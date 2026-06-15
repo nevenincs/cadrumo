@@ -10,7 +10,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Modelo
-from ....core.aggregation import BindingAggregationOp
+from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
@@ -22,17 +22,19 @@ from ...iva import (
     TransactionKind,
 )
 from ._binding_aggregation import binding_aggregation_op
+from ._binding_selector_utils import invariant_diagnostics, selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
-# Ledger-aggregation binding source kinds. Every binding whose ``source``
-# matches one of these reads its values from the bucket-scoped ledger
-# (transaction-classified IVA aggregation or Renta first-slice expense
-# aggregation). Cross-domain consumers route through this frozenset so
-# the registry stays the single source of truth for ledger readiness.
-LEDGER_BINDING_SOURCE_KINDS: frozenset[str] = frozenset({"ledger_iva_aggregation", "ledger_renta_expense_aggregation"})
-
+# Ledger-aggregation binding source kinds (all four). Re-exported from
+# :data:`aeat.core.aggregation.LEDGER_BINDING_SOURCE_KINDS`, which derives the
+# set from :class:`~aeat.core.BindingSourceKind` (the single source-kind
+# taxonomy). Every binding whose ``source`` is a member reads its values from
+# the bucket-scoped ledger (transaction-classified IVA / OSS aggregation or
+# Renta first-slice income/expense aggregation). Cross-domain consumers route
+# through this name so the registry stays the single source of truth for ledger
+# readiness.
 __all__ = [
     "LEDGER_BINDING_SOURCE_KINDS",
     "IvaLedgerObservation",
@@ -44,9 +46,16 @@ __all__ = [
     "resolve_ledger_renta_expense_aggregation_binding_values",
     "resolve_ledger_renta_income_aggregation_binding_values",
     "unsupported_ledger_iva_observations",
+    "unsupported_ledger_oss_observations",
+    "unsupported_ledger_renta_expense_observations",
+    "unsupported_ledger_renta_income_observations",
+    "validate_ledger_iva_aggregation_binding",
     "validate_ledger_iva_aggregation_binding_definition",
+    "validate_ledger_oss_aggregation_binding",
     "validate_ledger_oss_aggregation_binding_definition",
+    "validate_ledger_renta_expense_aggregation_binding",
     "validate_ledger_renta_expense_aggregation_binding_definition",
+    "validate_ledger_renta_income_aggregation_binding",
     "validate_ledger_renta_income_aggregation_binding_definition",
 ]
 
@@ -212,6 +221,51 @@ def resolve_ledger_oss_aggregation_binding_values(
             total = sum((observation.base_amount for observation in matched), Decimal("0"))
         resolved[binding.id] = total
     return resolved
+
+
+def unsupported_ledger_oss_observations(
+    revision: ModeloRevision,
+    observations: Iterable[OssIossLedgerObservation],
+) -> tuple[OssIossLedgerObservation, ...]:
+    """Return the :class:`OssIossLedgerObservation` rows no binding on ``revision`` can consume.
+
+    Fail-closed counterpart to
+    :func:`resolve_ledger_oss_aggregation_binding_values`, mirroring
+    :func:`unsupported_ledger_iva_observations`. An observation whose
+    regime/destination/rate/direction/transaction-kind tuple matches no
+    ``ledger_oss_aggregation`` binding has its base/cuota silently dropped — a
+    modelling gap, not a legitimate zero.
+
+    False-fire guard: an observation carrying neither base nor IVA (both zero)
+    contributes nothing whether or not it is routed and is excluded; only a
+    non-zero declarable OSS line reaching no binding is surfaced.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose OSS bindings define the
+            supported classification tuples.
+        observations: Validated OSS/IOSS observations to screen.
+
+    Returns:
+        Tuple of observations whose non-zero base/cuota is selected by no
+        ``ledger_oss_aggregation`` binding.
+    """
+    selectors = tuple(
+        _ledger_oss_selector(binding) for binding in revision.bindings if binding.source == "ledger_oss_aggregation"
+    )
+    unsupported: list[OssIossLedgerObservation] = []
+    for observation in observations:
+        if observation.base_amount == Decimal("0") and observation.iva_amount == Decimal("0"):
+            continue
+        if not any(
+            observation.regime is selector.regime
+            and observation.destination_member_state is selector.destination_member_state
+            and observation.rate_kind is selector.rate_kind
+            and observation.invoice_direction is selector.invoice_direction
+            and observation.transaction_kind in set(selector.transaction_kinds)
+            for selector in selectors
+        ):
+            unsupported.append(observation)
+    return tuple(unsupported)
 
 
 # ---------------------------------------------------------------------------
@@ -547,6 +601,52 @@ def resolve_ledger_renta_expense_aggregation_binding_values(
     return resolved
 
 
+def unsupported_ledger_renta_expense_observations(
+    revision: ModeloRevision,
+    observations: Iterable[RentaExpenseObservationProtocol],
+) -> tuple[RentaExpenseObservationProtocol, ...]:
+    """Return the :class:`RentaExpenseObservationProtocol` rows no binding on ``revision`` can consume.
+
+    Fail-closed counterpart to
+    :func:`resolve_ledger_renta_expense_aggregation_binding_values`, mirroring
+    :func:`unsupported_ledger_iva_observations`. An observation whose
+    modelo/period/target_casilla triple matches no
+    ``ledger_renta_expense_aggregation`` binding has its deductible amount
+    silently dropped from the filing — a modelling gap, not a legitimate zero.
+
+    False-fire guard (``ledger-iva-advisory-only-on-cuota-bearing-categories``
+    precedent): an observation that carries a zero ``deductible_amount`` contributes
+    nothing whether or not it is routed, so it is excluded — only a non-zero
+    declarable expense that reaches no casilla is surfaced.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose renta-expense bindings define
+            the supported (modelo, period, target_casilla) triples.
+        observations: First-slice renta-expense observations to screen.
+
+    Returns:
+        Tuple of observations whose non-zero deductible amount is selected by no
+        ``ledger_renta_expense_aggregation`` binding.
+    """
+    selectors = tuple(
+        _renta_ledger_expense_selector(binding)
+        for binding in revision.bindings
+        if binding.source == "ledger_renta_expense_aggregation"
+    )
+    unsupported: list[RentaExpenseObservationProtocol] = []
+    for observation in observations:
+        if observation.deductible_amount == Decimal("0"):
+            continue
+        if not any(
+            observation.modelo == selector.modelo
+            and observation.period == selector.period
+            and observation.target_casilla == selector.target_casilla
+            for selector in selectors
+        ):
+            unsupported.append(observation)
+    return tuple(unsupported)
+
+
 class _RentaLedgerIncomeSelector(BaseModel):
     """Validated form of a ledger_renta_income_aggregation binding selector.
 
@@ -681,3 +781,109 @@ def resolve_ledger_renta_income_aggregation_binding_values(
         else:
             resolved[str(binding.id)] = sum((observation.gross_amount for observation in matched), Decimal("0"))
     return resolved
+
+
+def unsupported_ledger_renta_income_observations(
+    revision: ModeloRevision,
+    observations: Iterable[RentaIncomeObservationProtocol],
+) -> tuple[RentaIncomeObservationProtocol, ...]:
+    """Return the :class:`RentaIncomeObservationProtocol` rows no binding on ``revision`` can consume.
+
+    Fail-closed counterpart to
+    :func:`resolve_ledger_renta_income_aggregation_binding_values`, mirroring
+    :func:`unsupported_ledger_iva_observations`. An observation whose
+    ``target_casilla`` matches no ``ledger_renta_income_aggregation`` binding has
+    its income silently dropped from the filing — a modelling gap, not a
+    legitimate zero.
+
+    False-fire guard: an observation whose declarable income is zero (both
+    ``gross_amount`` and any declared ``taxable_base_amount`` are zero) contributes
+    nothing whether or not it is routed and is excluded; only a non-zero income
+    reaching no casilla is surfaced.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose renta-income bindings define
+            the supported ``target_casilla`` set.
+        observations: Actividad-económica income observations to screen.
+
+    Returns:
+        Tuple of observations whose non-zero income is selected by no
+        ``ledger_renta_income_aggregation`` binding.
+    """
+    supported_casillas = frozenset(
+        _renta_ledger_income_selector(binding).target_casilla
+        for binding in revision.bindings
+        if binding.source == "ledger_renta_income_aggregation"
+    )
+    unsupported: list[RentaIncomeObservationProtocol] = []
+    for observation in observations:
+        declarable = observation.gross_amount
+        if observation.taxable_base_amount is not None:
+            declarable = max(declarable, observation.taxable_base_amount)
+        if declarable == Decimal("0"):
+            continue
+        if observation.target_casilla not in supported_casillas:
+            unsupported.append(observation)
+    return tuple(unsupported)
+
+
+def validate_ledger_oss_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``ledger_oss_aggregation`` binding at registry-build time.
+
+    Accumulating ``list[str]`` validator: validates the selector shape against
+    :class:`_OssIossLedgerSelector` (preserving the underlying pydantic field
+    error) then lifts the fact/aggregation-op invariant to build time via the
+    raise-style :func:`validate_ledger_oss_aggregation_binding_definition`, which
+    stays as a defence-in-depth resolve-time re-check.
+    """
+    failures = selector_against_model(binding, _OssIossLedgerSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(binding, "ledger_oss_aggregation", validate_ledger_oss_aggregation_binding_definition)
+
+
+def validate_ledger_iva_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``ledger_iva_aggregation`` binding at registry-build time.
+
+    Accumulating ``list[str]`` validator over :class:`_IvaLedgerSelector`; lifts
+    the fact/aggregation-op invariant via the raise-style
+    :func:`validate_ledger_iva_aggregation_binding_definition`.
+    """
+    failures = selector_against_model(binding, _IvaLedgerSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(binding, "ledger_iva_aggregation", validate_ledger_iva_aggregation_binding_definition)
+
+
+def validate_ledger_renta_expense_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``ledger_renta_expense_aggregation`` binding at registry-build time.
+
+    Accumulating ``list[str]`` validator over :class:`_RentaLedgerExpenseSelector`;
+    lifts the fact/aggregation-op invariant via the raise-style
+    :func:`validate_ledger_renta_expense_aggregation_binding_definition`.
+    """
+    failures = selector_against_model(binding, _RentaLedgerExpenseSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(
+        binding,
+        "ledger_renta_expense_aggregation",
+        validate_ledger_renta_expense_aggregation_binding_definition,
+    )
+
+
+def validate_ledger_renta_income_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``ledger_renta_income_aggregation`` binding at registry-build time.
+
+    Accumulating ``list[str]`` validator over :class:`_RentaLedgerIncomeSelector`;
+    lifts the fact/aggregation-op invariant via the raise-style
+    :func:`validate_ledger_renta_income_aggregation_binding_definition`.
+    """
+    failures = selector_against_model(binding, _RentaLedgerIncomeSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(
+        binding,
+        "ledger_renta_income_aggregation",
+        validate_ledger_renta_income_aggregation_binding_definition,
+    )

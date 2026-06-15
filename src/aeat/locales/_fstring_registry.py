@@ -42,6 +42,16 @@ def _hyphen(v: str) -> str:
     return v.replace("_", "-")
 
 
+# The service-capability CONFIRM question ids (hyphenated, matching the catalogue
+# question ids in :mod:`aeat.application.wizard._catalogue`). Their prompt and
+# CLI-flag-help keys are f-string-built, so they are enumerated here for scaffold.
+_CAPABILITY_QUESTION_IDS: tuple[str, ...] = (
+    "cloud-evidence-upload",
+    "llm-vision",
+    "google-export",
+)
+
+
 def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Construct the registration tuple at import time.
 
@@ -106,6 +116,16 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             description="wizard.*.description (registered wizard flow IDs)",
             key_factory=lambda v: f"wizard.{v}.description",
             values=tuple(flow.id for flow in WIZARD_FLOWS),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.capabilities.*.prompt (service-capability CONFIRM questions)",
+            key_factory=lambda v: f"wizard.setup.capabilities.{v}.prompt",
+            values=_CAPABILITY_QUESTION_IDS,
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.flags.*.help (service-capability CLI flags)",
+            key_factory=lambda v: f"wizard.setup.flags.{v}.help",
+            values=_CAPABILITY_QUESTION_IDS,
         ),
     )
 

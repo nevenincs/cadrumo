@@ -143,7 +143,7 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -157,7 +157,7 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
         original = TransactionCatalogue.from_transactions([mixed_txn])
         repo.save(original)
 
-        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        object_key = transaction_object_key(profile.bucket_id, mixed_txn.transaction_id)
         record = profile.repository.load(
             TX_BUCKET_NAMESPACE,
             object_key,
@@ -166,7 +166,7 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
-        txn_dict = envelope["payload"]["transactions"][mixed_txn.transaction_id]
+        txn_dict = envelope["payload"]
         assert "business_pct" in txn_dict, (
             "fixture must serialise business_pct into the envelope for this proof test to be meaningful"
         )
@@ -200,7 +200,7 @@ def test_transaction_catalogue_inner_classification_mismatch_is_structured(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -212,7 +212,7 @@ def test_transaction_catalogue_inner_classification_mismatch_is_structured(
         )
         repo.save(TransactionCatalogue.from_transactions([txn]))
 
-        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        object_key = transaction_object_key(profile.bucket_id, txn.transaction_id)
         record = profile.repository.load(
             TX_BUCKET_NAMESPACE,
             object_key,
@@ -252,7 +252,7 @@ def test_transaction_catalogue_inner_schema_version_mismatch_is_structured(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -264,7 +264,7 @@ def test_transaction_catalogue_inner_schema_version_mismatch_is_structured(
         )
         repo.save(TransactionCatalogue.from_transactions([txn]))
 
-        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        object_key = transaction_object_key(profile.bucket_id, txn.transaction_id)
         record = profile.repository.load(
             TX_BUCKET_NAMESPACE,
             object_key,
@@ -344,7 +344,7 @@ def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -359,7 +359,7 @@ def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
         original = TransactionCatalogue.from_transactions([spanish_txn])
         repo.save(original)
 
-        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        object_key = transaction_object_key(profile.bucket_id, spanish_txn.transaction_id)
         record = profile.repository.load(
             TX_BUCKET_NAMESPACE,
             object_key,
@@ -368,7 +368,7 @@ def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
-        txn_dict = envelope["payload"]["transactions"][spanish_txn.transaction_id]
+        txn_dict = envelope["payload"]
         assert txn_dict.get("source_jurisdiction") == "ES", (
             "fixture must serialise source_jurisdiction into the envelope for the grandfather proof to be meaningful"
         )
@@ -437,7 +437,7 @@ def test_transaction_catalogue_grandfathers_missing_group_label_key(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -452,7 +452,7 @@ def test_transaction_catalogue_grandfathers_missing_group_label_key(
         original = TransactionCatalogue.from_transactions([labelled])
         repo.save(original)
 
-        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        object_key = transaction_object_key(profile.bucket_id, labelled.transaction_id)
         record = profile.repository.load(
             TX_BUCKET_NAMESPACE,
             object_key,
@@ -461,7 +461,7 @@ def test_transaction_catalogue_grandfathers_missing_group_label_key(
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
-        txn_dict = envelope["payload"]["transactions"][labelled.transaction_id]
+        txn_dict = envelope["payload"]
         assert txn_dict.get("group_label") == "Proyecto Acme", (
             "fixture must serialise group_label into the envelope for the grandfather proof to be meaningful"
         )
@@ -576,7 +576,7 @@ def test_transaction_catalogue_rejects_missing_created_at_key(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -594,7 +594,7 @@ def test_transaction_catalogue_rejects_missing_created_at_key(
         original = TransactionCatalogue.from_transactions([stamped])
         repo.save(original)
 
-        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        object_key = transaction_object_key(profile.bucket_id, stamped.transaction_id)
         record = profile.repository.load(
             TX_BUCKET_NAMESPACE,
             object_key,
@@ -603,7 +603,7 @@ def test_transaction_catalogue_rejects_missing_created_at_key(
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
-        txn_dict = envelope["payload"]["transactions"][stamped.transaction_id]
+        txn_dict = envelope["payload"]
         assert txn_dict.get("created_at") is not None, (
             "fixture must serialise created_at into the envelope for the grandfather proof to be meaningful"
         )
@@ -639,7 +639,7 @@ def test_transaction_catalogue_negative_amount_payload_rejected_at_load(
 
     import json as _json
 
-    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from .._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -652,7 +652,7 @@ def test_transaction_catalogue_negative_amount_payload_rejected_at_load(
         original = TransactionCatalogue.from_transactions([txn])
         repo.save(original)
 
-        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        object_key = transaction_object_key(profile.bucket_id, txn.transaction_id)
         record = profile.repository.load(
             TX_BUCKET_NAMESPACE,
             object_key,
@@ -661,7 +661,7 @@ def test_transaction_catalogue_negative_amount_payload_rejected_at_load(
         )
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
-        txn_dict = envelope["payload"]["transactions"][txn.transaction_id]
+        txn_dict = envelope["payload"]
         assert txn_dict["raw"]["amount"] == "100.00", (
             "fixture must serialise the magnitude into the envelope for this proof to be meaningful"
         )

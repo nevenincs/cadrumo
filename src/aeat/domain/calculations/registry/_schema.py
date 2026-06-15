@@ -16,7 +16,7 @@ from typing import Annotated, Literal
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core import Period, TaxDomain
-from ....core.aggregation import AggregationSourceKind, BindingAggregation, RowSetGroupingKind
+from ....core.aggregation import BindingAggregation, BindingSourceKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 
@@ -976,32 +976,46 @@ class ModeloScheduleDefinition(RegistryModel):
 
 class DataBindingDefinition(RegistryModel):
     id: BindingId
-    source: Literal[
-        "profile",
-        "previous_filing",
-        "relation_prefill",
-        "manual_input",
-        "ledger_oss_aggregation",
-        "ledger_iva_aggregation",
-        "ledger_renta_expense_aggregation",
-        "ledger_renta_income_aggregation",
-        AggregationSourceKind.PAYABLE_INVOICE,
-        AggregationSourceKind.COLLECTIBLE_INVOICE,
-        AggregationSourceKind.LEDGER_TRANSACTION,
-        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        RowSetGroupingKind.WITHHOLDING,
-        "related_party_operation",
-        RowSetGroupingKind.FOREIGN_ASSET,
-        "atribucion_member",
-        "refund_operation",
-    ]
+    source: BindingSourceKind
     selector: BindingSelectorMap
     aggregation: BindingAggregation | None = None
     typed_enum: str | None = None
+    """Closed-set enum class name a consumer routes the binding value through.
+
+    LIVE field (do NOT remove). Declared in registry TOML for the bindings that
+    bridge a closed-membership substrate axis — ``"censo_event_kind"`` (M036),
+    ``"CCAA"`` and ``"EstimacionDirectaModalidad"`` (M100), ``"LegalEntityForm"``
+    (M200) — and surfaced by the operator-facing ``bindings list`` CLI table
+    (``_modelo_discovery_cli.py``), the :class:`ModeloBindingRow` query
+    projection, the borrador binding resolver, and the Sheets-pull edit router.
+    It is the closed-set *annotation* on the binding, distinct from the
+    ``input_channel`` (how a formula consumes the value); a binding may carry a
+    ``typed_enum`` yet still be a numeric ``decimal`` channel. Gated by
+    ``test_schema_hygiene.py::test_renta_typed_binding_candidates_declare_substrate_enum_class``.
+    """
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
     aeat_prefilled: bool = False
+
+    @field_validator("source", mode="before")
+    @classmethod
+    def _coerce_source(cls, value: object) -> object:
+        """Hydrate the registry TOML's raw ``source`` string into its enum member.
+
+        The authoring tree declares ``source`` as a plain string (``"profile"``,
+        ``"ledger_iva_aggregation"``, ...). Under the strict model config a
+        :class:`~aeat.core.BindingSourceKind` field requires the actual member,
+        not its value, so the raw string from ``model_validate`` would be
+        rejected. Coercing the known closed-set string to its member at the
+        boundary keeps the TOML plain while preserving strict rejection of an
+        unknown source (:class:`~aeat.core.BindingSourceKind` raises on an
+        invalid value). This is the source-kind sibling of
+        :meth:`~aeat.core.aggregation.BindingAggregation._coerce_op`.
+        """
+        if isinstance(value, str) and not isinstance(value, BindingSourceKind):
+            return BindingSourceKind(value)
+        return value
 
 
 class FormulaDefinition(RegistryModel):

@@ -5,9 +5,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
-from typing import Annotated
+from typing import Annotated, cast
 
+import click
 import typer
+import typer._click.types as typer_click_types
 
 from ...application.modelo import (
     profile_resolvable_binding_ids,
@@ -34,6 +36,7 @@ from ...domain.user_profile import ProfileNotFoundError
 from ._common import _emit_envelope, _parse_iso_date
 from ._modelo_payloads import (
     BindingPreviewRowPayload,
+    BindingRowPayload,
     CasillaRowPayload,
     FormulaPayload,
     FormulasResult,
@@ -82,6 +85,26 @@ def register_discovery_commands(
     _register_bindings_list_command(bindings_app, deps)
     _register_bindings_preview_command(bindings_app, deps)
     _register_formulas_command(app, deps)
+
+
+# The registry-bound accepted-code set for the ``--modelo`` option, built
+# once from the registry authority (:func:`registry_modelo_codes`). ``--help``
+# renders the full accepted-code set and an unknown ``--modelo`` refuses at
+# parse time with the accepted list, per the CLI-Choice-hint mandate in
+# ``aeat-architecture-boundaries``. The choice is a module-level constant
+# because ``from __future__ import annotations`` stringifies the ``Annotated``
+# metadata carrying ``click_type=...`` and Typer re-evaluates that string in
+# this module's global namespace, where a closure-local binding is invisible.
+#
+# typer vendors its own copy of click, so ``click.Choice`` is a
+# ``click.types.ParamType`` while ``typer.Option``'s ``click_type`` expects
+# ``typer._click.types.ParamType``. They are the same object at runtime (the
+# vendored click), so the cast only bridges the static type duality — no Any
+# escape. The bundled registry load this triggers needs no secret passphrase.
+_MODELO_CHOICE: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType,
+    click.Choice(list(registry_modelo_codes())),
+)
 
 
 def _as_of(raw: str | None) -> date | None:
@@ -392,29 +415,31 @@ def _bindings_report_for_target(
     )
 
 
-def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[dict[str, object]], list[str]]:
+def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[BindingRowPayload], list[str]]:
     rows = report.rows
     if missing:
         profile_resolved = _profile_resolved_binding_ids(report)
         rows = tuple(row for row in rows if row.source != "constant_value" and row.binding_id not in profile_resolved)
 
-    merged_rows: list[dict[str, object]] = []
+    merged_rows: list[BindingRowPayload] = []
     text_rows: list[str] = []
     for row in rows:
         readiness = _readiness_for_source(row.source)
         merged_rows.append(
-            {
-                "modelo": report.code,
-                "revision": report.revision,
-                "filing_year": report.filing_year,
-                "period": report.period,
-                "binding_id": row.binding_id,
-                "source": row.source,
-                "readiness": readiness,
-                "typed_enum": row.typed_enum,
-                "input_channel": row.input_channel,
-                "borrador_capable": row.borrador_capable,
-            },
+            BindingRowPayload(
+                modelo=report.code,
+                revision=report.revision,
+                filing_year=report.filing_year,
+                period=report.period,
+                binding_id=row.binding_id,
+                source=row.source,
+                readiness=readiness,
+                typed_enum=row.typed_enum,
+                input_channel=row.input_channel,
+                borrador_capable=row.borrador_capable,
+                legal_refs=row.legal_refs,
+                source_refs=row.source_refs,
+            ),
         )
         text_rows.append(
             f"{report.code}\t{report.revision}\t{report.period or '-'}\t"
@@ -430,7 +455,7 @@ def _register_bindings_list_command(bindings_app: typer.Typer, deps: _DiscoveryD
         ctx: typer.Context,
         modelo: Annotated[
             str | None,
-            typer.Option("--modelo", help=tr("cli.app.modelo.bindings.modelo_help")),
+            typer.Option("--modelo", click_type=_MODELO_CHOICE, help=tr("cli.app.modelo.bindings.modelo_help")),
         ] = None,
         year: Annotated[
             int | None,
@@ -460,7 +485,7 @@ def _register_bindings_list_command(bindings_app: typer.Typer, deps: _DiscoveryD
                     raise
                 continue
             per_modelo_reports.append(report)
-        merged_rows: list[dict[str, object]] = []
+        merged_rows: list[BindingRowPayload] = []
         text_rows: list[str] = []
         for report in per_modelo_reports:
             report_rows, report_text_rows = _binding_list_rows_for_report(report, missing=missing)
@@ -472,7 +497,7 @@ def _register_bindings_list_command(bindings_app: typer.Typer, deps: _DiscoveryD
             period_filter=period,
             missing_filter=missing,
             binding_count=len(merged_rows),
-            bindings=merged_rows,
+            bindings=tuple(merged_rows),
         )
         lines = [
             "operation\tregistry.modelo.bindings.list",
@@ -503,7 +528,7 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
         ctx: typer.Context,
         modelo: Annotated[
             str | None,
-            typer.Option("--modelo", help=tr("cli.app.modelo.bindings.modelo_help")),
+            typer.Option("--modelo", click_type=_MODELO_CHOICE, help=tr("cli.app.modelo.bindings.modelo_help")),
         ] = None,
         year: Annotated[
             int | None,
@@ -568,6 +593,8 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
                     readiness=_readiness_for_source(row.source),
                     typed_enum=row.typed_enum,
                     override=overrides.get(row.binding_id),
+                    legal_refs=row.legal_refs,
+                    source_refs=row.source_refs,
                 )
                 for row in report.rows
             ],

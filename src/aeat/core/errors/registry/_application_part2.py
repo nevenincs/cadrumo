@@ -191,6 +191,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._calculate_input.ModeloCalculateBindingInputError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATE_BINDING_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_calculate_binding_input",
+            default_suggestion="aeat app modelo work calculate --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._calculate_input.ModeloCalculateShortcutInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_SHORTCUT_INPUT",

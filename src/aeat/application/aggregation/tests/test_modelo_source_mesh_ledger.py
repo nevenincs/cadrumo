@@ -48,7 +48,6 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionCatalogueRepository,
     TransactionDirection,
-    transaction_catalogue_object_key,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
@@ -437,10 +436,14 @@ def test_iva_source_mesh_resolver_degrades_on_transaction_catalogue_drift(
     secure_objects: SecureObjectRepository,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    from ....domain.transactions._repository import transaction_index_object_key
+
     revision = _revision("303", "2009-y-siguientes")
+    # Per-row catalogue: a corrupt membership-index row makes load() fail closed
+    # with StoredTransactionDriftError, the drift the resolver must degrade on.
     secure_objects.save(
         namespace=TX_BUCKET_NAMESPACE,
-        object_key=transaction_catalogue_object_key("bucket-a"),
+        object_key=transaction_index_object_key("bucket-a"),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
         written_at=datetime(2026, 6, 4, 12, 0, tzinfo=UTC),
@@ -537,3 +540,50 @@ def test_oss_source_mesh_resolver_matches_existing_candidate_binding_wrapper() -
     assert resolution.source_transaction_ids == ("oss-ledger-1",)
     assert resolution.diagnostics == ()
     assert tuple(item.source_ref for item in resolution.provenance) == ("transaction:oss-ledger-1",)
+
+
+def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -> None:
+    """A non-zero OSS line routed to no binding surfaces a non-blocking advisory.
+
+    The esquema-union revision binds DE/FR union services and DE goods-distance;
+    no binding selects an IT destination. An IT-destination candidate matches no
+    binding; its base/cuota would otherwise silently vanish from the M369 form,
+    so the resolver MUST emit an ``unrouted_observation`` advisory rather than
+    dropping it (no-silent-under-declaration).
+    """
+    revision = _revision("369", "esquema-union")
+    candidates = (
+        OssIossLedgerCandidate(
+            ledger_id="oss-it-unrouted",
+            transaction_date=date(2025, 6, 15),
+            regime=OssIossRegime.UNION_SCHEME,
+            destination_member_state=EUMemberState.IT,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=IvaInvoiceKind.ISSUED,
+            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+            base_amount=Decimal("100.00"),
+            iva_amount=Decimal("22.00"),
+        ),
+    )
+
+    resolution = OssIossLedgerSourceResolver(candidates=candidates).resolve(
+        CalculationSourceContext(
+            bucket_id="bucket-a",
+            modelo="369",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "4T"),
+            revision=revision,
+        ),
+    )
+
+    unrouted = [
+        diagnostic
+        for diagnostic in resolution.diagnostics
+        if diagnostic.reason == "unrouted_observation"
+        and diagnostic.source_kind == "ledger_oss_aggregation"
+        and "oss-it-unrouted" in diagnostic.message
+    ]
+    assert len(unrouted) == 1, "an IT-destination OSS line routed to no binding must surface one advisory"
+    # The advisory is non-blocking: the resolution still resolves the (zero) DE
+    # binding value and records the candidate so calculate succeeds.
+    assert resolution.binding_values.get("modelo-369-union-de-services-21pct") == Decimal("0")

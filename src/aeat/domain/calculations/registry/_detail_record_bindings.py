@@ -13,7 +13,8 @@ from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp, RowSetGroupingKind
 from ....core.external_constants import DEFAULT_CURRENCY
 from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import uppercase_alpha_code
+from ._binding_selector_utils import invariant_diagnostics, selector_against_model, uppercase_alpha_code
+from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -26,7 +27,35 @@ __all__ = [
     "resolve_foreign_asset_binding_row_values",
     "resolve_refund_binding_row_values",
     "resolve_related_party_binding_row_values",
+    "validate_atribucion_binding",
+    "validate_foreign_asset_binding",
+    "validate_refund_binding",
+    "validate_related_party_binding",
 ]
+
+
+def _validate_detail_record_row_field(
+    binding: DataBindingDefinition,
+    selector_fact: object,
+    selector_row_field: object,
+    family_label: str,
+) -> None:
+    """Shared op/fact invariant for the four detail-record families.
+
+    Every detail-record family declares exactly the ``row_field`` fact, defaults
+    to (and requires) the ``rows`` aggregation op, and must name a ``row_field``
+    selector key. The four families enforced this with byte-identical bodies; the
+    one shared check raises a family-labelled :class:`RegistryValidationError`.
+    """
+    if selector_fact != "row_field":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} declares unsupported {family_label} fact {selector_fact!r}",
+        )
+    if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
+    if selector_row_field is None:
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
+
 
 # Related-party operation source bindings (modelo 232).
 #
@@ -85,18 +114,25 @@ class _RelatedPartySelector(BaseModel):
 
 def _validated_related_party_selector(binding: DataBindingDefinition) -> _RelatedPartySelector:
     try:
-        selector = _RelatedPartySelector.model_validate(binding.selector)
+        selector = _RelatedPartySelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed related-party selector") from exc
-    if selector.fact != "row_field":
-        raise RegistryValidationError(
-            f"binding {binding.id!r} declares unsupported related-party fact {selector.fact!r}",
-        )
-    if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
-        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
-    if selector.row_field is None:
-        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
+    _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "related-party")
     return selector
+
+
+def validate_related_party_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a related-party-operation binding at registry-build time.
+
+    Accumulating ``list[str]`` validator: validates the selector shape against
+    :class:`_RelatedPartySelector` and lifts the resolve-time op/fact invariant
+    (``row_field`` fact paired with the ``rows`` op and a named ``row_field``)
+    to build time, preserving the underlying pydantic field error.
+    """
+    failures = selector_against_model(binding, _RelatedPartySelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(binding, "related-party", lambda b: _validated_related_party_selector(b))
 
 
 def resolve_related_party_binding_row_values(
@@ -213,18 +249,24 @@ class _ForeignAssetSelector(BaseModel):
 
 def _validated_foreign_asset_selector(binding: DataBindingDefinition) -> _ForeignAssetSelector:
     try:
-        selector = _ForeignAssetSelector.model_validate(binding.selector)
+        selector = _ForeignAssetSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed foreign-asset selector") from exc
-    if selector.fact != "row_field":
-        raise RegistryValidationError(
-            f"binding {binding.id!r} declares unsupported foreign-asset fact {selector.fact!r}",
-        )
-    if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
-        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
-    if selector.row_field is None:
-        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
+    _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "foreign-asset")
     return selector
+
+
+def validate_foreign_asset_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a foreign-asset binding at registry-build time.
+
+    Accumulating ``list[str]`` validator: validates the selector against
+    :class:`_ForeignAssetSelector` and lifts the resolve-time op/fact invariant
+    to build time, preserving the underlying pydantic field error.
+    """
+    failures = selector_against_model(binding, _ForeignAssetSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(binding, "foreign-asset", lambda b: _validated_foreign_asset_selector(b))
 
 
 def resolve_foreign_asset_binding_row_values(
@@ -347,16 +389,24 @@ class _AtributionSelector(BaseModel):
 
 def _validated_atribucion_selector(binding: DataBindingDefinition) -> _AtributionSelector:
     try:
-        selector = _AtributionSelector.model_validate(binding.selector)
+        selector = _AtributionSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed atribucion selector") from exc
-    if selector.fact != "row_field":
-        raise RegistryValidationError(f"binding {binding.id!r} declares unsupported atribucion fact {selector.fact!r}")
-    if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
-        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
-    if selector.row_field is None:
-        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
+    _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "atribucion")
     return selector
+
+
+def validate_atribucion_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate an atribución-member binding at registry-build time.
+
+    Accumulating ``list[str]`` validator: validates the selector against
+    :class:`_AtributionSelector` and lifts the resolve-time op/fact invariant to
+    build time, preserving the underlying pydantic field error.
+    """
+    failures = selector_against_model(binding, _AtributionSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(binding, "atribucion", lambda b: _validated_atribucion_selector(b))
 
 
 def resolve_atribucion_binding_row_values(
@@ -453,16 +503,24 @@ class _RefundSelector(BaseModel):
 
 def _validated_refund_selector(binding: DataBindingDefinition) -> _RefundSelector:
     try:
-        selector = _RefundSelector.model_validate(binding.selector)
+        selector = _RefundSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed refund selector") from exc
-    if selector.fact != "row_field":
-        raise RegistryValidationError(f"binding {binding.id!r} declares unsupported refund fact {selector.fact!r}")
-    if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
-        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
-    if selector.row_field is None:
-        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
+    _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "refund")
     return selector
+
+
+def validate_refund_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a refund-operation binding at registry-build time.
+
+    Accumulating ``list[str]`` validator: validates the selector against
+    :class:`_RefundSelector` and lifts the resolve-time op/fact invariant to
+    build time, preserving the underlying pydantic field error.
+    """
+    failures = selector_against_model(binding, _RefundSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(binding, "refund", lambda b: _validated_refund_selector(b))
 
 
 def resolve_refund_binding_row_values(

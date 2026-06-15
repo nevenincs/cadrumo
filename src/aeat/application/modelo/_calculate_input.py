@@ -16,7 +16,7 @@ from ...core import Modelo
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.resources import resources
-from ...domain.calculations.registry import ModeloRevision
+from ...domain.calculations.registry import ModeloRevision, enum_consumed_binding_ids
 from ...domain.contribuyente._deduccion_maternidad import compute_deduccion_maternidad_0611
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._dt12_reduccion import compute_dt12_reduccion_plan_pensiones
@@ -58,6 +58,10 @@ class ModeloCalculateDecimalInputError(ModeloCalculateInputError):
 
 class ModeloCalculateCasillaInputError(ModeloCalculateInputError):
     """Raised when a casilla override cannot be resolved for the active revision."""
+
+
+class ModeloCalculateBindingInputError(ModeloCalculateInputError):
+    """Raised when a ``--binding`` override cannot be resolved for the active revision."""
 
 
 class ModeloCalculateShortcutInputError(ModeloCalculateInputError):
@@ -213,11 +217,15 @@ def build_work_calculate_input_bundle(
 
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
-    for key, raw_value in binding_overrides.items():
-        try:
-            binding_values[key] = Decimal(raw_value)
-        except (InvalidOperation, ValueError):
-            enum_binding_values[key] = raw_value
+    if binding_overrides:
+        known_binding_ids = {str(binding.id) for binding in revision.bindings}
+        enum_channel_ids = enum_consumed_binding_ids(revision)
+        for key, raw_value in binding_overrides.items():
+            channel = _binding_input_channel(key, revision, known_binding_ids, enum_channel_ids)
+            if channel == "enum":
+                enum_binding_values[key] = raw_value
+            else:
+                binding_values[key] = _decimal(raw_value, flag="--binding", key=key)
 
     casilla_inputs, binding_values = apply_calculation_shortcut_inputs(
         work_unit_id=work_unit_id,
@@ -306,6 +314,36 @@ def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
             f"to bind it to the current law-determined revision.",
         )
     return snapshot.revision
+
+
+def _binding_input_channel(
+    key: str,
+    revision: ModeloRevision,
+    known_binding_ids: set[str],
+    enum_channel_ids: frozenset[str],
+) -> str:
+    """Return the registry-declared engine channel for a ``--binding`` override.
+
+    Routes the override by the binding's *declared* input channel, not by
+    parse success: a binding the revision's formulas consume as a string
+    enum key (``enum_consumed_binding_ids``) is an ``"enum"`` channel and
+    its override is carried verbatim; every other declared binding is a
+    ``"decimal"`` channel whose override the caller coerces with
+    :func:`_decimal` (so a malformed numeric value REFUSES instead of
+    silently reclassifying as an enum string). An unknown binding id
+    refuses with the accepted set, per ``no-silent-under-declaration``
+    and the CLI-Choice-hint mandate.
+    """
+    if key not in known_binding_ids:
+        accepted = ", ".join(sorted(known_binding_ids))
+        raise ModeloCalculateBindingInputError(
+            f"--binding {key!r} does not match any binding id in this revision. "
+            f"Accepted binding ids: {accepted}. "
+            "Use `aeat app modelo bindings list <MODELO>` to list valid binding ids.",
+            context={"key": key, "accepted": accepted},
+            translated_message="application.modelo.errors.calculate_binding_unknown",
+        )
+    return "enum" if key in enum_channel_ids else "decimal"
 
 
 def _guard_casilla_data_type(casilla_id: str, revision: ModeloRevision) -> None:

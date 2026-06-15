@@ -823,7 +823,15 @@ class ModeloCasillasResult(OutputSchema):
 
 
 class BindingRowPayload(OutputSchema):
-    """One binding row in the bindings list/preview output."""
+    """One binding row in the bindings list output.
+
+    Carries the binding's regulatory grounding (``legal_refs`` /
+    ``source_refs``, sourced from the registry binding definition) at
+    parity with the casilla half (``CasillaRowPayload``), per the
+    operator-boundary provenance-parity decision of the
+    bindings-interface-hardening ADR. ``source`` renders the typed
+    :class:`~aeat.core.BindingSourceKind` value as a string.
+    """
 
     modelo: str
     revision: str
@@ -835,6 +843,8 @@ class BindingRowPayload(OutputSchema):
     typed_enum: str | None
     input_channel: str
     borrador_capable: bool
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
 
 
 @register_schema("modelo.bindings.list")
@@ -847,17 +857,25 @@ class ModeloBindingsListResult(OutputSchema):
     period_filter: str | None
     missing_filter: bool
     binding_count: int
-    bindings: list[dict[str, object]]
+    bindings: tuple[BindingRowPayload, ...]
 
 
 class BindingPreviewRowPayload(OutputSchema):
-    """One binding preview row with optional override value."""
+    """One binding preview row with optional override value.
+
+    Carries the binding's regulatory grounding (``legal_refs`` /
+    ``source_refs``, sourced from the registry binding definition) at
+    parity with the casilla half, per the operator-boundary
+    provenance-parity decision of the bindings-interface-hardening ADR.
+    """
 
     binding_id: str
     source: str
     readiness: str
     typed_enum: str | None
     override: str | None
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
 
 
 @register_schema("modelo.bindings.preview")

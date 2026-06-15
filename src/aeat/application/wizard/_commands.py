@@ -362,6 +362,18 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
             choices=", ".join(_CCAA_CHOICE_VALUES),
         ),
     ),
+    "cloud-evidence-upload": typer.Option(
+        "--cloud-evidence-upload/--no-cloud-evidence-upload",
+        help=tr("wizard.setup.flags.cloud-evidence-upload.help"),
+    ),
+    "llm-vision": typer.Option(
+        "--llm-vision/--no-llm-vision",
+        help=tr("wizard.setup.flags.llm-vision.help"),
+    ),
+    "google-export": typer.Option(
+        "--google-export/--no-google-export",
+        help=tr("wizard.setup.flags.google-export.help"),
+    ),
     "notes": typer.Option("--notes", help=tr("wizard.setup.flags.notes.help")),
     "entity-type": typer.Option(
         "--entity-type",

@@ -93,6 +93,48 @@ term_status = "preferred"
 """
 
 
+# A deprecated concept populating the three optional fields the curated round-trip
+# leaves at their defaults: seed_provenance, a term grammatical_gender, and
+# replaced_by (valid only on a deprecated/retired lifecycle).
+_DEPRECATED_FULLY_POPULATED = """
+[concept]
+concept_id = "recargo-equivalencia"
+domain = "regimen"
+lifecycle = "deprecated"
+replaced_by = "iva-domestic-general-21"
+domain_refs = ["modelo:303", "casilla:303:00029"]
+legal_refs = ["ley-37-1992:art-148"]
+created_at = 2024-01-02
+updated_at = 2026-06-09
+
+[concept.seed_provenance]
+source = "ubterm"
+attribution = "UBTERM Diccionari de fiscalitat (Universitat de Barcelona), CC BY 3.0"
+source_entry_id = "fisc-0421"
+
+[language.es]
+short_description = "Regimen especial de IVA para comerciantes minoristas."
+definition = "Regimen especial para comerciantes minoristas en el que el proveedor repercute un recargo."
+
+[language.es.source]
+citation = "Articulos 148 a 163 de la Ley 37/1992 del IVA."
+authority = "boe"
+
+[[language.es.term]]
+label = "recargo de equivalencia"
+term_status = "preferred"
+part_of_speech = "noun"
+grammatical_gender = "masculine"
+
+[language.en]
+short_description = "A special VAT regime for retail traders."
+
+[[language.en.term]]
+label = "equivalence surcharge"
+term_status = "preferred"
+"""
+
+
 def _write(tmp_path: Path, name: str, content: str) -> Path:
     concepts = tmp_path / "concepts"
     concepts.mkdir(exist_ok=True)
@@ -300,6 +342,30 @@ def test_serialise_round_trips_a_curated_concept(tmp_path: Path) -> None:
     rendered = serialise_concept(original)
     (concepts / "modelo-303.toml").write_text(rendered, encoding="utf-8")
     reloaded = load_terminology_handbook(concepts).concept("modelo-303")
+
+    assert reloaded == original
+
+
+def test_serialise_round_trips_seed_provenance_gender_and_replaced_by(tmp_path: Path) -> None:
+    """A deprecated concept's seed_provenance, grammatical_gender, and replaced_by survive a round-trip.
+
+    The curated-concept round-trip above leaves these three optional fields at
+    their defaults, so a serialise-drops-field / load-re-defaults-field
+    regression on any of them is invisible there. This fixture populates all
+    three with non-default values (per the anti-default roundtrip discipline)
+    so such a regression surfaces as strict inequality.
+    """
+    concepts = _write(tmp_path, "recargo-equivalencia.toml", _DEPRECATED_FULLY_POPULATED)
+    original = load_terminology_handbook(concepts).concept("recargo-equivalencia")
+
+    # Guard the fixture is not vacuous: the three fields are actually present.
+    assert original.seed_provenance is not None
+    assert original.replaced_by is not None
+    assert any(term.grammatical_gender is not None for lang in original.languages for term in lang.terms)
+
+    rendered = serialise_concept(original)
+    (concepts / "recargo-equivalencia.toml").write_text(rendered, encoding="utf-8")
+    reloaded = load_terminology_handbook(concepts).concept("recargo-equivalencia")
 
     assert reloaded == original
 

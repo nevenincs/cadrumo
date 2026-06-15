@@ -305,6 +305,11 @@ class SetupAnswers(BaseModel):
     representante_fiscal_nombre: str = ""
     """Full name of the fiscal representative in Spain."""
 
+    # ── capabilities ─────────────────────────────────────────────────────
+    cloud_evidence_upload: bool = False
+    llm_vision: bool = True
+    google_export: bool = True
+
     # ── notes ────────────────────────────────────────────────────────────
     notes: str = ""
 

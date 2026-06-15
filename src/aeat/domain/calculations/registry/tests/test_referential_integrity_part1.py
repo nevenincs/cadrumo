@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import Period
+from .....core import BindingSourceKind, Period
 from ..._export_field_kind import CasillaFieldKind
 from ._referential_integrity_support import (
     _DUMMY_LEGAL_ID,
@@ -190,7 +190,7 @@ def test_dangling_binding_source_refs() -> None:
     _extra = "aeat-dr-binding-v1"
     binding = DataBindingDefinition(
         id="test.binding",
-        source="manual_input",
+        source=BindingSourceKind.MANUAL_INPUT,
         selector={
             "record": "DPA",
             "field": "test",

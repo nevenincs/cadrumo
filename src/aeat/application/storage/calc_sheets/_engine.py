@@ -16,6 +16,7 @@ from typing import Final, Literal
 from ....core import Period
 from ....core.i18n import tr
 from ....domain.calculations.registry import (
+    BindingAggregationOp,
     CasillaDefinition,
     DataBindingDefinition,
     FormulaDefinition,
@@ -23,6 +24,7 @@ from ....domain.calculations.registry import (
     ModeloRevision,
     ParameterDefinition,
     RegistrySnapshot,
+    binding_aggregation_op,
 )
 from ._errors import CalcSheetsEngineError
 from ._layout import SheetLayout, plan_layout
@@ -948,7 +950,7 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
     cohort_legal: dict[str, set[str]] = {}
     cohort_source: dict[str, set[str]] = {}
     for binding in revision.bindings:
-        if binding.aggregation is None or binding.aggregation.op != "rows":
+        if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
             continue
         # `binding.selector` is a Mapping; getattr returns the default
         # for every Mapping regardless of key, so the lookup must go

@@ -89,14 +89,24 @@ def test_mutating_one_bucket_db_leaves_other_bucket_reads_unaffected(tmp_path: P
         repo_b.save(expected_state)
         b_db = profile_b.paths.db_dir / "aeat.db"
         assert b_db.exists()
-        b_db_bytes_before = b_db.read_bytes()
+
+    # B's engine is disposed on context exit (dispose_engine -> WAL checkpoint
+    # folds the ``-wal`` sidecar into ``aeat.db``), so the main file is now
+    # stable. Read the baseline here, AFTER B's own checkpoint, so the
+    # comparison isolates A's corruption from B's routine WAL fold.
+    b_db_bytes_before = b_db.read_bytes()
 
     with isolated_runtime_profile(tmp_path=bucket_a_root, bucket_id="bucket-a") as profile_a:
         repo_a = WorkflowStateRepository(objects=profile_a.repository)
         repo_a.save(_state_for_label("bucket-a"))
         a_db = profile_a.paths.db_dir / "aeat.db"
         assert a_db.exists()
-        a_db.write_bytes(b"corrupted-not-a-real-sqlite-file")
+
+    # Corrupt A's database AFTER its engine is disposed. Disposing the engine on
+    # context exit checkpoints A's ``-wal`` sidecar back into ``aeat.db``; writing
+    # the garbage inside the context would be folded over by that checkpoint, so
+    # the corruption must land after it to persist and genuinely test isolation.
+    a_db.write_bytes(b"corrupted-not-a-real-sqlite-file")
 
     b_db_bytes_after = b_db.read_bytes()
     assert b_db_bytes_after == b_db_bytes_before, (

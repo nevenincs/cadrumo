@@ -39,12 +39,18 @@ def cloud_evidence_read_permitted(settings: Settings, *, acknowledged: bool) -> 
     """Whether an off-host cloud evidence read is permitted for THIS invocation.
 
     On-host reading is always allowed and is the default; this gate governs only
-    the cloud exception. A cloud read is permitted only when the deployment has
-    opted in (``aeat_evidence_cloud_upload_permitted``), the deployment is not a
-    gestor/professional deployment (``aeat_evidence_gestor_mode`` is the absolute
-    bar), AND the operator acknowledged the upload for this specific invocation.
-    The acknowledgement is never sticky -- it must be re-affirmed each time
-    (sensitive-financial-data-secure-storage-only).
+    the cloud exception. A cloud read is permitted only when the
+    ``cloud_evidence_upload`` capability resolves enabled for the active profile
+    AND the operator acknowledged the upload for this specific invocation.
+
+    The capability resolution (``resolve_active_capability``) is the single place
+    the posture is computed: the gestor-mode bar is applied first and absolutely
+    (``aeat_evidence_gestor_mode``), then the active profile's opt-in/out fact, then
+    — when no profile fact is set — the global ``aeat_evidence_cloud_upload_permitted``
+    flag as the fallback default (so existing deployments behave unchanged until a
+    profile sets the capability). A capability can only NARROW this floor, never
+    widen it. The acknowledgement is never sticky -- it must be re-affirmed each
+    time (sensitive-financial-data-secure-storage-only).
 
     Args:
         settings: Resolved deployment settings carrying the consent posture.
@@ -52,11 +58,13 @@ def cloud_evidence_read_permitted(settings: Settings, *, acknowledged: bool) -> 
             this invocation.
 
     Returns:
-        ``True`` only when all three conditions hold; ``False`` otherwise.
+        ``True`` only when the capability resolves enabled AND ``acknowledged``.
     """
-    if settings.aeat_evidence_gestor_mode:
-        return False
-    if not settings.aeat_evidence_cloud_upload_permitted:
+    from ...core import ServiceCapability
+    from ..user_profile import resolve_active_capability
+
+    decision = resolve_active_capability(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, settings=settings)
+    if not decision.enabled:
         return False
     return acknowledged
 

@@ -639,6 +639,7 @@ application:
         required casilla ids are missing from the corrected map.'
       amendment_verification_refused_no_snapshot: Registry has no snapshot for the
         requested modelo, year, and period.
+      calculate_binding_unknown: '--binding %{key} does not match any binding id in this revision. Accepted binding ids: %{accepted}. Use `aeat app modelo bindings list <MODELO>` to list valid binding ids.'
       calculate_casilla_ambiguous: '--casilla %{key} matches multiple casillas in
         this revision: %{candidates}. Supply the qualified PREFIX:NNNNN form to disambiguate.'
       calculate_casilla_non_numeric: --casilla %{casilla_id} targets non-numeric data
@@ -773,8 +774,15 @@ application:
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
     findings:
-      art20_reduccion_next_action: 'Verify whether your other non-work income excluding exempt income for the year does not exceed 6500 EUR; if it does not, declare the article 20 LIRPF work-income reduction in the general reduction casilla (ley-35-2006:art-20).'
-      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: casilla %{rnt_id} (net work income) = %{rnt_value} is within the article 20 reduction band (below 19747,50) but casilla %{reduccion_id} (general work-income reduction) is zero. If your other non-work income excluding exempt income does not exceed 6500, the article 20 LIRPF work-income reduction may apply.'
+      art20_reduccion_next_action: Verify whether your other non-work income excluding
+        exempt income for the year does not exceed 6500 EUR; if it does not, declare
+        the article 20 LIRPF work-income reduction in the general reduction casilla
+        (ley-35-2006:art-20).
+      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: casilla %{rnt_id} (net
+        work income) = %{rnt_value} is within the article 20 reduction band (below
+        19747,50) but casilla %{reduccion_id} (general work-income reduction) is zero.
+        If your other non-work income excluding exempt income does not exceed 6500,
+        the article 20 LIRPF work-income reduction may apply.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -1924,6 +1932,13 @@ cli:
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
     bucket: null
+    check:
+      available: available
+      help: Check external-dependency availability and the active profile's service
+        capability posture, with the fix for any gap.
+      issue_label: issue
+      missing: missing
+      profile_label: profile
     custody:
       confirm_new_passphrase_help: Repeat the new secret-store passphrase.
       confirm_new_passphrase_prompt: 'Confirm new AEAT secret-store passphrase: '
@@ -2000,6 +2015,8 @@ cli:
       sync:
         calc:
           export:
+            capability_disabled: Google export is disabled for this profile; enable
+              it with 'aeat config profile capabilities set google_export on'.
             modelo_help: Modelo id to export (e.g. 130, 303, 100)
             period_help: Filing period code (e.g. 1T, 2T, 0A)
             prefill_relations_help: Prefill cross-revision relation values from the
@@ -2069,6 +2086,20 @@ cli:
       help: Lock the current profile by clearing the active profile pointer.
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
+      capabilities:
+        capability_help: Service capability to opt in or out of.
+        capability_label: capability
+        disabled: disabled
+        enabled: enabled
+        help: Opt this profile in or out of external services (cloud upload, LLM vision,
+          Google export).
+        no_active_profile: No active profile; select one with 'aeat config profile
+          use <name>' before setting a capability.
+        set_help: Opt the active profile in or out of one service capability.
+        show_help: Show the resolved posture of every service capability for the active
+          profile.
+        state_help: Whether to enable (on) or disable (off) the capability.
+        state_label: state
       censo:
         apply_help: Overwrite the profile with censo values reported by AEAT
         compare_help: Compare AEAT censo and this profile field by field
@@ -2666,13 +2697,14 @@ cli:
       group_filter_help: Show only rows in this group label.
       header: ACCOUNTING LEDGER TRANSACTIONS
       help: List ledger transactions in the active profile
+      hide_llm_rejected_help: Hide rows whose most recent LLM suggestion was rejected
+        (a reviewed-and-declined row drops out of the pending queue).
       limit_help: 'Maximum rows to show (default: all rows).'
       offset_help: 'Skip this many rows before listing (default: 0).'
       sort_by_help: Sort the listed rows by this field (date, amount, description,
         created_at, modified_at, ...).
       sort_order_help: 'Sort order: asc (ascending) or desc (descending).'
       ungrouped_label: (ungrouped)
-      hide_llm_rejected_help: 'Hide rows whose most recent LLM suggestion was rejected (a reviewed-and-declined row drops out of the pending queue).'
     merge:
       actor_help: Operator name recorded on the LEDGER_TRANSACTION_MERGED event
       child_id_help: One child id (or unambiguous prefix) to merge. Repeat for every
@@ -3955,6 +3987,7 @@ errors:
       100%.
     modelo_347_threshold: Modelo 347 operations above the reporting threshold require
       explicit declaration coverage.
+    modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
     modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
@@ -4516,6 +4549,15 @@ wizard:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
+    capabilities:
+      cloud-evidence-upload:
+        prompt: Allow uploading sensitive evidence to cloud LLM providers? (off by
+          default)
+      google-export:
+        prompt: Enable Google Sheets export?
+      llm-vision:
+        prompt: Enable on-host LLM vision for reading invoices?
+      title: Service capabilities
     certificate:
       path:
         prompt: Enter the path to your digital certificate (.p12, .pfx)
@@ -4561,6 +4603,8 @@ wizard:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
+      cloud-evidence-upload:
+        help: Allow uploading sensitive evidence to cloud LLM providers (off by default).
       country-of-fiscal-residence:
         help: ISO 3166-1 alpha-2 code of the country of fiscal residence (e.g. GB,
           DE, FR). Required when fiscal-residency is non_resident_irnr.
@@ -4582,6 +4626,8 @@ wizard:
       fiscal-residency:
         help: 'Fiscal residency category: resident_irpf (habitual resident in Spain)
           or non_resident_irnr (non-resident, IRNR taxation RDLeg 5/2004).'
+      google-export:
+        help: Enable Google Sheets export.
       has-employees:
         help: Has employees and pays salaries with retención
       incn-prior-12-months:
@@ -4614,6 +4660,8 @@ wizard:
         help: Whether the taxpayer is enrolled in the SII
       legal-entity-form:
         help: Recognised legal form when the entity type is a legal entity
+      llm-vision:
+        help: Enable on-host LLM vision for reading invoices.
       name:
         help: Display name shown in local reviews
       new-entity-first-two-profit-periods:

@@ -42,9 +42,10 @@ def test_transaction_repository_logs_bucket_fields(
         repo.save(repo.load())
 
     messages = [record.getMessage() for record in caplog.records]
+    # Per-row catalogue: the save log carries the bucket id and the diff counts
+    # (rewritten / deleted rows) rather than a single catalogue object_key.
     assert any(
-        "bucket_id=bucket-log" in message and "object_key=transaction-catalogue:bucket-log" in message
-        for message in messages
+        "bucket_id=bucket-log" in message and "rewritten=" in message and "deleted=" in message for message in messages
     )
 
 

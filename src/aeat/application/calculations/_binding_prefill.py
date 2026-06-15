@@ -39,6 +39,7 @@ from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ._errors import BindingPrefillTypeError
 from ._iva_compensation_history import IvaCompensationHistoryRepository
 from ._observations_repository import CalculationObservationRepository, _ObservationEnvelopePayload
+from ._revision_carry_gate import revision_carry_outcome
 
 
 def _selector_year_delta(value: object) -> int:
@@ -75,26 +76,21 @@ _MODELO_303_IVA_COMPENSATION_BINDING_ID: Final = "modelo-303-compensacion-pendie
 def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> tuple[bool, bool]:
     """Return ``(diverges, advisory)`` for a payload's revision stamp.
 
-    ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
-
-    - Missing stamp (legacy record) → ``(False, True)``: carry proceeds, advisory set.
-    - Indeterminate (source context fails to resolve) → ``(False, True)``: carry
-      proceeds, but the stamp could not be re-confirmed so the advisory MUST be set
-      rather than carrying silently clean.
-    - Divergent stamp → ``(True, False)``: carry refused (caller drops the observation).
-    - Matching stamp → ``(False, False)``: clean carry, no advisory.
+    Thin adapter over the single shared
+    :func:`~aeat.application.calculations._revision_carry_gate.revision_carry_outcome`
+    gate (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2): it
+    extracts the source context off the payload's observation and delegates the
+    ``(diverges, advisory)`` decision so the binding-prefill, cross-period
+    clean-state, and relation-prefill carry reads share one law-determined
+    re-confirmation rather than three parallel copies.
     """
-    if payload.stamped_revision_id is None:
-        return False, True
     obs = payload.observation
-    try:
-        snapshot = resources().modelos.authority.snapshot(obs.modelo, filing_year=obs.filing_year, period=obs.period)
-    except Exception:
-        # Indeterminate: the source context will not resolve, so the stamp cannot be
-        # re-confirmed. Surface the advisory rather than silently carrying a clean,
-        # unverifiable stamp.
-        return False, True
-    return payload.stamped_revision_id != snapshot.revision.id, False
+    return revision_carry_outcome(
+        payload.stamped_revision_id,
+        source_modelo=obs.modelo,
+        source_filing_year=obs.filing_year,
+        source_period=obs.period,
+    )
 
 
 def _revision_prefill_divergence(payload: _ObservationEnvelopePayload) -> bool:

@@ -48,6 +48,7 @@ from ._secure_object_integrity import (
 from ._secure_object_records import (
     DEFAULT_WRITE_PROVENANCE,
     SecureObjectDecryptabilityRow,
+    SecureObjectDeletion,
     SecureObjectListItem,
     SecureObjectMetadata,
     SecureObjectNamespaceIntegrity,
@@ -775,6 +776,81 @@ class SecureObjectRepository:
                     write_provenance=write.write_provenance,
                     source_event_id=write.source_event_id,
                     expected_revision_id=write.expected_revision_id,
+                )
+
+    def namespace_payload_hashes(self, namespace: str) -> dict[bytes, str | None]:
+        """Return ``{object_key_digest: payload_hash}`` for every row in ``namespace``.
+
+        A decryption-free scan of the ``object_key`` (HMAC digest) and
+        ``payload_hash`` columns, for diff-based writers that persist a
+        namespace as one row per logical entry: an entry whose freshly-serialised
+        ``payload_hash`` matches the stored value is unchanged and need not be
+        rewritten. The digest is the same value
+        :func:`secure_object_key_digest` produces for the entry's natural key,
+        so a caller compares ``secure_object_key_digest(key)`` against these
+        keys without decrypting anything.
+        """
+        self._check_session_freshness()
+        with session_scope(self._engine) as session:
+            rows = session.execute(
+                select(
+                    _orm.SecureObjectRow.object_key,
+                    _orm.SecureObjectRow.payload_hash,
+                ).where(_orm.SecureObjectRow.namespace == namespace),
+            ).all()
+        hashes: dict[bytes, str | None] = {}
+        for object_key, payload_hash in rows:
+            digest = object_key if isinstance(object_key, bytes) else bytes(object_key)
+            hashes[digest] = payload_hash
+        return hashes
+
+    def apply_batch(
+        self,
+        writes: tuple[SecureObjectWrite, ...],
+        deletions: tuple[SecureObjectDeletion, ...] = (),
+    ) -> None:
+        """Atomically upsert ``writes`` and remove ``deletions`` in one unit of work.
+
+        The single ``session_scope`` transaction commits every upsert and every
+        digest-addressed deletion together, so a diff-based per-row writer (e.g.
+        the transaction catalogue) keeps the all-or-nothing guarantee the
+        whole-blob ``save`` had — including when the same call must also commit
+        sibling-catalogue writes (bucket-event history, invoices) passed in
+        ``writes``. A crash mid-batch rolls the whole unit back.
+
+        Deletions are addressed by raw HMAC digest (see
+        :class:`SecureObjectDeletion`); the digest passes straight through the
+        ``HashedLookup`` column comparison without re-hashing.
+        """
+        if not writes and not deletions:
+            return
+        self._check_session_freshness()
+        for write in writes:
+            self._enforce_registered_write_policy(
+                namespace=write.namespace,
+                classification=write.classification,
+                schema_version=write.schema_version,
+            )
+        with session_scope(self._engine) as session:
+            for write in writes:
+                self._save_internal_in_session(
+                    session,
+                    namespace=write.namespace,
+                    key=write.object_key,
+                    classification=write.classification,
+                    schema_version=write.schema_version,
+                    written_at=write.written_at,
+                    payload=write.payload,
+                    write_provenance=write.write_provenance,
+                    source_event_id=write.source_event_id,
+                    expected_revision_id=write.expected_revision_id,
+                )
+            for removal in deletions:
+                session.execute(
+                    delete(_orm.SecureObjectRow).where(
+                        _orm.SecureObjectRow.namespace == removal.namespace,
+                        _orm.SecureObjectRow.object_key == removal.hashed_object_key,
+                    ),
                 )
 
     def save_with_raw_key(

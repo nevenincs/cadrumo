@@ -28,6 +28,8 @@ from ...domain.calculations.registry import (
     resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
     unsupported_ledger_iva_observations,
+    unsupported_ledger_renta_expense_observations,
+    unsupported_ledger_renta_income_observations,
 )
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoicePersistenceError
 from ...domain.renta import RentaDeductibleExpenseObservation
@@ -198,7 +200,7 @@ class LedgerIvaAggregationSourceResolver:
             )
             + tuple(
                 CalculationSourceDiagnostic(
-                    reason="source_issue",
+                    reason="unrouted_observation",
                     source_kind="ledger_iva_aggregation",
                     resolver_id=self.resolver_id,
                     message=(
@@ -268,6 +270,12 @@ class LedgerRentaExpenseAggregationSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
+        # Fail-closed advisory parity with the IVA screen: a non-zero declarable
+        # expense whose (modelo, period, target_casilla) matches no
+        # ledger_renta_expense_aggregation binding would otherwise be silently
+        # dropped (no-silent-under-declaration). Calculate still succeeds; the
+        # operator sees the unrouted expense instead of an under-declared form.
+        unrouted = unsupported_ledger_renta_expense_observations(context.revision, aggregation.observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -286,6 +294,22 @@ class LedgerRentaExpenseAggregationSourceResolver:
                     message=issue.detail,
                 )
                 for issue in aggregation.issues
+            )
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="unrouted_observation",
+                    source_kind="ledger_renta_expense_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        f"declarable renta expense observation "
+                        f"(modelo={str(observation.modelo)!r}, period={observation.period!r}, "
+                        f"target_casilla={observation.target_casilla!r}, "
+                        f"deductible_amount={observation.deductible_amount}) is not consumed by any "
+                        f"ledger_renta_expense_aggregation binding on revision {context.revision.id!r}; "
+                        "its deductible amount is not declared on this calculation"
+                    ),
+                )
+                for observation in unrouted
             ),
             provenance=tuple(
                 provenance
@@ -325,6 +349,10 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
+        # Fail-closed advisory parity with the IVA screen: a non-zero declarable
+        # income whose target_casilla matches no ledger_renta_income_aggregation
+        # binding would otherwise be silently dropped (no-silent-under-declaration).
+        unrouted = unsupported_ledger_renta_income_observations(context.revision, aggregation.observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -343,6 +371,20 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     message=issue.detail,
                 )
                 for issue in aggregation.issues
+            )
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="unrouted_observation",
+                    source_kind="ledger_renta_income_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        f"declarable renta income observation (target_casilla="
+                        f"{observation.target_casilla!r}, gross_amount={observation.gross_amount}) "
+                        f"is not consumed by any ledger_renta_income_aggregation binding on revision "
+                        f"{context.revision.id!r}; its income is not declared on this calculation"
+                    ),
+                )
+                for observation in unrouted
             ),
             provenance=tuple(
                 CalculationSourceProvenance(

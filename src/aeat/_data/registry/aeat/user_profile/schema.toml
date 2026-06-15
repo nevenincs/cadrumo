@@ -75,6 +75,33 @@ description = "Output language used by CLI rendering and notification copy."
 enum_values = ["es", "en", "ca", "hu"]
 
 [[sections]]
+key = "capabilities"
+title = "Service capabilities"
+sensitivity = "operational"
+effective_dated = false
+
+[[sections.fields]]
+key = "cloud_evidence_upload"
+type = "boolean"
+required = false
+sensitivity = "operational"
+description = "Whether this profile permits sending sensitive financial evidence (a text-layer invoice) to a cloud CLI provider for classification. Default off; gestor mode bars it absolutely regardless. Opt-in only narrows, never widens, the global safety floor."
+
+[[sections.fields]]
+key = "llm_vision"
+type = "boolean"
+required = false
+sensitivity = "operational"
+description = "Whether this profile may read scanned or image evidence on-host with the local vision model, so no byte leaves the machine. Default on; opting out disables the on-host vision read."
+
+[[sections.fields]]
+key = "google_export"
+type = "boolean"
+required = false
+sensitivity = "operational"
+description = "Whether this profile may export modelo workbooks to Google Sheets or Drive. Default on; opting out keeps exports offline-only."
+
+[[sections]]
 key = "contact"
 title = "Contact and fiscal address"
 sensitivity = "identity"

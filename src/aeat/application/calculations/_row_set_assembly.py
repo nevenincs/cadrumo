@@ -38,12 +38,14 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing._dates import _parse_iso8601_date
 from ...domain.calculations.registry import (
     AtributionMemberObservation,
+    BindingAggregationOp,
     Modelo720RowObservation,
     ModeloRevision,
     RefundOperationObservation,
     RegistryValidationError,
     RelatedPartyOperationObservation,
     WithholdingObservation,
+    binding_aggregation_op,
 )
 
 __all__ = [
@@ -173,7 +175,7 @@ def _row_field_lookup(revision: ModeloRevision) -> Mapping[str, str]:
     """Return ``binding_id → selector.row_field`` for every row-producer binding."""
     lookup: dict[str, str] = {}
     for binding in revision.bindings:
-        if binding.aggregation is None or binding.aggregation.op != "rows":
+        if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
             continue
         row_field = binding.selector.get("row_field")
         if isinstance(row_field, str) and row_field:

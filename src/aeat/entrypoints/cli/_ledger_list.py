@@ -198,7 +198,9 @@ def project_ledger_list(
     ``--group`` selection and *before* paging, with a deterministic final
     tie-break on the content-addressed ``transaction_id`` (D5). ``--by-group``
     still partitions rows by group label first; the sort orders within that
-    partition.
+    partition. With ``exclude_llm_rejected`` the projection drops every row whose
+    latest decision in the :class:`BucketEventHistoryRepository` is an LLM
+    rejection.
     """
     bucket_id = transaction_repository.bucket_id
     all_results = list_manual_transactions(

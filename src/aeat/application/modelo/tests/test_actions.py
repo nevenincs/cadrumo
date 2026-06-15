@@ -279,9 +279,7 @@ def test_art20_reduccion_advisory_fires_within_band_and_is_localised() -> None:
     the rnt_id, rnt_value, and reduccion_id tokens.
     """
     rnt = SimpleNamespace(id="0022", semantic_role="irpf_rendimiento_trabajo_rendimiento_neto")
-    reduccion = SimpleNamespace(
-        id="0023", semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales"
-    )
+    reduccion = SimpleNamespace(id="0023", semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales")
     revision = SimpleNamespace(casillas=[rnt, reduccion])
     casilla_values = {"0022": Decimal("12000"), "0023": Decimal("0")}
 
@@ -308,32 +306,15 @@ def test_art20_reduccion_advisory_silent_in_negative_cases() -> None:
     the reducción is already declared, RNT is zero, or the roles are absent.
     """
     rnt = SimpleNamespace(id="0022", semantic_role="irpf_rendimiento_trabajo_rendimiento_neto")
-    reduccion = SimpleNamespace(
-        id="0023", semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales"
-    )
+    reduccion = SimpleNamespace(id="0023", semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales")
     revision = SimpleNamespace(casillas=[rnt, reduccion])
 
     # Above the ceiling: the art. 20 reduction is legitimately zero — no advisory.
-    assert (
-        _art20_reduccion_advisory_finding(
-            revision, {"0022": Decimal("25000"), "0023": Decimal("0")}
-        )
-        is None
-    )
+    assert _art20_reduccion_advisory_finding(revision, {"0022": Decimal("25000"), "0023": Decimal("0")}) is None
     # Reduction already declared — nothing to surface.
-    assert (
-        _art20_reduccion_advisory_finding(
-            revision, {"0022": Decimal("12000"), "0023": Decimal("3500")}
-        )
-        is None
-    )
+    assert _art20_reduccion_advisory_finding(revision, {"0022": Decimal("12000"), "0023": Decimal("3500")}) is None
     # RNT zero — no eligible income.
-    assert (
-        _art20_reduccion_advisory_finding(
-            revision, {"0022": Decimal("0"), "0023": Decimal("0")}
-        )
-        is None
-    )
+    assert _art20_reduccion_advisory_finding(revision, {"0022": Decimal("0"), "0023": Decimal("0")}) is None
     # Roles absent — the advisory cannot resolve its casillas.
     assert _art20_reduccion_advisory_finding(SimpleNamespace(casillas=[]), {}) is None
 

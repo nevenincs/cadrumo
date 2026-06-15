@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import base64
 import shutil
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
@@ -287,6 +288,17 @@ def _resolve_evidence(
         images = rasterise_pdf_pages_to_base64_png(evidence_input.data)
     else:
         images = (base64.b64encode(evidence_input.data).decode("ascii"),)
+    # The on-host vision read is the only path that reaches here. Gate it on the
+    # profile's llm_vision capability — opting out disables scanned/image reading
+    # entirely (a typed refusal, never a silent skip).
+    from ...core import ServiceCapability
+    from ..user_profile import resolve_active_capability
+
+    if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
+        raise PurchaseInvoiceEvidenceInputError(
+            "on-host LLM vision reading is disabled for this profile; enable it to read scanned or image evidence",
+            suggestion="aeat config profile capabilities set llm_vision on",
+        )
     return _ResolvedEvidence(reference=reference, text=None, images=images)
 
 
@@ -298,6 +310,32 @@ _TEXT_PATH_NEEDS_PROVIDER = (
     "(--read-evidence reads a scanned or image invoice on-host with no provider, but this transaction has "
     "no readable image evidence to route there.)"
 )
+
+
+def _run_vision_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
+    """Run an on-host vision call, converting a missing/unreachable Ollama to a typed refusal.
+
+    The local adapter only guards HTTP *status* errors; a connection-refused or a
+    model-missing failure escaped every CLI ``except`` clause as a raw
+    ``httpx.ConnectError`` / ``LLMProviderError`` traceback. This converts both into
+    an ``LLMClassifierError`` (which the classify CLI already renders) carrying the
+    exact remediation from :func:`probe_ollama_vision`
+    (``dependency-provisioning`` ADR: probe -> typed refusal with the fix).
+    """
+    import httpx
+
+    from ...adapters.outbound.llm import LLMProviderError
+    from ...domain.transactions import LLMClassifierError
+
+    try:
+        return run()
+    except (httpx.HTTPError, LLMProviderError) as exc:
+        from ..provisioning import probe_ollama_vision
+
+        status = probe_ollama_vision(settings)
+        fix = status.remediation or "ensure the local Ollama vision model is reachable"
+        detail = status.detail if not status.available else str(exc)
+        raise LLMClassifierError(f"on-host vision reading failed: {detail}. Fix: {fix}") from exc
 
 
 def _classify_with_evidence(
@@ -321,10 +359,17 @@ def _classify_with_evidence(
     Raises:
         TransactionValidationError: When the text path is taken but no
             ``text_classifier`` was resolved (no ``--llm`` provider supplied).
+        LLMClassifierError: When the on-host Ollama vision model is unreachable or
+            the configured model is not pulled.
     """
     if evidence is not None and evidence.is_images:
         vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings, model=vision_model)
-        return vision.classify(transaction, evidence_images=evidence.images), vision.decided_by
+        images = evidence.images
+        response = _run_vision_or_refuse(
+            lambda: vision.classify(transaction, evidence_images=images),
+            settings=settings,
+        )
+        return response, vision.decided_by
     if text_classifier is None:
         raise TransactionValidationError(
             _TEXT_PATH_NEEDS_PROVIDER,
@@ -354,7 +399,12 @@ def _split_with_evidence(
     """
     if evidence is not None and evidence.is_images:
         vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings, model=vision_model)
-        return vision.propose_split(transaction, evidence_images=evidence.images), vision.decided_by
+        images = evidence.images
+        response = _run_vision_or_refuse(
+            lambda: vision.propose_split(transaction, evidence_images=images),
+            settings=settings,
+        )
+        return response, vision.decided_by
     if proposer is None:
         raise TransactionValidationError(
             _TEXT_PATH_NEEDS_PROVIDER,

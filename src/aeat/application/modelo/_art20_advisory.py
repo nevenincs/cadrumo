@@ -50,10 +50,7 @@ def _art20_reduccion_advisory_finding(
     rnt_value = casilla_values.get(rnt_id, Decimal(0))
     reduccion_value = casilla_values.get(reduccion_id, Decimal(0))
 
-    if (
-        Decimal(0) < rnt_value < MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR
-        and reduccion_value == Decimal(0)
-    ):
+    if Decimal(0) < rnt_value < MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR and reduccion_value == Decimal(0):
         return ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.ADVISORY,
             severity=ModeloVerificationFindingSeverity.WARNING,

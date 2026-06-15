@@ -24,7 +24,7 @@ from decimal import Decimal
 import pytest
 from pydantic import BaseModel
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .. import (
     DataBindingDefinition,
@@ -32,6 +32,7 @@ from .. import (
     build_snapshot,
     load_registry_tree,
     resolve_ledger_renta_income_aggregation_binding_values,
+    unsupported_ledger_renta_income_observations,
     validate_ledger_renta_income_aggregation_binding_definition,
 )
 
@@ -117,7 +118,7 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
 def test_income_binding_validator_rejects_unknown_fact() -> None:
     binding = DataBindingDefinition(
         id="m130-income-bad-fact",
-        source="ledger_renta_income_aggregation",
+        source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
         selector={"modelo": "130", "target_casilla": "01", "fact": "net_income_sum"},
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=("rd-439-2007:art-110",),
@@ -125,3 +126,51 @@ def test_income_binding_validator_rejects_unknown_fact() -> None:
     )
     with pytest.raises(RegistryValidationError):
         validate_ledger_renta_income_aggregation_binding_definition(binding)
+
+
+def test_unsupported_renta_income_flags_observation_routed_to_no_binding() -> None:
+    """A non-zero income whose target_casilla matches no binding is surfaced.
+
+    Every committed M130 income binding selects casilla 01; an observation
+    routed to casilla 03 reaches no binding and would silently vanish, so the
+    fail-closed screen MUST report it (no-silent-under-declaration).
+    """
+    revision = _modelo_130_snapshot().revision
+
+    routed = _IncomeObservation(
+        transaction_id="inv-routed",
+        target_casilla="01",
+        gross_amount=Decimal("1000.00"),
+        taxable_base_amount=None,
+        filing_date=date(2026, 2, 10),
+    )
+    unrouted = _IncomeObservation(
+        transaction_id="inv-unrouted",
+        target_casilla="03",
+        gross_amount=Decimal("500.00"),
+        taxable_base_amount=None,
+        filing_date=date(2026, 3, 5),
+    )
+
+    result = unsupported_ledger_renta_income_observations(revision, (routed, unrouted))
+    assert result == (unrouted,)
+
+
+def test_unsupported_renta_income_does_not_flag_zero_income() -> None:
+    """A zero-income observation routed to no binding must NOT false-fire.
+
+    A zero declarable income contributes nothing whether or not it is routed, so
+    the false-fire guard excludes it even when its target_casilla is unbound.
+    """
+    revision = _modelo_130_snapshot().revision
+
+    zero_unrouted = _IncomeObservation(
+        transaction_id="inv-zero",
+        target_casilla="03",
+        gross_amount=Decimal("0.00"),
+        taxable_base_amount=None,
+        filing_date=date(2026, 3, 5),
+    )
+
+    result = unsupported_ledger_renta_income_observations(revision, (zero_unrouted,))
+    assert result == ()

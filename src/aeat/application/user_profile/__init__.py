@@ -47,6 +47,12 @@ if TYPE_CHECKING:
         deserialize_profile_bundle,
         serialize_profile_bundle,
     )
+    from ._capabilities import (
+        CapabilityDecision,
+        CapabilitySource,
+        resolve_active_capability,
+        resolve_capability,
+    )
     from ._censo_errors import (
         CensoApplyConflictError,
         CensoFieldValidationError,
@@ -289,6 +295,15 @@ def __getattr__(name: str):
         from ._profile_repository import ProfileRepository
 
         return ProfileRepository
+    if name in (
+        "CapabilityDecision",
+        "CapabilitySource",
+        "resolve_active_capability",
+        "resolve_capability",
+    ):
+        from . import _capabilities
+
+        return getattr(_capabilities, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -298,6 +313,8 @@ __all__ = [
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
+    "CapabilityDecision",
+    "CapabilitySource",
     "CensoApplyConflictError",
     "CensoApplyResult",
     "CensoComparisonStatus",
@@ -364,6 +381,8 @@ __all__ = [
     "remove_active_profile",
     "remove_profile_bucket_directory",
     "rename_profile",
+    "resolve_active_capability",
+    "resolve_capability",
     "select_profile",
     "select_profile_with_lifecycle_span",
     "serialize_profile_bundle",

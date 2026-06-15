@@ -650,6 +650,7 @@ application:
         casilla-azonosítók hiányoznak a javított térképből.'
       amendment_verification_refused_no_snapshot: A nyilvántartásban nincs pillanatkép
         a kért modellhez, évhez és időszakhoz.
+      calculate_binding_unknown: '--binding %{key} egyik binding azonositonak sem felel meg ebben a revizioban. Elfogadott binding azonositok: %{accepted}. Hasznalja a `aeat app modelo bindings list <MODELO>` parancsot az ervenyes azonositok listazasahoz.'
       calculate_casilla_ambiguous: 'A --casilla %{key} több casillához illeszkedik
         ebben a revízióban: %{candidates}. A pontosításhoz adja meg a PREFIX:NNNNN
         alakú azonosítót.'
@@ -789,8 +790,16 @@ application:
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
     findings:
-      art20_reduccion_next_action: 'Ellenorizze, hogy a nem munkabol szarmazo egyeb jovedelme a mentes jovedelem nelkul az adoevben nem haladja-e meg a 6500 EUR-t; ha nem, akkor a 20. cikk LIRPF szerinti munkajovedelem-csokkentest tuntesse fel az altalanos csokkentesi rovatban (ley-35-2006:art-20).'
-      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: a(z) %{rnt_id} rovat (munkabol szarmazo netto jovedelem) = %{rnt_value} a 20. cikk szerinti csokkentesi savon belul van (19747,50 alatt), de a(z) %{reduccion_id} rovat (altalanos munkajovedelem-csokkentes) nulla. Ha a nem munkabol szarmazo egyeb jovedelme a mentes jovedelem nelkul nem haladja meg a 6500-at, akkor a 20. cikk LIRPF szerinti munkajovedelem-csokkentes alkalmazhato.'
+      art20_reduccion_next_action: Ellenorizze, hogy a nem munkabol szarmazo egyeb
+        jovedelme a mentes jovedelem nelkul az adoevben nem haladja-e meg a 6500 EUR-t;
+        ha nem, akkor a 20. cikk LIRPF szerinti munkajovedelem-csokkentest tuntesse
+        fel az altalanos csokkentesi rovatban (ley-35-2006:art-20).
+      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: a(z) %{rnt_id} rovat (munkabol
+        szarmazo netto jovedelem) = %{rnt_value} a 20. cikk szerinti csokkentesi savon
+        belul van (19747,50 alatt), de a(z) %{reduccion_id} rovat (altalanos munkajovedelem-csokkentes)
+        nulla. Ha a nem munkabol szarmazo egyeb jovedelme a mentes jovedelem nelkul
+        nem haladja meg a 6500-at, akkor a 20. cikk LIRPF szerinti munkajovedelem-csokkentes
+        alkalmazhato.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -1981,6 +1990,13 @@ cli:
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtassa:
         `aeat config auth --help` az érvényes azonosítókhoz.'
     bucket: null
+    check:
+      available: elérhető
+      help: Ellenőrzi a külső függőségek elérhetőségét és az aktív profil szolgáltatás-képességeit,
+        minden hiányhoz megadva a javítást.
+      issue_label: probléma
+      missing: hiányzik
+      profile_label: profil
     custody:
       confirm_new_passphrase_help: Ismetelje meg az uj titkos tar passphrase erteket.
       confirm_new_passphrase_prompt: 'Uj AEAT titkos tar passphrase megerositese: '
@@ -2067,6 +2083,9 @@ cli:
       sync:
         calc:
           export:
+            capability_disabled: A Google-exportálás le van tiltva ehhez a profilhoz;
+              engedélyezd az 'aeat config profile capabilities set google_export on'
+              paranccsal.
             modelo_help: Az exportálandó nyomtatvány azonosítója (pl. 130, 303, 100).
             period_help: Benyújtási időszak kódja (pl. 1T, 2T, 0A).
             prefill_relations_help: Keresztrevízió-kapcsolati értékek előtöltése a
@@ -2142,6 +2161,20 @@ cli:
       help: Az aktiv profil zarolasa az aktivprofil-mutato torlesevel.
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
+      capabilities:
+        capability_help: A be- vagy kikapcsolandó szolgáltatás.
+        capability_label: képesség
+        disabled: kikapcsolva
+        enabled: bekapcsolva
+        help: Kapcsolja be vagy ki ennél a profilnál a külső szolgáltatásokat (felhőfeltöltés,
+          LLM-látás, Google-exportálás).
+        no_active_profile: Nincs aktív profil; válasszon egyet az 'aeat config profile
+          use <név>' paranccsal a képesség beállítása előtt.
+        set_help: Be- vagy kikapcsol egy szolgáltatás-képességet az aktív profilhoz.
+        show_help: Megjeleníti az aktív profil minden szolgáltatás-képességének feloldott
+          állapotát.
+        state_help: A képesség engedélyezése (on) vagy letiltása (off).
+        state_label: állapot
       censo:
         apply_help: Az AEAT által jelentett nyilvántartási értékekkel felülírja a
           profilt.
@@ -2779,13 +2812,14 @@ cli:
       group_filter_help: Csak az adott csoportcimkehez tartozo sorok megjelenitese.
       header: KÖNYVELÉSI FŐKÖNYVI TRANZAKCIÓK
       help: Főkönyvi tranzakciók listázása az aktív profilban.
+      hide_llm_rejected_help: Elrejti azokat a sorokat, amelyek legutóbbi modelljavaslatát
+        elutasították (a felülvizsgált és elutasított sor kikerül a függő sorból).
       limit_help: 'Megjelenitendo sorok maximalis szama (alapertelmezett: az osszes).'
       offset_help: 'Ennyi sor kihagyasa a listazas elott (alapertelmezett: 0).'
       sort_by_help: A listázott sorok rendezése e mező szerint (date, amount, description,
         created_at, modified_at, ...).
       sort_order_help: 'Rendezési sorrend: asc (növekvő) vagy desc (csökkenő).'
       ungrouped_label: (nincs csoport)
-      hide_llm_rejected_help: 'Elrejti azokat a sorokat, amelyek legutóbbi modelljavaslatát elutasították (a felülvizsgált és elutasított sor kikerül a függő sorból).'
     merge:
       actor_help: Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_MERGED eseményen
         rögzítenek.
@@ -4082,6 +4116,7 @@ errors:
       kell kitenniük.
     modelo_347_threshold: A Modelo 347 jelentési küszöb feletti ügyleteihez kifejezett
       bevallási lefedettség szükséges.
+    modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
     modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
@@ -4664,6 +4699,15 @@ wizard:
     question_prefix: '%{q_n}. kérdés / %{q_total}'
     section_header: '%{section_n}. lépés / %{section_total}: %{title}'
   setup:
+    capabilities:
+      cloud-evidence-upload:
+        prompt: Engedélyezi az érzékeny bizonylatok feltöltését felhő LLM-szolgáltatókhoz?
+          (alapból kikapcsolva)
+      google-export:
+        prompt: Engedélyezi a Google Sheets exportálást?
+      llm-vision:
+        prompt: Engedélyezi a helyi LLM-látást a számlák beolvasásához?
+      title: Szolgáltatási képességek
     certificate:
       path:
         prompt: Adja meg a digitális tanúsítvány elérési útját (.p12, .pfx)
@@ -4712,6 +4756,9 @@ wizard:
         help: Adóügyi lakcím irányítószáma
       bienes-extranjero-above-threshold:
         help: Külföldi vagyon meghaladja a jogszabályi küszöbértéket
+      cloud-evidence-upload:
+        help: Érzékeny bizonylatok feltöltésének engedélyezése felhő LLM-szolgáltatókhoz
+          (alapból kikapcsolva).
       country-of-fiscal-residence:
         help: Az adóügyi lakóhely szerinti ország ISO 3166-1 alfa-2 kódja (pl. GB,
           DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.
@@ -4734,6 +4781,8 @@ wizard:
         help: 'Adóügyi illetőségi kategória: resident_irpf (Spanyolországban szokásos
           lakóhellyel rendelkező) vagy non_resident_irnr (nem rezidens, IRNR szerinti
           adózás, RDLeg 5/2004).'
+      google-export:
+        help: Google Sheets exportálás engedélyezése.
       has-employees:
         help: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
       incn-prior-12-months:
@@ -4769,6 +4818,8 @@ wizard:
         help: Az adózó be van-e jegyezve az SII-be
       legal-entity-form:
         help: Elismert jogi forma, ha az entitástípus jogi személy
+      llm-vision:
+        help: Helyi LLM-látás engedélyezése a számlák beolvasásához.
       name:
         help: A helyi áttekintésekben megjelenő megjelenítési név
       new-entity-first-two-profit-periods:

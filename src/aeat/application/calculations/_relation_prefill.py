@@ -53,6 +53,7 @@ from ..aggregation._source_mesh import (
     storage_degradation_resolution,
 )
 from ._observations_repository import CalculationObservationRepository
+from ._revision_carry_gate import revision_carry_outcome
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
@@ -86,7 +87,21 @@ def _gather_observations_for_snapshot(
             )
             if payload is None:
                 continue
+            # R2 carry gate (shared with binding-prefill and cross-period
+            # clean-state): re-confirm the carried observation's revision stamp
+            # against the law-determined revision. A divergent stamp means the
+            # prior was filed under a revision that is no longer the law-determined
+            # revision for its source context; drop it from the fold rather than
+            # silently injecting a stale-revision value into the relation.
             obs = payload.observation
+            diverges, _advisory = revision_carry_outcome(
+                payload.stamped_revision_id,
+                source_modelo=obs.modelo,
+                source_filing_year=obs.filing_year,
+                source_period=obs.period,
+            )
+            if diverges:
+                continue
             key = (obs.modelo, obs.filing_year, obs.period)
             needed.setdefault(key, obs)
     return tuple(needed.values())
@@ -363,6 +378,24 @@ class RelationPrefillSourceResolver:
             for item in relation_values.values
             if item.value is None and item.relation in formula_relation_ids
         )
+        # Narrow silent gap (no-silent-under-declaration): a declared relation
+        # that resolves to no value, is referenced by no formula, AND whose
+        # ``target_binding`` is NOT a declared binding on the revision produces
+        # neither a value, nor a materialised binding slot, nor a diagnostic — its
+        # absence reaches nothing observable. Surface a non-blocking advisory for
+        # exactly that orphaned case. A non-formula relation whose target_binding
+        # IS a declared binding still materialises an (absent/zero) slot the engine
+        # threads, which is the intended cold-start behaviour for the cross-modelo
+        # carries (M200/M202/M100), so it is deliberately NOT flagged here.
+        declared_binding_ids = frozenset(binding.id for binding in snapshot.revision.bindings)
+        relation_target_binding = {relation.id: relation.target_binding for relation in snapshot.revision.relations}
+        unresolved_non_formula_relation_ids = frozenset(
+            item.relation
+            for item in relation_values.values
+            if item.value is None
+            and item.relation not in formula_relation_ids
+            and relation_target_binding.get(item.relation) not in declared_binding_ids
+        )
         resolved_relation_values = {item.relation: item.value for item in resolved if item.value is not None}
         # Materialise the resolved relation values into their declared
         # ``target_binding`` slots HERE, inside the resolver, so the merged
@@ -384,6 +417,11 @@ class RelationPrefillSourceResolver:
             binding_values=binding_values,
             diagnostics=_unresolved_relation_diagnostics(
                 unresolved_relation_ids=unresolved_relation_ids,
+                requirements_by_relation=requirements_by_relation,
+                resolver_id=self.resolver_id,
+            )
+            + _unresolved_relation_diagnostics(
+                unresolved_relation_ids=unresolved_non_formula_relation_ids,
                 requirements_by_relation=requirements_by_relation,
                 resolver_id=self.resolver_id,
             ),

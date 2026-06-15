@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
+from types import MappingProxyType
 from typing import Final, Literal
 
 from pydantic import BaseModel, field_validator
@@ -152,6 +154,22 @@ class RowSetGroupingKind(StrEnum):
     Placed in :mod:`aeat.core` (cross-layer home) because both the application
     assembly layer and the domain registry schema reference these values, and
     domain → application imports are forbidden under the hexagonal contract.
+
+    This is the **row-assembly grouping axis** consumed in the application layer
+    (`_row_set_assembly.py`), a separate concept from the binding ``source``
+    token enumerated by :class:`BindingSourceKind`. For the three detail-record
+    families whose grouping member differs from the binding source token, the
+    correspondence is intentional and explicit; see
+    :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE`:
+
+    - ``BindingSourceKind.WITHHOLDING`` (``"withholding"``) ↔ ``WITHHOLDING``
+    - ``BindingSourceKind.FOREIGN_ASSET`` (``"foreign_asset"``) ↔ ``FOREIGN_ASSET``
+    - ``BindingSourceKind.RELATED_PARTY_OPERATION`` (``"related_party_operation"``)
+      ↔ ``RELATED_PARTY`` (``"related_party"``)
+    - ``BindingSourceKind.ATRIBUCION_MEMBER`` (``"atribucion_member"``)
+      ↔ ``ATRIBUCION`` (``"atribucion"``)
+    - ``BindingSourceKind.REFUND_OPERATION`` (``"refund_operation"``)
+      ↔ ``REFUND`` (``"refund"``)
     """
 
     WITHHOLDING = "withholding"
@@ -159,6 +177,105 @@ class RowSetGroupingKind(StrEnum):
     FOREIGN_ASSET = "foreign_asset"
     ATRIBUCION = "atribucion"
     REFUND = "refund"
+
+
+class BindingSourceKind(StrEnum):
+    """The single canonical closed set of registry binding ``source`` tokens.
+
+    Every :class:`~aeat.domain.calculations.registry.DataBindingDefinition`
+    declares exactly one ``source`` drawn from this enum. The members below are
+    the complete set of source tokens declared across the registry authoring
+    tree; the per-family frozensets (invoice, ledger, counterpart) are
+    **derived** from this enum rather than hand-maintained, so a new source
+    token is added in exactly one place.
+
+    BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the source
+    token that was previously a bare string (or an
+    :class:`AggregationSourceKind` / :class:`RowSetGroupingKind` member) in the
+    ``DataBindingDefinition.source`` Literal. Those tokens live in registry TOML
+    and may be persisted; a :class:`~enum.StrEnum` serialises to its value, so
+    folding the mixed Literal onto this enum changes the static type without
+    changing any stored or compared string (the modelo-enum-hardening
+    precedent). Do NOT rename a stored token.
+
+    The four invoice/counterpart members reuse the :class:`AggregationSourceKind`
+    values and the two grouping members reuse :class:`RowSetGroupingKind` values
+    so the cross-layer aggregation taxonomy stays consistent; see
+    :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE` for the detail-record
+    source-token ↔ grouping-axis mapping.
+    """
+
+    # Profile / cross-filing / relation / manual scalar sources.
+    PROFILE = "profile"
+    PREVIOUS_FILING = "previous_filing"
+    RELATION_PREFILL = "relation_prefill"
+    MANUAL_INPUT = "manual_input"
+    # Ledger-aggregation sources (all four ledger kinds).
+    LEDGER_OSS_AGGREGATION = "ledger_oss_aggregation"
+    LEDGER_IVA_AGGREGATION = "ledger_iva_aggregation"
+    LEDGER_RENTA_EXPENSE_AGGREGATION = "ledger_renta_expense_aggregation"
+    LEDGER_RENTA_INCOME_AGGREGATION = "ledger_renta_income_aggregation"
+    # Invoice / counterpart aggregation sources (value-aligned with
+    # AggregationSourceKind).
+    PAYABLE_INVOICE = AggregationSourceKind.PAYABLE_INVOICE.value
+    COLLECTIBLE_INVOICE = AggregationSourceKind.COLLECTIBLE_INVOICE.value
+    LEDGER_TRANSACTION = AggregationSourceKind.LEDGER_TRANSACTION.value
+    PURCHASE_INVOICE_EVIDENCE = AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE.value
+    # Detail-record families. WITHHOLDING / FOREIGN_ASSET reuse the
+    # RowSetGroupingKind value; the other three carry their distinct
+    # source-token value (see ROW_SET_GROUPING_FOR_BINDING_SOURCE).
+    WITHHOLDING = RowSetGroupingKind.WITHHOLDING.value
+    FOREIGN_ASSET = RowSetGroupingKind.FOREIGN_ASSET.value
+    RELATED_PARTY_OPERATION = "related_party_operation"
+    ATRIBUCION_MEMBER = "atribucion_member"
+    REFUND_OPERATION = "refund_operation"
+
+
+ROW_SET_GROUPING_FOR_BINDING_SOURCE: Final[Mapping[BindingSourceKind, RowSetGroupingKind]] = MappingProxyType(
+    {
+        BindingSourceKind.WITHHOLDING: RowSetGroupingKind.WITHHOLDING,
+        BindingSourceKind.FOREIGN_ASSET: RowSetGroupingKind.FOREIGN_ASSET,
+        BindingSourceKind.RELATED_PARTY_OPERATION: RowSetGroupingKind.RELATED_PARTY,
+        BindingSourceKind.ATRIBUCION_MEMBER: RowSetGroupingKind.ATRIBUCION,
+        BindingSourceKind.REFUND_OPERATION: RowSetGroupingKind.REFUND,
+    },
+)
+"""Explicit detail-record binding-source ↔ row-assembly grouping correspondence.
+
+The binding ``source`` token (e.g. ``"related_party_operation"``) and the
+row-assembly :class:`RowSetGroupingKind` value (e.g. ``"related_party"``) are
+distinct strings for the three families whose source token carries the
+``_operation`` / ``_member`` suffix; this mapping makes the relationship
+explicit so a reader is not misled into assuming the two axes share a value.
+"""
+
+
+INVOICE_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
+    {
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    },
+)
+"""Invoice-shaped binding source kinds, derived from :class:`BindingSourceKind`."""
+
+
+LEDGER_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
+    {
+        BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+    },
+)
+"""Ledger-aggregation binding source kinds (all four), derived from the enum.
+
+Every binding whose ``source`` is a member reads its values from the
+bucket-scoped ledger (transaction-classified IVA / OSS aggregation or Renta
+first-slice income/expense aggregation). Cross-domain consumers route through
+this frozenset so the registry stays the single source of truth for ledger
+readiness.
+"""
 
 
 class RetencionScheme(StrEnum):

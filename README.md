@@ -35,16 +35,28 @@ You need Python and the uv package manager:
 - Python 3.13 or newer
 - [uv](https://docs.astral.sh/uv/)
 
-Clone the repository, install it, then confirm the command line responds:
+Clone the repository, bootstrap it, then confirm the command line responds:
 
 ```bash
 git clone https://github.com/wgergely/aeat
 cd aeat
-uv sync
+just bootstrap
 aeat --version
 ```
 
-The version command prints a single line, such as `aeat 0.1.0`.
+`just bootstrap` installs the dependencies, provisions `env/.env`, and runs the
+workstation check. The version command prints a single line, such as `aeat 0.1.0`.
+
+Check the optional external services (on-host LLM vision via Ollama, the cloud
+provider CLIs, the Playwright browser) any time, with the exact fix for each gap:
+
+```bash
+just doctor          # or: aeat config check
+just provision       # install the Playwright browser binary
+```
+
+Each profile opts in or out of these services independently — see
+`aeat config profile capabilities show`.
 
 ## The command line
 

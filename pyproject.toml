@@ -88,7 +88,6 @@ dependencies = [
   # localise AEAT timestamps to Europe/Madrid).
   "tzdata>=2026.2 ; sys_platform == 'win32'",
   "xlrd>=2.0.1,<3",
-  "torch>=2.4",
 ]
 
 [project.scripts]
@@ -144,6 +143,12 @@ managed-torch-direct-dependency = true
 dev = [
   # Dependency declaration drift: missing, unused, transitive, and misplaced deps.
   "deptry>=0.24",
+  # torch is the vaultspec-rag embedding backend (dev-only semantic search); no
+  # `src/aeat/` runtime path imports it. It lives here, not in [project.dependencies],
+  # so production installs stay lean — a PEP 735 group is a valid direct-dep location
+  # for the `[tool.uv.sources]` cu130 pin per vaultspec-rag's torch_config, and
+  # `just install` installs the dev group so contributors still get GPU torch.
+  "torch>=2.4",
   # Import-linter for layered-architecture boundary enforcement.
   # Contract definition lives in `.importlinter` at repo root; activated by
   # the architecture boundary checks.
@@ -736,6 +741,6 @@ ignore_decorators = [
 "PyYAML" = ["yaml"]
 "pyyaml" = ["yaml"]
 [tool.deptry.per_rule_ignores]
-DEP002 = ["formulas", "python-dotenv", "rich", "torch", "tzdata"]
+DEP002 = ["formulas", "python-dotenv", "rich", "tzdata"]
 DEP003 = ["click", "pydantic_core", "yaml"]
 DEP004 = ["pytest", "reportlab"]

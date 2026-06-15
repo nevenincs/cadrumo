@@ -35,6 +35,7 @@ _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
     "src/aeat/adapters/persistence/storage/envelope/tests/test_secure_bound_repository_contract.py",
     "src/aeat/adapters/persistence/storage/envelope/_repository_test_suite.py",
     "src/aeat/adapters/persistence/storage/master_key/tests/test_adverse_sessions.py",
+    "src/aeat/adapters/persistence/storage/sql/tests/test_apply_batch.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_archive_bundle_roundtrip.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_constraints.py",
     "src/aeat/adapters/persistence/storage/sql/tests/test_engine.py",

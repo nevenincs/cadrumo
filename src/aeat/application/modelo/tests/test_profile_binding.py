@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
@@ -207,7 +207,7 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> Non
 def _snapshot_with_decimal_profile_binding(snapshot: RegistrySnapshot) -> RegistrySnapshot:
     binding = DataBindingDefinition(
         id=_SYNTHETIC_DECIMAL_PROFILE_BINDING,
-        source="profile",
+        source=BindingSourceKind.PROFILE,
         selector={"profile_key": "usage_ratios.business_ratio"},
         legal_refs=snapshot.revision.legal_refs,
         source_refs=snapshot.revision.source_refs,
@@ -305,7 +305,7 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
     """
     binding = DataBindingDefinition(
         id=_SYNTHETIC_BOOL_PROFILE_BINDING,
-        source="profile",
+        source=BindingSourceKind.PROFILE,
         selector={"profile_key": "entity.new_entity_override"},
         legal_refs=snapshot.revision.legal_refs,
         source_refs=snapshot.revision.source_refs,

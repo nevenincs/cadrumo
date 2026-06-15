@@ -18,7 +18,6 @@ from typing import Final, NamedTuple, Protocol, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core import Period
-from ...core.resources import resources as _resources
 from ...domain.calculations.registry import (
     RegistryModeloObservation,
     RegistryModeloObservationRequirement,
@@ -42,6 +41,7 @@ from ...domain.modelos import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ._observations_repository import CalculationObservationRepository
+from ._revision_carry_gate import revision_carry_outcome
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 _OFFICIAL_SOURCE_KINDS: Final = frozenset(
@@ -711,33 +711,24 @@ def _revision_carry_check(
 ) -> tuple[list[CrossPeriodCleanStateBlocker], bool]:
     """Return (blockers, unstamped_advisory) for a carry-read revision check.
 
-    ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2:
-
-    - Divergent stamp → [REGISTRY_REVISION_DIVERGENCE] blocker, False advisory.
-    - Missing stamp (legacy record) → [] blockers, True advisory (carry proceeds loudly).
-    - Matching stamp → [] blockers, False advisory.
-    - Indeterminate (source context fails to resolve) → [] blockers, True advisory.
-      The carry proceeds but the operator MUST be told the stamp could not be
-      re-confirmed against the law-determined revision; a silent clean carry on
-      an unverifiable stamp would defeat the gate.
+    Thin adapter over the single shared
+    :func:`~aeat.application.calculations._revision_carry_gate.revision_carry_outcome`
+    gate (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2): it maps
+    the shared ``(diverges, advisory)`` decision onto this site's blocker shape —
+    a divergent stamp becomes a ``REGISTRY_REVISION_DIVERGENCE`` blocker, an
+    absent/unverifiable stamp a non-blocking advisory — so the cross-period
+    clean-state, binding-prefill, and relation-prefill carry reads share one
+    law-determined re-confirmation.
     """
-    if stamped_revision_id is None:
-        # Legacy record: no stamp — carry proceeds, but surface a non-blocking advisory.
-        return [], True
-    try:
-        snapshot = _resources().modelos.authority.snapshot(
-            source_modelo,
-            filing_year=source_filing_year,
-            period=source_period.registry_token,
-        )
-        law_determined_id = snapshot.revision.id
-    except Exception:
-        # Indeterminate: the source context will not resolve, so the stamp cannot be
-        # re-confirmed. Surface the non-blocking advisory rather than carrying silently.
-        return [], True
-    if stamped_revision_id != law_determined_id:
+    diverges, advisory = revision_carry_outcome(
+        stamped_revision_id,
+        source_modelo=source_modelo,
+        source_filing_year=source_filing_year,
+        source_period=source_period.registry_token,
+    )
+    if diverges:
         return [CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE], False
-    return [], False
+    return [], advisory
 
 
 def _aeat_register_provenance_blockers(

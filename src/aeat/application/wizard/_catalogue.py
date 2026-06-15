@@ -839,6 +839,22 @@ _NOTES_SECTION = WizardSection(
 )
 
 
+_CAPABILITIES_SECTION = WizardSection(
+    id="capabilities",
+    title=tr("wizard.setup.capabilities.title"),
+    questions=(
+        _confirm(
+            "cloud-evidence-upload",
+            "capabilities.cloud_evidence_upload",
+            suffix="capabilities",
+            default="false",
+        ),
+        _confirm("llm-vision", "capabilities.llm_vision", suffix="capabilities", default="true"),
+        _confirm("google-export", "capabilities.google_export", suffix="capabilities", default="true"),
+    ),
+)
+
+
 SETUP_FLOW = WizardFlow(
     id="setup",
     title=tr("wizard.setup.title"),
@@ -853,6 +869,7 @@ SETUP_FLOW = WizardFlow(
         _ENROLLMENT_SECTION,
         _OBLIGATIONS_SECTION,
         _RESIDENCE_SECTION,
+        _CAPABILITIES_SECTION,
         _NOTES_SECTION,
     ),
     answers_model=SetupAnswers,

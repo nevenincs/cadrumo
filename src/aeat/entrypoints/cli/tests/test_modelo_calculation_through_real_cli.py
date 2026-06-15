@@ -22,6 +22,7 @@ source-mesh and registry-level test suites.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
@@ -489,3 +490,115 @@ def test_modelo_100_calculate_surface_is_reachable(
         ],
     )  # fmt: skip
     assert "Traceback" not in result.output
+
+
+# ---------------------------------------------------------------------------
+# Typed ``--binding`` coercion (bindings-interface-hardening, cluster D)
+# ---------------------------------------------------------------------------
+#
+# The pre-hardening classification was a ``try Decimal/except`` heuristic: a
+# malformed amount for a numeric binding silently fell through to the enum
+# channel, so a typo'd figure was carried as an enum string and produced a wrong
+# (or blank) calculation with no operator signal. The hardened path routes by
+# the binding's *declared* engine channel: a decimal-channel binding's override
+# MUST parse as a Decimal, so a malformed amount REFUSES instead of silently
+# reclassifying. These tests exercise the real CLI against the real registry.
+
+
+def test_modelo_130_malformed_numeric_binding_refuses_not_reclassified(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """A malformed amount for a numeric ``--binding`` REFUSES.
+
+    ``irpf.previous_year_economic_activity_net_income`` is a decimal-channel
+    Modelo 130 binding (the oracle test supplies it as ``13000``). Supplying
+    ``12abc`` must refuse with a decimal-shape error naming the binding —
+    never silently reclassify it as an enum string. The refusal is the
+    no-silent-under-declaration contract: a typo'd figure must surface, not
+    vanish into the enum channel.
+    """
+
+    _seed_natural_person_profile(runtime_profile)
+    work_unit_id = _create_work_unit(
+        modelo="130",
+        year="2026",
+        period="1T",
+        revision="2019-y-siguientes",
+    )
+
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            "--casilla", "02=4000.00",
+            "--binding", "irpf.previous_year_economic_activity_net_income=12abc",
+        ],
+    )  # fmt: skip
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    envelope = json.loads(result.output)
+    assert envelope["status"] == "error", envelope
+    error = envelope["error"]
+    # The refusal is the decimal-shape error surfaced at the CLI boundary,
+    # not a missing-binding nor a silent enum reclassification: its message
+    # names the offending binding, the ``--binding`` flag, and the bad value.
+    assert error["category"] == "REFUSED", error
+    message = error["message"]
+    assert "--binding" in message
+    assert "irpf.previous_year_economic_activity_net_income" in message
+    assert "12abc" in message
+    assert "is not a decimal" in message
+
+
+def test_modelo_200_enum_binding_accepts_non_numeric_value(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """An enum-channel ``--binding`` carries its non-numeric value verbatim.
+
+    ``modelo-200-2024-profile-legal-entity-form`` is consumed by a dispatch op
+    as a string enum key, so its ``--binding`` override is a string (``sl``).
+    The hardened router classifies it by the declared enum channel (not by
+    parse failure), so a non-numeric enum value is accepted and the calculate
+    succeeds — proving the enum half of the channel split. This is the
+    anti-tautology companion to the decimal-refusal test: a working enum
+    binding confirms the refusal is channel-specific, not a blanket rejection
+    of non-numeric ``--binding`` values.
+    """
+
+    _seed_legal_entity_profile(
+        runtime_profile,
+        incn_prior_12_months=Decimal("500000.00"),
+        new_entity=False,
+    )
+    work_unit_id = _create_work_unit(
+        modelo="200",
+        year="2024",
+        period="0A",
+        revision="2024-y-siguientes",
+    )
+
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            "--casilla", "00501=100000.00",
+            "--casilla", "DP200013:00417=0.00",
+            "--casilla", "DP200013:00418=0.00",
+            "--casilla", "01032=0.00",
+            "--casilla", "DP200014:00547=0.00",
+            "--casilla", "DP200014:01033=0.00",
+            "--casilla", "DP200014:01034=0.00",
+            "--binding", "modelo-200-2024-profile-legal-entity-form=sl",
+            "--binding", "modelo-200-2024-profile-new-entity-flag=0",
+            "--binding", "modelo-200-2024-profile-incn-prior-12-months=500000",
+            "--binding", "modelo-200-2024-profile-tributacion-estado-porcentaje=100",
+            "--binding", "modelo-200-2024-bin-pendiente-ejercicios-anteriores=0",
+            "--binding", "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
+            "--binding", "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
+            "--relation", "modelo-200-2024-rel-202-pagos-fraccionados=0",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    assert "Traceback" not in result.output
+    payload = _payload(result.output)
+    assert "casilla_values" in payload, result.output

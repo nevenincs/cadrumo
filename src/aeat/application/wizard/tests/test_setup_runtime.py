@@ -95,6 +95,10 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             # country-of-fiscal-residence + representante-fiscal-* SKIPPED
             # (conditional on fiscal-residency == non_resident_irnr).
             "madrid",  # tax-residence-ccaa (visible: resident)
+            # ── capabilities ───────────────────────
+            "false",  # cloud-evidence-upload
+            "true",  # llm-vision
+            "true",  # google-export
             # ── notes ──────────────────────────────
             "",  # notes
         ],
@@ -233,6 +237,9 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "resident_irpf",  # fiscal-residency (#197 non-resident axis)
             # country-of-fiscal-residence + representante-fiscal-* SKIPPED (resident)
             "madrid",  # tax-residence-ccaa
+            "false",  # cloud-evidence-upload
+            "true",  # llm-vision
+            "true",  # google-export
             "",  # notes
         ],
     )

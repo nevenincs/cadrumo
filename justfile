@@ -14,6 +14,21 @@ bootstrap:
     just install
     uv run --no-sync vaultspec-core install --upgrade
     just env-setup
+    -just doctor
+
+# Verify the workstation for the services the active profile opts into: external
+# dependency availability (Ollama vision, provider CLIs, Playwright) + the profile's
+# capability posture, with the exact fix for any gap. Exits non-zero when an
+# opted-in capability has a missing dependency. This is the product-side
+# "is my workstation ready" check (the dev-toolchain probe is `just env-doctor`).
+doctor:
+    uv run --no-sync aeat config check
+
+# Provision the optional external dependencies a fresh workstation needs for the
+# capability surfaces: the Playwright browser binary now; Ollama + the vision model
+# are guided by `just doctor` (run `ollama pull <model>` per its remediation rows).
+provision: env-playwright
+    @echo "Playwright Chromium installed. For on-host LLM vision, run 'ollama serve' and 'ollama pull qwen2.5vl:3b' (see 'just doctor')."
 
 # Additively install runtime, workbook, and dev dependencies into the current
 # venv. This is intentionally not an exact sync: it repairs missing packages and
@@ -118,18 +133,10 @@ env-pip-check:
 env-pip-check:
     uv pip check --python .venv/bin/python
 
-# Run the Playwright doctor health check.
-[unix]
+# Provision the Playwright Chromium browser binary (the post-install step that
+# `uv sync` does not perform; the AEAT sede live-capture paths need it).
 env-playwright:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    uv run python -m aeat.entrypoints.cli.browser.health
-
-[windows]
-env-playwright:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    uv run python -m aeat.entrypoints.cli.browser.health
+    uv run --no-sync playwright install chromium
 
 # Start the background vaultspec-rag HTTP service daemon on loopback port 8766.
 env-rag-start:

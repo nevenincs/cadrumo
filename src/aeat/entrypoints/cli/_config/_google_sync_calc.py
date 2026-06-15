@@ -127,6 +127,13 @@ def google_sync_calc_export(
 ) -> None:
     """Export the registry calculation surface for a modelo + period to a Google Sheets workbook."""
     from ....application.calculations import resolve_relations_from_local_store
+    from ....application.user_profile import resolve_active_capability
+    from ....core import ServiceCapability
+
+    if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.google.sync.calc.export.capability_disabled",
+        )
 
     try:
         active = resolve_active_profile()
