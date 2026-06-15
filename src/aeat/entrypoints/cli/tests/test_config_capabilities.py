@@ -86,6 +86,8 @@ def test_config_check_reports_capabilities_and_dependencies() -> None:
     assert "ollama-vision" in services
     assert "playwright-chromium" in services
     assert any(s.startswith("llm-provider:") for s in services)
+    # The doctor reports every capability-gated optional extra's importability.
+    assert {"extra:google", "extra:browser", "extra:anthropic"} <= services
 
 
 def test_config_check_flags_opted_in_capability_with_missing_dependency() -> None:
