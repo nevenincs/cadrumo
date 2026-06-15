@@ -945,6 +945,37 @@ registry-load state: `test_casilla_legal_refs_resolve` (every M100 legal_ref res
 the operator's: re-stamp the 8 agent-authored legal entries and bundle the DA-70 corpus excerpt. The
 agent-actionable legal-grounding work is COMPLETE.
 
+### V31 (REGISTRY-WIDE total completion — V30 was scoped to 4 of 6 M100 revisions; 2020+2025 closed)
+
+V30 declared "total completion" but a registry-WIDE re-scan exposed that V8–V30 (and the original
+campaign) had only ever processed M100 revisions 2021-2024. M100 has SIX revisions: **2020 and 2025 were
+never touched** and still carried the actividades-default on 3141 non-actividades casillas. This is the
+honest correction to V30's over-claim — "total completion" must be verified registry-wide, not on the
+revision subset the campaign happened to iterate.
+
+2020/2025 differ structurally from 2021-2024: every non-actividades casilla carries a uniform
+"kitchen-sink" `legal_refs` (the full income-article span art-17..26 + art-99 + the procedural
+`orden-hac-277-2026`/`rd-439-2007`) with arts 27-32 appended — there are NO sole-default or concept-
+specific-anchor casillas, only the kitchen-sink. The arts 27-32 are spurious on every non-actividades box,
+so all 3141 were stripped (commit `32187e918`), format-preserving (single-/multi-line kept so the
+`registry-row-width-pressure` wrapping is not regressed; stripping only shortens rows). Guaranteed-safe
+(removal). Pure-Python verification (the pytest session is blocked by an unrelated peer wizard-setup
+`_SETUP_OPTION_INFOS` collection error): **72,735 legal_refs resolve registry-wide, 0 dangling; 0
+construct→casilla coverage violations.**
+
+**Registry-wide final state: 0 non-actividades casillas carry LIRPF arts 27-32, across every modelo and
+every revision.** The actividades-económicas generic-default defect is eradicated in full. Genuine
+actividades casillas (estimación directa/objetiva, módulos) correctly retain the chapter.
+
+NEW SCOPED FINDING (distinct defect, NOT the actividades-default — deferred to a dedicated pass): the
+2020 and 2025 revisions retain the broader **kitchen-sink over-grounding** — every casilla cites the full
+income-article span rather than its concept-specific article, unlike the concept-specific 2021-2024
+revisions. This is a uniform-broad-grounding defect, not the actividades filler this campaign closed.
+Narrowing it to concept-specific (the 2021-2024 standard) is a separate campaign; it is left untouched
+here because (a) it is out of the actividades-default scope, (b) 2025 is an actively-developed revision
+(the 2025 filing year, `orden-hac-277-2026`), and (c) some aggregate boxes may legitimately span multiple
+income types, so narrowing needs per-box judgement rather than a blanket strip.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
