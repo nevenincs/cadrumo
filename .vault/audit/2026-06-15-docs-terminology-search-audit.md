@@ -82,24 +82,54 @@ The fix is `.gitignore += pagefind/` plus `git rm -r --cached pagefind/`
 (non-destructive to the working tree). Deferred to an owner decision because it
 untracks 16k peer-committed files.
 
-### PERF-006 | RESIDUAL | Legal-grounding coverage is bounded by catalogue enrolment
+### PERF-006 | FIXED | Tax-concept legal-grounding coverage driven to 100%
 
-Only 7 of 40 approved concepts carry resolvable legal grounding. Many that
-should (modelo-303 cites LIVA arts. 164/167) cannot be linked because the
-binding provision is not enrolled in the legal catalogue. Adding it is a
-legal-authority workstream governed by `registry-calculation-legal-grounding`,
-not a search-surface change; fabricating a near-miss `legal_ref` is forbidden.
+Only 7 of 40 approved concepts carried resolvable legal grounding. The binding
+framework articles for the rest were not enrolled in the legal catalogue. Thirteen
+provisions were enrolled in a dedicated `terminology-concept-grounding.toml`
+(separate from the calculation legal files a peer campaign is actively editing):
+LIVA arts 1/148/164, LIRPF arts 1/96/98, LGT arts 5/98/99/213, RGAT arts 3/18,
+Ley 39/2015 art 38. Each carries the verified BOE permalink; the three whose
+verbatim text was fetched ship a corpus excerpt + a `required_text` the strict
+corpus gate verifies, the rest use the supported staged-annotation state. Legal_refs
+were added to 19 concept fragments; the loader confirms every ref resolves and all
+13 entries pass `corpus_strict`. Result: glossary legal-basis links 9 -> 28, with
+26/26 TAX concepts grounded. The 14 still-ungrounded approved concepts are
+search/calc INFRASTRUCTURE terms (barrido-rag, proyeccion-busqueda, mapa-relevancia,
+work-unit, ledger, ...) with no AEAT legal basis -- correctly left ungrounded, never
+fabricated.
+
+### PERF-007 | FIXED | The palette ranking + draft-free invariants are now gated
+
+The PERF-003 ranking fix lacked a test (the prior smoke gate exercises
+`pf.search`, not the compose ladder). A durable Playwright gate
+(`test_palette_ranking.py`) now drives the SHIPPED palette: it opens Ctrl-K,
+types "iva", and asserts the IVA concept is the first row, ahead of VIES. Driving
+the real palette exposed that the relevance-only tiebreak was fragile over a thin
+corpus, so a deterministic title-match signal (exact > prefix > substring) was
+added as the primary within-tier key, with relevance as the cross-lingual
+fallback.
+
+### NOTE | Terminology module relocation absorbed
+
+Mid-campaign a peer relocated the `src/aeat/terminology` Python module to
+`dev/docs/terminology_handbook` (production-code vs documentation-tooling boundary).
+The docs-search consumers this campaign owns were swept to the new import path and
+re-verified; the data fragments under `src/aeat/_data/terminology/` are unaffected.
 
 ## Recommendations
 
-- Land PERF-005 (untrack `pagefind/`) on owner approval; it is the single
-  largest corpus/repo performance item.
-- Grow legal-grounding cross-links by enrolling the binding provisions in the
-  legal catalogue (separate workstream), then the glossary renders them for
-  free.
-- Add a durable Playwright palette test (the scratch battery used here) so the
-  PERF-003 ranking and the draft-free invariant cannot regress; the existing
-  smoke gate exercises the index/injection but not the palette compose ladder.
+All three residuals from the first pass are now closed: PERF-005 (`pagefind/`
+untracked + gitignored), PERF-006 (tax-concept legal grounding to 100%), and
+PERF-007 (durable Playwright palette gate). Remaining follow-ups, lower priority:
+
+- Ingest the corpus excerpts for the 10 staged legal provisions
+  (`required_text` pending) so they graduate from permalink-only to
+  corpus-verified grounding, matching the calculation legal catalogue.
+- Consider demoting the 14 search/calc INFRASTRUCTURE concepts (barrido-rag,
+  proyeccion-busqueda, work-unit, ...) out of the taxpayer-facing glossary: they
+  document the system, not AEAT surfaces, and a taxpayer would never look them
+  up. This is a curation decision, not a grounding gap.
 
 ## Codification candidates
 
