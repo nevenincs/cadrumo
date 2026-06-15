@@ -22,6 +22,7 @@ from ...iva import (
     TransactionKind,
 )
 from ._binding_aggregation import binding_aggregation_op
+from ._binding_selector_utils import invariant_diagnostics, selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
@@ -45,9 +46,13 @@ __all__ = [
     "resolve_ledger_renta_expense_aggregation_binding_values",
     "resolve_ledger_renta_income_aggregation_binding_values",
     "unsupported_ledger_iva_observations",
+    "validate_ledger_iva_aggregation_binding",
     "validate_ledger_iva_aggregation_binding_definition",
+    "validate_ledger_oss_aggregation_binding",
     "validate_ledger_oss_aggregation_binding_definition",
+    "validate_ledger_renta_expense_aggregation_binding",
     "validate_ledger_renta_expense_aggregation_binding_definition",
+    "validate_ledger_renta_income_aggregation_binding",
     "validate_ledger_renta_income_aggregation_binding_definition",
 ]
 
@@ -682,3 +687,65 @@ def resolve_ledger_renta_income_aggregation_binding_values(
         else:
             resolved[str(binding.id)] = sum((observation.gross_amount for observation in matched), Decimal("0"))
     return resolved
+
+
+def validate_ledger_oss_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``ledger_oss_aggregation`` binding at registry-build time.
+
+    Accumulating ``list[str]`` validator: validates the selector shape against
+    :class:`_OssIossLedgerSelector` (preserving the underlying pydantic field
+    error) then lifts the fact/aggregation-op invariant to build time via the
+    raise-style :func:`validate_ledger_oss_aggregation_binding_definition`, which
+    stays as a defence-in-depth resolve-time re-check.
+    """
+    failures = selector_against_model(binding, _OssIossLedgerSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(binding, "ledger_oss_aggregation", validate_ledger_oss_aggregation_binding_definition)
+
+
+def validate_ledger_iva_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``ledger_iva_aggregation`` binding at registry-build time.
+
+    Accumulating ``list[str]`` validator over :class:`_IvaLedgerSelector`; lifts
+    the fact/aggregation-op invariant via the raise-style
+    :func:`validate_ledger_iva_aggregation_binding_definition`.
+    """
+    failures = selector_against_model(binding, _IvaLedgerSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(binding, "ledger_iva_aggregation", validate_ledger_iva_aggregation_binding_definition)
+
+
+def validate_ledger_renta_expense_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``ledger_renta_expense_aggregation`` binding at registry-build time.
+
+    Accumulating ``list[str]`` validator over :class:`_RentaLedgerExpenseSelector`;
+    lifts the fact/aggregation-op invariant via the raise-style
+    :func:`validate_ledger_renta_expense_aggregation_binding_definition`.
+    """
+    failures = selector_against_model(binding, _RentaLedgerExpenseSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(
+        binding,
+        "ledger_renta_expense_aggregation",
+        validate_ledger_renta_expense_aggregation_binding_definition,
+    )
+
+
+def validate_ledger_renta_income_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a ``ledger_renta_income_aggregation`` binding at registry-build time.
+
+    Accumulating ``list[str]`` validator over :class:`_RentaLedgerIncomeSelector`;
+    lifts the fact/aggregation-op invariant via the raise-style
+    :func:`validate_ledger_renta_income_aggregation_binding_definition`.
+    """
+    failures = selector_against_model(binding, _RentaLedgerIncomeSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(
+        binding,
+        "ledger_renta_income_aggregation",
+        validate_ledger_renta_income_aggregation_binding_definition,
+    )

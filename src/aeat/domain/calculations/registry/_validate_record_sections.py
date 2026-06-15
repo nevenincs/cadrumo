@@ -8,14 +8,7 @@ from pathlib import Path
 from ._bindings import (
     is_layout_binding_selector,
     validate_binding_selector_shape,
-    validate_invoice_binding_definition,
-    validate_ledger_iva_aggregation_binding_definition,
-    validate_ledger_oss_aggregation_binding_definition,
-    validate_ledger_renta_expense_aggregation_binding_definition,
-    validate_ledger_renta_income_aggregation_binding_definition,
 )
-from ._errors import RegistryValidationError
-from ._invoice_bindings import INVOICE_BINDING_SOURCE_KINDS
 from ._schema import DataBindingDefinition, FormulaDefinition, LegalReference, ModeloRevision, SourceReference
 from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
@@ -167,38 +160,16 @@ def validate_binding_section(
                     "official_source_guidance",
                 ),
             )
-        _validate_per_source_binding(failures, prefix=prefix, binding=binding)
+    # The per-source op/fact invariants for every family (invoice, counterpart,
+    # the four ledger families, the four detail-record families, withholding, and
+    # previous_filing) are run by the single ``validate_binding_selector_shape``
+    # dispatch loop above. The prior separate try/except per-family calls here
+    # were a redundant second validation path; one path now covers every family.
 
 
 def _is_layout_binding(binding: DataBindingDefinition) -> bool:
     """Layout-binding predicate, delegated to the typed manual_input shape."""
     return is_layout_binding_selector(binding.selector)
-
-
-def _validate_per_source_binding(
-    failures: list[str],
-    *,
-    prefix: str,
-    binding: DataBindingDefinition,
-) -> None:
-    """Run the per-source typed binding-definition validators."""
-    source_validators = (
-        ("ledger_oss_aggregation", validate_ledger_oss_aggregation_binding_definition),
-        ("ledger_iva_aggregation", validate_ledger_iva_aggregation_binding_definition),
-        ("ledger_renta_expense_aggregation", validate_ledger_renta_expense_aggregation_binding_definition),
-        ("ledger_renta_income_aggregation", validate_ledger_renta_income_aggregation_binding_definition),
-    )
-    if binding.source in INVOICE_BINDING_SOURCE_KINDS:
-        try:
-            validate_invoice_binding_definition(binding)
-        except RegistryValidationError as exc:
-            failures.append(f"{prefix}: {exc}")
-    for source_name, validator in source_validators:
-        if binding.source == source_name:
-            try:
-                validator(binding)
-            except RegistryValidationError as exc:
-                failures.append(f"{prefix}: {exc}")
 
 
 def validate_extraction_profile_section(

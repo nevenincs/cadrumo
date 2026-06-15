@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
@@ -11,21 +11,21 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ....core import STRICT_FROZEN_CONFIG, Period
 from ....core.aggregation import AggregationSourceKind, BindingAggregationOp, CounterpartSourceKind, RowSetGroupingKind
 from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
-from ._binding_selector_utils import selector_as_dict as _selector_as_dict
+from ._binding_selector_utils import selector_against_model
 from ._bindings_previous_filing import (
     RegistryModeloObservationRequirement,
     _PreviousModeloSelector,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
+    validate_previous_filing_binding,
 )
 from ._counterpart_bindings import (
-    COUNTERPART_BINDING_SOURCE_KINDS,
     CounterpartAggregationObservation,
     CounterpartObservationRequirement,
-    _validated_counterpart_selector,
     counterpart_binding_requirements,
     resolve_counterpart_binding_row_values,
     resolve_counterpart_binding_values,
+    validate_counterpart_binding,
 )
 from ._detail_record_bindings import (
     AtributionMemberObservation,
@@ -42,6 +42,10 @@ from ._detail_record_bindings import (
     resolve_foreign_asset_binding_row_values,
     resolve_refund_binding_row_values,
     resolve_related_party_binding_row_values,
+    validate_atribucion_binding,
+    validate_foreign_asset_binding,
+    validate_refund_binding,
+    validate_related_party_binding,
 )
 from ._errors import RegistryValidationError
 from ._ids import CasillaId, FormulaId, OracleId
@@ -53,6 +57,7 @@ from ._invoice_bindings import (
     invoice_binding_requirements,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
+    validate_invoice_binding,
     validate_invoice_binding_definition,
 )
 from ._ledger_bindings import (
@@ -70,9 +75,13 @@ from ._ledger_bindings import (
     resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
     unsupported_ledger_iva_observations,
+    validate_ledger_iva_aggregation_binding,
     validate_ledger_iva_aggregation_binding_definition,
+    validate_ledger_oss_aggregation_binding,
     validate_ledger_oss_aggregation_binding_definition,
+    validate_ledger_renta_expense_aggregation_binding,
     validate_ledger_renta_expense_aggregation_binding_definition,
+    validate_ledger_renta_income_aggregation_binding,
     validate_ledger_renta_income_aggregation_binding_definition,
 )
 from ._schema import DataBindingDefinition, InputKind, ModeloRevision
@@ -140,6 +149,10 @@ __all__ = [
     "validate_ledger_renta_income_aggregation_binding_definition",
     "withholding_binding_requirements",
 ]
+
+#: One per-family ``validate(binding) -> list[str]`` accumulating validator. Every
+#: source family registers exactly one in :data:`_BINDING_VALIDATOR_REGISTRY`.
+_BindingFamilyValidator = Callable[[DataBindingDefinition], list[str]]
 
 
 def _tuple_from_json_array(value: object) -> object:
@@ -562,53 +575,88 @@ _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
 }
 
 
-def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]:
-    """Validate ``binding.selector`` against the source's typed selector model.
+def _validate_selector_only(selector_model: type[BaseModel]) -> _BindingFamilyValidator:
+    """Build a family validator that only validates the selector shape.
 
-    Sources registered in :data:`_BINDING_SELECTOR_REGISTRY` get their
-    selector mapping piped through the strict pydantic model that owns
-    the per-source key set. Failures are returned as a list of
-    diagnostic strings rather than raised so the snapshot-build gate
-    can accumulate every failure across a revision in one pass.
-
-    The selector is projected through :func:`_selector_as_dict` before
-    validation so the gate sees the SAME normalised mapping the
-    handler-call-time helpers see. Without this projection the gate
-    would reject any registry binding whose loaded selector still
-    carries the (test-injected or legacy) ``source`` key, while the
-    handler would accept it — a stricter-than-runtime drift that
-    must not land in production.
-
-    Counterpart-source bindings (``ledger_transaction``,
-    ``purchase_invoice_evidence``, ``payable_invoice``,
-    ``collectible_invoice``) additionally run the fact/op cross-check
-    invariants that the handler-call-time ``_validated_counterpart_selector``
-    enforces — so a snapshot whose binding declared
-    ``fact = "operator_count"`` paired with ``aggregation.op = "sum"``
-    (a real cross-shape error) is caught at registry-build time
-    rather than only when the resolver is invoked.
-
-    Sources NOT in the registry are intentionally free-form today;
-    those bindings short-circuit with an empty failure list.
+    For families with no op/fact cross-invariant beyond the strict selector
+    model (``manual_input``, ``profile``, ``relation_prefill``), the family
+    validator is simply :func:`selector_against_model` against the registered
+    model. The underlying pydantic field error is preserved in the diagnostic.
     """
-    selector_model = _BINDING_SELECTOR_REGISTRY.get(binding.source)
-    if binding.source == RowSetGroupingKind.WITHHOLDING:
-        return validate_withholding_binding_selector_shape(binding)
-    if selector_model is None:
+
+    def _validate(binding: DataBindingDefinition) -> list[str]:
+        return selector_against_model(binding, selector_model)
+
+    return _validate
+
+
+# ---------------------------------------------------------------------------
+# Single binding validator-dispatch table
+#
+# One ``validate(binding) -> list[str]`` accumulating validator per source
+# family, keyed by the canonical ``BindingSourceKind``. Every entry returns a
+# list of diagnostic strings (empty when the binding is well formed) so the
+# registry-build section validator can run one path for every family and
+# accumulate every failure across a revision in one pass — replacing the prior
+# split between the raise-style per-source validators and the list-returning
+# selector-shape gate. Each family validator validates the selector shape
+# (preserving the underlying pydantic field error) and lifts that family's
+# op/fact invariants to build time; the raise-style resolve-time helpers remain
+# as defence-in-depth re-checks.
+# ---------------------------------------------------------------------------
+
+
+_BINDING_VALIDATOR_REGISTRY: dict[str, _BindingFamilyValidator] = {
+    "previous_filing": validate_previous_filing_binding,
+    "relation_prefill": _validate_selector_only(_RelationPrefillSelector),
+    # The three invoice-shaped sources run the stricter invoice validator (the
+    # union of the prior dual path: selector-shape + counterpart fact/op
+    # invariants + the two invoice-only scalar-shape guards). ledger_transaction
+    # is a counterpart-only source (never an invoice source) and keeps the
+    # counterpart validator.
+    AggregationSourceKind.LEDGER_TRANSACTION: validate_counterpart_binding,
+    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE: validate_invoice_binding,
+    AggregationSourceKind.PAYABLE_INVOICE: validate_invoice_binding,
+    AggregationSourceKind.COLLECTIBLE_INVOICE: validate_invoice_binding,
+    "ledger_oss_aggregation": validate_ledger_oss_aggregation_binding,
+    "ledger_iva_aggregation": validate_ledger_iva_aggregation_binding,
+    "ledger_renta_expense_aggregation": validate_ledger_renta_expense_aggregation_binding,
+    "ledger_renta_income_aggregation": validate_ledger_renta_income_aggregation_binding,
+    "related_party_operation": validate_related_party_binding,
+    RowSetGroupingKind.FOREIGN_ASSET: validate_foreign_asset_binding,
+    "atribucion_member": validate_atribucion_binding,
+    "refund_operation": validate_refund_binding,
+    RowSetGroupingKind.WITHHOLDING: validate_withholding_binding_selector_shape,
+    "manual_input": _validate_selector_only(_ManualInputSelector),
+    "profile": _validate_selector_only(_ProfileSelector),
+}
+
+
+def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]:
+    """Validate a binding against its source family's single build-time validator.
+
+    Routes the binding through the one per-family ``validate(binding) ->
+    list[str]`` validator registered in :data:`_BINDING_VALIDATOR_REGISTRY`,
+    keyed by :class:`~aeat.core.BindingSourceKind`. Each family validator
+    validates the selector shape (projected through :func:`_selector_as_dict`
+    inside :func:`selector_against_model`, so the gate sees the SAME normalised
+    mapping the resolve-time helpers see and is never stricter than runtime) and
+    lifts that family's op/fact cross-invariants to build time. Failures are
+    accumulated as diagnostic strings rather than raised, preserving the
+    underlying pydantic field error, so the snapshot-build gate can collect every
+    failure across a revision in one pass.
+
+    For every family — including the four detail-record families
+    (``related_party_operation``, ``foreign_asset``, ``atribucion_member``,
+    ``refund_operation``) and ``previous_filing`` whose op/fact invariants
+    previously ran only at resolve time — a malformed binding is now rejected at
+    snapshot build rather than only when a taxpayer calculation invokes the
+    resolver.
+
+    Sources NOT in the dispatch table are intentionally free-form today; those
+    bindings short-circuit with an empty failure list.
+    """
+    validator = _BINDING_VALIDATOR_REGISTRY.get(binding.source)
+    if validator is None:
         return []
-    try:
-        selector_model.model_validate(_selector_as_dict(binding))
-    except ValueError as exc:
-        return [
-            f"binding {binding.id!r} (source={binding.source!r}) selector violates {selector_model.__name__}: {exc}",
-        ]
-    # Counterpart-source bindings get the additional fact/op
-    # invariants that ``_validated_counterpart_selector`` runs at
-    # handler-call time, lifted up here so registry-build catches
-    # them too. Audit selector-drift F3.
-    if binding.source in COUNTERPART_BINDING_SOURCE_KINDS:
-        try:
-            _validated_counterpart_selector(binding)
-        except RegistryValidationError as exc:
-            return [f"binding {binding.id!r} (source={binding.source!r}) counterpart invariants violated: {exc}"]
-    return []
+    return validator(binding)

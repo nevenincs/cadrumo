@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import date
 from decimal import Decimal
 
@@ -10,21 +10,23 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import COUNTERPART_SOURCE_KINDS, AggregationSourceKind, CounterpartSourceKind
-from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
+from ._binding_selector_utils import (
+    intracommunity_clave_validator,
+    invariant_diagnostics,
+    selector_against_model,
+    unique_tuple,
+    uppercase_alpha_code,
+    validate_rectification_fields,
+)
 from ._errors import RegistryValidationError
 from ._invoice_bindings import (
-    _INVOICE_FACTS,
     InvoiceObservation,
-    _aggregate_invoice_binding,
-    _build_invoice_rows,
-    _filter_invoice_observations,
     _invoice_selector,
-    _InvoiceGrouping,
     _InvoiceSelector,
     _RectificationScope,
-    _validate_row_field_invoice_fact,
-    _validate_scalar_invoice_fact_op,
+    resolve_invoice_family_row_values,
+    resolve_invoice_family_scalar_values,
+    validate_invoice_family_fact_and_aggregation,
 )
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -35,6 +37,7 @@ __all__ = [
     "counterpart_binding_requirements",
     "resolve_counterpart_binding_row_values",
     "resolve_counterpart_binding_values",
+    "validate_counterpart_binding",
 ]
 
 COUNTERPART_BINDING_SOURCE_KINDS: frozenset[CounterpartSourceKind] = COUNTERPART_SOURCE_KINDS
@@ -65,17 +68,7 @@ class CounterpartAggregationObservation(BaseModel):
     party_legal_name: str | None = Field(default=None, max_length=200)
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
-
-    @field_validator("intracommunity_clave")
-    @classmethod
-    def _clave_uppercase(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        if value != value.upper():
-            raise RegistryValidationError("intracommunity_clave must be uppercase")
-        if value not in {"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"}:
-            raise RegistryValidationError(f"intracommunity_clave {value!r} is not an AEAT clave de operacion")
-        return value
+    _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
 
     @field_validator("base_amount", "rectified_base_previous")
     @classmethod
@@ -88,18 +81,7 @@ class CounterpartAggregationObservation(BaseModel):
 
     @model_validator(mode="after")
     def _validate_rectification(self) -> CounterpartAggregationObservation:
-        if self.is_rectification:
-            if self.rectified_year is None or self.rectified_period is None:
-                raise RegistryValidationError(
-                    "rectification observation must declare rectified_year and rectified_period",
-                )
-            if self.rectified_base_previous is None:
-                raise RegistryValidationError("rectification observation must declare rectified_base_previous")
-        else:
-            if self.rectified_year is not None or self.rectified_period is not None:
-                raise RegistryValidationError("non-rectification observation must not declare rectified_year/period")
-            if self.rectified_base_previous is not None:
-                raise RegistryValidationError("non-rectification observation must not declare rectified_base_previous")
+        validate_rectification_fields(self)
         return self
 
 
@@ -118,21 +100,37 @@ class CounterpartObservationRequirement(BaseModel):
     )
 
 
-_COUNTERPART_FACTS = _INVOICE_FACTS
-
-
 def _validated_counterpart_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
-    """Validate a counterpart-source binding selector with counterpart-flavoured errors."""
+    """Validate a counterpart-source binding selector with counterpart-flavoured errors.
+
+    Delegates to the shared invoice/counterpart fact + aggregation-op invariant
+    parameterised with the ``counterpart aggregation`` family label. The
+    counterpart family historically omitted the invoice-only scalar-shape guards
+    (``non-row fact must not declare row_field/grouping`` and ``op 'rows'
+    requires fact 'row_field'``), so ``strict_scalar_shape`` is ``False`` to
+    preserve that behaviour exactly.
+    """
     selector = _invoice_selector(binding)
-    if selector.fact not in _COUNTERPART_FACTS:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} declares unsupported counterpart aggregation fact {selector.fact!r}",
-        )
-    op = binding_aggregation_op(binding)
-    _validate_scalar_invoice_fact_op(binding, selector, op)
-    if selector.fact == "row_field":
-        _validate_row_field_invoice_fact(binding, selector, op)
+    validate_invoice_family_fact_and_aggregation(
+        binding,
+        selector,
+        family_label="counterpart aggregation",
+        strict_scalar_shape=False,
+    )
     return selector
+
+
+def validate_counterpart_binding(binding: DataBindingDefinition) -> list[str]:
+    """Validate a counterpart-source binding at registry-build time.
+
+    Accumulating ``list[str]`` validator: validates the selector against
+    :class:`_InvoiceSelector` and lifts the counterpart fact/op invariants to
+    build time, preserving the underlying pydantic field error.
+    """
+    failures = selector_against_model(binding, _InvoiceSelector)
+    if failures:
+        return failures
+    return invariant_diagnostics(binding, "counterpart", lambda b: _validated_counterpart_selector(b))
 
 
 def _counterpart_to_invoice(observation: CounterpartAggregationObservation) -> InvoiceObservation:
@@ -184,11 +182,37 @@ def counterpart_binding_requirements(
     return tuple(requirements)
 
 
+def _counterpart_observations_for_binding(
+    available: tuple[CounterpartAggregationObservation, ...],
+) -> Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]]:
+    """Build a per-binding observation supplier matching ``source_kind`` to the binding source.
+
+    Counterpart aggregation observations carry a ``source_kind`` that must match
+    the declared counterpart-source binding; the supplier filters by that match
+    and converts each matched observation to the shared
+    :class:`InvoiceObservation` shape the invoice-family resolver cores consume.
+    """
+
+    def _supplier(binding: DataBindingDefinition) -> tuple[InvoiceObservation, ...]:
+        return tuple(
+            _counterpart_to_invoice(observation)
+            for observation in available
+            if observation.source_kind == binding.source
+        )
+
+    return _supplier
+
+
 def resolve_counterpart_binding_values(
     revision: ModeloRevision,
     observations: Iterable[CounterpartAggregationObservation],
 ) -> dict[str, Decimal]:
     """Resolve scalar counterpart-source bindings into Decimal aggregates.
+
+    Delegates to the shared invoice-family scalar resolver core
+    (:func:`resolve_invoice_family_scalar_values`) parameterised by the
+    counterpart membership set, the counterpart selector validator, and a
+    ``source_kind``-matched observation supplier.
 
     Args:
         revision: The :class:`ModeloRevision` whose counterpart bindings to resolve.
@@ -196,21 +220,12 @@ def resolve_counterpart_binding_values(
             filter by selector and aggregate into scalar Decimal values.
     """
     available = tuple(observations)
-    resolved: dict[str, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source not in COUNTERPART_BINDING_SOURCE_KINDS:
-            continue
-        selector = _validated_counterpart_selector(binding)
-        if selector.fact == "row_field":
-            continue
-        matched = tuple(
-            _counterpart_to_invoice(observation)
-            for observation in available
-            if observation.source_kind == binding.source
-        )
-        scope_filtered = tuple(_filter_invoice_observations(matched, selector))
-        resolved[binding.id] = _aggregate_invoice_binding(binding, selector, scope_filtered)
-    return resolved
+    return resolve_invoice_family_scalar_values(
+        revision,
+        source_kinds=COUNTERPART_BINDING_SOURCE_KINDS,
+        validate_selector=_validated_counterpart_selector,
+        observations_for_binding=_counterpart_observations_for_binding(available),
+    )
 
 
 def resolve_counterpart_binding_row_values(
@@ -219,49 +234,22 @@ def resolve_counterpart_binding_row_values(
 ) -> dict[tuple[str, int], Decimal | str]:
     """Resolve row-producer counterpart-source bindings into per-row indexed values.
 
+    Delegates to the shared invoice-family row resolver core
+    (:func:`resolve_invoice_family_row_values`) with ``cohort_by_source = True``
+    so a different counterpart source kind does not share row indexes.
+
     Args:
         revision: The :class:`ModeloRevision` whose counterpart bindings are resolved.
         observations: Counterpart aggregation lines to group into rows.
     """
     available = tuple(observations)
-    resolved: dict[tuple[str, int], Decimal | str] = {}
-    cohorts: dict[
-        tuple[str, _InvoiceGrouping, _RectificationScope, tuple[str, ...]],
-        list[tuple[DataBindingDefinition, _InvoiceSelector]],
-    ] = {}
-    for binding in revision.bindings:
-        if binding.source not in COUNTERPART_BINDING_SOURCE_KINDS:
-            continue
-        selector = _validated_counterpart_selector(binding)
-        if selector.fact != "row_field":
-            continue
-        assert selector.grouping is not None
-        cohort_key = (
-            binding.source,
-            selector.grouping,
-            selector.rectification_scope,
-            tuple(sorted(selector.claves)),
-        )
-        cohorts.setdefault(cohort_key, []).append((binding, selector))
-    for cohort_key, members in cohorts.items():
-        source_kind, grouping, _, _ = cohort_key
-        _, sample_selector = members[0]
-        matched = tuple(
-            _counterpart_to_invoice(observation) for observation in available if observation.source_kind == source_kind
-        )
-        scope_filtered = tuple(_filter_invoice_observations(matched, sample_selector))
-        rows = _build_invoice_rows(grouping, scope_filtered)
-        for binding, selector in members:
-            assert selector.row_field is not None
-            for row_index, row in enumerate(rows, start=1):
-                value = row.get(selector.row_field)
-                if value is None:
-                    raise RegistryValidationError(
-                        f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
-                        f"for grouping {grouping!r}",
-                    )
-                resolved[(binding.id, row_index)] = value
-    return resolved
+    return resolve_invoice_family_row_values(
+        revision,
+        source_kinds=COUNTERPART_BINDING_SOURCE_KINDS,
+        validate_selector=_validated_counterpart_selector,
+        observations_for_binding=_counterpart_observations_for_binding(available),
+        cohort_by_source=True,
+    )
 
 
 # ---------------------------------------------------------------------------
