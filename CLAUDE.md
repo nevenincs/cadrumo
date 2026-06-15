@@ -28,6 +28,7 @@ You MUST respect these rules at all times:
 @.claude/rules/aeat-vaultspec-centralisation.md
 @.claude/rules/calculation-source-canonical-mechanism.md
 @.claude/rules/carried-observations-stamp-their-revision.md
+@.claude/rules/casilla-grounding-corrects-actividades-default-by-section.md
 @.claude/rules/cli-notices-are-the-only-diagnostic-channel.md
 @.claude/rules/cli-single-subject-id-is-positional.md
 @.claude/rules/composition-service-no-parallel-write-path.md
@@ -36,6 +37,7 @@ You MUST respect these rules at all times:
 @.claude/rules/fixture-provenance-declared-in-sidecar.md
 @.claude/rules/full-tree-gate-must-distinguish-owner.md
 @.claude/rules/generated-reference-is-cli-owned.builtin.md
+@.claude/rules/glossary-concepts-are-taxpayer-facing.md
 @.claude/rules/ledger-amount-is-absolute-direction-is-authority.md
 @.claude/rules/ledger-derived-revisions-bundle-evidence.md
 @.claude/rules/ledger-evidence-bytes-not-links.md

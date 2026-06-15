@@ -2,9 +2,8 @@
 # establish the nature of the main taxes (IVA, IRPF), the tax administration,
 # fiscal identification (censo and NIF), the declaration and self-assessment
 # obligations, the review procedure, the recargo de equivalencia regime, and the
-# electronic sede. Entries carrying a verbatim corpus excerpt declare a
-# required_text the strict corpus gate verifies; the rest use the staged
-# annotation state (corpus_ref present, required_text pending corpus ingestion).
+# electronic sede. Every entry is corpus-verified: its corpus_ref resolves to a
+# bundled BOE excerpt and its required_text is checked by the strict corpus gate.
 
 [legal."ley-37-1992:art-1"]
 evidence_tier = "legal_authority"
@@ -60,6 +59,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 notes = "LIVA art. 148: régimen especial del recargo de equivalencia."
+required_text = ["El régimen especial del recargo de equivalencia se aplicará"]
 
 [legal."ley-37-1992:art-164"]
 evidence_tier = "legal_authority"
@@ -73,6 +73,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 notes = "LIVA art. 164: obligaciones de los sujetos pasivos (autoliquidación, M303/M390)."
+required_text = ["Sin perjuicio de lo establecido en el"]
 
 [legal."ley-35-2006:art-96"]
 evidence_tier = "legal_authority"
@@ -86,6 +87,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 notes = "LIRPF art. 96: obligación de declarar (M100)."
+required_text = ["Los contribuyentes estarán obligados a presentar y suscribir"]
 
 [legal."ley-35-2006:art-98"]
 evidence_tier = "legal_authority"
@@ -99,6 +101,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 notes = "LIRPF art. 98: borrador de declaración."
+required_text = ["La Administración tributaria podrá poner a disposición de los"]
 
 [legal."ley-58-2003:art-98"]
 evidence_tier = "legal_authority"
@@ -112,6 +115,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 notes = "LGT art. 98: iniciación de los procedimientos tributarios (declaraciones, modelos, casillas)."
+required_text = ["Las actuaciones y procedimientos tributarios podrán iniciarse"]
 
 [legal."ley-58-2003:art-99"]
 evidence_tier = "legal_authority"
@@ -125,6 +129,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 notes = "LGT art. 99: desarrollo de las actuaciones y procedimientos; documentación (justificante)."
+required_text = ["En el desarrollo de las actuaciones y procedimientos tributarios"]
 
 [legal."ley-58-2003:art-213"]
 evidence_tier = "legal_authority"
@@ -138,6 +143,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 notes = "LGT art. 213: medios de revisión de los actos tributarios."
+required_text = ["Los actos y actuaciones de aplicación de los tributos"]
 
 [legal."rd-1065-2007:art-3"]
 evidence_tier = "legal_authority"
@@ -150,7 +156,8 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a3"
 published_at = 2007-09-05
 effective_from = 2008-01-01
 review_status = "reviewed"
-notes = "RGAT art. 3: Censo de Empresarios, Profesionales y Retenedores."
+notes = "RGAT art. 3: formación de los censos tributarios (Censo de Obligados Tributarios)."
+required_text = ["El Censo de Obligados Tributarios estará formado por la totalidad"]
 
 [legal."rd-1065-2007:art-18"]
 evidence_tier = "legal_authority"
@@ -163,17 +170,19 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a18"
 published_at = 2007-09-05
 effective_from = 2008-01-01
 review_status = "reviewed"
-notes = "RGAT art. 18: número de identificación fiscal (NIF)."
+notes = "RGAT art. 18: obligación de disponer de un número de identificación fiscal (NIF)."
+required_text = ["Obligación de disponer de un número de identificación fiscal"]
 
-[legal."ley-39-2015:art-38"]
+[legal."ley-40-2015:art-38"]
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
-corpus_ref = "corpus/normatives/html/ley-39-2015-art-38.html#a38"
-document_id = "BOE-A-2015-10565"
+corpus_ref = "corpus/normatives/html/ley-40-2015-art-38.html#a38"
+document_id = "BOE-A-2015-10566"
 article = "38"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a38"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10566#a38"
 published_at = 2015-10-02
 effective_from = 2016-10-02
 review_status = "reviewed"
-notes = "Ley 39/2015 art. 38: sede electrónica de las Administraciones Públicas."
+notes = "Ley 40/2015 art. 38: la sede electrónica de las Administraciones Públicas."
+required_text = ["La sede electrónica es aquella dirección electrónica, disponible"]

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-58-2003-art-98.html",
+  "source_sha256": "338df2a6815a7f422c1c4fdbc4fe0cd8f03be2fd9cd59141ca00a38b63ca7ca5",
+  "preprocessor_id": "normatives-html-example",
+  "preprocessor_version": "0.1",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution; consult the sibling normatives manifest for the BOE permalink.",
+  "units": [
+    {
+      "text": "1. Las actuaciones y procedimientos tributarios podrán iniciarse de oficio o a instancia del obligado tributario, mediante autoliquidación, declaración, comunicación, solicitud o cualquier otro medio previsto en la normativa tributaria.\n\n2. Los documentos de iniciación de las actuaciones y procedimientos tributarios deberán incluir, en todo caso, el nombre y apellidos o razón social y el número de identificación fiscal del obligado tributario y, en su caso, de la persona que lo represente.\n\n3. La Administración tributaria podrá aprobar modelos y sistemas normalizados de autoliquidaciones, declaraciones, comunicaciones, solicitudes o cualquier otro medio previsto en la normativa tributaria para los casos en que se produzca la tramitación masiva de las actuaciones y procedimientos tributarios. La Administración tributaria pondrá a disposición de los obligados tributarios los modelos mencionados en las condiciones que señale la normativa tributaria.\n\n4. En el ámbito de competencias del Estado, el Ministro de Hacienda podrá determinar los supuestos y condiciones en los que los obligados tributarios deberán presentar por medios telemáticos sus declaraciones, autoliquidaciones, comunicaciones, solicitudes y cualquier otro documento con trascendencia tributaria.",
+      "title": "Artículo 98. Iniciación de los procedimientos tributarios.",
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

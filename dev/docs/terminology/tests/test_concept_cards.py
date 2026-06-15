@@ -129,10 +129,19 @@ def test_approved_prorrata_card_is_fully_populated(
     assert prorrata.is_approved is True
 
 
-def test_self_hosted_architectural_vocabulary_projects_to_cards(
+def test_self_hosted_architectural_vocabulary_is_deprecated_not_glossary_facing(
     projection: tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats],
 ) -> None:
-    """The epic's own architecture terms are enrolled into the shipped surface."""
+    """The epic's own architecture terms project to cards but are DEPRECATED.
+
+    These concepts document the search/calculation machinery itself, not a
+    taxpayer-facing AEAT surface, so the glossary-enrolment policy
+    (`2026-06-15-docs-terminology-search-adr` D1/D2) excludes them from the
+    APPROVED tier: they stay enrolled and resolvable for the dev/agent RAG
+    (they still project to cards, with their content intact) but are
+    `deprecated`, so the approved-only glossary and the shipped Pagefind
+    injection drop them.
+    """
     required = {
         "manual-terminologia": "Terminology Handbook",
         "barrido-rag": "RAG sweep",
@@ -148,7 +157,9 @@ def test_self_hosted_architectural_vocabulary_projects_to_cards(
     assert required.keys() <= by_id.keys()
     for concept_id, english_label in required.items():
         card = by_id[concept_id]
-        assert card.is_approved is True
+        # Internal machinery: enrolled and projected, but NOT taxpayer-facing.
+        assert card.is_approved is False
+        assert card.lifecycle is ConceptLifecycle.DEPRECATED
         assert OutputLanguage.ES in card.descriptions
         assert OutputLanguage.EN in card.descriptions
         aliases = {(alias.language, alias.label) for alias in card.aliases}
