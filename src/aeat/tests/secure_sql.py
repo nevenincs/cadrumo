@@ -120,6 +120,27 @@ def dev_test_database_password(settings: Settings | None = None) -> str:
     return source.aeat_dev_test_database_password.get_secret_value()
 
 
+def read_db_at_rest_bytes(db_path: Path) -> bytes:
+    """Return the full on-disk SQLite footprint for an at-rest plaintext scan.
+
+    The bucket databases run in WAL mode (``PRAGMA journal_mode=WAL``), so a
+    just-committed row lives in the ``<db>-wal`` sidecar until a checkpoint
+    folds it into the main database file. An at-rest plaintext scan that reads
+    only the main ``.db`` file would miss those rows and pass *tautologically* —
+    "no plaintext leaked" would hold simply because the data is not in the file
+    being scanned. Concatenating the main file with its ``-wal`` sidecar makes
+    the scan cover every committed byte regardless of checkpoint state, which
+    strengthens (never weakens) the leak assertion.
+
+    The ``-shm`` shared-memory index carries no row payload and is omitted.
+    """
+    data = db_path.read_bytes()
+    wal_path = db_path.with_name(db_path.name + "-wal")
+    if wal_path.exists():
+        data += wal_path.read_bytes()
+    return data
+
+
 @contextmanager
 def isolated_ephemeral_secure_sql(
     *,

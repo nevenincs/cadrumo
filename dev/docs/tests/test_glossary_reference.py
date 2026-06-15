@@ -159,7 +159,16 @@ def test_generated_glossary_parses_without_duplicate_term_warning() -> None:
         )
         app.build()
 
-        assert not warning.getvalue().strip(), warning.getvalue()
+        # Sphinx registers some docutils nodes/roles process-globally, so a
+        # second Sphinx app in the same pytest process re-emits benign
+        # "already registered" notices that are not glossary problems. Filter
+        # them so this gate asserts only real warnings -- the duplicate-term or
+        # unresolved-reference warnings the generated directive could actually
+        # provoke.
+        real_warnings = [
+            line for line in warning.getvalue().splitlines() if line.strip() and "already registered" not in line
+        ]
+        assert not real_warnings, warning.getvalue()
         std = app.env.domains["std"]
         terms = [name for (objtype, name) in std.objects if objtype == "term"]
         assert "AEAT" in terms

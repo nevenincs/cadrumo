@@ -2785,6 +2785,7 @@ cli:
         created_at, modified_at, ...).
       sort_order_help: 'Rendezési sorrend: asc (növekvő) vagy desc (csökkenő).'
       ungrouped_label: (nincs csoport)
+      hide_llm_rejected_help: 'Elrejti azokat a sorokat, amelyek legutóbbi modelljavaslatát elutasították (a felülvizsgált és elutasított sor kikerül a függő sorból).'
     merge:
       actor_help: Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_MERGED eseményen
         rögzítenek.

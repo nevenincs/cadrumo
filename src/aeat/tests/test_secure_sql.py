@@ -23,9 +23,40 @@ from .secure_sql import (
     isolated_ephemeral_secure_sql,
     isolated_profile_storage_root,
     isolated_runtime_profile,
+    read_db_at_rest_bytes,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+def test_read_db_at_rest_bytes_includes_the_wal_sidecar(tmp_path: Path) -> None:
+    """The at-rest reader scans the ``-wal`` sidecar, not just the main ``.db``.
+
+    Non-tautology lock for every at-rest plaintext scan routed through
+    ``read_db_at_rest_bytes``: in WAL mode a just-committed row lives in the
+    ``<db>-wal`` sidecar until a checkpoint folds it into the main file. A scan
+    that read only the main ``.db`` would miss it and pass tautologically. This
+    pins the helper's contract directly and deterministically (without relying
+    on SQLite checkpoint timing): the combined view must include the sidecar
+    bytes, and a main-only read must not. If the helper ever stops reading the
+    sidecar, this fails first.
+    """
+    db_path = tmp_path / "x.db"
+    db_path.write_bytes(b"MAIN_DB_CONTENT")
+    (tmp_path / "x.db-wal").write_bytes(b"WAL_SIDECAR_SENTINEL")
+
+    combined = read_db_at_rest_bytes(db_path)
+    assert b"MAIN_DB_CONTENT" in combined
+    assert b"WAL_SIDECAR_SENTINEL" in combined, "helper must include the -wal sidecar"
+    assert b"WAL_SIDECAR_SENTINEL" not in db_path.read_bytes(), (
+        "a main-only read must miss the sidecar -- this is the tautology the helper closes"
+    )
+
+    # With no sidecar present the helper still returns the main file bytes.
+    plain_db = tmp_path / "plain.db"
+    plain_db.write_bytes(b"ONLY_MAIN")
+    assert read_db_at_rest_bytes(plain_db) == b"ONLY_MAIN"
+
 
 _CONTROL_BUCKET_ID = "contamination-control"
 _CONTROL_KEK = b"c" * 32
