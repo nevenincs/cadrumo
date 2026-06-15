@@ -4,7 +4,7 @@ number = "1916"
 label = "Incremento por gastos en guarderías o centros de educación infantil autorizados (cantidades no aplicadas en el ejercicio 2021)"
 section = ["resultados", "calculo_impuesto_res", "ampliacion_deduc_mater_res"]
 semantic_role = "irpf_incremento_maternidad_guarderia_no_aplicado_2021"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 
