@@ -271,6 +271,35 @@ def test_text_or_no_evidence_without_provider_refuses_instructively() -> None:
         )
 
 
+def test_vision_connection_error_becomes_a_typed_refusal_with_fix() -> None:
+    """A down/unreachable Ollama is converted to LLMClassifierError, not a raw traceback."""
+    import httpx
+
+    from ....domain.transactions import LLMClassifierError
+
+    class _UnreachableVision:
+        @property
+        def decided_by(self) -> str:
+            return "llm:local-vision:qwen2.5vl:3b"
+
+        def classify(self, transaction: Transaction, *, evidence_images: tuple[str, ...]) -> LLMClassificationResponse:
+            raise httpx.ConnectError("connection refused")
+
+    evidence = _ResolvedEvidence(
+        reference="ev-1", text=None, images=(base64.b64encode(_png_image()).decode("ascii"),),
+    )
+    with pytest.raises(LLMClassifierError, match=r"vision reading failed.*Fix:"):
+        _classify_with_evidence(
+            _transaction("ev-1"),
+            evidence,
+            text_classifier=None,
+            spec=prompt_spec_with_saturation_fields(),
+            vision_classifier=_UnreachableVision(),  # ty: ignore[invalid-argument-type]  # structural vision stub
+            vision_model=None,
+            settings=load_settings(),
+        )
+
+
 def test_vision_model_override_selects_the_named_model(profile: TestRuntimeProfile) -> None:
     """--vision-model threads through to the request model and the provenance stamp."""
     _ = profile  # active bucket session backs the LLM cache
