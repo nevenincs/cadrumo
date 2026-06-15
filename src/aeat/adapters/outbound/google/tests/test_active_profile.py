@@ -1,4 +1,4 @@
-"""Tests for Google OAuth active-profile binding."""
+"""Tests for the Google OAuth active-profile resolver."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.i18n import tr
+from .._active_profile import resolve_active_profile
 from .._errors import GoogleAuthProfileUnboundError
-from .._profile_binding import resolve_active_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
