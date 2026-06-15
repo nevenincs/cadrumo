@@ -249,8 +249,14 @@ def test_secure_object_payload_is_encrypted_in_database(tmp_path: Path) -> None:
             )
             assert loaded is not None
             assert loaded.payload == payload
-            assert payload not in db_path.read_bytes()
-            assert natural_key.encode("utf-8") not in db_path.read_bytes()
+            # Scan the main file AND its -wal sidecar: under WAL the just-written
+            # row lives in <db>-wal until checkpoint, so a main-only read would
+            # pass this at-rest assertion tautologically.
+            from ......tests.secure_sql import read_db_at_rest_bytes
+
+            at_rest = read_db_at_rest_bytes(db_path)
+            assert payload not in at_rest
+            assert natural_key.encode("utf-8") not in at_rest
 
             with sqlite3.connect(db_path) as con:
                 stored_key, stored = con.execute("SELECT object_key, payload FROM secure_objects").fetchone()

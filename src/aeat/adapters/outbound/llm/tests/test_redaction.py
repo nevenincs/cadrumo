@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from .....tests.secure_sql import TestRuntimeProfile
+from .....tests.secure_sql import TestRuntimeProfile, read_db_at_rest_bytes
 from .._cache import LLMCache
 from .._models import (
     CachedEntry,
@@ -78,7 +78,7 @@ class TestCacheRedaction:
 
         assert not (tmp_path / "cache").exists()
         db_path = secure_object_test_profile.paths.db_dir / "aeat.db"
-        assert _NIF_CANARY.encode() not in db_path.read_bytes()
+        assert _NIF_CANARY.encode() not in read_db_at_rest_bytes(db_path)
 
     def test_bearer_token_redacted_in_cache(
         self,
@@ -92,7 +92,7 @@ class TestCacheRedaction:
 
         assert not (tmp_path / "cache").exists()
         db_path = secure_object_test_profile.paths.db_dir / "aeat.db"
-        assert _BEARER_TAIL.encode() not in db_path.read_bytes()
+        assert _BEARER_TAIL.encode() not in read_db_at_rest_bytes(db_path)
 
     def test_cache_entry_remains_parseable(self, tmp_path: Path) -> None:
         cache = LLMCache(root_dir=tmp_path / "cache")
@@ -125,7 +125,7 @@ class TestCacheRedaction:
         cache.write(request, first.model_copy(update={"cache_hit": False}))
         assert not (tmp_path / "cache").exists()
         db_path = secure_object_test_profile.paths.db_dir / "aeat.db"
-        assert _NIF_CANARY.encode() not in db_path.read_bytes()
+        assert _NIF_CANARY.encode() not in read_db_at_rest_bytes(db_path)
 
 
 class TestUsageRedaction:
@@ -156,7 +156,7 @@ class TestUsageRedaction:
         path = recorder.record(record)
         assert not path.exists()
         db_path = secure_object_test_profile.paths.db_dir / "aeat.db"
-        assert _NIF_CANARY.encode() not in db_path.read_bytes()
+        assert _NIF_CANARY.encode() not in read_db_at_rest_bytes(db_path)
 
     def test_bearer_token_redacted_in_usage(
         self,
@@ -168,7 +168,7 @@ class TestUsageRedaction:
         path = recorder.record(record)
         assert not path.exists()
         db_path = secure_object_test_profile.paths.db_dir / "aeat.db"
-        assert _BEARER_TAIL.encode() not in db_path.read_bytes()
+        assert _BEARER_TAIL.encode() not in read_db_at_rest_bytes(db_path)
 
     def test_each_record_is_one_jsonl_line(self, tmp_path: Path) -> None:
         recorder = UsageRecorder(root_dir=tmp_path / "usage")
