@@ -26,6 +26,7 @@ from ...application.ledger import (
 from ...application.review import FilterParseError
 from ...core import LedgerSortField, LedgerSortOrder, Period, resolve_active_bucket_id
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -522,11 +523,20 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
         ]
         from ._ledger_payloads import LedgerViewResult
 
+        notices: list[Notice] = []
+        rejection_notice = _latest_llm_rejection_notice(transaction_repository, resolved_id=resolved_id)
+        if rejection_notice is not None:
+            notices.append(rejection_notice)
+            reason = (rejection_notice.context or {}).get("operator_reason", "")
+            label = tr("cli.ledger.view.llm_rejected_label", default="LLM suggestion")
+            lines.append(f"{label}\t{tr('cli.ledger.classify.llm_rejected_label')}" + (f": {reason}" if reason else ""))
+
         _emit_envelope(
             ctx,
             command="ledger.view",
             result=LedgerViewResult.model_validate(result_payload.model_dump(mode="json")),
             lines=lines,
+            notices=notices,
         )
 
 
@@ -742,6 +752,56 @@ def _collect_ledger_history_events(object_ids: list[str]) -> list[BucketEvent]:
         )
     matches.sort(key=lambda event: event.occurred_at)
     return matches
+
+
+# The two terminal LLM decisions: an accepted (applied) classification or a
+# rejection. The most recent of the two is the standing LLM decision on a row.
+_LLM_DECISION_EVENT_TYPES = (
+    BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
+    BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,
+)
+
+
+def _latest_llm_rejection_notice(
+    transaction_repository: TransactionCatalogueRepository,
+    *,
+    resolved_id: str,
+) -> Notice | None:
+    """Return a notice when the row's most recent LLM decision was a rejection.
+
+    Reads the bucket-event history for the transaction (and its edit lineage) and
+    finds the latest LLM-decision event. When that is a rejection — i.e. the
+    operator declined an LLM suggestion and has not since accepted one — `view`
+    surfaces a one-line advisory carrying the recorded reason, so prior judgement
+    is visible without opening `history`
+    (``cli-notices-are-the-only-diagnostic-channel``).
+    """
+    object_ids = _history_object_ids(transaction_repository, resolved_id=resolved_id, include_split_siblings=False)
+    decisions = [
+        event for event in _collect_ledger_history_events(object_ids) if event.event_type in _LLM_DECISION_EVENT_TYPES
+    ]
+    if not decisions:
+        return None
+    latest = decisions[-1]  # chronological order from _collect_ledger_history_events
+    if latest.event_type is not BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED:
+        return None
+    reason = latest.payload.get("operator_reason", "")
+    context = {"transaction_id": resolved_id, "occurred_at": latest.occurred_at.isoformat()}
+    if reason:
+        context["operator_reason"] = reason
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="ledger.view.llm_suggestion_rejected",
+        message=tr(
+            "cli.ledger.view.llm_rejected_notice",
+            default=(
+                "The most recent LLM suggestion for this transaction was rejected; "
+                "classify it manually when ready."
+            ),
+        ),
+        suggestion=f"aeat app ledger classify {resolved_id} --classification BUSINESS --category-id <id>",
+        context=context,
+    )
 
 
 def _ledger_status_readiness_issue_line(transaction: Transaction, *, reason: str, detail: str) -> str:

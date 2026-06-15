@@ -16,6 +16,7 @@ related:
   - '[[2026-06-14-llm-classification-workflow-P04-S08]]'
   - '[[2026-06-14-llm-classification-workflow-P04-S09]]'
   - '[[2026-06-14-llm-classification-workflow-P04-S10]]'
+  - '[[2026-06-14-llm-classification-workflow-P05-S11]]'
   - '[[2026-06-14-llm-classification-workflow-adr]]'
   - '[[2026-06-14-llm-classification-workflow-audit]]'
   - '[[2026-06-14-llm-classification-workflow-plan]]'
@@ -52,6 +53,7 @@ Auto-generated index of all documents tagged with `#llm-classification-workflow`
 - `2026-06-14-llm-classification-workflow-P04-S08` - Add reject_llm_suggestion + LLMSuggestionRejectionResult emitting the rejection event without mutating the transaction
 - `2026-06-14-llm-classification-workflow-P04-S09` - Add classify --reject (stage-1/saturate/auto-split) and surface the rejection in ledger history
 - `2026-06-14-llm-classification-workflow-P04-S10` - Real-behaviour tests for reject (event recorded, no mutation, history/view)
+- `2026-06-14-llm-classification-workflow-P05-S11` - Surface the latest LLM rejection on ledger view as a typed info notice reading the row's LLM-decision events
 
 ### plan
 
