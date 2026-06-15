@@ -115,13 +115,17 @@ paths the resolver reads. All confirmed.
 - **Done (later pass):** M1 — the `llm_vision=off` two-mode refusal regression
   landed (S17, commit `9803e9dc0`) via a real lifecycle-saved profile fact.
 - **Done (later pass):** S09 — the capability-extras lean-core pyproject migration
-  landed (commits `2490c33af` foundation, `dd6122263` doctor probes + graceful
-  guard, `975a98e39` docs). google / playwright / anthropic now install on demand
-  via the `google` / `browser` / `anthropic` extras; the dev environment is
-  unchanged; the doctor reconciles each enabled capability against its extra. The
-  one intentional non-goal — feature-boundary inline guards (lazy-import refactor
-  of the adapters) — is documented in the S09 exec record; the doctor +
-  `require_optional_extra` provide the actionable guidance instead.
+  landed (commits `2490c33af` foundation, `dd6122263` doctor probes, `975a98e39`
+  docs, `3a0ab7823` hexagonal feature-boundary guards). google / playwright /
+  anthropic now install on demand via the `google` / `browser` / `anthropic`
+  extras; the dev environment is unchanged; the package imports without any extra;
+  each feature reached without its extra refuses with its own typed error naming
+  `pip install aeat[<extra>]`; and the doctor reconciles each enabled capability
+  against its extra. The feature-boundary guards — initially deferred on a
+  layer-violation concern — were completed by siting the guard primitive in `core`
+  (contract-legal for adapters) and making the eager-import adapters import-safe;
+  real-behaviour import-blocker tests cover every boundary. No deferred items
+  remain.
 - **Process note:** during closeout the driving agent twice hit the shared-index
   hazard — once a peer `git commit` swept staged vault files into its commit, once
   a bare `git commit` (no pathspec) swept peer-staged work (a `filing/reconciliation`
