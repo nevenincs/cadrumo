@@ -13,7 +13,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
 from ...core.errors import BaseSeverity
 from ...core.hashing import content_hash_hex
 from ...core.i18n import Translatable as tr
@@ -69,14 +69,35 @@ class ModeloValue(BaseModel):
 
 
 class ModeloBindingValue(BaseModel):
-    """The typed value of one registry binding on a :class:`ModeloDraft`."""
+    """The typed value of one registry binding on a :class:`ModeloDraft`.
+
+    Carries the same regulatory grounding the casilla half exposes via
+    :class:`ModeloCasillaProvenance`: ``legal_refs`` and ``source_refs``
+    populated from the binding definition, plus a typed
+    :class:`~aeat.core.BindingSourceKind` ``source`` (replacing the former
+    free-text provenance string) so a bound value is operator-traceable at
+    parity with a computed casilla.
+
+    Attributes:
+        binding_id: Stable registry binding id this value materialises.
+        value: The scalar value carried for this binding.
+        kind: Provenance kind — literal input, computed, inherited, etc.
+        source: Typed registry binding source kind (e.g.
+            :attr:`~aeat.core.BindingSourceKind.MANUAL_INPUT`,
+            :attr:`~aeat.core.BindingSourceKind.LEDGER_IVA_AGGREGATION`).
+        legal_refs: Legal references carried from the binding definition.
+        source_refs: Source references carried from the binding definition.
+        row_index: 1-based row index for multi-row (detail-record) bindings.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     binding_id: BindingId
     value: ModeloScalar
     kind: ModeloValueKind
-    source: str
+    source: BindingSourceKind
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
     row_index: int | None = Field(default=None, ge=1)
 
 
