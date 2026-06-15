@@ -48,6 +48,9 @@ _CONCEPT_SECTION_GROUNDING: dict[str, tuple[str, tuple[int, ...]]] = {
     # base liquidable general negativa (carry-forward) — art. 50; grounded via the
     # binding-aware pass (casilla + construct + binding coherently, resolving V19).
     "base_liq_neg_res": ("ley-35-2006:art-50", (2021, 2022, 2023, 2024)),
+    # reducciones de la base imponible (aggregate) — art. 50 (base liquidable = base
+    # imponible − reducciones); the specific reduction articles are the inputs.
+    "red_base_imponible_res": ("ley-35-2006:art-50", (2021, 2022, 2023, 2024)),
 }
 
 
