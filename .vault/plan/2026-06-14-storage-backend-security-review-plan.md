@@ -149,7 +149,7 @@ Remove the attach_evidence double-decrypt and thread one catalogue per command.
 Stream namespace enumeration and move transactions to one secure-object row per id.
 
 - [x] `W06.P14.S30` - Make secure-object namespace enumeration stream decrypted rows instead of materialising and sorting the full set; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `W06.P14.S31` - Move the transaction catalogue to one secure-object row per transaction keyed by transaction id so single-row mutations stop rewriting the whole catalogue; `src/aeat/domain/transactions/_repository.py`.
+- [x] `W06.P14.S31` - Move the transaction catalogue to one secure-object row per transaction keyed by transaction id so single-row mutations stop rewriting the whole catalogue; `src/aeat/domain/transactions/_repository.py`.
 
 ## Description
 

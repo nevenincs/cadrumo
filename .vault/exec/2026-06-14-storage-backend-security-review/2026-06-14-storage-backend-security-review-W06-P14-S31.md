@@ -30,26 +30,43 @@ related:
 
 ## Outcome
 
-STEP DEFERRED — large persistence-model redesign, focused follow-up.
+STEP COMPLETE. The transaction catalogue is now one encrypted secure-object row
+per transaction; a single-transaction mutation rewrites only the changed rows
+instead of re-encrypting the whole catalogue.
 
-Moving to one secure-object row per transaction (keyed by transaction id) is a
-clean target and the no-legacy rule means a straight cutover (no migration: delete
-the whole-catalogue shape, ship the per-row shape). But the blast radius is the hot
-ledger path and every reader of the catalogue:
+Three pieces landed:
 
-- the repository read/write API (whole-catalogue load/save -> per-row load,
-  namespace enumeration for list-all, single-row upsert/delete for mutations);
-- the derived participation index
-  (`ledger-participation-index-is-derived-rebuildable`) and its co-write atomicity;
-- reconciliation, aggregation, and CLI consumers that load the catalogue;
-- the uniform-quintet mutation contract (`ledger-mutation-returns-uniform-quintet`);
-- the catalogue roundtrip + anti-tautology persistence tests (the whole-catalogue
-  fixtures rewrite to per-row).
+1. **Atomic upsert+delete primitive** — `SecureObjectRepository.apply_batch(writes,
+   deletions)` commits every upsert and every digest-addressed deletion in one
+   unit of work, so the per-row diff *and* the sibling-catalogue co-writes
+   (bucket-event history, invoices, via `save_with_secure_object_writes`) stay
+   all-or-nothing — the exact atomicity the single-blob save had. Deletions
+   address rows by raw HMAC digest (`SecureObjectDeletion`), the diff's only
+   handle on stored rows. `namespace_payload_hashes` is its decryption-free diff
+   companion (skip unchanged rows). A transactional-rollback proof covers it.
+2. **Per-row repository** — `load`/`save`/`save_with_secure_object_writes` keep
+   their signatures and the `TransactionCatalogueRepositoryProtocol`, so **every
+   ledger-mutation caller is untouched** (the caller blast radius I had flagged
+   evaporated under the API-preserving design). Changed-row detection is the
+   payload-hash diff; stable hashes come from serialising each row with
+   `written_at = transaction.modified_at`.
+3. **Cross-bucket isolation** — preserved by a per-bucket membership-index row
+   (`transaction-index:{bucket}`) read by its exact key: `load()` and deletions
+   are bounded to this bucket's transaction ids, so a shared secure store can
+   neither leak nor delete another bucket's rows. This was the crux — without it
+   a shared-store reconciliation would have deleted peer buckets' rows.
 
-This is a self-contained campaign-sized slice that must land atomically with full
-roundtrip coverage, not an end-of-session edit on the hot path. Deferred to a
-focused pass with the ledger + persistence suites as the gate — the same
-deferral-then-complete discipline that carried S23.
+The deferral's stated blocker (no atomic upsert+delete primitive; `save_many` is
+upsert-only) was the first thing built. The roundtrip + anti-tautology suite was
+rewritten to mutate per-transaction rows; the classification / schema-version /
+drift error contracts are preserved per row.
+
+Gates: transaction repo 17, `apply_batch` 3, ledger+review+runtime 610,
+aggregation 51, transactions+staleness+bulk-classify+participation 144 — all
+green; full storage suite green (hardening-guard allowlist extended for the new
+test). The 5 failures in the broad sweep were peer-state contamination (the
+`application/modelo` mid-flight error-class conftest import) — all pass in
+isolation, confirmed not owned here.
 
 ## Notes
 
