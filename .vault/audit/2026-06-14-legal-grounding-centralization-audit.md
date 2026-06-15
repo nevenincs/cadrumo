@@ -840,6 +840,40 @@ boundary; the residual is gated on the peer's binding-aggregation refactor landi
 art-20 Phase-2 + M714 + the inmueble/gravamenes grounding tail become buildable on the final mesh) and on
 the operator's legal re-stamp of the 14 agent-authored entries.
 
+### V28 (grounding-tail re-scan — 134 spurious-default casillas stripped; 365 sole-default precisely quantified)
+
+A full re-scan of the M100 tree (all 4 revisions) for the LIRPF arts 27-32 actividades generic-default
+found it is NOT exhausted — 1227 casillas still cite arts 27-32. Classified by the renumbering-immune
+section tag (`casilla-grounding-corrects-actividades-default-by-section`):
+
+- **728 genuine actividades — CORRECT, untouched.** Estimación directa P&L lines (ingresos/gastos de
+  explotación, sueldos, amortización), estimación objetiva módulos (agrícola/ganadero, índices
+  correctores), IAE/epígrafe, "inmueble afecto a actividades económicas", and the art-32.1 irregular-
+  income reductions. Arts 27-32 IS their binding grounding; the rule mandates preserving it.
+- **134 spurious-default — FIXED (commit `580e70ab5`).** Non-actividades casillas that already carried
+  their correct anchor article (art-77 cuota líquida autonómica [74], art-81-bis maternidad [16], art-80
+  doble imposición internacional [12], art-81 [12], art-79/50/103/68.x) but had the arts 27-32 default
+  left appended by the earlier sweep. Stripped the spurious default. Guaranteed-safe (removal preserves
+  resolution and only relaxes construct/binding coverage); schema-independent resolution gate green.
+- **365 sole-default — PRECISELY QUANTIFIED, deferred.** Non-actividades casillas carrying ONLY arts
+  27-32 (no correct anchor), so the fix must ADD the concept article (and strip 27-32). The cluster→
+  article mapping is turnkey: `regularizacion_res` (45)→art-79/DA-45; `compensacion_conyuges_res` bank/
+  NIF/SEPA fields (48)→administrative/art-84 tributación conjunta; `red_base_imponible` reductions
+  (~41)→art-51/52/53/54/55; `reserva_inversiones_baleares_res` (19)→ley-31-2022 DA-70 (corpus-blocked);
+  `deduccion_residente_ue_res` (20)→art-... UE; `gp_*` ganancias (premios/fondos/acciones/derechos,
+  ~32)→art-33/34; `regimenes_especiales` TFI/imagen/IIC (~28)→art-91/92/95; `irpf_ccaa_res` (12)→art-77;
+  doble-imposición/cuota residue→art-80/79.
+
+Why the 365 are deferred, not done blind: adding a legal_ref can BREAK construct/binding coverage (the
+construct must remain a superset of its members' refs — a newly-added member ref the construct does not
+list fails registry load, the V19/V20 failure mode). Verifying coverage for an ADD requires either the
+real registry validator (peer-blocked) or a faithful schema-independent construct→formula→casilla
+coverage gate; an imperfect gate would plant a load-time landmine that fires when the peer's refactor
+lands. The conservative, correct move is the 134-strip now (provably safe) and the 365-add when the
+validator is available — the cluster mapping above makes that pass turnkey. This supersedes the earlier
+"irreducible tail" characterisation (V22): the tail is larger and mostly tractable, bounded only by the
+ADD-coverage verification, not by corpus gaps (only the 19 Baleares RIB casillas are corpus-blocked).
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
