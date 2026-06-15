@@ -158,13 +158,13 @@ aeat config doctor reporting availability + capability posture + remediation per
 
 Capability extras, torch relocation, just doctor/provision recipes, fix env-playwright, README reconcile.
 
-- [ ] `W03.P07.S09` - Capability extras + relocate torch; `just doctor/provision recipes; fix env-playwright; reconcile README/justfile; `pyproject.toml, justfile, README.md`.
+- [x] `W03.P07.S09` - Capability extras + relocate torch; `just doctor/provision recipes; fix env-playwright; reconcile README/justfile; `pyproject.toml, justfile, README.md`.
 - [x] `W03.P07.S10` - Tests + locales + how-to onboarding doc across capabilities, probes, doctor, provisioning; `src/aeat tests, src/aeat/locales, docs/how-to`.
 - [x] `W03.P07.S13` - Investigate the torch placement (vaultspec-rag managed-torch-direct-dependency) and restructure pyproject: capability-mapped extras + relocate torch correctly; `pyproject.toml`.
 - [x] `W03.P07.S14` - Write the onboarding how-to doc covering bootstrap, capabilities, and the doctor; `docs/how-to`.
 - [x] `W03.P07.S15` - Verify: full focused suite + conformance + honesty review; `close the plan; `.vault/audit`.
 - [x] `W03.P07.S16` - Gate every Google-write verb (verify, push, probe --no-read-only) on google_export with a no-allowlist conformance test (honesty review H1); `src/aeat/entrypoints/cli/_config/_google.py, src/aeat/entrypoints/cli/_config/_google_sync_calc.py`.
-- [ ] `W03.P07.S17` - DEFERRED follow-up: add an llm_vision=off two-mode (scan PDF + image) evidence-refusal regression (honesty review M1); `src/aeat/application/ledger/tests`.
+- [x] `W03.P07.S17` - DEFERRED follow-up: add an llm_vision=off two-mode (scan PDF + image) evidence-refusal regression (honesty review M1); `src/aeat/application/ledger/tests`.
 
 ## Description
 
