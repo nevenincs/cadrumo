@@ -5,5 +5,5 @@ label = "Base imponible imputada"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_agrup_interes_economico"]
 data_type = "decimal"
 semantic_role = "base_imponible_irpf"
-legal_refs = ["ley-35-2006:art-86"]
+legal_refs = ["ley-35-2006:art-48", "ley-35-2006:art-49", "ley-35-2006:art-86"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
