@@ -35,7 +35,7 @@ from ..errors import (
     StorageValidationError,
 )
 from . import _orm
-from ._secure_object_crypto import derive_revision_id
+from ._secure_object_crypto import derive_revision_id, verify_revision_self_consistency
 from ._secure_object_integrity import (
     iter_namespace_decryptability as _iter_namespace_decryptability,
 )
@@ -544,7 +544,8 @@ class SecureObjectRepository:
             stmt = (
                 text(
                     "SELECT id, object_key, classification, schema_version, "
-                    "written_at, payload "
+                    "written_at, payload, revision_id, previous_revision_id, "
+                    "payload_hash, ciphertext_hash, previous_payload_hash "
                     "FROM secure_objects WHERE namespace = :namespace "
                     "ORDER BY object_key",
                 )
@@ -636,6 +637,27 @@ class SecureObjectRepository:
                         schema_version=schema_version,
                         written_at=written_at,
                         reason=str(exc),
+                    )
+                    continue
+                if not verify_revision_self_consistency(
+                    namespace=namespace,
+                    object_key=object_key,
+                    schema_version=schema_version,
+                    written_at=written_at,
+                    revision_id=raw.revision_id,
+                    previous_revision_id=raw.previous_revision_id,
+                    payload_hash=raw.payload_hash,
+                    ciphertext_hash=raw.ciphertext_hash,
+                    previous_payload_hash=raw.previous_payload_hash,
+                ):
+                    yield SecureObjectUnreadable(
+                        namespace=namespace,
+                        row_id=row_id,
+                        object_key=object_key,
+                        classification=classification_str,
+                        schema_version=schema_version,
+                        written_at=written_at,
+                        reason="revision lineage self-consistency check failed",
                     )
                     continue
                 yield SecureObjectRecord(
@@ -1140,6 +1162,23 @@ class SecureObjectRepository:
             schema_version=row.schema_version,
             definition=namespace_definition,
         )
+        if not verify_revision_self_consistency(
+            namespace=row.namespace,
+            object_key=bytes(row.object_key),
+            schema_version=row.schema_version,
+            written_at=row.written_at,
+            revision_id=row.revision_id,
+            previous_revision_id=row.previous_revision_id,
+            payload_hash=row.payload_hash,
+            ciphertext_hash=row.ciphertext_hash,
+            previous_payload_hash=row.previous_payload_hash,
+        ):
+            _log.error(
+                "secure_objects: revision lineage self-consistency failed for namespace=%s row id=%s",
+                row.namespace,
+                row.id,
+            )
+            raise SecureObjectUnreadableError(row.namespace, int(row.id))
         payload_plain = decrypt_secure_object_payload(
             bytes(row.payload),
             associated_data=secure_object_payload_aad(
