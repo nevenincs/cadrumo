@@ -1,11 +1,23 @@
 """Governed-persistence repository for the transaction catalogue.
 
-The repository is the only sanctioned read/write path for the
-transaction catalogue. It stores the catalogue as an encrypted byte
-object via :class:`SecureObjectRepository` at
-:class:`SensitivityClass` ``FINANCIAL``, wrapping each payload in an
-:class:`Envelope` before serialisation; no plaintext transaction row,
-JSON catalogue, or envelope file lands on disk.
+The repository is the only sanctioned read/write path for the transaction
+catalogue. It stores **one encrypted secure-object row per transaction** —
+keyed ``transaction:{bucket_id}:{transaction_id}`` inside the
+``aeat.domain.transactions.bucket`` namespace at :class:`SensitivityClass`
+``FINANCIAL`` — so a single-transaction mutation rewrites only that row instead
+of re-encrypting the whole catalogue (the prior single-blob shape was O(n) write
+amplification per ledger edit). Each row wraps its :class:`Transaction` in an
+:class:`Envelope` before serialisation; no plaintext transaction row, JSON
+catalogue, or envelope file lands on disk.
+
+Writes go through the atomic upsert+delete batch
+(:meth:`SecureObjectRepository.apply_batch`) so a multi-transaction mutation —
+and any sibling-catalogue co-writes (bucket-event history, invoices) passed to
+:meth:`save_with_secure_object_writes` — commit all-or-nothing, preserving the
+co-write atomicity the single-blob ``save`` had. The diff that decides which
+rows to write or delete is driven by a decryption-free
+:meth:`SecureObjectRepository.namespace_payload_hashes` scan, so an unchanged
+transaction is never rewritten.
 """
 
 from __future__ import annotations
@@ -22,16 +34,47 @@ from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...core.time import now, validate_utc_aware
 from ._errors import LedgerStorageError, StoredTransactionDriftError
-from ._models import BucketTransactionRef, TransactionCatalogue
+from ._models import BucketTransactionRef, Transaction, TransactionCatalogue
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ...adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
-    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+    from ...adapters.persistence.storage import (
+        SecureObjectDeletion,
+        SecureObjectRepository,
+        SecureObjectWrite,
+    )
 
 _log = get_logger(__name__)
 
 _TX_CATALOGUE_VERSION = 1
 TX_BUCKET_NAMESPACE = "aeat.domain.transactions.bucket"
+
+
+class _TransactionIndex(BaseModel):
+    """Per-bucket membership list: the transaction ids this bucket owns.
+
+    The index is a single secure-object row keyed by ``bucket_id`` that bounds
+    both reads and deletions to *this* bucket's rows. It is what preserves
+    cross-bucket isolation when several buckets share one secure store: a load
+    or a reconciliation reads this bucket's index by its exact key and never
+    enumerates another bucket's transactions, and a reconciliation can only
+    delete transaction ids the index lists. The heavy per-transaction payloads
+    live in their own rows; the index carries only the (cheap) id list.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    transaction_ids: tuple[str, ...] = ()
+
+
+def transaction_index_object_key(bucket_id: str) -> str:
+    """Return the per-bucket transaction-membership-index secure-object key."""
+    trimmed = bucket_id.strip()
+    if not trimmed:
+        raise LedgerStorageError(
+            "bucket_id must not be blank",
+            context={"repository": "transaction_catalogue", "operation": "index_object_key"},
+        )
+    return f"transaction-index:{trimmed}"
 
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
@@ -42,13 +85,13 @@ def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     return secure_object_repository_for_bucket(bucket_id, load_settings())
 
 
-def transaction_catalogue_object_key(bucket_id: str) -> str:
-    """Return the secure object key for one profile bucket's transaction catalogue.
+def transaction_object_key(bucket_id: str, transaction_id: str) -> str:
+    """Return the per-transaction secure-object key within a profile bucket.
 
-    The catalogue is per profile bucket: every read and write resolves
-    through the active profile bucket's id. Cross-bucket aggregation
-    must qualify with ``(bucket_id, tx_id)``; ``tx_id`` alone is unique
-    only within one bucket.
+    Each transaction is its own secure-object row. The key qualifies with the
+    bucket id (``transaction:{bucket_id}:{transaction_id}``); cross-bucket
+    aggregation must qualify with ``(bucket_id, tx_id)`` because ``tx_id`` alone
+    is unique only within one bucket.
     """
     trimmed = bucket_id.strip()
     if not trimmed:
@@ -56,7 +99,13 @@ def transaction_catalogue_object_key(bucket_id: str) -> str:
             "bucket_id must not be blank",
             context={"repository": "transaction_catalogue", "operation": "object_key"},
         )
-    return f"transaction-catalogue:{trimmed}"
+    tx = transaction_id.strip()
+    if not tx:
+        raise LedgerStorageError(
+            "transaction_id must not be blank",
+            context={"repository": "transaction_catalogue", "operation": "object_key"},
+        )
+    return f"transaction:{trimmed}:{tx}"
 
 
 class ImportSummary(BaseModel):
@@ -110,36 +159,37 @@ class _PersistedTransactionTimestampWitness(BaseModel):
 
 
 def _validate_persisted_transaction_timestamps(payload: bytes) -> None:
-    """Reject persisted catalogues missing the mandatory D6 timestamp fields."""
+    """Reject a persisted per-transaction row missing the mandatory D6 timestamps."""
     try:
         decoded = json.loads(payload.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):
         return
     if not isinstance(decoded, dict):
         return
-    envelope_payload = decoded.get("payload")
-    if not isinstance(envelope_payload, dict):
+    transaction_payload = decoded.get("payload")
+    if not isinstance(transaction_payload, dict):
         return
-    transactions = envelope_payload.get("transactions")
-    if not isinstance(transactions, dict):
-        return
-    for transaction_payload in transactions.values():
-        _PersistedTransactionTimestampWitness.validate_payload(transaction_payload)
+    _PersistedTransactionTimestampWitness.validate_payload(transaction_payload)
 
 
 class TransactionCatalogueRepository:
     """Repository over the encrypted SQL-backed transaction catalogue.
 
-    Every instance is bound to one profile bucket via ``bucket_id``.
-    All reads and writes operate on the per-bucket secure object
-    ``transaction-catalogue:{bucket_id}`` inside the
-    ``aeat.domain.transactions.bucket`` namespace, so two operator
-    profiles never share transaction storage.
+    Every instance is bound to one profile bucket via ``bucket_id``. The
+    catalogue is stored as one secure-object row per transaction (keyed
+    ``transaction:{bucket_id}:{transaction_id}``) inside the
+    ``aeat.domain.transactions.bucket`` namespace, so two operator profiles
+    never share transaction storage and a single-transaction mutation touches a
+    single row.
     """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
-        self._object_key = transaction_catalogue_object_key(bucket_id)
         self._bucket_id = bucket_id.strip()
+        if not self._bucket_id:
+            raise LedgerStorageError(
+                "bucket_id must not be blank",
+                context={"repository": "transaction_catalogue", "operation": "object_key"},
+            )
         self._objects = objects or _secure_objects_for_bucket(self._bucket_id)
 
     @property
@@ -148,137 +198,105 @@ class TransactionCatalogueRepository:
         return self._bucket_id
 
     def exists(self) -> bool:
-        """Return whether this bucket's transaction catalogue has been persisted."""
-        return self._objects.exists(TX_BUCKET_NAMESPACE, self._object_key)
+        """Return whether this bucket holds any persisted transactions."""
+        return bool(self._load_index_ids())
 
     def load(self) -> TransactionCatalogue:
-        """Return the persisted catalogue or an empty catalogue if absent.
+        """Return the persisted catalogue, assembled from this bucket's rows.
+
+        The per-bucket membership index names exactly the transaction ids this
+        bucket owns; only the rows whose digest the index lists are read, so a
+        shared secure store never leaks another bucket's transactions.
 
         Returns:
             The deserialised :class:`TransactionCatalogue`, or a fresh empty
-            instance when no database object is present.
+            instance when this bucket has no transactions.
 
         Raises:
-            ClassificationError: If the persisted object's class is not
+            ClassificationError: If a row's inner envelope class is not
                 ``SensitivityClass.FINANCIAL``.
-            EnvelopeVersionError: If the persisted object's schema version is
+            EnvelopeVersionError: If a row's inner envelope schema version is
                 higher than the consumer supports.
-            StoredTransactionDriftError: If the persisted payload fails
-                pydantic schema validation on deserialization.
+            StoredTransactionDriftError: If a row payload fails pydantic schema
+                validation on deserialization.
         """
         from ...adapters.persistence.storage import Envelope
+        from ...adapters.persistence.storage.crypto import secure_object_key_digest
         from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 
-        record = self._objects.load(
+        index_ids = self._load_index_ids()
+        if not index_ids:
+            return TransactionCatalogue.from_transactions([])
+        wanted = {
+            secure_object_key_digest(transaction_object_key(self._bucket_id, transaction_id)): transaction_id
+            for transaction_id in index_ids
+        }
+        transactions: list[Transaction] = []
+        for record in self._objects.list_records(
             TX_BUCKET_NAMESPACE,
-            self._object_key,
             expected_class=SensitivityClass.FINANCIAL,
             max_supported_version=_TX_CATALOGUE_VERSION,
-        )
-        if record is None:
-            _log.debug(
-                "transaction catalogue not found; returning empty catalogue bucket_id=%s object_key=%s",
-                self._bucket_id,
-                self._object_key,
-            )
-            return TransactionCatalogue()
-        try:
-            _validate_persisted_transaction_timestamps(record.payload)
-            envelope = Envelope[TransactionCatalogue].model_validate_json(record.payload)
-        except ValidationError as exc:
-            # pydantic ValidationError previously propagated raw and lost the
-            # typed drift signal at the CLI boundary. Mirror the
-            # StoredProfileDriftError pattern so the CLI can route
-            # stored-data-validation failures to the repair-oriented surface
-            # instead of a generic refusal.
-            _log.error(
-                "transaction catalogue schema drift bucket_id=%s object_key=%s",
-                self._bucket_id,
-                self._object_key,
-                exc_info=True,
-            )
-            raise StoredTransactionDriftError(self._bucket_id, exc) from exc
-        if envelope.classification is not SensitivityClass.FINANCIAL:
-            _log.error(
-                "transaction catalogue classification mismatch bucket_id=%s object_key=%s classification=%s",
-                self._bucket_id,
-                self._object_key,
-                envelope.classification.value,
-            )
-            raise ClassificationError(
-                context={
-                    "namespace": TX_BUCKET_NAMESPACE,
-                    "object_key": self._object_key,
-                    "bucket_id": self._bucket_id,
-                    "classification": envelope.classification.value,
-                    "expected": SensitivityClass.FINANCIAL.value,
-                },
-                translated_message="errors.integrity.integrity_storage_classification",
-            )
-        if envelope.schema_version > _TX_CATALOGUE_VERSION:
-            _log.error(
-                "transaction catalogue envelope version mismatch bucket_id=%s object_key=%s schema_version=%d",
-                self._bucket_id,
-                self._object_key,
-                envelope.schema_version,
-            )
-            raise EnvelopeVersionError(
-                context={
-                    "namespace": TX_BUCKET_NAMESPACE,
-                    "object_key": self._object_key,
-                    "bucket_id": self._bucket_id,
-                    "schema_version": envelope.schema_version,
-                    "expected": _TX_CATALOGUE_VERSION,
-                },
-                translated_message="errors.integrity.integrity_storage_envelope_version",
-            )
-        catalogue = envelope.payload
+        ):
+            transaction_id = wanted.get(bytes(record.object_key))
+            if transaction_id is None:
+                continue  # the index row, or (shared store) another bucket's row
+            try:
+                _validate_persisted_transaction_timestamps(record.payload)
+                envelope = Envelope[Transaction].model_validate_json(record.payload)
+            except ValidationError as exc:
+                _log.error(
+                    "transaction row schema drift bucket_id=%s",
+                    self._bucket_id,
+                    exc_info=True,
+                )
+                raise StoredTransactionDriftError(self._bucket_id, exc) from exc
+            if envelope.classification is not SensitivityClass.FINANCIAL:
+                raise ClassificationError(
+                    context={
+                        "namespace": TX_BUCKET_NAMESPACE,
+                        "object_key": transaction_object_key(self._bucket_id, transaction_id),
+                        "bucket_id": self._bucket_id,
+                        "classification": envelope.classification.value,
+                        "expected": SensitivityClass.FINANCIAL.value,
+                    },
+                    translated_message="errors.integrity.integrity_storage_classification",
+                )
+            if envelope.schema_version > _TX_CATALOGUE_VERSION:
+                raise EnvelopeVersionError(
+                    context={
+                        "namespace": TX_BUCKET_NAMESPACE,
+                        "object_key": transaction_object_key(self._bucket_id, transaction_id),
+                        "bucket_id": self._bucket_id,
+                        "schema_version": envelope.schema_version,
+                        "expected": _TX_CATALOGUE_VERSION,
+                    },
+                    translated_message="errors.integrity.integrity_storage_envelope_version",
+                )
+            transactions.append(envelope.payload)
         _log.debug(
-            "loaded transaction catalogue bucket_id=%s object_key=%s entries=%d",
+            "loaded transaction catalogue bucket_id=%s entries=%d",
             self._bucket_id,
-            self._object_key,
-            len(catalogue.transactions),
+            len(transactions),
         )
-        return catalogue
+        return TransactionCatalogue.from_transactions(transactions)
 
     def save(self, catalogue: TransactionCatalogue) -> None:
-        """Persist ``catalogue`` in the encrypted database object store.
+        """Persist ``catalogue`` as per-transaction encrypted rows.
 
-        The on-disk database value is an encrypted BLOB at FINANCIAL
-        class. No plaintext transaction row lands on disk.
+        Only rows whose content changed are rewritten; transactions removed from
+        the catalogue are deleted. The whole diff commits atomically.
 
         Args:
             catalogue: The :class:`TransactionCatalogue` to persist.
         """
-        self._objects.save_many((self.to_secure_object_write(catalogue),))
+        writes, deletions = self._reconcile(catalogue)
+        self._objects.apply_batch(writes, deletions)
         _log.info(
-            "saved transaction catalogue bucket_id=%s object_key=%s entries=%d",
+            "saved transaction catalogue bucket_id=%s entries=%d rewritten=%d deleted=%d",
             self._bucket_id,
-            self._object_key,
             len(catalogue.transactions),
-        )
-
-    def to_secure_object_write(self, catalogue: TransactionCatalogue) -> SecureObjectWrite:
-        """Return the :class:`SecureObjectWrite` upsert for ``catalogue`` without committing it.
-
-        Args:
-            catalogue: The :class:`TransactionCatalogue` to serialise.
-        """
-        from ...adapters.persistence.storage import Envelope, SecureObjectWrite
-
-        envelope = Envelope[TransactionCatalogue](
-            schema_version=_TX_CATALOGUE_VERSION,
-            written_at=now(),
-            classification=SensitivityClass.FINANCIAL,
-            payload=catalogue,
-        )
-        return SecureObjectWrite(
-            namespace=TX_BUCKET_NAMESPACE,
-            object_key=self._object_key,
-            classification=SensitivityClass.FINANCIAL,
-            schema_version=_TX_CATALOGUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            len(writes),
+            len(deletions),
         )
 
     def save_with_secure_object_writes(
@@ -288,25 +306,137 @@ class TransactionCatalogueRepository:
     ) -> None:
         """Persist ``catalogue`` plus related secure objects in one unit of work.
 
+        The per-transaction diff (changed rows + deletions) and ``extra_writes``
+        (e.g. bucket-event history, invoice catalogue) commit atomically, so a
+        ledger mutation and its co-emitted records remain all-or-nothing.
+
         Args:
             catalogue: The :class:`TransactionCatalogue` to persist.
             extra_writes: Additional secure object writes to commit atomically.
         """
-        self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
+        writes, deletions = self._reconcile(catalogue)
+        self._objects.apply_batch((*writes, *extra_writes), deletions)
         _log.info(
-            "saved transaction catalogue bucket_id=%s object_key=%s entries=%d extra_writes=%d",
+            "saved transaction catalogue bucket_id=%s entries=%d rewritten=%d deleted=%d extra_writes=%d",
             self._bucket_id,
-            self._object_key,
             len(catalogue.transactions),
+            len(writes),
+            len(deletions),
             len(extra_writes),
         )
+
+    def _reconcile(
+        self,
+        catalogue: TransactionCatalogue,
+    ) -> tuple[tuple[SecureObjectWrite, ...], tuple[SecureObjectDeletion, ...]]:
+        """Diff ``catalogue`` against this bucket's stored rows.
+
+        Returns ``(changed writes, deletions)``. Changed-row detection is a
+        decryption-free :meth:`namespace_payload_hashes` lookup keyed by the
+        bucket-qualified HMAC digest (so it is correct even when several buckets
+        share one store): an incoming transaction whose freshly-serialised
+        payload hash matches the stored one is left untouched. Deletions and the
+        membership index are bounded to *this* bucket via the per-bucket index,
+        so a reconciliation can never touch another bucket's rows.
+        """
+        from ...adapters.persistence.storage import SecureObjectDeletion, SecureObjectWrite
+        from ...adapters.persistence.storage.crypto import secure_object_key_digest
+        from ...core.hashing import sha256_hex
+
+        current_ids = self._load_index_ids()
+        incoming_ids = set(catalogue.transactions)
+        stored_hashes = self._objects.namespace_payload_hashes(TX_BUCKET_NAMESPACE)
+
+        writes: list[SecureObjectWrite] = []
+        for transaction_id, transaction in catalogue.transactions.items():
+            object_key = transaction_object_key(self._bucket_id, transaction_id)
+            digest = secure_object_key_digest(object_key)
+            payload = self._serialise_transaction(transaction)
+            if stored_hashes.get(digest) == sha256_hex(payload):
+                continue
+            writes.append(
+                SecureObjectWrite(
+                    namespace=TX_BUCKET_NAMESPACE,
+                    object_key=object_key,
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=_TX_CATALOGUE_VERSION,
+                    written_at=transaction.modified_at,
+                    payload=payload,
+                ),
+            )
+
+        if incoming_ids != current_ids:
+            writes.append(
+                SecureObjectWrite(
+                    namespace=TX_BUCKET_NAMESPACE,
+                    object_key=transaction_index_object_key(self._bucket_id),
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=_TX_CATALOGUE_VERSION,
+                    written_at=now(),
+                    payload=self._serialise_index(incoming_ids),
+                ),
+            )
+
+        deletions = tuple(
+            SecureObjectDeletion(
+                namespace=TX_BUCKET_NAMESPACE,
+                hashed_object_key=secure_object_key_digest(transaction_object_key(self._bucket_id, transaction_id)),
+            )
+            for transaction_id in current_ids - incoming_ids
+        )
+        return tuple(writes), deletions
+
+    def _load_index_ids(self) -> set[str]:
+        """Return the transaction ids the per-bucket membership index records."""
+        from ...adapters.persistence.storage import Envelope
+
+        record = self._objects.load(
+            TX_BUCKET_NAMESPACE,
+            transaction_index_object_key(self._bucket_id),
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        if record is None:
+            return set()
+        try:
+            envelope = Envelope[_TransactionIndex].model_validate_json(record.payload)
+        except ValidationError as exc:
+            raise StoredTransactionDriftError(self._bucket_id, exc) from exc
+        return set(envelope.payload.transaction_ids)
+
+    def _serialise_index(self, transaction_ids: set[str]) -> bytes:
+        """Serialise the membership index (sorted ids) into encrypted-row bytes."""
+        from ...adapters.persistence.storage import Envelope
+
+        envelope = Envelope[_TransactionIndex](
+            schema_version=_TX_CATALOGUE_VERSION,
+            written_at=now(),
+            classification=SensitivityClass.FINANCIAL,
+            payload=_TransactionIndex(transaction_ids=tuple(sorted(transaction_ids))),
+        )
+        return envelope.model_dump_json().encode("utf-8")
+
+    def _serialise_transaction(self, transaction: Transaction) -> bytes:
+        """Serialise one transaction into stable encrypted-row envelope bytes.
+
+        The envelope ``written_at`` is the transaction's own ``modified_at`` (not
+        ``now()``), so an unchanged transaction serialises to identical bytes —
+        and an identical ``payload_hash`` — letting the diff skip rewriting it.
+        """
+        from ...adapters.persistence.storage import Envelope
+
+        envelope = Envelope[Transaction](
+            schema_version=_TX_CATALOGUE_VERSION,
+            written_at=transaction.modified_at,
+            classification=SensitivityClass.FINANCIAL,
+            payload=transaction,
+        )
+        return envelope.model_dump_json().encode("utf-8")
 
 
 __all__ = [
     "TX_BUCKET_NAMESPACE",
-    "ClassificationError",
-    "EnvelopeVersionError",
     "ImportSummary",
     "TransactionCatalogueRepository",
-    "transaction_catalogue_object_key",
+    "transaction_object_key",
 ]
