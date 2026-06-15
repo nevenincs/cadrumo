@@ -3298,3 +3298,111 @@ retrieved_at = 2026-05-06
 applies_from = 2007-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 review_status = "reviewed"
+
+[legal."ley-35-2006:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a7"
+document_id = "BOE-A-2006-20764"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a7"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a7; operator to re-stamp)"
+notes = "LIRPF art 7: rentas exentas. Base legal de las casillas informativas de rentas exentas (importes que no se integran en la base imponible) del Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a7; operator to confirm and re-stamp."
+required_text = [
+    "Rentas exentas",
+]
+
+[legal."ley-35-2006:art-53"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a53"
+document_id = "BOE-A-2006-20764"
+article = "53"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a53"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a53; operator to re-stamp)"
+notes = "LIRPF art 53: reducciones de la base imponible general por aportaciones y contribuciones a sistemas de previsión social constituidos a favor de personas con discapacidad. Base legal de las casillas de reducción/exceso por previsión social de personas con discapacidad en Modelo 100 (distinto del patrimonio protegido del art. 54). AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a53; operator to confirm and re-stamp."
+required_text = [
+    "Reducciones por aportaciones y contribuciones a sistemas de previsión social constituidos a favor de personas con discapacidad",
+]
+
+[legal."ley-35-2006:art-55"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a55"
+document_id = "BOE-A-2006-20764"
+article = "55"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a55"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a55; operator to re-stamp)"
+notes = "LIRPF art 55: reducciones de la base imponible por pensiones compensatorias satisfechas al cónyuge y anualidades por alimentos (salvo las fijadas a favor de los hijos) por decisión judicial. Base legal de las casillas de reducción por pensiones compensatorias y anualidades por alimentos en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a55; operator to confirm and re-stamp."
+required_text = [
+    "Reducciones por pensiones compensatorias",
+]
+
+[legal."ley-35-2006:art-92"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a92"
+document_id = "BOE-A-2006-20764"
+article = "92"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a92"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a92; operator to re-stamp)"
+notes = "LIRPF art 92: imputación de rentas por la cesión de derechos de imagen. Base legal de las casillas del régimen especial de imputación por cesión de derechos de imagen en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a92; operator to confirm and re-stamp."
+required_text = [
+    "Imputación de rentas por la cesión de derechos de imagen",
+]
+
+[legal."ley-35-2006:art-95"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a95"
+document_id = "BOE-A-2006-20764"
+article = "95"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a95"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a95; operator to re-stamp)"
+notes = "LIRPF art 95: tributación de los socios o partícipes de las instituciones de inversión colectiva constituidas en países o territorios considerados como paraísos fiscales. Base legal de las casillas del régimen especial de imputación por IIC en paraísos fiscales en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a95; operator to confirm and re-stamp."
+required_text = [
+    "instituciones de inversión colectiva constituidas en países o territorios considerados como paraísos fiscales",
+]
+
+[legal."ley-35-2006:art-97"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a97"
+document_id = "BOE-A-2006-20764"
+article = "97"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a97"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a97; operator to re-stamp)"
+notes = "LIRPF art 97: autoliquidación. Incluye en su apartado 6 la compensación entre cónyuges cuando, en tributación individual, el resultado de una declaración es a ingresar y el de la otra a devolver. Base legal de las casillas de resultado de la autoliquidación, compensación entre cónyuges (datos de la cuenta SEPA) y autoliquidación rectificativa en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a97; operator to confirm and re-stamp."
+required_text = [
+    "Autoliquidación",
+]
