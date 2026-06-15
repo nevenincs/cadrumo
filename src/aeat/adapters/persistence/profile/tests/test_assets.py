@@ -88,8 +88,10 @@ def test_asset_persistence_is_encrypted_financial_secure_object(_runtime_profile
         cost_basis=Decimal("1105.00"),
     )
 
+    from .....tests.secure_sql import read_db_at_rest_bytes
+
     path = save_assets((asset,))
-    db_bytes = (_runtime_profile.paths.db_dir / "aeat.db").read_bytes()
+    db_bytes = read_db_at_rest_bytes(_runtime_profile.paths.db_dir / "aeat.db")
 
     assert not path.exists()
     assert b"LEAK-CANARY-NAS" not in db_bytes

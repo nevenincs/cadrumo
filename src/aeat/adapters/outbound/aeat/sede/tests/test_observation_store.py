@@ -74,7 +74,9 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     assert b"12345678Z" not in persisted_bytes
     assert b"12.34" not in persisted_bytes
     assert b"202610013522222A" not in persisted_bytes
-    database_bytes = (active_storage.paths.db_dir / "aeat.db").read_bytes()
+    from ......tests.secure_sql import read_db_at_rest_bytes
+
+    database_bytes = read_db_at_rest_bytes(active_storage.paths.db_dir / "aeat.db")
     assert body not in database_bytes
     assert b"12345678Z" not in database_bytes
     assert b"12.34" not in database_bytes

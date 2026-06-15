@@ -349,7 +349,9 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
         assert rename_events[-1].payload["previous_display_name"] == original_label
         assert duplicate_events[-1].payload["source_profile_id"] == source_profile_id
 
-        database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
+        from ....tests.secure_sql import read_db_at_rest_bytes
+
+        database_bytes = read_db_at_rest_bytes(profile.paths.db_dir / "aeat.db")
         for plaintext in (
             source_profile_id,
             target_profile_id,
