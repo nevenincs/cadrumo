@@ -13,7 +13,7 @@ configured for the active profile. Settings drive the choice:
 
 Composition order:
 
-1. Resolve the active profile via `_profile_binding.resolve_active_profile`.
+1. Resolve the active profile via `_active_profile.resolve_active_profile`.
 2. Read settings via `load_settings()`.
 3. Dispatch on `ProviderKind`. ``LOCAL_FILESYSTEM`` builds a
    ``LocalFileSystemProvider`` rooted at ``aeat_local_storage_root / profile``;
@@ -85,7 +85,7 @@ def _build_google_credentials(*, profile: str) -> Credentials:
         raise OutboundStorageError(
             "google-auth is not importable",
             context={"dependency": "google-auth"},
-            suggestion="uv sync",
+            suggestion="pip install aeat[google]",
             translated_message="adapters.outbound.storage.factory.errors.google_auth_import_failed",
         ) from exc
     return Credentials(
@@ -105,7 +105,7 @@ def _required_scopes() -> tuple[str, ...]:
 
 
 def _resolve_profile() -> str:
-    from ..google._profile_binding import resolve_active_profile
+    from ..google._active_profile import resolve_active_profile
 
     return resolve_active_profile()
 

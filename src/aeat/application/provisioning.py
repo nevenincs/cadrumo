@@ -18,7 +18,7 @@ from pathlib import Path
 import httpx
 from pydantic import BaseModel, Field
 
-from ..core import STRICT_FROZEN_CONFIG
+from ..core import OPTIONAL_EXTRAS, STRICT_FROZEN_CONFIG, OptionalExtra, optional_extra_available
 from ..core.config import Settings, load_settings
 
 __all__ = [
@@ -30,31 +30,9 @@ __all__ = [
     "probe_optional_extras",
     "probe_playwright_browser",
     "probe_subprocess_providers",
-    "require_optional_extra",
 ]
 
 _OLLAMA_PROBE_TIMEOUT_S = 2.0
-
-
-class OptionalExtra(BaseModel):
-    """A capability-gated optional package extra and how to probe/install it."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    extra: str = Field(min_length=1)
-    import_name: str = Field(min_length=1)
-    feature: str = Field(min_length=1)
-
-
-# The capability-mapped optional extras declared in
-# ``[project.optional-dependencies]``. Each is lazily imported, so the core CLI
-# runs without it; the doctor reports its availability and a feature refuses with
-# the install hint when the extra is absent.
-OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (
-    OptionalExtra(extra="google", import_name="googleapiclient", feature="Google Drive / Sheets export"),
-    OptionalExtra(extra="browser", import_name="playwright", feature="live AEAT browser automation"),
-    OptionalExtra(extra="anthropic", import_name="anthropic", feature="the Anthropic-API LLM provider"),
-)
 
 
 class DependencyStatus(BaseModel):
@@ -183,23 +161,17 @@ def probe_playwright_browser() -> DependencyStatus:
 def probe_optional_extra(extra: OptionalExtra) -> DependencyStatus:
     """Probe whether an optional package extra is importable, never raising.
 
-    A spec-only check (``importlib.util.find_spec``) — it confirms the package is
-    installed without importing it (no side effects, no heavy module load). Returns
-    unavailable with the ``pip install aeat[<extra>]`` remediation when absent.
+    Wraps the core :func:`optional_extra_available` spec-only check (no import, no
+    side effects) in the doctor's :class:`DependencyStatus`, naming the
+    ``pip install aeat[<extra>]`` remediation when absent. The feature-boundary
+    guard is the sibling core :func:`~aeat.core.require_optional_extra`.
     """
-    import importlib.util
-
-    try:
-        present = importlib.util.find_spec(extra.import_name) is not None
-    except ModuleNotFoundError:
-        # A parent package of import_name is itself absent.
-        present = False
-    if not present:
+    if not optional_extra_available(extra):
         return DependencyStatus(
             service=f"extra:{extra.extra}",
             available=False,
             detail=f"{extra.feature} needs the '{extra.extra}' extra ({extra.import_name} not importable)",
-            remediation=f"pip install aeat[{extra.extra}]",
+            remediation=extra.install_hint,
         )
     return DependencyStatus(
         service=f"extra:{extra.extra}",
@@ -211,19 +183,3 @@ def probe_optional_extra(extra: OptionalExtra) -> DependencyStatus:
 def probe_optional_extras() -> tuple[DependencyStatus, ...]:
     """Probe every capability-gated optional extra, one :class:`DependencyStatus` each."""
     return tuple(probe_optional_extra(extra) for extra in OPTIONAL_EXTRAS)
-
-
-def require_optional_extra(extra: OptionalExtra) -> None:
-    """Raise an instructive :class:`ImportError` when an optional extra is absent.
-
-    Call this at a feature boundary before the lazy import of its package so a
-    missing extra becomes a single, actionable message naming the install command
-    instead of a raw deep-stack ``ModuleNotFoundError``. A no-op when present.
-    """
-    status = probe_optional_extra(extra)
-    if not status.available:
-        raise ImportError(
-            f"{extra.feature} requires the optional '{extra.extra}' extra. "
-            f"Install it with: pip install aeat[{extra.extra}]",
-            name=extra.import_name,
-        )

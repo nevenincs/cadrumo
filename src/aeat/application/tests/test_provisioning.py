@@ -12,17 +12,20 @@ from pathlib import Path
 
 import pytest
 
+from ...core import (
+    MissingOptionalExtraError,
+    OptionalExtra,
+    require_optional_extra,
+)
 from ...core.config import override_settings
 from ..provisioning import (
     OPTIONAL_EXTRAS,
     DependencyStatus,
-    OptionalExtra,
     probe_ollama_vision,
     probe_optional_extra,
     probe_optional_extras,
     probe_playwright_browser,
     probe_subprocess_providers,
-    require_optional_extra,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -117,8 +120,12 @@ def test_require_optional_extra_present_is_a_noop() -> None:
 
 
 def test_require_optional_extra_absent_raises_instructive_import_error() -> None:
-    """A missing extra raises ImportError naming the install command, not a deep ModuleNotFoundError."""
+    """A missing extra raises a typed ImportError naming the install command, not a deep ModuleNotFoundError."""
     extra = OptionalExtra(extra="ghost", import_name="aeat_definitely_not_installed_xyz", feature="a ghost feature")
-    with pytest.raises(ImportError) as raised:
+    with pytest.raises(MissingOptionalExtraError) as raised:
         require_optional_extra(extra)
+    assert raised.value.extra is extra
+    assert raised.value.install_hint == "pip install aeat[ghost]"
     assert "pip install aeat[ghost]" in str(raised.value)
+    # MissingOptionalExtraError IS an ImportError so existing import-failure handlers still catch it.
+    assert isinstance(raised.value, ImportError)

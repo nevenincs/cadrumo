@@ -181,7 +181,7 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
     except ImportError as exc:
         raise GoogleAuthNetworkError(
             f"google-auth-oauthlib not importable: {exc}",
-            suggestion="uv sync",
+            suggestion="pip install aeat[google]",
             translated_message="adapters.google.oauth_flow.errors.oauthlib_not_importable",
         ) from exc
 
@@ -286,7 +286,7 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
     except ImportError as exc:
         raise GoogleAuthNetworkError(
             f"google-auth id_token module not importable: {exc}",
-            suggestion="uv sync",
+            suggestion="pip install aeat[google]",
             translated_message="adapters.google.oauth_flow.errors.id_token_module_not_importable",
         ) from exc
     try:

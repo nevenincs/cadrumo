@@ -15,13 +15,15 @@ from ._errors import LLMConfigError
 from ._models import LLMProvider, LLMRequest, LLMResponse, PromptRegistry
 from ._pricing import estimate_cost_usd
 from ._providers import (
-    AnthropicAdapter,
     GeminiAdapter,
     LocalAdapter,
     OpenAIAdapter,
     ProviderRequest,
     _ProviderAdapter,
 )
+
+# AnthropicAdapter is NOT imported here: it pulls the optional `anthropic` SDK at
+# module load. It is imported lazily in _build_adapter behind the extra guard.
 from ._usage import UsageRecorder
 
 _LOGGER = get_logger(__name__)
@@ -154,6 +156,17 @@ class LLMClient:
     def _build_adapter(self, provider: LLMProvider) -> _ProviderAdapter:
         timeout_s = self.settings.aeat_llm_default_timeout_s
         if provider is LLMProvider.ANTHROPIC:
+            # The Anthropic-API provider needs the optional `anthropic` extra. Guard
+            # before the lazy import so a missing extra is an instructive
+            # LLMConfigError, not a deep ModuleNotFoundError.
+            from ....core import ANTHROPIC_EXTRA, MissingOptionalExtraError, require_optional_extra
+
+            try:
+                require_optional_extra(ANTHROPIC_EXTRA)
+            except MissingOptionalExtraError as exc:
+                raise LLMConfigError(message=str(exc), suggestion=exc.install_hint) from exc
+            from ._providers.anthropic import AnthropicAdapter
+
             return AnthropicAdapter(
                 api_key=self._unwrap_secret(self.settings.aeat_llm_anthropic_api_key),
                 timeout_s=timeout_s,

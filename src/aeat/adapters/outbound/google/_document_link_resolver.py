@@ -70,7 +70,7 @@ def _drive_service(credentials: object) -> _DriveService:
         raise OutboundStorageNetworkError(
             "googleapiclient is not importable",
             context={"dependency": "google-api-python-client"},
-            suggestion="uv sync",
+            suggestion="pip install aeat[google]",
         ) from exc
     # CAST-RATIONALE-GOOGLE-DRIVE-SERVICE: googleapiclient.build returns a
     # dynamic resource; the protocol pins the files().get_media().execute
