@@ -13,7 +13,8 @@ catalogue, or envelope file lands on disk.
 Writes go through the :class:`SecureObjectRepository` atomic upsert+delete batch
 (:meth:`SecureObjectRepository.apply_batch`) so a multi-transaction mutation —
 and any sibling-catalogue co-writes (bucket-event history, invoices) passed to
-:meth:`save_with_secure_object_writes` — commit all-or-nothing, preserving the
+:meth:`TransactionCatalogueRepository.save_with_secure_object_writes` — commit
+all-or-nothing, preserving the
 co-write atomicity the single-blob ``save`` had. The diff that decides which
 rows to write or delete is driven by a decryption-free
 :meth:`SecureObjectRepository.namespace_payload_hashes` scan, so an unchanged
