@@ -10,7 +10,7 @@ amplification per ledger edit). Each row wraps its :class:`Transaction` in an
 :class:`Envelope` before serialisation; no plaintext transaction row, JSON
 catalogue, or envelope file lands on disk.
 
-Writes go through the atomic upsert+delete batch
+Writes go through the :class:`SecureObjectRepository` atomic upsert+delete batch
 (:meth:`SecureObjectRepository.apply_batch`) so a multi-transaction mutation —
 and any sibling-catalogue co-writes (bucket-event history, invoices) passed to
 :meth:`save_with_secure_object_writes` — commit all-or-nothing, preserving the
