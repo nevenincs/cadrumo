@@ -19,7 +19,7 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import CalculationSourceContext
+from ...aggregation import CalculationSourceContext, CalculationSourceResolution
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
 
@@ -131,3 +131,101 @@ def test_resolve_relations_produced_values_carry_provenance_string_when_resolved
             f"but got {rv.provenance!r}; the provenance contract was lost at the "
             "modelo→filing handoff boundary"
         )
+
+
+def _diagnosed_relation_ids(resolution: CalculationSourceResolution) -> set[str]:
+    return {
+        diagnostic.relation_id
+        for diagnostic in resolution.diagnostics
+        if diagnostic.source_kind == "relation_prefill" and diagnostic.relation_id is not None
+    }
+
+
+def test_unresolved_non_formula_relation_with_materialised_slot_is_not_flagged(tmp_path: Path) -> None:
+    """W03.P06.S18 false-fire guard: a cold-start non-formula relation is silent.
+
+    Modelo 202's relations are referenced by no formula but each materialises a
+    declared ``target_binding`` slot the engine threads (resolving to the
+    cold-start zero). An empty local store leaves them unresolved, which is the
+    intended cross-modelo carry cold-start — it MUST NOT surface a diagnostic, or
+    the M200/M202/M100 fold-in contract breaks.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()  # empty store
+        snapshot = resources().modelos.authority.snapshot("202", filing_year=2025, period="2P")
+
+        from .._relation_prefill import _formula_relation_ids
+
+        declared_binding_ids = {binding.id for binding in snapshot.revision.bindings}
+        non_formula = {r.id for r in snapshot.revision.relations} - _formula_relation_ids(snapshot)
+        assert non_formula, "M202 must declare at least one non-formula relation for this fixture"
+        # Every M202 non-formula relation materialises a real binding slot.
+        assert all(r.target_binding in declared_binding_ids for r in snapshot.revision.relations if r.id in non_formula)
+
+        source_resolution = RelationPrefillSourceResolver(
+            repository=repository,
+            registry_snapshot=snapshot,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="202",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "2P"),
+                revision=snapshot.revision,
+            ),
+        )
+
+    assert non_formula.isdisjoint(_diagnosed_relation_ids(source_resolution)), (
+        "a cold-start non-formula relation whose target_binding materialises an observable slot "
+        "must NOT fire the S18 advisory — that would regress the cross-modelo carry contract"
+    )
+
+
+def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Path) -> None:
+    """W03.P06.S18: an unresolved non-formula relation that reaches nothing is surfaced.
+
+    The narrow silent gap: a declared relation referenced by no formula whose
+    ``target_binding`` is NOT a declared binding on the revision materialises no
+    slot and previously produced neither a value nor a diagnostic — its absence
+    reached nothing observable. The resolver MUST now emit a non-blocking advisory
+    for exactly that orphaned case.
+
+    The registry validator forbids an orphaned relation in shipped TOML, so the
+    fixture builds the revision directly via ``model_copy`` (which does not
+    re-run cross-section validation) to exercise the defensive guard.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()  # empty store — relation cannot resolve
+        snapshot = resources().modelos.authority.snapshot("202", filing_year=2025, period="2P")
+
+        from .._relation_prefill import _formula_relation_ids
+
+        seed_relation = next(r for r in snapshot.revision.relations if r.id not in _formula_relation_ids(snapshot))
+        declared_binding_ids = {binding.id for binding in snapshot.revision.bindings}
+        orphan_target = "no-such-binding-orphan-xyz"
+        assert orphan_target not in declared_binding_ids
+        orphan_relation = seed_relation.model_copy(
+            update={"id": "orphan-non-formula-relation-test", "target_binding": orphan_target},
+        )
+        orphaned_revision = snapshot.revision.model_copy(
+            update={"relations": (*snapshot.revision.relations, orphan_relation)},
+        )
+        orphaned_snapshot = snapshot.model_copy(update={"revision": orphaned_revision})
+
+        source_resolution = RelationPrefillSourceResolver(
+            repository=repository,
+            registry_snapshot=orphaned_snapshot,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="202",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "2P"),
+                revision=orphaned_revision,
+            ),
+        )
+
+    assert orphan_relation.id in _diagnosed_relation_ids(source_resolution), (
+        "an unresolved non-formula relation that materialises no binding slot produced no "
+        "diagnostic — the narrow silent gap S18 closes"
+    )

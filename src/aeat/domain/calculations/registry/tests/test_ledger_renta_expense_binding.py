@@ -20,6 +20,8 @@ from ....renta import (
 )
 from .. import (
     DataBindingDefinition,
+    ModeloRevision,
+    RegistrySnapshot,
     RegistryValidationError,
     build_snapshot,
     calculate_registry_snapshot,
@@ -178,7 +180,7 @@ def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
         validate_ledger_renta_expense_aggregation_binding_definition(binding)
 
 
-def _single_expense_binding_revision(snapshot, target_casilla: str):
+def _single_expense_binding_revision(snapshot: RegistrySnapshot, target_casilla: str) -> ModeloRevision:
     """A revision carrying only the one renta-expense binding for ``target_casilla``."""
     revision = snapshot.revision
     binding = next(

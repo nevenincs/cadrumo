@@ -286,7 +286,9 @@ def test_vision_connection_error_becomes_a_typed_refusal_with_fix() -> None:
             raise httpx.ConnectError("connection refused")
 
     evidence = _ResolvedEvidence(
-        reference="ev-1", text=None, images=(base64.b64encode(_png_image()).decode("ascii"),),
+        reference="ev-1",
+        text=None,
+        images=(base64.b64encode(_png_image()).decode("ascii"),),
     )
     with pytest.raises(LLMClassifierError, match=r"vision reading failed.*Fix:"):
         _classify_with_evidence(
@@ -294,7 +296,7 @@ def test_vision_connection_error_becomes_a_typed_refusal_with_fix() -> None:
             evidence,
             text_classifier=None,
             spec=prompt_spec_with_saturation_fields(),
-            vision_classifier=_UnreachableVision(),  # ty: ignore[invalid-argument-type]  # structural vision stub
+            vision_classifier=_UnreachableVision(),  # ty: ignore[invalid-argument-type]  # pyright: ignore[reportArgumentType]
             vision_model=None,
             settings=load_settings(),
         )
