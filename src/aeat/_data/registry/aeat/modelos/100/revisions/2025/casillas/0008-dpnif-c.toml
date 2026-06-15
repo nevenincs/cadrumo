@@ -7,5 +7,5 @@ data_type = "nif"
 semantic_role = "spouse_nif"
 input_kind = "bound"
 binding = "renta-2025-profile-spouse-tax-id"
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

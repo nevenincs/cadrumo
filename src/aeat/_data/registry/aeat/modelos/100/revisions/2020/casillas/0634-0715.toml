@@ -5,5 +5,5 @@ label = "NIF del arrendador 1"
 section = ["resultados", "anexo_a_res", "deduccion_alquiler_res"]
 data_type = "nif"
 semantic_role = "irpf_arrendador_nif"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

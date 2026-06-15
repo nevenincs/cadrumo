@@ -4,5 +4,5 @@ number = "0464"
 label = "Excesos pendientes de reducir procedentes del ejercicio 2015 a 2019 derivados de contribuciones empresariales a seguros colectivos de dependencia (Vea el anexo C.2)"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
 semantic_role = "irpf_red_prevision_social_exceso_scd"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26"]
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

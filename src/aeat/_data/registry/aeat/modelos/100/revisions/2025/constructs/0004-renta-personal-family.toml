@@ -1,7 +1,7 @@
 [[revisions."2025".constructs]]
 id = "renta-personal-family"
 title = "Modelo 100 personal and family profile inputs"
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["orden-hac-277-2026:art-3", "ley-35-2006:art-57", "ley-35-2006:art-64", "ley-35-2006:art-75", "ley-35-2006:art-81-bis"]
 source_refs = [
     "aeat-dr-100-2025-dictionary",
     "aeat-dr-100-2025-xsd",
