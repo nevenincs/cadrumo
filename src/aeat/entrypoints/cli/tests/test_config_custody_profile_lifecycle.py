@@ -118,7 +118,9 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
     secret_dir = tmp_path / "secrets"
     assert (secret_dir / "master.key").is_file()
     assert (secret_dir / "master.kdf").is_file()
-    assert (secret_dir / "salt").is_file()
+    # The per-store salt lives inside master.kdf (salt_b64); no standalone
+    # salt artefact is written.
+    assert not (secret_dir / "salt").is_file()
     bucket_dirs = list((tmp_path / "buckets").iterdir())
     assert len(bucket_dirs) == 1
     bucket_id = bucket_dirs[0].name

@@ -175,9 +175,11 @@ class TestFileFallbackProvider:
         )
         key = provider.provision_master_key()
         assert len(key) == KEY_SIZE
-        assert (tmp_path / "secrets" / "salt").exists()
         assert (tmp_path / "secrets" / "master.key").exists()
         assert (tmp_path / "secrets" / "master.kdf").exists()
+        # The salt is carried inside master.kdf (salt_b64); no standalone
+        # salt artefact is written.
+        assert not (tmp_path / "secrets" / "salt").exists()
 
     def test_below_floor_kdf_cost_is_refused_on_read(self, tmp_path: Path) -> None:
         """A tampered master.kdf declaring a below-floor Argon2 cost fails closed.
@@ -660,35 +662,16 @@ class TestTornStateGate:
         assert "aeat config recover --recovery-key" in msg
         assert "aeat config profile create NAME" in msg
 
-    def test_torn_state_master_key_plus_kdf_raises(
+    def test_torn_state_kdf_only_raises(
         self,
         store_dir: Path,
     ) -> None:
-        # Crash after master.kdf, before salt.
-        (store_dir / "master.key").write_bytes(b"orphan-master-key")
+        # Inverted-order torn state: master.kdf present without master.key.
+        # The gate refuses regardless of which single artefact survives.
         (store_dir / "master.kdf").write_text(
             '{"version": 2, "algorithm": "argon2id"}',
             encoding=UTF_8_ENCODING,
         )
-
-        from ...errors import MasterKeyMaterialMissingError
-        from .. import FileFallbackMasterKeyProvider
-
-        provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
-        with pytest.raises(MasterKeyMaterialMissingError, match="torn state"):
-            provider.get_master_key()
-
-    def test_torn_state_kdf_plus_salt_only_raises(
-        self,
-        store_dir: Path,
-    ) -> None:
-        # Inverted-order torn state (master.kdf + salt without
-        # master.key). The gate refuses regardless of which subset.
-        (store_dir / "master.kdf").write_text(
-            '{"version": 2, "algorithm": "argon2id"}',
-            encoding=UTF_8_ENCODING,
-        )
-        (store_dir / "salt").write_bytes(b"\x00" * 16)
 
         from ...errors import MasterKeyMaterialMissingError
         from .. import FileFallbackMasterKeyProvider
@@ -708,7 +691,7 @@ class TestTornStateGate:
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
         with pytest.raises(MasterKeyMaterialMissingError, match="not provisioned"):
             provider.get_master_key()
-        for name in ("master.key", "master.kdf", "salt"):
+        for name in ("master.key", "master.kdf"):
             assert not (store_dir / name).exists()
 
 
@@ -751,13 +734,13 @@ class TestSecurityHardening:
             _default_passphrase_callback()
 
     def test_master_key_files_are_mode_0o600(self, tmp_path: Path) -> None:
-        """The wrapped master key + KDF params + salt land mode 0o600 on POSIX."""
+        """The wrapped master key + KDF params land mode 0o600 on POSIX."""
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "test-passphrase",
         )
         provider.provision_master_key()
-        for name in ("master.key", "master.kdf", "salt"):
+        for name in ("master.key", "master.kdf"):
             path = tmp_path / "secrets" / name
             assert path.is_file()
             if os.name != "posix":
