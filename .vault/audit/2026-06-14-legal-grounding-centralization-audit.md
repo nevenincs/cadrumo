@@ -976,6 +976,35 @@ here because (a) it is out of the actividades-default scope, (b) 2025 is an acti
 (the 2025 filing year, `orden-hac-277-2026`), and (c) some aggregate boxes may legitimately span multiple
 income types, so narrowing needs per-box judgement rather than a blanket strip.
 
+### V32 (cross-revision legal_refs standardization — the V31 "kitchen-sink" finding driven to closure by semantic_role)
+
+The V31 deferred kitchen-sink (the 2020/2025 broad over-grounding) is now CLOSED, discovered and framed via
+vaultspec-rag semantic search over the schema-hardening campaign: `rg`-confirmed against
+`2026-05-27-schema-hardening-m100-revision-drift-research` (which quantified the drift: 2024→2025 = 2047
+ids, 2020→2021 = 1499) and grounded in `2026-05-27-casilla-continuity-contract-adr` (which establishes
+`semantic_role` as the cross-revision continuity key).
+
+Method: propagate the concept-specific grounding from the LATEST concept-specific revision that carries
+each `semantic_role` (2024 → 2023 → 2022 → 2021) onto the 2020/2025 casillas, preserving each revision's
+own year-specific procedural refs (`orden-hac-*`, `rd-439-2007`). Role matching is renumbering-immune
+(unlike casilla id). For roles whose 2024 most-common signature under-narrowed the concept (e.g.
+`base_imponible_irpf` losing the art-48/49 integración), the small coherent union (≤5 concept articles) is
+restored; large role-reuse unions (e.g. the declarante selector spanning 9 articles) keep the clean narrow
+grounding.
+
+Scope: ~3650 casillas re-grounded across 2020+2025 (3462 initial propagation + 192 latest-revision/union
+refinement); 3 constructs swept to preserve closure. Cross-revision concept-ref drift by shared
+`semantic_role` fell from **1499/2047 → 7/4** (2020↔2021 / 2024↔2025) — a 99.7% reduction; the residual is
+genuine role-reuse across distinct contexts, not a grounding defect. Registry-wide scan of every other
+multi-revision modelo found no comparable drift (M202 = 1, all others 0), confirming the research's
+"drift concentrates in M100" and closing it.
+
+Verification (pure-Python — the pytest session is blocked by an unrelated peer wizard `_SETUP_OPTION_INFOS`
+collection error): 0 dangling refs registry-wide, 0 construct→casilla coverage violations, all 2020/2025
+TOML valid; format-preserving (single-/multi-line kept, row-width wrapping not regressed). Commits
+`2a1bd715f`, `233108021`, `b48a35219`. This supersedes V31's deferral: the kitchen-sink is no longer a
+separate-campaign item — it is standardized to the concept-specific cross-revision baseline.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
