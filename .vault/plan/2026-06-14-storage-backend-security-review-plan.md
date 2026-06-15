@@ -72,7 +72,7 @@ Set WAL, busy_timeout, and synchronous on the bucket engine connect listener.
 
 - [x] `W03.P05.S10` - Set SQLite busy_timeout in the bucket engine connect listener so a concurrent invocation waits rather than failing immediately with database-locked; `src/aeat/adapters/persistence/storage/sql/engine.py`.
 - [x] `W03.P05.S11` - Add a concurrent-writer regression proving two sessions on one bucket do not raise an immediate database-locked error; `src/aeat/adapters/persistence/storage/sql/tests/`.
-- [ ] `W03.P05.S33` - LARGER FOLLOW-UP: enable journal_mode=WAL and synchronous=NORMAL after migrating the ~21 at-rest raw-db test readers to a shared WAL-aware helper that also scans the -wal sidecar; `src/aeat/adapters/persistence/storage/sql/engine.py`.
+- [x] `W03.P05.S33` - LARGER FOLLOW-UP: enable journal_mode=WAL and synchronous=NORMAL after migrating the ~21 at-rest raw-db test readers to a shared WAL-aware helper that also scans the -wal sidecar; `src/aeat/adapters/persistence/storage/sql/engine.py`.
 
 ### Phase `W03.P06` - durability and locking
 

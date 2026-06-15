@@ -18,6 +18,7 @@ related:
   - '[[2026-06-14-storage-backend-security-review-W02-P04-S09]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P05-S10]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P05-S11]]'
+  - '[[2026-06-14-storage-backend-security-review-W03-P05-S33]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P06-S12]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P06-S13]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P06-S14]]'
@@ -84,6 +85,7 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 - `2026-06-14-storage-backend-security-review-W06-P13-S29` - Remove the attach_evidence double full-catalogue decrypt by threading one decrypted catalogue through the command
 - `2026-06-14-storage-backend-security-review-W01-P03-S32` - OWNER-GATED DEFERRED: remove the write-only standalone salt artefact and shrink the torn-install detection tuple after owner review per the no-legacy-compatibility key-management caution
 - `2026-06-14-storage-backend-security-review-W02-P04-S08` - Verify the stored payload hash and recomputed revision id on every secure-object read and fail closed on mismatch
+- `2026-06-14-storage-backend-security-review-W03-P05-S33` - LARGER FOLLOW-UP: enable journal_mode=WAL and synchronous=NORMAL after migrating the ~21 at-rest raw-db test readers to a shared WAL-aware helper that also scans the -wal sidecar
 - `2026-06-14-storage-backend-security-review-W05-P11-S25` - Promote the sealed-archive read and write helpers to the bucket package all and rebind the maintenance service call sites
 - `2026-06-14-storage-backend-security-review-W06-P14-S30` - Make secure-object namespace enumeration stream decrypted rows instead of materialising and sorting the full set
 - `2026-06-14-storage-backend-security-review-W06-P14-S31` - Move the transaction catalogue to one secure-object row per transaction keyed by transaction id so single-row mutations stop rewriting the whole catalogue
