@@ -618,6 +618,25 @@ heterogeneous `re_at_rentas` / ganancia-inmueble / `gravamenes_res` surfaces (pe
 anexo-B informativa blocks (actividades may be partly correct — per-block), and the feature/human lanes
 (art. 20 ADR, M714, operator re-stamps of the 12 agent-authored entries).
 
+### V19 (base-computation chain is BINDING-entangled, not just construct-bound — deeper than V16)
+
+A second, construct-aware attempt at the base-computation sections (ground the casillas AND extend the one
+owning construct's `legal_refs`) revealed the entanglement is **three layers deep**, not two: the registry
+validator also requires a construct's `legal_refs` to cover its **bindings'** `legal_refs`, and the
+`renta-2024-anexo-c-base-liquidable-negativa` construct's binding
+(`renta-2024-base-liquidable-negativa-general-anterior`) itself carries the actividades generic-default —
+so cleaning the construct's refs broke the binding-coverage check (`construct '…' does not include legal
+refs [art-27…32] required by binding '…'`). The base-computation chain therefore has casillas **+**
+constructs **+** bindings all carrying the generic-default and cross-validated together; grounding it
+coherently needs a casilla+construct+binding pass that re-grounds the bindings too (the bindings are the
+calculation wiring — higher stakes). The attempt was **byte-exact reverted from HEAD** (a
+`git show HEAD:<path>` *binary* restore — an initial text-mode restore introduced UTF-8 double-encoding
+mojibake in the accented labels, caught and re-done in binary; registry re-validates clean, working tree
+clean). The base-computation chain stays deferred to a dedicated binding-aware pass — it is load-bearing
+calculation structure, not a data-entry section, and the simple section-tag method does not reach it.
+**Running total unchanged at ~2906 casillas; the durable lesson: check construct AND binding coverage
+before grounding any calculation-chain casilla.**
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
