@@ -4,5 +4,5 @@ number = "1203"
 label = "Importe de la deducción autonómica por gastos en primas de seguros de crédito para cubrir impagos de rentas de arrendamientos de vivienda (deducción del arrendador)"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_eps"]
 semantic_role = "irpf_deduccion_autonomica_seguro_credito_importe"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

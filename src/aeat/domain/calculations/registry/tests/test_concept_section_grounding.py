@@ -125,6 +125,7 @@ _AUTONOMIC_COMUNIDADES = (
     "la_palma",
     "c_valenciana",
     "deduccion_autonomica",
+    "datos_adicionales_anexo_b",  # Anexo B = autonomic-deductions annex (info blocks)
 )
 
 
