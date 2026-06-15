@@ -42,6 +42,7 @@ related:
   - '[[2026-06-14-storage-backend-security-review-adr]]'
   - '[[2026-06-14-storage-backend-security-review-plan]]'
   - '[[2026-06-14-storage-backend-security-review-research]]'
+  - '[[2026-06-15-storage-backend-security-review-audit]]'
 ---
 
 # `storage-backend-security-review` feature index
@@ -53,6 +54,10 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 ### adr
 
 - `2026-06-14-storage-backend-security-review-adr` - `storage-backend-security-review` adr: `close the residual secure-storage security, enrollment, and standardisation gap` | (**status:** `accepted`)
+
+### audit
+
+- `2026-06-15-storage-backend-security-review-audit` - `storage-backend-security-review` audit: `campaign close honesty review`
 
 ### exec
 
