@@ -12,13 +12,13 @@ from pathlib import Path
 
 import pytest
 
-from aeat.application.provisioning import (
+from ...core.config import override_settings
+from ..provisioning import (
     DependencyStatus,
     probe_ollama_vision,
     probe_playwright_browser,
     probe_subprocess_providers,
 )
-from aeat.core.config import override_settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
