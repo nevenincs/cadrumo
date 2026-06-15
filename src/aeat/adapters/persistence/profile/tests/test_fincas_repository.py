@@ -1,4 +1,9 @@
-"""Round-trip CRUD tests for the rental-register repositories (#454)."""
+"""Round-trip CRUD tests for the rental-register repositories (#454).
+
+These concrete repositories live in the persistence adapter
+(:mod:`aeat.adapters.persistence.profile.fincas`); they satisfy the
+read-side ports declared in :mod:`aeat.domain.fincas._repository_ports`.
+"""
 
 from __future__ import annotations
 
@@ -10,28 +15,30 @@ from pathlib import Path
 import pytest
 from sqlalchemy.engine import Engine
 
-from ....adapters.persistence.storage import (
-    RepositoryError,
-    session_scope,
-)
-from ....adapters.persistence.storage.sql.engine import get_engine
-from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from .....domain.fincas import (
     Arrendamiento,
-    ArrendamientoRepository,
     ExpenseCategory,
     Finca,
     FincaAmortizacionLedgerEntry,
-    FincaAmortizacionLedgerRepository,
     FincaGasto,
-    FincaGastoRepository,
     FincaRendimientoRecord,
-    FincaRendimientoRepository,
-    FincaRepository,
     UseType,
 )
+from .....tests.secure_sql import isolated_runtime_profile
+from ...storage import (
+    RepositoryError,
+    session_scope,
+)
+from ...storage.sql.engine import get_engine
+from ..fincas import (
+    ArrendamientoRepository,
+    FincaAmortizacionLedgerRepository,
+    FincaGastoRepository,
+    FincaRendimientoRepository,
+    FincaRepository,
+)
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 @pytest.fixture(autouse=True)
