@@ -5,5 +5,5 @@ label = "Denominación de la entidad no residente participada"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_tr_fiscal_inter"]
 data_type = "text"
 semantic_role = "irpf_re_tfi_entidad_denominacion"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-91"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
