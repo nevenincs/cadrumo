@@ -19,6 +19,10 @@ from ....core.i18n import tr
 from .._common import _bad, _emit_envelope
 from .._errors import decorate_typer_app
 
+# Eager import so the @register_schema decorators run when this module is imported
+# on the CLI build path, keeping every capability leaf in the JSON-contract registry.
+from ._capabilities_payloads import CapabilitiesShowResult, CapabilitySetResult
+
 
 class _Toggle(StrEnum):
     """On/off argument for ``capabilities set``."""
@@ -32,7 +36,6 @@ def _register_show(capabilities_app: typer.Typer) -> None:
     def capabilities_show(ctx: typer.Context) -> None:
         """Report the resolved posture of every service capability for the active profile."""
         from ....application.user_profile import resolve_active_capability
-        from ._capabilities_payloads import CapabilitiesShowResult
 
         profile_id = resolve_active_bucket_id()
         rows: list[dict[str, object]] = []
@@ -68,7 +71,6 @@ def _register_set(capabilities_app: typer.Typer) -> None:
         from ....application.user_profile import set_active_fields
         from ....application.workflow._persistence import workflow_state_repository
         from ....domain.user_profile import UserProfileFact
-        from ._capabilities_payloads import CapabilitySetResult
 
         profile_id = resolve_active_bucket_id()
         if profile_id is None:

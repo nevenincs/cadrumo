@@ -843,8 +843,16 @@ application:
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
     findings:
-      art20_reduccion_next_action: 'Verifiqueu si les vostres altres rendes diferents de les del treball excloses les exemptes de l''exercici no superen 6500 EUR; en aquest cas, declareu la reduccio per rendiments del treball de l''article 20 LIRPF a la casella de reduccio general (ley-35-2006:art-20).'
-      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: la casella %{rnt_id} (rendiment net del treball) = %{rnt_value} es dins del tram de reduccio de l''article 20 (per sota de 19747,50) pero la casella %{reduccion_id} (reduccio general per rendiments del treball) es zero. Si les vostres altres rendes diferents de les del treball excloses les exemptes no superen 6500, podeu aplicar la reduccio per rendiments del treball de l''article 20 LIRPF.'
+      art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
+        de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;
+        en aquest cas, declareu la reduccio per rendiments del treball de l'article
+        20 LIRPF a la casella de reduccio general (ley-35-2006:art-20).
+      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: la casella %{rnt_id} (rendiment
+        net del treball) = %{rnt_value} es dins del tram de reduccio de l''article
+        20 (per sota de 19747,50) pero la casella %{reduccion_id} (reduccio general
+        per rendiments del treball) es zero. Si les vostres altres rendes diferents
+        de les del treball excloses les exemptes no superen 6500, podeu aplicar la
+        reduccio per rendiments del treball de l''article 20 LIRPF.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -2192,6 +2200,16 @@ cli:
     profile:
       already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
         destinació.
+      capabilities:
+        capability_help: cli.config.profile.capabilities.capability_help
+        capability_label: cli.config.profile.capabilities.capability_label
+        enabled: cli.config.profile.capabilities.enabled
+        help: cli.config.profile.capabilities.help
+        no_active_profile: cli.config.profile.capabilities.no_active_profile
+        set_help: 'Activa o desactiva una capacitat de servei per al perfil actiu.'
+        show_help: 'Mostra l''estat resolt de cada capacitat de servei per al perfil actiu.'
+        state_help: 'Si activar (on) o desactivar (off) la capacitat.'
+        state_label: 'estat'
       censo:
         apply_help: Sobrescriu el perfil amb els valors censals comunicats per AEAT
         compare_help: Compara camp a camp el cens AEAT amb aquest perfil
@@ -2817,13 +2835,15 @@ cli:
       group_filter_help: Mostra nomes les files d'aquesta etiqueta de grup.
       header: MOVIMENTS DEL LLIBRE COMPTABLE
       help: Llistar moviments del llibre al perfil actiu
+      hide_llm_rejected_help: Amaga les files el suggeriment del model més recent
+        de les quals s'ha rebutjat (una fila revisada i descartada surt de la cua
+        pendent).
       limit_help: 'Nombre maxim de files a mostrar (per defecte: totes).'
       offset_help: 'Omet aquest nombre de files abans de llistar (per defecte: 0).'
       sort_by_help: Ordena les files llistades per aquest camp (date, amount, description,
         created_at, modified_at, ...).
       sort_order_help: 'Ordre: asc (ascendent) o desc (descendent).'
       ungrouped_label: (sense grup)
-      hide_llm_rejected_help: 'Amaga les files el suggeriment del model més recent de les quals s''ha rebutjat (una fila revisada i descartada surt de la cua pendent).'
     merge:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       child_id_help: Id de transacció filla que vols fusionar; es pot repetir
