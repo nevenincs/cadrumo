@@ -68,26 +68,43 @@ Catalan leaf in `src/aeat/locales/ca.yml`. **Disposition: FIXED** (commit
 `939f61067`, FIX B; the locale leaf updated through `python -m aeat.locales set`
 per the locales-CLI authority rule, not by hand-editing the YAML).
 
-### RECONCILE-DUP — dead parallel reconciler + false "composes" docstrings (HIGH, split disposition)
+### RECONCILE-DUP — dead parallel reconciler + false "composes" docstrings (HIGH, FIXED)
 
 Semantic functionality-cluster overlap axis. The live modelo reconcile service
 `src/aeat/application/modelo/_reconcile.py` reimplements the metadata-level
 comparison (modelo, period, `ejercicio`, tax id) inline, but three of its
 docstrings claimed it "composes" the low-level reconciler in
 `aeat.application.filing.reconciliation._reconcile`. It imports nothing from
-there. The `filing.reconciliation` package is a dead parallel reconciler with
-zero live importers.
+there. The `filing.reconciliation` package was a dead parallel reconciler with
+zero live importers — a design-only implementation shell (it did field-by-field
+justificante comparison but was never wired to any CLI verb), which
+`aeat-source-hygiene` forbids.
 
-**Disposition: docstrings FIXED** (commit `d87c12129`, FIX C) — the three false
-"composes" claims corrected to state the inline reimplementation, and a stale
-"per-casilla" diff description corrected to header-field-only. **The dead-package
-deletion is DEFERRED as a tracked follow-up:** it is entangled with the registry
-"reconciliation" surface consumer link (asserted by `test_modelo_100_registry.py`
-and referenced by `test_period_combined_string_gate.py`), so deleting
-`application/filing/reconciliation/` requires repointing or retiring that
-registry link in the same atomic change. Best done once the peer registry churn
-settles; until then the docstring correction removes the false-composition
-hazard.
+A vaultspec-rag semantic sweep of the reconcile cluster (queried by behaviour,
+not symbol) confirmed exactly two production reconcile sites — this dead package
+and the live, CLI-wired `application.modelo._reconcile` — with no hidden third
+site. A symbol-level grep confirmed the dead package's public API
+(`ReconciliationReport`, `ReconciliationStatus`, `ModeloDivergenceKind`,
+`ModeloDraftRef`, `JustificanteRefSummary`, `reconcile`) had zero external
+importers.
+
+**Disposition: FULLY FIXED.** Step 1 — docstrings corrected (commit `d87c12129`,
+FIX C): the three false "composes" claims now state the inline reimplementation,
+and a stale "per-casilla" diff description was corrected to header-field-only.
+Step 2 — the dead package was **deleted** and the registry
+`modelo-100-reconciliation` application-link `consumer` repointed from
+`aeat.application.filing.reconciliation` to the live
+`aeat.application.modelo.modelo_reconcile`; the `test_modelo_100_registry`
+application-links assertion was updated to match, the now-dead
+`test_period_combined_string_gate` allowlist entry for the deleted reconcile test
+was removed, the stale sanitizer no-write-test comment was de-referenced, and the
+4 orphan `docs/api` stubs were removed via `apidocs scaffold` (drift check clean).
+This change set landed coherently at `HEAD` (swept into commit `fe474ff1d` by the
+shared-worktree auto-commit process; verified piece-by-piece at `HEAD` — package
+gone, consumer repointed, assertion updated, allowlist entry removed, stubs gone,
+filing toctree clean). Gates green: registry application-links test, period gate,
+modelo reconcile tests, layout import smoke, sanitizer no-write test; 794 tests
+collect with no import breakage.
 
 ### TERM-SEED-RT — terminology round-trip omits three optional fields (MEDIUM, FIXED)
 
@@ -111,31 +128,45 @@ fix restores correct row shaping that the parity gate exercises. No code defect
 distinct from BIND-01 was confirmed. **Disposition: DOCUMENTED** — no separate
 action; tracked here so a future swarm does not re-discover it cold.
 
-### LOW findings (deferred, recorded as inventory)
+### LOW findings (all closed)
 
-- **XDH-1 / XDH-2** (cross-domain handoffs): minor handoff-surface observations
-  with no confirmed data-loss pathway against `HEAD`. Recorded for the next
-  cadence pass; not actioned this cycle.
-- **STR-COERCE** (calculation grounding): a `str(...)` coercion of a typed alias
-  flagged as a potential type-escape per the boundary-leak rule. Low impact;
-  verify whether it sits on a third-party boundary (documentable) or is an
-  internal escape (removable) before action.
-- **TERM-ANTITAUT**: the terminology round-trip lacked a dedicated
-  anti-tautology proof. Partially addressed by FIX D's guard assertions (which
-  fail loudly if the fixture goes vacuous); a full mutate-on-disk-then-reload
-  proof remains a LOW follow-up.
+- **TERM-ANTITAUT** — **FIXED** (commit `88944e574`). A dedicated anti-tautology
+  proof was added to the terminology round-trip: a value mutation on the
+  serialised TOML surfaces as strict inequality on reload, and dropping the
+  required `[concept]` table makes the loader raise `TerminologyValidationError`
+  rather than silently re-default. The round-trip suite is no longer vacuous.
+- **STR-COERCE** (calculation grounding) — **VERIFIED NON-ACTIONABLE**. The
+  flagged `str(...)` sites were re-examined at `HEAD`: every production hit is a
+  legitimate rendering, not a typed-alias type-escape. `str(obs.value)` /
+  `str(row.value)` / `str(entry.value)` coerce a `Decimal | str | None` *union*
+  field (a real string projection for JSON/CLI). `str(period)` invokes
+  `Period.__str__` — `Period` is a pydantic `BaseModel`, not a `str` subtype, so
+  the call formats the AEAT token (explicitly documented as the "human-readable
+  `str(period)` form" in `domain/filing/_schema.py`), not a no-op coercion. No
+  bare `str()` erasing an already-`str` StrEnum/alias was found. The boundary-leak
+  rule is not violated; nothing to remove or document inline.
+- **XDH-1 / XDH-2** (cross-domain handoffs) — **VERIFIED NON-ACTIONABLE**. The
+  calculation→persist→export provenance handoff carries `legal_refs` /
+  `source_refs` through typed envelopes and is guarded at `HEAD` by multiple
+  roundtrip/conformance tests (`test_json_envelope_roundtrip`,
+  `test_calc_sheets_apply_evidence`, the offline-vs-online calc-sheets
+  conformance test, filing runtime). No data-loss pathway was reproducible; the
+  observations were soft and are closed without a code change.
 
 ## Recommendations
 
-- Close the RECONCILE-DUP follow-up by deleting `application/filing/reconciliation/`
-  in one atomic commit that also repoints the registry "reconciliation" consumer
-  link and updates `test_modelo_100_registry.py` /
-  `test_period_combined_string_gate.py` — schedule once the peer registry refactor
-  is fully settled.
-- Sweep STR-COERCE and XDH-1/2 in the next cadence pass; classify STR-COERCE as
-  boundary-documentable or removable.
-- Re-run the swarm after the RECONCILE-DUP deletion lands (it crosses a domain
-  boundary and removes a package), per the cadence trigger.
+All findings from this swarm are now closed — every MEDIUM/HIGH item fixed and
+verified, every LOW item fixed or verified non-actionable. Remaining standing
+guidance:
+
+- **Re-run the swarm** at the next cadence trigger: the RECONCILE-DUP package
+  deletion crossed a domain boundary and removed a package, which is itself a
+  cadence trigger; the next pass should re-confirm no dangling references to the
+  removed `application.filing.reconciliation` surface remain.
+- Watch the docs API-stub tree: the shared worktree accrues peer-module stub
+  drift (e.g. the `_decimal_binding_value`→`_decimal_parsing` rename observed
+  during this pass); a periodic `apidocs scaffold` keeps the nitpicky docs build
+  green. This is worktree hygiene, not a finding.
 
 ## Codification candidates
 
