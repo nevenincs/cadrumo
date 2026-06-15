@@ -121,38 +121,42 @@ def test_blob_mutation_after_store_surfaces_on_reverify(tmp_path: Path) -> None:
     """
     from sqlalchemy import select
 
+    from .....adapters.persistence.storage.crypto._encrypted_columns import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from .....adapters.persistence.storage.sql._orm import SecureObjectRow
     from .....adapters.persistence.storage.sql.engine import get_engine
     from .....adapters.persistence.storage.sql.session import session_scope
 
     payload = b"%PDF-1.4 anti-tautology blob mutation proof payload"
-    donor_body = b"a completely different document body entirely"
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         store = AttachmentStore()
         attachment = _store_resolved_link(store, payload=payload)
         # Baseline: the freshly-stored blob verifies.
         store.verify_blob(attachment.attachment_id)
 
-        # Store a donor document so we have a valid foreign ciphertext (encrypted
-        # under the same bucket key) to swap in — overwriting the target blob's
-        # ciphertext so its decrypted, prefix-stripped bytes no longer hash to id.
-        donor_digest = store.put_bytes(donor_body)
+        # Corrupt the blob CONTENT under the row's own AAD. The AAD binds the row
+        # identity (namespace, object_key, schema_version), so re-encrypting the
+        # mutated plaintext under that same AAD keeps AEAD/AAD verification passing
+        # and surfaces the mutation at the re-hash layer (the byte-custody check)
+        # rather than the decryption layer — exactly the guarantee under test.
         engine = get_engine(profile.settings)
         with session_scope(engine) as session:
-            donor_row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == "aeat.domain.attachments.blobs",
-                    SecureObjectRow.object_key == donor_digest,
-                ),
-            ).scalar_one()
-            donor_payload = donor_row.payload
             target_row = session.execute(
                 select(SecureObjectRow).where(
                     SecureObjectRow.namespace == "aeat.domain.attachments.blobs",
                     SecureObjectRow.object_key == attachment.attachment_id,
                 ),
             ).scalar_one()
-            target_row.payload = donor_payload
+            target_aad = secure_object_payload_aad(
+                target_row.namespace,
+                bytes(target_row.object_key),
+                target_row.schema_version,
+            )
+            decrypted = decrypt_secure_object_payload(bytes(target_row.payload), associated_data=target_aad)
+            target_row.payload = encrypt_secure_object_payload(decrypted + b"-tampered", associated_data=target_aad)
 
         with pytest.raises(AttachmentValidationError):
             store.verify_blob(attachment.attachment_id)

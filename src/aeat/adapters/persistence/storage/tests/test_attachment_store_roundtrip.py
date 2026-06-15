@@ -28,9 +28,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-if TYPE_CHECKING:
-    from ..sql._orm import SecureObjectRow
-
 from .....core.config import override_settings
 from .....core.errors import build_error_envelope, resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
@@ -47,6 +44,9 @@ from ..crypto._encrypted_columns import (
 from ..sql.engine import get_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+if TYPE_CHECKING:
+    from ..sql._orm import SecureObjectRow
 
 
 def _row_payload_aad(row: SecureObjectRow) -> bytes:
