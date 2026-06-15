@@ -51,7 +51,7 @@ class FincaRendimientoReader(Protocol):
         contract_id: int,
         period_year: int,
     ) -> FincaRendimientoRecord | None:
-        """Return the income record for ``contract_id`` in ``period_year``, or ``None``."""
+        """Return the :class:`FincaRendimientoRecord` for ``contract_id`` in ``period_year``, or ``None``."""
         ...
 
 
