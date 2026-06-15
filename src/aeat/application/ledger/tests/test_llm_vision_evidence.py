@@ -42,7 +42,7 @@ from ....domain.transactions import (
     prompt_spec_with_saturation_fields,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._evidence import PurchaseInvoiceEvidenceService
+from .._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from .._llm_classification import _classify_with_evidence, _resolve_evidence, _ResolvedEvidence
 from .._vision_classifier import LocalVisionLLMClassifier
 
@@ -138,6 +138,53 @@ def test_image_evidence_resolves_to_images(profile: TestRuntimeProfile, tmp_path
     assert resolved is not None
     assert resolved.text is None
     assert resolved.images == (base64.b64encode(_png_image()).decode("ascii"),)
+
+
+@pytest.mark.parametrize(
+    ("name", "data_factory"),
+    [("scan.pdf", _scan_only_pdf), ("receipt.png", _png_image)],
+    ids=["scan-pdf", "image"],
+)
+def test_llm_vision_off_refuses_both_on_host_read_modes(
+    profile: TestRuntimeProfile,
+    tmp_path: Path,
+    name: str,
+    data_factory: Callable[[], bytes],
+) -> None:
+    """An ``llm_vision=off`` profile refuses BOTH on-host read modes (honesty review M1).
+
+    The capability gate sits past the text-layer early return, so it must cover
+    every on-host read mode: a scan-only PDF (rasterise path) and an image
+    attachment (direct-bytes path). Both reach the gate and must refuse with an
+    instructive, non-silent error naming the opt-in command.
+    """
+    from ....domain.user_profile import UserProfileFact, UserProfileRecord
+    from ...user_profile import UserProfileLifecycleRepository
+
+    clock = datetime(2026, 1, 1, tzinfo=UTC)
+    UserProfileLifecycleRepository(bucket_id="bucket-001").save(
+        UserProfileRecord(
+            profile_id="bucket-001",
+            display_name="Vision opted out",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="capabilities.llm_vision", value=False),
+            ),
+            created_at=clock,
+            updated_at=clock,
+        ),
+    )
+
+    evidence_id = _add_evidence(profile, tmp_path, name=name, data=data_factory())
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+        _resolve_evidence(
+            _transaction(evidence_id),
+            bucket_id="bucket-001",
+            settings=profile.settings,
+            evidence_acknowledged=False,
+        )
+    assert "vision" in str(raised.value).lower()
+    assert "llm_vision on" in (raised.value.suggestion or "")
 
 
 class _ObservedOllamaRequest(BaseHTTPRequestHandler):
