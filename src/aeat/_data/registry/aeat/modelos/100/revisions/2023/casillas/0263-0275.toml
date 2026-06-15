@@ -4,5 +4,5 @@ number = "0275"
 label = "Suma de imputaciones de rentas por la cesión de derechos de imagen"
 section = ["resultados", "regimenes_especiales_res", "re_derechos_imagen_res"]
 semantic_role = "irpf_re_imagen_suma_imputaciones"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-92"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

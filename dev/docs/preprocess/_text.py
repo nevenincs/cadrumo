@@ -1,25 +1,30 @@
-"""Unsupported-text-extension passthrough extractor for the dev-side RAG index.
+"""Retired text-extension passthrough extractor for the dev-side RAG index.
 
-Closes the small text-extension tail the walker cannot see: ``.txt``,
-``.xml``, ``.xsd``, and ``.properties`` files. These are ALREADY
-human-readable text (unlike the binary PDF/XLS corpus), but none of the four
-extensions is in the walker's supported-extension set, so the files are
-100% invisible to the index. The highest-value members are the Modelo 100
-``.properties`` diccionario dictionaries (casilla-path to description
-mappings) and the Modelo 349 / 232 instruction ``.txt`` files.
+This interim passthrough closed the small text-extension tail the resident
+``vaultspec-rag`` walker could not see: ``.txt``, ``.xml``, ``.xsd``, and the
+cp1252 Modelo 100 ``.properties`` diccionario dictionaries (casilla-path to
+description mappings). The walker has since added all four to its
+supported-extension map and now indexes them raw (as it does HTML) - the exact
+upstream extension-map addition this module's lifecycle names as its retirement
+trigger.
 
-Because the four extensions are genuinely invisible (none is walker
-supported), the passthrough sidecars are purely ADDITIVE - there is no
-raw-vs-sidecar duplicate-index concern for these extensions, unlike the
-normatives HTML which the walker already indexes raw.
+The passthrough SWEEP is therefore retired: :data:`SUPPORTED_TEXT_EXTENSIONS`
+is empty, so no file is swept and no sidecar overlaps the walker's raw index
+(the dedup invariant). The retirement is gated by
+``test_passthrough_is_retired_now_walker_covers_the_text_tail``: if the walker
+ever drops one of the four, that gate fails and the sweep must re-cover it. The
+extractor functions below are retained as the upstream-hook migration precursor.
+
+FOLLOW-UP: the walker reads utf-8, so the cp1252 ``.properties`` diccionarios
+lose the encoding fidelity the passthrough gave them; raise cp1252 handling with
+the ``vaultspec-rag`` walker owner if diccionario search quality regresses.
 
 The extraction is a near-passthrough: the file's text is read with an
 encoding-detection fallback (UTF-8, then cp1252, then latin-1 - the AEAT
-``.properties`` diccionarios and several ``.xsd`` ship as cp1252/latin-1),
-whitespace is lightly normalised, and the whole text becomes one
-:class:`PreprocessUnit`. The structured shapes (``.properties`` key=value,
-``.xml`` / ``.xsd`` markup) are kept verbatim because they are already
-human-readable and their structure is the grounding signal.
+``.properties`` diccionarios ship as cp1252/latin-1), whitespace is lightly
+normalised, and the whole text becomes one :class:`PreprocessUnit`. The
+``.properties`` key=value structure is kept verbatim because it is already
+human-readable and its structure is the grounding signal.
 
 Attribution is pulled from the sibling Diseno-de-registro ``manifest.json``
 (one directory above ``files/``) where the file is a catalogued artefact,
@@ -56,8 +61,16 @@ TEXT_EXTRACTOR_ID = "unsupported-text"
 #: rendering changes so a regeneration is distinguishable from a no-op.
 TEXT_EXTRACTOR_VERSION = "1.0"
 
-#: The extensions this extractor covers (all genuinely walker-invisible).
-SUPPORTED_TEXT_EXTENSIONS = frozenset({".txt", ".xml", ".xsd", ".properties"})
+#: Walker-invisible extensions the sweep covers. The resident vaultspec-rag
+#: walker now natively indexes the entire former tail (.txt/.xml/.xsd/.properties)
+#: raw, so the passthrough sweep is RETIRED (empty) to avoid raw-vs-sidecar
+#: double-index; the no-overlap/retirement invariant is gated by
+#: test_passthrough_is_retired_now_walker_covers_the_text_tail. The extractor
+#: functions are retained as the upstream-hook migration precursor.
+#: FOLLOW-UP: the walker reads utf-8, so the cp1252 Modelo-100 diccionario
+#: (.properties) files lose the passthrough's cp1252 fidelity once their sidecars
+#: are removed; raise cp1252 handling with the vaultspec-rag walker owner.
+SUPPORTED_TEXT_EXTENSIONS: frozenset[str] = frozenset()
 
 #: Encoding fallback chain. UTF-8 first; the AEAT .properties diccionarios and
 #: some .xsd ship as cp1252; latin-1 is the never-fails final fallback so a
