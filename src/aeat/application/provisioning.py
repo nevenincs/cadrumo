@@ -1,4 +1,4 @@
-"""Typed external-dependency probes for graceful degradation and the doctor.
+"""Typed external-dependency probes for graceful degradation and the check surface.
 
 Each probe answers "is this external service available right now?" and returns a
 typed :class:`DependencyStatus` carrying the exact remediation command when it is
@@ -6,7 +6,7 @@ not. Probes NEVER raise on absence — a missing dependency is data, not an
 exception (``dependency-provisioning`` ADR). The vision read consults
 :func:`probe_ollama_vision` before the expensive inference so a down server or an
 unpulled model becomes an instructive refusal instead of a raw stack trace; the
-``aeat config doctor`` surface renders every probe in one report.
+``aeat config check`` surface renders every probe in one report.
 """
 
 from __future__ import annotations
