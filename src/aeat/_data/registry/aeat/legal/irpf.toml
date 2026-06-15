@@ -3406,3 +3406,21 @@ notes = "LIRPF art 97: autoliquidación. Incluye en su apartado 6 la compensaci�
 required_text = [
     "Autoliquidación",
 ]
+
+[legal."ley-35-2006:da-48"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-48"
+document_id = "BOE-A-2006-20764"
+article = "DA-48"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-48"
+published_at = 2006-11-29
+effective_from = 2018-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html (DA cuadragésima octava); operator to re-stamp)"
+notes = "LIRPF disposición adicional 48ª: deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Económico Europeo, que equipara el tratamiento al de la tributación conjunta cuando uno de los miembros no es residente en España. Base legal de las casillas de la deducción por unidad familiar de residentes en la UE/EEE en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html (DA cuadragésima octava); operator to confirm and re-stamp."
+required_text = [
+    "Deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea",
+]

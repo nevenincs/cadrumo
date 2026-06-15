@@ -4,5 +4,5 @@ number = "0730"
 label = "Cuota líquida total si todos los miembros de la unidad familiar hubiesen tributado conjuntamente (*)"
 section = ["resultados", "anexo_a_res", "deduccion_residente_ue_res"]
 semantic_role = "irpf_anexo_a_residente_ue_cuota_conjunta_hipotetica"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:da-48"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
