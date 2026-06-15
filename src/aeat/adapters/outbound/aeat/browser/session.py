@@ -170,8 +170,14 @@ class BrowserSession:
                 type(exc).__name__,
                 exc_info=True,
             )
+            # When the failure is a missing browser binary (the post-install
+            # `playwright install` step was skipped), name the exact fix rather
+            # than relaying a bare driver error (dependency-provisioning ADR).
+            hint = ""
+            if "executable doesn't exist" in str(exc).lower() or "playwright install" in str(exc).lower():
+                hint = " — run 'playwright install chromium' (or 'just provision') to install the browser binary"
             raise BrowserError(
-                f"Failed to launch browser: {exc}",
+                f"Failed to launch browser: {exc}{hint}",
                 failure_mode=BrowserFailureMode.BROWSER_LAUNCH_FAILED,
                 context={
                     "profile": self.profile.name,

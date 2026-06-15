@@ -83,8 +83,23 @@ class LLMProviderAvailabilityPayload(OutputSchema):
     resolved_path: str | None = None
 
 
+class VisionProviderPayload(OutputSchema):
+    """The on-host Ollama vision model's availability (nested)."""
+
+    service: str
+    available: bool
+    detail: str = ""
+    remediation: str = ""
+
+
 @register_schema("ledger.providers")
 class LedgerProvidersResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger providers``."""
+    """JSON envelope for ``aeat app ledger providers``.
+
+    Reports the subprocess cloud-provider CLIs (claude / antigravity / codex) and
+    the on-host Ollama vision model, so the operator sees every classification
+    backend — cloud and local — in one place.
+    """
 
     providers: list[LLMProviderAvailabilityPayload]
+    vision: VisionProviderPayload | None = None
