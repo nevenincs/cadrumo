@@ -16,6 +16,7 @@ Submodules
    aeat.application.modelo._action_errors
    aeat.application.modelo._actions
    aeat.application.modelo._amendment_actions
+   aeat.application.modelo._art20_advisory
    aeat.application.modelo._binding_readiness
    aeat.application.modelo._binding_resolution
    aeat.application.modelo._borrador_binding

@@ -138,6 +138,9 @@ from ._verification_actions import (
     _PREDICATE_PROFILE_FIELD_REQUIRED as _PREDICATE_PROFILE_FIELD_REQUIRED,
 )
 from ._verification_actions import (
+    _art20_reduccion_advisory_finding as _art20_reduccion_advisory_finding,
+)
+from ._verification_actions import (
     _assert_evidence_covers_snapshot as _assert_evidence_covers_snapshot,
 )
 from ._verification_actions import (

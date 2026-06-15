@@ -445,6 +445,18 @@ MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR: Final[Decimal] = Decimal("1500")
 #: provision: Ley 27/2014 art. 40.3 (modalidad obligatoria por cifra de negocios).
 MODELO_202_ART_40_3_INCN_THRESHOLD_EUR: Final[Decimal] = Decimal("6000000")
 
+#: Art. 20 LIRPF (Ley 35/2006) rendimiento-neto-del-trabajo ceiling above which the
+#: reducción por obtención de rendimientos del trabajo is zero. The reduction is a
+#: piecewise-linear function of the rendimiento neto del trabajo (RNT) that decays to
+#: zero at this ceiling: for RNT strictly below it the general reduction is positive;
+#: at or above it the reduction is nil. Used by the Modelo 100 art. 20 advisory to flag
+#: a possibly-unapplied reduction (RNT inside the band but the general-reduction casilla
+#: zero) — a ``no-silent-under-declaration`` safeguard. The DATED per-ejercicio schedule
+#: is authoritative in the registry; this is the current (2024-2025) ceiling raised by
+#: RDL 4/2024. Binding provision: Ley 35/2006 art. 20, schedule per RDL 4/2024 art. 3.1
+#: (BOE-A-2024-12944).
+MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR: Final[Decimal] = Decimal("19747.50")
+
 #: Default IVA general-rate percentage for input/pre-fill purposes.
 #: This is the LIVA art. 90 Uno general rate (Ley 37/1992, BOE-A-1992-28740)
 #: currently in force for Spain (ES).

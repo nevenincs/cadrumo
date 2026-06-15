@@ -843,6 +843,8 @@ application:
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
     findings:
+      art20_reduccion_next_action: 'Verifiqueu si les vostres altres rendes diferents de les del treball excloses les exemptes de l''exercici no superen 6500 EUR; en aquest cas, declareu la reduccio per rendiments del treball de l''article 20 LIRPF a la casella de reduccio general (ley-35-2006:art-20).'
+      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: la casella %{rnt_id} (rendiment net del treball) = %{rnt_value} es dins del tram de reduccio de l''article 20 (per sota de 19747,50) pero la casella %{reduccion_id} (reduccio general per rendiments del treball) es zero. Si les vostres altres rendes diferents de les del treball excloses les exemptes no superen 6500, podeu aplicar la reduccio per rendiments del treball de l''article 20 LIRPF.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -1063,6 +1065,8 @@ application:
         amb l'id de perfil '%{profile}'.
       profile_integrity_identity_mismatch: 'L''emmagatzematge del perfil no és coherent:
         els magatzems físics no coincideixen en la identitat del perfil.'
+      profile_integrity_label_mismatch: 'L''emmagatzematge del perfil no és coherent:
+        l''etiqueta del manifest no coincideix amb el registre segur.'
       profile_integrity_status_mismatch: 'L''emmagatzematge del perfil no és coherent:
         l''estat de cicle de vida del manifest no coincideix amb el registre segur.'
       profile_label_blank: L'etiqueta del perfil no pot estar buida.
@@ -1088,7 +1092,6 @@ application:
         instantània de perfil no és compatible amb aquesta aplicació.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
-      profile_integrity_label_mismatch: 'L''emmagatzematge del perfil no és coherent: l''etiqueta del manifest no coincideix amb el registre segur.'
   verification:
     errors:
       missing_binding_values: La verificació del registre requereix valors de vinculació
@@ -1970,7 +1973,8 @@ cli:
     app_help: Gestionar configuració local i diagnòstics
     auth:
       apoderado:
-        check_help: 'Verificar contra l''AEAT (no disponible; les lectures en viu estan segellades). Feu servir ''status'' per a la lectura sense connexió.'
+        check_help: Verificar contra l'AEAT (no disponible; les lectures en viu estan
+          segellades). Feu servir 'status' per a la lectura sense connexió.
         clear_help: Retirar la configuració d'apoderat
         configure:
           represented_nif_help: NIF de la part representada
@@ -2217,6 +2221,11 @@ cli:
       export_help: Escriu un paquet portable del perfil en un JSON
       export_name_help: Perfil que vols exportar; per defecte, l'actiu
       export_out_help: Ruta de destinació per al paquet JSON
+      export_sensitivity_warning: 'Aquest paquet NO està xifrat i conté dades financeres
+        sensibles: el NIF en clar (sense ocultar), el llibre de moviments complet,
+        les revisions de càlcul i els registres de presentació. S''ha escrit a {out}.
+        Esborra''l després de la transferència; no l''enviïs per correu, no el sincronitzis
+        ni el deixis al disc.'
       help: Gestionar valors de configuració del perfil actiu
       history:
         invalid_event_type: 'Tipus d''esdeveniment desconegut: {value}. Tipus d''esdeveniment
@@ -2237,6 +2246,9 @@ cli:
         marca ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00)
       history_until_help: Filtrar l'historial a esdeveniments en o abans d'aquesta
         marca ISO-8601 (p. ex. 2026-04-30T23:59:59+00:00)
+      import_active_switch_info: El perfil importat {name} ara és el perfil ACTIU;
+        les ordres següents operen sobre ell. Executa 'aeat config switch <name>'
+        per canviar el perfil actiu.
       import_help: Registra un paquet portable de perfil des d'un JSON
       import_invalid_bundle: 'Paquet de perfil no vàlid: el JSON no s''ajusta a l''esquema
         del paquet de perfil.'
@@ -2296,8 +2308,6 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
-      export_sensitivity_warning: 'Aquest paquet NO està xifrat i conté dades financeres sensibles: el NIF en clar (sense ocultar), el llibre de moviments complet, les revisions de càlcul i els registres de presentació. S''ha escrit a {out}. Esborra''l després de la transferència; no l''enviïs per correu, no el sincronitzis ni el deixis al disc.'
-      import_active_switch_info: 'El perfil importat {name} ara és el perfil ACTIU; les ordres següents operen sobre ell. Executa ''aeat config switch <name>'' per canviar el perfil actiu.'
     recover:
       help: Recuperar el magatzem secret de fitxer amb una clau de recuperacio i vincular-lo
         a una nova contrasenya.
@@ -2556,6 +2566,12 @@ cli:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       apply_help: 'Persisteix el suggeriment de l''LLM amb procedencia llm: en lloc
         de nomes previsualitzar-lo.'
+      auto_split_help: Llegeix la factura adjunta i, quan és multicomponent, la divideix
+        en fills base/IVA per línia; si no, la classifica al lloc (requereix --read-evidence).
+      auto_split_needs_evidence: '--auto-split requereix --read-evidence: la decisió
+        de divisió es llegeix de la factura.'
+      auto_split_single_line: 'factura d''una sola línia: no cal divisió; --apply
+        la classifica al lloc'
       bulk_summary: 'classificació massiva: %{total} files, %{applied} aplicades,
         %{skipped} omeses, %{fail} fallides'
       business_pct_help: Percentatge d'ús professional de 0 a 1; obligatori amb --classification
@@ -2597,6 +2613,9 @@ cli:
         que sigui al PATH, o executa ''aeat app ledger providers'' per llistar els
         proveidors disponibles.'
       llm_reason_label: motiu
+      llm_rejected_label: rebutjada
+      llm_rejected_message: Suggeriment del model rebutjat i registrat. La transacció
+        no canvia; classifica-la manualment quan vulguis.
       llm_review_hint: Revisa el suggeriment anterior. Torna a executar amb --apply
         per acceptar-lo, amb --classification per anul-lar-lo manualment, o no facis
         res per rebutjar-lo.
@@ -2608,23 +2627,24 @@ cli:
         la passa al classificador.
       reaffirm_help: Reafirmar la classificació d'una transacció ja classificada.
       reaffirmed: Classificació reafirmada.
+      reason_help: Motiu en text lliure que es registra amb una decisió --reject.
+      reject_apply_exclusive: '--reject no es pot combinar amb --apply: reject registra
+        un suggeriment rebutjat, apply un d''acceptat.'
+      reject_help: Registra un rebuig explícit del suggeriment del model com a esdeveniment
+        d'auditoria, sense classificar la fila (no es pot combinar amb --apply).
       saturate_help: 'Satura amb IA: selecciona tambe la categoria d''IVA i deriva
         el tipus, la base i la quota.'
       saturate_non_derivable: Tipus no derivable
       saturate_requires_llm: L'opcio --saturate nomes s'aplica amb --llm; indiqueu
         --llm amb un proveidor.
+      split_recommended_label: divisió recomanada
+      split_recommended_message: La factura adjunta sembla contenir diverses línies
+        de tipus o categoria. Torna a executar amb --auto-split per separar-les en
+        fills de base i IVA declarables de manera independent.
       taxable_base_help: Import de base imposable
-      vision_model_help: 'Substitueix el model de visió local d''Ollama per llegir una factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir el model configurat.'
-      auto_split_help: 'Llegeix la factura adjunta i, quan és multicomponent, la divideix en fills base/IVA per línia; si no, la classifica al lloc (requereix --read-evidence).'
-      split_recommended_message: 'La factura adjunta sembla contenir diverses línies de tipus o categoria. Torna a executar amb --auto-split per separar-les en fills de base i IVA declarables de manera independent.'
-      split_recommended_label: 'divisió recomanada'
-      auto_split_single_line: 'factura d''una sola línia: no cal divisió; --apply la classifica al lloc'
-      auto_split_needs_evidence: '--auto-split requereix --read-evidence: la decisió de divisió es llegeix de la factura.'
-      reject_help: 'Registra un rebuig explícit del suggeriment del model com a esdeveniment d''auditoria, sense classificar la fila (no es pot combinar amb --apply).'
-      reason_help: 'Motiu en text lliure que es registra amb una decisió --reject.'
-      reject_apply_exclusive: '--reject no es pot combinar amb --apply: reject registra un suggeriment rebutjat, apply un d''acceptat.'
-      llm_rejected_message: 'Suggeriment del model rebutjat i registrat. La transacció no canvia; classifica-la manualment quan vulguis.'
-      llm_rejected_label: 'rebutjada'
+      vision_model_help: Substitueix el model de visió local d'Ollama per llegir una
+        factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir
+        el model configurat.
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Descarrega un enllaç de document de Drive i desa'n els bytes com a evidència
@@ -2644,7 +2664,8 @@ cli:
         50 per cent.
       command_input_invalid: 'Rebutjat. La transacció no és vàlida: {details}'
       command_input_invalid_fallback: un o més camps no han superat la validació
-      confirm_required: 'Passa --yes per confirmar aquesta operació destructiva del llibre.'
+      confirm_required: Passa --yes per confirmar aquesta operació destructiva del
+        llibre.
       filter_parse_error: 'Fallada en analitzar el filtre del llibre prop de %{token}:
         %{reason}.'
       id_prefix_collision: 'El prefix d''id de transacció %{prefix!r} coincideix amb
@@ -2854,6 +2875,9 @@ cli:
       child_amount_help: Import d'una transacció filla com a magnitud no negativa;
         es pot repetir
       child_description_help: Descripció d'una transacció filla; es pot repetir
+      classification_dropped: La classificació del pare %{classification} no s'ha
+        copiat als fills de la divisió; cada fill queda com a NOT_YET_PROCESSED i
+        necessita reclassificar-se amb 'aeat app ledger classify'.
       errors:
         child_args_mismatch: Cada import fill ha de tenir una descripció filla corresponent
         min_two_children: Has d'indicar almenys dues transaccions filles
@@ -2868,9 +2892,10 @@ cli:
       read_evidence_help: Llegeix la factura adjunta de la transaccio en local i alimenta-la
         al proposant de divisio --llm.
       reason_help: Motiu registrat a l'historial de cicle de vida
+      vision_model_help: Substitueix el model de visió local d'Ollama per llegir una
+        factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir
+        el model configurat.
       yes_help: Confirma la divisió de la transacció
-      classification_dropped: 'La classificació del pare %{classification} no s''ha copiat als fills de la divisió; cada fill queda com a NOT_YET_PROCESSED i necessita reclassificar-se amb ''aeat app ledger classify''.'
-      vision_model_help: 'Substitueix el model de visió local d''Ollama per llegir una factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir el model configurat.'
     stash:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       help: Apartar un moviment del llibre al perfil actiu
@@ -2904,6 +2929,9 @@ cli:
       value_date_help: Nova data valor (AAAA-MM-DD)
     view:
       help: Mostra una transacció del llibre
+      llm_rejected_label: Suggeriment del model
+      llm_rejected_notice: El suggeriment més recent del model per a aquesta transacció
+        es va rebutjar; classifica-la manualment quan vulguis.
       transaction_id_help: Id de la transacció (o prefix no ambigu)
   locales:
     app_help: Auditar i generar catàlegs de traducció
@@ -2946,6 +2974,7 @@ cli:
         footer: Executeu 'aeat app <ordre> --help' per obtenir mes informacio sobre
           cada ordre.
         heading: Operacions de declaracio fiscal de l'AEAT.
+        ledger_add: Afegir una transacció al llibre manualment.
         ledger_allocate: Assignar transaccions a un periode fiscal.
         ledger_archive: Arxivar entrades del llibre de transaccions.
         ledger_attach: Adjuntar un fitxer d'origen a una entrada del llibre.
@@ -2967,6 +2996,8 @@ cli:
         modelo_bindings: Gestionar les vinculacions d'un model fiscal.
         modelo_describe: Descriure l'estructura d'un model fiscal.
         modelo_list: Llistar els models fiscals disponibles.
+        modelo_m036: Registrar una declaració Model 036 presentada a l'AEAT.
+        modelo_verification_report: Llistar i veure informes de verificació de models.
         modelo_work: 'Treballar amb un model fiscal: introduir dades, calcular i exportar.'
         overview_status: Mostrar l'estat general de la declaracio activa.
         paragraph_operational_workflow: 'Flux operatiu: configureu el perfil -> importeu
@@ -2980,9 +3011,6 @@ cli:
         section_modelo: Models fiscals
         section_overview: Estat general
         section_review_and_registry: Revisio i registre
-        ledger_add: 'Afegir una transacció al llibre manualment.'
-        modelo_verification_report: 'Llistar i veure informes de verificació de models.'
-        modelo_m036: 'Registrar una declaració Model 036 presentada a l''AEAT.'
       config:
         auth_clear: Eliminar les credencials d'autenticacio emmagatzemades.
         auth_configure: Configurar el proveidor d'autenticacio amb l'AEAT.
@@ -4520,7 +4548,9 @@ locales:
       updated: updated %{locale_file}:%{key}
 profile:
   descendiente:
-    custodia_compartida_prorrata_applied: 'S''ha aplicat prorrata 50 %% (Art. 61 LIRPF) per custòdia compartida en %{count} descendent(s). Cada progenitor declara la meitat del mínim corresponent (caselles 0513/0514 i, si escau, 0515/0516).'
+    custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)
+      per custòdia compartida en %{count} descendent(s). Cada progenitor declara la
+      meitat del mínim corresponent (caselles 0513/0514 i, si escau, 0515/0516).
     deduccion_maternidad_applied: 'Deducció maternitat Art. 81 LIRPF calculada: %{amount}
       € (casella 0611). Fórmula sum(min(mesos × 100, 1.200)) per descendent menor
       de 3 anys amb mesos de treball declarats.'

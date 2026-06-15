@@ -34,6 +34,7 @@ from .._actions import (
     ModeloIvaWalletReconciliationBlocked,
     WorkflowInputMismatchError,
     _apply_iva_compensation_decision_binding,
+    _art20_reduccion_advisory_finding,
     _collect_revision_verification_findings,
     _dt12_reduccion_advisory_finding,
     _evaluate_verification_predicates,
@@ -261,6 +262,80 @@ def test_dt12_reduccion_advisory_message_is_localised() -> None:
     assert "0011" in finding.message
     # Locale template token "reduccion" must appear in the rendered string.
     assert "reduccion" in finding.message.lower()
+
+
+# ---------------------------------------------------------------------------
+# contract/contract — art. 20 LIRPF reducción advisory
+# ---------------------------------------------------------------------------
+
+
+def test_art20_reduccion_advisory_fires_within_band_and_is_localised() -> None:
+    """_art20_reduccion_advisory_finding warns when RNT is in-band but reduction is zero.
+
+    A synthetic revision carrying the rendimiento-neto-del-trabajo role and the
+    art. 20 general-reducción role triggers the ADVISORY finding when RNT is strictly
+    positive and below the art. 20 ceiling while the reducción casilla is zero. The
+    finding is non-blocking (ADVISORY / WARNING) and its tr()-rendered message carries
+    the rnt_id, rnt_value, and reduccion_id tokens.
+    """
+    rnt = SimpleNamespace(id="0022", semantic_role="irpf_rendimiento_trabajo_rendimiento_neto")
+    reduccion = SimpleNamespace(
+        id="0023", semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales"
+    )
+    revision = SimpleNamespace(casillas=[rnt, reduccion])
+    casilla_values = {"0022": Decimal("12000"), "0023": Decimal("0")}
+
+    finding = _art20_reduccion_advisory_finding(revision, casilla_values)
+
+    assert finding is not None
+    # Non-blocking advisory: the eligibility gate (otras rentas <= 6.500) is not engine-visible.
+    assert finding.kind == "advisory"
+    assert finding.severity == "warning"
+    assert finding.casilla_id == "0023"
+    assert finding.legal_refs == ("ley-35-2006:art-20",)
+    assert "0022" in finding.message
+    assert "12000" in finding.message
+    assert "0023" in finding.message
+    assert finding.next_action
+    # The advisory message must be the rendered locale value, not the raw key.
+    assert finding.message != "application.modelo.findings.art20_reduccion_possible"
+
+
+def test_art20_reduccion_advisory_silent_in_negative_cases() -> None:
+    """The art. 20 advisory must NOT fire when there is nothing to surface.
+
+    No false positive when: RNT is at/above the ceiling (reduction is genuinely zero),
+    the reducción is already declared, RNT is zero, or the roles are absent.
+    """
+    rnt = SimpleNamespace(id="0022", semantic_role="irpf_rendimiento_trabajo_rendimiento_neto")
+    reduccion = SimpleNamespace(
+        id="0023", semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales"
+    )
+    revision = SimpleNamespace(casillas=[rnt, reduccion])
+
+    # Above the ceiling: the art. 20 reduction is legitimately zero — no advisory.
+    assert (
+        _art20_reduccion_advisory_finding(
+            revision, {"0022": Decimal("25000"), "0023": Decimal("0")}
+        )
+        is None
+    )
+    # Reduction already declared — nothing to surface.
+    assert (
+        _art20_reduccion_advisory_finding(
+            revision, {"0022": Decimal("12000"), "0023": Decimal("3500")}
+        )
+        is None
+    )
+    # RNT zero — no eligible income.
+    assert (
+        _art20_reduccion_advisory_finding(
+            revision, {"0022": Decimal("0"), "0023": Decimal("0")}
+        )
+        is None
+    )
+    # Roles absent — the advisory cannot resolve its casillas.
+    assert _art20_reduccion_advisory_finding(SimpleNamespace(casillas=[]), {}) is None
 
 
 # ---------------------------------------------------------------------------

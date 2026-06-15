@@ -852,6 +852,8 @@ application:
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
     findings:
+      art20_reduccion_next_action: 'Verifique si sus otras rentas distintas de las del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese caso, declare la reduccion por rendimientos del trabajo del articulo 20 LIRPF en la casilla de reduccion general (ley-35-2006:art-20).'
+      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: la casilla %{rnt_id} (rendimiento neto del trabajo) = %{rnt_value} esta dentro del tramo de reduccion del articulo 20 (por debajo de 19747,50) pero la casilla %{reduccion_id} (reduccion general por rendimientos del trabajo) es cero. Si sus otras rentas distintas de las del trabajo excluidas las exentas no superan 6500, puede aplicar la reduccion por rendimientos del trabajo del articulo 20 LIRPF.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -1073,6 +1075,8 @@ application:
         con el id de perfil '%{profile}'.
       profile_integrity_identity_mismatch: 'El almacenamiento del perfil no es coherente:
         los almacenes físicos no coinciden en la identidad del perfil.'
+      profile_integrity_label_mismatch: 'El almacenamiento del perfil no es coherente:
+        la etiqueta del manifiesto no coincide con el registro seguro.'
       profile_integrity_status_mismatch: 'El almacenamiento del perfil no es coherente:
         el estado de ciclo de vida del manifiesto no coincide con el registro seguro.'
       profile_label_blank: La etiqueta del perfil no puede estar vacía.
@@ -1098,7 +1102,6 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
-      profile_integrity_label_mismatch: 'El almacenamiento del perfil no es coherente: la etiqueta del manifiesto no coincide con el registro seguro.'
   verification:
     errors:
       missing_binding_values: La verificación del registro requiere valores de vinculación
@@ -2000,7 +2003,8 @@ cli:
     app_help: Gestionar configuración local y diagnósticos
     auth:
       apoderado:
-        check_help: 'Verificar contra la AEAT (no disponible; las lecturas en vivo están selladas). Use ''status'' para la lectura sin conexión.'
+        check_help: Verificar contra la AEAT (no disponible; las lecturas en vivo
+          están selladas). Use 'status' para la lectura sin conexión.
         clear_help: Retirar la configuración de apoderado
         configure:
           represented_nif_help: NIF de la parte representada
@@ -2249,6 +2253,11 @@ cli:
       export_help: Escribe un paquete portátil del perfil en un JSON
       export_name_help: Perfil que quieres exportar; por defecto, el activo
       export_out_help: Ruta de destino para el paquete JSON
+      export_sensitivity_warning: 'Este paquete NO está cifrado y contiene datos financieros
+        sensibles: el NIF en claro (sin ocultar), el libro de movimientos completo,
+        las revisiones de cálculo y los registros de presentación. Se escribió en
+        {out}. Bórralo tras la transferencia; no lo envíes por correo, no lo sincronices
+        ni lo dejes en disco.'
       help: Gestionar valores de configuración del perfil activo
       history:
         invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
@@ -2268,6 +2277,9 @@ cli:
         (p. ej. 2026-04-01T00:00:00+00:00)
       history_until_help: Filtrar el historial a eventos en o antes de esta marca
         ISO-8601 (p. ej. 2026-04-30T23:59:59+00:00)
+      import_active_switch_info: El perfil importado {name} es ahora el perfil ACTIVO;
+        las órdenes siguientes operan sobre él. Ejecuta 'aeat config switch <name>'
+        para cambiar el perfil activo.
       import_help: Registra un paquete portátil de perfil desde un JSON
       import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al
         esquema del paquete de perfil.'
@@ -2329,8 +2341,6 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
-      export_sensitivity_warning: 'Este paquete NO está cifrado y contiene datos financieros sensibles: el NIF en claro (sin ocultar), el libro de movimientos completo, las revisiones de cálculo y los registros de presentación. Se escribió en {out}. Bórralo tras la transferencia; no lo envíes por correo, no lo sincronices ni lo dejes en disco.'
-      import_active_switch_info: 'El perfil importado {name} es ahora el perfil ACTIVO; las órdenes siguientes operan sobre él. Ejecuta ''aeat config switch <name>'' para cambiar el perfil activo.'
     recover:
       help: Recuperar el almacen secreto de archivo con una clave de recuperacion
         y vincularlo a una nueva contrasena.
@@ -2592,6 +2602,12 @@ cli:
       actor_help: Nombre del operador registrado en el evento del bucket
       apply_help: 'Persiste la sugerencia del LLM con procedencia llm: en lugar de
         solo previsualizarla.'
+      auto_split_help: Lee la factura adjunta y, cuando es multicomponente, la divide
+        en hijos base/IVA por línea; si no, la clasifica en su sitio (requiere --read-evidence).
+      auto_split_needs_evidence: '--auto-split requiere --read-evidence: la decisión
+        de división se lee de la factura.'
+      auto_split_single_line: 'factura de una sola línea: no procede división; --apply
+        la clasifica en su sitio'
       bulk_summary: 'clasificación masiva: %{total} filas, %{applied} aplicadas, %{skipped}
         omitidas, %{fail} fallidas'
       business_pct_help: Porcentaje de uso profesional de 0 a 1; obligatorio con --classification
@@ -2633,6 +2649,9 @@ cli:
         que este en el PATH, o ejecuta ''aeat app ledger providers'' para listar los
         proveedores disponibles.'
       llm_reason_label: motivo
+      llm_rejected_label: rechazada
+      llm_rejected_message: Sugerencia del modelo rechazada y registrada. La transacción
+        no cambia; clasifícala manualmente cuando quieras.
       llm_review_hint: Revisa la sugerencia anterior. Vuelve a ejecutar con --apply
         para aceptarla, con --classification para anularla manualmente, o no hagas
         nada para rechazarla.
@@ -2644,23 +2663,24 @@ cli:
         pasa al clasificador.
       reaffirm_help: Reafirmar la clasificación de una transacción ya clasificada.
       reaffirmed: Clasificación reafirmada.
+      reason_help: Motivo en texto libre que se registra con una decisión --reject.
+      reject_apply_exclusive: '--reject no se puede combinar con --apply: reject registra
+        una sugerencia rechazada, apply una aceptada.'
+      reject_help: Registra un rechazo explícito de la sugerencia del modelo como
+        evento de auditoría, sin clasificar la fila (no se puede combinar con --apply).
       saturate_help: 'Satura con IA: selecciona tambien la categoria de IVA y deriva
         el tipo, la base y la cuota.'
       saturate_non_derivable: Tipo no derivable
       saturate_requires_llm: La opcion --saturate solo se aplica con --llm; indique
         --llm con un proveedor.
+      split_recommended_label: división recomendada
+      split_recommended_message: La factura adjunta parece contener varias líneas
+        de tipo o categoría. Vuelve a ejecutar con --auto-split para separarlas en
+        hijos de base e IVA declarables de forma independiente.
       taxable_base_help: Importe de base imponible
-      vision_model_help: 'Sustituye el modelo de visión local de Ollama para leer una factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo configurado.'
-      auto_split_help: 'Lee la factura adjunta y, cuando es multicomponente, la divide en hijos base/IVA por línea; si no, la clasifica en su sitio (requiere --read-evidence).'
-      split_recommended_message: 'La factura adjunta parece contener varias líneas de tipo o categoría. Vuelve a ejecutar con --auto-split para separarlas en hijos de base e IVA declarables de forma independiente.'
-      split_recommended_label: 'división recomendada'
-      auto_split_single_line: 'factura de una sola línea: no procede división; --apply la clasifica en su sitio'
-      auto_split_needs_evidence: '--auto-split requiere --read-evidence: la decisión de división se lee de la factura.'
-      reject_help: 'Registra un rechazo explícito de la sugerencia del modelo como evento de auditoría, sin clasificar la fila (no se puede combinar con --apply).'
-      reason_help: 'Motivo en texto libre que se registra con una decisión --reject.'
-      reject_apply_exclusive: '--reject no se puede combinar con --apply: reject registra una sugerencia rechazada, apply una aceptada.'
-      llm_rejected_message: 'Sugerencia del modelo rechazada y registrada. La transacción no cambia; clasifícala manualmente cuando quieras.'
-      llm_rejected_label: 'rechazada'
+      vision_model_help: Sustituye el modelo de visión local de Ollama para leer una
+        factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo
+        configurado.
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia
@@ -2680,7 +2700,7 @@ cli:
         el 50 por ciento.
       command_input_invalid: 'Rechazado. La transacción no es válida: {details}'
       command_input_invalid_fallback: uno o más campos no superaron la validación
-      confirm_required: 'Pasa --yes para confirmar esta operación destructiva del libro.'
+      confirm_required: Pasa --yes para confirmar esta operación destructiva del libro.
       filter_parse_error: 'Fallo al analizar el filtro del libro cerca de %{token}:
         %{reason}.'
       id_prefix_collision: 'El prefijo de id %{prefix!r} coincide con varias transacciones:
@@ -2891,6 +2911,9 @@ cli:
       child_amount_help: Importe de una transacción hija como magnitud no negativa;
         se puede repetir
       child_description_help: Descripción de una transacción hija; se puede repetir
+      classification_dropped: La clasificación del padre %{classification} no se copió
+        a los hijos de la división; cada hijo queda como NOT_YET_PROCESSED y necesita
+        reclasificarse con 'aeat app ledger classify'.
       errors:
         child_args_mismatch: Cada importe hijo debe tener una descripción hija correspondiente
         min_two_children: Debes indicar al menos dos transacciones hijas
@@ -2905,9 +2928,10 @@ cli:
       read_evidence_help: Lee la factura adjunta de la transaccion en local y alimentala
         al proponente de division --llm.
       reason_help: Motivo registrado en el historial de ciclo de vida
+      vision_model_help: Sustituye el modelo de visión local de Ollama para leer una
+        factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo
+        configurado.
       yes_help: Confirma la división de la transacción
-      classification_dropped: 'La clasificación del padre %{classification} no se copió a los hijos de la división; cada hijo queda como NOT_YET_PROCESSED y necesita reclasificarse con ''aeat app ledger classify''.'
-      vision_model_help: 'Sustituye el modelo de visión local de Ollama para leer una factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo configurado.'
     stash:
       actor_help: Nombre del operador registrado en el evento del bucket
       help: Apartar un movimiento del libro en el perfil activo
@@ -2941,6 +2965,9 @@ cli:
       value_date_help: Nueva fecha valor (AAAA-MM-DD)
     view:
       help: Muestra una transacción del libro
+      llm_rejected_label: Sugerencia del modelo
+      llm_rejected_notice: La sugerencia más reciente del modelo para esta transacción
+        fue rechazada; clasifícala manualmente cuando quieras.
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
   locales:
     app_help: Auditar y generar catálogos de traducción
@@ -2983,6 +3010,7 @@ cli:
         footer: Ejecute 'aeat app <comando> --help' para obtener mas informacion sobre
           cada comando.
         heading: Operaciones de declaracion fiscal AEAT.
+        ledger_add: Añadir una transacción al libro manualmente.
         ledger_allocate: Asignar transacciones a un periodo fiscal.
         ledger_archive: Archivar entradas del libro de transacciones.
         ledger_attach: Adjuntar un fichero de origen a una entrada del libro.
@@ -3003,6 +3031,8 @@ cli:
         modelo_bindings: Gestionar las vinculaciones de un modelo fiscal.
         modelo_describe: Describir la estructura de un modelo fiscal.
         modelo_list: Listar los modelos fiscales disponibles.
+        modelo_m036: Registrar una declaración Modelo 036 presentada en la AEAT.
+        modelo_verification_report: Listar y ver informes de verificación de modelos.
         modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y
           exportar.'
         overview_status: Mostrar el estado general de la declaracion activa.
@@ -3017,9 +3047,6 @@ cli:
         section_modelo: Modelos fiscales
         section_overview: Estado general
         section_review_and_registry: Revision y registro
-        ledger_add: 'Añadir una transacción al libro manualmente.'
-        modelo_verification_report: 'Listar y ver informes de verificación de modelos.'
-        modelo_m036: 'Registrar una declaración Modelo 036 presentada en la AEAT.'
       config:
         auth_clear: Eliminar las credenciales de autenticacion almacenadas.
         auth_configure: Configurar el proveedor de autenticacion con la AEAT.
@@ -4567,7 +4594,9 @@ locales:
       updated: updated %{locale_file}:%{key}
 profile:
   descendiente:
-    custodia_compartida_prorrata_applied: 'Se ha aplicado prorrata 50 % (Art. 61 LIRPF) por custodia compartida en %{count} descendiente(s). Cada progenitor declara la mitad del mínimo correspondiente (casillas 0513/0514 y, si procede, 0515/0516).'
+    custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)
+      por custodia compartida en %{count} descendiente(s). Cada progenitor declara
+      la mitad del mínimo correspondiente (casillas 0513/0514 y, si procede, 0515/0516).
     deduccion_maternidad_applied: 'Deducción maternidad Art. 81 LIRPF calculada: %{amount}
       € (casilla 0611). Comprobada la fórmula sum(min(meses × 100, 1.200)) por descendiente
       menor de 3 años con meses de trabajo declarados.'
