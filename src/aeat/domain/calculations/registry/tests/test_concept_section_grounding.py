@@ -35,6 +35,8 @@ _CONCEPT_SECTION_GROUNDING: dict[str, tuple[str, tuple[int, ...]]] = {
     "minimo_per_fam_res": ("ley-35-2006:art-56", (2021, 2022, 2023, 2024)),
     # rendimientos de capital mobiliario negativos pendientes — integración base ahorro
     "rdtos_cm_negativos_res": ("ley-35-2006:art-49", (2021, 2022, 2023, 2024)),
+    # deducción por alquiler de la vivienda habitual (régimen transitorio) — DT-15ª
+    "deduccion_alquiler_res": ("ley-35-2006:dt-15", (2021, 2022, 2023, 2024)),
     # deducciones por familia numerosa y personas con discapacidad a cargo — art. 81 bis
     "deduc_familia_numerosa_res": ("ley-35-2006:art-81-bis", (2021, 2022, 2023, 2024)),
     "deduc_ascendiente_disc_res": ("ley-35-2006:art-81-bis", (2021, 2022, 2023, 2024)),
