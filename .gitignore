@@ -306,6 +306,7 @@ cache/
 /C\:*
 /*_keys.txt
 /translate_*.py
+/scratch_*.py
 # Agent scratch the patterns above missed: commit-message temps, capture
 # dumps, trace/check helpers, ad-hoc runners, underscore-prefixed temp files,
 # and generated-doc backups. Root-level only; never durable.

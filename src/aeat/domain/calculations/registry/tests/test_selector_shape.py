@@ -25,7 +25,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .._bindings import (
     _BINDING_SELECTOR_REGISTRY,
     validate_binding_selector_shape,
@@ -220,7 +220,7 @@ def test_collectible_invoice_selector_accepts_well_shaped_selector() -> None:
     """
 
     binding = _binding(
-        source="collectible_invoice",
+        source=BindingSourceKind.COLLECTIBLE_INVOICE,
         selector={
             "fact": "base_sum",
         },
@@ -233,7 +233,7 @@ def test_collectible_invoice_row_field_selector_accepts_grouping() -> None:
 
     binding = DataBindingDefinition(
         id="collectible-rows",
-        source="collectible_invoice",  # type: ignore[arg-type]
+        source=BindingSourceKind.COLLECTIBLE_INVOICE,
         selector={
             "fact": "row_field",
             "row_field": "country_code",
@@ -256,7 +256,7 @@ def test_collectible_invoice_scalar_fact_rejects_grouping() -> None:
     """
 
     binding = _binding(
-        source="collectible_invoice",
+        source=BindingSourceKind.COLLECTIBLE_INVOICE,
         selector={
             "fact": "base_sum",
             "grouping": "operator_clave",
@@ -465,7 +465,7 @@ def test_invoice_binding_fact_op_mismatch_caught_at_snapshot_build() -> None:
     # NEGATIVE TEST: source="collectible_invoice" is valid but the fact/op pair is invalid
     binding = DataBindingDefinition(
         id="bad-invoice-fact-op",
-        source="collectible_invoice",  # type: ignore[arg-type]
+        source=BindingSourceKind.COLLECTIBLE_INVOICE,
         selector={
             "fact": "operator_count",
             "claves": ("E", "M"),
@@ -492,7 +492,7 @@ def test_counterpart_binding_fact_op_mismatch_caught_at_snapshot_build() -> None
     """
     binding = DataBindingDefinition(
         id="bad-counterpart-fact-op",
-        source="ledger_transaction",  # type: ignore[arg-type]
+        source=BindingSourceKind.LEDGER_TRANSACTION,
         selector={
             "fact": "operator_count",
             "claves": ("E", "M"),
@@ -517,7 +517,7 @@ def test_collectible_invoice_rejects_lowercase_clave() -> None:
     """
 
     binding = _binding(
-        source="collectible_invoice",
+        source=BindingSourceKind.COLLECTIBLE_INVOICE,
         selector={
             "fact": "base_sum",
             "claves": ("e",),  # lowercase: invalid

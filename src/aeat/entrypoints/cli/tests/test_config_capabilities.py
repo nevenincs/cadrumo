@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from typer.testing import CliRunner
@@ -37,7 +38,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _show() -> dict[str, dict]:
+def _show() -> dict[str, Any]:
     result = _RUNNER.invoke(app, ["--format", "json", "config", "profile", "capabilities", "show"])
     assert result.exit_code == 0, result.output
     rows = json.loads(result.output)["result"]["capabilities"]

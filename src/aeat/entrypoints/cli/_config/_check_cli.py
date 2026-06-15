@@ -46,10 +46,7 @@ def register(app: typer.Typer) -> None:
         ollama = probe_ollama_vision()
         providers = probe_subprocess_providers()
         playwright = probe_playwright_browser()
-        dependencies = [
-            d.model_dump()
-            for d in (ollama, *providers, playwright)
-        ]
+        dependencies = [d.model_dump() for d in (ollama, *providers, playwright)]
         any_provider = any(p.available for p in providers)
 
         issues: list[str] = []
