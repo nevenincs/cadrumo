@@ -37,7 +37,9 @@ def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 def _database_bytes(profile: TestRuntimeProfile) -> bytes:
-    return (profile.paths.db_dir / "aeat.db").read_bytes()
+    from ....tests.secure_sql import read_db_at_rest_bytes
+
+    return read_db_at_rest_bytes(profile.paths.db_dir / "aeat.db")
 
 
 def test_load_missing_returns_empty(tmp_path: Path) -> None:

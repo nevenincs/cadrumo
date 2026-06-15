@@ -64,7 +64,9 @@ def test_blob_and_manifest_round_trip_without_plaintext_files(
     assert tuple(store.iter_manifests()) == (attachment,)
     store.verify_blob(digest)
 
-    database_bytes = (runtime_profile.paths.db_dir / "aeat.db").read_bytes()
+    from ....tests.secure_sql import read_db_at_rest_bytes
+
+    database_bytes = read_db_at_rest_bytes(runtime_profile.paths.db_dir / "aeat.db")
     assert b"secure_objects" in database_bytes
     assert body not in database_bytes
     assert b"ATTACHMENT_CANARY_00000000T" not in database_bytes

@@ -98,10 +98,17 @@ def _attach_sqlite_pragmas(engine: Engine) -> None:
     - ``busy_timeout`` so a writer that meets a held lock from a concurrent
       ``aeat`` invocation on the same bucket waits its turn rather than failing
       immediately with ``SQLITE_BUSY`` ("database is locked").
-
-    ``synchronous`` is left at the rollback-journal-safe default (FULL).
-    WAL mode is a separate, larger change (it adds a ``-wal`` sidecar that the
-    at-rest test surface must learn to read) and is tracked as its own step.
+    - ``journal_mode=WAL`` so readers do not block the writer and the writer does
+      not block readers — the right concurrency model for the many-concurrent-
+      ``aeat``-invocation workload. WAL keeps committed pages in a ``-wal``
+      sidecar until a checkpoint folds them into the main database file, so any
+      at-rest plaintext scan over the raw file must read the ``-wal`` sidecar too
+      (see ``read_db_at_rest_bytes`` in the shared test surface). A no-op on
+      ``:memory:`` databases, which have no on-disk journal.
+    - ``synchronous=NORMAL`` — the durability level WAL is designed for: it cannot
+      corrupt the database, and at most loses the last transaction on an OS/power
+      crash (acceptable for a build-and-export local store; never used for live
+      AEAT submission).
 
     Args:
         engine: :class:`~sqlalchemy.engine.Engine` to attach the listener to.
@@ -115,6 +122,8 @@ def _attach_sqlite_pragmas(engine: Engine) -> None:
         try:
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.execute(f"PRAGMA busy_timeout={_SQLITE_BUSY_TIMEOUT_MS}")
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA synchronous=NORMAL")
         finally:
             cursor.close()
 

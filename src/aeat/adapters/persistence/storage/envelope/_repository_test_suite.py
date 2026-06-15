@@ -213,9 +213,11 @@ def _database_payload_is_encrypted_audit_data[T: BaseModel](
     case: SecureRepositoryContractCase[T],
     db_path: Path,
 ) -> None:
+    from .....tests.secure_sql import read_db_at_rest_bytes
+
     repo = case.repository_factory()
     repo.save(case.first_payload)
-    raw = db_path.read_bytes()
+    raw = read_db_at_rest_bytes(db_path)
     assert b"secure_objects" in raw, (
         "raw SQLite file does not include the secure_objects table marker; encrypted-row backing is not wired"
     )
