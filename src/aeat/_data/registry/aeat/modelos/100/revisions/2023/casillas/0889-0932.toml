@@ -5,5 +5,5 @@ label = "Si no tiene referencia catastral, marque con una 'X' esta casilla"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 data_type = "boolean"
 semantic_role = "irpf_deduccion_canarias_referencia_catastral_2_flag"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
