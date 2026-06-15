@@ -13,6 +13,7 @@ related:
   - '[[2026-06-14-storage-backend-security-review-W01-P03-S05]]'
   - '[[2026-06-14-storage-backend-security-review-W01-P03-S06]]'
   - '[[2026-06-14-storage-backend-security-review-W02-P04-S07]]'
+  - '[[2026-06-14-storage-backend-security-review-W02-P04-S08]]'
   - '[[2026-06-14-storage-backend-security-review-W02-P04-S09]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P05-S10]]'
   - '[[2026-06-14-storage-backend-security-review-W03-P05-S11]]'
@@ -34,6 +35,8 @@ related:
   - '[[2026-06-14-storage-backend-security-review-W05-P12-S27]]'
   - '[[2026-06-14-storage-backend-security-review-W05-P12-S28]]'
   - '[[2026-06-14-storage-backend-security-review-W06-P13-S29]]'
+  - '[[2026-06-14-storage-backend-security-review-W06-P14-S30]]'
+  - '[[2026-06-14-storage-backend-security-review-W06-P14-S31]]'
   - '[[2026-06-14-storage-backend-security-review-adr]]'
   - '[[2026-06-14-storage-backend-security-review-plan]]'
   - '[[2026-06-14-storage-backend-security-review-research]]'
@@ -78,7 +81,10 @@ Auto-generated index of all documents tagged with `#storage-backend-security-rev
 - `2026-06-14-storage-backend-security-review-W05-P12-S27` - Delete the v1 portable-bundle compat branch and drop version 1 from the supported set per no-legacy-compatibility
 - `2026-06-14-storage-backend-security-review-W05-P12-S28` - Confirm the SQL secure_objects store is covered by the bucket-DEK rewrap rotation path and document or extend the rotation contract
 - `2026-06-14-storage-backend-security-review-W06-P13-S29` - Remove the attach_evidence double full-catalogue decrypt by threading one decrypted catalogue through the command
+- `2026-06-14-storage-backend-security-review-W02-P04-S08` - Verify the stored payload hash and recomputed revision id on every secure-object read and fail closed on mismatch
 - `2026-06-14-storage-backend-security-review-W05-P11-S25` - Promote the sealed-archive read and write helpers to the bucket package all and rebind the maintenance service call sites
+- `2026-06-14-storage-backend-security-review-W06-P14-S30` - Make secure-object namespace enumeration stream decrypted rows instead of materialising and sorting the full set
+- `2026-06-14-storage-backend-security-review-W06-P14-S31` - Move the transaction catalogue to one secure-object row per transaction keyed by transaction id so single-row mutations stop rewriting the whole catalogue
 
 ### plan
 
