@@ -65,6 +65,5 @@ def test_every_casilla_legal_ref_resolves_to_a_catalogue_entry() -> None:
         if missing:
             dangling[str(f.relative_to(bundled_path("registry", "aeat", "modelos")))] = missing
     assert not dangling, (
-        "casilla legal_refs cite provisions absent from the legal catalogue "
-        f"(dangling references): {dangling}"
+        f"casilla legal_refs cite provisions absent from the legal catalogue (dangling references): {dangling}"
     )
