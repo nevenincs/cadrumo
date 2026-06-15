@@ -403,15 +403,36 @@
      * first (ordered by injected tier+weight), navigation titles second, the
      * full-text handoff third. Dedupe by href across tiers: a hit that is both
      * a term card and a nav/full-text result shows once, in its higher tier. */
+    /* How well a card's own title matches the query: an exact title match is a
+     * strong, DETERMINISTIC signal that this card is THE answer, independent of
+     * Pagefind's BM25 (which, for a short common token like "iva" diluted across
+     * many multilingual card descriptions, does not reliably float the exact
+     * concept). 3 exact, 2 prefix, 1 substring, 0 none. */
+    function titleMatch(title, query) {
+      if (!title || !query) return 0;
+      var t = String(title).toLowerCase();
+      var q = String(query).toLowerCase().trim();
+      if (!q) return 0;
+      if (t === q) return 3;
+      if (t.indexOf(q) === 0) return 2;
+      if (t.indexOf(q) >= 0) return 1;
+      return 0;
+    }
+
     function compose(query, pagefindCards) {
       var seenHref = {};
       var ordered = [];
       var cards = (pagefindCards || []).slice().sort(function (a, b) {
-        /* Primary axis: the tier+weight rank (concept > cli > casilla > page),
-         * so cards always sit above full-text pages. Secondary axis: the
-         * relevance rank, so within a tier the best textual match leads (the
-         * IVA concept ahead of concepts that merely mention "iva"). */
+        /* Primary axis: the tier rank (concept > cli > casilla > page), so cards
+         * always sit above full-text pages. Secondary: an exact/prefix title
+         * match, so the concept the operator literally typed leads its tier (the
+         * IVA concept for "iva", not VIES). Tertiary: the relevance rank, which
+         * orders the remaining within-tier ties and the cross-lingual matches
+         * (e.g. "pro rata" -> prorrata) whose title is in another language. */
         if (b.tierRank !== a.tierRank) return b.tierRank - a.tierRank;
+        var ma = titleMatch(a.title, query);
+        var mb = titleMatch(b.title, query);
+        if (mb !== ma) return mb - ma;
         return (a.relRank || 0) - (b.relRank || 0);
       });
       cards.forEach(function (card) {
