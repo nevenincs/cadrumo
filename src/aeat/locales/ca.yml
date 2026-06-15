@@ -2217,8 +2217,7 @@ cli:
         enabled: activat
         help: Activa o desactiva en aquest perfil els serveis externs (pujada al núvol,
           visió LLM, exportació a Google).
-        no_active_profile: No hi ha cap perfil actiu; selecciona'n un amb 'aeat config
-          profile use <nom>' abans de configurar una capacitat.
+        no_active_profile: 'No hi ha cap perfil actiu; selecciona''n un amb ''aeat config switch <nom>'' abans de configurar una capacitat.'
         set_help: Activa o desactiva una capacitat de servei per al perfil actiu.
         show_help: Mostra l'estat resolt de cada capacitat de servei per al perfil
           actiu.
@@ -4798,6 +4797,8 @@ wizard:
     question_prefix: Pregunta %{q_n} de %{q_total}
     section_header: 'Pas %{section_n} de %{section_total}: %{title}'
   setup:
+    capabilities:
+      title: 'Capacitats de serveis'
     certificate:
       path:
         prompt: Introduiu el cami del certificat digital (.p12, .pfx)
