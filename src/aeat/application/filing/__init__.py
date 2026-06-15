@@ -12,6 +12,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
+from ...core import BindingSourceKind
 from ...core import Period as _Period
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
@@ -403,6 +404,28 @@ def _string_inputs_for_ids(inputs: ModeloInputs, input_ids: frozenset[str]) -> d
     return string_inputs
 
 
+def _binding_provenance(binding: object) -> tuple[BindingSourceKind, tuple[str, ...], tuple[str, ...]]:
+    """Extract the typed source kind and grounding from a binding definition.
+
+    The ``binding`` is the registry ``DataBindingDefinition`` already held by
+    the filing builder; its ``source`` is a typed
+    :class:`~aeat.core.BindingSourceKind` and its ``legal_refs`` / ``source_refs``
+    carry the binding's regulatory grounding. Carrying them onto every
+    :class:`ModeloBindingValue` brings bound values to provenance parity with
+    casillas (the casilla half already populates
+    :class:`~aeat.domain.filing.ModeloCasillaProvenance`).
+    """
+    source = getattr(binding, "source", None)
+    if not isinstance(source, BindingSourceKind):
+        raise ModeloBuilderError(
+            f"registry binding {getattr(binding, 'id', binding)!r} carries a non-typed "
+            f"source {source!r}; expected a BindingSourceKind member",
+        )
+    legal_refs = tuple(getattr(binding, "legal_refs", ()) or ())
+    source_refs = tuple(getattr(binding, "source_refs", ()) or ())
+    return source, legal_refs, source_refs
+
+
 def _filing_binding_values(
     inputs: ModeloInputs,
     bindings: Mapping[str, object],
@@ -420,6 +443,7 @@ def _filing_binding_values(
             continue
         if binding_id not in inputs or inputs[binding_id] is None:
             continue
+        source, legal_refs, source_refs = _binding_provenance(binding)
         raw_value = inputs[binding_id]
         if isinstance(raw_value, list | tuple):
             values.extend(
@@ -427,7 +451,9 @@ def _filing_binding_values(
                     binding_id=binding_id,
                     value=_binding_input(binding_id, row_value, binding),
                     kind=ModeloValueKind.LITERAL,
-                    source="registry binding input",
+                    source=source,
+                    legal_refs=legal_refs,
+                    source_refs=source_refs,
                     row_index=index,
                 )
                 for index, row_value in enumerate(raw_value, start=1)
@@ -439,7 +465,9 @@ def _filing_binding_values(
                     binding_id=binding_id,
                     value=_binding_input(binding_id, row_value, binding),
                     kind=ModeloValueKind.LITERAL,
-                    source="registry binding input",
+                    source=source,
+                    legal_refs=legal_refs,
+                    source_refs=source_refs,
                     row_index=_binding_row_index(binding_id, row_key),
                 )
                 for row_key, row_value in raw_value.items()
@@ -450,7 +478,9 @@ def _filing_binding_values(
                 binding_id=binding_id,
                 value=_binding_input(binding_id, raw_value, binding),
                 kind=ModeloValueKind.LITERAL,
-                source="registry binding input",
+                source=source,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
             ),
         )
     return values
