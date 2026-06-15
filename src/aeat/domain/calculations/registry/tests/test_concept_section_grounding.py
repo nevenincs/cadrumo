@@ -42,6 +42,10 @@ _CONCEPT_SECTION_GROUNDING: dict[str, tuple[str, tuple[int, ...]]] = {
     "deduc_ascendiente_disc_res": ("ley-35-2006:art-81-bis", (2021, 2022, 2023, 2024)),
     "deduc_descendiente_disc_res": ("ley-35-2006:art-81-bis", (2021, 2022, 2023, 2024)),
     "deduc_conyuge_disc_res": ("ley-35-2006:art-81-bis", (2021, 2022, 2023, 2024)),
+    # base imponible (integración y compensación de saldos) — arts. 48/49. NOTE:
+    # base_liq_neg_res is NOT grounded — it is binding-entangled (V19), deferred.
+    "base_imponible_res": ("ley-35-2006:art-48", (2021, 2022, 2023, 2024)),
+    "base_liquidable_res": ("ley-35-2006:art-50", (2021, 2022, 2023, 2024)),
 }
 
 
