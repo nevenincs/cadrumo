@@ -1,4 +1,9 @@
-"""Shared str→Decimal coercion for modelo binding pipelines.
+"""Shared str→Decimal parser for modelo binding pipelines.
+
+This module is a parsing helper, not a binding: ``decimal_from_string`` coerces a
+raw string into a :class:`~decimal.Decimal`. It is named for what it does
+(parsing) rather than the pipelines that consume it, so "binding" stays reserved
+for the registry-data-input concept.
 
 The borrador-binding and profile-binding pipelines each shipped a near-duplicate ``_decimal_value``
 helper. They diverged on:

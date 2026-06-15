@@ -39,7 +39,7 @@ from ..live import (
     LiveApplicationInputError,
     SnapshotLifecycleState,
 )
-from ._decimal_binding_value import decimal_from_string
+from ._decimal_parsing import decimal_from_string
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
