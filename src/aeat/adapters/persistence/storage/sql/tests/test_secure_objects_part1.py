@@ -29,6 +29,141 @@ from ._secure_objects_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
+def test_revision_id_round_trips_for_self_consistency_check(tmp_path: Path) -> None:
+    """The stored ``revision_id`` recomputes exactly from the round-tripped columns.
+
+    Precondition proof for the read-time revision-lineage self-consistency gate:
+    ``derive_revision_id`` mixes ``written_at.isoformat()`` into the hash, so the
+    gate is only safe if the persisted ``written_at`` (and every other lineage
+    column) round-trips through the ORM read path with byte-identical
+    ``isoformat()``. If this ever fails, the self-consistency gate would fail-close
+    *valid* rows; this test is the canary that keeps that from shipping silently.
+    """
+
+    from sqlalchemy import select
+
+    from .._orm import SecureObjectRow
+    from .._secure_object_crypto import derive_revision_id
+    from ..session import session_scope
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        db_path = tmp_path / "revision-fidelity.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            # Two writes to the same key so the second row carries a populated
+            # previous_revision_id / previous_payload_hash lineage chain.
+            repo.save(
+                namespace="aeat.test",
+                object_key="key-rev",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"first-revision-body",
+            )
+            repo.save(
+                namespace="aeat.test",
+                object_key="key-rev",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"second-revision-body",
+            )
+            with session_scope(engine) as session:
+                row = session.execute(
+                    select(SecureObjectRow).where(
+                        SecureObjectRow.namespace == "aeat.test",
+                        SecureObjectRow.object_key == "key-rev",
+                    ),
+                ).scalar_one()
+                assert row.revision_id is not None
+                assert row.previous_revision_id is not None, "second write must chain to the first revision"
+                recomputed = derive_revision_id(
+                    namespace=row.namespace,
+                    object_key=bytes(row.object_key),
+                    schema_version=row.schema_version,
+                    written_at=row.written_at,
+                    payload_hash=row.payload_hash,
+                    ciphertext_hash=row.ciphertext_hash,
+                    previous_revision_id=row.previous_revision_id,
+                    previous_payload_hash=row.previous_payload_hash,
+                )
+                assert recomputed == row.revision_id, (
+                    "revision_id does not recompute from round-tripped columns; the "
+                    "self-consistency gate would fail-close valid rows"
+                )
+        finally:
+            engine.dispose()
+
+
+def test_revision_lineage_tamper_fails_closed(tmp_path: Path) -> None:
+    """Tampering a stored lineage column without restamping revision_id fails closed.
+
+    The revision id is a content address over the whole lineage-metadata tuple,
+    so an attacker with write access to the bucket SQLite file who edits a
+    plaintext lineage column (here ``payload_hash``, or ``revision_id`` itself)
+    without recomputing ``revision_id`` produces a row that no longer
+    self-recomputes. The read path detects the divergence and refuses the row
+    instead of returning a record whose integrity metadata lies about its
+    content. This is the anti-tautology proof for the read-time revision
+    self-consistency gate; it tampers metadata only (never the payload), so it
+    is orthogonal to the AEAD payload authentication.
+    """
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        db_path = tmp_path / "lineage-tamper.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace="aeat.test",
+                object_key="key-tamper",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"lineage-tamper-body",
+            )
+            # Sanity: the untampered row reads cleanly.
+            assert (
+                repo.load("aeat.test", "key-tamper", expected_class=SensitivityClass.FINANCIAL, max_supported_version=1)
+                is not None
+            )
+
+            # Tamper a single lineage column (payload_hash) without restamping
+            # revision_id -- the stored revision_id no longer recomputes.
+            with sqlite3.connect(db_path) as con:
+                con.execute(
+                    "UPDATE secure_objects SET payload_hash = :h WHERE namespace = :ns",
+                    {"h": "f" * 64, "ns": "aeat.test"},
+                )
+
+            with pytest.raises(SecureObjectUnreadableError):
+                repo.load(
+                    "aeat.test",
+                    "key-tamper",
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                )
+
+            # The fault-isolated enumeration path also flags the row.
+            items = list(
+                repo.iter_records_with_failures(
+                    "aeat.test",
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                ),
+            )
+            assert len(items) == 1
+            assert isinstance(items[0], SecureObjectUnreadable)
+            assert "self-consistency" in items[0].reason
+        finally:
+            engine.dispose()
+
+
 def test_secure_object_row_substitution_fails_closed(tmp_path: Path) -> None:
     """A ciphertext moved into a different row refuses to decrypt (AAD row binding).
 
