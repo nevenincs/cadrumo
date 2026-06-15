@@ -87,10 +87,12 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
 def _register_ledger_providers_command(app: typer.Typer) -> None:
     @app.command("providers", help=tr("cli.ledger.providers.help"))
     def ledger_providers(ctx: typer.Context) -> None:
-        """List which subprocess LLM providers have a usable CLI on PATH."""
+        """List the cloud-provider CLIs on PATH and the on-host vision model."""
+        from ...application.provisioning import probe_ollama_vision
         from ._ledger_payloads import LedgerProvidersResult
 
         listings = available_llm_providers()
+        vision = probe_ollama_vision()
         result = LedgerProvidersResult.model_validate(
             {
                 "providers": [
@@ -102,6 +104,12 @@ def _register_ledger_providers_command(app: typer.Typer) -> None:
                     }
                     for item in listings
                 ],
+                "vision": {
+                    "service": vision.service,
+                    "available": vision.available,
+                    "detail": vision.detail,
+                    "remediation": vision.remediation,
+                },
             },
         )
         lines: list[str] = []
@@ -109,6 +117,9 @@ def _register_ledger_providers_command(app: typer.Typer) -> None:
             status = "available" if item.available else "unavailable"
             location = item.resolved_path or item.cli_binary
             lines.append(f"{item.provider.value}\t{status}\t{location}")
+        vision_status = "available" if vision.available else "unavailable"
+        vision_tail = f"\t{vision.remediation}" if vision.remediation else ""
+        lines.append(f"{vision.service}\t{vision_status}\t{vision.detail}{vision_tail}")
         _emit_envelope(ctx, command="ledger.providers", result=result, lines=lines)
 
 
