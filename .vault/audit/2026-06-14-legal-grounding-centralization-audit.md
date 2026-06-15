@@ -874,6 +874,44 @@ validator is available — the cluster mapping above makes that pass turnkey. Th
 "irreducible tail" characterisation (V22): the tail is larger and mostly tractable, bounded only by the
 ADD-coverage verification, not by corpus gaps (only the 19 Baleares RIB casillas are corpus-blocked).
 
+### V29 (sole-default tail RESOLVED — construct-coverage gate built; 337/365 re-grounded; only 28 honestly deferred)
+
+The 365-add was completed without the peer-blocked registry, by building the missing safety net the V28
+analysis named. A new schema-independent gate `test_construct_casilla_coverage` faithfully replicates the
+casilla branch of `_validate_constructs.validate_construct_closure` (`member.legal_refs ⊆
+construct.legal_refs`) by parsing the construct TOMLs directly. It established the decisive fact that
+de-risked the whole pass: only 2 M100 casillas are DIRECT construct members (constructs reference
+*formulas*, which carry their own refs), so 0 of the 365 are construct-bound — the only constraint on an
+ADD is resolution (article ∈ catalogue). The V19/V20 landmine therefore could not fire, and the gate
+proves it on every run.
+
+Re-grounded across four phases (each: section-tag keyed, resolution + construct-coverage gates green,
+only `legal_refs` lines changed):
+
+- **Phase A — 127** to existing articles: ganancias `gp_*`/otras/juegos/cambio-residencia → art-33+34
+  (DT-9 boxes +dt-9); TFI → art-91; patrimonio protegido discapacidad → art-54; cuota autonómica → art-77;
+  ampliación maternidad → art-81 (commit `a82a4bc37`).
+- **Phase B — 141** with 6 newly-authored LIRPF entries (each grounded in bundled `ley-35-2006.html`,
+  corpus-verified `required_text`, agent-authored `reviewed_by`): art-7 rentas exentas (6); art-53
+  previsión social discapacidad (20); art-55 pensiones compensatorias (12); art-92 derechos imagen (16);
+  art-95 IIC paraísos (12); art-97 autoliquidación/compensación cónyuges/rectificativa (75) (commit
+  `1333169f0`).
+- **Phase C — 28**: DA-48 unidad-familiar-UE authored (20); art-81-bis regularización descendiente/
+  ascendiente (8) (commit `88dbbdfda`).
+- **Phase D — 41**: art-97 autoliquidación/complementaria/rectificativa result boxes (27); art-37 canje/
+  fusión/escisión de valores (10); art-25 saldo capital mobiliario (4) (commit `0d4d3e9e1`).
+
+**Total: 337 of 365 re-grounded; 7 new legal entries authored (art-7/53/55/92/95/97 + DA-48).** The 28
+deferred are honest, not tractable-but-skipped: 19 reserva-inversiones-Baleares (Ley 31/2022 DA-70 — NOT
+in the bundled corpus; grounding it would require authoring from a non-bundled/secondary source, which
+`legal-grounding-verifies-bundled-authoritative-corpus` forbids) and 9 genuinely-ambiguous identifier/
+rental boxes (datos_adicionales children-NIF, inmueble alquiler-de-locales) whose concept article is not
+unambiguous from the section tag. The 7 agent-authored legal entries remain operator-re-stamp-gated.
+
+This closes the actividades-default defect to its corpus-bounded limit and supersedes V28's deferral: the
+ADD pass that V28 gated on "the validator being available" was instead unblocked by the schema-independent
+construct-coverage gate, which proved the ADD safe.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
