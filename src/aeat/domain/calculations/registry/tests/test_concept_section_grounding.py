@@ -170,6 +170,10 @@ _SUBSTRING_CONCEPTS: dict[str, tuple[str, tuple[int, ...]]] = {
     "mejoras_energeticas": ("ley-35-2006:da-50", (2021, 2022, 2023, 2024)),  # DA-50ª eficiencia energética
     "eficiencia_energetica": ("ley-35-2006:da-50", (2022, 2023, 2024)),
     "vehiculos_elec": ("ley-35-2006:da-58", (2023, 2024)),  # DA-58ª vehículos eléctricos
+    # régimen de atribución de rentas + AIE — framework art. 86 (attributed income; the
+    # underlying source nature is a refinement, like autonomic→art.77).
+    "re_at_rentas": ("ley-35-2006:art-86", (2021, 2022, 2023, 2024)),
+    "re_agrup_interes_economico": ("ley-35-2006:art-86", (2021, 2022, 2023, 2024)),
 }
 
 
