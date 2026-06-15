@@ -46,7 +46,7 @@ Auto-generated index of all documents tagged with `#service-capabilities`.
 ### exec
 
 - `2026-06-15-service-capabilities-W01-P01-S01` - Add ServiceCapability StrEnum (cloud_evidence_upload, llm_vision, google_export) in core with per-member docstrings
-- `2026-06-15-service-capabilities-W01-P01-S02` - Add a capabilities [[sections]] with boolean fields to the user_profile schema TOML
+- `2026-06-15-service-capabilities-W01-P01-S02` - Add a capabilities `[[sections]]` with boolean fields to the user_profile schema TOML
 - `2026-06-15-service-capabilities-W01-P02-S03` - Add resolve_capability + CapabilityDecision overlaying profile facts onto the global Settings default (gestor-mode absolute bar first)
 - `2026-06-15-service-capabilities-W01-P02-S04` - Rewire cloud_evidence_read_permitted, the vision path, and google export through resolve_capability with typed refusals
 - `2026-06-15-service-capabilities-W01-P03-S05` - Add config profile capabilities show/set verbs routed through EditProfileSectionCommand
