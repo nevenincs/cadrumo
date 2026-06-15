@@ -20,5 +20,5 @@ Submodules
    aeat.domain.fincas._expense_rollup
    aeat.domain.fincas._imputacion_parameters
    aeat.domain.fincas._models
-   aeat.domain.fincas._repository
+   aeat.domain.fincas._repository_ports
    aeat.domain.fincas._tier_resolver

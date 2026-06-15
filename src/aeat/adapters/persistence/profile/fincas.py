@@ -1,14 +1,17 @@
-"""Typed repositories for the rental-register record types.
+"""ORM-backed repositories for the rental-register record types.
 
-Bridges between the public :mod:`aeat.domain.fincas._models` records and the
-internal :mod:`aeat.adapters.persistence.storage.sql._orm` mapper rows. Every
-method routes through ``Repository._flush_or_wrap`` so DB integrity violations
+These concrete repositories are the persistence adapter behind the
+read-side ports declared in :mod:`aeat.domain.fincas._repository_ports`.
+They bridge the public :mod:`aeat.domain.fincas._models` records and the
+internal :mod:`aeat.adapters.persistence.storage.sql._orm` mapper rows;
+every method routes through ``_flush_or_wrap`` so DB integrity violations
 surface as :class:`RepositoryError`.
 
-Storage imports are deferred behind methods that consult them so the
-rental subpackage does not pull :mod:`aeat.adapters.persistence.storage` (with its
-Alembic plugin discovery) into every CLI command's import chain;
-this preserves the json-pipe-safety contract.
+Living in the persistence adapter (not in :mod:`aeat.domain.fincas`) keeps
+the SQLAlchemy and ORM-row coupling out of the domain layer: the domain
+aggregation functions depend only on the structural ``*`` reader ports,
+never on this module. Storage imports remain deferred behind the methods
+that consult them so the module stays import-light.
 """
 
 from __future__ import annotations
@@ -19,9 +22,9 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from ...core.logging import get_logger
-from ._enums import ExpenseCategory, UseType
-from ._models import (
+from ....core.logging import get_logger
+from ....domain.fincas._enums import ExpenseCategory, UseType
+from ....domain.fincas._models import (
     Arrendamiento,
     Finca,
     FincaAmortizacionLedgerEntry,
@@ -30,13 +33,13 @@ from ._models import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover — type-only imports
-    from ...adapters.persistence.storage.sql import _orm
+    from ..storage.sql import _orm
 
 _log = get_logger(__name__)
 
 
 def _flush_or_wrap(session: Session, kind: str) -> None:
-    from ...adapters.persistence.storage.errors import RepositoryError
+    from ..storage.errors import RepositoryError
 
     try:
         session.flush()
@@ -48,6 +51,7 @@ class FincaRepository:
     """Repository for :class:`Finca`."""
 
     def __init__(self, session: Session) -> None:
+        """Bind the repository to an open ORM ``session``."""
         self._session = session
 
     def list_all(self) -> list[Finca]:
@@ -56,7 +60,7 @@ class FincaRepository:
         Returns:
             List of all :class:`Finca` records.
         """
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.sql import _orm
 
         rows = self._session.execute(select(_orm.FincaRow).order_by(_orm.FincaRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
@@ -73,8 +77,8 @@ class FincaRepository:
         Raises:
             RepositoryError: When no row matches.
         """
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         row = self._session.get(_orm.FincaRow, record_id)
         if row is None:
@@ -87,7 +91,7 @@ class FincaRepository:
         Returns:
             The matching :class:`Finca`, or ``None`` when not found.
         """
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.sql import _orm
 
         row = self._session.execute(
             select(_orm.FincaRow).where(_orm.FincaRow.identifier == identifier),
@@ -100,8 +104,8 @@ class FincaRepository:
         Returns:
             The persisted :class:`Finca` with any database-generated fields populated.
         """
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         row: _orm.FincaRow | None = None
         if record.id is not None:
@@ -150,8 +154,8 @@ class FincaRepository:
 
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         row = self._session.get(_orm.FincaRow, record_id)
         if row is None:
@@ -162,7 +166,7 @@ class FincaRepository:
 
     @staticmethod
     def _to_record(row: _orm.FincaRow) -> Finca:
-        from ...adapters.persistence.storage.errors import RepositoryError
+        from ..storage.errors import RepositoryError
 
         try:
             use_type = UseType(row.use_type)
@@ -197,18 +201,19 @@ class ArrendamientoRepository:
     """Repository for :class:`Arrendamiento`."""
 
     def __init__(self, session: Session) -> None:
+        """Bind the repository to an open ORM ``session``."""
         self._session = session
 
     def list_all(self) -> list[Arrendamiento]:
         """Return every :class:`Arrendamiento` record in the table, ordered by surrogate id."""
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.sql import _orm
 
         rows = self._session.execute(select(_orm.ArrendamientoRow).order_by(_orm.ArrendamientoRow.id)).scalars().all()
         return [self._to_record(row) for row in rows]
 
     def list_for_finca(self, finca_id: int) -> list[Arrendamiento]:
         """Return every :class:`Arrendamiento` record attached to the supplied finca."""
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.sql import _orm
 
         rows = (
             self._session.execute(
@@ -233,8 +238,8 @@ class ArrendamientoRepository:
         Raises:
             RepositoryError: When no row matches.
         """
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         row = self._session.get(_orm.ArrendamientoRow, record_id)
         if row is None:
@@ -243,8 +248,8 @@ class ArrendamientoRepository:
 
     def upsert(self, record: Arrendamiento) -> Arrendamiento:
         """Insert or update ``record`` and return the persisted :class:`Arrendamiento`."""
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         row: _orm.ArrendamientoRow | None = None
         if record.id is not None:
@@ -262,8 +267,8 @@ class ArrendamientoRepository:
 
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         row = self._session.get(_orm.ArrendamientoRow, record_id)
         if row is None:
@@ -323,6 +328,7 @@ class FincaRendimientoRepository:
     """Repository for :class:`FincaRendimientoRecord`."""
 
     def __init__(self, session: Session) -> None:
+        """Bind the repository to an open ORM ``session``."""
         self._session = session
 
     def list_for_period(self, period_year: int) -> list[FincaRendimientoRecord]:
@@ -331,7 +337,7 @@ class FincaRendimientoRepository:
         Returns:
             List of :class:`FincaRendimientoRecord` for the given period year.
         """
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.sql import _orm
 
         rows = (
             self._session.execute(
@@ -350,7 +356,7 @@ class FincaRendimientoRepository:
         period_year: int,
     ) -> FincaRendimientoRecord | None:
         """Return the :class:`FincaRendimientoRecord` for ``contract_id`` matching ``period``, or ``None``."""
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.sql import _orm
 
         row = self._session.execute(
             select(_orm.FincaRendimientoRecordRow).where(
@@ -362,8 +368,8 @@ class FincaRendimientoRepository:
 
     def upsert(self, record: FincaRendimientoRecord) -> FincaRendimientoRecord:
         """Insert or update ``record`` and return the persisted :class:`FincaRendimientoRecord`."""
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         row: _orm.FincaRendimientoRecordRow | None = None
         if record.id is not None:
@@ -395,8 +401,8 @@ class FincaRendimientoRepository:
 
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         row = self._session.get(_orm.FincaRendimientoRecordRow, record_id)
         if row is None:
@@ -420,11 +426,12 @@ class FincaGastoRepository:
     """Repository for :class:`FincaGasto`."""
 
     def __init__(self, session: Session) -> None:
+        """Bind the repository to an open ORM ``session``."""
         self._session = session
 
     def list_for_finca_period(self, finca_id: int, period_year: int) -> list[FincaGasto]:
         """Return every :class:`FincaGasto` record attached to ``finca_id`` within the period window."""
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.sql import _orm
 
         rows = (
             self._session.execute(
@@ -442,8 +449,8 @@ class FincaGastoRepository:
 
     def add(self, record: FincaGasto) -> FincaGasto:
         """Insert ``record`` and return the persisted :class:`FincaGasto` entity."""
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         if record.id is not None:
             raise RepositoryError(
@@ -466,8 +473,8 @@ class FincaGastoRepository:
         Returns:
             The persisted :class:`FincaGasto` with any database-generated fields populated.
         """
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         if record.id is None:
             return self.add(record)
@@ -484,8 +491,8 @@ class FincaGastoRepository:
 
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         row = self._session.get(_orm.FincaGastoRow, record_id)
         if row is None:
@@ -495,7 +502,7 @@ class FincaGastoRepository:
 
     @staticmethod
     def _to_record(row: _orm.FincaGastoRow) -> FincaGasto:
-        from ...adapters.persistence.storage.errors import RepositoryError
+        from ..storage.errors import RepositoryError
 
         try:
             category = ExpenseCategory(row.category)
@@ -523,6 +530,7 @@ class FincaAmortizacionLedgerRepository:
     """Repository for :class:`FincaAmortizacionLedgerEntry`."""
 
     def __init__(self, session: Session) -> None:
+        """Bind the repository to an open ORM ``session``."""
         self._session = session
 
     def list_for_finca(self, finca_id: int) -> list[FincaAmortizacionLedgerEntry]:
@@ -531,7 +539,7 @@ class FincaAmortizacionLedgerRepository:
         Returns:
             List of :class:`FincaAmortizacionLedgerEntry` for the finca.
         """
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.sql import _orm
 
         rows = (
             self._session.execute(
@@ -554,7 +562,7 @@ class FincaAmortizacionLedgerRepository:
         Returns:
             The matching :class:`FincaAmortizacionLedgerEntry`, or ``None`` when absent.
         """
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.sql import _orm
 
         row = self._session.execute(
             select(_orm.FincaAmortizacionLedgerRow).where(
@@ -566,8 +574,8 @@ class FincaAmortizacionLedgerRepository:
 
     def upsert(self, record: FincaAmortizacionLedgerEntry) -> FincaAmortizacionLedgerEntry:
         """Insert or update ``record`` and return the persisted :class:`FincaAmortizacionLedgerEntry`."""
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         row: _orm.FincaAmortizacionLedgerRow | None = None
         if record.id is not None:
@@ -605,8 +613,8 @@ class FincaAmortizacionLedgerRepository:
 
     def delete(self, record_id: int) -> None:
         """Delete the record with surrogate id ``record_id``."""
-        from ...adapters.persistence.storage.errors import RepositoryError
-        from ...adapters.persistence.storage.sql import _orm
+        from ..storage.errors import RepositoryError
+        from ..storage.sql import _orm
 
         row = self._session.get(_orm.FincaAmortizacionLedgerRow, record_id)
         if row is None:

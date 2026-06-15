@@ -7,8 +7,14 @@ multi-year ledger with a per-finca cost-basis cap.
 
 Callers outside :mod:`aeat.domain.fincas` import only from this module.
 Internal modules (``_models``, ``_enums``, ``_errors``,
-``_repository``, ``_tier_resolver``, ``_amortization_ledger``,
+``_repository_ports``, ``_tier_resolver``, ``_amortization_ledger``,
 ``_expense_rollup``, and ``_aggregates``) are implementation details.
+
+The concrete ORM-backed repositories that satisfy the reader ports
+declared here live in the persistence adapter
+(:mod:`aeat.adapters.persistence.profile.fincas`), not in this domain
+package — keeping the SQLAlchemy / mapper-row coupling out of the
+domain layer.
 """
 
 from __future__ import annotations
@@ -48,12 +54,12 @@ from ._models import (
     FincaGasto,
     FincaRendimientoRecord,
 )
-from ._repository import (
-    ArrendamientoRepository,
-    FincaAmortizacionLedgerRepository,
-    FincaGastoRepository,
-    FincaRendimientoRepository,
-    FincaRepository,
+from ._repository_ports import (
+    ArrendamientoReader,
+    FincaAmortizacionLedgerReader,
+    FincaGastoReader,
+    FincaReader,
+    FincaRendimientoReader,
 )
 from ._tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,
@@ -71,7 +77,7 @@ __all__ = [
     "AmortizationComputation",
     "AmortizationLedgerCapExceededError",
     "Arrendamiento",
-    "ArrendamientoRepository",
+    "ArrendamientoReader",
     "CarryForwardEntry",
     "ContractNotFoundError",
     "ContractTierAttribution",
@@ -80,15 +86,15 @@ __all__ = [
     "FincaAggregates",
     "FincaAggregationError",
     "FincaAmortizacionLedgerEntry",
-    "FincaAmortizacionLedgerRepository",
+    "FincaAmortizacionLedgerReader",
     "FincaAttribution",
     "FincaGasto",
-    "FincaGastoRepository",
+    "FincaGastoReader",
     "FincaNotFoundError",
+    "FincaReader",
     "FincaRegisterError",
+    "FincaRendimientoReader",
     "FincaRendimientoRecord",
-    "FincaRendimientoRepository",
-    "FincaRepository",
     "GastosForYear",
     "ReduccionTier",
     "TierResolution",

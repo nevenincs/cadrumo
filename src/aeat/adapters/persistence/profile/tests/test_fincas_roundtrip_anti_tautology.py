@@ -19,19 +19,19 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy.engine import Engine
 
-from ....adapters.persistence.storage import (
-    session_scope,
-)
-from ....adapters.persistence.storage.sql._orm import FincaRow
-from ....adapters.persistence.storage.sql.engine import get_engine
-from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from .....domain.fincas import (
     Finca,
-    FincaRepository,
     UseType,
 )
+from .....tests.secure_sql import isolated_runtime_profile
+from ...storage import (
+    session_scope,
+)
+from ...storage.sql._orm import FincaRow
+from ...storage.sql.engine import get_engine
+from ..fincas import FincaRepository
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 @pytest.fixture(autouse=True)
