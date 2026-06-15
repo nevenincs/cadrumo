@@ -9,7 +9,7 @@
 concept_id = "sede-electronica"
 domain = "concepto"
 lifecycle = "approved"
-legal_refs = ["ley-39-2015:art-38"]
+legal_refs = ["ley-40-2015:art-38"]
 created_at = 2026-06-11
 updated_at = 2026-06-11
 

@@ -133,6 +133,35 @@ PERF-007 (durable Playwright palette gate). Remaining follow-ups, lower priority
 
 ## Codification candidates
 
-No new codification candidates. The constraints exercised are covered by the
-existing rules (`shipped-search-licence-clean`, `terminology-single-declaration`,
-`terminology-scaffold-preserve-contract`); the fixes are feature-specific.
+The two lower-priority follow-ups below were promoted to project rules during the
+follow-up plan: `glossary-concepts-are-taxpayer-facing` (new) and the
+committed-light-data-not-heavy-index boundary folded into
+`shipped-search-licence-clean`. The other existing rules
+(`terminology-single-declaration`, `terminology-scaffold-preserve-contract`)
+remain unchanged.
+
+## Follow-up plan closure
+
+The two follow-ups recommended above were actioned to completion under the
+`2026-06-15-docs-terminology-search` plan (L2, 28/28 steps closed), backed by the
+`2026-06-15-docs-terminology-search` ADR (D1-D3). Per-phase verification evidence:
+
+- **Legal grounding (P01).** The 10 staged provisions were graduated from
+  permalink-only to corpus-verified: verbatim BOE text fetched via the Open Data
+  API, corpus excerpts written, `required_text` added. Fetching surfaced a real
+  grounding error - the sede electronica article is Ley 40/2015 art. 38, not Ley
+  39/2015 art. 38 - which was corrected (entry, corpus, and the
+  `sede-electronica` concept ref). All 13 `tax-framework.toml` entries pass the
+  strict corpus gate.
+- **Glossary cleanup (P02).** The 11 internal-machinery concepts were demoted to
+  `deprecated` with internal-marker scope_notes; approved concepts dropped 40 ->
+  29 and the glossary excludes all 11. The S31 self-hosted-vocabulary test was
+  updated to assert the deprecated, non-glossary-facing state.
+- **Artefact boundary (P03).** `pagefind/` is gitignored and untracked (0 tracked
+  files); the light `relevance.json` plus the Handbook fragments stay committed.
+- **Codify + verify (P04).** Both rules authored and synced to the provider
+  dirs. The sweep's `enumerate_query_vocabulary` now enumerates approved concepts
+  only; the committed `relevance.json` was rederived from the failed=0 approved-era
+  sweep by excluding the deprecated concepts (no degraded re-retrieval), leaving
+  72 queries / 29 concepts / failed=0. The relevance-drift, miss-rate,
+  concept-cards, sweep, glossary, and pagefind gates are green.

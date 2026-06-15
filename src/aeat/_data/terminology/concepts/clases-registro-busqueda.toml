@@ -3,7 +3,7 @@
 [concept]
 concept_id = "clases-registro-busqueda"
 domain = "concepto"
-lifecycle = "approved"
+lifecycle = "deprecated"
 broader = ["manual-terminologia"]
 related = ["proyeccion-busqueda"]
 created_at = 2026-06-12

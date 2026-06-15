@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-terminology-search'
-date: '2026-06-14'
-modified: '2026-06-14'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-10-docs-terminology-search-W01-P01-S01]]'
   - '[[2026-06-10-docs-terminology-search-W01-P01-S02]]'
@@ -48,7 +48,9 @@ related:
   - '[[2026-06-12-docs-terminology-search-live-verification-audit]]'
   - '[[2026-06-12-docs-terminology-search-rung2-adjudication-audit]]'
   - '[[2026-06-14-docs-terminology-search-audit]]'
+  - '[[2026-06-15-docs-terminology-search-adr]]'
   - '[[2026-06-15-docs-terminology-search-audit]]'
+  - '[[2026-06-15-docs-terminology-search-plan]]'
 ---
 
 # `docs-terminology-search` feature index
@@ -60,6 +62,7 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 ### adr
 
 - `2026-06-10-docs-terminology-search-adr` - `docs-terminology-search` adr: `terminology handbook and precompiled docs search` | (**status:** `accepted`)
+- `2026-06-15-docs-terminology-search-adr` - `docs-terminology-search` adr: `glossary enrolment policy and committed-artifact boundary` | (**status:** `accepted`)
 
 ### audit
 
@@ -110,6 +113,7 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 ### plan
 
 - `2026-06-10-docs-terminology-search-plan` - `docs-terminology-search` `terminology handbook and precompiled docs search epic` plan
+- `2026-06-15-docs-terminology-search-plan` - `docs-terminology-search` plan: grounding and glossary follow-up
 
 ### research
 

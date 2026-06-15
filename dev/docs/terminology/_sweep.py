@@ -40,7 +40,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from aeat.core.external_constants import OutputLanguage
 
 from ..terminology_handbook import TerminologyHandbook, load_terminology_handbook
-from ..terminology_handbook._enums import TermStatus
+from ..terminology_handbook._enums import ConceptLifecycle, TermStatus
 from ._resolution import ChunkHit, GroundingSurface, TargetResolver, resolve_chunk_hits
 from ._search_record import SearchRecordKind
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, wrangle
@@ -186,6 +186,13 @@ def enumerate_query_vocabulary(
     queries: dict[tuple[str, str], SweepQuery] = {}
     for concept in resolved.concepts:
         if wanted is not None and concept.concept_id not in wanted:
+            continue
+        # Only APPROVED concepts reach the shipped search surface (the glossary
+        # and the Pagefind injection gate on approved), so only their terms are
+        # the closed query vocabulary; a deprecated/draft concept's terms must
+        # not be swept into the relevance mapping (they would target a card that
+        # is never injected -- a dead entry).
+        if concept.lifecycle is not ConceptLifecycle.APPROVED:
             continue
         for section in concept.languages:
             for term in section.terms:

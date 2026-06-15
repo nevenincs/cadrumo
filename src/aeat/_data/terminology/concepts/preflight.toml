@@ -8,13 +8,14 @@
 [concept]
 concept_id = "preflight"
 domain = "concepto"
-lifecycle = "approved"
+lifecycle = "deprecated"
 related = ["ledger", "prorrata"]
 created_at = 2026-06-11
 updated_at = 2026-06-11
 
 [language.es]
 short_description = "La comprobacion de que el ledger esta completo para un periodo antes de calcular un modelo."
+scope_note = "Concepto interno de la maquinaria de busqueda/calculo de la aplicacion; documentado para el RAG de desarrollo, no es un termino tributario de cara al contribuyente y por eso queda fuera del glosario."
 definition = "Comprobacion de disponibilidad del ledger para un periodo. Informa de las filas a las que les falta una categoria, un importe de base, un tipo de IVA, una divisa o una referencia de prorrata antes de calcular un modelo, para que la persona corrija los datos antes de continuar."
 
 [language.es.source]
