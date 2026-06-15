@@ -9,6 +9,7 @@
 concept_id = "aeat"
 domain = "concepto"
 lifecycle = "approved"
+legal_refs = ["ley-58-2003:art-5"]
 created_at = 2026-06-11
 updated_at = 2026-06-11
 

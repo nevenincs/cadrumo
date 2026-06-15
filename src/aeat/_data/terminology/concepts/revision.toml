@@ -9,6 +9,7 @@
 concept_id = "revision"
 domain = "concepto"
 lifecycle = "approved"
+legal_refs = ["ley-58-2003:art-213"]
 related = ["modelo"]
 created_at = 2026-06-11
 updated_at = 2026-06-11

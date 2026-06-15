@@ -9,6 +9,7 @@
 concept_id = "modelo-100"
 domain = "modelo"
 lifecycle = "approved"
+legal_refs = ["ley-35-2006:art-96"]
 domain_refs = ["modelo:100"]
 related = ["irpf", "renta", "casilla", "borrador"]
 created_at = 2026-06-10

@@ -9,6 +9,7 @@
 concept_id = "irpf"
 domain = "concepto"
 lifecycle = "approved"
+legal_refs = ["ley-35-2006:art-1"]
 related = ["tema-irpf-regime", "renta", "modelo-100", "modelo-130"]
 created_at = 2026-06-11
 updated_at = 2026-06-11

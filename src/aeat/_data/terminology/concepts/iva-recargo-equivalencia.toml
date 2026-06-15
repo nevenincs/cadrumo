@@ -9,6 +9,7 @@
 concept_id = "iva-recargo-equivalencia"
 domain = "regimen"
 lifecycle = "approved"
+legal_refs = ["ley-37-1992:art-148"]
 domain_refs = ["iva-category:recargo_equivalencia"]
 created_at = 2026-06-10
 updated_at = 2026-06-11
