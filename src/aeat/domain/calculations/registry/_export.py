@@ -155,7 +155,7 @@ def _export_field_from_row_binding(
     record: ExportRecordDefinition,
     binding: DataBindingDefinition,
 ) -> ExportFieldDefinition | None:
-    if binding.aggregation is None or binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
+    if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
         return None
     if record.binding_record is None:
         return None

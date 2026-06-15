@@ -109,7 +109,7 @@ def _validate_export_record_binding_link(
             f"{record.binding_record!r}",
         )
     for binding in matching_bindings:
-        if binding.aggregation is not None and binding_aggregation_op(binding) == BindingAggregationOp.ROWS:
+        if binding_aggregation_op(binding) == BindingAggregationOp.ROWS:
             continue
         missing_selector_keys = sorted(key for key in ("offset", "length", "data_type") if key not in binding.selector)
         if missing_selector_keys:
