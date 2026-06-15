@@ -125,7 +125,7 @@ Add resolve_capability and rewire cloud-evidence/vision/google gates through it.
 config profile capabilities show/set and a wizard capabilities section.
 
 - [x] `W01.P03.S05` - Add config profile capabilities show/set verbs routed through EditProfileSectionCommand; `add a wizard capabilities section; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W01.P03.S11` - Add a capabilities section to the wizard create/edit flow so opt-in/out is offered at profile creation; `src/aeat/application/wizard`.
+- [x] `W01.P03.S11` - Add a capabilities section to the wizard create/edit flow so opt-in/out is offered at profile creation; `src/aeat/application/wizard`.
 
 ## Wave `W02` - Dependency probes + graceful degradation
 
@@ -142,7 +142,7 @@ Typed DependencyStatus + per-service probes (ollama/model, playwright, google, p
 Ollama probe-before-inference refusal, CLI catches LLMProviderError/connection errors, providers vision row, Playwright hint.
 
 - [x] `W02.P05.S07` - Probe Ollama before vision inference + refuse instructively; `widen classify CLI to catch LLMProviderError/connection errors; add ollama providers row; Playwright hint; `src/aeat/application/ledger, src/aeat/entrypoints/cli`.
-- [ ] `W02.P05.S12` - Add an Ollama/vision row to ledger providers and a playwright-install remediation hint to BrowserError; `src/aeat/entrypoints/cli/_ledger_read_cli.py, src/aeat/adapters/outbound/aeat/browser/session.py`.
+- [x] `W02.P05.S12` - Add an Ollama/vision row to ledger providers and a playwright-install remediation hint to BrowserError; `src/aeat/entrypoints/cli/_ledger_read_cli.py, src/aeat/adapters/outbound/aeat/browser/session.py`.
 
 ## Wave `W03` - Doctor + provisioning
 
@@ -159,10 +159,10 @@ aeat config doctor reporting availability + capability posture + remediation per
 Capability extras, torch relocation, just doctor/provision recipes, fix env-playwright, README reconcile.
 
 - [ ] `W03.P07.S09` - Capability extras + relocate torch; `just doctor/provision recipes; fix env-playwright; reconcile README/justfile; `pyproject.toml, justfile, README.md`.
-- [ ] `W03.P07.S10` - Tests + locales + how-to onboarding doc across capabilities, probes, doctor, provisioning; `src/aeat tests, src/aeat/locales, docs/how-to`.
-- [ ] `W03.P07.S13` - Investigate the torch placement (vaultspec-rag managed-torch-direct-dependency) and restructure pyproject: capability-mapped extras + relocate torch correctly; `pyproject.toml`.
-- [ ] `W03.P07.S14` - Write the onboarding how-to doc covering bootstrap, capabilities, and the doctor; `docs/how-to`.
-- [ ] `W03.P07.S15` - Verify: full focused suite + conformance + honesty review; close the plan; `.vault/audit`.
+- [x] `W03.P07.S10` - Tests + locales + how-to onboarding doc across capabilities, probes, doctor, provisioning; `src/aeat tests, src/aeat/locales, docs/how-to`.
+- [x] `W03.P07.S13` - Investigate the torch placement (vaultspec-rag managed-torch-direct-dependency) and restructure pyproject: capability-mapped extras + relocate torch correctly; `pyproject.toml`.
+- [x] `W03.P07.S14` - Write the onboarding how-to doc covering bootstrap, capabilities, and the doctor; `docs/how-to`.
+- [ ] `W03.P07.S15` - Verify: full focused suite + conformance + honesty review; `close the plan; `.vault/audit`.
 
 ## Description
 
