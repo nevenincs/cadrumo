@@ -2078,16 +2078,17 @@ cli:
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
       capabilities:
-        capability_help: cli.config.profile.capabilities.capability_help
-        capability_label: cli.config.profile.capabilities.capability_label
-        enabled: cli.config.profile.capabilities.enabled
-        help: cli.config.profile.capabilities.help
-        no_active_profile: cli.config.profile.capabilities.no_active_profile
+        capability_help: 'Service capability to opt in or out of.'
+        capability_label: 'capability'
+        enabled: 'enabled'
+        help: 'Opt this profile in or out of external services (cloud upload, LLM vision, Google export).'
+        no_active_profile: 'No active profile; select one with ''aeat config profile use <name>'' before setting a capability.'
         set_help: Opt the active profile in or out of one service capability.
         show_help: Show the resolved posture of every service capability for the active
           profile.
         state_help: Whether to enable (on) or disable (off) the capability.
         state_label: state
+        disabled: 'disabled'
       censo:
         apply_help: Overwrite the profile with censo values reported by AEAT
         compare_help: Compare AEAT censo and this profile field by field
