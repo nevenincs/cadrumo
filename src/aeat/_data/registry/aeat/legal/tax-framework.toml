@@ -1,11 +1,10 @@
-# Legal provisions that ground Terminology Handbook CONCEPTS (the glossary
-# legal-basis links), as opposed to calculation values. The binding provision
-# for each concept is its framework article; the operator-facing grounding is
-# the BOE permalink the glossary renders. Entries carrying corpus text declare
-# a `required_text` the strict corpus gate verifies; the remainder use the
-# supported staged-annotation state (corpus_ref present, required_text pending
-# corpus ingestion) — see `verify_legal_reference` (corpus_strict skips the
-# file read when required_text is empty).
+# Foundational framework provisions of the Spanish tax system: the articles that
+# establish the nature of the main taxes (IVA, IRPF), the tax administration,
+# fiscal identification (censo and NIF), the declaration and self-assessment
+# obligations, the review procedure, the recargo de equivalencia regime, and the
+# electronic sede. Entries carrying a verbatim corpus excerpt declare a
+# required_text the strict corpus gate verifies; the rest use the staged
+# annotation state (corpus_ref present, required_text pending corpus ingestion).
 
 [legal."ley-37-1992:art-1"]
 evidence_tier = "legal_authority"
