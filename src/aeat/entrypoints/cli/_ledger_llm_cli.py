@@ -105,8 +105,7 @@ def emit_llm_rejection(
         message=tr(
             "cli.ledger.classify.llm_rejected_message",
             default=(
-                "LLM suggestion rejected and recorded. The transaction is unchanged; "
-                "classify it manually when ready."
+                "LLM suggestion rejected and recorded. The transaction is unchanged; classify it manually when ready."
             ),
         ),
         suggestion=f"aeat app ledger classify {result.transaction_id} --classification BUSINESS --category-id <id>",

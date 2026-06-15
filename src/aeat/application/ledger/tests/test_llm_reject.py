@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.buckets import BucketEvent, BucketEventHistoryRepository, BucketEventType
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
@@ -101,7 +101,7 @@ def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
     )
 
 
-def _rejection_events(events: BucketEventHistoryRepository) -> tuple:
+def _rejection_events(events: BucketEventHistoryRepository) -> tuple[BucketEvent, ...]:
     return events.load().for_bucket(
         _BUCKET,
         event_types=(BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,),

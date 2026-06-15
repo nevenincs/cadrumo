@@ -65,21 +65,15 @@ def _params():
 
 
 @pytest.mark.parametrize(("section_tag", "article", "year"), list(_params()))
-def test_concept_section_grounds_in_its_article_not_actividades(
-    section_tag: str, article: str, year: int
-) -> None:
+def test_concept_section_grounds_in_its_article_not_actividades(section_tag: str, article: str, year: int) -> None:
     """Every box in a corrected concept-section carries its concept article and no
     actividades article."""
     casillas = _section_casillas(year, section_tag)
     assert casillas, f"M100 {year} section {section_tag} must have casillas"
     actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
-    assert not actividades, (
-        f"M100 {year} {section_tag}: boxes still cite the actividades chapter: {actividades}"
-    )
+    assert not actividades, f"M100 {year} {section_tag}: boxes still cite the actividades chapter: {actividades}"
     missing = [(c.id, sorted(c.legal_refs)) for c in casillas if article not in set(c.legal_refs)]
-    assert not missing, (
-        f"M100 {year} {section_tag}: boxes not grounded in {article}: {missing}"
-    )
+    assert not missing, f"M100 {year} {section_tag}: boxes not grounded in {article}: {missing}"
 
 
 def _prevision_social_casillas(filing_year: int):
@@ -106,20 +100,31 @@ def test_prevision_social_grounds_in_arts_51_52_not_actividades(year: int) -> No
     casillas = _prevision_social_casillas(year)
     assert casillas, f"M100 {year}: previsión-social section must have casillas"
     actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
-    assert not actividades, (
-        f"M100 {year}: previsión-social boxes still cite the actividades chapter: {actividades}"
-    )
+    assert not actividades, f"M100 {year}: previsión-social boxes still cite the actividades chapter: {actividades}"
     missing = [(c.id, sorted(c.legal_refs)) for c in casillas if "ley-35-2006:art-51" not in set(c.legal_refs)]
-    assert not missing, (
-        f"M100 {year}: previsión-social boxes not grounded in art. 51: {missing}"
-    )
+    assert not missing, f"M100 {year}: previsión-social boxes not grounded in art. 51: {missing}"
 
 
 _AUTONOMIC_COMUNIDADES = (
-    "valenciana", "canarias", "asturias", "la_rioja", "i_baleares", "madrid",
-    "castilla_la_mancha", "castilla_y_leon", "galicia", "murcia", "cantabria",
-    "aragon", "andalucia", "catalunya", "extremadura", "navarra", "la_palma",
-    "c_valenciana", "deduccion_autonomica",
+    "valenciana",
+    "canarias",
+    "asturias",
+    "la_rioja",
+    "i_baleares",
+    "madrid",
+    "castilla_la_mancha",
+    "castilla_y_leon",
+    "galicia",
+    "murcia",
+    "cantabria",
+    "aragon",
+    "andalucia",
+    "catalunya",
+    "extremadura",
+    "navarra",
+    "la_palma",
+    "c_valenciana",
+    "deduccion_autonomica",
 )
 
 
@@ -149,9 +154,7 @@ def test_autonomic_deductions_ground_in_art77_not_actividades(year: int) -> None
         f"M100 {year}: autonomic-deduction boxes still cite the actividades chapter: {actividades[:10]}"
     )
     missing = [(c.id, sorted(c.legal_refs)) for c in casillas if "ley-35-2006:art-77" not in set(c.legal_refs)]
-    assert not missing, (
-        f"M100 {year}: autonomic-deduction boxes not grounded in art. 77: {missing[:10]}"
-    )
+    assert not missing, f"M100 {year}: autonomic-deduction boxes not grounded in art. 77: {missing[:10]}"
 
 
 def _casillas_with_section_substr(filing_year: int, needle: str):
@@ -190,10 +193,6 @@ def test_substring_concept_section_grounding(needle: str, article: str, year: in
     casillas = _casillas_with_section_substr(year, needle)
     assert casillas, f"M100 {year}: section substring '{needle}' must have casillas"
     actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
-    assert not actividades, (
-        f"M100 {year} '{needle}': boxes still cite the actividades chapter: {actividades}"
-    )
+    assert not actividades, f"M100 {year} '{needle}': boxes still cite the actividades chapter: {actividades}"
     missing = [(c.id, sorted(c.legal_refs)) for c in casillas if article not in set(c.legal_refs)]
-    assert not missing, (
-        f"M100 {year} '{needle}': boxes not grounded in {article}: {missing}"
-    )
+    assert not missing, f"M100 {year} '{needle}': boxes not grounded in {article}: {missing}"
