@@ -131,7 +131,7 @@ explanation/index
 updates
 _generated/glossary
 disclaimer
-architecture
+architecture/index
 authoring-guide
 api/aeat
 ```
