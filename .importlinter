@@ -255,8 +255,6 @@ ignore_imports =
     aeat.application.evidence.tests.test_evidence -> aeat.adapters.persistence.storage
     aeat.application.evidence.tests.test_evidence -> aeat.tests.secure_sql
     aeat.application.filing.conftest -> aeat.tests.secure_sql
-    aeat.application.filing.reconciliation.tests.test_reconcile -> aeat.adapters.inbound.justificante
-    aeat.application.filing.reconciliation.tests.test_reconcile -> aeat.tests
     aeat.application.filing.tests.test_complementaria_repository -> aeat.adapters.persistence.storage
     aeat.application.filing.tests.test_complementaria_repository -> aeat.adapters.persistence.storage.errors
     aeat.application.filing.tests.test_complementaria_repository -> aeat.adapters.persistence.storage.sql.secure_objects
