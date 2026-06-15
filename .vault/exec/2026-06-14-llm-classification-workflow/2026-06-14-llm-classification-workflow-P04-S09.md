@@ -36,20 +36,20 @@ related:
 <!-- STEP RECORD:
      This file represents one Step from the originating plan. Identified
      by its canonical leaf identifier (S##) and ancestor display path.
-     The Add classify --reject (stage-1/saturate/auto-split) and surface the prior rejection in ledger view and ## Scope
+     The Add classify --reject (stage-1/saturate/auto-split) and surface the rejection in ledger history and ## Scope
 
 - `src/aeat/entrypoints/cli/_ledger.py`
-- `src/aeat/entrypoints/cli/_ledger_autosplit_cli.py`
+- `src/aeat/entrypoints/cli/_ledger_llm_cli.py`
 - `src/aeat/entrypoints/cli/_ledger_read_cli.py` placeholders below are machine-filled
      by `vaultspec-core vault add exec` from the originating Step row;
      do not fill them by hand. -->
 
-# Add classify --reject (stage-1/saturate/auto-split) and surface the prior rejection in ledger view
+# Add classify --reject (stage-1/saturate/auto-split) and surface the rejection in ledger history
 
 ## Scope
 
 - `src/aeat/entrypoints/cli/_ledger.py`
-- `src/aeat/entrypoints/cli/_ledger_autosplit_cli.py`
+- `src/aeat/entrypoints/cli/_ledger_llm_cli.py`
 - `src/aeat/entrypoints/cli/_ledger_read_cli.py`
 
 ## Description

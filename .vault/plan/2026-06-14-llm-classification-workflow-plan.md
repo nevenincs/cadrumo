@@ -129,7 +129,7 @@ Add the LLM-suggestion-rejected event, reject_llm_suggestion, classify --reject 
 
 - [x] `P04.S07` - Add BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED + catalogue pin test; `src/aeat/domain/buckets/_event.py, src/aeat/domain/buckets/tests/test_event_catalogue.py`.
 - [x] `P04.S08` - Add reject_llm_suggestion + LLMSuggestionRejectionResult emitting the rejection event without mutating the transaction; `src/aeat/application/ledger/_llm_classification.py`.
-- [x] `P04.S09` - Add classify --reject (stage-1/saturate/auto-split) and surface the prior rejection in ledger view; `src/aeat/entrypoints/cli/_ledger.py, src/aeat/entrypoints/cli/_ledger_autosplit_cli.py, src/aeat/entrypoints/cli/_ledger_read_cli.py`.
+- [x] `P04.S09` - Add classify --reject (stage-1/saturate/auto-split) and surface the rejection in ledger history; `src/aeat/entrypoints/cli/_ledger.py, src/aeat/entrypoints/cli/_ledger_llm_cli.py, src/aeat/entrypoints/cli/_ledger_read_cli.py`.
 - [x] `P04.S10` - Real-behaviour tests for reject (event recorded, no mutation, history/view); `locales; how-to review-loop section; `src/aeat/application/ledger/tests, src/aeat/entrypoints/cli/tests, src/aeat/locales, docs/how-to/classify-with-llm.md`.
 
 ## Description
