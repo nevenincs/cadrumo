@@ -287,6 +287,18 @@ def _resolve_evidence(
         images = rasterise_pdf_pages_to_base64_png(evidence_input.data)
     else:
         images = (base64.b64encode(evidence_input.data).decode("ascii"),)
+    # The on-host vision read is the only path that reaches here. Gate it on the
+    # profile's llm_vision capability — opting out disables scanned/image reading
+    # entirely (a typed refusal, never a silent skip).
+    from ...core import ServiceCapability
+    from ..user_profile import resolve_active_capability
+
+    if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
+        raise PurchaseInvoiceEvidenceInputError(
+            "on-host LLM vision reading is disabled for this profile; enable it to read "
+            "scanned or image evidence",
+            suggestion="aeat config profile capabilities set llm_vision on",
+        )
     return _ResolvedEvidence(reference=reference, text=None, images=images)
 
 
