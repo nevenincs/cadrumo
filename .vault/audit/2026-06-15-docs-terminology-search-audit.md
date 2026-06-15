@@ -86,7 +86,7 @@ untracks 16k peer-committed files.
 
 Only 7 of 40 approved concepts carried resolvable legal grounding. The binding
 framework articles for the rest were not enrolled in the legal catalogue. Thirteen
-provisions were enrolled in a dedicated `terminology-concept-grounding.toml`
+provisions were enrolled in a dedicated `tax-framework.toml`
 (separate from the calculation legal files a peer campaign is actively editing):
 LIVA arts 1/148/164, LIRPF arts 1/96/98, LGT arts 5/98/99/213, RGAT arts 3/18,
 Ley 39/2015 art 38. Each carries the verified BOE permalink; the three whose
