@@ -711,6 +711,7 @@ application:
         faltan identificadores de casilla requeridos en el mapa corregido.'
       amendment_verification_refused_no_snapshot: El registro no tiene una instantánea
         para el modelo, año y período solicitados.
+      calculate_binding_unknown: application.modelo.errors.calculate_binding_unknown
       calculate_casilla_ambiguous: '--casilla %{key} coincide con varias casillas
         de esta revision: %{candidates}. Indica la forma cualificada PREFIX:NNNNN
         para desambiguar.'
@@ -4253,6 +4254,7 @@ errors:
       184 deben sumar exactamente el 100 %.
     modelo_347_threshold: Las operaciones del Modelo 347 por encima del umbral informativo
       requieren cobertura declarativa explícita.
+    modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
     modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
@@ -4843,6 +4845,15 @@ wizard:
     question_prefix: Pregunta %{q_n} de %{q_total}
     section_header: 'Paso %{section_n} de %{section_total}: %{title}'
   setup:
+    capabilities:
+      cloud-evidence-upload:
+        prompt: ¿Permitir subir evidencia sensible a proveedores LLM en la nube? (desactivado
+          por defecto)
+      google-export:
+        prompt: ¿Activar la exportación a Google Sheets?
+      llm-vision:
+        prompt: ¿Activar la visión LLM local para leer facturas?
+      title: Capacidades de servicios
     certificate:
       path:
         prompt: Enter the path to your digital certificate (.p12, .pfx)
@@ -4889,6 +4900,9 @@ wizard:
         help: Código postal del domicilio fiscal
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
+      cloud-evidence-upload:
+        help: Permitir subir evidencia sensible a proveedores LLM en la nube (desactivado
+          por defecto).
       country-of-fiscal-residence:
         help: Código ISO 3166-1 alfa-2 del país de residencia fiscal (p.ej. GB, DE,
           FR). Obligatorio cuando fiscal-residency es non_resident_irnr.
@@ -4910,6 +4924,8 @@ wizard:
       fiscal-residency:
         help: 'Categoría de residencia fiscal: resident_irpf (residente habitual en
           España) o non_resident_irnr (no residente, tributación por IRNR RDLeg 5/2004).'
+      google-export:
+        help: Activar la exportación a Google Sheets.
       has-employees:
         help: Tiene empleados y paga salarios con retención
       incn-prior-12-months:
@@ -4943,6 +4959,8 @@ wizard:
         help: Si el contribuyente está inscrito en el SII
       legal-entity-form:
         help: Forma jurídica reconocida cuando el tipo de entidad es persona jurídica
+      llm-vision:
+        help: Activar la visión LLM local para leer facturas.
       name:
         help: Nombre visible mostrado en revisiones locales
       new-entity-first-two-profit-periods:
