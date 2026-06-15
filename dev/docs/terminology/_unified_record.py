@@ -28,6 +28,7 @@ from aeat.core.external_constants import OutputLanguage
 from ._casilla_projection import CasillaSearchRecord
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord
 from ._concept_cards import ConceptCardRecord
+from ._glossary_anchor import glossary_term_anchor
 from ._search_record import SearchRecordKind
 
 __all__ = [
@@ -220,7 +221,11 @@ def _from_concept(record: ConceptCardRecord, sweep_score: float | None) -> Searc
         tier=RankingTier.TERM,
         title=title,
         descriptions=dict(record.descriptions),
-        target=f"{GLOSSARY_PAGE}#term-{record.concept_id}",
+        # Deep-link to the headword-derived glossary anchor Sphinx actually
+        # generates (e.g. "VIES" -> term-VIES), NOT the concept id (term-vies),
+        # which only coincides when the id equals the headword slug. The
+        # glossary-anchor-parity gate keeps the two in lock-step.
+        target=f"{GLOSSARY_PAGE}#{glossary_term_anchor(title)}",
         ranking_weight=normalise_ranking_weight(SearchRecordKind.CONCEPT, sweep_score),
         search_aliases=tuple(aliases),
         metadata=SearchRecordMetadata(
