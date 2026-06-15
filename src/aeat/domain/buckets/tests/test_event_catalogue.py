@@ -169,8 +169,7 @@ def test_ledger_event_catalogue_uses_approved_transaction_vocabulary() -> None:
     assert BucketEventType.LEDGER_TRANSACTION_UPDATED.value == "ledger.transaction.updated"
     assert BucketEventType.LEDGER_TRANSACTION_CLASSIFIED.value == "ledger.transaction.classified"
     assert (
-        BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED.value
-        == "ledger.transaction.llm_suggestion.rejected"
+        BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED.value == "ledger.transaction.llm_suggestion.rejected"
     )
     assert BucketEventType.LEDGER_TRANSACTION_ALLOCATED.value == "ledger.transaction.allocated"
     assert BucketEventType.LEDGER_TRANSACTION_REMOVED.value == "ledger.transaction.removed"
