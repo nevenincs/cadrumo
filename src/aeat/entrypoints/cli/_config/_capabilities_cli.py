@@ -78,8 +78,7 @@ def _register_set(capabilities_app: typer.Typer) -> None:
                 tr(
                     "cli.config.profile.capabilities.no_active_profile",
                     default=(
-                        "No active profile; select one with "
-                        "'aeat config switch <name>' before setting a capability."
+                        "No active profile; select one with 'aeat config switch <name>' before setting a capability."
                     ),
                 ),
             )
