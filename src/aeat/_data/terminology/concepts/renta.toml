@@ -9,6 +9,7 @@
 concept_id = "renta"
 domain = "concepto"
 lifecycle = "approved"
+legal_refs = ["ley-35-2006:art-1"]
 related = ["irpf", "modelo-100"]
 created_at = 2026-06-11
 updated_at = 2026-06-11

@@ -9,6 +9,7 @@
 concept_id = "expediente"
 domain = "concepto"
 lifecycle = "approved"
+legal_refs = ["ley-58-2003:art-99"]
 created_at = 2026-06-11
 updated_at = 2026-06-11
 
