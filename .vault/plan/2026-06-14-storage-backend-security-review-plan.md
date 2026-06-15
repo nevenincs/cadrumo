@@ -136,7 +136,7 @@ Bind row identity into the secure-object payload AEAD and verify integrity colum
 Bind row identity into the payload AEAD and verify integrity columns on read, failing closed.
 
 - [x] `W02.P04.S07` - Bind namespace and object-key digest and schema version into the secure-object payload AEAD associated data; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
-- [ ] `W02.P04.S08` - Verify the stored payload hash and recomputed revision id on every secure-object read and fail closed on mismatch; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `W02.P04.S08` - Verify the stored payload hash and recomputed revision id on every secure-object read and fail closed on mismatch; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 - [x] `W02.P04.S09` - Add a row-substitution and corrupted-hash anti-tautology test proving read-time refusal; `src/aeat/adapters/persistence/storage/sql/tests/`.
 
 ## Wave `W03` - concurrency and durability

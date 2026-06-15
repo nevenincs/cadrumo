@@ -52,59 +52,65 @@ related:
 
 <!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
-- Re-assess S08 against the landed H3 (S07) AEAD row-identity binding and its
-  proof (S09).
-- Map the candidate read-time checks: payload-hash-vs-payload, ciphertext-hash-vs-wire,
-  and revision-id self-consistency (`derive_revision_id` over stored columns).
-- Confirm `probe_namespace_integrity` only checks decryptability (AEAD), never the
-  revision-id chain — so the chain has never been read-verified.
+- Empirically probe the precondition: a fidelity test recomputing `revision_id`
+  from round-tripped columns **failed**, proving `written_at` round-trips lossy
+  (SQLite drops the `+00:00` tzinfo: `...581079+00:00` writes, `...581079` reads).
+- Fix the precondition: canonicalise every instant to naive-UTC isoformat in
+  `derive_revision_id` (`_canonical_instant`), so write-time and read-time
+  derivations are identical. Probe now passes.
+- Add `verify_revision_self_consistency` next to `derive_revision_id`: recompute
+  `revision_id` from the stored lineage columns; absent revision metadata is
+  consistent, a present-but-divergent id is not.
+- Wire the gate into both read paths: `_record_from_row` (load → raises
+  `SecureObjectUnreadableError`) and `iter_records_with_failures` (enumeration →
+  yields `SecureObjectUnreadable`, fault-isolated; SELECT extended with the
+  lineage columns).
+- Add the anti-tautology proof: tamper `payload_hash` without restamping
+  `revision_id` → both read paths fail closed.
 
 ## Outcome
 
-PRIMARY OBJECTIVE MET BY H3; RESIDUAL DEFERRED (hazard-laden).
+STEP COMPLETE. Read-time revision-lineage self-consistency now fails closed on
+every secure-object read.
 
-The security objective of S08 — a read that fails closed on payload tampering or
-row substitution — is **delivered by H3/S07**: the payload AEAD binds
-`(namespace, object_key_digest, schema_version)` into the associated data, so a
-tampered or swapped ciphertext fails decryption on every read path
-(`_record_from_row`, `iter_records_with_failures`, `probe_namespace_integrity`).
-`test_secure_object_row_substitution_fails_closed` (S09) proves it. This is the
-core read-time integrity the step exists to guarantee.
+The gate closes the residual H3 left open: the plaintext lineage/integrity columns
+(`revision_id`, `payload_hash`, `ciphertext_hash`, `previous_*`) sit **outside**
+the payload AEAD and were trusted unverified. Because `revision_id` is a content
+address over the whole lineage tuple, recomputing it from the stored columns and
+comparing detects a tamper of **any single column — including `payload_hash`** —
+that does not also restamp `revision_id`. So the literal S08 ask ("verify the
+stored payload hash and recomputed revision id") is satisfied transitively by the
+one revision-id check, without a payload-dependent comparison.
 
-The literal residual — recompute the stored **payload_hash** and **revision_id**
-and fail closed on mismatch — is the approach that was tried and reverted earlier
-in this campaign, and re-assessment confirms each variant carries a real hazard
-that outweighs the marginal defence-in-depth over a medium finding:
+The earlier-rejected hazards were both resolved rather than dodged:
 
-- A **revision_id self-consistency** recompute (`derive_revision_id` over the
-  stored lineage columns) is the only payload-independent variant (so it would not
-  fire on the 14 reconciled anti-tautology corruption suites), but it depends on
-  `written_at.isoformat()` round-trip fidelity. That chain has **never been
-  read-verified** (`probe_namespace_integrity` only checks AEAD decryptability), so
-  a lossy SQLite datetime round-trip would fail-close **valid** rows — denying a
-  user access to their own data, a regression worse than the column-tamper threat
-  it mitigates. Adding it safely requires an explicit round-trip-fidelity proof
-  first.
-- A **payload_hash-vs-decrypted-payload** or **ciphertext_hash-vs-wire** check
-  fires on every anti-tautology corruption test (they re-encrypt a mutated payload
-  without re-stamping the hash columns), pre-empting the domain model_validator
-  assertions those tests exist to prove. Adding it requires re-stamping integrity
-  metadata across all 14 suites — co-design with that contract.
+- The **round-trip false-positive** hazard (a lossy `written_at` would fail-close
+  valid rows) was *empirically confirmed* by a failing fidelity probe, then *fixed*
+  at the root by canonicalising the instant in `derive_revision_id`. The probe is
+  retained as a canary so the canonicalisation cannot silently regress. Pre-beta /
+  no-legacy makes changing the derivation free.
+- The **corruption-suite conflict** is avoided by design: the check is purely
+  metadata-internal (it uses the stored `payload_hash`/`ciphertext_hash` columns,
+  never recomputes them from the payload/wire), so a corruption probe that
+  re-encrypts a mutated payload without restamping metadata leaves the lineage
+  self-consistent → the gate stays silent and the domain model_validator fires as
+  before. No anti-tautology suite needed reconciling.
 
-The plaintext lineage columns (`revision_id`, `payload_hash`, `ciphertext_hash`,
-`previous_*`) remain outside the AEAD; binding the **pre-encrypt** subset
-(`payload_hash`, `previous_payload_hash`, `previous_revision_id`) into the H3 AAD
-is the canonical, corruption-test-safe mechanism for that residual and is the
-recommended follow-up shape (the post-encrypt `ciphertext_hash`/`revision_id`
-cannot enter the AAD — chicken-and-egg — and are already covered for ciphertext
-tamper by the GCM tag).
+Gates: full storage suite green (**848**, +2 new tests); the cross-domain
+corruption-suite sweep (14 files) green except two **pre-existing peer failures**
+in `test_revision_stamp_roundtrip` — `binding.aggregation.op` AttributeError in the
+registry binding-aggregation layer (the active M100-grounding registry campaign's
+surface), reproduced identically at HEAD with this change reverted, so not owned
+here. The secure-object `revision_id` (storage lineage content-address) is distinct
+from the registry `stamped_revision_id`; this change does not touch the latter.
 
 ## Notes
 
 <!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
-Deferred deliberately. "Data security, persistence, and storage correctness are
-absolute keys" cuts both ways: a fail-closed read-gate that false-positives on
-valid data is itself a severe correctness regression, so the round-trip-fidelity
-proof is a precondition, not an afterthought. The step stays unchecked; the
-primary read-integrity guarantee is already green via S07/S09.
+The "data access is an absolute key" caution that motivated the earlier deferral
+was honoured by proving round-trip fidelity *first* (failing probe → root-cause fix
+→ passing probe → retained canary) rather than shipping a gate on an unverified
+assumption. Pre-existing peer regression in `test_revision_stamp_roundtrip`
+(registry binding-aggregation dict-vs-typed) reported to the owning campaign, not
+patched here per `full-tree-gate-must-distinguish-owner`.
