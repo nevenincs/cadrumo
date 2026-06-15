@@ -110,15 +110,15 @@ Core ServiceCapability enum, the profile capabilities schema section, the resolu
 
 Add ServiceCapability StrEnum in core and the capabilities section in the profile schema TOML.
 
-- [ ] `W01.P01.S01` - Add ServiceCapability StrEnum (cloud_evidence_upload, llm_vision, google_export) in core with per-member docstrings; `src/aeat/core`.
-- [ ] `W01.P01.S02` - Add a capabilities [[sections]] with boolean fields to the user_profile schema TOML; `add a roundtrip test; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
+- [x] `W01.P01.S01` - Add ServiceCapability StrEnum (cloud_evidence_upload, llm_vision, google_export) in core with per-member docstrings; `src/aeat/core`.
+- [x] `W01.P01.S02` - Add a capabilities [[sections]] with boolean fields to the user_profile schema TOML; `add a roundtrip test; `src/aeat/_data/registry/aeat/user_profile/schema.toml`.
 
 ### Phase `W01.P02` - Resolution layer + gates
 
 Add resolve_capability and rewire cloud-evidence/vision/google gates through it.
 
-- [ ] `W01.P02.S03` - Add resolve_capability + CapabilityDecision overlaying profile facts onto the global Settings default (gestor-mode absolute bar first); `src/aeat/application/user_profile`.
-- [ ] `W01.P02.S04` - Rewire cloud_evidence_read_permitted, the vision path, and google export through resolve_capability with typed refusals; `src/aeat/application/ledger/_evidence_input.py`.
+- [x] `W01.P02.S03` - Add resolve_capability + CapabilityDecision overlaying profile facts onto the global Settings default (gestor-mode absolute bar first); `src/aeat/application/user_profile`.
+- [x] `W01.P02.S04` - Rewire cloud_evidence_read_permitted, the vision path, and google export through resolve_capability with typed refusals; `src/aeat/application/ledger/_evidence_input.py`.
 
 ### Phase `W01.P03` - CLI + wizard
 
