@@ -37,6 +37,7 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
+    unsupported_ledger_oss_observations,
 )
 from ...domain.invoices import Invoice, InvoiceCatalogueRepository, InvoiceLine, iva_rate_kind
 from ...domain.iva import (
@@ -403,12 +404,34 @@ class OssIossLedgerSourceResolver:
                 diagnostics=self._no_live_source_diagnostics(context),
             )
         observations = validate_oss_ioss_observations(candidates)
+        # Fail-closed advisory parity with the IVA screen: a non-zero declarable
+        # OSS line whose classification tuple matches no ledger_oss_aggregation
+        # binding would otherwise be silently dropped (no-silent-under-declaration).
+        unrouted = unsupported_ledger_oss_observations(context.revision, observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=resolve_ledger_oss_aggregation_binding_values(context.revision, observations),
             source_transaction_ids=tuple(
                 sorted({observation.ledger_id.split(":", 1)[0] for observation in observations}),
+            ),
+            diagnostics=tuple(
+                CalculationSourceDiagnostic(
+                    reason="unrouted_observation",
+                    source_kind="ledger_oss_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        f"declarable OSS observation {observation.ledger_id!r} "
+                        f"(regime={observation.regime.value!r}, "
+                        f"destination={observation.destination_member_state.value!r}, "
+                        f"rate_kind={observation.rate_kind.value!r}, "
+                        f"invoice_direction={observation.invoice_direction.value!r}, "
+                        f"transaction_kind={observation.transaction_kind.value!r}) is not consumed by any "
+                        f"ledger_oss_aggregation binding on revision {context.revision.id!r}; "
+                        "its base/cuota is not declared on this calculation"
+                    ),
+                )
+                for observation in unrouted
             ),
             provenance=tuple(
                 CalculationSourceProvenance(
