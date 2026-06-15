@@ -704,7 +704,7 @@ application:
         identificadors de casella requerits al mapa corregit.'
       amendment_verification_refused_no_snapshot: El registre no té una instantània
         per al model, any i període sol·licitats.
-      calculate_binding_unknown: application.modelo.errors.calculate_binding_unknown
+      calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta revisio. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list <MODELO>` per llistar els bindings valids.'
       calculate_casilla_ambiguous: '--casilla %{key} coincideix amb diverses caselles
         d''aquesta revisio: %{candidates}. Indica la forma qualificada PREFIX:NNNNN
         per desambiguar.'

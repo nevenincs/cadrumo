@@ -711,7 +711,7 @@ application:
         faltan identificadores de casilla requeridos en el mapa corregido.'
       amendment_verification_refused_no_snapshot: El registro no tiene una instantánea
         para el modelo, año y período solicitados.
-      calculate_binding_unknown: application.modelo.errors.calculate_binding_unknown
+      calculate_binding_unknown: '--binding %{key} no coincide con ningun binding de esta revision. Bindings aceptados: %{accepted}. Use `aeat app modelo bindings list <MODELO>` para listar los bindings validos.'
       calculate_casilla_ambiguous: '--casilla %{key} coincide con varias casillas
         de esta revision: %{candidates}. Indica la forma cualificada PREFIX:NNNNN
         para desambiguar.'
