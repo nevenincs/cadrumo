@@ -173,7 +173,7 @@ Make documentation quality enforceable where machines can help and reviewed wher
 - [x] `W07.P14.S48` - Implement a real single-source-page docs build that writes the requested page into the canonical HTML build output without rebuilding generated API/autodoc surfaces or producing a separate preview artifact; `docs build tooling`.
 - [x] `W07.P14.S49` - Evaluate and implement an autobuild server or watch recipe for canonical docs page rebuilds after the single-page build path is stable; `docs build tooling`.
 - [x] `W07.P14.S54` - Run a corpus terminology sweep for identity and tax-identifier wording after each profile, censo, or authentication docs edit: DNI for Spanish citizens, NIE for foreign individuals, NIF/CIF for tax identifiers and legal entities, and DNI/NIE only where Cl@ve identity specifically requires it; `docs/ and src/aeat/locales`.
-- [ ] `W07.P14.S59` - Move documentation generators, build helpers, and documentation verifier tests out of production package code and unsupported `scripts/` paths into supported `docs/tools/` tooling; update Sphinx hooks, just recipes, and generated API stubs so production code does not own documentation generation responsibilities; `docs/tools, docs/conf.py, justfile, docs/api, and docs verifier tests`.
+- [x] `W07.P14.S59` - Move documentation generators, build helpers, and documentation verifier tests out of production package code and unsupported `scripts/` paths into supported `docs/tools/` tooling; update Sphinx hooks, just recipes, and generated API stubs so production code does not own documentation generation responsibilities; `docs/tools, docs/conf.py, justfile, docs/api, and docs verifier tests`.
 
 ## Description
 

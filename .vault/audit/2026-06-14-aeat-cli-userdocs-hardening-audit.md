@@ -129,6 +129,11 @@ observed.
   move (packaging, ~10 `dev/docs/` importers, the terminology CLI, and tree-wide
   conformance gates) governed by the relocation-atomicity rule. It is deferred as a
   standalone follow-up rather than bundled into this userdocs-prose campaign.
+  **Update (2026-06-15):** the follow-up landed via the `docs-tooling-separation`
+  feature (research + ADR + plan, option D1): the terminology package code and
+  tests moved to `dev/docs/terminology_handbook/` (commit `d6250dcf5`), the
+  authoring data stays shipped and is read via `bundled_path`, the gates and
+  autodoc stubs were reconciled, and `W07.P14.S59` is now complete.
 
 ## Recommendations
 
