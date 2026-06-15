@@ -4,5 +4,5 @@ number = "0988"
 label = "Por partos múltiples o adopciones simultáneas producidos en el año 2019 y/o 2020"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_partos_multiples"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

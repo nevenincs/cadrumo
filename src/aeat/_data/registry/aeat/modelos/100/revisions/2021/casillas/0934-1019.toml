@@ -4,5 +4,5 @@ number = "1019"
 label = "Por arrendamiento de vivienda habitual (se traslada este importe a la casilla [1130] del anexo B.8)"
 section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
 semantic_role = "irpf_deduccion_extremadura_arrendamiento_vivienda"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

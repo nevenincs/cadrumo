@@ -4,5 +4,5 @@ number = "1906"
 label = "Por los gastos en intereses por la financiación ajena de la adquisición de primera vivienda habitual por menores de 40 años"
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 semantic_role = "irpf_deduccion_castilla_la_mancha_intereses_vivienda"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

@@ -4,5 +4,5 @@ number = "1105"
 label = "Por residir habitualmente en municipios y entidades locales menores de Extremadura con población inferior a 3.000 habitantes"
 section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
 semantic_role = "irpf_deduccion_extremadura_residencia_municipios_pequenos"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

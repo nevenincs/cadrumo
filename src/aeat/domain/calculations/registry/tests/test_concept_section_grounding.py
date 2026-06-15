@@ -115,6 +115,45 @@ def test_prevision_social_grounds_in_arts_51_52_not_actividades(year: int) -> No
     )
 
 
+_AUTONOMIC_COMUNIDADES = (
+    "valenciana", "canarias", "asturias", "la_rioja", "i_baleares", "madrid",
+    "castilla_la_mancha", "castilla_y_leon", "galicia", "murcia", "cantabria",
+    "aragon", "andalucia", "catalunya", "extremadura", "navarra", "la_palma",
+    "c_valenciana", "deduccion_autonomica",
+)
+
+
+def _autonomic_deduction_casillas(filing_year: int):
+    """Comunidad-named autonomic-deduction sections. Their LIRPF home is art. 77
+    (cuota líquida autonómica = cuota íntegra autonómica − deducciones autonómicas);
+    the specific comunidad-law article is a future refinement on this framework."""
+    modelos, _ = load_registry_tree(_REGISTRY_ROOT)
+    modelos_by_id = {m.id: m for m in modelos}
+    rev = select_revision(modelos_by_id["100"], filing_year=filing_year, period="0A")
+    out = []
+    for c in rev.casillas:
+        sec = "/".join(tuple(c.section))
+        if any(com in sec for com in _AUTONOMIC_COMUNIDADES):
+            out.append(c)
+    return out
+
+
+@pytest.mark.parametrize("year", [2021, 2022, 2023, 2024])
+def test_autonomic_deductions_ground_in_art77_not_actividades(year: int) -> None:
+    """Autonomic-deduction boxes cite art. 77 (cuota líquida autonómica) and never
+    the actividades chapter."""
+    casillas = _autonomic_deduction_casillas(year)
+    assert casillas, f"M100 {year}: autonomic-deduction sections must have casillas"
+    actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
+    assert not actividades, (
+        f"M100 {year}: autonomic-deduction boxes still cite the actividades chapter: {actividades[:10]}"
+    )
+    missing = [(c.id, sorted(c.legal_refs)) for c in casillas if "ley-35-2006:art-77" not in set(c.legal_refs)]
+    assert not missing, (
+        f"M100 {year}: autonomic-deduction boxes not grounded in art. 77: {missing[:10]}"
+    )
+
+
 def _casillas_with_section_substr(filing_year: int, needle: str):
     modelos, _ = load_registry_tree(_REGISTRY_ROOT)
     modelos_by_id = {m.id: m for m in modelos}
