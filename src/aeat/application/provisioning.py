@@ -11,6 +11,10 @@ unpulled model becomes an instructive refusal instead of a raw stack trace; the
 
 from __future__ import annotations
 
+import os
+import sys
+from pathlib import Path
+
 import httpx
 from pydantic import BaseModel, Field
 
@@ -105,36 +109,46 @@ def probe_subprocess_providers() -> tuple[DependencyStatus, ...]:
     return tuple(statuses)
 
 
-def probe_playwright_browser() -> DependencyStatus:
-    """Probe the Playwright Chromium browser binary, returning a :class:`DependencyStatus`.
+def _playwright_browsers_root() -> Path:
+    """Return the directory Playwright installs browser binaries into.
 
-    Reads Chromium's registered executable path without launching a browser, and
-    checks it exists on disk. Returns unavailable — never raises — when Playwright
-    or the browser binary is absent (``playwright install chromium``).
+    Honours ``PLAYWRIGHT_BROWSERS_PATH`` then falls back to the per-OS default
+    cache. A filesystem read only — it never launches the Playwright driver (which
+    can hang inside the CLI process), so the probe stays fast and non-blocking.
     """
-    from pathlib import Path
+    override = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
+    if override:
+        return Path(override)
+    if sys.platform == "win32":
+        base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
+        return Path(base) / "ms-playwright"
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Caches" / "ms-playwright"
+    return Path.home() / ".cache" / "ms-playwright"
 
+
+def probe_playwright_browser() -> DependencyStatus:
+    """Probe whether a Playwright Chromium browser binary is installed.
+
+    Scans the Playwright browsers cache for an installed ``chromium*`` build (a fast
+    filesystem check; the Playwright sync driver can hang inside the CLI process, so
+    it is deliberately not launched). Returns unavailable — never raises — when no
+    Chromium build is present (``playwright install chromium``).
+    """
+    root = _playwright_browsers_root()
     try:
-        from playwright.sync_api import sync_playwright
-
-        with sync_playwright() as playwright:
-            executable = playwright.chromium.executable_path
-    except Exception as exc:
+        installed = root.is_dir() and any(child.name.startswith("chromium") for child in root.iterdir())
+    except OSError:
+        installed = False
+    if not installed:
         return DependencyStatus(
             service="playwright-chromium",
             available=False,
-            detail=f"Playwright could not resolve the Chromium binary: {exc}",
-            remediation="playwright install chromium",
-        )
-    if not executable or not Path(executable).exists():
-        return DependencyStatus(
-            service="playwright-chromium",
-            available=False,
-            detail="the Playwright Chromium browser binary is not installed",
+            detail=f"no Playwright Chromium build found under {root}",
             remediation="playwright install chromium",
         )
     return DependencyStatus(
         service="playwright-chromium",
         available=True,
-        detail=f"Chromium binary present at {executable}",
+        detail=f"Chromium build present under {root}",
     )
