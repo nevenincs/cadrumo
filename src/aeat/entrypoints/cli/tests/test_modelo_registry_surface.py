@@ -749,7 +749,7 @@ def test_parse_binding_override_rejects_invalid_keys(spec: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# bindings-interface-hardening (W04.P08): the `bindings list` payload is typed
+# bindings-interface hardening: the `bindings list` payload is typed
 # and carries provenance; `--modelo` is a registry-derived Choice that refuses
 # an unknown code with the accepted set.
 # ---------------------------------------------------------------------------
@@ -791,7 +791,7 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
     Each binding row carries the typed fields plus the regulatory grounding
     (`legal_refs` / `source_refs`) sourced from the registry binding
     definition, at parity with the casilla half. This is the operator-boundary
-    provenance-parity contract of the bindings-interface-hardening ADR; the
+    provenance-parity contract of the bindings-interface hardening; the
     pre-hardening payload was an untyped `dict[str, object]` bag with no
     grounding.
     """

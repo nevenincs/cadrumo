@@ -2,7 +2,7 @@
 
 The pre-hardening classification was a ``try Decimal/except`` heuristic: a
 malformed numeric override silently fell through to the enum channel. The
-bindings-interface-hardening ADR (cluster D) replaced that with a
+bindings-interface hardening replaced that with a
 registry-declared coercion: a binding the revision's formulas consume as a
 string enum key routes to the ``enum`` channel verbatim; every other declared
 binding routes to the ``decimal`` channel whose override MUST parse as a
