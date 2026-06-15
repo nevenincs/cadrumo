@@ -20,8 +20,11 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # ceiling; their owners should extract submodules during their next pass.
     "src/aeat/application/calculations/_cross_period_clean_state.py": 1265,  # SPLIT-CANDIDATE
     "src/aeat/application/calculations/tests/test_cross_period_clean_state.py": 1440,  # SPLIT-CANDIDATE
-    "src/aeat/application/ledger/_llm_classification.py": 1473,  # SPLIT-CANDIDATE (on-host vision + provider UX)
+    "src/aeat/application/ledger/_llm_classification.py": 1614,  # SPLIT-CANDIDATE (on-host vision + provider UX; active LLM-ledger growth)
     "src/aeat/application/modelo/_verification_actions.py": 1469,  # SPLIT-CANDIDATE
+    # Centralised live-test opt-in added the live_tests_* predicates, the Google
+    # opt-in field, and the opt-in constants; re-pinned to the present size.
+    "src/aeat/core/config.py": 1281,
     # Active live-censo calendar reconciliation is landing in this shared tree;
     # keep a bounded ceiling so unrelated closeout sweeps can proceed while it settles.
     # Live-censo calendar reconciliation is actively landing and growing; bounded
@@ -47,6 +50,8 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
     ): 226,  # SPLIT-CANDIDATE
     ("src/aeat/domain/calculations/registry/_formula_runtime.py", "calculate_registry_snapshot"): 192,
     ("src/aeat/entrypoints/cli/_ledger.py", "ledger_classify"): 208,  # SPLIT-CANDIDATE
+    # Extracted LLM ledger CLI verb (active LLM-ledger campaign); SPLIT-CANDIDATE.
+    ("src/aeat/entrypoints/cli/_ledger_llm_cli.py", "ledger_saturate_llm"): 187,
 }
 
 
