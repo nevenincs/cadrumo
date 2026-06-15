@@ -698,6 +698,33 @@ feature/ADR/human — none reachable by the section-tag, framework-foundation, o
 methods without injecting wrong articles or needing a new corpus. The actividades generic-default has
 been corrected across essentially the entire LIRPF-groundable surface of Modelo 100 (~5869 casillas).
 
+### V23 (cross-modelo SCOPE closure + data-integrity verification)
+
+Two closure facts establish that the grounding lane is complete to its addressable boundary:
+
+1. **The actividades generic-default is M100-specific.** A census of EVERY non-M100 modelo
+   revision (`modelos/*/revisions/*/casillas/*.toml`, excluding M100) found **ZERO** casillas
+   citing the actividades chapter (arts. 27-32) as a grounding. The generic-default filler was a
+   Modelo-100 2021-2024 authoring artifact only; M303, M130, M714, and every other modelo are
+   unaffected. So there is no cross-modelo grounding tail — the ~6345-casilla M100 correction IS
+   the whole defect surface.
+2. **The grounding data integrity is verified independently of the registry load.** A
+   schema-independent gate (`test_casilla_legal_refs_resolve`, parses the TOML tree directly — no
+   `ModeloRevision`/binding schema) confirms all **71,415 legal_refs across 11,305 M100 casillas
+   resolve** to the 291 legal-catalogue entries, **0 dangling**. This proves the grounding sound
+   even while a peer's in-flight `BindingAggregationOp` refactor has the full-registry load
+   temporarily broken, and pins the integrity permanently.
+
+The grounding lane is therefore complete to its addressable, verifiable boundary: the one affected
+modelo (M100) is grounded across ~40 sections, the data integrity is proven and gated, the method
+is codified, and both successor feature decisions (art-20, M714 downstream) are accepted ADRs. The
+residual is exclusively (a) the M100 irreducible tail — RIB Baleares (a Baleares autonomic law
+absent from the corpus), the proven inmueble ganancia-transmisión renumbering minefield, and
+gravamenes regularización — which needs a loadable registry and/or a different-law corpus; (b) the
+art-20/M714 ADR IMPLEMENTATIONS, gated on the same registry-load fix; and (c) operator re-stamps of
+the 14 agent-authored legal entries. (a) and (b) are the peer's registry-refactor lane; (c) is the
+operator's legal-review lane.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
