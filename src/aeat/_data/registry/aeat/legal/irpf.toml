@@ -3424,3 +3424,19 @@ notes = "LIRPF disposición adicional 48ª: deducción aplicable a las unidades 
 required_text = [
     "Deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea",
 ]
+
+[legal."ley-31-2022:da-70"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-31-2022-da-70.html#da70"
+document_id = "BOE-A-2022-22128"
+article = "DA-70"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#da70"
+published_at = 2022-12-23
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored; binding provision confirmed from the AEAT Modelo 100 casilla labels 'D.A. septuagésima Ley 31/2022'; CORPUS NOT YET BUNDLED — operator to bundle DA-70 and re-stamp)"
+notes = "Ley 31/2022 (Presupuestos Generales del Estado para 2023) disposición adicional 70ª: Reserva para Inversiones en las Illes Balears (RIB), incentivo análogo a la Reserva para Inversiones en Canarias, aplicable a los rendimientos derivados de establecimientos situados en las Illes Balears para los ejercicios 2023-2028. Base legal de las casillas de dotación e inversión de la RIB en Modelo 100. AGENT-AUTHORED: the binding provision (Ley 31/2022 DA-70) is taken verbatim from the AEAT Modelo 100 casilla labels themselves; the consolidated DA-70 corpus excerpt is NOT bundled under corpus/normatives/html (only ley-31-2022-art-39.html, the LIS modification, is bundled), so required_text is intentionally empty pending an operator corpus refresh — never fabricate the excerpt from a secondary source (legal-grounding-verifies-bundled-authoritative-corpus). corpus_ref names the to-be-bundled DA-70 file path. Operator to bundle the BOE-A-2022-22128 DA-70 text, add a corpus-verified required_text, and re-stamp."
+required_text = []
