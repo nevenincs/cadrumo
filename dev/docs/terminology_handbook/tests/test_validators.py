@@ -320,7 +320,7 @@ def test_default_inventory_trips_on_a_bad_handbook(tmp_path: Path) -> None:
 
 
 def test_bundled_exemplars_pass_every_gate_against_real_catalogue() -> None:
-    from ...domain.calculations.registry import bundled_authority
+    from aeat.domain.calculations.registry import bundled_authority
 
     handbook = load_bundled_terminology_handbook()
     legal_ids = frozenset(bundled_authority().catalogues.legal)

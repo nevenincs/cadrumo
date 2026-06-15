@@ -33,7 +33,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
+from aeat.core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.docs, pytest.mark.hex_entrypoint]
 
@@ -67,8 +67,8 @@ def _approved_anchor_terms() -> tuple[str, ...]:
     generator renders them. Longest-first so a multi-word term is matched before
     a substring (``modelo 100`` before a bare ``modelo`` that is not an anchor).
     """
-    from ....terminology import load_terminology_handbook
-    from ....terminology._enums import ConceptLifecycle, TermStatus
+    from .. import load_terminology_handbook
+    from .._enums import ConceptLifecycle, TermStatus
 
     handbook = load_terminology_handbook()
     labels: set[str] = set()

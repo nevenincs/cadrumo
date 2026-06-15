@@ -3,7 +3,7 @@
 There is no external numeric oracle for terminology, so these tests
 prove STRUCTURE: a populated multi-language multi-term concept fragment
 round-trips through the loader into a strict frozen
-:class:`~aeat.terminology.ConceptRecord` with every field preserved
+:class:`~dev.docs.terminology_handbook.ConceptRecord` with every field preserved
 (every defaultable field set non-default); ``narrower`` is derived from
 authored ``broader`` inverses; malformed and partial fragments raise; and
 the validation-hook seam runs supplied validators over the assembled
@@ -17,7 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from ...core.external_constants import OutputLanguage
+from aeat.core.external_constants import OutputLanguage
+
 from .. import (
     ConceptDomain,
     ConceptLifecycle,

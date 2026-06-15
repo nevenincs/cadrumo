@@ -14,14 +14,14 @@ Every model is strict, frozen, and forbids extra fields
 (:data:`~aeat.core.STRICT_FROZEN_CONFIG`). The four-language
 axis reuses the canonical
 :class:`~aeat.core.external_constants.OutputLanguage`; the
-Handbook-local closed axes (:class:`~aeat.terminology._enums.ConceptDomain`,
-:class:`~aeat.terminology._enums.ConceptLifecycle`,
-:class:`~aeat.terminology._enums.TermStatus`) live beside this schema.
+Handbook-local closed axes (:class:`~dev.docs.terminology_handbook._enums.ConceptDomain`,
+:class:`~dev.docs.terminology_handbook._enums.ConceptLifecycle`,
+:class:`~dev.docs.terminology_handbook._enums.TermStatus`) live beside this schema.
 
 The ``narrower`` field is intentionally NOT settable from a fragment:
 authoring it raises. The loader computes it as the inverse of every
 fragment's ``broader`` after the full concept set is parsed
-(see :func:`~aeat.terminology._loader.load_terminology_handbook`), which
+(see :func:`~dev.docs.terminology_handbook._loader.load_terminology_handbook`), which
 is why :class:`ConceptRecord` keeps it as a plain field defaulting to
 the empty tuple rather than rejecting it outright at the single-record
 boundary.
@@ -35,8 +35,9 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core.external_constants import OutputLanguage
+from aeat.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from aeat.core.external_constants import OutputLanguage
+
 from ._enums import ConceptDomain, ConceptLifecycle, TermStatus
 from ._errors import TerminologyValidationError
 

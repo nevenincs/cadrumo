@@ -20,13 +20,14 @@ from __future__ import annotations
 import pytest
 
 from aeat.core.external_constants import OutputLanguage
-from aeat.terminology import (
+from dev.docs.terminology._concept_cards import ConceptCardProjectionStats, ConceptCardRecord
+
+from ...terminology_handbook import (
     ConceptLifecycle,
     TermStatus,
     load_terminology_handbook,
     terminology_concepts_dir,
 )
-from dev.docs.terminology._concept_cards import ConceptCardProjectionStats, ConceptCardRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

@@ -1,7 +1,7 @@
 """Deterministic TOML serialisation of a Terminology Handbook concept.
 
 The scaffold writes concept fragments back as TOML. Serialisation is
-canonical and stable: the same :class:`~aeat.terminology._schema.ConceptRecord`
+canonical and stable: the same :class:`~dev.docs.terminology_handbook._schema.ConceptRecord`
 always emits byte-identical TOML, so a no-change scaffold run is a
 no-op diff (idempotence) and a curated field round-trips through
 ``serialise -> load`` unchanged (the PRESERVE guarantee operates at the
@@ -23,10 +23,10 @@ __all__ = ["serialise_concept"]
 
 _HEADER = (
     "# Terminology Handbook concept fragment.\n"
-    "# Compiled by the strict loader in `aeat.terminology` into a frozen\n"
+    "# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen\n"
     "# `ConceptRecord`. Curated prose fields (definition, scope_note,\n"
     "# short_description) are hand-edited; structural operations go\n"
-    "# through the `aeat.terminology` CLI. `narrower` is derived at load\n"
+    "# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load\n"
     "# from `broader` and must never be authored here.\n"
 )
 

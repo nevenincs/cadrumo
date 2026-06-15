@@ -15,7 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from ...core.external_constants import OutputLanguage
+from aeat.core.external_constants import OutputLanguage
+
 from .. import (
     ConceptDomain,
     CurationError,

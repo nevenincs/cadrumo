@@ -33,14 +33,14 @@ Seeds never auto-approve
 A seed adds translations / aliases, NOT an ``es`` grounded definition with a
 source citation, so it does not satisfy the approved-completeness gate: a
 seeded ``draft`` stays ``draft``. Lifecycle promotion is human curation. Every
-seeded value stamps :class:`~aeat.terminology.SeedProvenance`; a seed with no
+seeded value stamps :class:`~dev.docs.terminology_handbook.SeedProvenance`; a seed with no
 attribution is refused at the schema boundary (``attribution`` is
 ``min_length=1``).
 
 The actual third-party export files are placed later at an operator-chosen
 path; the importers are the durable deliverable. The parsers are proven
 end-to-end against committed fixture exports under
-``src/aeat/terminology/tests/fixtures/`` -- minimal, clearly-labelled valid
+``dev/docs/terminology_handbook/tests/fixtures/`` -- minimal, clearly-labelled valid
 samples -- never against fabricated production data.
 """
 
@@ -55,8 +55,9 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
-from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
+from aeat.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from aeat.core.external_constants import UTF_8_ENCODING, OutputLanguage
+
 from ._enums import TermStatus
 from ._errors import TerminologyError, TerminologyValidationError
 from ._loader import TerminologyHandbook, load_terminology_handbook, terminology_concepts_dir
@@ -723,6 +724,6 @@ def _section(concept: ConceptRecord, language: OutputLanguage) -> LanguageSectio
 
 
 def _today() -> date:
-    from ..core.time import now
+    from aeat.core.time import now
 
     return now().date()
