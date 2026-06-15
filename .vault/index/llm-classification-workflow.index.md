@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#llm-classification-workflow'
-date: '2026-06-14'
-modified: '2026-06-14'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-14-llm-classification-workflow-P01-S01]]'
   - '[[2026-06-14-llm-classification-workflow-P01-S02]]'
@@ -12,10 +12,15 @@ related:
   - '[[2026-06-14-llm-classification-workflow-P02-S04]]'
   - '[[2026-06-14-llm-classification-workflow-P03-S05]]'
   - '[[2026-06-14-llm-classification-workflow-P03-S06]]'
+  - '[[2026-06-14-llm-classification-workflow-P04-S07]]'
+  - '[[2026-06-14-llm-classification-workflow-P04-S08]]'
+  - '[[2026-06-14-llm-classification-workflow-P04-S09]]'
+  - '[[2026-06-14-llm-classification-workflow-P04-S10]]'
   - '[[2026-06-14-llm-classification-workflow-adr]]'
   - '[[2026-06-14-llm-classification-workflow-audit]]'
   - '[[2026-06-14-llm-classification-workflow-plan]]'
   - '[[2026-06-14-llm-classification-workflow-research]]'
+  - '[[2026-06-15-llm-classification-workflow-adr]]'
 ---
 
 # `llm-classification-workflow` feature index
@@ -27,6 +32,7 @@ Auto-generated index of all documents tagged with `#llm-classification-workflow`
 ### adr
 
 - `2026-06-14-llm-classification-workflow-adr` - `llm-classification-workflow` adr: `LLM classification workflow contract: split recommendation, evidence-driven auto-split, and the review loop` | (**status:** `accepted`)
+- `2026-06-15-llm-classification-workflow-adr` - `llm-classification-workflow` adr: `Audit-trailed LLM review loop: explicit reject as the fourth decision terminal` | (**status:** `accepted`)
 
 ### audit
 
@@ -40,6 +46,10 @@ Auto-generated index of all documents tagged with `#llm-classification-workflow`
 - `2026-06-14-llm-classification-workflow-P02-S04` - Emit typed split-recommendation Notice from classify
 - `2026-06-14-llm-classification-workflow-P03-S05` - Real-behaviour tests: no-split verdict, in-place apply, auto-split route, recommendation Notice
 - `2026-06-14-llm-classification-workflow-P03-S06` - Add locale keys via aeat.locales
+- `2026-06-14-llm-classification-workflow-P04-S07` - Add BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED + catalogue pin test
+- `2026-06-14-llm-classification-workflow-P04-S08` - Add reject_llm_suggestion + LLMSuggestionRejectionResult emitting the rejection event without mutating the transaction
+- `2026-06-14-llm-classification-workflow-P04-S09` - Add classify --reject (stage-1/saturate/auto-split) and surface the prior rejection in ledger view
+- `2026-06-14-llm-classification-workflow-P04-S10` - Real-behaviour tests for reject (event recorded, no mutation, history/view)
 
 ### plan
 

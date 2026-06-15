@@ -11,6 +11,10 @@ from __future__ import annotations
 
 import pytest
 
+from .._ledger_llm_payloads import (
+    LedgerClassifyLlmSaturateResult,
+    LedgerClassifyLlmSuggestResult,
+)
 from .._ledger_payloads import (
     BusinessInvoiceRecordPayload,
     EvidenceListResult,
@@ -21,8 +25,6 @@ from .._ledger_payloads import (
     InventoryStockLayerPayload,
     LedgerAddResult,
     LedgerClassifyBulkResult,
-    LedgerClassifyLlmSaturateResult,
-    LedgerClassifyLlmSuggestResult,
     LedgerClassifySingleResult,
     LedgerExportPayload,
     LedgerExportRowPayload,

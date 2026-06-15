@@ -2477,6 +2477,11 @@ cli:
       split_recommended_label: 'split recommended'
       auto_split_single_line: 'single-line invoice: no split warranted; --apply classifies it in place'
       auto_split_needs_evidence: '--auto-split requires --read-evidence: the split decision is read from the invoice.'
+      reject_help: 'Record an explicit rejection of the LLM suggestion as an audit event, without classifying the row (cannot be combined with --apply).'
+      reason_help: 'Free-text reason recorded with a --reject decision.'
+      reject_apply_exclusive: '--reject cannot be combined with --apply: reject records a declined suggestion, apply records an accepted one.'
+      llm_rejected_message: 'LLM suggestion rejected and recorded. The transaction is unchanged; classify it manually when ready.'
+      llm_rejected_label: 'rejected'
     doclink:
       actor_help: Operator label.
       help: Fetch a Drive document link and store its bytes as encrypted evidence

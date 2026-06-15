@@ -276,3 +276,84 @@ def test_classify_read_evidence_single_line_emits_no_recommendation(tmp_path: Pa
     envelope = json.loads(result.output)
     codes = [n["code"] for n in envelope["notices"]]
     assert "ledger.classify.split_recommended" not in codes
+
+
+def _history(tx: str) -> list[dict[str, Any]]:
+    out = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx])
+    assert out.exit_code == 0, out.output
+    return json.loads(out.output)["result"]["events"]
+
+
+def test_classify_reject_records_event_without_classifying(tmp_path: Path) -> None:
+    _register(_RouterModel(multi=False))
+    tx = _import_one_transaction(tmp_path)
+    result = _RUNNER.invoke(
+        app,
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "classify",
+            tx,
+            "--llm",
+            "claude",
+            "--reject",
+            "--reason",
+            "model is wrong here",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.output)
+    assert envelope["command"] == "ledger.classify"
+    payload = envelope["result"]
+    assert payload["rejected"] is True
+    assert payload["persisted"] is False
+    assert payload["suggestion_kind"] == "classification"
+    assert payload["bucket_event_id"]
+    # The row is unchanged — still not classified.
+    row = {r["transaction_id"]: r for r in _rows()}[tx]
+    assert row["business_classification"] == "NOT_YET_PROCESSED"
+    # The rejection rides the audit history.
+    kinds = [e["event_type"] for e in _history(tx)]
+    assert "ledger.transaction.llm_suggestion.rejected" in kinds
+
+
+def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path) -> None:
+    _register(_RouterModel(multi=False))
+    tx = _import_one_transaction(tmp_path)
+    result = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "classify", tx, "--llm", "claude", "--reject", "--apply"],
+    )
+    assert result.exit_code != 0
+    assert "--reject" in result.output and "--apply" in result.output
+
+
+def test_auto_split_reject_records_split_rejection(tmp_path: Path) -> None:
+    _register(_RouterModel(multi=True))
+    tx = _import_one_transaction(tmp_path)
+    result = _RUNNER.invoke(
+        app,
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "classify",
+            tx,
+            "--llm",
+            "claude",
+            "--read-evidence",
+            "--auto-split",
+            "--reject",
+            "--reason",
+            "do not split",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["rejected"] is True
+    assert payload["suggestion_kind"] == "split"
+    # No split happened: still one row.
+    assert len(_rows()) == 1

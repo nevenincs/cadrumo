@@ -133,6 +133,7 @@ class BucketEventType(StrEnum):
     LEDGER_IMPORT_DIAGNOSTIC_RECORDED = "ledger.import.diagnostic_recorded"
     LEDGER_TRANSACTION_UPDATED = "ledger.transaction.updated"
     LEDGER_TRANSACTION_CLASSIFIED = "ledger.transaction.classified"
+    LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED = "ledger.transaction.llm_suggestion.rejected"
     LEDGER_TRANSACTION_ALLOCATED = "ledger.transaction.allocated"
     LEDGER_TRANSACTION_REMOVED = "ledger.transaction.removed"
     LEDGER_TRANSACTION_ARCHIVED = "ledger.transaction.archived"
