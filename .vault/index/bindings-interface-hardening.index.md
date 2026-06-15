@@ -35,6 +35,14 @@ related:
   - '[[2026-06-15-bindings-interface-hardening-W04-P08-S24]]'
   - '[[2026-06-15-bindings-interface-hardening-W04-P08-S25]]'
   - '[[2026-06-15-bindings-interface-hardening-W04-P08-S26]]'
+  - '[[2026-06-15-bindings-interface-hardening-W05-P09-S27]]'
+  - '[[2026-06-15-bindings-interface-hardening-W05-P09-S28]]'
+  - '[[2026-06-15-bindings-interface-hardening-W05-P09-S29]]'
+  - '[[2026-06-15-bindings-interface-hardening-W05-P10-S30]]'
+  - '[[2026-06-15-bindings-interface-hardening-W06-P11-S31]]'
+  - '[[2026-06-15-bindings-interface-hardening-W06-P11-S32]]'
+  - '[[2026-06-15-bindings-interface-hardening-W06-P12-S33]]'
+  - '[[2026-06-15-bindings-interface-hardening-audit]]'
   - '[[2026-06-15-bindings-interface-hardening-plan]]'
 ---
 
@@ -47,6 +55,10 @@ Auto-generated index of all documents tagged with `#bindings-interface-hardening
 ### adr
 
 - `2026-06-14-bindings-interface-hardening-adr` - `bindings-interface-hardening` adr: `bindings interface hardening: one validation contract, provenance parity, semantic disambiguation` | (**status:** `accepted`)
+
+### audit
+
+- `2026-06-15-bindings-interface-hardening-audit` - `bindings-interface-hardening` audit: `bindings interface hardening close audit and fresh-context honesty review`
 
 ### exec
 
@@ -76,6 +88,13 @@ Auto-generated index of all documents tagged with `#bindings-interface-hardening
 - `2026-06-15-bindings-interface-hardening-W04-P08-S24` - make bindings list --modelo a registry-derived click.Choice that refuses an unknown code with the accepted-codes set in the error message
 - `2026-06-15-bindings-interface-hardening-W04-P08-S25` - replace the --binding numeric-vs-enum try-Decimal-except heuristic with a registry-data-type-driven coercion that rejects a malformed amount instead of reclassifying it as an enum
 - `2026-06-15-bindings-interface-hardening-W04-P08-S26` - add documented-command and json-schema conformance tests covering the typed bindings list payload and the --modelo Choice refusal
+- `2026-06-15-bindings-interface-hardening-W05-P09-S27` - rename the Google OAuth _profile_binding.py to an active-profile resolver name in one atomic explicit-path relocation commit and run python -m dev.docs.apidocs scaffold
+- `2026-06-15-bindings-interface-hardening-W05-P09-S28` - reclassify decimal_from_string out of the _decimal_binding_value binding-value filename in one atomic explicit-path relocation commit and run python -m dev.docs.apidocs scaffold
+- `2026-06-15-bindings-interface-hardening-W05-P09-S29` - rename the legal_basis_binding rate-to-BOE verification test concept off the binding word in one atomic explicit-path relocation commit and run python -m dev.docs.apidocs scaffold
+- `2026-06-15-bindings-interface-hardening-W05-P10-S30` - give the three source-resolver result types one role-named shared contract or a documented shared role, replacing naming-by-source with naming-by-role
+- `2026-06-15-bindings-interface-hardening-W06-P11-S31` - promote the never-promoted registry-resolver-family-extraction and registry-formula-runtime-facade candidates to rules with vaultspec-core vault rule promote from their 2026-06-02 boundary audits
+- `2026-06-15-bindings-interface-hardening-W06-P11-S32` - author the five new bindings-interface rules from the ADR codification candidates and propagate them with vaultspec-core sync
+- `2026-06-15-bindings-interface-hardening-W06-P12-S33` - run a fresh-context honesty review and close audit per the campaign-close-honesty rule with full-tree owner triage, tracking every surfaced item as a new Step with a verification gate
 
 ### plan
 
