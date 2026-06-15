@@ -8,6 +8,13 @@ options, use the [command-line reference](../cli/index.rst).
 ::::{grid} 1 2 2 3
 :gutter: 3
 
+:::{grid-item-card} Fresh Workstation Setup
+:link: onboarding
+:link-type: doc
+
+Install on a clean machine, check what is missing, and choose optional services.
+:::
+
 :::{grid-item-card} Quickstart
 :link: quickstart
 :link-type: doc
@@ -241,6 +248,7 @@ records.
 ```{toctree}
 :hidden:
 
+onboarding
 quickstart
 profile-setup
 censo-update
