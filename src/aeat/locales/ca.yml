@@ -2823,6 +2823,7 @@ cli:
         created_at, modified_at, ...).
       sort_order_help: 'Ordre: asc (ascendent) o desc (descendent).'
       ungrouped_label: (sense grup)
+      hide_llm_rejected_help: 'Amaga les files el suggeriment del model més recent de les quals s''ha rebutjat (una fila revisada i descartada surt de la cua pendent).'
     merge:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       child_id_help: Id de transacció filla que vols fusionar; es pot repetir

@@ -2672,6 +2672,7 @@ cli:
         created_at, modified_at, ...).
       sort_order_help: 'Sort order: asc (ascending) or desc (descending).'
       ungrouped_label: (ungrouped)
+      hide_llm_rejected_help: 'Hide rows whose most recent LLM suggestion was rejected (a reviewed-and-declined row drops out of the pending queue).'
     merge:
       actor_help: Operator name recorded on the LEDGER_TRANSACTION_MERGED event
       child_id_help: One child id (or unambiguous prefix) to merge. Repeat for every

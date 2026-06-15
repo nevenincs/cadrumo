@@ -436,6 +436,11 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
             "--sort-order",
             help=tr("cli.ledger.list.sort_order_help"),
         ),
+        hide_llm_rejected: bool = typer.Option(
+            False,
+            "--hide-llm-rejected",
+            help=tr("cli.ledger.list.hide_llm_rejected_help"),
+        ),
     ) -> None:
         """List bucket-scoped ledger transactions through the backend read service."""
         transaction_repository = _tx_repo(_state())
@@ -452,6 +457,7 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
             offset=offset,
             sort_by=sort_by,
             sort_order=sort_order,
+            exclude_llm_rejected=hide_llm_rejected,
         )
         from ._ledger_payloads import LedgerListResult
 
@@ -795,8 +801,7 @@ def _latest_llm_rejection_notice(
         message=tr(
             "cli.ledger.view.llm_rejected_notice",
             default=(
-                "The most recent LLM suggestion for this transaction was rejected; "
-                "classify it manually when ready."
+                "The most recent LLM suggestion for this transaction was rejected; classify it manually when ready."
             ),
         ),
         suggestion=f"aeat app ledger classify {resolved_id} --classification BUSINESS --category-id <id>",
