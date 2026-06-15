@@ -267,6 +267,9 @@ ignore_imports =
     aeat.application.filing.tests.test_repository -> aeat.adapters.persistence.storage
     aeat.application.filing.tests.test_repository -> aeat.adapters.persistence.storage.errors
     aeat.application.filing.tests.test_repository -> aeat.adapters.persistence.storage.sql.secure_objects
+    aeat.application.filing.tests.test_complementaria_repository -> aeat.tests.secure_sql
+    aeat.application.filing.tests.test_history_repository -> aeat.tests.secure_sql
+    aeat.application.filing.tests.test_repository -> aeat.tests.secure_sql
     aeat.application.inventory.tests.test_inventory -> aeat.adapters.persistence.storage
     aeat.application.inventory.tests.test_inventory -> aeat.adapters.persistence.storage.errors
     aeat.application.inventory.tests.test_inventory -> aeat.tests.secure_sql

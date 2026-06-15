@@ -39,7 +39,7 @@ def _all_row_producer_groupings() -> set[str]:
     for modelo in resources().modelos.all():
         for revision in modelo.revisions.values():
             for binding in revision.bindings:
-                if (binding.aggregation or {}).get("op") != "rows":
+                if binding.aggregation is None or binding.aggregation.op != "rows":
                     continue
                 grouping = binding.selector.get("grouping")
                 if isinstance(grouping, str) and grouping:

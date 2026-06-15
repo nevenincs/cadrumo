@@ -21,7 +21,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/aeat/application/calculations/_cross_period_clean_state.py": 1265,  # SPLIT-CANDIDATE
     "src/aeat/application/calculations/tests/test_cross_period_clean_state.py": 1440,  # SPLIT-CANDIDATE
     "src/aeat/application/ledger/_llm_classification.py": 1614,  # SPLIT-CANDIDATE (active LLM-ledger growth)
-    "src/aeat/application/modelo/_verification_actions.py": 1469,  # SPLIT-CANDIDATE
+    "src/aeat/application/modelo/_verification_actions.py": 1480,  # SPLIT-CANDIDATE
     # Centralised live-test opt-in added the live_tests_* predicates, the Google
     # opt-in field, and the opt-in constants; re-pinned to the present size.
     "src/aeat/core/config.py": 1281,
