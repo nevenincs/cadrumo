@@ -37,6 +37,8 @@ _GROUNDED_GANANCIA_SECTIONS: dict[str, tuple[int, ...]] = {
     "fondo": (2021, 2022, 2023, 2024),
     # ganancias y pérdidas patrimoniales — sumas/resultado
     "gp_patrimoniales_res": (2021, 2022, 2023, 2024),
+    # ganancias y pérdidas a integrar en la base imponible del ahorro (cuartas)
+    "gan_per_cuartas": (2021, 2022, 2023, 2024),
 }
 
 
