@@ -30,7 +30,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def _load_handbook():
-    from aeat.terminology import load_terminology_handbook
+    from ..terminology_handbook import load_terminology_handbook
 
     return load_terminology_handbook()
 
@@ -43,7 +43,7 @@ def test_only_approved_concepts_render_drafts_excluded() -> None:
     Confirms the approved-only rule: drafts (the bulk of the Handbook) carry
     no curated definition and must never become a glossary entry.
     """
-    from aeat.terminology._enums import ConceptLifecycle
+    from ..terminology_handbook._enums import ConceptLifecycle
 
     handbook = _load_handbook()
     approved = sum(1 for c in handbook.concepts if c.lifecycle is ConceptLifecycle.APPROVED)
@@ -98,7 +98,7 @@ def test_broader_related_relations_render_as_term_cross_references() -> None:
     page into a navigable concept graph. A relation to a draft (non-rendered)
     concept is skipped so no unresolvable reference reaches the ``-n -W`` build.
     """
-    from aeat.terminology._enums import ConceptLifecycle
+    from ..terminology_handbook._enums import ConceptLifecycle
 
     handbook = _load_handbook()
     rst, _ = render_glossary(_REPO_ROOT, handbook)

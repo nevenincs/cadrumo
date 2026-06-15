@@ -41,10 +41,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from aeat.core.external_constants import OutputLanguage
-from aeat.terminology import load_terminology_handbook
-from aeat.terminology._enums import ConceptLifecycle, TermStatus
-from aeat.terminology._loader import TerminologyHandbook
-from aeat.terminology._schema import ConceptRecord, LanguageSection
+
+from .terminology_handbook import load_terminology_handbook
+from .terminology_handbook._enums import ConceptLifecycle, TermStatus
+from .terminology_handbook._loader import TerminologyHandbook
+from .terminology_handbook._schema import ConceptRecord, LanguageSection
 
 _UTF_8 = "utf-8"
 
