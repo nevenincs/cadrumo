@@ -652,6 +652,25 @@ five remaining lanes (the construct-bound base-computation chain) is now CLOSED;
 casillas re-grounded.** The durable method extension: a calculation-chain section is grounded by sweeping
 its casillas, constructs, AND bindings in one coherent pass.
 
+### V21 (autonomic-deductions lane CLOSED via LIRPF framework art. 77 — NO separate corpus needed)
+
+The "principal remaining campaign" (autonomic deductions, assumed to need 17+ comunidades' corpora) was
+closed without a separate corpus by a decisive grounding-authority insight: the autonomic deductions'
+**LIRPF home is art. 77 ("Cuota líquida autonómica" — la cuota líquida autonómica resulta de disminuir la
+cuota íntegra autonómica en las deducciones autonómicas)**, an existing reviewed legal entry. The 2025
+autonomic boxes offered no ground truth (they are the kitchen-sink over-grounding), and `ley-22-2009`
+(the financiación-autonómica framework) is absent from the corpus — but art. 77 IS the LIRPF provision
+that gives the autonomic deductions effect in the cuota, so it is the correct framework foundation
+(exactly the approach used for ganancias→33/34, base→48/49/50; the specific comunidad-law article is a
+documented future refinement, not a blocker). Grounded all comunidad-named autonomic-deduction sections
+(`c_valenciana_res`, `canarias_res`, `asturias_res`, `madrid_res`, `galicia_res`, … 17+ comunidades, plus
+`deduccion_autonomica_*`) from the generic-default actividades chapter to art. 77 — **1592 casillas across
+2021-2024** (349/383/397/463), construct-guarded (0 bound), referential green, commit `fb321a740`. Pinned
+by `test_autonomic_deductions_ground_in_art77_not_actividades`. **Running total ~4726 M100 casillas
+re-grounded; a SECOND of the five originally-documented remaining lanes (the largest) is now CLOSED.**
+The lesson: an "obviously different corpus" assumption was wrong — the LIRPF framework article that
+*applies* a deduction is a valid foundation home even when the deduction is *established* elsewhere.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
