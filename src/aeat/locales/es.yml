@@ -2233,16 +2233,17 @@ cli:
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       capabilities:
-        capability_help: cli.config.profile.capabilities.capability_help
-        capability_label: cli.config.profile.capabilities.capability_label
-        enabled: cli.config.profile.capabilities.enabled
-        help: cli.config.profile.capabilities.help
-        no_active_profile: cli.config.profile.capabilities.no_active_profile
+        capability_help: 'Servicio que se quiere activar o desactivar.'
+        capability_label: 'capacidad'
+        enabled: 'activado'
+        help: 'Activa o desactiva en este perfil los servicios externos (subida a la nube, visión LLM, exportación a Google).'
+        no_active_profile: 'No hay perfil activo; selecciona uno con ''aeat config profile use <nombre>'' antes de configurar una capacidad.'
         set_help: Activa o desactiva una capacidad de servicio para el perfil activo.
         show_help: Muestra el estado resuelto de cada capacidad de servicio para el
           perfil activo.
         state_help: Si activar (on) o desactivar (off) la capacidad.
         state_label: estado
+        disabled: 'desactivado'
       censo:
         apply_help: Sobrescribe el perfil con los valores censales comunicados por
           AEAT

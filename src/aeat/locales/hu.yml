@@ -2152,16 +2152,17 @@ cli:
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
       capabilities:
-        capability_help: cli.config.profile.capabilities.capability_help
-        capability_label: cli.config.profile.capabilities.capability_label
-        enabled: cli.config.profile.capabilities.enabled
-        help: cli.config.profile.capabilities.help
-        no_active_profile: cli.config.profile.capabilities.no_active_profile
+        capability_help: 'A be- vagy kikapcsolandó szolgáltatás.'
+        capability_label: 'képesség'
+        enabled: 'bekapcsolva'
+        help: 'Kapcsolja be vagy ki ennél a profilnál a külső szolgáltatásokat (felhőfeltöltés, LLM-látás, Google-exportálás).'
+        no_active_profile: 'Nincs aktív profil; válasszon egyet az ''aeat config profile use <név>'' paranccsal a képesség beállítása előtt.'
         set_help: Be- vagy kikapcsol egy szolgáltatás-képességet az aktív profilhoz.
         show_help: Megjeleníti az aktív profil minden szolgáltatás-képességének feloldott
           állapotát.
         state_help: A képesség engedélyezése (on) vagy letiltása (off).
         state_label: állapot
+        disabled: 'kikapcsolva'
       censo:
         apply_help: Az AEAT által jelentett nyilvántartási értékekkel felülírja a
           profilt.
