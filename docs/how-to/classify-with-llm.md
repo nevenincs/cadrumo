@@ -102,9 +102,11 @@ aeat app ledger classify <transaction-id> --llm claude --reject --reason "this i
 ```
 
 Reject records what the model proposed and your reason as an audit event. The row
-is left unclassified. See the record later:
+is left unclassified. The next `aeat app ledger view <transaction-id>` flags that
+the most recent LLM suggestion was rejected, and the full record stays in history:
 
 ```bash
+aeat app ledger view <transaction-id>
 aeat app ledger history <transaction-id>
 ```
 
