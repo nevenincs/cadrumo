@@ -1,4 +1,4 @@
-"""Cross-substrate legal-basis binding verification.
+"""Cross-substrate legal-basis rate-grounding verification.
 
 This test module is the canonical gate that every rate value used by
 the IVA / IRPF substrate and modelo registry matches its BOE legal
