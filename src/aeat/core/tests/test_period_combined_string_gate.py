@@ -173,10 +173,6 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="filing import refusal tests prove old raw period spellings are rejected",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/application/filing/reconciliation/tests/test_reconcile\.py$"),
-        reason="filing reconciliation tests preserve justificante labels supplied by external evidence",
-    ),
-    AllowlistRule(
         path=_path(r"^src/aeat/application/modelo/tests/test_work_period_normalization\.py$"),
         reason="modelo work-period normalisation tests prove old inbound strings are refused or canonicalised",
     ),

@@ -99,6 +99,31 @@ def test_config_check_flags_opted_in_capability_with_missing_dependency() -> Non
     assert any("llm_vision is on" in issue for issue in payload["issues"])
 
 
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["config", "google", "sync", "calc", "export", "--modelo", "303", "--period", "1T", "--year", "2025"],
+        ["config", "google", "sync", "calc", "verify", "--modelo", "303", "--period", "1T", "--year", "2025"],
+        ["config", "google", "sync", "push"],
+        ["config", "google", "sync", "probe", "--no-read-only"],
+    ],
+    ids=["calc-export", "calc-verify", "push", "probe-write"],
+)
+def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[str]) -> None:
+    """Every Google-write CLI leaf is gated on google_export, not just `export`.
+
+    Closes honesty-review finding H1: with the capability off, each Drive/Sheets
+    write verb refuses with the capability message *before* any Google call.
+    """
+    off = _RUNNER.invoke(app, ["config", "profile", "capabilities", "set", "google_export", "off"])
+    assert off.exit_code == 0, off.output
+
+    result = _RUNNER.invoke(app, argv)
+    assert result.exit_code != 0, result.output
+    combined = result.output + str(result.exception or "")
+    assert "Google export is disabled" in combined, combined
+
+
 def test_set_enables_cloud_upload_via_profile_opt_in() -> None:
     setres = _RUNNER.invoke(
         app,

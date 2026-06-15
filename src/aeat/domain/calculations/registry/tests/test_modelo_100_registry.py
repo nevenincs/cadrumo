@@ -544,7 +544,7 @@ def test_modelo_100_application_links_route_current_workflows_through_snapshots(
     assert links_by_surface["verification"].consumer == "aeat.application.verification"
     assert links_by_surface["review"].consumer == "aeat.application.filing.review"
     assert links_by_surface["approval"].consumer == "aeat.application.filing.approval"
-    assert links_by_surface["reconciliation"].consumer == "aeat.application.filing.reconciliation"
+    assert links_by_surface["reconciliation"].consumer == "aeat.application.modelo.modelo_reconcile"
     assert links_by_surface["workflow"].consumer == "aeat.application.workflow"
 
 
