@@ -92,7 +92,11 @@ and the full-tree owner triage.
 Full-tree `pytest --collect-only -q src/aeat` is clean: 15968 collected, **0
 collection errors** — the campaign introduced no collection breakage. The broad
 bindings test surface (registry + aggregation + calculations + filing + modelo
-test dirs) passes (recorded at close). One earlier full-suite failure observed
+test dirs) passes at close: **4088 passed, 0 failed** (8m31s). The 90
+campaign-added tests (typed aggregation, source-kind taxonomy parity, build-time
+validation, encrypted-boundary provenance roundtrip + anti-tautology, the
+`--binding` channel coercion, and the source-resolution role) all pass at final
+HEAD. One earlier full-suite failure observed
 mid-campaign — `test_referential_integrity_part1.py` importing
 `build_config_repair_report` from `aeat.application.diagnostics` — was
 **owner-distinct peer churn** (the concurrent graceful-degradation campaign) and
