@@ -459,9 +459,14 @@ def test_collectible_invoice_rejects_lowercase_clave() -> None:
 
 
 def test_bare_invoice_source_kind_is_not_constructible() -> None:
-    """The retired bare ``invoice`` alias is outside the binding schema."""
+    """The retired bare ``invoice`` alias is outside the binding schema.
 
-    with pytest.raises(ValidationError, match="Input should be"):
+    The ``source`` field is the single canonical
+    :class:`~aeat.core.BindingSourceKind` enum, so an unknown token is rejected
+    by the before-validator with a ``not a valid BindingSourceKind`` value error.
+    """
+
+    with pytest.raises(ValidationError, match="not a valid BindingSourceKind"):
         _binding(
             source="invoice",
             selector={

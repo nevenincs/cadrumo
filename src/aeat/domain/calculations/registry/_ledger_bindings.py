@@ -10,7 +10,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Modelo
-from ....core.aggregation import BindingAggregationOp
+from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
@@ -26,13 +26,14 @@ from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
-# Ledger-aggregation binding source kinds. Every binding whose ``source``
-# matches one of these reads its values from the bucket-scoped ledger
-# (transaction-classified IVA aggregation or Renta first-slice expense
-# aggregation). Cross-domain consumers route through this frozenset so
-# the registry stays the single source of truth for ledger readiness.
-LEDGER_BINDING_SOURCE_KINDS: frozenset[str] = frozenset({"ledger_iva_aggregation", "ledger_renta_expense_aggregation"})
-
+# Ledger-aggregation binding source kinds (all four). Re-exported from
+# :data:`aeat.core.aggregation.LEDGER_BINDING_SOURCE_KINDS`, which derives the
+# set from :class:`~aeat.core.BindingSourceKind` (the single source-kind
+# taxonomy). Every binding whose ``source`` is a member reads its values from
+# the bucket-scoped ledger (transaction-classified IVA / OSS aggregation or
+# Renta first-slice income/expense aggregation). Cross-domain consumers route
+# through this name so the registry stays the single source of truth for ledger
+# readiness.
 __all__ = [
     "LEDGER_BINDING_SOURCE_KINDS",
     "IvaLedgerObservation",

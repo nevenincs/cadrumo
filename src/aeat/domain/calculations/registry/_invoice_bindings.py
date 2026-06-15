@@ -10,7 +10,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.aggregation import BindingAggregationOp
+from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
@@ -30,14 +30,11 @@ _InvoiceRowField = Literal[
     "rectified_base_previous",
 ]
 
-# Canonical source-kind strings the registry uses for invoice-shaped
-# bindings. The bare ``"invoice"`` source was retired; every consumer
-# that needs "is this binding an invoice binding?" routes through this
-# frozenset so the answer stays single-sourced.
-INVOICE_BINDING_SOURCE_KINDS: frozenset[str] = frozenset(
-    {"collectible_invoice", "payable_invoice", "purchase_invoice_evidence"},
-)
-
+# Canonical invoice-shaped binding source kinds. Re-exported from
+# :data:`aeat.core.aggregation.INVOICE_BINDING_SOURCE_KINDS`, which derives the
+# set from :class:`~aeat.core.BindingSourceKind` (the single source-kind
+# taxonomy) rather than hand-listing strings. Every consumer that needs "is
+# this binding an invoice binding?" routes through this name.
 __all__ = [
     "INVOICE_BINDING_SOURCE_KINDS",
     "InvoiceObservation",
