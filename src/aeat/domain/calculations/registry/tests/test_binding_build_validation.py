@@ -9,10 +9,11 @@ registry-build section validator for EVERY family.
 This file proves the build gate is live for every source family: a malformed
 binding (a bad op/fact pairing or a missing required selector field) is REJECTED
 at registry-build (``RegistryValidator.validate_modelo`` — snapshot construction
-validation), not only when a taxpayer calculation invokes the resolver. Before
-the wave, the four detail-record families and ``previous_filing`` enforced their
+validation), not only when a taxpayer calculation invokes the resolver. Before this
+hardening, the four detail-record families and ``previous_filing`` enforced their
 op/fact invariants ONLY at resolve time, so a malformed binding of those families
-shipped clean through build and failed only on a calculation.
+shipped clean through build and failed only on a calculation. This consolidation
+made the build gate uniform across every family.
 
 Anti-tautology proofs (the gate is not trivially rejecting everything):
 
