@@ -22,6 +22,19 @@ related:
   - '[[2026-06-15-bindings-interface-hardening-W02-P04-S11]]'
   - '[[2026-06-15-bindings-interface-hardening-W02-P04-S12]]'
   - '[[2026-06-15-bindings-interface-hardening-W02-P04-S13]]'
+  - '[[2026-06-15-bindings-interface-hardening-W03-P05-S14]]'
+  - '[[2026-06-15-bindings-interface-hardening-W03-P05-S15]]'
+  - '[[2026-06-15-bindings-interface-hardening-W03-P05-S16]]'
+  - '[[2026-06-15-bindings-interface-hardening-W03-P06-S17]]'
+  - '[[2026-06-15-bindings-interface-hardening-W03-P06-S18]]'
+  - '[[2026-06-15-bindings-interface-hardening-W03-P06-S19]]'
+  - '[[2026-06-15-bindings-interface-hardening-W04-P07-S20]]'
+  - '[[2026-06-15-bindings-interface-hardening-W04-P07-S21]]'
+  - '[[2026-06-15-bindings-interface-hardening-W04-P07-S22]]'
+  - '[[2026-06-15-bindings-interface-hardening-W04-P08-S23]]'
+  - '[[2026-06-15-bindings-interface-hardening-W04-P08-S24]]'
+  - '[[2026-06-15-bindings-interface-hardening-W04-P08-S25]]'
+  - '[[2026-06-15-bindings-interface-hardening-W04-P08-S26]]'
   - '[[2026-06-15-bindings-interface-hardening-plan]]'
 ---
 
@@ -50,6 +63,19 @@ Auto-generated index of all documents tagged with `#bindings-interface-hardening
 - `2026-06-15-bindings-interface-hardening-W02-P04-S11` - run every family validator from the single dispatch table inside the registry-build section validator so all families are checked at snapshot build
 - `2026-06-15-bindings-interface-hardening-W02-P04-S12` - add build-time rejection tests per family plus an anti-tautology proof asserting a malformed binding fails at build for each family, not only at resolve
 - `2026-06-15-bindings-interface-hardening-W02-P04-S13` - fix any latent malformed registry TOML the new build gate surfaces so the full registry suite collects and builds clean
+- `2026-06-15-bindings-interface-hardening-W03-P05-S14` - generalise the IVA unsupported-observation screen into a per-family unrouted-observation screen that flags an unrouted declarable observation for every aggregation family
+- `2026-06-15-bindings-interface-hardening-W03-P05-S15` - wire the per-family unrouted-observation advisory diagnostics on the live calculate path so a resolver surfaces an advisory instead of a silent Decimal(0)
+- `2026-06-15-bindings-interface-hardening-W03-P05-S16` - add silent-zero refusal tests per family asserting a positive unrouted observation raises an advisory rather than resolving to zero
+- `2026-06-15-bindings-interface-hardening-W03-P06-S17` - unify the three ADR-R2 revision-carry gate copies onto one shared path consumed by the binding-prefill, cross-period clean-state, and relation-prefill callers
+- `2026-06-15-bindings-interface-hardening-W03-P06-S18` - emit a diagnostic for an unresolved non-formula relation that today produces neither value nor warning at calculate time
+- `2026-06-15-bindings-interface-hardening-W03-P06-S19` - add carry-gate parity and relation-diagnostic tests asserting one gate path and a surfaced diagnostic for an unresolved non-formula relation
+- `2026-06-15-bindings-interface-hardening-W04-P07-S20` - add legal_refs, source_refs and a typed source kind to ModeloBindingValue at parity with the casilla provenance model, re-reading HEAD and git diff before editing the encrypted boundary
+- `2026-06-15-bindings-interface-hardening-W04-P07-S21` - populate the binding-value provenance from the binding definition in the filing builder and drop the hardcoded source=registry binding input free-text string
+- `2026-06-15-bindings-interface-hardening-W04-P07-S22` - add a strict save-load-equality roundtrip and an anti-tautology proof that corrupts the persisted provenance and asserts refusal on the encrypted filing-draft boundary
+- `2026-06-15-bindings-interface-hardening-W04-P08-S23` - expose the binding provenance on BindingRowPayload and BindingPreviewRowPayload and convert bindings list from the list[dict[str,object]] bag to the typed payload
+- `2026-06-15-bindings-interface-hardening-W04-P08-S24` - make bindings list --modelo a registry-derived click.Choice that refuses an unknown code with the accepted-codes set in the error message
+- `2026-06-15-bindings-interface-hardening-W04-P08-S25` - replace the --binding numeric-vs-enum try-Decimal-except heuristic with a registry-data-type-driven coercion that rejects a malformed amount instead of reclassifying it as an enum
+- `2026-06-15-bindings-interface-hardening-W04-P08-S26` - add documented-command and json-schema conformance tests covering the typed bindings list payload and the --modelo Choice refusal
 
 ### plan
 
