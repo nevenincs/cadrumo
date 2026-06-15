@@ -5,5 +5,5 @@ label = "Si las entidades no residentes no han aplicado un régimen fiscal simil
 section = ["toma_datos_ampliada", "regimen_especial"]
 data_type = "boolean"
 semantic_role = "irpf_re_especial_tfi_no_regimen_similar_flag"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-37"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

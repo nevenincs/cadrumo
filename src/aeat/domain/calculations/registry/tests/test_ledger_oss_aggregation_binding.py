@@ -14,6 +14,7 @@ from functools import lru_cache
 import pytest
 from pydantic import ValidationError
 
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import resources
 from ....iva import (
     EUMemberState,
@@ -48,8 +49,8 @@ def _with_selector(binding: DataBindingDefinition, **updates: object) -> DataBin
     return binding.model_copy(update={"selector": {**binding.selector, **updates}})
 
 
-def _with_aggregation(binding: DataBindingDefinition, op: str) -> DataBindingDefinition:
-    return binding.model_copy(update={"aggregation": {"op": op}})
+def _with_aggregation(binding: DataBindingDefinition, op: BindingAggregationOp) -> DataBindingDefinition:
+    return binding.model_copy(update={"aggregation": BindingAggregation(op=op)})
 
 
 def _observation(
@@ -122,7 +123,7 @@ def test_validate_rejects_empty_transaction_kinds() -> None:
 
 def test_validate_rejects_non_sum_aggregation() -> None:
     with pytest.raises(RegistryValidationError, match="aggregation op 'sum'"):
-        validate_ledger_oss_aggregation_binding_definition(_with_aggregation(_binding(), "max"))
+        validate_ledger_oss_aggregation_binding_definition(_with_aggregation(_binding(), BindingAggregationOp.COPY))
 
 
 def test_validate_rejects_unknown_fact() -> None:

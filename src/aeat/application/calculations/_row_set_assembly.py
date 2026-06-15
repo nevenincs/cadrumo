@@ -173,7 +173,7 @@ def _row_field_lookup(revision: ModeloRevision) -> Mapping[str, str]:
     """Return ``binding_id → selector.row_field`` for every row-producer binding."""
     lookup: dict[str, str] = {}
     for binding in revision.bindings:
-        if (binding.aggregation or {}).get("op") != "rows":
+        if binding.aggregation is None or binding.aggregation.op != "rows":
             continue
         row_field = binding.selector.get("row_field")
         if isinstance(row_field, str) and row_field:

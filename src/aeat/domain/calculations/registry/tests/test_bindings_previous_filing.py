@@ -19,6 +19,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .._bindings_previous_filing import (
     _aggregate_previous_filing_binding,
     _is_direct_previous_filing_binding,
@@ -54,7 +55,7 @@ def _span_binding(*, source_casillas: tuple[str, ...]) -> DataBindingDefinition:
             "prior_quarter_expanding_span": True,
             "max_year_delta": 0,
         },
-        aggregation={"op": "sum"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
@@ -132,7 +133,7 @@ def _prior_pagos_binding() -> DataBindingDefinition:
             "prior_quarter_expanding_span": True,
             "max_year_delta": 0,
         },
-        aggregation={"op": "prior_pagos_fraccionados"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )

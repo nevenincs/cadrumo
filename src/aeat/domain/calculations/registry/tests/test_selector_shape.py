@@ -25,6 +25,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .._bindings import (
     _BINDING_SELECTOR_REGISTRY,
     validate_binding_selector_shape,
@@ -426,7 +427,7 @@ def test_counterpart_binding_fact_op_mismatch_caught_at_snapshot_build() -> None
             "claves": ("E", "M"),
             "rectification_scope": "exclude_rectifications",
         },
-        aggregation={"op": "sum"},  # mismatched op — should be "count_distinct"
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),  # mismatched op — should be "count_distinct"
         legal_refs=("lirpf.art-99",),
         source_refs=("aeat.test",),
     )

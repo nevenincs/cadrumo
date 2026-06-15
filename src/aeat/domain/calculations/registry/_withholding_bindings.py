@@ -13,7 +13,8 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.aggregation import RowSetGroupingKind
+from ....core.aggregation import BindingAggregationOp, RowSetGroupingKind
+from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
 from ._errors import RegistryValidationError
@@ -132,15 +133,15 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
     selector = _withholding_selector(binding)
     if selector.fact not in _WITHHOLDING_FACTS:
         raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact {selector.fact!r}")
-    op = str((binding.aggregation or {}).get("op", "sum"))
-    if selector.fact == "perceptor_count" and op != "count_distinct":
+    op = binding_aggregation_op(binding)
+    if selector.fact == "perceptor_count" and op != BindingAggregationOp.COUNT_DISTINCT:
         raise RegistryValidationError(
             f"binding {binding.id!r} fact 'perceptor_count' requires aggregation op 'count_distinct'",
         )
-    if selector.fact in {"percibido_sum", "retencion_sum"} and op != "sum":
+    if selector.fact in {"percibido_sum", "retencion_sum"} and op != BindingAggregationOp.SUM:
         raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
     if selector.fact == "row_field":
-        if op != "rows":
+        if op != BindingAggregationOp.ROWS:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
         if selector.row_field is None:
             raise RegistryValidationError(

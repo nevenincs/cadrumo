@@ -9,7 +9,8 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Period
-from ....core.aggregation import AggregationSourceKind, CounterpartSourceKind, RowSetGroupingKind
+from ....core.aggregation import AggregationSourceKind, BindingAggregationOp, CounterpartSourceKind, RowSetGroupingKind
+from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._bindings_previous_filing import (
     RegistryModeloObservationRequirement,
@@ -88,6 +89,7 @@ __all__ = [
     "INVOICE_BINDING_SOURCE_KINDS",
     "LEDGER_BINDING_SOURCE_KINDS",
     "AtributionMemberObservation",
+    "BindingAggregationOp",
     "CasillaObservation",
     "CounterpartAggregationObservation",
     "CounterpartObservationRequirement",
@@ -109,7 +111,9 @@ __all__ = [
     "WithholdingObservationRequirement",
     "_build_foreign_asset_rows",
     "_build_related_party_rows",
+    "binding_aggregation_op",
     "counterpart_binding_requirements",
+    "default_binding_aggregation_op",
     "invoice_binding_requirements",
     "previous_filing_observation_requirements",
     "resolve_atribucion_binding_row_values",

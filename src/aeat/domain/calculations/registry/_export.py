@@ -11,6 +11,8 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import Literal, TypeGuard
 
+from ....core.aggregation import BindingAggregationOp
+from ._binding_aggregation import binding_aggregation_op
 from ._errors import RegistryValidationError
 from ._ids import CasillaId, ExportFieldId
 from ._schema import (
@@ -153,7 +155,7 @@ def _export_field_from_row_binding(
     record: ExportRecordDefinition,
     binding: DataBindingDefinition,
 ) -> ExportFieldDefinition | None:
-    if binding.aggregation is None or binding.aggregation.get("op") != "rows":
+    if binding.aggregation is None or binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
         return None
     if record.binding_record is None:
         return None

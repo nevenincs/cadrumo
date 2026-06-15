@@ -10,8 +10,9 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.aggregation import RowSetGroupingKind
+from ....core.aggregation import BindingAggregationOp, RowSetGroupingKind
 from ....core.external_constants import DEFAULT_CURRENCY
+from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import uppercase_alpha_code
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
@@ -91,8 +92,7 @@ def _validated_related_party_selector(binding: DataBindingDefinition) -> _Relate
         raise RegistryValidationError(
             f"binding {binding.id!r} declares unsupported related-party fact {selector.fact!r}",
         )
-    op = str((binding.aggregation or {}).get("op", "rows"))
-    if op != "rows":
+    if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
     if selector.row_field is None:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
@@ -220,8 +220,7 @@ def _validated_foreign_asset_selector(binding: DataBindingDefinition) -> _Foreig
         raise RegistryValidationError(
             f"binding {binding.id!r} declares unsupported foreign-asset fact {selector.fact!r}",
         )
-    op = str((binding.aggregation or {}).get("op", "rows"))
-    if op != "rows":
+    if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
     if selector.row_field is None:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
@@ -353,8 +352,7 @@ def _validated_atribucion_selector(binding: DataBindingDefinition) -> _Atributio
         raise RegistryValidationError(f"binding {binding.id!r} has malformed atribucion selector") from exc
     if selector.fact != "row_field":
         raise RegistryValidationError(f"binding {binding.id!r} declares unsupported atribucion fact {selector.fact!r}")
-    op = str((binding.aggregation or {}).get("op", "rows"))
-    if op != "rows":
+    if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
     if selector.row_field is None:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
@@ -460,8 +458,7 @@ def _validated_refund_selector(binding: DataBindingDefinition) -> _RefundSelecto
         raise RegistryValidationError(f"binding {binding.id!r} has malformed refund selector") from exc
     if selector.fact != "row_field":
         raise RegistryValidationError(f"binding {binding.id!r} declares unsupported refund fact {selector.fact!r}")
-    op = str((binding.aggregation or {}).get("op", "rows"))
-    if op != "rows":
+    if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
     if selector.row_field is None:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")

@@ -16,7 +16,7 @@ from typing import Annotated, Literal
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core import Period, TaxDomain
-from ....core.aggregation import AggregationSourceKind, RowSetGroupingKind
+from ....core.aggregation import AggregationSourceKind, BindingAggregation, RowSetGroupingKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 
@@ -996,7 +996,7 @@ class DataBindingDefinition(RegistryModel):
         "refund_operation",
     ]
     selector: BindingSelectorMap
-    aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
+    aggregation: BindingAggregation | None = None
     typed_enum: str | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs

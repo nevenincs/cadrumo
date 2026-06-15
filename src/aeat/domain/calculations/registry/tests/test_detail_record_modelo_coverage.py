@@ -53,7 +53,11 @@ def test_detail_record_modelo_emits_row_sets(
     """Each detail-record modelo's row-producer bindings produce row-sets."""
 
     revision = _modelos_by_id[modelo_id].revisions[revision_id]
-    declared = [b for b in revision.bindings if b.source == source_kind and (b.aggregation or {}).get("op") == "rows"]
+    declared = [
+        b
+        for b in revision.bindings
+        if b.source == source_kind and b.aggregation is not None and b.aggregation.op == "rows"
+    ]
     assert declared, f"modelo {modelo_id!r} declares no {source_kind!r} row-producer bindings"
 
     row_sets = collect_row_sets(revision)

@@ -948,8 +948,7 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
     cohort_legal: dict[str, set[str]] = {}
     cohort_source: dict[str, set[str]] = {}
     for binding in revision.bindings:
-        aggregation = binding.aggregation or {}
-        if str(aggregation.get("op")) != "rows":
+        if binding.aggregation is None or binding.aggregation.op != "rows":
             continue
         # `binding.selector` is a Mapping; getattr returns the default
         # for every Mapping regardless of key, so the lookup must go

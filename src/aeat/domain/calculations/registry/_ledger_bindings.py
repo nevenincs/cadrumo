@@ -10,6 +10,7 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Modelo
+from ....core.aggregation import BindingAggregationOp
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
@@ -20,6 +21,7 @@ from ...iva import (
     OssIossRegime,
     TransactionKind,
 )
+from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
@@ -155,10 +157,10 @@ def validate_ledger_oss_aggregation_binding_definition(
     selector = _ledger_oss_selector(binding)
 
     if binding.aggregation is not None:
-        op = str(binding.aggregation.get("op", "sum"))
-        if op != "sum":
+        op = binding_aggregation_op(binding)
+        if op != BindingAggregationOp.SUM:
             raise RegistryValidationError(
-                f"binding {binding.id!r} ledger_oss_aggregation supports only aggregation op 'sum', got {op!r}",
+                f"binding {binding.id!r} ledger_oss_aggregation supports only aggregation op 'sum', got {op.value!r}",
             )
 
     if selector.fact not in {"iva_amount_sum", "base_amount_sum"}:
@@ -323,10 +325,10 @@ def validate_ledger_iva_aggregation_binding_definition(
     selector = _iva_ledger_selector(binding)
 
     if binding.aggregation is not None:
-        op = str(binding.aggregation.get("op", "sum"))
-        if op != "sum":
+        op = binding_aggregation_op(binding)
+        if op != BindingAggregationOp.SUM:
             raise RegistryValidationError(
-                f"binding {binding.id!r} ledger_iva_aggregation supports only aggregation op 'sum', got {op!r}",
+                f"binding {binding.id!r} ledger_iva_aggregation supports only aggregation op 'sum', got {op.value!r}",
             )
 
     if selector.fact not in {"iva_amount_sum", "base_amount_sum"}:
@@ -504,10 +506,11 @@ def validate_ledger_renta_expense_aggregation_binding_definition(binding: DataBi
             f"binding {binding.id!r} target_casilla {selector.target_casilla!r} "
             "is outside the first Modelo 100 Renta ledger expense slice",
         )
-    op = str((binding.aggregation or {}).get("op", "sum"))
-    if op != "sum":
+    op = binding_aggregation_op(binding)
+    if op != BindingAggregationOp.SUM:
         raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_expense_aggregation supports only aggregation op 'sum', got {op!r}",
+            f"binding {binding.id!r} ledger_renta_expense_aggregation supports only "
+            f"aggregation op 'sum', got {op.value!r}",
         )
     if selector.fact != "deductible_amount_sum":
         raise RegistryValidationError(
@@ -604,10 +607,11 @@ def validate_ledger_renta_income_aggregation_binding_definition(binding: DataBin
             f"binding {binding.id!r} target_casilla {selector.target_casilla!r} "
             "is outside the supported Modelo 130 income casillas",
         )
-    op = str((binding.aggregation or {}).get("op", "sum"))
-    if op != "sum":
+    op = binding_aggregation_op(binding)
+    if op != BindingAggregationOp.SUM:
         raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_income_aggregation supports only aggregation op 'sum', got {op!r}",
+            f"binding {binding.id!r} ledger_renta_income_aggregation supports only "
+            f"aggregation op 'sum', got {op.value!r}",
         )
     if selector.fact not in _RENTA_130_INCOME_SUPPORTED_FACTS:
         raise RegistryValidationError(

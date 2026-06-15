@@ -945,7 +945,7 @@ def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingRow, ...]:
             typed_enum=binding.typed_enum,
             input_channel="enum" if str(binding.id) in enum_consumed else "decimal",
             selector=_public_mapping(binding.selector),
-            aggregation=_public_mapping(binding.aggregation) if binding.aggregation is not None else None,
+            aggregation={"op": binding.aggregation.op.value} if binding.aggregation is not None else None,
             legal_refs=tuple(str(ref) for ref in binding.legal_refs),
             source_refs=tuple(str(ref) for ref in binding.source_refs),
             borrador_capable=binding.aeat_prefilled is True,

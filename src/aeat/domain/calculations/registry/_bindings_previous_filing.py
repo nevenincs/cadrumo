@@ -12,6 +12,8 @@ from typing import Literal, Protocol
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Period
+from ....core.aggregation import BindingAggregationOp
+from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._binding_selector_utils import unique_tuple
 from ._errors import RegistryValidationError
@@ -96,8 +98,7 @@ def _optional_source_casilla_ids(binding: DataBindingDefinition, selector: _Prev
     never filed cannot be carried, so its absence is a real integrity error.
     Every other op keeps every source casilla required (empty optional set).
     """
-    aggregation = binding.aggregation or {}
-    if str(aggregation.get("op", "sum")) != "prior_pagos_fraccionados":
+    if binding_aggregation_op(binding) != BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS:
         return frozenset()
     source_ids = _previous_filing_source_ids(selector)
     if len(source_ids) != 2:
@@ -382,17 +383,16 @@ def _aggregate_previous_filing_binding(
     *,
     source_casillas: tuple[str, ...] = (),
 ) -> Decimal:
-    aggregation = binding.aggregation or {}
-    op = str(aggregation.get("op", "sum"))
-    if op == "sum":
+    op = binding_aggregation_op(binding)
+    if op == BindingAggregationOp.SUM:
         return sum(values, Decimal("0"))
-    if op == "copy":
+    if op == BindingAggregationOp.COPY:
         if len(values) != 1:
             raise RegistryValidationError(f"binding {binding.id!r} copy aggregation requires one source casilla")
         return values[0]
-    if op == "prior_pagos_fraccionados":
+    if op == BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS:
         return _aggregate_prior_pagos_fraccionados(binding, values, source_casillas=source_casillas)
-    raise RegistryValidationError(f"binding {binding.id!r} uses unsupported previous-filing aggregation {op!r}")
+    raise RegistryValidationError(f"binding {binding.id!r} uses unsupported previous-filing aggregation {op.value!r}")
 
 
 def _aggregate_prior_pagos_fraccionados(

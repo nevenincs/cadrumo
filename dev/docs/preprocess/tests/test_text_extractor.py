@@ -77,7 +77,7 @@ def test_passthrough_is_retired_now_walker_covers_the_text_tail() -> None:
 
     former_tail = {".txt", ".xml", ".xsd", ".properties"}
     # Retired: nothing swept, so nothing overlaps the walker's raw index.
-    assert SUPPORTED_TEXT_EXTENSIONS == frozenset()
+    assert frozenset() == SUPPORTED_TEXT_EXTENSIONS
     for ext in SUPPORTED_TEXT_EXTENSIONS:
         assert ext not in SUPPORTED_EXTENSIONS, ext
     # Completeness: the whole former tail is now walker-covered (the reason the

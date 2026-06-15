@@ -5,5 +5,5 @@ label = "IBAN rectificación"
 section = ["resultados", "regularizacion_res"]
 data_type = "iban"
 semantic_role = "irpf_rectificacion_iban"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-97"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
