@@ -1,8 +1,8 @@
 # Terminology Handbook concept fragment.
 # One concept per file; compiled by the strict loader in
-# `aeat.terminology` into a frozen `ConceptRecord`. Curated prose
+# `dev.docs.terminology_handbook` into a frozen `ConceptRecord`. Curated prose
 # fields (definition, scope_note, short_description) are hand-edited
-# here; structural operations go through the `aeat.terminology` CLI.
+# here; structural operations go through the `dev.docs.terminology_handbook` CLI.
 
 [concept]
 concept_id = "prorrata"

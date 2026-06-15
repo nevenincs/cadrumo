@@ -2664,6 +2664,24 @@ reviewed_at = 2026-05-27
 reviewed_by = "wgergely"
 notes = "Articulo 8 de la Orden HAC/242/2025: plazo de presentacion de la declaracion del IRPF ejercicio 2024. El plazo general comprende del 2 de abril al 30 de junio de 2025. La domiciliacion bancaria del pago puede realizarse desde el 2 de abril hasta el 25 de junio de 2025. Corpus contiene solo articulo primero; art-8 pendiente de extraccion al corpus HTML."
 
+[legal."ley-35-2006:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a11"
+document_id = "BOE-A-2006-20764"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a11"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-15
+reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a11; operator to re-stamp)"
+notes = "LIRPF art 11: individualización de rentas — la renta se entiende obtenida por los contribuyentes en función del origen o fuente (rendimientos del trabajo por quien genera el derecho, del capital por los titulares de los elementos, de actividades por quien las realiza, ganancias por los titulares). Base legal de las casillas 'Contribuyente que obtiene los rendimientos / a quien corresponde la imputación / titular' del Modelo 100 (toma de datos ampliada). AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a11; operator to confirm and re-stamp."
+required_text = [
+    "Individualización de rentas",
+]
+
 [legal."ley-35-2006:art-17"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -508,6 +508,7 @@ ignore_imports =
     aeat.domain.deadlines.conftest -> aeat.application.wizard._catalogue
     aeat.domain.deadlines.conftest -> aeat.application.wizard._persistence
     aeat.domain.fincas.tests.test_aggregates -> aeat.adapters.persistence.storage.sql.engine
+    aeat.domain.fincas.tests.test_aggregates -> aeat.adapters.persistence.profile.fincas
     aeat.domain.fincas.tests.test_repository -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.fincas.tests.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.modelos.tests.test_calculation_repository_roundtrip -> aeat.adapters.persistence.storage

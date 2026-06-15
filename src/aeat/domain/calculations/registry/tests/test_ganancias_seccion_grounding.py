@@ -39,6 +39,12 @@ _GROUNDED_GANANCIA_SECTIONS: dict[str, tuple[int, ...]] = {
     "gp_patrimoniales_res": (2021, 2022, 2023, 2024),
     # ganancias y pérdidas a integrar en la base imponible del ahorro (cuartas)
     "gan_per_cuartas": (2021, 2022, 2023, 2024),
+    # further ganancia surfaces: FEAC (ganancias diferidas cap. VII), ayudas públicas
+    # (ganancias patrimoniales), juegos (ganancias/pérdidas), G4 transmisión de acciones
+    "feac": (2023, 2024),
+    "otras": (2021, 2022, 2023, 2024),
+    "juegos": (2021, 2022, 2023, 2024),
+    "g4_re": (2021, 2022, 2023, 2024),
 }
 
 

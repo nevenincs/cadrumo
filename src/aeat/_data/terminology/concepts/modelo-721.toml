@@ -1,8 +1,8 @@
 # Terminology Handbook concept fragment.
-# Compiled by the strict loader in `aeat.terminology` into a frozen
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
 # `ConceptRecord`. Curated prose fields (definition, scope_note,
 # short_description) are hand-edited; structural operations go
-# through the `aeat.terminology` CLI. `narrower` is derived at load
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
 # from `broader` and must never be authored here.
 
 [concept]
