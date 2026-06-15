@@ -637,6 +637,21 @@ calculation structure, not a data-entry section, and the simple section-tag meth
 **Running total unchanged at ~2906 casillas; the durable lesson: check construct AND binding coverage
 before grounding any calculation-chain casilla.**
 
+### V20 (base-computation chain CLOSED via binding-aware pass — lane resolved, ~3134 casillas)
+
+The V19-deferred construct/binding-entangled base-computation chain was completed with the binding-aware
+pass it called for. First grounded the two non-entangled base result sections (`base_imponible_res`→arts.
+48/49, `base_liquidable_res`→art. 50 — 152 casillas, 0 construct-bound, referential green, commit
+`fb5bdea3e`). Then resolved the entangled `base_liq_neg_res` by grounding the WHOLE chain coherently:
+the 52 casillas **+** the `renta-anexo-c-base-liquidable-negativa` construct **+** the
+`base-liquidable-negativa-general-anterior` previous_filing binding all to `[art. 48 (integración base
+general), art. 50 (base liquidable negativa, art. 50.3 carry-forward)]`, removing actividades from all
+three validation layers at once (commit `765452a89`). Referential validation green — the three-layer
+cross-validation that broke V19 now passes because all three layers were grounded together. **One of the
+five remaining lanes (the construct-bound base-computation chain) is now CLOSED; running total ~3134 M100
+casillas re-grounded.** The durable method extension: a calculation-chain section is grounded by sweeping
+its casillas, constructs, AND bindings in one coherent pass.
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
