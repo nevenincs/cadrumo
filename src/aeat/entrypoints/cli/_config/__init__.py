@@ -1120,10 +1120,12 @@ def config_reset(
 
 
 from ._capabilities_cli import register as _register_profile_capabilities
+from ._check_cli import register as _register_config_check
 from ._profile_censo import register as _register_profile_censo
 
 _register_profile_censo(profile_app)
 _register_profile_capabilities(profile_app)
+_register_config_check(app)
 register_profile_bundle_commands(
     profile_app,
     profile_state=_profile_state,

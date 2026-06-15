@@ -1989,6 +1989,13 @@ cli:
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtassa:
         `aeat config auth --help` az érvényes azonosítókhoz.'
     bucket: null
+    check:
+      available: elérhető
+      help: Ellenőrzi a külső függőségek elérhetőségét és az aktív profil szolgáltatás-képességeit,
+        minden hiányhoz megadva a javítást.
+      issue_label: probléma
+      missing: hiányzik
+      profile_label: profil
     custody:
       confirm_new_passphrase_help: Ismetelje meg az uj titkos tar passphrase erteket.
       confirm_new_passphrase_prompt: 'Uj AEAT titkos tar passphrase megerositese: '
@@ -2075,7 +2082,9 @@ cli:
       sync:
         calc:
           export:
-            capability_disabled: 'A Google-exportálás le van tiltva ehhez a profilhoz; engedélyezd az ''aeat config profile capabilities set google_export on'' paranccsal.'
+            capability_disabled: A Google-exportálás le van tiltva ehhez a profilhoz;
+              engedélyezd az 'aeat config profile capabilities set google_export on'
+              paranccsal.
             modelo_help: Az exportálandó nyomtatvány azonosítója (pl. 130, 303, 100).
             period_help: Benyújtási időszak kódja (pl. 1T, 2T, 0A).
             prefill_relations_help: Keresztrevízió-kapcsolati értékek előtöltése a
@@ -2152,17 +2161,19 @@ cli:
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
       capabilities:
-        capability_help: 'A be- vagy kikapcsolandó szolgáltatás.'
-        capability_label: 'képesség'
-        enabled: 'bekapcsolva'
-        help: 'Kapcsolja be vagy ki ennél a profilnál a külső szolgáltatásokat (felhőfeltöltés, LLM-látás, Google-exportálás).'
-        no_active_profile: 'Nincs aktív profil; válasszon egyet az ''aeat config profile use <név>'' paranccsal a képesség beállítása előtt.'
+        capability_help: A be- vagy kikapcsolandó szolgáltatás.
+        capability_label: képesség
+        disabled: kikapcsolva
+        enabled: bekapcsolva
+        help: Kapcsolja be vagy ki ennél a profilnál a külső szolgáltatásokat (felhőfeltöltés,
+          LLM-látás, Google-exportálás).
+        no_active_profile: Nincs aktív profil; válasszon egyet az 'aeat config profile
+          use <név>' paranccsal a képesség beállítása előtt.
         set_help: Be- vagy kikapcsol egy szolgáltatás-képességet az aktív profilhoz.
         show_help: Megjeleníti az aktív profil minden szolgáltatás-képességének feloldott
           állapotát.
         state_help: A képesség engedélyezése (on) vagy letiltása (off).
         state_label: állapot
-        disabled: 'kikapcsolva'
       censo:
         apply_help: Az AEAT által jelentett nyilvántartási értékekkel felülírja a
           profilt.

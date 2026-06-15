@@ -2073,6 +2073,13 @@ cli:
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''aeat config auth --help'' para ver los identificadores válidos.'
     bucket: null
+    check:
+      available: disponible
+      help: Comprueba la disponibilidad de las dependencias externas y las capacidades
+        de servicio del perfil activo, con la solución para cada problema.
+      issue_label: problema
+      missing: ausente
+      profile_label: perfil
     custody:
       confirm_new_passphrase_help: Repite la nueva contrasena del almacen secreto.
       confirm_new_passphrase_prompt: 'Confirma la nueva contrasena del almacen secreto
@@ -2160,7 +2167,9 @@ cli:
       sync:
         calc:
           export:
-            capability_disabled: 'La exportación a Google está desactivada para este perfil; actívala con ''aeat config profile capabilities set google_export on''.'
+            capability_disabled: La exportación a Google está desactivada para este
+              perfil; actívala con 'aeat config profile capabilities set google_export
+              on'.
             modelo_help: Identificador del modelo a exportar (p. ej. 130, 303, 100)
             period_help: Código de período (p. ej. 1T, 2T, 0A)
             prefill_relations_help: Prerrellenar valores de relaciones entre revisiones
@@ -2233,17 +2242,19 @@ cli:
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       capabilities:
-        capability_help: 'Servicio que se quiere activar o desactivar.'
-        capability_label: 'capacidad'
-        enabled: 'activado'
-        help: 'Activa o desactiva en este perfil los servicios externos (subida a la nube, visión LLM, exportación a Google).'
-        no_active_profile: 'No hay perfil activo; selecciona uno con ''aeat config profile use <nombre>'' antes de configurar una capacidad.'
+        capability_help: Servicio que se quiere activar o desactivar.
+        capability_label: capacidad
+        disabled: desactivado
+        enabled: activado
+        help: Activa o desactiva en este perfil los servicios externos (subida a la
+          nube, visión LLM, exportación a Google).
+        no_active_profile: No hay perfil activo; selecciona uno con 'aeat config profile
+          use <nombre>' antes de configurar una capacidad.
         set_help: Activa o desactiva una capacidad de servicio para el perfil activo.
         show_help: Muestra el estado resuelto de cada capacidad de servicio para el
           perfil activo.
         state_help: Si activar (on) o desactivar (off) la capacidad.
         state_label: estado
-        disabled: 'desactivado'
       censo:
         apply_help: Sobrescribe el perfil con los valores censales comunicados por
           AEAT

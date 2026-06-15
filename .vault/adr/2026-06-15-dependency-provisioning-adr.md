@@ -71,7 +71,7 @@ profile-capabilities ADR: a service runs only when (capability opted-in) AND
   it in `[project.dependencies]` bloats every install (`aeat-source-hygiene`,
   `no-legacy-compatibility` spirit: don't ship dead weight).
 - The CLI root surface is `config` + `app` only (enforced); a workstation doctor
-  must live under `config` (e.g. `aeat config doctor`), not a third root family
+  must live under `config` (e.g. `aeat config check`), not a third root family
   (`aeat-architecture-boundaries`).
 
 ## Constraints
@@ -91,7 +91,7 @@ profile-capabilities ADR: a service runs only when (capability opted-in) AND
 **Decision: define one cohesive missing-dependency contract — probe → typed
 refusal/Notice with the exact remediation command → opt-in provisioning — apply it
 to the ungraceful paths, give pyproject a capability-mapped extras structure, and
-add a single `aeat config doctor` (plus a `just doctor`) that reports every
+add a single `aeat config check` (plus a `just doctor`) that reports every
 external dependency's availability, the active profile's capability posture, and
 the provisioning command to fix each gap.**
 
@@ -123,7 +123,7 @@ the provisioning command to fix each gap.**
    `[dev]`/rag extra), removing the deptry suppression. The default install keeps
    working; the extras make the capability/dependency surfaces congruent.
 
-5. **A single `aeat config doctor`.** Under the `config` family, a read-only report
+5. **A single `aeat config check`.** Under the `config` family (named `check`, since `config doctor` is a retired path), a read-only report
    that, for every external service, prints: dependency availability (from the
    probe), the active profile's capability posture (from ADR A's resolver), the
    global safety posture, and — when a gap exists — the exact remediation command
@@ -134,7 +134,7 @@ the provisioning command to fix each gap.**
    for" the retired `aeat doctor` used to be.
 
 6. **`just doctor` + provisioning recipes + fixes.** A `just doctor` aggregate that
-   runs `aeat config doctor` and the dev-toolchain checks; fix the broken
+   runs `aeat config check` and the dev-toolchain checks; fix the broken
    `env-playwright` (point it at the real browser-health path or `playwright
    install`), add `env-vision` (ollama model pull guidance) and a `provision`
    recipe, make `bootstrap` end by running `just doctor`, and reconcile the
@@ -149,7 +149,7 @@ through the typed refusal/Notice channel (not a traceback, not a silent skip)
 satisfies `cli-notices-are-the-only-diagnostic-channel` and
 `no-silent-under-declaration`. Mapping extras to capabilities makes the install
 surface mirror the runtime opt-in surface, so "I want vision" maps to one extra and
-one doctor row. A single `aeat config doctor` replaces the dissolved
+one doctor row. A single `aeat config check` replaces the dissolved
 `aeat doctor` from the provisioning angle without re-adding a third CLI root.
 
 ## Consequences
