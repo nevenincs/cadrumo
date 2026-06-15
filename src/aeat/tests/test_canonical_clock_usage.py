@@ -87,7 +87,7 @@ def _collect_violations() -> list[str]:
                 pattern_idx = code_part.find(pattern)
                 if pattern_idx > 0:
                     pre = code_part[:pattern_idx].rstrip()
-                    if pre and pre[-1] in ('"', "'"):
+                    if pre and pre[-1] in ('"', "'", "`"):
                         continue
                 rel = path.relative_to(repo_root).as_posix()
                 violations.append(f"{rel}:{lineno}")

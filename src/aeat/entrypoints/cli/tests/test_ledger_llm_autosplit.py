@@ -338,6 +338,33 @@ def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path, extra_
     assert "--reject" in result.output and "--apply" in result.output
 
 
+def test_view_surfaces_the_latest_rejection(tmp_path: Path) -> None:
+    _register(_RouterModel(multi=False))
+    tx = _import_one_transaction(tmp_path)
+    rejected = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "classify", tx, "--llm", "claude", "--reject", "--reason", "not a business cost"],
+    )
+    assert rejected.exit_code == 0, rejected.output
+
+    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", tx])
+    assert viewed.exit_code == 0, viewed.output
+    envelope = json.loads(viewed.output)
+    rej = [n for n in envelope["notices"] if n["code"] == "ledger.view.llm_suggestion_rejected"]
+    assert rej, envelope
+    assert rej[0]["severity"] == "info"
+    assert rej[0]["context"]["operator_reason"] == "not a business cost"
+
+
+def test_view_shows_no_rejection_notice_when_none(tmp_path: Path) -> None:
+    _register(_RouterModel(multi=False))
+    tx = _import_one_transaction(tmp_path)
+    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", tx])
+    assert viewed.exit_code == 0, viewed.output
+    codes = [n["code"] for n in json.loads(viewed.output)["notices"]]
+    assert "ledger.view.llm_suggestion_rejected" not in codes
+
+
 def test_auto_split_reject_records_split_rejection(tmp_path: Path) -> None:
     _register(_RouterModel(multi=True))
     tx = _import_one_transaction(tmp_path)
