@@ -2007,6 +2007,7 @@ cli:
       sync:
         calc:
           export:
+            capability_disabled: 'Google export is disabled for this profile; enable it with ''aeat config profile capabilities set google_export on''.'
             modelo_help: Modelo id to export (e.g. 130, 303, 100)
             period_help: Filing period code (e.g. 1T, 2T, 0A)
             prefill_relations_help: Prefill cross-revision relation values from the
@@ -2082,10 +2083,11 @@ cli:
         enabled: cli.config.profile.capabilities.enabled
         help: cli.config.profile.capabilities.help
         no_active_profile: cli.config.profile.capabilities.no_active_profile
-        set_help: 'Opt the active profile in or out of one service capability.'
-        show_help: 'Show the resolved posture of every service capability for the active profile.'
-        state_help: 'Whether to enable (on) or disable (off) the capability.'
-        state_label: 'state'
+        set_help: Opt the active profile in or out of one service capability.
+        show_help: Show the resolved posture of every service capability for the active
+          profile.
+        state_help: Whether to enable (on) or disable (off) the capability.
+        state_label: state
       censo:
         apply_help: Overwrite the profile with censo values reported by AEAT
         compare_help: Compare AEAT censo and this profile field by field
