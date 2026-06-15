@@ -671,6 +671,33 @@ re-grounded; a SECOND of the five originally-documented remaining lanes (the lar
 The lesson: an "obviously different corpus" assumption was wrong — the LIRPF framework article that
 *applies* a deduction is a valid foundation home even when the deduction is *established* elsewhere.
 
+### V22 (per-box cuota + inmueble structural + ganancia misc — ~5869 casillas; remaining is irreducible)
+
+After the framework closures (V20-V21), the remaining surface was driven down by per-box and
+foundation passes that the framework method had left: four more ganancia surfaces (`feac`/`otras`/
+`juegos`/`g4_re` → arts. 33/34, 140 casillas); a careful PER-BOX pass over the cuota section
+(`gravamenes_res` — each box keyed by deaccented label to its specific cuota article: escala→63/74,
+cuota líquida→67/77, deducciones→68/DT-18/DT-15/DA-50/DA-58/81-bis — 156 casillas, with the
+RIC/regularización/Ceuta boxes deliberately left); and the inmueble structural property-ID fields
+(0063-0099 → art. 22, 124 casillas, with the 12 'afecto a actividades económicas' boxes PRESERVED
+because actividades is the correct grounding there). **Running total ~5869 M100 casillas re-grounded.**
+
+**The remaining ~140 boxes are genuinely irreducible** to any safe automated method:
+- **REF / non-LIRPF corpus:** `reserva_inversiones_canarias/baleares`, the RIC dotación + venta-bienes-
+  corporales boxes in `gravamenes_res` (Ley 19/1994 / Baleares law — absent from the bundled corpus).
+- **Regularización por pérdida del derecho a deducción** (gravamenes 0504/0569/0577-0583 — a distinct
+  provision, art. 59 territory, per-box).
+- **Renumbering minefield:** the `inmueble` ganancia-transmisión boxes (1816+, id-unstable across years)
+  and the mejora-desglose (1393-1440, ambiguous art. 23 amortización vs DA-50ª energy deduction).
+- **Generic:** `toma_datos_ampliada` contribuyente-identification headers; `compnosepa`/`ref_cat` misc.
+- **Feature/human:** art. 20 computed reduction (ADR), M714 downstream, operator re-stamps of the 13
+  agent-authored legal entries.
+
+These are different-law (a non-LIRPF corpus), per-year/per-box where actividades is sometimes correct, or
+feature/ADR/human — none reachable by the section-tag, framework-foundation, or label-keyed per-box
+methods without injecting wrong articles or needing a new corpus. The actividades generic-default has
+been corrected across essentially the entire LIRPF-groundable surface of Modelo 100 (~5869 casillas).
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
