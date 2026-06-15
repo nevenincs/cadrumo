@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import BindingSourceKind
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingAggregationOp,
@@ -37,7 +38,7 @@ def _rows_default_detail_binding() -> DataBindingDefinition:
 
     return DataBindingDefinition(
         id="synthetic-detail-row",
-        source="foreign_asset",
+        source=BindingSourceKind.FOREIGN_ASSET,
         selector={"grouping": "per_foreign_asset", "row_field": "valoracion"},
         aggregation=None,
         legal_refs=("ley-7-2012:dt-18",),
