@@ -147,8 +147,9 @@ def _sort_results(
 
 
 # The two terminal LLM decisions on a row: an accepted (applied) classification or
-# a rejection. The most recent of the two is the standing LLM decision.
-_LLM_DECISION_EVENT_TYPES = (
+# a rejection. The most recent of the two is the standing LLM decision. Canonical
+# home, shared by the ledger-view rejection notice so the two surfaces cannot drift.
+LLM_DECISION_EVENT_TYPES = (
     BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
     BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,
 )
@@ -169,7 +170,7 @@ def latest_llm_decision_is_rejection(event_catalogue: BucketEventHistoryCatalogu
             object_type=BucketEventObjectType.LEDGER_TRANSACTION,
             object_id=transaction_id,
         )
-        if event.event_type in _LLM_DECISION_EVENT_TYPES
+        if event.event_type in LLM_DECISION_EVENT_TYPES
     ]
     if not decisions:
         return False
