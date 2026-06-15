@@ -160,6 +160,7 @@ ignore_imports =
     aeat.core.tests.test_modelo -> aeat.application.modelo
     aeat.core.tests.test_modelo -> aeat.domain.calculations.registry
     aeat.core.tests.test_modelo -> aeat.domain.modelos
+    aeat.core.tests.test_service_capability -> aeat.domain.user_profile
     aeat.core.tests.test_logging -> aeat.adapters.inbound.pdf._pdfplumber
     aeat.core.tests.test_setup_answers -> aeat.application.wizard._catalogue
     aeat.core.tests.test_setup_answers -> aeat.domain.deadlines._models
@@ -480,6 +481,7 @@ ignore_imports =
     aeat.core.tests.test_modelo -> aeat.application.modelo
     aeat.core.tests.test_modelo -> aeat.domain.calculations.registry
     aeat.core.tests.test_modelo -> aeat.domain.modelos
+    aeat.core.tests.test_service_capability -> aeat.domain.user_profile
     aeat.core.tests.test_logging -> aeat.adapters.inbound.pdf._pdfplumber
     aeat.core.tests.test_setup_answers -> aeat.application.wizard._catalogue
     aeat.core.tests.test_setup_answers -> aeat.domain.deadlines._models
