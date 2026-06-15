@@ -158,11 +158,21 @@ def resolve_active_capability(
 
 
 def _active_profile_record() -> UserProfileRecord | None:
-    """Return the active profile's record, or ``None`` when there is no session."""
+    """Return the active profile's record, or ``None`` when unavailable.
+
+    Returns ``None`` — never raises — when there is no active session OR the secret
+    store cannot be opened (e.g. a locked store with no passphrase, as on a fresh
+    workstation running ``aeat config check``). A diagnostic/gate resolves to the
+    conservative global default rather than crashing when the profile is locked.
+    """
     from ...adapters.persistence.storage import has_active_bucket_session
+    from ...adapters.persistence.storage.errors import PersistenceError
 
-    if not has_active_bucket_session():
+    try:
+        if not has_active_bucket_session():
+            return None
+        from ..workflow._persistence import workflow_state_repository
+
+        return workflow_state_repository().load().active_profile_record()
+    except PersistenceError:
         return None
-    from ..workflow._persistence import workflow_state_repository
-
-    return workflow_state_repository().load().active_profile_record()
