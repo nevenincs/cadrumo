@@ -88,6 +88,17 @@ def test_config_check_reports_capabilities_and_dependencies() -> None:
     assert any(s.startswith("llm-provider:") for s in services)
 
 
+def test_config_check_flags_opted_in_capability_with_missing_dependency() -> None:
+    # llm_vision is on by default; point Ollama at a closed port so the dependency
+    # is reliably unavailable. The doctor must surface the gap and exit non-zero.
+    with override_settings(aeat_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
+        result = _RUNNER.invoke(app, ["--format", "json", "config", "check"])
+    assert result.exit_code == 2, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["ok"] is False
+    assert any("llm_vision is on" in issue for issue in payload["issues"])
+
+
 def test_set_enables_cloud_upload_via_profile_opt_in() -> None:
     setres = _RUNNER.invoke(
         app,
