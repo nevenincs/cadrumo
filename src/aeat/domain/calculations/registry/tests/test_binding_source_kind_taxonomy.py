@@ -61,7 +61,7 @@ def test_declared_registry_sources_are_a_subset_of_the_enum() -> None:
 # Enum members that are load-bearing in code (validators, selector dispatch,
 # resolver routing) but are not yet declared by any compiled registry binding.
 # These are the source-kind analogue of ``NON_REGISTRY_MODELOS``: each is fenced
-# as out-of-scope-but-tracked in the bindings-interface-hardening ADR
+# as out-of-scope-but-tracked by the binding-source-kind taxonomy design
 # (``payable_invoice`` declared by no registry binding; the
 # ``PurchaseInvoiceEvidenceSourceResolver`` data-shape blocker; the
 # counterpart-shaped ``ledger_transaction`` source). A member dropping off this
@@ -77,7 +77,7 @@ _RESERVED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 
 
 def test_enum_members_have_no_undeclared_orphans_beyond_reserved_sources() -> None:
-    """No enum member sits unused beyond the ADR-fenced reserved carve-out.
+    """No enum member sits unused beyond the design-fenced reserved carve-out.
 
     The enum is the canonical *declarable* binding-source set. Every member
     except the documented :data:`_RESERVED_UNDECLARED_SOURCE_KINDS` must be

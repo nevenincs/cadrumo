@@ -1,8 +1,9 @@
 """Profile-linked service-capability resolution.
 
 A capability is the operator's opt-in/opt-out of an external service, stored as a
-boolean fact under the profile schema ``capabilities`` section. This module
-resolves the *effective* posture by overlaying the profile fact onto the global
+boolean fact under the profile schema ``capabilities`` section of the
+:class:`UserProfileRecord`. This module resolves the *effective* posture by
+overlaying that profile fact onto the global
 ``Settings`` default and the global safety floor, returning a typed
 :class:`CapabilityDecision` with the reason.
 
@@ -73,12 +74,15 @@ def resolve_capability(
     profile_record: UserProfileRecord | None,
     settings: Settings,
 ) -> CapabilityDecision:
-    """Resolve ``capability`` for ``profile_record`` against the global posture.
+    """Resolve ``capability`` for a :class:`UserProfileRecord` against the global posture.
 
     Pure: no I/O. Reads the profile's capability fact (when present), falls back to
     the global ``Settings`` flag (cloud upload) or the conservative capability
     default (vision / google), and applies the global safety floor on top. The
     safety floor can only DISABLE, never enable.
+
+    Returns:
+        The resolved :class:`CapabilityDecision` carrying the posture and reason.
     """
     if capability is ServiceCapability.CLOUD_EVIDENCE_UPLOAD:
         # The gestor bar is absolute and applied first: no profile opt-in re-enables it.
@@ -144,6 +148,9 @@ def resolve_active_capability(
     active profile, ``profile_record`` is ``None`` and the resolver falls back to
     the global default — so the posture is well-defined even before a profile is
     selected.
+
+    Returns:
+        The resolved :class:`CapabilityDecision` for the active profile.
     """
     resolved_settings = settings if settings is not None else load_settings()
     record = _active_profile_record()

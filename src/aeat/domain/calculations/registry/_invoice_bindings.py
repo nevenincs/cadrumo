@@ -344,7 +344,7 @@ def resolve_invoice_family_scalar_values(
     validate_selector: Callable[[DataBindingDefinition], _InvoiceSelector],
     observations_for_binding: Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]],
 ) -> dict[str, Decimal]:
-    """Resolve scalar bindings of one invoice-shaped family into Decimal aggregates.
+    """Resolve scalar bindings on a :class:`ModeloRevision` for one invoice family into Decimal aggregates.
 
     Shared core for both the invoice and counterpart scalar resolvers; the two
     differed only in (a) the family membership set, (b) the per-family selector
@@ -372,7 +372,7 @@ def resolve_invoice_family_row_values(
     observations_for_binding: Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]],
     cohort_by_source: bool,
 ) -> dict[tuple[str, int], Decimal | str]:
-    """Resolve row-producer bindings of one invoice-shaped family into per-row values.
+    """Resolve row-producer bindings on a :class:`ModeloRevision` for one invoice family into per-row values.
 
     Shared core for both the invoice and counterpart row resolvers. Bindings
     sharing the same cohort key share one-based row indexes so that an export

@@ -45,7 +45,7 @@ def _ollama_tags_url(chat_url: str) -> str:
 
 
 def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
-    """Probe Ollama reachability and the presence of the configured vision model.
+    """Probe Ollama and the configured vision model, returning a :class:`DependencyStatus`.
 
     A fast ``GET /api/tags`` (short timeout). Returns unavailable — never raises —
     when the server is unreachable (``ollama serve``) or the configured vision
@@ -85,7 +85,7 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
 
 
 def probe_subprocess_providers() -> tuple[DependencyStatus, ...]:
-    """Probe each subprocess LLM CLI provider (claude / antigravity / codex) on PATH."""
+    """Probe each subprocess LLM CLI provider on PATH, one :class:`DependencyStatus` per provider."""
     from .ledger import available_llm_providers
 
     statuses: list[DependencyStatus] = []
@@ -106,7 +106,7 @@ def probe_subprocess_providers() -> tuple[DependencyStatus, ...]:
 
 
 def probe_playwright_browser() -> DependencyStatus:
-    """Probe whether the Playwright Chromium browser binary is installed.
+    """Probe the Playwright Chromium browser binary, returning a :class:`DependencyStatus`.
 
     Reads Chromium's registered executable path without launching a browser, and
     checks it exists on disk. Returns unavailable — never raises — when Playwright
