@@ -26,6 +26,11 @@ You MUST respect these rules at all times:
 @.claude/rules/aeat-swarm-orchestration.md
 @.claude/rules/aeat-user-docs-hardening.md
 @.claude/rules/aeat-vaultspec-centralisation.md
+@.claude/rules/binding-aggregation-is-typed.md
+@.claude/rules/binding-names-reserved-for-registry-input.md
+@.claude/rules/binding-source-kind-single-taxonomy.md
+@.claude/rules/binding-validation-single-contract.md
+@.claude/rules/binding-values-carry-provenance.md
 @.claude/rules/calculation-source-canonical-mechanism.md
 @.claude/rules/carried-observations-stamp-their-revision.md
 @.claude/rules/casilla-grounding-corrects-actividades-default-by-section.md
@@ -57,6 +62,7 @@ You MUST respect these rules at all times:
 @.claude/rules/period-filter-single-boundary-authority.md
 @.claude/rules/plan-closure-requires-exec-records.md
 @.claude/rules/registry-calculation-legal-grounding.md
+@.claude/rules/registry-resolver-family-extraction.md
 @.claude/rules/relation-slot-bindings-declare-relation-source.md
 @.claude/rules/retired-enum-members-need-consumer-reconciliation.md
 @.claude/rules/revision-resolution-is-law-determined.md

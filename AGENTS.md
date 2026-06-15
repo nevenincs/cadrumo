@@ -26,6 +26,11 @@ You MUST respect these rules at all times:
 @.codex/rules/aeat-swarm-orchestration.md
 @.codex/rules/aeat-user-docs-hardening.md
 @.codex/rules/aeat-vaultspec-centralisation.md
+@.codex/rules/binding-aggregation-is-typed.md
+@.codex/rules/binding-names-reserved-for-registry-input.md
+@.codex/rules/binding-source-kind-single-taxonomy.md
+@.codex/rules/binding-validation-single-contract.md
+@.codex/rules/binding-values-carry-provenance.md
 @.codex/rules/calculation-source-canonical-mechanism.md
 @.codex/rules/carried-observations-stamp-their-revision.md
 @.codex/rules/casilla-grounding-corrects-actividades-default-by-section.md
@@ -57,6 +62,7 @@ You MUST respect these rules at all times:
 @.codex/rules/period-filter-single-boundary-authority.md
 @.codex/rules/plan-closure-requires-exec-records.md
 @.codex/rules/registry-calculation-legal-grounding.md
+@.codex/rules/registry-resolver-family-extraction.md
 @.codex/rules/relation-slot-bindings-declare-relation-source.md
 @.codex/rules/retired-enum-members-need-consumer-reconciliation.md
 @.codex/rules/revision-resolution-is-law-determined.md
