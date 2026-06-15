@@ -28,6 +28,7 @@ def register(app: typer.Typer) -> None:
         """Report external-dependency availability + the active profile's capability posture."""
         from ....application.provisioning import (
             probe_ollama_vision,
+            probe_optional_extras,
             probe_playwright_browser,
             probe_subprocess_providers,
         )
@@ -46,14 +47,18 @@ def register(app: typer.Typer) -> None:
         ollama = probe_ollama_vision()
         providers = probe_subprocess_providers()
         playwright = probe_playwright_browser()
-        dependencies = [d.model_dump() for d in (ollama, *providers, playwright)]
+        extras = probe_optional_extras()
+        dependencies = [d.model_dump() for d in (ollama, *providers, playwright, *extras)]
         any_provider = any(p.available for p in providers)
+        extra_available = {status.service: status.available for status in extras}
 
         issues: list[str] = []
         if cap_enabled[ServiceCapability.LLM_VISION.value] and not ollama.available:
             issues.append(f"llm_vision is on but {ollama.detail}: {ollama.remediation}")
         if cap_enabled[ServiceCapability.CLOUD_EVIDENCE_UPLOAD.value] and not any_provider:
             issues.append("cloud_evidence_upload is on but no cloud LLM provider CLI is on PATH (claude / agy / codex)")
+        if cap_enabled[ServiceCapability.GOOGLE_EXPORT.value] and not extra_available.get("extra:google", False):
+            issues.append("google_export is on but the 'google' extra is not installed (pip install aeat[google])")
 
         ok = not issues
         result = ConfigCheckResult.model_validate(
