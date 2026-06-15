@@ -775,6 +775,34 @@ mechanism exists in-codebase — the helper-vs-predicate choice was the unlock. 
 locale failures observed in passing carry the peer `BindingAggregationOp` signature (`input_value='copy'`)
 and are owner-distinguished peer-block, not introduced here (`full-tree-gate-must-distinguish-owner`).
 
+### V26 (exhaustive finding-by-finding HEAD re-verification — every inline-literal finding is centralised)
+
+Per the swarm "re-read HEAD before acting on a finding" discipline, each original inline-literal finding
+was re-checked against HEAD on 2026-06-15. Result: the entire inline-literal centralisation surface
+(F2/F5/F6) is now closed and grounded — confirming and tightening the V24 "swept clean" claim with a
+per-finding audit rather than a value-pattern sweep:
+
+- **F2 (prorrata thresholds) — CLOSED (peer `843f00132`).** `_prorrata.py`'s LIVA art. 103.Dos `1.10`
+  and art. 9.1.c `50` now read `PRORRATA_ESPECIAL_MANDATORY_MULTIPLE` and
+  `PRORRATA_SECTORAL_SEPARATION_SPREAD_PP` from `external_constants`, each docstring-grounded on its
+  binding LIVA article. Only docstrings retain `1.10` as illustration (acceptable).
+- **F5 (DT 12ª 40% + SAL reserva 10%/2×) — CLOSED (peer).** `_dt12_reduccion.py` reads
+  `DT12_RESCATE_REDUCCION_RATE`; `_sal_reserva_especial.py` reads `SAL_RESERVA_DOTACION_RATE` and
+  `SAL_RESERVA_CAPITAL_MULTIPLE` — all grounded in `external_constants`.
+- **F6 (art. 58/59 family thresholds) — CLOSED (peer).** `family.py` reads `MINIMO_DESCENDIENTE_MAX_AGE`,
+  `MINIMO_MENOR_TRES_MAX_AGE`, and `CUSTODIA_COMPARTIDA_PRORRATA_FACTOR` from `external_constants`.
+- **M202 art. 40.3 INCN + art. 20 RNT ceiling — CLOSED (this campaign, V24/V25).**
+
+The inline-literal centralisation mandate is therefore complete across the whole audit inventory — no
+ungrounded inline regulatory literal remains in production. The ONLY open findings are registry-dependent
+and blocked by the peer `BindingAggregationOp` refactor: F1 (fincas art. 23.2 reducción tiers — a live
+calc-path change wired to a registry read), F3 (M303/M390 compensación casilla routing), and F4
+(casilla 59/60 base-imponible helpers) — each requires authoring/validating registry bindings or
+resolvers, which needs a loadable registry. They cannot be closed registry-independently and are NOT
+deferrable into the helper-mechanism pattern that unblocked art-20 Phase-1 (that pattern works only where
+the value is already present in the same revision's `casilla_values`; F1/F3/F4 and M714 require
+cross-binding/cross-modelo registry resolution).
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
