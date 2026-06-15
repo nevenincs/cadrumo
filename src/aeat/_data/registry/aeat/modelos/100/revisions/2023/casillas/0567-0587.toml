@@ -4,5 +4,5 @@ number = "0587"
 label = "Cuota líquida incrementada total ( [0585] + [0586] )"
 section = ["resultados", "calculo_impuesto_res", "cuota_autoliquidacion_res"]
 semantic_role = "irpf_cuota_liquida_total"
-legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-50"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
