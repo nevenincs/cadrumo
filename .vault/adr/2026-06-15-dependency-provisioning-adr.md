@@ -116,12 +116,20 @@ the provisioning command to fix each gap.**
    message gains the `playwright install chromium` remediation when the failure is
    browser-not-installed.
 
-4. **pyproject capability-mapped extras + torch relocation.** Introduce
-   `[project.optional-dependencies]` extras that mirror capabilities (`vision`,
-   `google`, `browser`) over a leaner core, and move `torch` out of runtime
-   `[project.dependencies]` into the dev/rag group it actually serves (or a
-   `[dev]`/rag extra), removing the deptry suppression. The default install keeps
-   working; the extras make the capability/dependency surfaces congruent.
+4. **pyproject torch relocation (done) + capability-mapped extras (scoped).**
+   `torch` is the vaultspec-rag embedding backend — no `src/aeat/` runtime path
+   imports it — yet it sat in `[project.dependencies]` (a ~GB CUDA wheel on every
+   production install). It is relocated to `[dependency-groups].dev`, which
+   vaultspec-rag's `torch_config` accepts as a valid direct-dep location (PEP 735),
+   so the `[tool.uv.sources]` cu130 pin still applies and `just install` (dev group)
+   still provisions it for contributors; the deptry DEP002 suppression is removed.
+   The capability-mapped `[project.optional-dependencies]` extras (`google`,
+   `browser`, cloud-LLM) over a *leaner* core are deferred as a separately-scoped
+   refactor: those libraries are eagerly imported across many adapter modules, so a
+   true lean-core requires converting every adapter import to lazy and extending the
+   probes to detect a missing *package* (ImportError → `pip install aeat[…]`), not
+   only a missing runtime service. That is a large, breakage-risky migration; torch
+   (the one genuinely-unused-in-core dependency) is the safe, immediate win.
 
 5. **A single `aeat config check`.** Under the `config` family (named `check`, since `config doctor` is a retired path), a read-only report
    that, for every external service, prints: dependency availability (from the
