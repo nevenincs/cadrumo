@@ -194,3 +194,11 @@ to corrupt the decrypted content and re-encrypt under the row AAD (commits
 `19d1ac86e`, `32f382a5a`, `05e2a3abd`). The S08 same-row revision-replay read
 check (verify payload_hash/revision_id on read) remains a smaller follow-up;
 AAD-alone closes the primary cross-row substitution threat the audit named.
+## Broad validation (2026-06-15)
+
+Full domain + application + outbound + profile sweep: 8883 passed, 35 skipped. The
+7 reported failures (`test_wizard_translations_resolve`, `test_document_link_resolve_roundtrip`)
+all PASS in isolation -- test-ordering / state-leakage flakiness across the 31-minute
+sequential run, not H3 regressions (the document-link test exercises the separate
+EncryptedBlobStore, which H3 does not touch). Per the aeat-local-execution rule,
+re-run sequentially before triaging: confirmed flaky, not real.
