@@ -5,12 +5,12 @@ Use of :class:`TaxpayerProfile` for compliance.
 
 from __future__ import annotations
 
-from decimal import Decimal
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.external_constants import MODELO_202_ART_40_3_INCN_THRESHOLD_EUR
 from ...deadlines.taxpayer_model import EntityType, TaxpayerProfile
 
 _MODELO_202_MODALITY_LEGAL_REFS: tuple[str, ...] = (
@@ -18,8 +18,6 @@ _MODELO_202_MODALITY_LEGAL_REFS: tuple[str, ...] = (
     "ley-27-2014:art-40-3",
 )
 """Scoped registry citation keys grounding the Modelo 202 modality gate."""
-
-_MODELO_202_ART_40_3_INCN_THRESHOLD: Decimal = Decimal("6000000")
 
 
 class Modelo202Modality(StrEnum):
@@ -88,7 +86,7 @@ def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVer
             reason=_MODELO_202_INCOMPLETE_REASON,
             legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
         )
-    if incn > _MODELO_202_ART_40_3_INCN_THRESHOLD:
+    if incn > MODELO_202_ART_40_3_INCN_THRESHOLD_EUR:
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.ART_40_3_MANDATORY,
             reason=_MODELO_202_ART_40_3_MANDATORY_REASON,

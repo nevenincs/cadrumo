@@ -437,6 +437,14 @@ ART_7P_EXEMPTION_CAP_EUR: Final[Decimal] = Decimal("60100")
 #: pagadores exceeds this amount.  Binding provision: Art. 96.3 LIRPF (Ley 35/2006).
 MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR: Final[Decimal] = Decimal("1500")
 
+#: Art. 40.3 LIS (Ley 27/2014, BOE-A-2014-12328) INCN threshold that makes the
+#: base-imponible pago-fraccionado modality MANDATORY for Modelo 202. A taxpayer
+#: whose importe neto de la cifra de negocios in the 12 months prior to the start of
+#: the relevant período impositivo exceeded this amount must use the art. 40.3
+#: modality; below it, the art. 40.2 (cuota) modality is optional. Binding
+#: provision: Ley 27/2014 art. 40.3 (modalidad obligatoria por cifra de negocios).
+MODELO_202_ART_40_3_INCN_THRESHOLD_EUR: Final[Decimal] = Decimal("6000000")
+
 #: Default IVA general-rate percentage for input/pre-fill purposes.
 #: This is the LIVA art. 90 Uno general rate (Ley 37/1992, BOE-A-1992-28740)
 #: currently in force for Spain (ES).
