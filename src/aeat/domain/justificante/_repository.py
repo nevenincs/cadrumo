@@ -50,8 +50,8 @@ class JustificanteRepository(SecureBoundRepository[Justificante]):
         return payload.csv
 
     def list_csvs(self) -> tuple[str, ...]:
-        """Return every justificante CSV persisted in this repository."""
-        return tuple(self.iter_ids())
+        """Return every justificante CSV persisted in this repository, in lexicographic order."""
+        return tuple(sorted(self.iter_ids()))
 
     def iter_justificantes(self) -> Iterator[Justificante]:
         """Yield every persisted justificante, in lexicographic CSV order.
@@ -59,7 +59,7 @@ class JustificanteRepository(SecureBoundRepository[Justificante]):
         Returns:
             Iterator over :class:`Justificante` records.
         """
-        yield from self.iter_records()
+        yield from sorted(self.iter_records(), key=self.extract_identifier)
 
 
 __all__ = [

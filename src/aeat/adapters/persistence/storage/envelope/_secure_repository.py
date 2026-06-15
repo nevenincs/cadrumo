@@ -237,48 +237,62 @@ class SecureBoundRepository[T: BaseModel]:
     # ------------------------------------------------------------------
 
     def iter_ids(self) -> Iterator[str]:
-        """Yield every persisted identifier in lexicographic order."""
-        identifiers: list[str] = []
-        for record in self._objects.list_records(
-            self.namespace,
-            expected_class=self.sensitivity,
-            max_supported_version=self.schema_version,
-        ):
-            envelope = self._envelope_cls().model_validate_json(record.payload.decode("utf-8"))
-            # Safe: same rationale as the load() path — envelope was validated by
-            # model_validate_json against Envelope[self.payload_type] == Envelope[T].
-            # Future improvement: eliminate via generic ClassVar alias
-            # (see: CAST-RATIONALE-SECURE-REPOSITORY-ITER).
-            identifiers.append(
-                self.extract_identifier(cast(T, envelope.payload)),  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
-            )
-        yield from sorted(identifiers)
+        """Yield every persisted identifier in storage order.
 
-    def iter_records(self) -> Iterator[T]:
-        """Yield every persisted payload in lexicographic id order.
+        Order is the secure-object storage order (the ``object_key`` digest
+        order), not the natural-id order: a caller that needs a specific
+        order sorts the result itself. Streams one identifier at a time
+        rather than buffering and sorting the whole namespace in memory.
 
-        Parses each row's decrypted payload bytes directly from
-        :meth:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository.list_records`
-        rather than routing through :meth:`load`.  The SQL
-        ``WHERE object_key = ?`` lookup inside :meth:`load` cannot
-        match the stored ciphertext when ``object_key`` is an
-        ``EncryptedString`` column (AES-256-GCM uses a random nonce, so
-        the bind-parameter ciphertext differs from the stored ciphertext
-        every time).  Iterating directly over the decrypted rows is the
-        correct pattern for full-scan enumeration.
+        Fail-closed: :meth:`SecureObjectRepository.list_records` scans the
+        whole namespace and raises ``SecureObjectUnreadableError`` if any row
+        is unreadable, so a full consumption (``tuple(...)``) never yields a
+        readable subset past a corrupt row.
         """
         envelope_cls = self._envelope_cls()
-        records: list[tuple[str, T]] = []
         for record in self._objects.list_records(
             self.namespace,
             expected_class=self.sensitivity,
             max_supported_version=self.schema_version,
         ):
             envelope = envelope_cls.model_validate_json(record.payload.decode("utf-8"))
-            payload = cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
-            records.append((self.extract_identifier(payload), payload))
-        for _, payload in sorted(records, key=lambda item: item[0]):
-            yield payload
+            # Safe: same rationale as the load() path — envelope was validated by
+            # model_validate_json against Envelope[self.payload_type] == Envelope[T].
+            # Future improvement: eliminate via generic ClassVar alias
+            # (see: CAST-RATIONALE-SECURE-REPOSITORY-ITER).
+            yield self.extract_identifier(cast(T, envelope.payload))  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
+
+    def iter_records(self) -> Iterator[T]:
+        """Yield every persisted payload in storage order.
+
+        Streams each payload straight from
+        :meth:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository.list_records`
+        without buffering the whole namespace or sorting it in memory. Order
+        is storage-defined (the ``object_key`` digest order), not the
+        natural-id order; a caller that needs a specific order sorts the
+        result itself.
+
+        Parses each row's decrypted payload bytes directly from
+        ``list_records`` rather than routing through :meth:`load`.  The SQL
+        ``WHERE object_key = ?`` lookup inside :meth:`load` cannot
+        match the stored ciphertext when ``object_key`` is an
+        ``EncryptedString`` column (AES-256-GCM uses a random nonce, so
+        the bind-parameter ciphertext differs from the stored ciphertext
+        every time).  Iterating directly over the decrypted rows is the
+        correct pattern for full-scan enumeration.
+
+        Fail-closed: ``list_records`` scans the whole namespace and raises
+        ``SecureObjectUnreadableError`` if any row is unreadable before this
+        generator yields a readable subset on full consumption.
+        """
+        envelope_cls = self._envelope_cls()
+        for record in self._objects.list_records(
+            self.namespace,
+            expected_class=self.sensitivity,
+            max_supported_version=self.schema_version,
+        ):
+            envelope = envelope_cls.model_validate_json(record.payload.decode("utf-8"))
+            yield cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
 
     # ------------------------------------------------------------------
     # Internals

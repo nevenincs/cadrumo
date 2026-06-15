@@ -40,8 +40,8 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
         return payload.submission_id
 
     def list_submission_ids(self) -> tuple[str, ...]:
-        """Return every submission id persisted in this repository."""
-        return tuple(self.iter_ids())
+        """Return every submission id persisted in this repository, in lexicographic order."""
+        return tuple(sorted(self.iter_ids()))
 
     def iter_submissions(self) -> Iterator[ModeloPresentado]:
         """Yield every persisted submission, in lexicographic id order.
