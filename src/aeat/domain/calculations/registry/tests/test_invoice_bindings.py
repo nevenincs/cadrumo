@@ -15,6 +15,7 @@ from functools import lru_cache
 import pytest
 from pydantic import ValidationError
 
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import resources
 from .._bindings import (
     InvoiceObservation,
@@ -53,8 +54,8 @@ def _with_selector(binding: DataBindingDefinition, **updates: object) -> DataBin
     return binding.model_copy(update={"selector": {**binding.selector, **updates}})
 
 
-def _with_aggregation(binding: DataBindingDefinition, op: str) -> DataBindingDefinition:
-    return binding.model_copy(update={"aggregation": {"op": op}})
+def _with_aggregation(binding: DataBindingDefinition, op: BindingAggregationOp) -> DataBindingDefinition:
+    return binding.model_copy(update={"aggregation": BindingAggregation(op=op)})
 
 
 def _observation(
@@ -252,7 +253,7 @@ def test_resolve_invoice_binding_values_rejects_unsupported_fact() -> None:
 
 
 def test_resolve_invoice_binding_values_rejects_op_mismatch_for_fact() -> None:
-    revision = _revision(_with_aggregation(_binding("iva-349-declarante-numero-operadores"), "sum"))
+    revision = _revision(_with_aggregation(_binding("iva-349-declarante-numero-operadores"), BindingAggregationOp.SUM))
     with pytest.raises(
         RegistryValidationError,
         match=r"fact 'operator_count' requires aggregation op 'count_distinct'",
@@ -481,7 +482,7 @@ def test_row_field_binding_requires_rows_aggregation_op() -> None:
                 claves=("E",),
                 rectification_scope="exclude_rectifications",
             ),
-            "sum",
+            BindingAggregationOp.SUM,
         ),
     )
     with pytest.raises(RegistryValidationError, match=r"fact 'row_field' requires aggregation op 'rows'"):

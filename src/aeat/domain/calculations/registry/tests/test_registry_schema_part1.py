@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 import pytest
 
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .. import RegistrySnapshot
 from ._registry_schema_support import (
     _EXPECTED_DEADLINE_WINDOWS,
@@ -459,7 +460,7 @@ def test_validator_rejects_invoice_binding_without_typed_selector() -> None:
         update={
             "source": "collectible_invoice",
             "selector": {"claves": ("E",)},
-            "aggregation": {"op": "sum"},
+            "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
         },
     )
     bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
@@ -492,7 +493,7 @@ def test_validator_rejects_invoice_binding_aggregation_mismatch() -> None:
         update={
             "source": "collectible_invoice",
             "selector": {"fact": "operator_count", "claves": ("E",)},
-            "aggregation": {"op": "sum"},
+            "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
         },
     )
     bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
@@ -509,7 +510,7 @@ def test_validator_rejects_invoice_rectification_delta_without_rectification_sco
         update={
             "source": "collectible_invoice",
             "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
-            "aggregation": {"op": "sum"},
+            "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
         },
     )
     bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
@@ -531,7 +532,7 @@ def test_validator_rejects_invoice_period_rows_without_rectification_scope() -> 
                 "grouping": "operator_clave_period",
                 "claves": ("E",),
             },
-            "aggregation": {"op": "rows"},
+            "aggregation": BindingAggregation(op=BindingAggregationOp.ROWS),
         },
     )
     bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)

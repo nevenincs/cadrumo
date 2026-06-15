@@ -263,7 +263,8 @@ def _assert_relation_binding_mirrors_source(*, binding, relation, scope: str) ->
         assert selector_casillas == (relation.source_output,), scope
     if selector_periods is not None:
         assert selector_periods == relation.source_periods, scope
-    assert (binding.aggregation or {}).get("op") == (relation.aggregation or {}).get("op")
+    binding_op = binding.aggregation.op if binding.aggregation is not None else None
+    assert binding_op == (relation.aggregation or {}).get("op")
 
 
 def test_formula_relation_dependencies_carry_relation_legal_basis() -> None:

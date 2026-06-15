@@ -615,7 +615,7 @@ def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_sum
     invoice_bindings: dict[str, DataBindingDefinition] = {
         b.id: b
         for b in revision.bindings
-        if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.get("op") != "rows"
+        if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.op != "rows"
     }
     assert set(invoice_bindings) == {
         "iva-349-declarante-numero-operadores",
@@ -770,7 +770,7 @@ def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings()
     row_bindings: dict[str, DataBindingDefinition] = {
         b.id: b
         for b in revision.bindings
-        if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.get("op") == "rows"
+        if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.op == "rows"
     }
     expected_operador_row_bindings = {
         "iva-349-operador-row-codigo-pais",

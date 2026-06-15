@@ -10,6 +10,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
 from .._authority import ValidatedRegistryAuthority
 from .._bindings import (
@@ -418,7 +419,7 @@ def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
                 "source_period_offset_from_target": -1,
                 "max_year_delta": 0,
             },
-            "aggregation": {"op": "copy"},
+            "aggregation": BindingAggregation(op=BindingAggregationOp.COPY),
         },
     )
     extended_revision = committed_modelo_130_snapshot.revision.model_copy(
@@ -464,7 +465,7 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
                 "source_period_offset_from_target": -1,
                 "max_year_delta": 0,
             },
-            "aggregation": {"op": "copy"},
+            "aggregation": BindingAggregation(op=BindingAggregationOp.COPY),
         },
     )
     extended_revision = committed_modelo_130_snapshot.revision.model_copy(

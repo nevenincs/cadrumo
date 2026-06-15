@@ -10,6 +10,8 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
+from ....core.aggregation import BindingAggregationOp
+from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
 from ._errors import RegistryValidationError
@@ -239,28 +241,32 @@ def _validated_invoice_selector(binding: DataBindingDefinition) -> _InvoiceSelec
 def _validate_invoice_fact_and_aggregation(binding: DataBindingDefinition, selector: _InvoiceSelector) -> None:
     if selector.fact not in _INVOICE_FACTS:
         raise RegistryValidationError(f"binding {binding.id!r} declares unsupported invoice fact {selector.fact!r}")
-    op = str((binding.aggregation or {}).get("op", "sum"))
+    op = binding_aggregation_op(binding)
     _validate_scalar_invoice_fact_op(binding, selector, op)
     if selector.fact == "row_field":
         _validate_row_field_invoice_fact(binding, selector, op)
     elif selector.row_field is not None or selector.grouping is not None:
         raise RegistryValidationError(f"binding {binding.id!r} non-row fact must not declare row_field or grouping")
-    if op == "rows" and selector.fact != "row_field":
+    if op == BindingAggregationOp.ROWS and selector.fact != "row_field":
         raise RegistryValidationError(f"binding {binding.id!r} aggregation op 'rows' requires fact 'row_field'")
 
 
-def _validate_scalar_invoice_fact_op(binding: DataBindingDefinition, selector: _InvoiceSelector, op: str) -> None:
+def _validate_scalar_invoice_fact_op(
+    binding: DataBindingDefinition,
+    selector: _InvoiceSelector,
+    op: BindingAggregationOp,
+) -> None:
     """Validate the aggregation op + scope of the scalar (non-``row_field``) facts.
 
     Enforces that ``operator_count`` uses ``count_distinct``, that ``base_sum`` /
     ``rectified_base_delta_sum`` use ``sum``, and that ``rectified_base_delta_sum``
     is scoped to rectifications. No-op for ``row_field`` (handled separately).
     """
-    if selector.fact == "operator_count" and op != "count_distinct":
+    if selector.fact == "operator_count" and op != BindingAggregationOp.COUNT_DISTINCT:
         raise RegistryValidationError(
             f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'",
         )
-    if selector.fact in {"base_sum", "rectified_base_delta_sum"} and op != "sum":
+    if selector.fact in {"base_sum", "rectified_base_delta_sum"} and op != BindingAggregationOp.SUM:
         raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
     if selector.fact == "rectified_base_delta_sum" and selector.rectification_scope != "only_rectifications":
         raise RegistryValidationError(
@@ -269,14 +275,18 @@ def _validate_scalar_invoice_fact_op(binding: DataBindingDefinition, selector: _
         )
 
 
-def _validate_row_field_invoice_fact(binding: DataBindingDefinition, selector: _InvoiceSelector, op: str) -> None:
+def _validate_row_field_invoice_fact(
+    binding: DataBindingDefinition,
+    selector: _InvoiceSelector,
+    op: BindingAggregationOp,
+) -> None:
     """Validate the ``row_field``-fact requirements on a row-producer binding.
 
     Requires aggregation op ``rows``, a declared ``row_field`` and ``grouping``,
     and enforces the ``operator_clave_period`` grouping / ``only_rectifications``
     scope coupling for the rectification-only row fields.
     """
-    if op != "rows":
+    if op != BindingAggregationOp.ROWS:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
     if selector.row_field is None:
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
@@ -549,9 +559,9 @@ def _aggregate_invoice_binding(
     selector: _InvoiceSelector,
     observations: tuple[InvoiceObservation, ...],
 ) -> Decimal:
-    op = str((binding.aggregation or {}).get("op", "sum"))
+    op = binding_aggregation_op(binding)
     if selector.fact == "operator_count":
-        if op != "count_distinct":
+        if op != BindingAggregationOp.COUNT_DISTINCT:
             raise RegistryValidationError(
                 f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'",
             )
@@ -589,11 +599,11 @@ def _aggregate_invoice_binding(
             ),
         )
     if selector.fact == "base_sum":
-        if op != "sum":
+        if op != BindingAggregationOp.SUM:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'base_sum' requires aggregation op 'sum'")
         return sum((observation.base_amount for observation in observations), Decimal("0"))
     if selector.fact == "rectified_base_delta_sum":
-        if op != "sum":
+        if op != BindingAggregationOp.SUM:
             raise RegistryValidationError(
                 f"binding {binding.id!r} fact 'rectified_base_delta_sum' requires aggregation op 'sum'",
             )
