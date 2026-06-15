@@ -773,6 +773,8 @@ application:
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
     findings:
+      art20_reduccion_next_action: 'Verify whether your other non-work income excluding exempt income for the year does not exceed 6500 EUR; if it does not, declare the article 20 LIRPF work-income reduction in the general reduction casilla (ley-35-2006:art-20).'
+      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: casilla %{rnt_id} (net work income) = %{rnt_value} is within the article 20 reduction band (below 19747,50) but casilla %{reduccion_id} (general work-income reduction) is zero. If your other non-work income excluding exempt income does not exceed 6500, the article 20 LIRPF work-income reduction may apply.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -992,6 +994,8 @@ application:
         profile id '%{profile}'.
       profile_integrity_identity_mismatch: 'Profile storage is inconsistent: physical
         stores disagree on profile identity.'
+      profile_integrity_label_mismatch: 'Profile storage is inconsistent: the manifest
+        label does not match the secure record.'
       profile_integrity_status_mismatch: 'Profile storage is inconsistent: the manifest
         lifecycle status does not match the secure record.'
       profile_label_blank: Profile label must not be blank.
@@ -1017,7 +1021,6 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
-      profile_integrity_label_mismatch: 'Profile storage is inconsistent: the manifest label does not match the secure record.'
   verification:
     errors:
       missing_binding_values: Registry verification requires external binding values.
@@ -1861,7 +1864,8 @@ cli:
     app_help: Manage local configuration and diagnostics
     auth:
       apoderado:
-        check_help: 'Verify against AEAT (unavailable; live reads are sealed). Use ''status'' for the offline read.'
+        check_help: Verify against AEAT (unavailable; live reads are sealed). Use
+          'status' for the offline read.
         clear_help: Retire the apoderado configuration
         configure:
           represented_nif_help: NIF of the represented party
@@ -2094,6 +2098,10 @@ cli:
       export_help: Write a portable profile bundle to a JSON file
       export_name_help: Profile to export; defaults to the active profile
       export_out_help: Destination path for the JSON bundle
+      export_sensitivity_warning: 'This bundle is UNENCRYPTED and contains sensitive
+        financial data: the raw tax id (not redacted), the full ledger, calculation
+        revisions, and filing records. It was written to {out}. Delete it after transfer;
+        do not email, sync, or leave it on disk.'
       help: Manage active profile configuration values
       history:
         invalid_event_type: 'Unknown event type: {value}. Valid event types: {valid}.'
@@ -2111,6 +2119,9 @@ cli:
         (e.g. 2026-04-01T00:00:00+00:00)
       history_until_help: Filter the history to events at or before this ISO-8601
         timestamp (e.g. 2026-04-30T23:59:59+00:00)
+      import_active_switch_info: The imported profile {name} is now the ACTIVE profile;
+        subsequent commands operate on it. Run 'aeat config switch <name>' to change
+        the active profile.
       import_help: Register a portable profile bundle from a JSON file
       import_invalid_bundle: 'Invalid profile bundle: the JSON does not conform to
         the profile bundle schema.'
@@ -2169,8 +2180,6 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
-      export_sensitivity_warning: 'This bundle is UNENCRYPTED and contains sensitive financial data: the raw tax id (not redacted), the full ledger, calculation revisions, and filing records. It was written to {out}. Delete it after transfer; do not email, sync, or leave it on disk.'
-      import_active_switch_info: 'The imported profile {name} is now the ACTIVE profile; subsequent commands operate on it. Run ''aeat config switch <name>'' to change the active profile.'
     recover:
       help: Recover the file secret store with a recovery key and bind it to a new
         passphrase.
@@ -2415,6 +2424,13 @@ cli:
       actor_help: Operator name recorded on the bucket event
       apply_help: 'Persist the LLM suggestion with llm: provenance instead of only
         previewing it.'
+      auto_split_help: Read the attached invoice and, when it is multi-component,
+        split it into per-line base/IVA children; otherwise classify it in place (requires
+        --read-evidence).
+      auto_split_needs_evidence: '--auto-split requires --read-evidence: the split
+        decision is read from the invoice.'
+      auto_split_single_line: 'single-line invoice: no split warranted; --apply classifies
+        it in place'
       bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
         skipped, %{fail} failed'
       business_pct_help: Business-use share from 0 to 1; required with --classification
@@ -2455,6 +2471,9 @@ cli:
         is not on PATH. Install the ''{provider}'' CLI and ensure it is on PATH, or
         run ''aeat app ledger providers'' to list usable providers.'
       llm_reason_label: reason
+      llm_rejected_label: rejected
+      llm_rejected_message: LLM suggestion rejected and recorded. The transaction
+        is unchanged; classify it manually when ready.
       llm_review_hint: Review the suggestion above. Re-run with --apply to accept
         it, with --classification to override manually, or do nothing to reject it.
       llm_suggestion_label: llm-suggestion
@@ -2465,23 +2484,23 @@ cli:
         it to the classifier.
       reaffirm_help: Reaffirm the classification of an already-classified transaction.
       reaffirmed: Classification reaffirmed.
+      reason_help: Free-text reason recorded with a --reject decision.
+      reject_apply_exclusive: '--reject cannot be combined with --apply: reject records
+        a declined suggestion, apply records an accepted one.'
+      reject_help: Record an explicit rejection of the LLM suggestion as an audit
+        event, without classifying the row (cannot be combined with --apply).
       saturate_help: 'Saturate via LLM: also select the IVA category and derive the
         rate, base, and IVA amount.'
       saturate_non_derivable: Rate not derivable
       saturate_requires_llm: The --saturate option applies only with --llm; supply
         --llm with a provider.
+      split_recommended_label: split recommended
+      split_recommended_message: The attached invoice appears to carry multiple rate
+        or category lines. Re-run with --auto-split to separate them into independently-filable
+        base and IVA children.
       taxable_base_help: Taxable base amount
-      vision_model_help: 'Override the local Ollama vision model for an image/scanned-invoice read (e.g. qwen2.5vl:7b); defaults to the configured model.'
-      auto_split_help: 'Read the attached invoice and, when it is multi-component, split it into per-line base/IVA children; otherwise classify it in place (requires --read-evidence).'
-      split_recommended_message: 'The attached invoice appears to carry multiple rate or category lines. Re-run with --auto-split to separate them into independently-filable base and IVA children.'
-      split_recommended_label: 'split recommended'
-      auto_split_single_line: 'single-line invoice: no split warranted; --apply classifies it in place'
-      auto_split_needs_evidence: '--auto-split requires --read-evidence: the split decision is read from the invoice.'
-      reject_help: 'Record an explicit rejection of the LLM suggestion as an audit event, without classifying the row (cannot be combined with --apply).'
-      reason_help: 'Free-text reason recorded with a --reject decision.'
-      reject_apply_exclusive: '--reject cannot be combined with --apply: reject records a declined suggestion, apply records an accepted one.'
-      llm_rejected_message: 'LLM suggestion rejected and recorded. The transaction is unchanged; classify it manually when ready.'
-      llm_rejected_label: 'rejected'
+      vision_model_help: Override the local Ollama vision model for an image/scanned-invoice
+        read (e.g. qwen2.5vl:7b); defaults to the configured model.
     doclink:
       actor_help: Operator label.
       help: Fetch a Drive document link and store its bytes as encrypted evidence
@@ -2499,7 +2518,7 @@ cli:
         of range. Enter a share between 0 and 1, e.g. 0.5 for 50 percent.
       command_input_invalid: 'Refused. The transaction is invalid: {details}'
       command_input_invalid_fallback: one or more fields failed validation
-      confirm_required: 'Pass --yes to confirm this destructive ledger operation.'
+      confirm_required: Pass --yes to confirm this destructive ledger operation.
       filter_parse_error: 'Failed to parse ledger filter near %{token}: %{reason}.'
       id_prefix_collision: 'Transaction id prefix %{prefix!r} matches more than one
         transaction: %{candidates}. Lengthen the prefix to disambiguate.'
@@ -2707,6 +2726,9 @@ cli:
         currency. Repeat once per child; the count must match --child-description.
       child_description_help: One child narrative. Repeat once per child; the count
         must match --child-amount.
+      classification_dropped: Parent classification %{classification} was not copied
+        to the split children; each child is NOT_YET_PROCESSED and needs re-classification
+        with 'aeat app ledger classify'.
       errors:
         child_args_mismatch: ledger split requires the same number of --child-amount
           and --child-description arguments
@@ -2723,10 +2745,10 @@ cli:
       read_evidence_help: Read the transaction's attached invoice on-host and feed
         it to the --llm split proposer.
       reason_help: Reason recorded in the bucket-event payload and lifecycle history
+      vision_model_help: Override the local Ollama vision model for an image/scanned-invoice
+        read (e.g. qwen2.5vl:7b); defaults to the configured model.
       yes_help: Confirm the split (transitions the parent to SPLIT and persists N
         child transactions)
-      classification_dropped: 'Parent classification %{classification} was not copied to the split children; each child is NOT_YET_PROCESSED and needs re-classification with ''aeat app ledger classify''.'
-      vision_model_help: 'Override the local Ollama vision model for an image/scanned-invoice read (e.g. qwen2.5vl:7b); defaults to the configured model.'
     stash:
       actor_help: Operator name recorded on the bucket event
       help: Stash one ledger transaction in the active profile
@@ -2760,6 +2782,9 @@ cli:
       value_date_help: New value date (YYYY-MM-DD)
     view:
       help: View one ledger transaction in the active profile
+      llm_rejected_label: LLM suggestion
+      llm_rejected_notice: The most recent LLM suggestion for this transaction was
+        rejected; classify it manually when ready.
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   locales:
     app_help: Audit and scaffold locale catalogues
@@ -2800,6 +2825,7 @@ cli:
       app:
         footer: Run aeat --help for the full overview.
         heading: aeat app - operational tax work
+        ledger_add: Add a transaction by hand.
         ledger_allocate: Assign business-use or tax allocation metadata.
         ledger_archive: Archive a ledger transaction without deleting history.
         ledger_attach: Attach evidence to a ledger transaction.
@@ -2820,6 +2846,8 @@ cli:
         modelo_bindings: Inspect registry binding coverage.
         modelo_describe: Describe one modelo revision.
         modelo_list: List supported modelos.
+        modelo_m036: Record a Modelo 036 declaration you filed at AEAT.
+        modelo_verification_report: List and view modelo verification reports.
         modelo_work: Create and operate modelo work units.
         overview_status: Summarize current profile and work state.
         paragraph_operational_workflow: App commands operate on the active profile.
@@ -2832,9 +2860,6 @@ cli:
         section_modelo: Modelo
         section_overview: Overview
         section_review_and_registry: Review and registry
-        ledger_add: 'Add a transaction by hand.'
-        modelo_verification_report: 'List and view modelo verification reports.'
-        modelo_m036: 'Record a Modelo 036 declaration you filed at AEAT.'
       config:
         auth_clear: Clear local authentication metadata.
         auth_configure: Configure an authentication provider.
@@ -4279,7 +4304,9 @@ locales:
       updated: updated %{locale_file}:%{key}
 profile:
   descendiente:
-    custodia_compartida_prorrata_applied: '50 % prorrata (Art. 61 LIRPF) applied for shared custody in %{count} dependent(s). Each parent declares half the applicable mínimo (casillas 0513/0514 and, where applicable, 0515/0516).'
+    custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for
+      shared custody in %{count} dependent(s). Each parent declares half the applicable
+      mínimo (casillas 0513/0514 and, where applicable, 0515/0516).
     deduccion_maternidad_applied: 'Art. 81 LIRPF maternity deduction computed: %{amount}
       € (casilla 0611). Formula sum(min(months × 100, 1,200)) applied per dependent
       under 3 with declared working months.'

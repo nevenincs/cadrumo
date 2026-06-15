@@ -7,29 +7,7 @@ modified: '2026-06-15'
 related: []
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace art20-trabajo-reduccion-compute with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     Status convention: the H1 status value is one of proposed, accepted,
-     rejected, or deprecated. A new ADR starts as proposed; it moves to
-     accepted or rejected when the decision is made, and to deprecated
-     when a later ADR supersedes it.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `art20-trabajo-reduccion-compute` adr: `Modelo 100 art. 20 work-income reduction: computed vs advisory` | (**status:** `accepted`)
 
@@ -99,6 +77,25 @@ Two-phase, advisory-first:
   predicate is upgraded to a `BLOCKING_RULE` consistency check between the computed and
   any entered value, or retired.
 
+**Shipped (Phase 1, this campaign).** Phase 1 landed as a Python advisory helper
+`_art20_reduccion_advisory_finding` (mirroring the existing DT 12ª advisory
+`_dt12_reduccion_advisory_finding`) wired into the verify path, NOT as a registry
+`verification_predicate` as the bullet above originally specified. The registry-predicate
+mechanism requires the registry to load, which the in-flight peer `BindingAggregationOp`
+refactor blocks; the Python-helper mechanism delivers the identical observable behaviour —
+a non-blocking `ADVISORY` / `WARNING` finding, grounded `ley-35-2006:art-20`, raised when
+the rendimiento neto del trabajo (role `irpf_rendimiento_trabajo_rendimiento_neto`) is
+strictly positive and below the ceiling while the general-reducción casilla (role
+`irpf_rendimiento_trabajo_reduccion_gastos_generales`) is zero — and is verifiable now via
+a synthetic-revision contract test, independent of the blocked registry. The two
+mechanisms co-exist in this codebase (DT 12ª uses the helper; M200 base-determination uses
+the registry predicate), so this is a mechanism selection, not a new pattern. The RNT
+ceiling (19.747,50 €) rides `external_constants.MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR`
+grounded on RDL 4/2024 art. 3.1, never an inline literal (`aeat-schema-central-config`).
+Phase 2 (flip `0023` to COMPUTED) remains gated on the cross-section "otras rentas"
+aggregate and the engine refactor; when it lands the advisory either migrates to the
+registry predicate / `BLOCKING_RULE` consistency check or is retired.
+
 ## Rationale
 
 Advisory-first respects `no-silent-under-declaration` (a determinable reduction left at
@@ -123,24 +120,4 @@ aggregate is real.
 
 ## Codification candidates
 
-<!-- If this decision introduces a durable cross-session constraint
-that should bind future agents (an obligation, a prohibition, a
-discipline that survives this feature's lifecycle), name it here as
-a candidate for promotion into a project rule under
-`.vaultspec/rules/rules/` via the codify pipeline phase.
 
-Each candidate names the proposed rule slug (kebab-case, naming the
-constraint's subject) and a one-sentence statement of the rule.
-
-Not every ADR produces a codification candidate. Decisions that are
-local to one feature, or that describe rather than constrain, leave
-this section empty. An empty Codification candidates section is a
-positive signal, not a failure. -->
-
-<!-- Example:
-
-- **Rule slug:** `destructive-verbs-need-dry-run`.
-  **Rule:** Every CLI verb that writes or removes state must
-  accept `--dry-run` and emit a usable preview before applying.
-
--->

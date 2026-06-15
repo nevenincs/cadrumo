@@ -95,6 +95,7 @@ from ._action_errors import (
     ModeloCrossPeriodCleanStateError,
     WorkUnitNotFoundError,
 )
+from ._art20_advisory import _art20_reduccion_advisory_finding
 from ._dt12_advisory import _dt12_reduccion_advisory_finding
 from ._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
@@ -1398,6 +1399,16 @@ def _collect_revision_verification_findings(
     dt12_finding = _dt12_reduccion_advisory_finding(snapshot.revision, target.casilla_values)
     if dt12_finding is not None:
         findings.append(dt12_finding)
+
+    # Advisory: art. 20 LIRPF — warn when the rendimiento neto del trabajo (0022) is
+    # within the reducción band (strictly below the RNT ceiling) but the general
+    # reducción casilla (0023) is zero. Stays ADVISORY because the art. 20 eligibility
+    # gate ("otras rentas distintas del trabajo" ≤ 6.500 €) is a cross-section aggregate
+    # the engine cannot yet evaluate, so a legitimately-zero reduction must remain
+    # permissible (no-silent-under-declaration).
+    art20_finding = _art20_reduccion_advisory_finding(snapshot.revision, target.casilla_values)
+    if art20_finding is not None:
+        findings.append(art20_finding)
 
     return findings, resolved_casillas, missing_required
 
