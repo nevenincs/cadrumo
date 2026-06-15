@@ -10,6 +10,10 @@ related:
   - '[[2026-06-15-service-capabilities-W01-P01-S02]]'
   - '[[2026-06-15-service-capabilities-W01-P02-S03]]'
   - '[[2026-06-15-service-capabilities-W01-P02-S04]]'
+  - '[[2026-06-15-service-capabilities-W01-P03-S05]]'
+  - '[[2026-06-15-service-capabilities-W02-P04-S06]]'
+  - '[[2026-06-15-service-capabilities-W02-P05-S07]]'
+  - '[[2026-06-15-service-capabilities-W03-P06-S08]]'
   - '[[2026-06-15-service-capabilities-adr]]'
   - '[[2026-06-15-service-capabilities-plan]]'
   - '[[2026-06-15-service-capabilities-research]]'
@@ -31,6 +35,10 @@ Auto-generated index of all documents tagged with `#service-capabilities`.
 - `2026-06-15-service-capabilities-W01-P01-S02` - Add a capabilities [[sections]] with boolean fields to the user_profile schema TOML
 - `2026-06-15-service-capabilities-W01-P02-S03` - Add resolve_capability + CapabilityDecision overlaying profile facts onto the global Settings default (gestor-mode absolute bar first)
 - `2026-06-15-service-capabilities-W01-P02-S04` - Rewire cloud_evidence_read_permitted, the vision path, and google export through resolve_capability with typed refusals
+- `2026-06-15-service-capabilities-W01-P03-S05` - Add config profile capabilities show/set verbs routed through EditProfileSectionCommand
+- `2026-06-15-service-capabilities-W02-P04-S06` - Add DependencyStatus + per-service probes (ollama reachability/model, playwright, google creds, provider CLIs) that never raise on absence
+- `2026-06-15-service-capabilities-W02-P05-S07` - Probe Ollama before vision inference + refuse instructively
+- `2026-06-15-service-capabilities-W03-P06-S08` - Add aeat config doctor: per-service availability + active-profile capability posture + remediation
 
 ### plan
 

@@ -124,7 +124,7 @@ Add resolve_capability and rewire cloud-evidence/vision/google gates through it.
 
 config profile capabilities show/set and a wizard capabilities section.
 
-- [ ] `W01.P03.S05` - Add config profile capabilities show/set verbs routed through EditProfileSectionCommand; `add a wizard capabilities section; `src/aeat/entrypoints/cli/_config`.
+- [x] `W01.P03.S05` - Add config profile capabilities show/set verbs routed through EditProfileSectionCommand; `add a wizard capabilities section; `src/aeat/entrypoints/cli/_config`.
 
 ## Wave `W02` - Dependency probes + graceful degradation
 
@@ -134,13 +134,13 @@ Typed dependency probes, close the Ollama headline gap, Playwright remediation, 
 
 Typed DependencyStatus + per-service probes (ollama/model, playwright, google, provider CLIs).
 
-- [ ] `W02.P04.S06` - Add DependencyStatus + per-service probes (ollama reachability/model, playwright, google creds, provider CLIs) that never raise on absence; `src/aeat/application`.
+- [x] `W02.P04.S06` - Add DependencyStatus + per-service probes (ollama reachability/model, playwright, google creds, provider CLIs) that never raise on absence; `src/aeat/application`.
 
 ### Phase `W02.P05` - Close ungraceful paths
 
 Ollama probe-before-inference refusal, CLI catches LLMProviderError/connection errors, providers vision row, Playwright hint.
 
-- [ ] `W02.P05.S07` - Probe Ollama before vision inference + refuse instructively; `widen classify CLI to catch LLMProviderError/connection errors; add ollama providers row; Playwright hint; `src/aeat/application/ledger, src/aeat/entrypoints/cli`.
+- [x] `W02.P05.S07` - Probe Ollama before vision inference + refuse instructively; `widen classify CLI to catch LLMProviderError/connection errors; add ollama providers row; Playwright hint; `src/aeat/application/ledger, src/aeat/entrypoints/cli`.
 
 ## Wave `W03` - Doctor + provisioning
 
@@ -150,7 +150,7 @@ aeat config doctor, pyproject extras + torch relocation, just doctor and provisi
 
 aeat config doctor reporting availability + capability posture + remediation per service.
 
-- [ ] `W03.P06.S08` - Add aeat config doctor: per-service availability + active-profile capability posture + remediation; `typed envelope + non-zero exit on opted-in-but-missing; `src/aeat/entrypoints/cli/_config`.
+- [x] `W03.P06.S08` - Add aeat config doctor: per-service availability + active-profile capability posture + remediation; `typed envelope + non-zero exit on opted-in-but-missing; `src/aeat/entrypoints/cli/_config`.
 
 ### Phase `W03.P07` - pyproject + justfile
 
