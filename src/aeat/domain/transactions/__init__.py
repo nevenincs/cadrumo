@@ -96,7 +96,7 @@ if TYPE_CHECKING:
         TX_BUCKET_NAMESPACE,
         ImportSummary,
         TransactionCatalogueRepository,
-        transaction_catalogue_object_key,
+        transaction_object_key,
     )
 
 
@@ -105,7 +105,7 @@ _LAZY_REPOSITORY_NAMES = frozenset(
         "ImportSummary",
         "TX_BUCKET_NAMESPACE",
         "TransactionCatalogueRepository",
-        "transaction_catalogue_object_key",
+        "transaction_object_key",
     },
 )
 
@@ -197,6 +197,6 @@ __all__ = [
     "resolve_split_proposer",
     "set_classification",
     "snapshot_classification_state",
-    "transaction_catalogue_object_key",
+    "transaction_object_key",
     "unregister_classifier",
 ]

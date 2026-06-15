@@ -48,7 +48,6 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionCatalogueRepository,
     TransactionDirection,
-    transaction_catalogue_object_key,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
@@ -437,10 +436,14 @@ def test_iva_source_mesh_resolver_degrades_on_transaction_catalogue_drift(
     secure_objects: SecureObjectRepository,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    from ....domain.transactions._repository import transaction_index_object_key
+
     revision = _revision("303", "2009-y-siguientes")
+    # Per-row catalogue: a corrupt membership-index row makes load() fail closed
+    # with StoredTransactionDriftError, the drift the resolver must degrade on.
     secure_objects.save(
         namespace=TX_BUCKET_NAMESPACE,
-        object_key=transaction_catalogue_object_key("bucket-a"),
+        object_key=transaction_index_object_key("bucket-a"),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,
         written_at=datetime(2026, 6, 4, 12, 0, tzinfo=UTC),

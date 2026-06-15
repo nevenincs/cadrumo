@@ -28,6 +28,7 @@ from ._encrypted_columns import (
     EncryptedPayload,
     EncryptedString,
     HashedLookup,
+    secure_object_key_digest,
 )
 
 __all__ = [
@@ -43,4 +44,5 @@ __all__ = [
     "decrypt_record",
     "derive_key",
     "encrypt_record",
+    "secure_object_key_digest",
 ]
