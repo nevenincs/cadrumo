@@ -295,8 +295,7 @@ def _resolve_evidence(
 
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
         raise PurchaseInvoiceEvidenceInputError(
-            "on-host LLM vision reading is disabled for this profile; enable it to read "
-            "scanned or image evidence",
+            "on-host LLM vision reading is disabled for this profile; enable it to read scanned or image evidence",
             suggestion="aeat config profile capabilities set llm_vision on",
         )
     return _ResolvedEvidence(reference=reference, text=None, images=images)

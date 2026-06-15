@@ -19,7 +19,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .._bindings_previous_filing import (
     _aggregate_previous_filing_binding,
     _is_direct_previous_filing_binding,
@@ -48,7 +48,7 @@ def _span_selector() -> _PreviousModeloSelector:
 def _span_binding(*, source_casillas: tuple[str, ...]) -> DataBindingDefinition:
     return DataBindingDefinition(
         id="modelo-130-test-span-binding",
-        source="previous_filing",
+        source=BindingSourceKind.PREVIOUS_FILING,
         selector={
             "source_modelo": "130",
             "source_casillas": tuple(source_casillas),
@@ -126,7 +126,7 @@ def test_expanding_span_rejects_non_quarterly_target() -> None:
 def _prior_pagos_binding() -> DataBindingDefinition:
     return DataBindingDefinition(
         id="modelo-130-pagos-fraccionados-anteriores",
-        source="previous_filing",
+        source=BindingSourceKind.PREVIOUS_FILING,
         selector={
             "source_modelo": "130",
             "source_casillas": ("07", "16"),
