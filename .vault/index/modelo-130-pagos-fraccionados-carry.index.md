@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-130-pagos-fraccionados-carry'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P01-S01]]'
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P01-S02]]'
@@ -24,6 +24,7 @@ related:
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-P04-S16]]'
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-adr]]'
   - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]'
+  - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-research]]'
 ---
 
 # `modelo-130-pagos-fraccionados-carry` feature index
@@ -58,3 +59,7 @@ Auto-generated index of all documents tagged with `#modelo-130-pagos-fraccionado
 ### plan
 
 - `2026-06-13-modelo-130-pagos-fraccionados-carry-plan` - `modelo-130-pagos-fraccionados-carry` `casilla 05 cumulative pagos-fraccionados carry (target-relative same-ejercicio expanding span)` plan
+
+### research
+
+- `2026-06-13-modelo-130-pagos-fraccionados-carry-research` - `modelo-130-pagos-fraccionados-carry` research: investigation backing the decision

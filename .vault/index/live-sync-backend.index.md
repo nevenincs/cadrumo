@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-sync-backend'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-04-21-live-sync-backend-adr-audit]]'
   - '[[2026-04-21-live-sync-backend-adr]]'

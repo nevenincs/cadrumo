@@ -1,3 +1,12 @@
+---
+tags: ['#exec', '#live-pull-verification-sweep']
+date: '2026-06-13'
+modified: '2026-06-13'
+step_id: 'S08'
+related:
+  - '[[2026-06-12-live-pull-verification-sweep-plan]]'
+---
+
 # W02.P03.S08 / W02.P04.S10 auth representation gate live retry
 
 ## Scope

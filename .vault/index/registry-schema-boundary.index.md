@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-schema-boundary'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-02-registry-schema-boundary-audit]]'
   - '[[2026-06-02-registry-schema-boundary-code-review-audit]]'

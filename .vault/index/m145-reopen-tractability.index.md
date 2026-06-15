@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m145-reopen-tractability'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-03-m145-reopen-tractability-research]]'
 ---

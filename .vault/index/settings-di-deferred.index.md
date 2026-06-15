@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#settings-di-deferred'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-03-settings-di-deferred-test-migration-adr]]'
   - '[[2026-06-04-settings-di-deferred-research]]'

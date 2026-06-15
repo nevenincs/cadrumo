@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#playwright-anti-bot'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-04-12-playwright-anti-bot-adr]]'
   - '[[2026-04-12-playwright-anti-bot-phase1-step1-exec]]'

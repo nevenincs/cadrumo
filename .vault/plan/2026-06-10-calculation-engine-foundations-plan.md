@@ -6,6 +6,7 @@ date: '2026-06-10'
 modified: '2026-06-10'
 tier: L4
 related:
+  - '[[2026-06-10-calculation-engine-foundations-research]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-10-period-revision-resolution-adr]]'
 ---

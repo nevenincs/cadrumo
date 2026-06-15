@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#semantic-dedup-epic'
-date: '2026-06-14'
-modified: '2026-06-14'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-13-semantic-dedup-epic-W01-P02-S04]]'
   - '[[2026-06-13-semantic-dedup-epic-W01-P03-S06]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-06-13-semantic-dedup-epic-W05-P15-S30]]'
   - '[[2026-06-13-semantic-dedup-epic-W06-P16-S31]]'
   - '[[2026-06-13-semantic-dedup-epic-W06-P16-S32]]'
+  - '[[2026-06-13-semantic-dedup-epic-W06-P16-S33]]'
   - '[[2026-06-13-semantic-dedup-epic-W06-P16-S34]]'
   - '[[2026-06-13-semantic-dedup-epic-W06-P17-S35]]'
   - '[[2026-06-13-semantic-dedup-epic-W06-P17-S36]]'
@@ -39,6 +40,7 @@ related:
   - '[[2026-06-13-semantic-dedup-epic-adr]]'
   - '[[2026-06-13-semantic-dedup-epic-audit]]'
   - '[[2026-06-13-semantic-dedup-epic-plan]]'
+  - '[[2026-06-13-semantic-dedup-epic-research]]'
   - '[[2026-06-14-semantic-dedup-epic-audit]]'
 ---
 
@@ -80,6 +82,7 @@ Auto-generated index of all documents tagged with `#semantic-dedup-epic`.
 - `2026-06-13-semantic-dedup-epic-W05-P15-S30` - C4-1 Extract the common base payload and have the review payload extend it, keeping serialized JSON byte-identical
 - `2026-06-13-semantic-dedup-epic-W06-P16-S31` - A2 Replace the two zero-collapse canonical-decimal-string copies with domain canonical_decimal_string
 - `2026-06-13-semantic-dedup-epic-W06-P16-S32` - A3 Delegate _display_decimal and _decimal_to_string to core.decimal.format_decimal
+- `2026-06-13-semantic-dedup-epic-W06-P16-S33` - B3 Reuse resolve_error_message and remove the inline localized-message copies
 - `2026-06-13-semantic-dedup-epic-W06-P16-S34` - D1 Extract one id-truncation display helper for the four ledger-rules sites
 - `2026-06-13-semantic-dedup-epic-W06-P17-S35` - C2 Replace module-local _STRICT_FROZEN re-declarations with the aliased canonical import
 - `2026-06-13-semantic-dedup-epic-W06-P17-S36` - C1 Sweep the inline strict-frozen ConfigDict literal tail onto STRICT_FROZEN_CONFIG
@@ -93,3 +96,7 @@ Auto-generated index of all documents tagged with `#semantic-dedup-epic`.
 ### plan
 
 - `2026-06-13-semantic-dedup-epic-plan` - `semantic-dedup-epic` plan
+
+### research
+
+- `2026-06-13-semantic-dedup-epic-research` - `semantic-dedup-epic` research: investigation backing the decision

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#secure-object-integrity'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-22-secure-object-integrity-P01-S01]]'
   - '[[2026-05-22-secure-object-integrity-P01-S02]]'

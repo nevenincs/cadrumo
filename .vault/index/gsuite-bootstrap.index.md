@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#gsuite-bootstrap'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-04-12-gsuite-bootstrap-adr]]'
   - '[[2026-04-12-gsuite-bootstrap-audit]]'

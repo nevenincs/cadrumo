@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-renta'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-04-21-modelo-100-renta-adr]]'
   - '[[2026-04-21-modelo-100-renta-plan]]'

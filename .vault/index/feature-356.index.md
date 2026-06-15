@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#feature-356'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-04-23-feature-356-adr]]'
   - '[[2026-04-23-feature-356-phase1-review-exec]]'

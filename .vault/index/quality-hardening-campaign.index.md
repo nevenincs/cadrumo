@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#quality-hardening-campaign'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-09-quality-hardening-campaign-S01]]'
   - '[[2026-06-09-quality-hardening-campaign-S02]]'
@@ -14,7 +14,10 @@ related:
   - '[[2026-06-09-quality-hardening-campaign-S06]]'
   - '[[2026-06-09-quality-hardening-campaign-S07]]'
   - '[[2026-06-09-quality-hardening-campaign-S08]]'
+  - '[[2026-06-09-quality-hardening-campaign-adr]]'
   - '[[2026-06-09-quality-hardening-campaign-audit]]'
+  - '[[2026-06-09-quality-hardening-campaign-plan]]'
+  - '[[2026-06-09-quality-hardening-campaign-research]]'
 ---
 
 # `quality-hardening-campaign` feature index
@@ -22,6 +25,10 @@ related:
 Auto-generated index of all documents tagged with `#quality-hardening-campaign`.
 
 ## Documents
+
+### adr
+
+- `2026-06-09-quality-hardening-campaign-adr` - `quality-hardening-campaign` adr: `Quality-hardening baseline: every justfile lane is a standing gate` | (**status:** `accepted`)
 
 ### audit
 
@@ -37,3 +44,11 @@ Auto-generated index of all documents tagged with `#quality-hardening-campaign`.
 - `2026-06-09-quality-hardening-campaign-S06` - `quality-hardening-campaign` S06: QHC-003 cognitive-complexity slice 3
 - `2026-06-09-quality-hardening-campaign-S07` - `quality-hardening-campaign` S07: QHC-004 duplication consolidation, slice 3
 - `2026-06-09-quality-hardening-campaign-S08` - `quality-hardening-campaign` S08: QHC-003 cognitive hotspot — `_resume_from_storage_state_locked`
+
+### plan
+
+- `2026-06-09-quality-hardening-campaign-plan` - `quality-hardening-campaign` plan
+
+### research
+
+- `2026-06-09-quality-hardening-campaign-research` - `quality-hardening-campaign` research: investigation backing the decision

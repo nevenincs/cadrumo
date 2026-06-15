@@ -12,15 +12,8 @@ related:
   - '[[2026-05-19-modelo-130-relation-regression-adr]]'
   - '[[2026-06-04-m130-casilla-15-override-adr]]'
   - '[[2026-04-27-modelo-130-calc-verify-adr]]'
+  - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-research]]'
 ---
-
-
-
-
-
-
-
-
 # `modelo-130-pagos-fraccionados-carry` `casilla 05 cumulative pagos-fraccionados carry (target-relative same-ejercicio expanding span)` plan
 
 ### Phase `P01` - Selector-grammar: target-relative expanding-span mode

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-auth-decomposition'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-04-live-auth-decomposition-adr]]'
   - '[[2026-06-05-live-auth-decomposition-research]]'

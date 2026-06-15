@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#multi-bucket-test-fixture'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-03-multi-bucket-test-fixture-adr]]'
   - '[[2026-06-04-multi-bucket-test-fixture-research]]'

@@ -3,16 +3,18 @@ generated: true
 tags:
   - '#index'
   - '#calculation-engine-foundations'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-10-calculation-engine-foundations-W04-P10-S16]]'
   - '[[2026-06-10-calculation-engine-foundations-W04-P11-S35]]'
   - '[[2026-06-10-calculation-engine-foundations-W04-P12-S29]]'
   - '[[2026-06-10-calculation-engine-foundations-W04-P12-S31]]'
   - '[[2026-06-10-calculation-engine-foundations-W04-P12-S38]]'
+  - '[[2026-06-10-calculation-engine-foundations-adr]]'
   - '[[2026-06-10-calculation-engine-foundations-audit]]'
   - '[[2026-06-10-calculation-engine-foundations-plan]]'
+  - '[[2026-06-10-calculation-engine-foundations-research]]'
   - '[[2026-06-11-calculation-engine-foundations-closeout-audit]]'
   - '[[2026-06-11-calculation-engine-foundations-code-review-audit]]'
   - '[[2026-06-12-calculation-engine-foundations-code-review-audit]]'
@@ -23,6 +25,10 @@ related:
 Auto-generated index of all documents tagged with `#calculation-engine-foundations`.
 
 ## Documents
+
+### adr
+
+- `2026-06-10-calculation-engine-foundations-adr` - `calculation-engine-foundations` adr: `Calculation-engine foundations: aggregation taxonomy and period-revision resolution` | (**status:** `accepted`)
 
 ### audit
 
@@ -42,3 +48,7 @@ Auto-generated index of all documents tagged with `#calculation-engine-foundatio
 ### plan
 
 - `2026-06-10-calculation-engine-foundations-plan` - `calculation-engine-foundations` `Calculation-engine foundations: aggregation taxonomy + period-revision resolution` plan
+
+### research
+
+- `2026-06-10-calculation-engine-foundations-research` - `calculation-engine-foundations` research: investigation backing the decision

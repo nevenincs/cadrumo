@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#linkage-design-audit'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-15-linkage-design-audit-audit]]'
   - '[[2026-05-15-linkage-design-audit-plan]]'

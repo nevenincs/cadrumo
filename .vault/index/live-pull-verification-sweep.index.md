@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-pull-verification-sweep'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-12-live-pull-verification-sweep-W01-P01-S01]]'
   - '[[2026-06-12-live-pull-verification-sweep-W01-P01-S02]]'
@@ -20,9 +20,11 @@ related:
   - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S17]]'
   - '[[2026-06-12-live-pull-verification-sweep-W03-P06-S27]]'
   - '[[2026-06-12-live-pull-verification-sweep-W04-P07-S29]]'
+  - '[[2026-06-12-live-pull-verification-sweep-adr]]'
   - '[[2026-06-12-live-pull-verification-sweep-code-review-audit]]'
   - '[[2026-06-12-live-pull-verification-sweep-live-auth-blocker-audit]]'
   - '[[2026-06-12-live-pull-verification-sweep-plan]]'
+  - '[[2026-06-12-live-pull-verification-sweep-research]]'
   - '[[2026-06-12-live-pull-verification-sweep-w02-p03-s08-w02-p04-s10-s11-s12-s13-w03-p06-s27-live-auth-read-sweep-exec]]'
   - '[[2026-06-12-live-pull-verification-sweep-w02-p03-s09-live-auth-pytest-lane-exec]]'
   - '[[2026-06-12-live-pull-verification-sweep-w02-p04-s10-w03-p05-s19-censo-cli-auth-preflight-and-live-retry-exec]]'
@@ -46,6 +48,7 @@ related:
   - '[[2026-06-12-live-pull-verification-sweep-w03-p06-s27-w04-p07-s29-modelo-record-calendar-events-exec]]'
   - '[[2026-06-12-live-pull-verification-sweep-w04-p07-s29-cross-period-taxpayer-identity-gate-exec]]'
   - '[[2026-06-13-live-pull-verification-sweep-exec]]'
+  - '[[2026-06-13-live-pull-verification-sweep-w02-p03-s08-w02-p04-s10-auth-representation-gate-live-retry-exec]]'
   - '[[2026-06-13-live-pull-verification-sweep-w02-p03-s08-w02-p04-s10-w03-p06-s26-live-auth-isolated-timeout-exec]]'
   - '[[2026-06-13-live-pull-verification-sweep-w03-p05-s18-w02-p04-s10-live-auth-retry-and-bulk-pull-limit-exec]]'
   - '[[2026-06-13-live-pull-verification-sweep-w03-p05-s18-w03-p05-s19-w03-p06-s27-w04-p07-s29-censo-row-state-live-runner-exec]]'
@@ -65,6 +68,10 @@ related:
 Auto-generated index of all documents tagged with `#live-pull-verification-sweep`.
 
 ## Documents
+
+### adr
+
+- `2026-06-12-live-pull-verification-sweep-adr` - `live-pull-verification-sweep` adr: `Authenticated pull-only live verification sweep: per-surface acceptance` | (**status:** `accepted`)
 
 ### audit
 
@@ -110,6 +117,7 @@ Auto-generated index of all documents tagged with `#live-pull-verification-sweep
 - `2026-06-12-live-pull-verification-sweep-w03-p06-s27-w04-p07-s29-modelo-record-calendar-events-exec` - W03.P06.S27 / W04.P07.S29 Modelo record calendar events
 - `2026-06-12-live-pull-verification-sweep-w04-p07-s29-cross-period-taxpayer-identity-gate-exec` - W04.P07.S29 - cross-period taxpayer identity gate
 - `2026-06-13-live-pull-verification-sweep-exec` - W02.P04.S14 / W03.P06.S27 justificante capture calendar enrolment
+- `2026-06-13-live-pull-verification-sweep-w02-p03-s08-w02-p04-s10-auth-representation-gate-live-retry-exec` - W02.P03.S08 / W02.P04.S10 auth representation gate live retry
 - `2026-06-13-live-pull-verification-sweep-w02-p03-s08-w02-p04-s10-w03-p06-s26-live-auth-isolated-timeout-exec` - W02.P03.S08 / W02.P04.S10 / W03.P06.S26 isolated live auth timeout
 - `2026-06-13-live-pull-verification-sweep-w03-p05-s18-w02-p04-s10-live-auth-retry-and-bulk-pull-limit-exec` - W03.P05.S18 / W02.P04.S10 live auth retry and bulk pull limit
 - `2026-06-13-live-pull-verification-sweep-w03-p05-s18-w03-p05-s19-w03-p06-s27-w04-p07-s29-censo-row-state-live-runner-exec` - W03.P05.S18 / W03.P05.S19 / W03.P06.S27 / W04.P07.S29 censo row state and live runner
@@ -126,3 +134,7 @@ Auto-generated index of all documents tagged with `#live-pull-verification-sweep
 ### plan
 
 - `2026-06-12-live-pull-verification-sweep-plan` - `live-pull-verification-sweep` `authenticated pull-only live verification sweep` plan
+
+### research
+
+- `2026-06-12-live-pull-verification-sweep-research` - `live-pull-verification-sweep` research: investigation backing the decision

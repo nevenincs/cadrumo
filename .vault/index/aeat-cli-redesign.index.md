@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-redesign'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-02-aeat-cli-redesign-adr]]'
   - '[[2026-05-02-aeat-cli-redesign-reference]]'

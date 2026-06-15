@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#kent-ux-journey'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-04-17-operator-ux-journey-audit]]'
 ---
