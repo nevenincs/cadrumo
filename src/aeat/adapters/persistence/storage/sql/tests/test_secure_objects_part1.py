@@ -80,6 +80,8 @@ def test_revision_id_round_trips_for_self_consistency_check(tmp_path: Path) -> N
                 ).scalar_one()
                 assert row.revision_id is not None
                 assert row.previous_revision_id is not None, "second write must chain to the first revision"
+                assert row.payload_hash is not None
+                assert row.ciphertext_hash is not None
                 recomputed = derive_revision_id(
                     namespace=row.namespace,
                     object_key=bytes(row.object_key),
