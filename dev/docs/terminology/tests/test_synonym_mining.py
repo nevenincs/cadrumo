@@ -8,7 +8,6 @@ import pytest
 from typer.testing import CliRunner
 
 from aeat.core.external_constants import OutputLanguage
-from aeat.terminology import load_terminology_handbook
 from dev.docs.terminology._sweep import enumerate_query_vocabulary
 from dev.docs.terminology._synonym_cli import app
 from dev.docs.terminology._synonym_mining import (
@@ -21,6 +20,8 @@ from dev.docs.terminology._synonym_mining import (
     mine_synonym_candidates,
     validate_ratification_queue,
 )
+
+from ...terminology_handbook import load_terminology_handbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

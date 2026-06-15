@@ -61,14 +61,6 @@ _RETURN_TYPE_LINK_BASELINE: frozenset[tuple[str, str]] = frozenset(
         ("aeat.locales._modelo_manager::inventory_keys", "ModeloLocaleInventoryKey"),
         ("aeat.locales._modelo_manager::load_modelo", "ModeloDefinition"),
         ("aeat.locales._modelo_manager::load_translation_file", "ModeloLocaleTranslationFile"),
-        ("aeat.terminology._enrolment::collect_enrolment_candidates", "EnrolmentCandidate"),
-        ("aeat.terminology._loader::by_id", "ConceptRecord"),
-        ("aeat.terminology._loader::load_bundled_terminology_handbook", "TerminologyHandbook"),
-        ("aeat.terminology._ratchet::check_curation_backlog_ratchet", "CurationBacklogRatchetResult"),
-        ("aeat.terminology._ratchet::load_curation_backlog_ratchet_baseline", "CurationBacklogRatchetBaseline"),
-        ("aeat.terminology._scaffold::by_action", "ScaffoldEntry"),
-        ("aeat.terminology._scaffold::counts", "ScaffoldAction"),
-        ("aeat.terminology._schema::language_codes", "OutputLanguage"),
     },
 )
 

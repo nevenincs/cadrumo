@@ -1980,20 +1980,6 @@
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.950831
-        },
-        {
-          "record_id": "code:aeat.terminology",
-          "target": "api/aeat.terminology.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.488666
-        },
-        {
-          "record_id": "code:aeat.terminology._loader",
-          "target": "api/aeat.terminology._loader.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.484973
         }
       ],
       "dropped_count": 10,

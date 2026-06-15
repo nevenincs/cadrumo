@@ -1,10 +1,10 @@
 """Validation gates for the compiled Terminology Handbook.
 
 These gates implement ADR decisions D2 and D8 (the loader-validation
-inventory) as :data:`~aeat.terminology._loader.HandbookValidator`
+inventory) as :data:`~dev.docs.terminology_handbook._loader.HandbookValidator`
 callables bolted onto the loader's validation seam -- the loader body is
 untouched. Each gate is a factory returning a closure over the assembled,
-narrower-derived :class:`~aeat.terminology._loader.TerminologyHandbook`;
+narrower-derived :class:`~dev.docs.terminology_handbook._loader.TerminologyHandbook`;
 :func:`default_handbook_validators` assembles the full inventory in the
 order the loader runs them.
 
@@ -164,7 +164,7 @@ def approved_completeness_validator() -> HandbookValidator:
     """
 
     def _validate(handbook: TerminologyHandbook) -> None:
-        from ..core.external_constants import OutputLanguage
+        from aeat.core.external_constants import OutputLanguage
 
         failures: list[str] = []
         for concept in handbook.concepts:
@@ -210,7 +210,7 @@ def default_handbook_validators(legal_ref_ids: Container[str] | None = None) -> 
 
 
 def _bundled_legal_ref_ids() -> frozenset[str]:
-    from ..domain.calculations.registry import bundled_authority
+    from aeat.domain.calculations.registry import bundled_authority
 
     return frozenset(bundled_authority().catalogues.legal)
 

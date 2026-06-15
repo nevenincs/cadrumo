@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.external_constants import OutputLanguage
-from ...domain.calculations.registry import bundled_authority
+from aeat.core.external_constants import OutputLanguage
+from aeat.domain.calculations.registry import bundled_authority
+
 from .. import (
     ConceptLifecycle,
     audit_handbook,

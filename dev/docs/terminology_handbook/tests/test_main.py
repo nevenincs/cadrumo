@@ -1,4 +1,4 @@
-"""Real entrypoint coverage for ``python -m aeat.terminology``."""
+"""Real entrypoint coverage for ``python -m dev.docs.terminology_handbook``."""
 
 from __future__ import annotations
 

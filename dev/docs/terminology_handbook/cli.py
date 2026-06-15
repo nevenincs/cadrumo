@@ -1,6 +1,6 @@
 """Developer CLI for Terminology Handbook scaffolding, curation, and audits.
 
-A dev / maintenance module CLI invoked as ``python -m aeat.terminology``,
+A dev / maintenance module CLI invoked as ``python -m dev.docs.terminology_handbook``,
 mirroring the ``aeat.locales`` and ``dev.docs.apidocs`` precedents. It is
 NOT part of the operator ``aeat config`` / ``aeat app`` surface, so it
 does not bear on the two-CLI-roots architecture rule; like ``apidocs`` it
@@ -28,8 +28,9 @@ from typing import Annotated
 
 import typer
 
-from ..core.external_constants import OutputLanguage
-from ..core.i18n import tr
+from aeat.core.external_constants import OutputLanguage
+from aeat.core.i18n import tr
+
 from ._curation import (
     CurationError,
     audit_handbook,

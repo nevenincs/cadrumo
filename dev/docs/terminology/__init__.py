@@ -5,7 +5,7 @@ and ``dev/docs/apidocs``), not shippable ``src/aeat`` code: the projected
 records are a build-time artifact consumed by the downstream Pagefind
 injection, never committed (like the generated CLI reference). Per ADR D4
 the casilla records are MACHINE-GENERATED from registry snapshots and
-never hand-curated, distinct from the curated ``aeat.terminology`` concept
+never hand-curated, distinct from the curated ``dev.docs.terminology_handbook`` concept
 Handbook.
 """
 

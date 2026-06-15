@@ -5,7 +5,7 @@ pipeline (``TOML authoring tree -> loader/compiler -> strict schema
 objects``). Each fragment under ``src/aeat/_data/terminology/concepts/``
 is one concept; the loader parses every fragment, reshapes the nested
 ``[language.<code>]`` / ``[[language.<code>.term]]`` authoring layout into
-the :class:`~aeat.terminology._schema.ConceptRecord` shape, compiles each
+the :class:`~dev.docs.terminology_handbook._schema.ConceptRecord` shape, compiles each
 into a strict frozen record, then DERIVES every concept's ``narrower`` as
 the inverse of the parsed ``broader`` edges across the whole set.
 
@@ -30,9 +30,10 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import freeze_toml, read_toml, to_str_keyed_dict
-from ..core.resources import bundled_path
+from aeat.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from aeat.core import freeze_toml, read_toml, to_str_keyed_dict
+from aeat.core.resources import bundled_path
+
 from ._errors import TerminologyLoadError, TerminologyValidationError
 from ._schema import ConceptRecord
 
@@ -44,8 +45,8 @@ __all__ = [
 ]
 
 #: A validation hook: receives the assembled, narrower-derived handbook and
-#: raises :class:`~aeat.terminology._errors.TerminologyValidationError`
-#: (or any :class:`~aeat.terminology._errors.TerminologyError`) on a
+#: raises :class:`~dev.docs.terminology_handbook._errors.TerminologyValidationError`
+#: (or any :class:`~dev.docs.terminology_handbook._errors.TerminologyError`) on a
 #: violation. The sibling validation step supplies these; the loader runs
 #: them as the final compile stage. Returning normally means "passed".
 HandbookValidator = Callable[["TerminologyHandbook"], None]

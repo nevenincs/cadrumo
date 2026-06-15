@@ -13,8 +13,9 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..core.external_constants import UTF_8_ENCODING
-from ..core.resources import bundled_path
+from aeat.core.external_constants import UTF_8_ENCODING
+from aeat.core.resources import bundled_path
+
 from ._curation import AuditReport, audit_handbook
 from ._errors import TerminologyLoadError
 

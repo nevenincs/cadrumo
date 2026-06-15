@@ -39,7 +39,8 @@ from datetime import date
 from enum import StrEnum
 from pathlib import Path
 
-from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
+from aeat.core.external_constants import UTF_8_ENCODING, OutputLanguage
+
 from ._enrolment import EnrolmentCandidate
 from ._enums import ConceptLifecycle, TermStatus
 from ._loader import load_terminology_handbook, terminology_concepts_dir
@@ -270,7 +271,7 @@ def scaffold_handbook(
         concepts_dir: Handbook concepts directory; defaults to the bundled
             tree.
         candidates: Enrolment candidates; defaults to walking every live
-            source via :func:`~aeat.terminology._enrolment.collect_enrolment_candidates`.
+            source via :func:`~dev.docs.terminology_handbook._enrolment.collect_enrolment_candidates`.
         today: Date stamped on new/retired records; defaults to the system
             date.
         apply: When True, write the plan; when False, compute only (the
@@ -299,6 +300,6 @@ def _load_existing(concepts_dir: Path) -> dict[str, ConceptRecord]:
 
 
 def _today() -> date:
-    from ..core.time import now
+    from aeat.core.time import now
 
     return now().date()

@@ -8,8 +8,7 @@ from typing import Annotated, Final
 
 import typer
 
-from aeat.terminology import TerminologyLoadError
-
+from ..terminology_handbook import TerminologyLoadError
 from ._synonym_mining import (
     SynonymCandidateObservation,
     load_synonym_ratification_queue,
