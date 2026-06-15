@@ -28,7 +28,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_document_link_resolver.py",  # follow-up contract: scope-compatible Drive doclink resolution
         "_errors.py",
         "_oauth_flow.py",
-        "_profile_binding.py",
+        "_active_profile.py",
         "_records.py",
         "_session_store.py",
         "test_api.py",  # contract: execute_request typed response + error-translation contract
@@ -47,7 +47,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_oauth_flow.py",  # contract: OAuth local-server failures stay inside GoogleAuthError
         "test_oauth_live.py",
         "test_package_module_allowlist.py",
-        "test_profile_binding.py",  # contract: active-profile resolver localized refusal contract
+        "test_active_profile.py",  # contract: active-profile resolver localized refusal contract
         "test_pull_adapter_helpers.py",
         "test_pull_result_roundtrip.py",
         "test_records.py",

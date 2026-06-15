@@ -9,7 +9,7 @@ opens in the operator's default browser.
 
 Two policy gates fire before any network IO happens:
 
-1. The active profile must be bound (resolver in `_profile_binding`).
+1. The active profile must be bound (resolver in `_active_profile`).
 2. If the secret store is running in `unsecured` mode AND the active
    profile carries a real Spanish NIF / NIE / CIF, the flow refuses
    with `GoogleAuthUnsecuredModeRefusedError`. This mirrors the
@@ -41,7 +41,7 @@ def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
     """Refuse the OAuth flow when unsecured mode meets a real NIF.
 
     Args:
-        profile: Resolved active profile UUID (per `_profile_binding`).
+        profile: Resolved active profile UUID (per `_active_profile`).
         tax_id: The active profile's `tax.id` value. Empty string when
             the profile has no tax id stored.
 
@@ -67,7 +67,7 @@ def resolve_active_tax_id(profile_id: str) -> str:
     """Return the `identity.tax_id` value for the profile UUID, or empty string.
 
     ``profile_id`` is the immutable UUID profile identity (per
-    ``_profile_binding.resolve_active_profile``). Loads the canonical
+    ``_active_profile.resolve_active_profile``). Loads the canonical
     user-profile record from that profile's bucket and reads the
     identity tax-id fact. Used by the orchestrator to feed
     `check_unsecured_mode_safety`.
@@ -153,7 +153,7 @@ def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuth
 
     Args:
         client: The operator-imported OAuth client metadata.
-        profile: Resolved active profile UUID (per `_profile_binding`).
+        profile: Resolved active profile UUID (per `_active_profile`).
 
     Returns:
         A 2-tuple of (:class:`OAuthToken`, :class:`OAuthMetadata`) ready for persistence.
