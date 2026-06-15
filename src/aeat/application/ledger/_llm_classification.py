@@ -330,7 +330,7 @@ def _run_vision_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     try:
         return run()
     except (httpx.HTTPError, LLMProviderError) as exc:
-        from ..diagnostics import probe_ollama_vision
+        from ..provisioning import probe_ollama_vision
 
         status = probe_ollama_vision(settings)
         fix = status.remediation or "ensure the local Ollama vision model is reachable"
