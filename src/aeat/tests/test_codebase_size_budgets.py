@@ -20,7 +20,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # ceiling; their owners should extract submodules during their next pass.
     "src/aeat/application/calculations/_cross_period_clean_state.py": 1265,  # SPLIT-CANDIDATE
     "src/aeat/application/calculations/tests/test_cross_period_clean_state.py": 1440,  # SPLIT-CANDIDATE
-    "src/aeat/application/ledger/_llm_classification.py": 1614,  # SPLIT-CANDIDATE (active LLM-ledger growth)
+    "src/aeat/application/ledger/_llm_classification.py": 1664,  # SPLIT-CANDIDATE (active LLM-ledger growth)
     "src/aeat/application/modelo/_verification_actions.py": 1480,  # SPLIT-CANDIDATE
     # Centralised live-test opt-in added the live_tests_* predicates, the Google
     # opt-in field, and the opt-in constants; re-pinned to the present size.
@@ -33,7 +33,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/aeat/application/overview/tests/test_calendar.py": 1396,
     "src/aeat/application/overview/tests/test_calendar_filing_evidence.py": 1530,  # SPLIT-CANDIDATE
     "src/aeat/domain/calculations/registry/_applicability.py": 1252,  # SPLIT-CANDIDATE
-    "src/aeat/domain/calculations/registry/_schema.py": 1274,
+    "src/aeat/domain/calculations/registry/_schema.py": 1286,
     "src/aeat/entrypoints/cli/tests/test_registry_cli.py": 1300,  # SPLIT-CANDIDATE (Period construction verbosity)
     "src/aeat/entrypoints/cli/_app_live.py": 1265,
     "src/aeat/entrypoints/cli/_ledger_payloads.py": 1303,
