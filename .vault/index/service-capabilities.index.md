@@ -20,7 +20,9 @@ related:
   - '[[2026-06-15-service-capabilities-W03-P07-S10]]'
   - '[[2026-06-15-service-capabilities-W03-P07-S13]]'
   - '[[2026-06-15-service-capabilities-W03-P07-S14]]'
+  - '[[2026-06-15-service-capabilities-W03-P07-S15]]'
   - '[[2026-06-15-service-capabilities-W03-P07-S16]]'
+  - '[[2026-06-15-service-capabilities-W03-P07-S17]]'
   - '[[2026-06-15-service-capabilities-adr]]'
   - '[[2026-06-15-service-capabilities-audit]]'
   - '[[2026-06-15-service-capabilities-plan]]'
@@ -57,7 +59,9 @@ Auto-generated index of all documents tagged with `#service-capabilities`.
 - `2026-06-15-service-capabilities-W03-P07-S10` - Tests + locales + how-to onboarding doc across capabilities, probes, doctor, provisioning
 - `2026-06-15-service-capabilities-W03-P07-S13` - Investigate the torch placement (vaultspec-rag managed-torch-direct-dependency) and restructure pyproject: capability-mapped extras + relocate torch correctly
 - `2026-06-15-service-capabilities-W03-P07-S14` - Write the onboarding how-to doc covering bootstrap, capabilities, and the doctor
+- `2026-06-15-service-capabilities-W03-P07-S15` - Verify: full focused suite + conformance + honesty review
 - `2026-06-15-service-capabilities-W03-P07-S16` - Gate every Google-write verb (verify, push, probe --no-read-only) on google_export with a no-allowlist conformance test (honesty review H1)
+- `2026-06-15-service-capabilities-W03-P07-S17` - DEFERRED follow-up: add an llm_vision=off two-mode (scan PDF + image) evidence-refusal regression (honesty review M1)
 
 ### plan
 

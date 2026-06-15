@@ -66,15 +66,22 @@ The claim "the Google export entry points check `google_export`" was true for
 cloud and vision (single chokepoints) but only partially true for Google. With
 H1 landed the claim is now accurate; no separate action required.
 
-### M1 (MEDIUM, DEFERRED) — vision gate sits past two early returns; no off-refusal regression for both on-host read modes
+### M1 (MEDIUM, FIXED) — vision gate sits past two early returns; no off-refusal regression for both on-host read modes
 
 The `llm_vision` check in `_resolve_evidence` is functionally correct (text →
 cloud gate; image/scan → vision gate) and reviewer-verified, but it guards only
 the image/scan arm by position. A future on-host read mode could land above the
-gate. The capability resolution off-path is already unit-tested
-(`test_capabilities.py`), and the gate's presence is verified by reading.
+gate.
 
-**Disposition: DEFERRED** as a coverage nicety on confirmed-correct behavior. A
+**Disposition: FIXED** (S17, commit `9803e9dc0`). A parametrized regression now
+persists a profile with `capabilities.llm_vision=false` (real lifecycle save, no
+mocks) and asserts both a scan-only PDF and an image attachment refuse — pinning
+the gate's coverage of every on-host read mode. The earlier-deferred note below is
+superseded.
+
+<!-- superseded deferral rationale, retained for history -->
+
+**(superseded) Was DEFERRED** as a coverage nicety on confirmed-correct behavior. A
 focused regression (an `llm_vision=off` profile refuses both a scan-only PDF and
 an image attachment) needs profile-fact persistence plumbing the vision test
 harness does not currently wire; it is a follow-up, not a close blocker.
@@ -89,8 +96,9 @@ so there is no defect. Left as-is to avoid churn; recorded for completeness.
 Zero `TODO`/`FIXME`/`NotImplementedError`/`xfail`/`skip`/stub markers exist in
 `provisioning.py`, `_capabilities.py`, `_capabilities_cli.py`, or `_check_cli.py`
 (the `NotImplementedError`s in `_evidence_input.py` are deliberate persistence
-tripwires). Torch relocation (the safe immediate win) is done. S09 is honestly
-scoped as a deferred follow-up.
+tripwires). Torch relocation and — in a later pass on this campaign — the full
+lean-core extras migration (S09) both landed; no deferred implementation items
+remain.
 
 ### L2 (LOW, SOUND) — residual surface verified
 
@@ -104,12 +112,16 @@ paths the resolver reads. All confirmed.
 
 - **Done:** H1 fixed with a no-allowlist conformance test that any future
   Google-write verb must satisfy. H2 resolves with it.
-- **Follow-up (deferred):** M1 — add the `llm_vision=off` two-mode refusal
-  regression when the vision test harness gains capability-fact plumbing.
-- **Follow-up (deferred):** S09 — the capability-extras lean-core pyproject
-  migration (relocate google / playwright / anthropic into capability-mapped
-  optional extras), a standalone breakage-risky refactor recorded in the
-  dependency-provisioning ADR §4.
+- **Done (later pass):** M1 — the `llm_vision=off` two-mode refusal regression
+  landed (S17, commit `9803e9dc0`) via a real lifecycle-saved profile fact.
+- **Done (later pass):** S09 — the capability-extras lean-core pyproject migration
+  landed (commits `2490c33af` foundation, `dd6122263` doctor probes + graceful
+  guard, `975a98e39` docs). google / playwright / anthropic now install on demand
+  via the `google` / `browser` / `anthropic` extras; the dev environment is
+  unchanged; the doctor reconciles each enabled capability against its extra. The
+  one intentional non-goal — feature-boundary inline guards (lazy-import refactor
+  of the adapters) — is documented in the S09 exec record; the doctor +
+  `require_optional_extra` provide the actionable guidance instead.
 - **Process note:** during closeout the driving agent twice hit the shared-index
   hazard — once a peer `git commit` swept staged vault files into its commit, once
   a bare `git commit` (no pathspec) swept peer-staged work (a `filing/reconciliation`
