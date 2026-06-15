@@ -111,10 +111,12 @@ appends an event.
 - The operator review loop is complete and fully auditable: every decision
   (approve, reject, override) leaves a typed trail; only "review" (preview) is
   intentionally trace-free because it changes nothing.
-- A rejected row stays `pending` — correct, because it is still unclassified. A
-  future "declined" review filter (exclude rows whose latest LLM decision is a
-  rejection from the pending queue) is a clean follow-on but is deliberately not
-  built here, to keep `review_status` a pure projection of classification.
+- A rejected row stays `pending` — correct, because it is still unclassified. The
+  "declined" review filter (`ledger list --hide-llm-rejected`, landed in the
+  follow-up pass) excludes rows whose latest LLM decision is a rejection from the
+  listing; it reads events as an orthogonal filter and does NOT fold the rejection
+  into `review_status`, so the status projection stays pure (the row is still
+  genuinely `pending`, just hidden from the batch queue on request).
 - Reject costs one model call (it captures a concrete proposal). An operator who
   already previewed and simply wants to log a decline pays for one more call; this
   is the honest cost of recording *what* was rejected.

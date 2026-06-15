@@ -57,6 +57,7 @@ Add the LLM-suggestion-rejected event, reject_llm_suggestion, classify --reject 
 Surface the most-recent LLM rejection on ledger view as a typed info notice, the deferred view one-liner from the review-loop ADR.
 
 - [x] `P05.S11` - Surface the latest LLM rejection on ledger view as a typed info notice reading the row's LLM-decision events; `src/aeat/entrypoints/cli/_ledger_read_cli.py, src/aeat/locales, docs/how-to/classify-with-llm.md, tests`.
+- [x] `P05.S12` - Add ledger list --hide-llm-rejected: an event-based filter excluding rows whose latest LLM decision is a rejection, keeping review_status a pure projection; `src/aeat/entrypoints/cli/_ledger_list.py, src/aeat/entrypoints/cli/_ledger_read_cli.py, src/aeat/locales, tests`.
 
 ## Description
 

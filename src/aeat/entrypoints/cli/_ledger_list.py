@@ -17,6 +17,12 @@ from ...application.ledger import (
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core import LedgerSortField, LedgerSortOrder
 from ...core.i18n import tr
+from ...domain.buckets import (
+    BucketEventHistoryCatalogue,
+    BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
+)
 from ...domain.transactions import Transaction, TransactionCatalogueRepositoryProtocol
 from ._ledger_payloads import LedgerListRowPayload
 
@@ -140,6 +146,37 @@ def _sort_results(
     return tuple(sorted(results, key=composite_key))
 
 
+# The two terminal LLM decisions on a row: an accepted (applied) classification or
+# a rejection. The most recent of the two is the standing LLM decision.
+_LLM_DECISION_EVENT_TYPES = (
+    BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
+    BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,
+)
+
+
+def latest_llm_decision_is_rejection(event_catalogue: BucketEventHistoryCatalogue, transaction_id: str) -> bool:
+    """Return True when the row's most recent LLM decision was a rejection.
+
+    The standing LLM decision is the latest of {classified, llm-suggestion-rejected}
+    for the transaction. A row whose latest such event is a rejection has been
+    reviewed-and-declined and should drop out of the pending review queue when the
+    operator filters it out. Reads events only; never consults ``review_status``
+    (which stays a pure projection of the classification).
+    """
+    decisions = [
+        event
+        for event in event_catalogue.for_object(
+            object_type=BucketEventObjectType.LEDGER_TRANSACTION,
+            object_id=transaction_id,
+        )
+        if event.event_type in _LLM_DECISION_EVENT_TYPES
+    ]
+    if not decisions:
+        return False
+    decisions.sort(key=lambda event: event.occurred_at)
+    return decisions[-1].event_type is BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED
+
+
 def project_ledger_list(
     *,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
@@ -150,6 +187,7 @@ def project_ledger_list(
     offset: int,
     sort_by: LedgerSortField | None = None,
     sort_order: LedgerSortOrder = LedgerSortOrder.ASC,
+    exclude_llm_rejected: bool = False,
 ) -> LedgerListProjection:
     """Project, page, and render one ``ledger list`` result set and return a :class:`LedgerListProjection`.
 
@@ -172,6 +210,13 @@ def project_ledger_list(
             transaction_repository=transaction_repository,
             spec=spec,
             results=all_results,
+        )
+    if exclude_llm_rejected:
+        event_catalogue = BucketEventHistoryRepository().load()
+        all_results = tuple(
+            result
+            for result in all_results
+            if not latest_llm_decision_is_rejection(event_catalogue, result.transaction.transaction_id)
         )
     if group is not None:
         wanted = group.strip() or None

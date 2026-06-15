@@ -2859,6 +2859,7 @@ cli:
         created_at, modified_at, ...).
       sort_order_help: 'Orden: asc (ascendente) o desc (descendente).'
       ungrouped_label: (sin grupo)
+      hide_llm_rejected_help: 'Oculta las filas cuya sugerencia del modelo más reciente fue rechazada (una fila revisada y descartada sale de la cola pendiente).'
     merge:
       actor_help: Nombre del operador registrado en el evento del bucket
       child_id_help: Id de transacción hija que quieres fusionar; se puede repetir

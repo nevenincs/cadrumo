@@ -338,6 +338,41 @@ def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path, extra_
     assert "--reject" in result.output and "--apply" in result.output
 
 
+def _import_two_transactions(tmp_path: Path) -> list[str]:
+    csv_content = (
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2026-04-01,Proveedor A,first invoice,-100.00,EUR,two-001\n"
+        "2026-04-02,Proveedor B,second invoice,-200.00,EUR,two-002\n"
+    )
+    csv_path = tmp_path / "import.csv"
+    csv_path.write_text(csv_content, encoding="utf-8")
+    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    assert result.exit_code == 0, result.output
+    return [r["transaction_id"] for r in _rows()]
+
+
+def test_list_hide_llm_rejected_drops_the_declined_row(tmp_path: Path) -> None:
+    _register(_RouterModel(multi=False))
+    ids = _import_two_transactions(tmp_path)
+    assert len(ids) == 2
+    rejected_id = ids[0]
+    rej = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "classify", rejected_id, "--llm", "claude", "--reject", "--reason", "no"],
+    )
+    assert rej.exit_code == 0, rej.output
+
+    # Without the flag both rows show; with it the rejected row is hidden.
+    all_ids = {r["transaction_id"] for r in _rows()}
+    assert rejected_id in all_ids
+
+    filtered = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list", "--hide-llm-rejected"])
+    assert filtered.exit_code == 0, filtered.output
+    shown = {r["transaction_id"] for r in json.loads(filtered.output)["result"]["rows"]}
+    assert rejected_id not in shown
+    assert ids[1] in shown
+
+
 def test_view_surfaces_the_latest_rejection(tmp_path: Path) -> None:
     _register(_RouterModel(multi=False))
     tx = _import_one_transaction(tmp_path)
