@@ -38,7 +38,9 @@ def _make_history(*, modelo: str = "130", n_entries: int = 2) -> ModeloHistory:
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
-    return (tmp_path / "aeat-storage" / "buckets" / "filing-test" / "db" / "aeat.db").read_bytes()
+    from ....tests.secure_sql import read_db_at_rest_bytes
+
+    return read_db_at_rest_bytes(tmp_path / "aeat-storage" / "buckets" / "filing-test" / "db" / "aeat.db")
 
 
 def _database_payloads(tmp_path: Path) -> tuple[bytes, ...]:

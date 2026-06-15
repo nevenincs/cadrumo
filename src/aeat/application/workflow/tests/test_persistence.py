@@ -35,7 +35,9 @@ def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
-    return (tmp_path / "aeat-storage" / "buckets" / "test-runtime-profile" / "db" / "aeat.db").read_bytes()
+    from ....tests.secure_sql import read_db_at_rest_bytes
+
+    return read_db_at_rest_bytes(tmp_path / "aeat-storage" / "buckets" / "test-runtime-profile" / "db" / "aeat.db")
 
 
 def _result(run_id: str, started: datetime) -> WorkflowResult:
