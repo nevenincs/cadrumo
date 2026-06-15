@@ -48,6 +48,7 @@ Submodules
    aeat.application._storage_paths
    aeat.application.config_reset
    aeat.application.diagnostics
+   aeat.application.provisioning
    aeat.application.repair_integrity
    aeat.application.state_projection
    aeat.application.storage_write_policy

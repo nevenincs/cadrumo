@@ -7,14 +7,6 @@ aeat.application.filing package
    :ignore-module-all:
 
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   aeat.application.filing.reconciliation
-
 Submodules
 ----------
 

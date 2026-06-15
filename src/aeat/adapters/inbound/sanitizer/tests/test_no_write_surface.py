@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 # Banned verbs from the parent aeat-verify write guard.
-# guard (mirrored from the sede + filing.reconciliation guards).
+# guard (mirrored from the sede write guard).
 _FORBIDDEN_VERBS: tuple[str, ...] = (
     "submit",
     "send",

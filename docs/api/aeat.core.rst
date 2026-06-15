@@ -36,6 +36,7 @@ Submodules
 
    aeat.core._bucket_pointer
    aeat.core._bucket_pointer_io
+   aeat.core._capabilities
    aeat.core._config_storage_route
    aeat.core._config_support
    aeat.core._config_timeouts
