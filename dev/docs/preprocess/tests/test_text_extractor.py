@@ -62,19 +62,27 @@ def test_target_files_exist() -> None:
     assert _TXT.is_file(), _TXT
 
 
-def test_all_four_extensions_are_walker_invisible() -> None:
-    """None of the four covered extensions is in the walker's supported set.
+def test_passthrough_is_retired_now_walker_covers_the_text_tail() -> None:
+    """The walker subsumed the text tail, so the passthrough sweep is retired.
 
-    This is the load-bearing premise of the passthrough extractor: the
-    sidecars are purely additive coverage of genuinely invisible files (no
-    raw-vs-sidecar double-index, in contrast to the already-supported HTML).
-    If a peer ever adds one of these to the walker, this test fails and the
-    dedup question must be revisited.
+    The interim passthrough covered the walker-invisible tail (``.txt`` /
+    ``.xml`` / ``.xsd`` / ``.properties``). The resident vaultspec-rag walker
+    now natively indexes all four raw - the documented retirement trigger - so
+    the sweep set is empty (nothing swept, no raw-vs-sidecar double-index) and
+    the whole former tail is walker-covered. If the walker ever DROPS one of
+    the four, the completeness assertion fails and the sweep must re-cover it
+    (and regenerate its sidecars).
     """
     from vaultspec_rag.indexer._chunking import SUPPORTED_EXTENSIONS
 
+    former_tail = {".txt", ".xml", ".xsd", ".properties"}
+    # Retired: nothing swept, so nothing overlaps the walker's raw index.
+    assert SUPPORTED_TEXT_EXTENSIONS == frozenset()
     for ext in SUPPORTED_TEXT_EXTENSIONS:
         assert ext not in SUPPORTED_EXTENSIONS, ext
+    # Completeness: the whole former tail is now walker-covered (the reason the
+    # passthrough is retired); catches a walker regression that drops one.
+    assert former_tail <= SUPPORTED_EXTENSIONS
 
 
 def test_properties_decodes_cp1252_with_accents() -> None:
