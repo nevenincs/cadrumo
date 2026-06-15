@@ -199,9 +199,9 @@ Route domain and outbound namespace literals through the registry and extend the
 
 Resolve the fincas inversion, rebind private-submodule imports, and promote missing re-exports.
 
-- [ ] `W05.P11.S23` - Resolve the fincas domain hexagonal inversion by relocating the ORM-coupled repository or exposing a typed boundary facade and fix the stale docstring path; `src/aeat/domain/fincas/_repository.py`.
+- [x] `W05.P11.S23` - Resolve the fincas domain hexagonal inversion by relocating the ORM-coupled repository or exposing a typed boundary facade and fix the stale docstring path; `src/aeat/domain/fincas/_repository.py`.
 - [x] `W05.P11.S24` - Rebind the private bucket-submodule imports in profile health and overview to the bucket package surface; `src/aeat/application/workflow/_profile_health.py`.
-- [ ] `W05.P11.S25` - Promote the sealed-archive read and write helpers to the bucket package all and rebind the maintenance service call sites; `src/aeat/adapters/persistence/storage/bucket/__init__.py`.
+- [x] `W05.P11.S25` - Promote the sealed-archive read and write helpers to the bucket package all and rebind the maintenance service call sites; `src/aeat/adapters/persistence/storage/bucket/__init__.py`.
 
 ### Phase `W05.P12` - enrollment and legacy deletion
 
