@@ -22,33 +22,24 @@ from ...application.ledger import (
     LLMProvider,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
-    apply_llm_classification,
-    apply_saturated_llm_classification,
     create_manual_transaction,
-    derive_operator_iva_substrate,
-    is_llm_provider_available,
     ledger_transaction_payload,
     ledger_transaction_result_payload,
     ledger_transaction_review_status,
     resolve_lineage_transaction_id,
-    saturate_llm_classification,
-    suggest_llm_classification,
     update_manual_transaction_fields,
 )
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
-from ...core.json_contract import Notice
 from ...core.logging import get_logger
 from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.transactions import (
     BusinessClassification,
-    LLMClassifierError,
     Transaction,
     TransactionCatalogueRepository,
     TransactionDirection,
     TransactionIdPrefixError,
-    TransactionValidationError,
 )
 from ._common import (
     _bad,
@@ -58,7 +49,6 @@ from ._common import (
     _state,
     _tx_repo,
 )
-from ._ledger_autosplit_cli import dispatch_autosplit, split_recommendation_notice
 from ._ledger_business_invoice_cli import (
     invoice_app,
     register_business_invoice_commands,
@@ -77,6 +67,12 @@ from ._ledger_lifecycle_cli import (
     ledger_split,
     ledger_stash,
     register_lifecycle_commands,
+)
+from ._ledger_llm_cli import (
+    dispatch_autosplit,
+    ledger_classify_llm,
+    ledger_operator_iva_derive,
+    ledger_saturate_llm,
 )
 from ._ledger_ratios_cli import ratios_app, register_ratios_commands
 from ._ledger_read_cli import register_read_commands
@@ -452,6 +448,8 @@ def ledger_classify(
         "--auto-split",
         help=tr("cli.ledger.classify.auto_split_help"),
     ),
+    reject: bool = typer.Option(False, "--reject", help=tr("cli.ledger.classify.reject_help")),
+    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.classify.reason_help")),
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--from-csv)."""
     if auto_split:
@@ -466,40 +464,33 @@ def ledger_classify(
             read_evidence=read_evidence,
             evidence_acknowledged=evidence_acknowledged,
             vision_model=vision_model,
+            reject=reject,
+            reason=reason,
         )
         return
     if llm is not None or read_evidence:
+        saturate_kwargs = {
+            "ctx": ctx,
+            "transaction_id": transaction_id,
+            "classification": classification,
+            "from_csv": from_csv,
+            "business_pct": business_pct,
+            "provider": llm,
+            "apply": apply,
+            "actor": actor,
+            "read_evidence": read_evidence,
+            "evidence_acknowledged": evidence_acknowledged,
+            "vision_model": vision_model,
+            "reject": reject,
+            "reason": reason,
+        }
         if saturate:
-            _ledger_saturate_llm(
-                ctx,
-                transaction_id=transaction_id,
-                classification=classification,
-                from_csv=from_csv,
-                business_pct=business_pct,
-                provider=llm,
-                apply=apply,
-                actor=actor,
-                read_evidence=read_evidence,
-                evidence_acknowledged=evidence_acknowledged,
-                vision_model=vision_model,
-            )
+            ledger_saturate_llm(**saturate_kwargs)
             return
-        _ledger_classify_llm(
-            ctx,
-            transaction_id=transaction_id,
-            classification=classification,
-            from_csv=from_csv,
-            business_pct=business_pct,
-            provider=llm,
-            apply=apply,
-            actor=actor,
-            read_evidence=read_evidence,
-            evidence_acknowledged=evidence_acknowledged,
-            vision_model=vision_model,
-        )
+        ledger_classify_llm(**saturate_kwargs)
         return
     if saturate:
-        _ledger_operator_iva_derive(
+        ledger_operator_iva_derive(
             ctx,
             transaction_id=transaction_id,
             classification=classification,
@@ -606,419 +597,6 @@ def ledger_classify(
         result=classify_result,
         lines=lines,
     )
-
-
-def _ledger_classify_llm(
-    ctx: typer.Context,
-    *,
-    transaction_id: str | None,
-    classification: BusinessClassification | None,
-    from_csv: str | None,
-    business_pct: str | None,
-    provider: LLMProvider | None,
-    apply: bool,
-    actor: str | None,
-    read_evidence: bool = False,
-    evidence_acknowledged: bool = False,
-    vision_model: str | None = None,
-) -> None:
-    """Run the LLM suggest / apply loop for ``aeat app ledger classify --llm``.
-
-    Without ``--apply`` the model's suggestion is printed for review and
-    nothing is persisted (the suggest step; rejecting is simply not applying).
-    With ``--apply`` the decision is written via
-    :func:`apply_llm_classification` with ``llm:<model>`` provenance. ``--llm``
-    is mutually exclusive with the manual ``--classification`` / ``--from-csv``
-    paths (manual classification is always the explicit override).
-    """
-    from ._ledger_payloads import LedgerClassifyLlmSuggestResult, LedgerClassifySingleResult
-
-    if classification is not None or from_csv is not None:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_exclusive",
-                default="--llm cannot be combined with --classification or --from-csv; "
-                "the manual path is the explicit operator override.",
-            ),
-        )
-    if transaction_id is None:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --from-csv is not provided.",
-            ),
-        )
-    # A provider is checked for PATH availability only when one is named. With
-    # --read-evidence and no --llm, a scanned/image invoice is read on-host by the
-    # local vision model, which needs no subprocess provider; a text-layer read with
-    # no provider is refused instructively downstream by the application.
-    if provider is not None and not is_llm_provider_available(provider):
-        # Instructive refusal: name the provider and the CLI it needs on PATH,
-        # never a crash. The subprocess backend shells to a local CLI binary.
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_provider_unavailable",
-                provider=provider.value,
-                default=(
-                    f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
-                    f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat app ledger providers' to list usable providers."
-                ),
-            ),
-        )
-
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    try:
-        suggestion = suggest_llm_classification(
-            bucket_id=transaction_repository.bucket_id,
-            transaction_id=resolved_id,
-            provider=provider,
-            transaction_repository=transaction_repository,
-            read_evidence=read_evidence,
-            evidence_acknowledged=evidence_acknowledged,
-            vision_model=vision_model,
-        )
-    except LLMClassifierError as exc:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_failed",
-                reason=str(exc),
-                default=f"LLM classification failed: {exc}",
-            ),
-        ) from exc
-
-    if not apply:
-        # Suggest (preview) — persist nothing. Rejecting = not applying.
-        suggest_result = LedgerClassifyLlmSuggestResult.model_validate(
-            {
-                "llm": True,
-                "persisted": False,
-                "transaction_id": suggestion.transaction_id,
-                "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
-                "classification": suggestion.classification.value,
-                "category": suggestion.category.value if suggestion.category is not None else None,
-                "confidence": format(suggestion.confidence, "f"),
-                "reason": suggestion.reason,
-                "provenance": suggestion.provenance,
-            },
-        )
-        lines = [
-            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
-            f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification.value}",
-            f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category.value if suggestion.category else ''}",
-            f"{tr('cli.ledger.classify.llm_confidence_label')}\t{format(suggestion.confidence, 'f')}",
-            f"{tr('cli.ledger.classify.llm_reason_label')}\t{suggestion.reason}",
-            tr("cli.ledger.classify.llm_review_hint"),
-        ]
-        notices: list[Notice] = []
-        if suggestion.recommends_split:
-            notice = split_recommendation_notice(suggestion.transaction_id, provider=provider)
-            notices.append(notice)
-            lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
-        _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines, notices=notices)
-        return
-
-    try:
-        result = apply_llm_classification(
-            suggestion,
-            bucket_id=transaction_repository.bucket_id,
-            business_pct=_parse_decimal(business_pct, label="business-pct"),
-            actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger classify --llm --apply",
-            transaction_repository=transaction_repository,
-        )
-    except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
-
-    transaction_payload = ledger_transaction_payload(result.transaction)
-    review_status = ledger_transaction_review_status(result.transaction)
-    # D1: the --llm --apply path is a single-transaction mutation, so it emits the
-    # canonical mutation quintet (LedgerClassifySingleResult); the llm provenance
-    # is surfaced in the operator-facing text lines below.
-    classify_result = LedgerClassifySingleResult.model_validate(
-        {
-            "bucket_id": result.ref.bucket_id,
-            "transaction_id": result.transaction.transaction_id,
-            "bucket_event_ids": list(result.bucket_event_ids),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
-    lines = [
-        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
-        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
-        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-    ]
-    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
-
-
-def _ledger_saturate_llm(
-    ctx: typer.Context,
-    *,
-    transaction_id: str | None,
-    classification: BusinessClassification | None,
-    from_csv: str | None,
-    business_pct: str | None,
-    provider: LLMProvider | None,
-    apply: bool,
-    actor: str | None,
-    read_evidence: bool = False,
-    evidence_acknowledged: bool = False,
-    vision_model: str | None = None,
-) -> None:
-    """Run the saturating LLM suggest / apply loop for ``classify --llm --saturate``.
-
-    Extends the stage-1 loop to the rich tax substrate: the model selects an
-    :class:`aeat.domain.iva.IvaCategory` and the system DERIVES the rate, base,
-    and amount from the registry — never the model. Without ``--apply`` the full
-    saturated suggestion is previewed and nothing is persisted; with ``--apply``
-    it is written through the manual-command write with ``llm:<model>``
-    provenance. Manual ``classify`` flags remain the explicit per-field
-    override; rejecting is simply not applying.
-    """
-    from ._ledger_payloads import LedgerClassifyLlmSaturateResult, LedgerClassifySingleResult
-
-    if classification is not None or from_csv is not None:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_exclusive",
-                default="--llm cannot be combined with --classification or --from-csv; "
-                "the manual path is the explicit operator override.",
-            ),
-        )
-    if transaction_id is None:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --from-csv is not provided.",
-            ),
-        )
-    if provider is not None and not is_llm_provider_available(provider):
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_provider_unavailable",
-                provider=provider.value,
-                default=(
-                    f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
-                    f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat app ledger providers' to list usable providers."
-                ),
-            ),
-        )
-
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    try:
-        suggestion = saturate_llm_classification(
-            bucket_id=transaction_repository.bucket_id,
-            transaction_id=resolved_id,
-            provider=provider,
-            transaction_repository=transaction_repository,
-            read_evidence=read_evidence,
-            evidence_acknowledged=evidence_acknowledged,
-            vision_model=vision_model,
-        )
-    except LLMClassifierError as exc:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_failed",
-                reason=str(exc),
-                default=f"LLM classification failed: {exc}",
-            ),
-        ) from exc
-
-    iva_category_value = suggestion.iva_category.value if suggestion.iva_category is not None else None
-    iva_rate_value = format(suggestion.iva_rate, "f") if suggestion.iva_rate is not None else None
-    taxable_base_value = format(suggestion.taxable_base, "f") if suggestion.taxable_base is not None else None
-    iva_amount_value = format(suggestion.iva_amount, "f") if suggestion.iva_amount is not None else None
-    derived_fields = {
-        "iva_category": iva_category_value,
-        "iva_rate": iva_rate_value,
-        "taxable_base": taxable_base_value,
-        "iva_amount": iva_amount_value,
-        "rate_derivable": suggestion.rate_derivable,
-        "derivation_note": suggestion.derivation_note or None,
-    }
-
-    if not apply:
-        classify_result = LedgerClassifyLlmSaturateResult.model_validate(
-            {
-                "llm": True,
-                "persisted": False,
-                "transaction_id": suggestion.transaction_id,
-                "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
-                "classification": suggestion.classification.value,
-                "category": suggestion.category.value if suggestion.category is not None else None,
-                "confidence": format(suggestion.confidence, "f"),
-                "reason": suggestion.reason,
-                "provenance": suggestion.provenance,
-                **derived_fields,
-            },
-        )
-        lines = [
-            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
-            f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification.value}",
-            f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category.value if suggestion.category else ''}",
-            f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",
-        ]
-        if suggestion.rate_derivable:
-            lines.extend(
-                [
-                    f"{tr('cli.ledger.labels.taxable_base')}\t{taxable_base_value}",
-                    f"{tr('cli.ledger.labels.iva_rate')}\t{iva_rate_value}",
-                    f"{tr('cli.ledger.labels.iva_amount')}\t{iva_amount_value}",
-                ],
-            )
-        elif suggestion.iva_category is not None:
-            lines.append(f"{tr('cli.ledger.classify.saturate_non_derivable')}\t{suggestion.derivation_note}")
-        lines.append(f"{tr('cli.ledger.classify.llm_confidence_label')}\t{format(suggestion.confidence, 'f')}")
-        lines.append(tr("cli.ledger.classify.llm_review_hint"))
-        notices: list[Notice] = []
-        if suggestion.recommends_split:
-            notice = split_recommendation_notice(suggestion.transaction_id, provider=provider)
-            notices.append(notice)
-            lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
-        _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
-        return
-
-    try:
-        result = apply_saturated_llm_classification(
-            suggestion,
-            bucket_id=transaction_repository.bucket_id,
-            business_pct=_parse_decimal(business_pct, label="business-pct"),
-            actor=actor or resolve_active_bucket_id() or "operator",
-            transaction_repository=transaction_repository,
-        )
-    except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
-    except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
-
-    transaction_payload = ledger_transaction_payload(result.transaction)
-    review_status = ledger_transaction_review_status(result.transaction)
-    # D1: the --llm --saturate --apply path is a single-transaction mutation; it
-    # emits the canonical mutation quintet (the saturated substrate is already
-    # persisted on `transaction`), with the substrate surfaced in the text lines.
-    classify_result = LedgerClassifySingleResult.model_validate(
-        {
-            "bucket_id": result.ref.bucket_id,
-            "transaction_id": result.transaction.transaction_id,
-            "bucket_event_ids": list(result.bucket_event_ids),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
-    lines = [
-        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
-        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
-        f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",
-        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-    ]
-    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
-
-
-def _ledger_operator_iva_derive(
-    ctx: typer.Context,
-    *,
-    transaction_id: str | None,
-    classification: str | None,
-    from_csv: str | None,
-    iva_category: IvaCategory | None,
-    actor: str | None,
-) -> None:
-    """Derive the IVA substrate from an OPERATOR-chosen category (no LLM).
-
-    The fallback for ``classify --saturate`` without ``--llm``: when the model
-    declines (returns ``unknown``) or the operator already knows the category,
-    pick it with ``--iva-category`` and the system derives the base, rate, and
-    amount from the registry — the same grounded
-    :func:`derive_operator_iva_substrate` path the LLM saturate uses, but
-    operator-initiated and stamped with ``derived:`` provenance. Only the IVA
-    substrate is touched; the business classification and its provenance are
-    left intact.
-    """
-    from ._ledger_payloads import LedgerClassifySingleResult
-
-    if from_csv is not None or classification is not None:
-        raise _bad(
-            "--saturate without --llm derives the IVA substrate from --iva-category alone; "
-            "it cannot be combined with --classification or --from-csv. Classify the row "
-            "first, then run 'classify <id> --iva-category <category> --saturate'.",
-        )
-    if transaction_id is None:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --from-csv is not provided.",
-            ),
-        )
-    if iva_category is None:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.saturate_requires_llm",
-                default=(
-                    "--saturate needs an IVA category: supply --iva-category to derive the "
-                    "base, rate, and amount, or --llm <provider> to have the model select one."
-                ),
-            ),
-        )
-
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    try:
-        derivation = derive_operator_iva_substrate(
-            bucket_id=transaction_repository.bucket_id,
-            transaction_id=resolved_id,
-            iva_category=iva_category,
-            actor=actor or resolve_active_bucket_id() or "operator",
-            transaction_repository=transaction_repository,
-        )
-    except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
-    except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
-
-    if not derivation.derivable:
-        raise _bad(
-            f"{iva_category.value} has no simple Spanish rate to derive: {derivation.note} "
-            "Supply --taxable-base, --iva-rate, and --iva-amount by hand for this category.",
-        )
-
-    result = derivation.result
-    taxable_base = derivation.taxable_base
-    iva_rate = derivation.iva_rate
-    iva_amount = derivation.iva_amount
-    if result is None or taxable_base is None or iva_rate is None or iva_amount is None:
-        raise _bad(
-            f"{iva_category.value} was reported derivable but produced no IVA substrate; "
-            "supply --taxable-base, --iva-rate, and --iva-amount by hand for this category.",
-        )
-
-    transaction_payload = ledger_transaction_payload(result.transaction)
-    review_status = ledger_transaction_review_status(result.transaction)
-    classify_result = LedgerClassifySingleResult.model_validate(
-        {
-            "bucket_id": result.ref.bucket_id,
-            "transaction_id": result.transaction.transaction_id,
-            "bucket_event_ids": list(result.bucket_event_ids),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
-    lines = [
-        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
-        f"{tr('cli.ledger.labels.iva_category')}\t{derivation.iva_category.value}",
-        f"{tr('cli.ledger.labels.taxable_base')}\t{format(taxable_base, 'f')}",
-        f"{tr('cli.ledger.labels.iva_rate')}\t{format(iva_rate, 'f')}",
-        f"{tr('cli.ledger.labels.iva_amount')}\t{format(iva_amount, 'f')}",
-        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
-        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-    ]
-    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
 
 
 @app.command("allocate", help=tr("cli.ledger.allocate.help"))

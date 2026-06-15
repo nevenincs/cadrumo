@@ -4,5 +4,5 @@ number = "1991"
 label = "Deducción por nacimiento: Importe del abono anticipado"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_i_baleares"]
 semantic_role = "irpf_anexo_b_deduccion_nacimiento_abono_anticipado"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

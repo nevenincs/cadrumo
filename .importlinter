@@ -277,6 +277,8 @@ ignore_imports =
     aeat.application.ledger.tests.test_evidence -> aeat.tests.secure_sql
     aeat.application.ledger.tests.test_llm_evidence_split -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_llm_evidence_split -> aeat.tests.secure_sql
+    aeat.application.ledger.tests.test_llm_reject -> aeat.adapters.persistence.storage.sql
+    aeat.application.ledger.tests.test_llm_reject -> aeat.tests.secure_sql
     aeat.application.ledger.tests.test_merge -> aeat.adapters.persistence.storage.sql
     aeat.application.ledger.tests.test_merge -> aeat.tests.secure_sql
     aeat.application.ledger.tests.test_preflight -> aeat.adapters.persistence.storage.sql
@@ -510,6 +512,14 @@ ignore_imports =
     aeat.domain.fincas.tests.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.modelos.tests.test_calculation_repository_roundtrip -> aeat.adapters.persistence.storage
     aeat.domain.usage_ratios.tests.test_service -> aeat.adapters.persistence.storage.errors
+    # Domain roundtrip/anti-tautology tests corrupt encrypted payloads under the
+    # AEAD AAD to prove byte custody, so they consume the real adapter crypto
+    # helper (aeat-roundtrip-discipline: real adapters, not mocks).
+    aeat.domain.buckets.tests.test_event_history_roundtrip -> aeat.adapters.persistence.storage.crypto._encrypted_columns
+    aeat.domain.filing.tests.test_amendment_roundtrip -> aeat.adapters.persistence.storage.crypto._encrypted_columns
+    aeat.domain.filing.tests.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.crypto._encrypted_columns
+    aeat.domain.invoices.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.crypto._encrypted_columns
+    aeat.domain.submission.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.crypto._encrypted_columns
     # ── application → adapters (permitted by architecture ADR sec. 538) ──
     # application/ may import adapters/ for outbound wiring; full inversion
     # would require a major refactor and is deferred.

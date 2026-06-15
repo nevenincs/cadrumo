@@ -9,6 +9,7 @@
 concept_id = "modelo"
 domain = "concepto"
 lifecycle = "approved"
+legal_refs = ["ley-58-2003:art-98"]
 related = ["modelo-100", "modelo-130", "modelo-303", "modelo-390", "casilla", "declaracion"]
 created_at = 2026-06-11
 updated_at = 2026-06-11

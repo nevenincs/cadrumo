@@ -1,6 +1,6 @@
 """Concept-card projection compiler for the docs search index (ADR D4).
 
-Projects every curated :class:`~aeat.terminology.ConceptRecord` from the
+Projects every curated :class:`~dev.docs.terminology_handbook.ConceptRecord` from the
 Terminology Handbook into a strict
 :class:`~dev.docs.terminology._concept_cards.ConceptCardRecord` -- the
 first-class "term card" the Ctrl-K command palette surfaces ahead of nav
@@ -40,7 +40,8 @@ from dataclasses import dataclass
 from pydantic import BaseModel, ConfigDict, Field
 
 from aeat.core.external_constants import OutputLanguage
-from aeat.terminology import (
+
+from ..terminology_handbook import (
     ConceptDomain,
     ConceptLifecycle,
     ConceptRecord,
@@ -49,7 +50,6 @@ from aeat.terminology import (
     default_handbook_validators,
     load_terminology_handbook,
 )
-
 from ._search_record import SearchRecordBase, SearchRecordKind
 
 __all__ = [

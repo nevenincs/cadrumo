@@ -2544,6 +2544,11 @@ cli:
       split_recommended_message: 'A csatolt számla több, eltérő kulcsú vagy kategóriájú sort tartalmazhat. Futtasd újra a --auto-split kapcsolóval, hogy önállóan bevallható alap- és áfa-gyermekekre váljon szét.'
       split_recommended_label: 'bontás javasolt'
       auto_split_single_line: 'egysoros számla: nincs szükség bontásra; a --apply helyben osztályozza'
+      reject_help: 'A modell javaslatának kifejezett elutasítását naplóeseményként rögzíti, a sor osztályozása nélkül (nem kombinálható a --apply kapcsolóval).'
+      reason_help: 'Szabadszöveges indok, amelyet a --reject döntéssel együtt rögzít.'
+      reject_apply_exclusive: 'A --reject nem kombinálható a --apply kapcsolóval: a reject elutasított javaslatot, az apply elfogadottat rögzít.'
+      llm_rejected_message: 'A modell javaslata elutasítva és rögzítve. A tranzakció változatlan; osztályozd kézzel, amikor készen állsz.'
+      llm_rejected_label: 'elutasítva'
     doclink:
       actor_help: Operátor címke.
       help: Letölt egy Drive dokumentumhivatkozást, és a bájtjait titkosított bizonyítékként

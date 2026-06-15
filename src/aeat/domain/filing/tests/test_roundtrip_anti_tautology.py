@@ -31,6 +31,11 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
+from ....adapters.persistence.storage.crypto._encrypted_columns import (
+    decrypt_secure_object_payload,
+    encrypt_secure_object_payload,
+    secure_object_payload_aad,
+)
 from ....adapters.persistence.storage.sql._orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import Period
@@ -147,12 +152,16 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
             with session_scope(profile.repository._engine) as session:
                 stmt = select(SecureObjectRow).limit(1)
                 row = session.execute(stmt).scalar_one()
-                decoded = json.loads(row.payload.decode("utf-8"))
+                _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+                _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+                decoded = json.loads(_h3_plain.decode("utf-8"))
                 assert "snapshot_ref" in decoded["payload"], (
                     "fixture must serialise snapshot_ref into the envelope's payload for this test to be meaningful"
                 )
                 del decoded["payload"]["snapshot_ref"]
-                row.payload = json.dumps(decoded).encode("utf-8")
+                row.payload = encrypt_secure_object_payload(
+                    json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad
+                )
 
             # Now reload through the repository. With ``snapshot_ref``
             # absent, one of two things must happen:
@@ -234,13 +243,17 @@ def test_boundary_catches_optional_field_drop(
             with session_scope(profile.repository._engine) as session:
                 stmt = select(SecureObjectRow).limit(1)
                 row = session.execute(stmt).scalar_one()
-                decoded = json.loads(row.payload.decode("utf-8"))
+                _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+                _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+                decoded = json.loads(_h3_plain.decode("utf-8"))
                 assert field_name in decoded["payload"], (
                     f"fixture must serialise {field_name!r} into the envelope payload "
                     "for this parametrize case to be a meaningful proof"
                 )
                 del decoded["payload"][field_name]
-                row.payload = json.dumps(decoded).encode("utf-8")
+                row.payload = encrypt_secure_object_payload(
+                    json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad
+                )
 
             regression_caught = False
             try:

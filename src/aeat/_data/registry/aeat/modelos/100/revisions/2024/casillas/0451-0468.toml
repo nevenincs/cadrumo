@@ -7,5 +7,5 @@ input_kind = "computed"
 formula = "renta-2024-reduccion-prevision-social-total"
 data_type = "money"
 semantic_role = "irpf_reduccion_prevision_social_total"
-legal_refs = ["ley-35-2006:art-52"]
+legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-52"]
 source_refs = ["aeat-dr-100-2024-dictionary", "boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]

@@ -127,6 +127,11 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(tmp_path: Path) ->
 
     from sqlalchemy import select
 
+    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from ....adapters.persistence.storage.sql._orm import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
 
@@ -143,13 +148,15 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(tmp_path: Path) ->
                 SecureObjectRow.object_key == original.submission_id,
             )
             row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
+            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+            envelope = _json.loads(_h3_plain.decode("utf-8"))
             payload = envelope["payload"]
             assert payload.get("justificante_csv"), (
                 "fixture must serialise justificante_csv onto the ACEPTADA record for this proof test to be meaningful"
             )
             payload["justificante_csv"] = None
-            row.payload = _json.dumps(envelope).encode("utf-8")
+            row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad)
 
         try:
             mutated = repo.load(original.submission_id)
@@ -183,6 +190,11 @@ def test_submission_corrupted_period_surfaces_at_load(tmp_path: Path) -> None:
 
     from sqlalchemy import select
 
+    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from ....adapters.persistence.storage.sql._orm import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
 
@@ -199,14 +211,16 @@ def test_submission_corrupted_period_surfaces_at_load(tmp_path: Path) -> None:
                 SecureObjectRow.object_key == original.submission_id,
             )
             row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
+            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+            envelope = _json.loads(_h3_plain.decode("utf-8"))
             payload = envelope["payload"]
             assert isinstance(payload.get("period"), dict), (
                 "fixture must serialise period as a dict for this proof test to be meaningful"
             )
             # Corrupt the period code to an invalid value that will fail Period validation.
             payload["period"]["code"] = "INVALID_CODE_XYZ"
-            row.payload = _json.dumps(envelope).encode("utf-8")
+            row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad)
 
         try:
             mutated = repo.load(original.submission_id)

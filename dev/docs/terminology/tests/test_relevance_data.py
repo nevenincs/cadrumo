@@ -33,8 +33,9 @@ import pytest
 
 from aeat.core.config import PROJECT_ROOT
 from aeat.domain.calculations.registry import bundled_authority
-from aeat.terminology import load_terminology_handbook
 from dev.docs.terminology._sweep import SweepResult, enumerate_query_vocabulary
+
+from ...terminology_handbook import load_terminology_handbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

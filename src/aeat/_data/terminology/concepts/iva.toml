@@ -9,6 +9,7 @@
 concept_id = "iva"
 domain = "concepto"
 lifecycle = "approved"
+legal_refs = ["ley-37-1992:art-1"]
 related = ["tema-iva-regime", "recargo-equivalencia", "iva-regimen-simplificado", "prorrata", "modelo-303"]
 created_at = 2026-06-11
 updated_at = 2026-06-11

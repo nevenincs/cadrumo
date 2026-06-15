@@ -20,7 +20,7 @@ _DEFAULT_COMMAND_LINE_LIMIT = 180
 # helpers on their next pass rather than growing these further.
 _COMMAND_LINE_LIMIT_OVERRIDES = {
     # SPLIT-CANDIDATE: a wide Typer signature (manual + LLM + saturate + evidence +
-    # auto-split routes). The auto-split body itself lives in `_ledger_autosplit_cli.py`;
+    # auto-split routes). The LLM-routing bodies live in `_ledger_llm_cli.py`;
     # what remains here is the option surface and the route dispatch.
     ("_ledger.py", "ledger_classify"): 210,
 }

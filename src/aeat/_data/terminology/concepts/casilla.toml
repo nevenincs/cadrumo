@@ -8,6 +8,7 @@
 concept_id = "casilla"
 domain = "casilla-namespace"
 lifecycle = "approved"
+legal_refs = ["ley-58-2003:art-98"]
 related = ["modelo", "revision"]
 created_at = 2026-06-10
 updated_at = 2026-06-10

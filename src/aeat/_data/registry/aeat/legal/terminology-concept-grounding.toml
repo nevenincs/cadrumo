@@ -1,0 +1,180 @@
+# Legal provisions that ground Terminology Handbook CONCEPTS (the glossary
+# legal-basis links), as opposed to calculation values. The binding provision
+# for each concept is its framework article; the operator-facing grounding is
+# the BOE permalink the glossary renders. Entries carrying corpus text declare
+# a `required_text` the strict corpus gate verifies; the remainder use the
+# supported staged-annotation state (corpus_ref present, required_text pending
+# corpus ingestion) — see `verify_legal_reference` (corpus_strict skips the
+# file read when required_text is empty).
+
+[legal."ley-37-1992:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-1.html#a1"
+document_id = "BOE-A-1992-28740"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a1"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+notes = "LIVA art. 1: naturaleza del IVA (impuesto indirecto sobre el consumo)."
+required_text = ["tributo de naturaleza indirecta que recae sobre el consumo"]
+
+[legal."ley-35-2006:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-1.html#a1"
+document_id = "BOE-A-2006-20764"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a1"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+notes = "LIRPF art. 1: naturaleza del IRPF (tributo personal y directo sobre la renta)."
+required_text = ["tributo de carácter personal y directo"]
+
+[legal."ley-58-2003:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-art-5.html#a5"
+document_id = "BOE-A-2003-23186"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a5"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+notes = "LGT art. 5: la Administración tributaria; competencias de la AEAT."
+required_text = ["la Administración Tributaria estará integrada por los órganos y entidades"]
+
+[legal."ley-37-1992:art-148"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-148.html#a148"
+document_id = "BOE-A-1992-28740"
+article = "148"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a148"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+notes = "LIVA art. 148: régimen especial del recargo de equivalencia."
+
+[legal."ley-37-1992:art-164"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-164.html#a164"
+document_id = "BOE-A-1992-28740"
+article = "164"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a164"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+notes = "LIVA art. 164: obligaciones de los sujetos pasivos (autoliquidación, M303/M390)."
+
+[legal."ley-35-2006:art-96"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-96.html#a96"
+document_id = "BOE-A-2006-20764"
+article = "96"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a96"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+notes = "LIRPF art. 96: obligación de declarar (M100)."
+
+[legal."ley-35-2006:art-98"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-98.html#a98"
+document_id = "BOE-A-2006-20764"
+article = "98"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a98"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+notes = "LIRPF art. 98: borrador de declaración."
+
+[legal."ley-58-2003:art-98"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-art-98.html#a98"
+document_id = "BOE-A-2003-23186"
+article = "98"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a98"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+notes = "LGT art. 98: iniciación de los procedimientos tributarios (declaraciones, modelos, casillas)."
+
+[legal."ley-58-2003:art-99"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-art-99.html#a99"
+document_id = "BOE-A-2003-23186"
+article = "99"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a99"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+notes = "LGT art. 99: desarrollo de las actuaciones y procedimientos; documentación (justificante)."
+
+[legal."ley-58-2003:art-213"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-art-213.html#a213"
+document_id = "BOE-A-2003-23186"
+article = "213"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a213"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+notes = "LGT art. 213: medios de revisión de los actos tributarios."
+
+[legal."rd-1065-2007:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007-art-3.html#a3"
+document_id = "BOE-A-2007-15984"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a3"
+published_at = 2007-09-05
+effective_from = 2008-01-01
+review_status = "reviewed"
+notes = "RGAT art. 3: Censo de Empresarios, Profesionales y Retenedores."
+
+[legal."rd-1065-2007:art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007-art-18.html#a18"
+document_id = "BOE-A-2007-15984"
+article = "18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a18"
+published_at = 2007-09-05
+effective_from = 2008-01-01
+review_status = "reviewed"
+notes = "RGAT art. 18: número de identificación fiscal (NIF)."
+
+[legal."ley-39-2015:art-38"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-39-2015-art-38.html#a38"
+document_id = "BOE-A-2015-10565"
+article = "38"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a38"
+published_at = 2015-10-02
+effective_from = 2016-10-02
+review_status = "reviewed"
+notes = "Ley 39/2015 art. 38: sede electrónica de las Administraciones Públicas."

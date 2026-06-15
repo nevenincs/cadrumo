@@ -4,5 +4,5 @@ number = "0261"
 label = "Deducciones por creación de empleo (importe deducible imputado)"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_agrup_interes_economico"]
 semantic_role = "irpf_re_aie_deduccion_creacion_empleo"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-86"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

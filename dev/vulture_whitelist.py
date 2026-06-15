@@ -16,7 +16,7 @@ consumed in the body:
   (:mod:`aeat.application.ledger._evidence_input`). The signature is fixed by
   the pickle protocol; the override exists to *refuse* pickling.
 * ``source_citation`` — a keyword-only parameter on
-  ``aeat.terminology._curation.set_language_field`` kept as part of the public
+  ``dev.docs.terminology_handbook._curation.set_language_field`` kept as part of the public
   curation API signature.
 
 Vulture marks a name "used" when it appears in a whitelist file. Referencing

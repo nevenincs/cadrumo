@@ -217,6 +217,11 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
 
     from sqlalchemy import select
 
+    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from ....adapters.persistence.storage.sql._orm import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
     from .._observations_repository import observation_key
@@ -240,13 +245,17 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
                 SecureObjectRow.object_key == object_key,
             )
             row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
+            # The payload is AEAD-encrypted with the row identity in the associated
+            # data; corrupt the decrypted content and re-encrypt under the same AAD.
+            aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+            plaintext = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
+            envelope = _json.loads(plaintext.decode("utf-8"))
             casillas = envelope["payload"]["observation"]["observations"]
             assert casillas and casillas[1]["legal_refs"], (
                 "fixture must serialise legal_refs onto the computed casilla for this proof test to be meaningful"
             )
             casillas[1]["legal_refs"] = []
-            row.payload = _json.dumps(envelope).encode("utf-8")
+            row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=aad)
 
         loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
         assert loaded is not None

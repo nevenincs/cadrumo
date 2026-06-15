@@ -163,7 +163,7 @@ def test_recovery_wrap_member_records_argon2id_password_kdf(
     """
     import json
 
-    from ....adapters.persistence.storage.bucket._sealed_archive_reader import read_sealed_archive
+    from ....adapters.persistence.storage.bucket import read_sealed_archive
 
     archive_path = tmp_path / "profile.aeat-bucket.tar.gz"
     BucketMaintenanceService().export(

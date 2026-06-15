@@ -30,12 +30,12 @@ from ._errors import FincaAggregationError
 from ._expense_rollup import CarryForwardEntry, compute_gastos_for_year
 from ._imputacion_parameters import load_imputacion_parameters
 from ._models import Arrendamiento, Finca
-from ._repository import (
-    ArrendamientoRepository,
-    FincaAmortizacionLedgerRepository,
-    FincaGastoRepository,
-    FincaRendimientoRepository,
-    FincaRepository,
+from ._repository_ports import (
+    ArrendamientoReader,
+    FincaAmortizacionLedgerReader,
+    FincaGastoReader,
+    FincaReader,
+    FincaRendimientoReader,
 )
 from ._tier_resolver import TierResolution, resolve_reduccion
 
@@ -99,21 +99,21 @@ class FincaAggregates(BaseModel):
 def compute_finca_aggregates(
     *,
     period_year: int,
-    finca_repo: FincaRepository,
-    contract_repo: ArrendamientoRepository,
-    income_repo: FincaRendimientoRepository,
-    expense_repo: FincaGastoRepository,
-    ledger_repo: FincaAmortizacionLedgerRepository,
+    finca_repo: FincaReader,
+    contract_repo: ArrendamientoReader,
+    income_repo: FincaRendimientoReader,
+    expense_repo: FincaGastoReader,
+    ledger_repo: FincaAmortizacionLedgerReader,
 ) -> FincaAggregates:
     """Aggregate factual rental amounts from the rental register.
 
     Args:
         period_year: Ejercicio whose rental amounts to compute.
-        finca_repo: Live :class:`FincaRepository`.
-        contract_repo: Live :class:`ArrendamientoRepository`.
-        income_repo: Live :class:`FincaRendimientoRepository`.
-        expense_repo: Live :class:`FincaGastoRepository`.
-        ledger_repo: Live :class:`FincaAmortizacionLedgerRepository`.
+        finca_repo: Live :class:`FincaReader`.
+        contract_repo: Live :class:`ArrendamientoReader`.
+        income_repo: Live :class:`FincaRendimientoReader`.
+        expense_repo: Live :class:`FincaGastoReader`.
+        ledger_repo: Live :class:`FincaAmortizacionLedgerReader`.
 
     Returns:
         :class:`FincaAggregates` carrying the derived rental totals
@@ -245,10 +245,10 @@ def _aggregate_finca(
     finca: Finca,
     *,
     period_year: int,
-    contract_repo: ArrendamientoRepository,
-    income_repo: FincaRendimientoRepository,
-    expense_repo: FincaGastoRepository,
-    ledger_repo: FincaAmortizacionLedgerRepository,
+    contract_repo: ArrendamientoReader,
+    income_repo: FincaRendimientoReader,
+    expense_repo: FincaGastoReader,
+    ledger_repo: FincaAmortizacionLedgerReader,
 ) -> tuple[Decimal, Decimal, Decimal, Decimal, list[ContractTierAttribution]]:
     """Compute income, expenses, amortization, total reduccion, and per-contract attribution for one finca.
 
@@ -354,7 +354,7 @@ def _compute_finca_amortization(
     finca: Finca,
     period_year: int,
     total_dias_alquilados: int,
-    ledger_repo: FincaAmortizacionLedgerRepository,
+    ledger_repo: FincaAmortizacionLedgerReader,
 ) -> Decimal:
     """Compute the per-finca amortización for ``period_year``.
 
@@ -383,7 +383,7 @@ def _compute_finca_amortization(
 
 
 def _cumulative_through_prior_year(
-    ledger_repo: FincaAmortizacionLedgerRepository,
+    ledger_repo: FincaAmortizacionLedgerReader,
     finca_id: int,
     period_year: int,
 ) -> Decimal:
@@ -399,8 +399,8 @@ def _compute_imputacion(
     finca: Finca,
     *,
     period_year: int,
-    contract_repo: ArrendamientoRepository,
-    income_repo: FincaRendimientoRepository,
+    contract_repo: ArrendamientoReader,
+    income_repo: FincaRendimientoReader,
 ) -> Decimal:
     """Compute LIRPF art. 85 imputación for a non-let finca.
 

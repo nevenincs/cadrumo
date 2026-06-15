@@ -4,5 +4,5 @@ number = "1600"
 label = "Atribución de retenciones de ganancias y pérdidas patrimoniales imputables a 2023"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 semantic_role = "irpf_re_atrib_retenciones_ganancias"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-86"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

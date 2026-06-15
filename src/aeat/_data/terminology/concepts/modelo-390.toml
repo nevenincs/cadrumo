@@ -9,6 +9,7 @@
 concept_id = "modelo-390"
 domain = "modelo"
 lifecycle = "approved"
+legal_refs = ["ley-37-1992:art-164"]
 domain_refs = ["modelo:390"]
 related = ["iva", "modelo-303", "casilla", "autoliquidacion"]
 created_at = 2026-06-10

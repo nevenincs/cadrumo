@@ -357,9 +357,8 @@ def test_materialise_injects_approved_concepts_only_no_drafts() -> None:
     materialised concept records must therefore all carry ``lifecycle ==
     'approved'`` and match the approved-concept count.
     """
-    from aeat.terminology._enums import ConceptLifecycle
-
     from ..terminology._concept_cards import project_concept_cards
+    from ..terminology_handbook._enums import ConceptLifecycle
 
     cards, _ = project_concept_cards()
     approved = sum(1 for c in cards if c.lifecycle is ConceptLifecycle.APPROVED)

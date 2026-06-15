@@ -76,6 +76,10 @@ docs/cli/
 # Glossary is generated fresh at build time from the approved Terminology
 # Handbook concepts (docs/conf.py builder-inited); never committed.
 docs/_generated/
+# Compiled Pagefind search index (ADR D5: uncommitted, regenerated every docs
+# build like docs/_build). The canonical output lives under docs/_build/html/
+# pagefind/; a root-level pagefind/ from an ad-hoc build run is never committed.
+pagefind/
 
 # PyBuilder
 .pybuilder/

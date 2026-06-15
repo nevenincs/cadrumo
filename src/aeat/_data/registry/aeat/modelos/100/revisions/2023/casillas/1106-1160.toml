@@ -5,5 +5,5 @@ label = "Código cuenta de cotización"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_murcia_empleada_hogar_ccc"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

@@ -11,11 +11,10 @@ Contains zero test doubles.
 
 from __future__ import annotations
 
-import os
-
 import pytest
 
 from ......core.config import Settings
+from ......tests.live_gate import requires_live_enabled
 from .. import (
     CertificateBundle,
     HandshakeResult,
@@ -33,8 +32,7 @@ def test_verify_handshake_live_against_aeat() -> None:
     certificate path / password env vars are unset on
     :class:`aeat.core.config.Settings`.
     """
-    if os.environ.get("AEAT_LIVE_TESTS_ENABLED") != "1":
-        pytest.skip("AEAT_LIVE_TESTS_ENABLED is not 1")
+    requires_live_enabled()
 
     settings = Settings()
     if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:

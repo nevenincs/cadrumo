@@ -284,21 +284,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "export_ledger_transactions",
         "command.output_path.write_bytes",
     ): "explicit operator-directed ledger transaction export to a caller-chosen path",
-    (
-        "src/aeat/terminology/_curation.py",
-        "_commit_concept",
-        "path.write_text",
-    ): "terminology curation writes committed handbook concept TOML, not user financial data",
-    (
-        "src/aeat/terminology/_scaffold.py",
-        "apply_scaffold_plan",
-        "path.write_text",
-    ): "terminology scaffold writes committed handbook concept TOML, not user financial data",
-    (
-        "src/aeat/terminology/_seed_import.py",
-        "_commit_seeded_concept",
-        "path.write_text",
-    ): "terminology seed import writes committed handbook concept TOML, not user financial data",
 }
 
 

@@ -27,10 +27,10 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 
 from aeat.core.external_constants import OutputLanguage
 from aeat.core.resources import bundled_path
-from aeat.terminology import TerminologyHandbook, load_terminology_handbook
-from aeat.terminology._enums import TermStatus
-from aeat.terminology._errors import TerminologyLoadError
 
+from ..terminology_handbook import TerminologyHandbook, load_terminology_handbook
+from ..terminology_handbook._enums import TermStatus
+from ..terminology_handbook._errors import TerminologyLoadError
 from ._sweep import enumerate_query_vocabulary
 
 _UTF_8: Final[str] = "utf-8"

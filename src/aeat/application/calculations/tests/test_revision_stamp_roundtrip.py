@@ -152,6 +152,11 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
     """
     from sqlalchemy import select
 
+    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from ....adapters.persistence.storage.sql._orm import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
 
@@ -174,14 +179,16 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
                 SecureObjectRow.object_key == object_key,
             )
             row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
+            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+            envelope = _json.loads(_h3_plain.decode("utf-8"))
             # Confirm the field is present with a non-null value before we mutate.
             assert envelope["payload"]["stamped_revision_id"] == revision_id, (
                 "fixture must serialize stamped_revision_id as a non-null value for this proof to be meaningful"
             )
             # Surgically set to null — simulating a pre-stamp record.
             envelope["payload"]["stamped_revision_id"] = None
-            row.payload = _json.dumps(envelope).encode("utf-8")
+            row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad)
 
         loaded = repo.load_observation(_MODELO, _filing_period())
         assert loaded is not None

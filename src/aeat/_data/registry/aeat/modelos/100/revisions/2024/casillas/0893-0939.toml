@@ -4,5 +4,5 @@ number = "0939"
 label = "Por obras de rehabilitación energética de la vivienda habitual (importe de la casilla [2001] del anexo B.10)"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_rehabilitacion_energetica"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

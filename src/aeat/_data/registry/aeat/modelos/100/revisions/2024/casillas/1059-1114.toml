@@ -4,5 +4,5 @@ number = "1114"
 label = "Por cantidades invertidas hasta 2022 en instalaciones de autoconsumo o de generación de energía eléctrica o térmica a través de fuentes renovables (importe de la casilla [1114] del anexo B.10)"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_autoconsumo_hasta_2022"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

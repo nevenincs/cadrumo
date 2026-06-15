@@ -4,5 +4,5 @@ number = "0944"
 label = "Por gastos en primas de seguros de crédito para cubrir impagos de rentas de arrendamientos de vivienda (deducción del arrendador) (traslade el importe de la casilla [1203] del anexo B.9)"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_seguros_credito_impago"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

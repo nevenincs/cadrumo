@@ -4,5 +4,5 @@ number = "0637"
 label = "Importe del abono anticipado de la deducción correspondiente a 2024 (*)"
 section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
 semantic_role = "irpf_abono_anticipado_ascendiente_discapacidad"
-legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

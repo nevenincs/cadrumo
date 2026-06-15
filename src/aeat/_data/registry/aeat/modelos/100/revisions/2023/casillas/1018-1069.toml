@@ -4,5 +4,5 @@ number = "1069"
 label = "Por gastos en escuelas o centros de educación infantil o personal contratado para el cuidado de hijos de 0 a 3 años por contribuyentes residentes en pequeños municipios"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_guarderia_escuelas"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

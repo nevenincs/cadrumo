@@ -28,6 +28,7 @@ import os
 
 import pytest
 
+from .....tests.live_gate import requires_live_enabled
 from .._oauth_flow import run_login_flow
 from .._records import REQUIRED_SCOPES
 from .._session_store import (
@@ -47,8 +48,7 @@ def _live_profile() -> str:
 
 
 def _skip_unless_live_and_client_registered() -> None:
-    if os.environ.get("AEAT_LIVE_TESTS_ENABLED") != "1":
-        pytest.skip("AEAT_LIVE_TESTS_ENABLED is not 1")
+    requires_live_enabled()
     profile = _live_profile()
     if load_client(profile) is None:
         pytest.skip(

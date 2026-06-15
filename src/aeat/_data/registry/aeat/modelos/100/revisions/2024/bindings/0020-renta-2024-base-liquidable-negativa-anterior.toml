@@ -21,7 +21,7 @@ id = "renta-2024-base-liquidable-negativa-general-anterior"
 source = "previous_filing"
 selector = { source_modelo = "100", source_output = "1391", filing_year_delta = -1, period = "0A" }
 aggregation = { op = "copy" }
-legal_refs = ["ley-35-2006:art-48", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-48", "ley-35-2006:art-50"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-modelo-100-procedure", "boe-modelo-100-2024-form"]
 
 [[revisions."2024".bindings.source_citations]]

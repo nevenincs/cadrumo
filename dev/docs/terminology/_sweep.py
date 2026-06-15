@@ -38,9 +38,9 @@ from typing import Protocol
 from pydantic import BaseModel, ConfigDict, Field
 
 from aeat.core.external_constants import OutputLanguage
-from aeat.terminology import TerminologyHandbook, load_terminology_handbook
-from aeat.terminology._enums import TermStatus
 
+from ..terminology_handbook import TerminologyHandbook, load_terminology_handbook
+from ..terminology_handbook._enums import TermStatus
 from ._resolution import ChunkHit, GroundingSurface, TargetResolver, resolve_chunk_hits
 from ._search_record import SearchRecordKind
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, wrangle

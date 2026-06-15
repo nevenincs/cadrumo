@@ -10,6 +10,13 @@ from pathlib import Path
 import pytest
 from sqlalchemy.engine import Engine
 
+from ....adapters.persistence.profile.fincas import (
+    ArrendamientoRepository,
+    FincaAmortizacionLedgerRepository,
+    FincaGastoRepository,
+    FincaRendimientoRepository,
+    FincaRepository,
+)
 from ....adapters.persistence.storage import (
     session_scope,
 )
@@ -17,15 +24,10 @@ from ....adapters.persistence.storage.sql.engine import get_engine
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     Arrendamiento,
-    ArrendamientoRepository,
     ExpenseCategory,
     Finca,
-    FincaAmortizacionLedgerRepository,
     FincaGasto,
-    FincaGastoRepository,
     FincaRendimientoRecord,
-    FincaRendimientoRepository,
-    FincaRepository,
     UseType,
     compute_finca_aggregates,
 )

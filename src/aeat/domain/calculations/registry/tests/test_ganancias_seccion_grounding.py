@@ -31,6 +31,14 @@ _GROUNDED_GANANCIA_SECTIONS: dict[str, tuple[int, ...]] = {
     # exención por reinversión sections (ganancia foundation + art. 38)
     "exencion_rentas_vitalicias_res": (2021, 2022, 2023, 2024),
     "exencion_nuevas_empresas_res": (2021, 2022, 2023, 2024),
+    # ganancias por transmisión de acciones/participaciones/fondos de inversión
+    "entidad_accion": (2021, 2022, 2023, 2024),
+    "entidad_derecho": (2021, 2022, 2023, 2024),
+    "fondo": (2021, 2022, 2023, 2024),
+    # ganancias y pérdidas patrimoniales — sumas/resultado
+    "gp_patrimoniales_res": (2021, 2022, 2023, 2024),
+    # ganancias y pérdidas a integrar en la base imponible del ahorro (cuartas)
+    "gan_per_cuartas": (2021, 2022, 2023, 2024),
 }
 
 
@@ -54,15 +62,8 @@ def test_ganancia_section_grounds_in_foundation_not_actividades(section_tag: str
     casillas = _section_casillas(year, section_tag)
     assert casillas, f"M100 {year} section {section_tag} must have casillas"
     actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
-    assert not actividades, (
-        f"M100 {year} {section_tag}: boxes still cite the actividades chapter: {actividades}"
-    )
-    missing = [
-        (c.id, sorted(c.legal_refs))
-        for c in casillas
-        if not (_GANANCIA_FOUNDATION & set(c.legal_refs))
-    ]
+    assert not actividades, f"M100 {year} {section_tag}: boxes still cite the actividades chapter: {actividades}"
+    missing = [(c.id, sorted(c.legal_refs)) for c in casillas if not (_GANANCIA_FOUNDATION & set(c.legal_refs))]
     assert not missing, (
-        f"M100 {year} {section_tag}: boxes not grounded in the ganancias foundation "
-        f"(arts. 33/34): {missing}"
+        f"M100 {year} {section_tag}: boxes not grounded in the ganancias foundation (arts. 33/34): {missing}"
     )

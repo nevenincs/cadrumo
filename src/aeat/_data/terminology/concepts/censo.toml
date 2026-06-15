@@ -9,6 +9,7 @@
 concept_id = "censo"
 domain = "concepto"
 lifecycle = "approved"
+legal_refs = ["rd-1065-2007:art-3"]
 related = ["modelo-036"]
 created_at = 2026-06-11
 updated_at = 2026-06-11

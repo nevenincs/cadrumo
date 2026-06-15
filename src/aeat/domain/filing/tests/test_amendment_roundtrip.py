@@ -169,6 +169,11 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
 
     from sqlalchemy import select
 
+    from ....adapters.persistence.storage.crypto._encrypted_columns import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from ....adapters.persistence.storage.sql._orm import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
     from .._complementaria_repository import _AMENDMENT_NAMESPACE
@@ -187,13 +192,17 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
                     f"(namespaces: {sorted({r.namespace for r in all_rows})})"
                 )
                 row = amendment_rows[0]
-                envelope = _json.loads(row.payload.decode("utf-8"))
+                _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+                _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+                envelope = _json.loads(_h3_plain.decode("utf-8"))
                 payload = envelope["payload"]
                 assert payload.get("delta"), (
                     "fixture must serialise a non-empty delta tuple for this proof test to be meaningful"
                 )
                 payload["delta"] = []
-                row.payload = _json.dumps(envelope).encode("utf-8")
+                row.payload = encrypt_secure_object_payload(
+                    _json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad
+                )
 
             with pytest.raises(ValidationError, match="delta"):
                 ModeloAmendmentRepository(bucket_id=_BUCKET_ID).load(original.amendment_id)

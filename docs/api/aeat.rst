@@ -19,4 +19,3 @@ Subpackages
    aeat.domain
    aeat.entrypoints
    aeat.locales
-   aeat.terminology

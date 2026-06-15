@@ -93,6 +93,4 @@ def test_capital_inmobiliario_range_never_cites_actividades(year: int) -> None:
             continue
         if _ACTIVIDADES_CHAPTER & set(c.legal_refs):
             offenders.append((c.id, sorted(c.legal_refs)))
-    assert not offenders, (
-        f"M100 {year}: capital-inmobiliario casillas still cite the actividades chapter: {offenders}"
-    )
+    assert not offenders, f"M100 {year}: capital-inmobiliario casillas still cite the actividades chapter: {offenders}"

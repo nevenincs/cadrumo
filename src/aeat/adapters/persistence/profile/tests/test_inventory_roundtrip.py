@@ -139,6 +139,11 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
 
     from sqlalchemy import select
 
+    from ....persistence.storage.crypto._encrypted_columns import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
     from ....persistence.storage.sql._orm import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
     from ..inventory import _INVENTORY_NAMESPACE, _INVENTORY_OBJECT_KEY
@@ -155,7 +160,9 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
                 SecureObjectRow.object_key == _INVENTORY_OBJECT_KEY,
             )
             row = session.execute(stmt).scalar_one()
-            document = _json.loads(row.payload.decode(UTF_8_ENCODING))
+            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
+            document = _json.loads(_h3_plain.decode(UTF_8_ENCODING))
             ledger_dict = document["ledgers"][0]
             assert ledger_dict.get("opening_stock"), (
                 "fixture must serialise opening_stock onto the ledger for this proof test to be meaningful"
@@ -163,7 +170,9 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
             # Halve the opening_stock so the layer-balance check fails
             # (sum of layers no longer matches the declared aggregate).
             ledger_dict["opening_stock"] = "750.00"
-            row.payload = _json.dumps(document).encode(UTF_8_ENCODING)
+            row.payload = encrypt_secure_object_payload(
+                _json.dumps(document).encode(UTF_8_ENCODING), associated_data=_h3_aad
+            )
 
         with pytest.raises(pydantic.ValidationError, match="opening_stock must equal the value of opening_layers"):
             repo.load()
