@@ -852,8 +852,16 @@ application:
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
     findings:
-      art20_reduccion_next_action: 'Verifique si sus otras rentas distintas de las del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese caso, declare la reduccion por rendimientos del trabajo del articulo 20 LIRPF en la casilla de reduccion general (ley-35-2006:art-20).'
-      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: la casilla %{rnt_id} (rendimiento neto del trabajo) = %{rnt_value} esta dentro del tramo de reduccion del articulo 20 (por debajo de 19747,50) pero la casilla %{reduccion_id} (reduccion general por rendimientos del trabajo) es cero. Si sus otras rentas distintas de las del trabajo excluidas las exentas no superan 6500, puede aplicar la reduccion por rendimientos del trabajo del articulo 20 LIRPF.'
+      art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
+        del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
+        caso, declare la reduccion por rendimientos del trabajo del articulo 20 LIRPF
+        en la casilla de reduccion general (ley-35-2006:art-20).
+      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: la casilla %{rnt_id} (rendimiento
+        neto del trabajo) = %{rnt_value} esta dentro del tramo de reduccion del articulo
+        20 (por debajo de 19747,50) pero la casilla %{reduccion_id} (reduccion general
+        por rendimientos del trabajo) es cero. Si sus otras rentas distintas de las
+        del trabajo excluidas las exentas no superan 6500, puede aplicar la reduccion
+        por rendimientos del trabajo del articulo 20 LIRPF.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -2223,6 +2231,16 @@ cli:
       help: Bloquear el perfil activo eliminando el puntero de perfil activo.
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
+      capabilities:
+        capability_help: cli.config.profile.capabilities.capability_help
+        capability_label: cli.config.profile.capabilities.capability_label
+        enabled: cli.config.profile.capabilities.enabled
+        help: cli.config.profile.capabilities.help
+        no_active_profile: cli.config.profile.capabilities.no_active_profile
+        set_help: 'Activa o desactiva una capacidad de servicio para el perfil activo.'
+        show_help: 'Muestra el estado resuelto de cada capacidad de servicio para el perfil activo.'
+        state_help: 'Si activar (on) o desactivar (off) la capacidad.'
+        state_label: 'estado'
       censo:
         apply_help: Sobrescribe el perfil con los valores censales comunicados por
           AEAT
@@ -2853,13 +2871,14 @@ cli:
       group_filter_help: Mostrar solo las filas de esta etiqueta de grupo.
       header: MOVIMIENTOS DEL LIBRO CONTABLE
       help: Listar movimientos del libro en el perfil activo
+      hide_llm_rejected_help: Oculta las filas cuya sugerencia del modelo más reciente
+        fue rechazada (una fila revisada y descartada sale de la cola pendiente).
       limit_help: 'Numero maximo de filas a mostrar (por defecto: todas).'
       offset_help: 'Omitir este numero de filas antes de listar (por defecto: 0).'
       sort_by_help: Ordena las filas listadas por este campo (date, amount, description,
         created_at, modified_at, ...).
       sort_order_help: 'Orden: asc (ascendente) o desc (descendente).'
       ungrouped_label: (sin grupo)
-      hide_llm_rejected_help: 'Oculta las filas cuya sugerencia del modelo más reciente fue rechazada (una fila revisada y descartada sale de la cola pendiente).'
     merge:
       actor_help: Nombre del operador registrado en el evento del bucket
       child_id_help: Id de transacción hija que quieres fusionar; se puede repetir

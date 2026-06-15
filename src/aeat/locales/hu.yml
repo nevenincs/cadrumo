@@ -789,8 +789,16 @@ application:
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
     findings:
-      art20_reduccion_next_action: 'Ellenorizze, hogy a nem munkabol szarmazo egyeb jovedelme a mentes jovedelem nelkul az adoevben nem haladja-e meg a 6500 EUR-t; ha nem, akkor a 20. cikk LIRPF szerinti munkajovedelem-csokkentest tuntesse fel az altalanos csokkentesi rovatban (ley-35-2006:art-20).'
-      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: a(z) %{rnt_id} rovat (munkabol szarmazo netto jovedelem) = %{rnt_value} a 20. cikk szerinti csokkentesi savon belul van (19747,50 alatt), de a(z) %{reduccion_id} rovat (altalanos munkajovedelem-csokkentes) nulla. Ha a nem munkabol szarmazo egyeb jovedelme a mentes jovedelem nelkul nem haladja meg a 6500-at, akkor a 20. cikk LIRPF szerinti munkajovedelem-csokkentes alkalmazhato.'
+      art20_reduccion_next_action: Ellenorizze, hogy a nem munkabol szarmazo egyeb
+        jovedelme a mentes jovedelem nelkul az adoevben nem haladja-e meg a 6500 EUR-t;
+        ha nem, akkor a 20. cikk LIRPF szerinti munkajovedelem-csokkentest tuntesse
+        fel az altalanos csokkentesi rovatban (ley-35-2006:art-20).
+      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: a(z) %{rnt_id} rovat (munkabol
+        szarmazo netto jovedelem) = %{rnt_value} a 20. cikk szerinti csokkentesi savon
+        belul van (19747,50 alatt), de a(z) %{reduccion_id} rovat (altalanos munkajovedelem-csokkentes)
+        nulla. Ha a nem munkabol szarmazo egyeb jovedelme a mentes jovedelem nelkul
+        nem haladja meg a 6500-at, akkor a 20. cikk LIRPF szerinti munkajovedelem-csokkentes
+        alkalmazhato.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -2142,6 +2150,16 @@ cli:
       help: Az aktiv profil zarolasa az aktivprofil-mutato torlesevel.
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
+      capabilities:
+        capability_help: cli.config.profile.capabilities.capability_help
+        capability_label: cli.config.profile.capabilities.capability_label
+        enabled: cli.config.profile.capabilities.enabled
+        help: cli.config.profile.capabilities.help
+        no_active_profile: cli.config.profile.capabilities.no_active_profile
+        set_help: 'Be- vagy kikapcsol egy szolgáltatás-képességet az aktív profilhoz.'
+        show_help: 'Megjeleníti az aktív profil minden szolgáltatás-képességének feloldott állapotát.'
+        state_help: 'A képesség engedélyezése (on) vagy letiltása (off).'
+        state_label: 'állapot'
       censo:
         apply_help: Az AEAT által jelentett nyilvántartási értékekkel felülírja a
           profilt.
@@ -2779,13 +2797,14 @@ cli:
       group_filter_help: Csak az adott csoportcimkehez tartozo sorok megjelenitese.
       header: KÖNYVELÉSI FŐKÖNYVI TRANZAKCIÓK
       help: Főkönyvi tranzakciók listázása az aktív profilban.
+      hide_llm_rejected_help: Elrejti azokat a sorokat, amelyek legutóbbi modelljavaslatát
+        elutasították (a felülvizsgált és elutasított sor kikerül a függő sorból).
       limit_help: 'Megjelenitendo sorok maximalis szama (alapertelmezett: az osszes).'
       offset_help: 'Ennyi sor kihagyasa a listazas elott (alapertelmezett: 0).'
       sort_by_help: A listázott sorok rendezése e mező szerint (date, amount, description,
         created_at, modified_at, ...).
       sort_order_help: 'Rendezési sorrend: asc (növekvő) vagy desc (csökkenő).'
       ungrouped_label: (nincs csoport)
-      hide_llm_rejected_help: 'Elrejti azokat a sorokat, amelyek legutóbbi modelljavaslatát elutasították (a felülvizsgált és elutasított sor kikerül a függő sorból).'
     merge:
       actor_help: Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_MERGED eseményen
         rögzítenek.

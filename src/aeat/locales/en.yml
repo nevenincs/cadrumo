@@ -773,8 +773,15 @@ application:
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
     findings:
-      art20_reduccion_next_action: 'Verify whether your other non-work income excluding exempt income for the year does not exceed 6500 EUR; if it does not, declare the article 20 LIRPF work-income reduction in the general reduction casilla (ley-35-2006:art-20).'
-      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: casilla %{rnt_id} (net work income) = %{rnt_value} is within the article 20 reduction band (below 19747,50) but casilla %{reduccion_id} (general work-income reduction) is zero. If your other non-work income excluding exempt income does not exceed 6500, the article 20 LIRPF work-income reduction may apply.'
+      art20_reduccion_next_action: Verify whether your other non-work income excluding
+        exempt income for the year does not exceed 6500 EUR; if it does not, declare
+        the article 20 LIRPF work-income reduction in the general reduction casilla
+        (ley-35-2006:art-20).
+      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: casilla %{rnt_id} (net
+        work income) = %{rnt_value} is within the article 20 reduction band (below
+        19747,50) but casilla %{reduccion_id} (general work-income reduction) is zero.
+        If your other non-work income excluding exempt income does not exceed 6500,
+        the article 20 LIRPF work-income reduction may apply.'
       cross_casilla_invariant_next_action: Ensure all casillas required by predicate
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
@@ -2069,6 +2076,16 @@ cli:
       help: Lock the current profile by clearing the active profile pointer.
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
+      capabilities:
+        capability_help: cli.config.profile.capabilities.capability_help
+        capability_label: cli.config.profile.capabilities.capability_label
+        enabled: cli.config.profile.capabilities.enabled
+        help: cli.config.profile.capabilities.help
+        no_active_profile: cli.config.profile.capabilities.no_active_profile
+        set_help: 'Opt the active profile in or out of one service capability.'
+        show_help: 'Show the resolved posture of every service capability for the active profile.'
+        state_help: 'Whether to enable (on) or disable (off) the capability.'
+        state_label: 'state'
       censo:
         apply_help: Overwrite the profile with censo values reported by AEAT
         compare_help: Compare AEAT censo and this profile field by field
@@ -2666,13 +2683,14 @@ cli:
       group_filter_help: Show only rows in this group label.
       header: ACCOUNTING LEDGER TRANSACTIONS
       help: List ledger transactions in the active profile
+      hide_llm_rejected_help: Hide rows whose most recent LLM suggestion was rejected
+        (a reviewed-and-declined row drops out of the pending queue).
       limit_help: 'Maximum rows to show (default: all rows).'
       offset_help: 'Skip this many rows before listing (default: 0).'
       sort_by_help: Sort the listed rows by this field (date, amount, description,
         created_at, modified_at, ...).
       sort_order_help: 'Sort order: asc (ascending) or desc (descending).'
       ungrouped_label: (ungrouped)
-      hide_llm_rejected_help: 'Hide rows whose most recent LLM suggestion was rejected (a reviewed-and-declined row drops out of the pending queue).'
     merge:
       actor_help: Operator name recorded on the LEDGER_TRANSACTION_MERGED event
       child_id_help: One child id (or unambiguous prefix) to merge. Repeat for every
