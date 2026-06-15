@@ -2075,6 +2075,7 @@ cli:
       sync:
         calc:
           export:
+            capability_disabled: 'A Google-exportálás le van tiltva ehhez a profilhoz; engedélyezd az ''aeat config profile capabilities set google_export on'' paranccsal.'
             modelo_help: Az exportálandó nyomtatvány azonosítója (pl. 130, 303, 100).
             period_help: Benyújtási időszak kódja (pl. 1T, 2T, 0A).
             prefill_relations_help: Keresztrevízió-kapcsolati értékek előtöltése a
@@ -2156,10 +2157,11 @@ cli:
         enabled: cli.config.profile.capabilities.enabled
         help: cli.config.profile.capabilities.help
         no_active_profile: cli.config.profile.capabilities.no_active_profile
-        set_help: 'Be- vagy kikapcsol egy szolgáltatás-képességet az aktív profilhoz.'
-        show_help: 'Megjeleníti az aktív profil minden szolgáltatás-képességének feloldott állapotát.'
-        state_help: 'A képesség engedélyezése (on) vagy letiltása (off).'
-        state_label: 'állapot'
+        set_help: Be- vagy kikapcsol egy szolgáltatás-képességet az aktív profilhoz.
+        show_help: Megjeleníti az aktív profil minden szolgáltatás-képességének feloldott
+          állapotát.
+        state_help: A képesség engedélyezése (on) vagy letiltása (off).
+        state_label: állapot
       censo:
         apply_help: Az AEAT által jelentett nyilvántartási értékekkel felülírja a
           profilt.
