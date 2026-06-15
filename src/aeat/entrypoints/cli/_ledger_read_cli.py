@@ -40,7 +40,12 @@ from ...domain.categories import (
 )
 from ...domain.transactions import Transaction, TransactionCatalogueRepository
 from ._common import _bad, _canonical_period, _emit_envelope, _optional_canonical_period, _state, _tx_repo
-from ._ledger_list import ledger_filter_parse_error_message, parse_ledger_list_filter_spec, project_ledger_list
+from ._ledger_list import (
+    LLM_DECISION_EVENT_TYPES,
+    ledger_filter_parse_error_message,
+    parse_ledger_list_filter_spec,
+    project_ledger_list,
+)
 from ._ledger_review_cli import register_ledger_review_command
 from ._participation_cli import register_participation_commands
 
@@ -760,14 +765,6 @@ def _collect_ledger_history_events(object_ids: list[str]) -> list[BucketEvent]:
     return matches
 
 
-# The two terminal LLM decisions: an accepted (applied) classification or a
-# rejection. The most recent of the two is the standing LLM decision on a row.
-_LLM_DECISION_EVENT_TYPES = (
-    BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
-    BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,
-)
-
-
 def _latest_llm_rejection_notice(
     transaction_repository: TransactionCatalogueRepository,
     *,
@@ -784,7 +781,7 @@ def _latest_llm_rejection_notice(
     """
     object_ids = _history_object_ids(transaction_repository, resolved_id=resolved_id, include_split_siblings=False)
     decisions = [
-        event for event in _collect_ledger_history_events(object_ids) if event.event_type in _LLM_DECISION_EVENT_TYPES
+        event for event in _collect_ledger_history_events(object_ids) if event.event_type in LLM_DECISION_EVENT_TYPES
     ]
     if not decisions:
         return None
