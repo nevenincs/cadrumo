@@ -14,8 +14,8 @@ from __future__ import annotations
 import httpx
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
-from ...core.config import Settings, load_settings
+from ..core import STRICT_FROZEN_CONFIG
+from ..core.config import Settings, load_settings
 
 __all__ = [
     "DependencyStatus",
@@ -86,7 +86,7 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
 
 def probe_subprocess_providers() -> tuple[DependencyStatus, ...]:
     """Probe each subprocess LLM CLI provider (claude / antigravity / codex) on PATH."""
-    from ..ledger import available_llm_providers
+    from .ledger import available_llm_providers
 
     statuses: list[DependencyStatus] = []
     for listing in available_llm_providers():
