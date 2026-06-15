@@ -6,10 +6,10 @@ and produces a ``ModeloReconciliationReport`` recording whether
 the work unit's most recent calculation matches the external evidence.
 
 The service is local-only: it never contacts AEAT and never invokes
-``require_live_read``. It composes the existing low-level reconciler in
-:mod:`aeat.application.filing.reconciliation._reconcile` with a parser
-for the supplied source kind. :class:`BucketEventHistoryRepository` receives
-a ``MODELO_RECONCILED`` event for each reconciliation run.
+``require_live_read``. It reimplements the metadata-level comparison
+(modelo, period, ``ejercicio``, tax id) inline against the justificante
+parser for the supplied source kind. :class:`BucketEventHistoryRepository`
+receives a ``MODELO_RECONCILED`` event for each reconciliation run.
 """
 
 from __future__ import annotations
@@ -125,10 +125,9 @@ class ModeloReconciliationReport(BaseModel):
     """Outcome of ``modelo_reconcile``.
 
     The verdict summarises the comparison at the work-unit level. The
-    diff list enumerates per-casilla disagreements (empty on
-    ``matches``). The wrapped reconciler report is the lower-level
-    field-by-field comparison from
-    :mod:`aeat.application.filing.reconciliation._reconcile`.
+    diff list enumerates the header-field disagreements (modelo, period,
+    ``ejercicio``, tax id; empty on ``matches``); it does not compare
+    individual casilla values.
     """
 
     model_config = _STRICT_FROZEN
@@ -175,9 +174,8 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     """Reconcile a modelo work unit against external evidence and return a :class:`ModeloReconciliationReport`.
 
     Local-only: never contacts AEAT and never invokes ``require_live_read``.
-    Composes the existing low-level reconciler at
-    :mod:`aeat.application.filing.reconciliation._reconcile` with the
-    justificante parser at :mod:`aeat.adapters.inbound.justificante`.
+    Reimplements the metadata comparison inline against the justificante
+    parser at :mod:`aeat.adapters.inbound.justificante`.
 
     Emits ``MODELO_RECONCILED`` into the bucket-event-history catalogue.
     The verdict is included in the event payload so downstream
