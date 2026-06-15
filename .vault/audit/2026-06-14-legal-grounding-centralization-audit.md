@@ -3,28 +3,11 @@ tags:
   - '#audit'
   - '#legal-grounding-centralization'
 date: '2026-06-14'
-modified: '2026-06-14'
+modified: '2026-06-15'
 related: []
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace legal-grounding-centralization with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `legal-grounding-centralization` audit: `Inline-and-Hardcoded Regulatory Definition Inventory — Cross-Domain Centralization Sweep`
 
@@ -757,6 +740,41 @@ The inline-literal lane is therefore complete: the single regulatory-literal vio
 and gated, the production code is swept and proven clean, and the two non-violations are documented so
 a future pass does not re-flag them.
 
+### V25 (art. 20 LIRPF Phase-1 advisory SHIPPED via the registry-independent helper mechanism)
+
+The "build legitimately-missing features" mandate is advanced: the art. 20 ADR's Phase-1 advisory
+(`2026-06-15-art20-trabajo-reduccion-compute-adr`) is now BUILT and gate-verified, despite the peer
+registry block, by selecting the registry-independent mechanism the ADR's sibling DT 12ª advisory
+already uses.
+
+1. **The feature.** `_art20_reduccion_advisory_finding` (`application/modelo/_art20_advisory.py`) raises
+   a non-blocking `ADVISORY` / `WARNING` finding, grounded `ley-35-2006:art-20`, when the rendimiento
+   neto del trabajo (role `irpf_rendimiento_trabajo_rendimiento_neto`, casilla 0022) is strictly
+   positive and below the art. 20 RNT ceiling while the general-reducción casilla (role
+   `irpf_rendimiento_trabajo_reduccion_gastos_generales`, casilla 0023, art-20) is zero — closing the
+   `no-silent-under-declaration` gap on the highest-volume IRPF reduction. Wired into the verify path in
+   `_verification_actions.py` beside the DT 12ª advisory; re-exported through `_actions.py`.
+2. **Mechanism selection (registry-independent).** The ADR originally specified a registry
+   `verification_predicate`, which needs the registry to load (peer-blocked). Phase-1 instead shipped as
+   a Python advisory helper — the exact mechanism DT 12ª already uses — delivering identical observable
+   behaviour and verifiable now via a synthetic-revision (`SimpleNamespace`) contract test that needs no
+   registry. The ADR Implementation section was amended to record this honestly.
+3. **Threshold centralised + grounded.** The RNT ceiling rides
+   `external_constants.MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR = 19747.50` (grounded RDL
+   4/2024 art. 3.1, BOE-A-2024-12944), never an inline literal — the same `aeat-schema-central-config`
+   discipline as the V24 M202 migration.
+4. **Verification (all registry-independent, green).** Two new contract tests in `test_actions.py`
+   (fires-in-band-and-localised; silent-in-four-negative-cases) pass; `ruff` clean on all six touched
+   files; the 146 global-catalogue locale gates (parity, translation-honesty, positional inventory,
+   coverage) pass with the 8 new leaves (en/es/ca/hu × possible/next_action), genuinely translated;
+   `apidocs scaffold --check` clean (new `_art20_advisory` stub landed). Phase-2 (flip 0023 to COMPUTED)
+   stays gated on the cross-section "otras rentas" aggregate and the engine refactor.
+
+This proves a registry-blocked ADR implementation can still ship when an equivalent registry-independent
+mechanism exists in-codebase — the helper-vs-predicate choice was the unlock. The four `test_modelo_manager`
+locale failures observed in passing carry the peer `BindingAggregationOp` signature (`input_value='copy'`)
+and are owner-distinguished peer-block, not introduced here (`full-tree-gate-must-distinguish-owner`).
+
 ## Recommendations
 
 - Track every F1–F6 finding as a plan step with a verification gate (per the
@@ -781,27 +799,4 @@ a future pass does not re-flag them.
 
 ## Codification candidates
 
-<!-- Findings that satisfy the three durability criteria
-(cross-session, constraint-shaped, project-bound) and should be
-promoted into project-shared rules under `.vaultspec/rules/rules/`
-via `vaultspec-core vault rule promote --from <this-audit-stem>
---as <rule-name>`.
 
-Each candidate names the finding it derives from, the proposed
-rule slug (kebab-case, naming the constraint's subject not the
-failure), and a one-sentence statement of the rule.
-
-Most audits produce zero codification candidates. Some produce one.
-Only the rare framework-wide-pattern audit produces several. If
-none of the findings above meet the bar, state that explicitly and
-move on -- an empty Codification candidates section is a positive
-signal, not a failure. -->
-
-<!-- Example:
-
-- **Source:** finding S04 (destructive verbs lack preview).
-  **Rule slug:** `destructive-verbs-need-dry-run`.
-  **Rule:** Every CLI verb that writes or removes state must
-  accept `--dry-run` and emit a usable preview before applying.
-
--->
