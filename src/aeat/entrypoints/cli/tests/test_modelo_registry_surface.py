@@ -746,3 +746,87 @@ def test_parse_binding_override_rejects_invalid_keys(spec: str) -> None:
 
     with pytest.raises(_typer.BadParameter):
         _parse_binding_override(spec)
+
+
+# ---------------------------------------------------------------------------
+# bindings-interface-hardening (W04.P08): the `bindings list` payload is typed
+# and carries provenance; `--modelo` is a registry-derived Choice that refuses
+# an unknown code with the accepted set.
+# ---------------------------------------------------------------------------
+
+
+def test_bindings_list_modelo_choice_refuses_unknown_code() -> None:
+    """`bindings list --modelo` is a registry-derived Choice.
+
+    An unknown modelo code is refused at parse time (before the command body
+    runs) with the accepted-code set, per the CLI-Choice-hint mandate. The
+    refusal names a real registry code so the operator sees the accepted set,
+    not a bare "value invalid".
+    """
+    result = invoke_cached_cli(["app", "modelo", "bindings", "list", "--modelo", "ZZZ"])
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    output_lower = result.output.lower()
+    assert "zzz" in output_lower or "invalid" in output_lower
+    # The accepted set is surfaced: at least one real registry code is named.
+    assert "303" in result.output or "130" in result.output
+
+
+def test_bindings_list_modelo_choice_help_renders_accepted_codes() -> None:
+    """`bindings list --help` surfaces the accepted modelo-code set.
+
+    The registry-derived Choice metavar / help carries the accepted codes so
+    the operator learns the valid set from `--help`, not from a failed run.
+    """
+    result = invoke_cached_cli(["app", "modelo", "bindings", "list", "--help"])
+    assert result.exit_code == 0, result.output
+    # The choice is built from the registry-bound modelo id list; the help
+    # surface names the accepted codes (the registry exposes 303 and 130).
+    assert "303" in result.output and "130" in result.output
+
+
+def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
+    """The `bindings list` JSON payload is the typed `BindingRowPayload` shape.
+
+    Each binding row carries the typed fields plus the regulatory grounding
+    (`legal_refs` / `source_refs`) sourced from the registry binding
+    definition, at parity with the casilla half. This is the operator-boundary
+    provenance-parity contract of the bindings-interface-hardening ADR; the
+    pre-hardening payload was an untyped `dict[str, object]` bag with no
+    grounding.
+    """
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "bindings", "list",
+            "--modelo", "100", "--year", "2025", "--period", "0A",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    bindings = payload["bindings"]
+    assert bindings, "Modelo 100 declares bindings; the listing must be non-empty"
+    # Every row carries the typed fields and the provenance fields.
+    required = {
+        "modelo",
+        "revision",
+        "filing_year",
+        "period",
+        "binding_id",
+        "source",
+        "readiness",
+        "typed_enum",
+        "input_channel",
+        "borrador_capable",
+        "legal_refs",
+        "source_refs",
+    }
+    for row in bindings:
+        assert required <= set(row), sorted(required - set(row))
+        assert isinstance(row["legal_refs"], list)
+        assert isinstance(row["source_refs"], list)
+    # At least one binding carries real legal grounding (parity with casillas):
+    # a grounded binding proves the provenance is wired, not merely defaulted.
+    assert any(row["legal_refs"] for row in bindings), (
+        "at least one Modelo 100 binding must carry legal_refs from the registry definition"
+    )

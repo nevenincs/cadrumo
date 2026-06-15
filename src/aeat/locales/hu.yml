@@ -650,7 +650,7 @@ application:
         casilla-azonosítók hiányoznak a javított térképből.'
       amendment_verification_refused_no_snapshot: A nyilvántartásban nincs pillanatkép
         a kért modellhez, évhez és időszakhoz.
-      calculate_binding_unknown: application.modelo.errors.calculate_binding_unknown
+      calculate_binding_unknown: '--binding %{key} egyik binding azonositonak sem felel meg ebben a revizioban. Elfogadott binding azonositok: %{accepted}. Hasznalja a `aeat app modelo bindings list <MODELO>` parancsot az ervenyes azonositok listazasahoz.'
       calculate_casilla_ambiguous: 'A --casilla %{key} több casillához illeszkedik
         ebben a revízióban: %{candidates}. A pontosításhoz adja meg a PREFIX:NNNNN
         alakú azonosítót.'
