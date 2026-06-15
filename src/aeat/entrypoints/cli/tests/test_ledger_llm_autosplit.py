@@ -319,12 +319,20 @@ def test_classify_reject_records_event_without_classifying(tmp_path: Path) -> No
     assert "ledger.transaction.llm_suggestion.rejected" in kinds
 
 
-def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "extra_flags",
+    [
+        [],  # stage-1
+        ["--saturate"],  # saturate route
+        ["--read-evidence", "--auto-split"],  # auto-split route
+    ],
+)
+def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path, extra_flags: list[str]) -> None:
     _register(_RouterModel(multi=False))
     tx = _import_one_transaction(tmp_path)
     result = _RUNNER.invoke(
         app,
-        ["app", "ledger", "classify", tx, "--llm", "claude", "--reject", "--apply"],
+        ["app", "ledger", "classify", tx, "--llm", "claude", "--reject", "--apply", *extra_flags],
     )
     assert result.exit_code != 0
     assert "--reject" in result.output and "--apply" in result.output

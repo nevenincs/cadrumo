@@ -21,6 +21,7 @@ related:
   - '[[2026-06-14-llm-classification-workflow-plan]]'
   - '[[2026-06-14-llm-classification-workflow-research]]'
   - '[[2026-06-15-llm-classification-workflow-adr]]'
+  - '[[2026-06-15-llm-classification-workflow-audit]]'
 ---
 
 # `llm-classification-workflow` feature index
@@ -37,6 +38,7 @@ Auto-generated index of all documents tagged with `#llm-classification-workflow`
 ### audit
 
 - `2026-06-14-llm-classification-workflow-audit` - `llm-classification-workflow` audit: `Campaign-close honesty review: split recommendation and auto-split`
+- `2026-06-15-llm-classification-workflow-audit` - `llm-classification-workflow` audit: `Campaign-close honesty review: audit-trailed reject terminal (F10)`
 
 ### exec
 
@@ -48,7 +50,7 @@ Auto-generated index of all documents tagged with `#llm-classification-workflow`
 - `2026-06-14-llm-classification-workflow-P03-S06` - Add locale keys via aeat.locales
 - `2026-06-14-llm-classification-workflow-P04-S07` - Add BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED + catalogue pin test
 - `2026-06-14-llm-classification-workflow-P04-S08` - Add reject_llm_suggestion + LLMSuggestionRejectionResult emitting the rejection event without mutating the transaction
-- `2026-06-14-llm-classification-workflow-P04-S09` - Add classify --reject (stage-1/saturate/auto-split) and surface the prior rejection in ledger view
+- `2026-06-14-llm-classification-workflow-P04-S09` - Add classify --reject (stage-1/saturate/auto-split) and surface the rejection in ledger history
 - `2026-06-14-llm-classification-workflow-P04-S10` - Real-behaviour tests for reject (event recorded, no mutation, history/view)
 
 ### plan

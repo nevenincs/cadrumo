@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 
 from .._ledger_llm_payloads import (
+    LedgerClassifyLlmRejectResult,
     LedgerClassifyLlmSaturateResult,
     LedgerClassifyLlmSuggestResult,
 )
@@ -147,6 +148,36 @@ def test_classify_branches_are_distinct_discriminated_shapes() -> None:
         {"llm": True, "provider": "claude", "transaction_id": "a" * 64, "iva_category": "DOMESTIC", "persisted": False},
     )
     assert saturate.iva_category == "DOMESTIC"
+
+    reject = LedgerClassifyLlmRejectResult.model_validate(
+        {
+            "llm": True,
+            "rejected": True,
+            "provider": "claude",
+            "transaction_id": "a" * 64,
+            "suggestion_kind": "classification",
+            "provenance": "llm:claude:m",
+            "bucket_event_id": "e" * 64,
+            "operator_reason": "wrong",
+            "persisted": False,
+        },
+    )
+    assert reject.rejected is True and reject.persisted is False
+    # Strict OutputSchema base forbids unknown keys and round-trips through JSON.
+    assert LedgerClassifyLlmRejectResult.model_validate_json(reject.model_dump_json()) == reject
+    with pytest.raises(ValueError, match="extra"):
+        LedgerClassifyLlmRejectResult.model_validate(
+            {
+                "llm": True,
+                "rejected": True,
+                "provider": "claude",
+                "transaction_id": "a" * 64,
+                "suggestion_kind": "classification",
+                "provenance": "llm:claude:m",
+                "bucket_event_id": "e" * 64,
+                "bogus": "x",
+            },
+        )
 
 
 def test_bulk_result_rejects_extra_field() -> None:
