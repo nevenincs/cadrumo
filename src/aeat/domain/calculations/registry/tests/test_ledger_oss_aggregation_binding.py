@@ -29,6 +29,7 @@ from .. import (
     OssIossLedgerObservation,
     RegistryValidationError,
     resolve_ledger_oss_aggregation_binding_values,
+    unsupported_ledger_oss_observations,
     validate_ledger_oss_aggregation_binding_definition,
 )
 
@@ -157,6 +158,39 @@ def test_resolve_filters_observations_by_destination_member_state() -> None:
     ]
     result = resolve_ledger_oss_aggregation_binding_values(revision, observations)
     assert result == {"modelo-369-union-de-services-21pct": Decimal("19")}
+
+
+def test_unsupported_oss_flags_observation_routed_to_no_binding() -> None:
+    """A non-zero OSS line whose classification matches no binding is surfaced.
+
+    The revision binds only DE-destination union services; an FR-destination
+    line reaches no binding and would silently vanish from the M369 cuota, so
+    the fail-closed screen MUST report it (no-silent-under-declaration).
+    """
+    revision = _revision_with_bindings(_binding())
+    routed = _observation(ledger_id="de-line", destination=EUMemberState.DE, iva=Decimal("19"))
+    unrouted = _observation(ledger_id="fr-line", destination=EUMemberState.FR, iva=Decimal("20"))
+
+    result = unsupported_ledger_oss_observations(revision, (routed, unrouted))
+    assert result == (unrouted,)
+
+
+def test_unsupported_oss_does_not_flag_zero_base_and_zero_iva() -> None:
+    """An OSS line with zero base and zero IVA routed to no binding must NOT false-fire.
+
+    A line carrying no declarable base or cuota contributes nothing whether or
+    not it is routed, so the false-fire guard excludes it.
+    """
+    revision = _revision_with_bindings(_binding())
+    zero_unrouted = _observation(
+        ledger_id="fr-zero",
+        destination=EUMemberState.FR,
+        base=Decimal("0"),
+        iva=Decimal("0"),
+    )
+
+    result = unsupported_ledger_oss_observations(revision, (zero_unrouted,))
+    assert result == ()
 
 
 def test_resolve_filters_observations_by_regime() -> None:

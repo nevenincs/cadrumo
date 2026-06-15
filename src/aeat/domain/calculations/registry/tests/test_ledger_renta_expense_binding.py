@@ -6,7 +6,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import BaseModel
 
+from .....core import Modelo
 from .....core.resources import bundled_path
 from ....categories import SpendingCategory, resolve_category_profiles
 from ....renta import (
@@ -23,6 +25,7 @@ from .. import (
     calculate_registry_snapshot,
     load_registry_tree,
     resolve_ledger_renta_expense_aggregation_binding_values,
+    unsupported_ledger_renta_expense_observations,
     validate_ledger_renta_expense_aggregation_binding_definition,
 )
 
@@ -173,3 +176,79 @@ def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
 
     with pytest.raises(RegistryValidationError, match="outside the first Modelo 100 Renta ledger expense slice"):
         validate_ledger_renta_expense_aggregation_binding_definition(binding)
+
+
+def _single_expense_binding_revision(snapshot, target_casilla: str):
+    """A revision carrying only the one renta-expense binding for ``target_casilla``."""
+    revision = snapshot.revision
+    binding = next(
+        item
+        for item in revision.bindings
+        if item.source == "ledger_renta_expense_aggregation"
+        and dict(item.selector).get("target_casilla") == target_casilla
+    )
+    return revision.model_copy(update={"bindings": (binding,)})
+
+
+def test_unsupported_renta_expense_flags_observation_routed_to_no_binding() -> None:
+    """A non-zero deductible whose target_casilla matches no binding is surfaced.
+
+    The revision carries only the 0186 binding; a 0199-routed deductible
+    observation reaches no binding and would silently vanish from the filing,
+    so the fail-closed screen MUST report it (no-silent-under-declaration).
+    """
+    snapshot = _modelo_100_2025_snapshot()
+    revision = _single_expense_binding_revision(snapshot, "0186")
+
+    routed = _expense_observation(
+        "tx-ss",
+        category=SpendingCategory.CUOTAS_AUTONOMOS_SS,  # routes to 0186 (the only binding)
+        gross_amount=Decimal("300.00"),
+    )
+    unrouted = _expense_observation(
+        "tx-fiscal",
+        category=SpendingCategory.ASESORIA_FISCAL,  # routes to 0199 — no binding on this revision
+        gross_amount=Decimal("121.00"),
+    )
+    assert routed.target_casilla == "0186"
+    assert unrouted.target_casilla == "0199"
+    assert unrouted.deductible_amount > Decimal("0")
+
+    result = unsupported_ledger_renta_expense_observations(revision, (routed, unrouted))
+    assert result == (unrouted,)
+
+
+class _ExpenseObservation(BaseModel):
+    """Minimal structural stand-in satisfying RentaExpenseObservationProtocol.
+
+    Used to exercise the zero-deductible false-fire guard: the production
+    deductibility evaluator never emits a zero-gross fact, but a fully
+    non-deductible category legitimately yields a zero ``deductible_amount`` on
+    a non-zero expense, which the screen must not flag.
+    """
+
+    modelo: Modelo
+    period: str
+    target_casilla: str
+    deductible_amount: Decimal
+
+
+def test_unsupported_renta_expense_does_not_flag_zero_deductible() -> None:
+    """A zero-deductible observation routed to no binding must NOT false-fire.
+
+    A zero deductible contributes nothing whether or not it is routed, so the
+    false-fire guard (the ledger-iva-advisory cuota-bearing precedent) excludes
+    it even when its target_casilla matches no binding on the revision.
+    """
+    snapshot = _modelo_100_2025_snapshot()
+    revision = _single_expense_binding_revision(snapshot, "0186")
+
+    zero_unrouted = _ExpenseObservation(
+        modelo=Modelo.M100,
+        period="0A",
+        target_casilla="0199",  # no binding on this single-binding revision
+        deductible_amount=Decimal("0"),
+    )
+
+    result = unsupported_ledger_renta_expense_observations(revision, (zero_unrouted,))
+    assert result == ()
