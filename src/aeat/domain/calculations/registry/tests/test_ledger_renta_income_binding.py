@@ -24,6 +24,7 @@ from decimal import Decimal
 import pytest
 from pydantic import BaseModel
 
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
 from .. import (
     DataBindingDefinition,
@@ -118,7 +119,7 @@ def test_income_binding_validator_rejects_unknown_fact() -> None:
         id="m130-income-bad-fact",
         source="ledger_renta_income_aggregation",
         selector={"modelo": "130", "target_casilla": "01", "fact": "net_income_sum"},
-        aggregation={"op": "sum"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=("rd-439-2007:art-110",),
         source_refs=("aeat-modelo-130-instructions",),
     )

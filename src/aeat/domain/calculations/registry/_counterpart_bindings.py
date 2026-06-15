@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import COUNTERPART_SOURCE_KINDS, AggregationSourceKind, CounterpartSourceKind
+from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
 from ._errors import RegistryValidationError
 from ._invoice_bindings import (
@@ -127,7 +128,7 @@ def _validated_counterpart_selector(binding: DataBindingDefinition) -> _InvoiceS
         raise RegistryValidationError(
             f"binding {binding.id!r} declares unsupported counterpart aggregation fact {selector.fact!r}",
         )
-    op = str((binding.aggregation or {}).get("op", "sum"))
+    op = binding_aggregation_op(binding)
     _validate_scalar_invoice_fact_op(binding, selector, op)
     if selector.fact == "row_field":
         _validate_row_field_invoice_fact(binding, selector, op)

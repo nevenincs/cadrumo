@@ -5,9 +5,79 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Final, Literal
 
+from pydantic import BaseModel, field_validator
+
+from ._models import STRICT_FROZEN_CONFIG
 from .logging import get_logger
 
 _log = get_logger(__name__)
+
+
+class BindingAggregationOp(StrEnum):
+    """Closed set of aggregation operators a registry binding may declare.
+
+    A binding's ``aggregation.op`` selects how the resolver folds the selected
+    source values into the bound casilla value. The members below are the
+    complete set declared on a ``DataBindingDefinition.aggregation`` across the
+    registry authoring tree; relation aggregation (``copy``/``sum`` on a
+    ``RelationDefinition``) and formula-expression operators are a separate,
+    unrelated axis and are not modelled here.
+
+    Members:
+        SUM: Add the selected source values (default for the scalar-folding
+            families: previous-filing, counterpart, invoice, ledger,
+            withholding).
+        ROWS: Emit one detail row per selected observation rather than folding
+            to a scalar (default for the detail-record families:
+            related-party, foreign-asset, atribución, refund).
+        COPY: Carry a single source value through unchanged; refuses when more
+            than one source value is selected.
+        COUNT_DISTINCT: Count the distinct operators/perceptores behind the
+            selected observations (e.g. Modelo 349 operator counts).
+        PRIOR_PAGOS_FRACCIONADOS: Modelo 130 cumulative pago-fraccionado carry
+            that nets the prior positive declaration against the running total.
+    """
+
+    SUM = "sum"
+    ROWS = "rows"
+    COPY = "copy"
+    COUNT_DISTINCT = "count_distinct"
+    PRIOR_PAGOS_FRACCIONADOS = "prior_pagos_fraccionados"
+
+
+class BindingAggregation(BaseModel):
+    """Typed aggregation rule carried by a registry ``DataBindingDefinition``.
+
+    Placed in :mod:`aeat.core` (cross-layer home) because the domain registry
+    schema declares the field and the application/adapter layers read it; the
+    closed :class:`BindingAggregationOp` set is the only key real binding
+    aggregation mappings carry in the registry authoring tree. The model is
+    strict and frozen, matching the registry schema's
+    :data:`~aeat.core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or
+    a stray extra key is rejected at registry-build validation rather than
+    silently re-parsed at resolve time.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    op: BindingAggregationOp
+
+    @field_validator("op", mode="before")
+    @classmethod
+    def _coerce_op(cls, value: object) -> object:
+        """Hydrate the registry TOML's raw ``op`` string into its enum member.
+
+        The authoring tree declares ``aggregation.op`` as a plain string
+        (``"sum"``, ``"copy"``, ...). Under the strict model config a
+        ``StrEnum`` field requires the actual member, not its value, so the raw
+        string from ``model_validate`` would be rejected. Coercing the known
+        closed-set string to its :class:`BindingAggregationOp` member at the
+        boundary keeps the TOML plain while preserving strict rejection of an
+        unknown op (``BindingAggregationOp(value)`` raises on an invalid value).
+        """
+        if isinstance(value, str) and not isinstance(value, BindingAggregationOp):
+            return BindingAggregationOp(value)
+        return value
 
 
 class AggregationSourceKind(StrEnum):
