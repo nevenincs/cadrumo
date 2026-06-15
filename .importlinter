@@ -446,6 +446,7 @@ ignore_imports =
     aeat.core.tests.test_token_dir_state_root -> aeat.tests.env_scope
     aeat.domain.buckets.tests.test_event_history_roundtrip -> aeat.tests.secure_sql
     aeat.domain.filing.tests.test_amendment_roundtrip -> aeat.tests.secure_sql
+    aeat.domain.filing.tests.test_binding_value_provenance_roundtrip -> aeat.tests.secure_sql
     aeat.domain.filing.tests.test_roundtrip_anti_tautology -> aeat.tests.secure_sql
     aeat.domain.filing.tests.test_secure_storage_roundtrip -> aeat.tests.secure_sql
     aeat.domain.fincas.tests.test_aggregates -> aeat.tests.secure_sql
@@ -523,6 +524,7 @@ ignore_imports =
     # helper (aeat-roundtrip-discipline: real adapters, not mocks).
     aeat.domain.buckets.tests.test_event_history_roundtrip -> aeat.adapters.persistence.storage.crypto._encrypted_columns
     aeat.domain.filing.tests.test_amendment_roundtrip -> aeat.adapters.persistence.storage.crypto._encrypted_columns
+    aeat.domain.filing.tests.test_binding_value_provenance_roundtrip -> aeat.adapters.persistence.storage.crypto._encrypted_columns
     aeat.domain.filing.tests.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.crypto._encrypted_columns
     aeat.domain.invoices.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.crypto._encrypted_columns
     aeat.domain.submission.tests.test_secure_storage_roundtrip -> aeat.adapters.persistence.storage.crypto._encrypted_columns
@@ -557,6 +559,7 @@ ignore_imports =
     aeat.domain.modelos._verification_repository -> aeat.adapters.persistence.storage.errors
     aeat.domain.submission._engine -> aeat.adapters.persistence.storage.errors
     aeat.domain.submission._repository -> aeat.adapters.persistence.storage
+    aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.crypto
     aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.errors
     aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage
     aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.errors
@@ -569,6 +572,8 @@ ignore_imports =
     aeat.domain.buckets.tests.test_event_history_roundtrip -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.filing.tests.test_amendment_roundtrip -> aeat.adapters.persistence.storage.sql._orm
     aeat.domain.filing.tests.test_amendment_roundtrip -> aeat.adapters.persistence.storage.sql.session
+    aeat.domain.filing.tests.test_binding_value_provenance_roundtrip -> aeat.adapters.persistence.storage.sql._orm
+    aeat.domain.filing.tests.test_binding_value_provenance_roundtrip -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.filing.tests.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql._orm
     aeat.domain.filing.tests.test_roundtrip_anti_tautology -> aeat.adapters.persistence.storage.sql.session
     aeat.domain.fincas.tests.test_aggregates -> aeat.adapters.persistence.storage
