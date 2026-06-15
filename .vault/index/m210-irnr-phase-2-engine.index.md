@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m210-irnr-phase-2-engine'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-27-m210-irnr-phase-2-engine-plan]]'
   - '[[2026-06-04-m210-irnr-phase-2-engine-adr]]'

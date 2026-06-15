@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-userdocs-hardening'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S01]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S02]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-w01-summary-exec]]'
   - '[[2026-06-05-general-audience-prose-rollout-audit]]'
   - '[[2026-06-10-aeat-cli-userdocs-hardening-audit]]'
+  - '[[2026-06-14-aeat-cli-userdocs-hardening-audit]]'
 ---
 
 # `aeat-cli-userdocs-hardening` feature index
@@ -45,6 +46,7 @@ Auto-generated index of all documents tagged with `#aeat-cli-userdocs-hardening`
 - `2026-06-04-aeat-cli-userdocs-hardening-reader-review-audit` - `aeat-cli-userdocs-hardening` Reader Review Evidence
 - `2026-06-05-general-audience-prose-rollout-audit` - `aeat-cli-userdocs-hardening` General-Audience Prose Audit
 - `2026-06-10-aeat-cli-userdocs-hardening-audit` - `aeat-cli-userdocs-hardening` audit: `userdocs hardening waves A-C session audit`
+- `2026-06-14-aeat-cli-userdocs-hardening-audit` - `aeat-cli-userdocs-hardening` audit: `userdocs backlog and decision steps resolution`
 
 ### exec
 

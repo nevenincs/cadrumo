@@ -6,6 +6,7 @@ date: '2026-06-08'
 modified: '2026-06-08'
 tier: L3
 related:
+  - '[[2026-06-08-filing-architecture-docs-research]]'
   - '[[2026-06-01-docs-educational-surface-adr]]'
   - '[[2026-06-02-docs-educational-surface-audit]]'
   - '[[2026-05-30-docs-architecture-adr]]'

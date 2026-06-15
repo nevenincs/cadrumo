@@ -2337,7 +2337,7 @@ This Phase delivers thin cli exposure for modelo work unit lifecycle as required
 
 This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr` decision for modelo calculation revisions. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
 
-> **Completion note.** W39 landed in two passes: the original cut delivered the lifecycle plumbing (CalculationRevision pydantic, content-addressed id, DRAFT state, supersession chain) with `calculate_modelo_revision` accepting a pre-computed `casilla_values` mapping. The follow-up wave `W39b` (modelo calculate engine wiring) replaces that with a real-registry computation path: every locally-computed revision now runs through `calculate_registry_snapshot`. See `[[2026-05-13-cli-workflow-redesign-modelo-calculate-engine-wiring-adr]]` for the engine-wiring contract and `W39b` for per-step trace.
+> **Completion note.** W39 landed in two passes: the original cut delivered the lifecycle plumbing (CalculationRevision pydantic, content-addressed id, DRAFT state, supersession chain) with `calculate_modelo_revision` accepting a pre-computed `casilla_values` mapping. The follow-up wave `W39b` (modelo calculate engine wiring) replaces that with a real-registry computation path: every locally-computed revision now runs through `calculate_registry_snapshot`. See the `2026-05-13-cli-workflow-redesign-modelo-calculate-engine-wiring-adr` ADR for the engine-wiring contract and `W39b` for per-step trace.
 
 ### Phase `W39.P191` - backend implementation
 

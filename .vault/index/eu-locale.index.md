@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#eu-locale'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-27-eu-locale-restructure-2025-S212]]'
   - '[[2026-05-27-eu-locale-restructure-2026-S212]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#deadline-engine'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-04-12-deadline-engine-adr]]'
   - '[[2026-04-12-deadline-engine-plan]]'

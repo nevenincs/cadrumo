@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-operator-hardening'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-02-ledger-operator-hardening-adr]]'
   - '[[2026-06-02-ledger-operator-hardening-audit]]'

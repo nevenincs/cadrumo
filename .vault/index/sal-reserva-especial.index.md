@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#sal-reserva-especial'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-27-sal-reserva-especial-S01]]'
   - '[[2026-06-04-sal-reserva-especial-adr]]'

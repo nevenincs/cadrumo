@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-submit-excision'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-04-18-live-submit-cli-excision-adr]]'
   - '[[2026-04-27-live-submit-excision-research]]'

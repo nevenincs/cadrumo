@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-google-live-export'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-03-ledger-google-live-export-plan]]'
   - '[[2026-06-04-ledger-google-live-export-adr]]'

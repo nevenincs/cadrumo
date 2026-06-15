@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#marcos-214'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-27-marcos-214-reduccion-art-84-S214]]'
   - '[[2026-06-04-marcos-214-adr]]'

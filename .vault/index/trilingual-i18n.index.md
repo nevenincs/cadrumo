@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#trilingual-i18n'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-04-12-trilingual-i18n-adr]]'
   - '[[2026-04-12-trilingual-i18n-phase1-step1-exec]]'

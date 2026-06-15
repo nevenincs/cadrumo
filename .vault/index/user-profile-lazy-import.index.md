@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#user-profile-lazy-import'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-03-user-profile-lazy-import-P01-S01]]'
   - '[[2026-06-03-user-profile-lazy-import-P01-S02]]'

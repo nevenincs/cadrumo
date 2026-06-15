@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-persona-testimonials'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-20-cli-persona-testimonials-audit]]'
   - '[[2026-05-20-cli-persona-testimonials-research]]'

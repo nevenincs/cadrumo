@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-censo-calendar-reconciliation'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-W01-P01-S01]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W01-P01-S02]]'
@@ -17,9 +17,11 @@ related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-W04-P04-S12]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W05-P05-S13]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-W05-P05-S14]]'
+  - '[[2026-06-05-live-censo-calendar-reconciliation-adr]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-code-review-audit]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-plan]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-reference]]'
+  - '[[2026-06-05-live-censo-calendar-reconciliation-research]]'
   - '[[2026-06-12-live-censo-calendar-reconciliation-W03-P03-S28]]'
   - '[[2026-06-12-live-censo-calendar-reconciliation-W03-P03-S31]]'
   - '[[2026-06-12-live-censo-calendar-reconciliation-W03-P03-S32]]'
@@ -45,6 +47,10 @@ related:
 Auto-generated index of all documents tagged with `#live-censo-calendar-reconciliation`.
 
 ## Documents
+
+### adr
+
+- `2026-06-05-live-censo-calendar-reconciliation-adr` - `live-censo-calendar-reconciliation` adr: `Calendar obligations resolve from live censo, fall back to profile, or refuse` | (**status:** `accepted`)
 
 ### audit
 
@@ -89,3 +95,7 @@ Auto-generated index of all documents tagged with `#live-censo-calendar-reconcil
 ### reference
 
 - `2026-06-05-live-censo-calendar-reconciliation-reference` - `live-censo-calendar-reconciliation` reference
+
+### research
+
+- `2026-06-05-live-censo-calendar-reconciliation-research` - `live-censo-calendar-reconciliation` research: investigation backing the decision

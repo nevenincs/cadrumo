@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-verify'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-04-22-aeat-verify-exec]]'
   - '[[2026-04-24-aeat-verify-adr]]'

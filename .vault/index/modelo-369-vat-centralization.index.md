@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-369-vat-centralization'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-06-modelo-369-vat-centralization-adr]]'
   - '[[2026-05-06-modelo-369-vat-centralization-audit]]'

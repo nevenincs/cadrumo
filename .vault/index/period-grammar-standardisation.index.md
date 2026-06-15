@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#period-grammar-standardisation'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-11-period-grammar-standardisation-W01-P03-S08]]'
   - '[[2026-06-11-period-grammar-standardisation-W02-P07-S21]]'
@@ -19,6 +19,7 @@ related:
   - '[[2026-06-11-period-grammar-standardisation-code-review-audit]]'
   - '[[2026-06-11-period-grammar-standardisation-exec]]'
   - '[[2026-06-11-period-grammar-standardisation-plan]]'
+  - '[[2026-06-11-period-grammar-standardisation-research]]'
   - '[[2026-06-12-period-grammar-standardisation-closeout-audit]]'
 ---
 
@@ -53,3 +54,7 @@ Auto-generated index of all documents tagged with `#period-grammar-standardisati
 ### plan
 
 - `2026-06-11-period-grammar-standardisation-plan` - `period-grammar-standardisation` `period grammar standardisation: AEAT-token-only, year always separate, conflation burn-down` plan
+
+### research
+
+- `2026-06-11-period-grammar-standardisation-research` - `period-grammar-standardisation` research: investigation backing the decision

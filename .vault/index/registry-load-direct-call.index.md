@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-load-direct-call'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-01-registry-load-direct-call-audit]]'
 ---

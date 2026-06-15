@@ -5,6 +5,7 @@ tags:
 date: '2026-06-13'
 modified: '2026-06-13'
 related:
+  - '[[2026-06-13-modelo-130-pagos-fraccionados-carry-research]]'
   - "[[2026-06-04-m130-casilla-15-override-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-05-19-modelo-130-relation-regression-adr]]"

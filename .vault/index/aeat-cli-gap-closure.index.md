@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-gap-closure'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-08-aeat-cli-gap-closure-adr]]'
   - '[[2026-05-08-aeat-cli-gap-closure-plan]]'

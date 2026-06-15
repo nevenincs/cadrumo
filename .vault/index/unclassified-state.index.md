@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#unclassified-state'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-04-18-unclassified-state-adr]]'
   - '[[2026-04-18-unclassified-state-plan]]'

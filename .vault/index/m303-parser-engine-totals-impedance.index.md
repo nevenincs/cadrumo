@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m303-parser-engine-totals-impedance'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-02-m303-parser-engine-totals-impedance-adr]]'
   - '[[2026-06-04-m303-parser-engine-totals-impedance-research]]'

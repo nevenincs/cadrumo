@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#dt12-reduccion'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-27-dt12-reduccion-S01]]'
   - '[[2026-06-04-dt12-reduccion-adr]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-parity-oracle'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-06-aeat-nif-iva-checker-adapter-adr]]'
   - '[[2026-05-06-cross-reference-oracle-binding-adr]]'

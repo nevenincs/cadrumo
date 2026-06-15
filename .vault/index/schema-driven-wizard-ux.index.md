@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#schema-driven-wizard-ux'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-13-schema-driven-wizard-ux-audit]]'
   - '[[2026-05-13-wizard-ux-transcripts-audit]]'

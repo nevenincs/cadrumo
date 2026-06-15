@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#llm-client'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-04-12-llm-client-adr]]'
   - '[[2026-04-12-llm-client-plan]]'

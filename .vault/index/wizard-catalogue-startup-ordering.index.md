@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#wizard-catalogue-startup-ordering'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-03-wizard-catalogue-startup-ordering-adr]]'
   - '[[2026-06-04-wizard-catalogue-startup-ordering-research]]'

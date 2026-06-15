@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#domain-boundary-audit'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-06-01-domain-boundary-audit-adr]]'
   - '[[2026-06-01-domain-boundary-audit-audit]]'

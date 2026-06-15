@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#sal-sll-legal-entity-form'
-date: '2026-06-13'
-modified: '2026-06-13'
+date: '2026-06-15'
+modified: '2026-06-15'
 related:
   - '[[2026-05-27-sal-sll-legal-entity-form-adr]]'
   - '[[2026-06-04-sal-sll-legal-entity-form-research]]'
