@@ -7,7 +7,7 @@ from collections.abc import Callable
 import typer
 
 from ....adapters.outbound.google import GoogleAuthError
-from ....adapters.outbound.google._profile_binding import resolve_active_profile
+from ....adapters.outbound.google._active_profile import resolve_active_profile
 from ....adapters.outbound.google._records import DriveConfig
 from ....adapters.outbound.google._session_store import load_drive_config, save_drive_config
 from ....core.i18n import tr
