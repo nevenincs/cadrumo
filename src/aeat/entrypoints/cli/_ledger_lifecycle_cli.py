@@ -199,7 +199,7 @@ def ledger_doclink(
     a link is never stored as evidence.
     """
     from ...adapters.outbound.google import resolve_document_link
-    from ...adapters.outbound.google._profile_binding import resolve_active_profile
+    from ...adapters.outbound.google._active_profile import resolve_active_profile
     from ...adapters.outbound.storage import OutboundStorageError
     from ...adapters.outbound.storage._factory import _build_google_credentials
     from ...adapters.persistence.storage.attachment import AttachmentStore
