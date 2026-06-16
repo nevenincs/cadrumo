@@ -12,7 +12,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
-from ...core import BindingSourceKind
+from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import Period as _Period
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
@@ -404,7 +404,7 @@ def _string_inputs_for_ids(inputs: ModeloInputs, input_ids: frozenset[str]) -> d
     return string_inputs
 
 
-def _binding_provenance(binding: object) -> tuple[BindingSourceKind, tuple[str, ...], tuple[str, ...]]:
+def _binding_provenance(binding: object) -> tuple[_BindingSourceKind, tuple[str, ...], tuple[str, ...]]:
     """Extract the typed source kind and grounding from a binding definition.
 
     The ``binding`` is the registry ``DataBindingDefinition`` already held by
@@ -416,7 +416,7 @@ def _binding_provenance(binding: object) -> tuple[BindingSourceKind, tuple[str, 
     :class:`~aeat.domain.filing.ModeloCasillaProvenance`).
     """
     source = getattr(binding, "source", None)
-    if not isinstance(source, BindingSourceKind):
+    if not isinstance(source, _BindingSourceKind):
         raise ModeloBuilderError(
             f"registry binding {getattr(binding, 'id', binding)!r} carries a non-typed "
             f"source {source!r}; expected a BindingSourceKind member",

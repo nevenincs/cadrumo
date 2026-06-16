@@ -37,6 +37,23 @@ Run the check directly for machine-readable output:
 aeat config check --format json
 ```
 
+## Install optional integrations
+
+The core install is lean. Google export, the live AEAT browser, and the
+Anthropic-API provider are optional package extras. Install only the ones you
+need:
+
+```bash
+pip install "aeat[google]"
+pip install "aeat[browser]"
+pip install "aeat[anthropic]"
+pip install "aeat[all]"
+```
+
+`aeat config check` lists each extra and prints the exact install command for any
+that is missing. A feature whose extra is not installed refuses with the same
+hint instead of failing obscurely.
+
 ## Provision optional dependencies
 
 Install the optional browser and model dependencies when you need them.

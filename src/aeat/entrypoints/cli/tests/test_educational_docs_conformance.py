@@ -1,7 +1,8 @@
 """Single-source conformance gate for the educational documentation surface.
 
 Per the ``docs-educational-surface`` contract, the Diataxis educational docs
-(``docs/tutorials``, ``docs/explanation``, ``docs/how-to``) reference the live
+(``docs/tutorials``, ``docs/explanation``, ``docs/how-to``) and the
+developer-facing architecture overview (``docs/architecture``) reference the live
 CLI surface by stable verb and link to sibling docs; they never re-author flag
 help. This gate makes that contract a tested invariant rather than an
 author-discipline hope:
@@ -29,7 +30,7 @@ from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_EDU_DIRS = ("docs/tutorials", "docs/explanation", "docs/how-to")
+_EDU_DIRS = ("docs/tutorials", "docs/explanation", "docs/how-to", "docs/architecture")
 _runner = CliRunner()
 
 # A leading run of lowercase verb-ish tokens after `aeat` (subcommands use

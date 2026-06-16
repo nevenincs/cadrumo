@@ -26,8 +26,14 @@ You MUST respect these rules at all times:
 @.agents/rules/aeat-swarm-orchestration.md
 @.agents/rules/aeat-user-docs-hardening.md
 @.agents/rules/aeat-vaultspec-centralisation.md
+@.agents/rules/binding-aggregation-is-typed.md
+@.agents/rules/binding-names-reserved-for-registry-input.md
+@.agents/rules/binding-source-kind-single-taxonomy.md
+@.agents/rules/binding-validation-single-contract.md
+@.agents/rules/binding-values-carry-provenance.md
 @.agents/rules/calculation-source-canonical-mechanism.md
 @.agents/rules/carried-observations-stamp-their-revision.md
+@.agents/rules/casilla-grounding-corrects-actividades-default-by-section.md
 @.agents/rules/cli-notices-are-the-only-diagnostic-channel.md
 @.agents/rules/cli-single-subject-id-is-positional.md
 @.agents/rules/composition-service-no-parallel-write-path.md
@@ -36,6 +42,7 @@ You MUST respect these rules at all times:
 @.agents/rules/fixture-provenance-declared-in-sidecar.md
 @.agents/rules/full-tree-gate-must-distinguish-owner.md
 @.agents/rules/generated-reference-is-cli-owned.builtin.md
+@.agents/rules/glossary-concepts-are-taxpayer-facing.md
 @.agents/rules/ledger-amount-is-absolute-direction-is-authority.md
 @.agents/rules/ledger-derived-revisions-bundle-evidence.md
 @.agents/rules/ledger-evidence-bytes-not-links.md
@@ -55,6 +62,7 @@ You MUST respect these rules at all times:
 @.agents/rules/period-filter-single-boundary-authority.md
 @.agents/rules/plan-closure-requires-exec-records.md
 @.agents/rules/registry-calculation-legal-grounding.md
+@.agents/rules/registry-resolver-family-extraction.md
 @.agents/rules/relation-slot-bindings-declare-relation-source.md
 @.agents/rules/retired-enum-members-need-consumer-reconciliation.md
 @.agents/rules/revision-resolution-is-law-determined.md

@@ -4,5 +4,5 @@ number = "0681"
 label = "Resultados a ingresar de anteriores autoliquidaciones o liquidaciones administrativas correspondientes al ejercicio 2020"
 section = ["resultados", "regularizacion_res"]
 semantic_role = "irpf_regularizacion_autoliquidaciones_anteriores_ingresar"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26"]
+legal_refs = ["ley-35-2006:art-97"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

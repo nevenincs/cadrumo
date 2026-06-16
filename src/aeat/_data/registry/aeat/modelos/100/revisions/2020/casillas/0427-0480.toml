@@ -4,5 +4,5 @@ number = "0480"
 label = "Aportaciones realizadas en 2020 al patrimonio protegido de la persona con discapacidad"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_patrimonio_protegido_discapacidad"]
 semantic_role = "irpf_red_patrimonio_protegido_discapacidad_aportaciones"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26"]
+legal_refs = ["ley-35-2006:art-54"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

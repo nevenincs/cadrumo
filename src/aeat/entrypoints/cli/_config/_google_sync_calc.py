@@ -13,11 +13,11 @@ from typing import TYPE_CHECKING, Annotated
 import typer
 
 from ....adapters.outbound.google import GoogleAuthError
+from ....adapters.outbound.google._active_profile import resolve_active_profile
 from ....adapters.outbound.google._calc_sheets_apply import (
     CalcSheetsApplyResult,
     apply_export_plan,
 )
-from ....adapters.outbound.google._profile_binding import resolve_active_profile
 from ....adapters.outbound.storage import OutboundStorageError
 from ....adapters.outbound.storage._factory import (
     _build_google_credentials,
@@ -233,6 +233,15 @@ def google_sync_calc_verify(
         OperatorInputScenario,
         verify_modelo_parity,
     )
+    from ....application.user_profile import resolve_active_capability
+    from ....core import ServiceCapability
+
+    # `verify` creates a Drive spreadsheet and writes cells, so it is a Google
+    # export egress and is gated on the same capability as `export`.
+    if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.google.sync.calc.export.capability_disabled",
+        )
 
     try:
         active = resolve_active_profile()

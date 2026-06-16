@@ -13,7 +13,7 @@ appropriate :class:`SensitivityClass`:
   session is operator-private state.
 
 Each function is keyed on the resolved AEAT profile name (per
-`_profile_binding.resolve_active_profile`).
+`_active_profile.resolve_active_profile`).
 """
 
 from __future__ import annotations

@@ -24,4 +24,5 @@ Submodules
    aeat.application.calculations._observations_repository
    aeat.application.calculations._ports
    aeat.application.calculations._relation_prefill
+   aeat.application.calculations._revision_carry_gate
    aeat.application.calculations._row_set_assembly

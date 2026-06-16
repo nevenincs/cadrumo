@@ -15,6 +15,7 @@ Submodules
 
    aeat.application.user_profile._aggregate
    aeat.application.user_profile._bundle
+   aeat.application.user_profile._capabilities
    aeat.application.user_profile._censo_errors
    aeat.application.user_profile._censo_sync
    aeat.application.user_profile._commands

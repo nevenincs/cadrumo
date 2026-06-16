@@ -18,12 +18,16 @@ from pathlib import Path
 import httpx
 from pydantic import BaseModel, Field
 
-from ..core import STRICT_FROZEN_CONFIG
+from ..core import OPTIONAL_EXTRAS, STRICT_FROZEN_CONFIG, OptionalExtra, optional_extra_available
 from ..core.config import Settings, load_settings
 
 __all__ = [
+    "OPTIONAL_EXTRAS",
     "DependencyStatus",
+    "OptionalExtra",
     "probe_ollama_vision",
+    "probe_optional_extra",
+    "probe_optional_extras",
     "probe_playwright_browser",
     "probe_subprocess_providers",
 ]
@@ -152,3 +156,30 @@ def probe_playwright_browser() -> DependencyStatus:
         available=True,
         detail=f"Chromium build present under {root}",
     )
+
+
+def probe_optional_extra(extra: OptionalExtra) -> DependencyStatus:
+    """Probe whether an optional package extra is importable, never raising.
+
+    Wraps the core :func:`optional_extra_available` spec-only check (no import, no
+    side effects) in the doctor's :class:`DependencyStatus`, naming the
+    ``pip install aeat[<extra>]`` remediation when absent. The feature-boundary
+    guard is the sibling core :func:`~aeat.core.require_optional_extra`.
+    """
+    if not optional_extra_available(extra):
+        return DependencyStatus(
+            service=f"extra:{extra.extra}",
+            available=False,
+            detail=f"{extra.feature} needs the '{extra.extra}' extra ({extra.import_name} not importable)",
+            remediation=extra.install_hint,
+        )
+    return DependencyStatus(
+        service=f"extra:{extra.extra}",
+        available=True,
+        detail=f"{extra.feature} is available ({extra.import_name} importable)",
+    )
+
+
+def probe_optional_extras() -> tuple[DependencyStatus, ...]:
+    """Probe every capability-gated optional extra, one :class:`DependencyStatus` each."""
+    return tuple(probe_optional_extra(extra) for extra in OPTIONAL_EXTRAS)

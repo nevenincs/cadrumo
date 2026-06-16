@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from typing import Protocol, runtime_checkable
 
 from ...core import Period as _Period
 from ...domain.calculations.registry import (
@@ -25,6 +26,35 @@ from ._borrador_binding import (
     Modelo100BorradorSourceResolver,
 )
 from ._profile_binding import ProfileSourcedBindingResult
+
+
+@runtime_checkable
+class BindingSourceResolution(Protocol):
+    """The one role every binding source-resolution result fills.
+
+    A binding source resolver answers a single question — "which registry
+    bindings does source X satisfy, and with what values" — and returns the
+    resolved values projected onto the engine's two scalar input channels:
+    ``binding_values`` (Decimal channel) and ``enum_binding_values`` (string /
+    enum-dispatch channel). :class:`ProfileSourcedBindingResult` (profile facts)
+    and :class:`Modelo100BorradorBindingResult` (AEAT borrador snapshot) both
+    satisfy this Protocol; each additionally carries its own provenance trace
+    (``bindings_sourced_from_profile`` / ``bindings_sourced_from_borrador``) and
+    source-specific metadata. The IVA-wallet compensation path feeds the same
+    ``binding_values`` channel through a distinct decision-gate mechanism (the
+    M303 carve-out) rather than a result object, so it is intentionally not a
+    member of this Protocol.
+
+    This Protocol names the shared role so the result types are recognisably one
+    contract rather than three look-alikes; it is structural (``runtime_checkable``)
+    and adds no inheritance or behaviour to the concrete results.
+    """
+
+    @property
+    def binding_values(self) -> Mapping[str, Decimal]: ...
+
+    @property
+    def enum_binding_values(self) -> Mapping[str, str]: ...
 
 
 @dataclass(frozen=True)

@@ -19,6 +19,7 @@ Submodules
    aeat.domain.calculations.registry._applicability_modelo202
    aeat.domain.calculations.registry._applicability_payer_facts
    aeat.domain.calculations.registry._authority
+   aeat.domain.calculations.registry._binding_aggregation
    aeat.domain.calculations.registry._binding_selector_utils
    aeat.domain.calculations.registry._bindings
    aeat.domain.calculations.registry._bindings_previous_filing

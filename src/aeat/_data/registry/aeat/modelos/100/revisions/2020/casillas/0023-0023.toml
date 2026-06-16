@@ -4,5 +4,5 @@ number = "0023"
 label = "Cuantía aplicable con carácter general"
 section = ["resultados", "rdto_trabajo_res"]
 semantic_role = "irpf_rendimiento_trabajo_reduccion_gastos_generales"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20"]
+legal_refs = ["ley-35-2006:art-20"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

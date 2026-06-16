@@ -26,8 +26,14 @@ You MUST respect these rules at all times:
 @.claude/rules/aeat-swarm-orchestration.md
 @.claude/rules/aeat-user-docs-hardening.md
 @.claude/rules/aeat-vaultspec-centralisation.md
+@.claude/rules/binding-aggregation-is-typed.md
+@.claude/rules/binding-names-reserved-for-registry-input.md
+@.claude/rules/binding-source-kind-single-taxonomy.md
+@.claude/rules/binding-validation-single-contract.md
+@.claude/rules/binding-values-carry-provenance.md
 @.claude/rules/calculation-source-canonical-mechanism.md
 @.claude/rules/carried-observations-stamp-their-revision.md
+@.claude/rules/casilla-grounding-corrects-actividades-default-by-section.md
 @.claude/rules/cli-notices-are-the-only-diagnostic-channel.md
 @.claude/rules/cli-single-subject-id-is-positional.md
 @.claude/rules/composition-service-no-parallel-write-path.md
@@ -36,6 +42,7 @@ You MUST respect these rules at all times:
 @.claude/rules/fixture-provenance-declared-in-sidecar.md
 @.claude/rules/full-tree-gate-must-distinguish-owner.md
 @.claude/rules/generated-reference-is-cli-owned.builtin.md
+@.claude/rules/glossary-concepts-are-taxpayer-facing.md
 @.claude/rules/ledger-amount-is-absolute-direction-is-authority.md
 @.claude/rules/ledger-derived-revisions-bundle-evidence.md
 @.claude/rules/ledger-evidence-bytes-not-links.md
@@ -55,6 +62,7 @@ You MUST respect these rules at all times:
 @.claude/rules/period-filter-single-boundary-authority.md
 @.claude/rules/plan-closure-requires-exec-records.md
 @.claude/rules/registry-calculation-legal-grounding.md
+@.claude/rules/registry-resolver-family-extraction.md
 @.claude/rules/relation-slot-bindings-declare-relation-source.md
 @.claude/rules/retired-enum-members-need-consumer-reconciliation.md
 @.claude/rules/revision-resolution-is-law-determined.md

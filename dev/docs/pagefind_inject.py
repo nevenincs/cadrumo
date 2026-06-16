@@ -216,12 +216,33 @@ def _content_for(record: SearchRecord) -> str:
     return "\n".join(unique)
 
 
+#: Cap for the clean one-line card summary. The palette shows this in place of
+#: Pagefind's auto-excerpt, which for an injected record would otherwise be a
+#: cross-lingual token blob (title + every alias + all four descriptions).
+_SUMMARY_MAX_CHARS: Final[int] = 160
+
+
+def _summary_for(record: SearchRecord) -> str:
+    """A clean single-language one-line summary for the card display.
+
+    Prefers the English description (the docs build's page language); falls back
+    to the always-present Spanish text. Whitespace is collapsed and the result
+    is truncated so the palette never renders the multilingual search blob.
+    """
+    text = record.descriptions.get(OutputLanguage.EN) or record.description_es
+    collapsed = " ".join(text.split())
+    if len(collapsed) > _SUMMARY_MAX_CHARS:
+        collapsed = collapsed[: _SUMMARY_MAX_CHARS - 1].rstrip() + "…"
+    return collapsed
+
+
 def _meta_for(record: SearchRecord, weight: float) -> dict[str, str]:
     """Build the typed Pagefind meta map for the palette term card."""
     meta: dict[str, str] = {
         "kind": record.kind.value,
         "tier": record.tier.value,
         "title": record.title,
+        "summary": _summary_for(record),
         "weight": f"{weight:.6f}",
     }
     md = record.metadata

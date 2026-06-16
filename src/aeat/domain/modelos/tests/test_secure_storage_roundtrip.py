@@ -116,7 +116,9 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
     assert dumped_unit["filing_year"] == 2025
     assert dumped_unit["period"] == {"filing_year": 2025, "code": "1T"}
     assert "2025Q1" not in loaded_unit.model_dump_json()
-    database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
+    from ....tests.secure_sql import read_db_at_rest_bytes
+
+    database_bytes = read_db_at_rest_bytes(profile.paths.db_dir / "aeat.db")
     assert b"2025Q1" not in database_bytes
     assert b"2025-1T" not in database_bytes
     # Per-field witnesses: ModeloCode preservation, year/period

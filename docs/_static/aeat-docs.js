@@ -296,11 +296,17 @@
       }
       var weight = meta && meta.weight ? parseFloat(meta.weight) : 0;
       if (isNaN(weight)) weight = 0;
+      /* Injected term/casilla/CLI records carry a clean single-language
+       * `summary`; show that, never Pagefind's auto-excerpt of the record,
+       * which is the cross-lingual token blob (title + every alias + all four
+       * descriptions). Full-text page hits carry no summary, so they keep their
+       * real Pagefind snippet. */
+      var summary = meta && meta.summary ? meta.summary : "";
       return {
         title: title,
         href: url,
         crumb: crumbParts.join(" · "),
-        excerpt: excerpt || "",
+        excerpt: summary || excerpt || "",
         kind: kind,
         tierRank: (KIND_TIER[kind] || 1) * 10 + weight,
       };
@@ -335,41 +341,50 @@
      *   2. a normal relevance search yields the full-text page hits (third
      *      tier). A page that is also a card is deduped away in compose(). */
     function searchPagefind(query) {
-      return loadPagefind().then(function (pf) {
-        if (!pf || typeof pf.search !== "function") return [];
-        var cardSearch = pf.search(query, { sort: { weight: "desc" } });
-        var pageSearch = pf.search(query);
-        return Promise.all([cardSearch, pageSearch]).then(function (both) {
-          var cardResults = both[0] && both[0].results ? both[0].results : [];
-          var pageResults = both[1] && both[1].results ? both[1].results : [];
-          /* Every injected concept card carries the same `weight` (tier one is
-           * a flat 1.0), so the weight-sorted card pass ties them all and
-           * returns them in Pagefind's internal (non-relevance) order - the
-           * exact-term match ("iva" -> the IVA concept) can then sink below
-           * concepts that only match "iva" incidentally, or fall out of the
-           * visible head entirely. The relevance pass DOES order by textual
-           * match, so capture each url's relevance rank and carry it onto the
-           * card; compose() breaks within-tier ties by it, floating the best
-           * textual match to the top of its tier while the tier itself still
-           * keeps cards above full-text pages. */
-          var relRank = {};
-          pageResults.forEach(function (r, i) {
-            if (relRank[r.url] === undefined) relRank[r.url] = i;
-          });
-          return dataToCards(cardResults, 12).then(function (cards) {
-            return dataToCards(pageResults, 6).then(function (pages) {
-              var all = cards.concat(pages);
-              all.forEach(function (item) {
-                item.relRank =
-                  relRank[item.href] !== undefined
-                    ? relRank[item.href]
-                    : Number.MAX_SAFE_INTEGER;
+      return loadPagefind()
+        .then(function (pf) {
+          if (!pf || typeof pf.search !== "function") return [];
+          /* Run the two passes SEQUENTIALLY. Two concurrent searches on one
+           * Pagefind instance make the first supersede-cancel the other -
+           * Pagefind keeps only the latest in-flight search and resolves the
+           * rest to null - which silently emptied the card pass while a reader
+           * was still typing. Awaiting each pass in turn removes the
+           * self-supersede so both reliably return. */
+          return Promise.resolve(
+            pf.search(query, { sort: { weight: "desc" } })
+          ).then(function (cardRes) {
+            return Promise.resolve(pf.search(query)).then(function (pageRes) {
+              var cardResults = cardRes && cardRes.results ? cardRes.results : [];
+              var pageResults = pageRes && pageRes.results ? pageRes.results : [];
+              /* The weight-sorted pass ties every concept card at the flat
+               * tier-one weight, so capture each url's relevance rank from the
+               * textual pass and carry it onto the card; compose() breaks
+               * within-tier ties by it, floating the best textual match to the
+               * top of its tier while cards still sit above full-text pages. */
+              var relRank = {};
+              pageResults.forEach(function (r, i) {
+                if (relRank[r.url] === undefined) relRank[r.url] = i;
               });
-              return all;
+              return dataToCards(cardResults, 12).then(function (cards) {
+                return dataToCards(pageResults, 6).then(function (pages) {
+                  var all = cards.concat(pages);
+                  all.forEach(function (item) {
+                    item.relRank =
+                      relRank[item.href] !== undefined
+                        ? relRank[item.href]
+                        : Number.MAX_SAFE_INTEGER;
+                  });
+                  return all;
+                });
+              });
             });
           });
+        })
+        .catch(function () {
+          /* A Pagefind failure degrades to nav-only; it never breaks the
+           * palette or leaves an unhandled rejection. */
+          return [];
         });
-      });
     }
 
     function fullSearchEntry(query) {
@@ -486,14 +501,23 @@
 
     function render(query) {
       var token = ++queryToken;
-      /* Paint nav + full-text immediately so the palette never blanks while
-       * Pagefind loads, then upgrade with term cards when the query resolves. */
-      paint(compose(query, []));
-      if (!query) return;
-      searchPagefind(query).then(function (cards) {
-        if (token !== queryToken) return; /* a newer keystroke superseded this */
-        if (cards.length) paint(compose(query, cards));
-      });
+      if (!query) {
+        paint(compose("", []));
+        return;
+      }
+      /* Keep the current results painted until the new query resolves, then
+       * swap - so a keystroke never blanks the palette to the bare fallback
+       * (the old eager repaint did, and on a transiently-empty Pagefind pass it
+       * stuck there). */
+      searchPagefind(query)
+        .then(function (cards) {
+          if (token !== queryToken) return; /* a newer keystroke superseded this */
+          paint(compose(query, cards));
+        })
+        .catch(function () {
+          if (token !== queryToken) return;
+          paint(compose(query, []));
+        });
     }
 
     function select(index) {
@@ -532,8 +556,15 @@
       }
     });
 
+    var searchDebounce = null;
     input.addEventListener("input", function () {
-      render(input.value.trim());
+      var q = input.value.trim();
+      if (searchDebounce) clearTimeout(searchDebounce);
+      /* Coalesce fast typing into one search: firing a Pagefind pass per
+       * keystroke is what raced them into the supersede-empty state. */
+      searchDebounce = setTimeout(function () {
+        render(q);
+      }, 130);
     });
 
     dialog.addEventListener("keydown", function (event) {

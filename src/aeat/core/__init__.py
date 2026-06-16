@@ -34,6 +34,16 @@ from ._capabilities import ServiceCapability
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._modelo import NON_REGISTRY_MODELOS, Modelo
 from ._models import STRICT_FROZEN_CONFIG
+from ._optional_extras import (
+    ANTHROPIC_EXTRA,
+    BROWSER_EXTRA,
+    GOOGLE_EXTRA,
+    OPTIONAL_EXTRAS,
+    MissingOptionalExtraError,
+    OptionalExtra,
+    optional_extra_available,
+    require_optional_extra,
+)
 from ._period import (
     Period,
     PeriodError,
@@ -62,14 +72,20 @@ if TYPE_CHECKING:
     from .aggregation import AggregationSourceKind, BindingSourceKind
 
 __all__: list[str] = [
+    "ANTHROPIC_EXTRA",
+    "BROWSER_EXTRA",
+    "GOOGLE_EXTRA",
     "NON_REGISTRY_MODELOS",
+    "OPTIONAL_EXTRAS",
     "STRICT_FROZEN_CONFIG",
     "AggregationSourceKind",
     "BindingSourceKind",
     "BucketPointer",
     "LedgerSortField",
     "LedgerSortOrder",
+    "MissingOptionalExtraError",
     "Modelo",
+    "OptionalExtra",
     "Period",
     "PeriodError",
     "PeriodKind",
@@ -81,11 +97,13 @@ __all__: list[str] = [
     "accepted_period_patterns",
     "freeze_toml",
     "freeze_toml_value",
+    "optional_extra_available",
     "parse_toml_text",
     "pointer_path",
     "read_pointer",
     "read_toml",
     "require_active_bucket_id",
+    "require_optional_extra",
     "resolve_active_bucket_id",
     "resolve_repository_bucket_id",
     "to_str_keyed_dict",

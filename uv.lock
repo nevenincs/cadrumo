@@ -28,23 +28,17 @@ name = "aeat"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "anthropic" },
     { name = "argon2-cffi" },
     { name = "beautifulsoup4" },
     { name = "cryptography" },
     { name = "defusedxml" },
     { name = "formulas" },
-    { name = "google-api-python-client" },
-    { name = "google-auth" },
-    { name = "google-auth-oauthlib" },
     { name = "httpx" },
     { name = "keyring" },
     { name = "ofxparse" },
     { name = "openpyxl" },
     { name = "pdfplumber" },
     { name = "pikepdf" },
-    { name = "playwright" },
-    { name = "playwright-stealth" },
     { name = "prompt-toolkit" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
@@ -60,22 +54,47 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+all = [
+    { name = "anthropic" },
+    { name = "google-api-python-client" },
+    { name = "google-auth" },
+    { name = "google-auth-oauthlib" },
+    { name = "playwright" },
+    { name = "playwright-stealth" },
+]
+anthropic = [
+    { name = "anthropic" },
+]
+browser = [
+    { name = "playwright" },
+    { name = "playwright-stealth" },
+]
+google = [
+    { name = "google-api-python-client" },
+    { name = "google-auth" },
+    { name = "google-auth-oauthlib" },
+]
 workbook-windows = [
     { name = "pywin32", marker = "sys_platform == 'win32'" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "anthropic" },
     { name = "complexipy" },
     { name = "deptry" },
     { name = "doc8" },
     { name = "furo" },
+    { name = "google-api-python-client" },
     { name = "google-api-python-client-stubs" },
+    { name = "google-auth" },
+    { name = "google-auth-oauthlib" },
     { name = "import-linter" },
     { name = "interrogate" },
     { name = "myst-parser" },
     { name = "pagefind", extra = ["extended"] },
     { name = "playwright" },
+    { name = "playwright-stealth" },
     { name = "prek" },
     { name = "psutil" },
     { name = "pydoclint" },
@@ -120,23 +139,26 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "anthropic", specifier = ">=0.74.1,<1" },
+    { name = "aeat", extras = ["anthropic"], marker = "extra == 'all'" },
+    { name = "aeat", extras = ["browser"], marker = "extra == 'all'" },
+    { name = "aeat", extras = ["google"], marker = "extra == 'all'" },
+    { name = "anthropic", marker = "extra == 'anthropic'", specifier = ">=0.74.1,<1" },
     { name = "argon2-cffi", specifier = ">=23.1.0,<26" },
     { name = "beautifulsoup4", specifier = ">=4.12,<5" },
     { name = "cryptography", specifier = ">=47.0.0,<48" },
     { name = "defusedxml", specifier = ">=0.7.1,<1" },
     { name = "formulas", specifier = ">=1.2.0,<2" },
-    { name = "google-api-python-client", specifier = ">=2.195.0,<3" },
-    { name = "google-auth", specifier = ">=2.50.0,<3" },
-    { name = "google-auth-oauthlib", specifier = ">=1.3.1,<2" },
+    { name = "google-api-python-client", marker = "extra == 'google'", specifier = ">=2.195.0,<3" },
+    { name = "google-auth", marker = "extra == 'google'", specifier = ">=2.50.0,<3" },
+    { name = "google-auth-oauthlib", marker = "extra == 'google'", specifier = ">=1.3.1,<2" },
     { name = "httpx", specifier = ">=0.28.1,<1" },
     { name = "keyring", specifier = ">=25.6.0,<26" },
     { name = "ofxparse", specifier = ">=0.21,<1" },
     { name = "openpyxl", specifier = ">=3.1.5,<4" },
     { name = "pdfplumber", specifier = ">=0.11.9,<1" },
     { name = "pikepdf", specifier = ">=10.0.0,<11" },
-    { name = "playwright", specifier = ">=1.58.0,<2" },
-    { name = "playwright-stealth", specifier = ">=2.0.3,<3" },
+    { name = "playwright", marker = "extra == 'browser'", specifier = ">=1.58.0,<2" },
+    { name = "playwright-stealth", marker = "extra == 'browser'", specifier = ">=2.0.3,<3" },
     { name = "prompt-toolkit", specifier = ">=3.0,<4" },
     { name = "pydantic", specifier = ">=2.12.5,<3" },
     { name = "pydantic-settings", specifier = ">=2.9.1,<3" },
@@ -151,20 +173,25 @@ requires-dist = [
     { name = "tzdata", marker = "sys_platform == 'win32'", specifier = ">=2026.2" },
     { name = "xlrd", specifier = ">=2.0.1,<3" },
 ]
-provides-extras = ["workbook-windows"]
+provides-extras = ["workbook-windows", "google", "browser", "anthropic", "all"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "anthropic", specifier = ">=0.74.1,<1" },
     { name = "complexipy", specifier = ">=3.3.0" },
     { name = "deptry", specifier = ">=0.24" },
     { name = "doc8", specifier = ">=1.1" },
     { name = "furo", specifier = ">=2024.8" },
+    { name = "google-api-python-client", specifier = ">=2.195.0,<3" },
     { name = "google-api-python-client-stubs", specifier = ">=1.36" },
+    { name = "google-auth", specifier = ">=2.50.0,<3" },
+    { name = "google-auth-oauthlib", specifier = ">=1.3.1,<2" },
     { name = "import-linter", specifier = ">=2.0" },
     { name = "interrogate", specifier = ">=1.7.0" },
     { name = "myst-parser", specifier = ">=4.0" },
     { name = "pagefind", extras = ["extended"], specifier = ">=1.5,<2" },
     { name = "playwright", specifier = ">=1.58.0" },
+    { name = "playwright-stealth", specifier = ">=2.0.3,<3" },
     { name = "prek", specifier = ">=0.2.0" },
     { name = "psutil", specifier = ">=5.9" },
     { name = "pydoclint", specifier = ">=0.6" },

@@ -17,7 +17,7 @@ Four commands wire the Google OAuth Desktop backend
   without re-importing the JSON.
 
 Every command resolves the active profile via
-`_profile_binding.resolve_active_profile(--profile)` and surfaces
+`_active_profile.resolve_active_profile(--profile)` and surfaces
 `GoogleAuthError` subclasses with the project's standard exit-code +
 JSON envelope semantics.
 """
@@ -44,8 +44,8 @@ from ....adapters.outbound.google import (
     GoogleAuthValidationError,
     OAuthClient,
 )
+from ....adapters.outbound.google._active_profile import resolve_active_profile
 from ....adapters.outbound.google._oauth_flow import run_login_flow
-from ....adapters.outbound.google._profile_binding import resolve_active_profile
 from ....adapters.outbound.google._session_store import (
     delete_session,
     load_client,
@@ -77,6 +77,7 @@ from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.i18n import tr
 from .._common import _emit_envelope
+from .._errors import CliRefusedBoundaryError
 from ._google_errors import _google_refusal
 from ._google_folder import register_google_folder_commands
 from ._google_payloads import (
@@ -394,6 +395,17 @@ def google_sync_probe(
     resolves to a real folder, and (when `--no-read-only`) a sentinel
     file round-trips into `_probe/`.
     """
+    from ....application.user_profile import resolve_active_capability
+    from ....core import ServiceCapability
+
+    # The read-only probe is a pure connectivity read and stays ungated. The
+    # `--no-read-only` arm writes a sentinel file to Drive, so that write is a
+    # Google export egress gated on the same capability as `push` / `export`.
+    if not read_only and not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.google.sync.calc.export.capability_disabled",
+        )
+
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:
@@ -801,6 +813,16 @@ def google_sync_push(
     folder, named `<hmac_prefix_8>--<label>.bin`. The local master
     key never leaves the host — only ciphertext reaches Drive.
     """
+    from ....application.user_profile import resolve_active_capability
+    from ....core import ServiceCapability
+
+    # `push` mirrors secure-object ciphertext to Drive, so it is a Google export
+    # egress and is gated on the same capability as the calc-sheets export.
+    if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.google.sync.calc.export.capability_disabled",
+        )
+
     try:
         active = resolve_active_profile()
     except GoogleAuthError as exc:

@@ -3,7 +3,7 @@
 [concept]
 concept_id = "manual-terminologia"
 domain = "concepto"
-lifecycle = "approved"
+lifecycle = "deprecated"
 created_at = 2026-06-12
 updated_at = 2026-06-12
 

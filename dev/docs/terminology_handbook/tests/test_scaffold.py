@@ -20,6 +20,7 @@ from .. import (
     EnrolmentCandidate,
     ScaffoldAction,
     SeedLabel,
+    TerminologyValidationError,
     build_scaffold_plan,
     collect_enrolment_candidates,
     load_terminology_handbook,
@@ -368,6 +369,36 @@ def test_serialise_round_trips_seed_provenance_gender_and_replaced_by(tmp_path: 
     reloaded = load_terminology_handbook(concepts).concept("recargo-equivalencia")
 
     assert reloaded == original
+
+
+def test_serialise_round_trip_equality_is_not_tautological(tmp_path: Path) -> None:
+    """Anti-tautology proof for the serialise round-trip boundary.
+
+    The round-trip tests above would be vacuous if load ignored the on-disk
+    payload. This proves it does not: a value mutation on the serialised TOML
+    surfaces as strict inequality on reload, and deleting the required
+    ``[concept]`` table makes the loader raise rather than silently re-default
+    (per the anti-tautology clause of the roundtrip discipline).
+    """
+    concepts = _write(tmp_path, "recargo-equivalencia.toml", _DEPRECATED_FULLY_POPULATED)
+    original = load_terminology_handbook(concepts).concept("recargo-equivalencia")
+    rendered = serialise_concept(original)
+    toml_path = concepts / "recargo-equivalencia.toml"
+
+    # Value mutation loads cleanly but must NOT compare equal — proves the
+    # equality assertion actually reads the on-disk value.
+    mutated = rendered.replace(
+        "Regimen especial de IVA para comerciantes minoristas.",
+        "A different short description that the round-trip must notice.",
+    )
+    assert mutated != rendered
+    toml_path.write_text(mutated, encoding="utf-8")
+    assert load_terminology_handbook(concepts).concept("recargo-equivalencia") != original
+
+    # Structural corruption (drop the [concept] table) must raise, not re-default.
+    toml_path.write_text(rendered.replace("[concept]\n", "", 1), encoding="utf-8")
+    with pytest.raises(TerminologyValidationError):
+        load_terminology_handbook(concepts)
 
 
 def test_build_plan_is_deterministically_ordered(tmp_path: Path) -> None:

@@ -7,7 +7,7 @@ ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2 decides the
 carry path is the one place a revision error compounds across years: a prior
 filed under the wrong revision injects that revision's norms into every later
 filing that folds it in. The carry read therefore re-confirms each carried
-observation's :data:`stamped_revision_id` against the law-determined revision
+observation's ``stamped_revision_id`` against the law-determined revision
 for its source context (:meth:`ValidatedRegistryAuthority.snapshot` /
 ``select_revision``) before trusting the value.
 

@@ -1,7 +1,7 @@
 [[revisions."2025".application_links]]
 id = "modelo-100-reconciliation"
 surface = "reconciliation"
-consumer = "aeat.application.filing.reconciliation"
+consumer = "aeat.application.modelo.modelo_reconcile"
 requires_snapshot = true
 legal_refs = [
     "ley-35-2006:art-27",

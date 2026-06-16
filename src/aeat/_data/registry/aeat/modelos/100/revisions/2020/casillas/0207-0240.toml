@@ -5,5 +5,5 @@ label = "NIF del cónyuge"
 section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]
 data_type = "nif"
 semantic_role = "spouse_nif"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26"]
+legal_refs = ["ley-35-2006:art-81-bis"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

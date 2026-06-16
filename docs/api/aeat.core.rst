@@ -36,12 +36,14 @@ Submodules
 
    aeat.core._bucket_pointer
    aeat.core._bucket_pointer_io
+   aeat.core._capabilities
    aeat.core._config_storage_route
    aeat.core._config_support
    aeat.core._config_timeouts
    aeat.core._ledger_sort
    aeat.core._modelo
    aeat.core._models
+   aeat.core._optional_extras
    aeat.core._period
    aeat.core._tax_domain
    aeat.core._toml

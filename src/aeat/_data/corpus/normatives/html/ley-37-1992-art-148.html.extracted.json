@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-148.html",
+  "source_sha256": "ad0c5c661b2b81514c48dbab16727a800faecca75160386a0de31c62ee9251a2",
+  "preprocessor_id": "normatives-html-example",
+  "preprocessor_version": "0.1",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution; consult the sibling normatives manifest for the BOE permalink.",
+  "units": [
+    {
+      "text": "Uno. El régimen especial del recargo de equivalencia se aplicará a los comerciantes minoristas que sean personas físicas o entidades en régimen de atribución de rentas en el Impuesto sobre la Renta de las Personas Físicas, que desarrollen su actividad en los sectores económicos y cumplan los requisitos que se determinen reglamentariamente.\n\nDos. En el supuesto de que el sujeto pasivo a quien sea de aplicación este régimen especial realizase otras actividades empresariales o profesionales sujetas al Impuesto sobre el Valor Añadido, la de comercio minorista sometida a dicho régimen especial tendrá, en todo caso, la consideración de sector diferenciado de la actividad económica.\n\nTres. Reglamentariamente podrán determinarse los artículos o productos cuya comercialización quedará excluida de este régimen especial.",
+      "title": "Artículo 148. Régimen especial del recargo de equivalencia.",
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

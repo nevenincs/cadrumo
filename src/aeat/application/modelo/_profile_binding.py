@@ -71,6 +71,11 @@ class ProfileSourcedBindingResult(BaseModel):
     carries date-channel bindings consumed by ``age_at_year_end``.
     ``bindings_sourced_from_profile`` is the union of all key sets, sorted
     -- a trace of every binding the profile satisfied.
+
+    Fills the shared binding source-resolution role (see
+    :class:`~aeat.application.modelo._binding_resolution.BindingSourceResolution`):
+    profile facts are one source that resolves registry bindings onto the engine
+    ``binding_values`` / ``enum_binding_values`` channels.
     """
 
     model_config = _STRICT_FROZEN

@@ -101,6 +101,10 @@ def register_discovery_commands(
 # ``typer._click.types.ParamType``. They are the same object at runtime (the
 # vendored click), so the cast only bridges the static type duality — no Any
 # escape. The bundled registry load this triggers needs no secret passphrase.
+# CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
+# click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
+# are the same runtime object behind two static names; the cast bridges only that
+# static duality, with no Any escape.
 _MODELO_CHOICE: typer_click_types.ParamType = cast(
     typer_click_types.ParamType,
     click.Choice(list(registry_modelo_codes())),
