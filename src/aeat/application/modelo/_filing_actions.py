@@ -41,11 +41,7 @@ from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
 from ._revision_persistence import persist_filed_revision
-from ._verification_actions import (
-    _applicable_source_modelos,
-    _cross_period_expected_member_sets_from_profile,
-    _require_cross_period_clean_state,
-)
+from ._verification_actions import _cross_period_expected_member_sets_from_profile, _require_cross_period_clean_state
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
 
@@ -178,9 +174,6 @@ def file_modelo_revision(
         ),
         taxpayer_tax_id=workflow_profile.tax_id,
         activity_start_date=workflow_profile.activity_start_date,
-        applicable_source_modelos=_applicable_source_modelos(
-            workflow_profile, filing_year=work_unit.filing_year
-        ),
     )
 
     now = clock or _utc_now()
