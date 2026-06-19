@@ -249,13 +249,20 @@ def _inject_derived_state_attribution_facts(
     if synthetic_key in fact_index:
         return
     scope = fact_index.get("tax_residence.jurisdiction_scope")
-    if scope == "common_regime":
-        fact_index[synthetic_key] = Decimal("100")
-    elif scope == "foral_unsupported":
+    if scope == "foral_unsupported":
+        # Explicit foral selection: the foral branch is unsupported; the calc
+        # downstream emits zero, blocking the filing.
         fact_index[synthetic_key] = Decimal("0")
-    # No scope on the profile yet: leave the synthetic key absent so the
-    # engine's missing-binding refusal surfaces the gap operator-side
-    # rather than silently defaulting.
+    else:
+        # common_regime, or no scope recorded. Every profile the app accepts
+        # carries a común-regime residence — the ``CCAA`` enum is común-only and
+        # foral regimes (País Vasco, Navarra) are refused at profile creation with
+        # ``ForalRegimeError`` — so the periodic IVA result attributes 100% to the
+        # State (Concierto Económico, Ley 12/2002 art. 29). Default the
+        # absent-scope case to 100 rather than letting casilla 65 resolve silently
+        # to 0, which would zero the headline result (casilla 71) on a real
+        # liability — a silent under-declaration.
+        fact_index[synthetic_key] = Decimal("100")
 
 
 def _decimal_value(binding_id: str, value: object) -> Decimal:
@@ -375,23 +382,36 @@ def resolve_profile_sourced_bindings(
     Returns a :class:`ProfileSourcedBindingResult` with resolved binding
     values split across Decimal and enum channels.
     """
-    # A profile binding only matters to the engine when a formula
-    # consumes it. Identity / export-layout profile bindings (the
-    # taxpayer NIF, display name, ...) are projected onto the filing
-    # draft, never the calculation graph; injecting them into a binding
-    # channel would force a non-numeric value through the Decimal
-    # channel and fail. Restrict resolution to formula-consumed
-    # bindings.
+    # A profile binding matters to the engine when a formula consumes it OR when
+    # it feeds a ``bound`` NUMERIC input casilla (e.g. M303 casilla 65, the
+    # state-attribution ratio, which casilla 66's formula then reads by casilla
+    # reference — the binding id never appears in a formula expression). Identity
+    # / export-layout profile bindings (the taxpayer NIF, display name, ...) are
+    # projected onto the filing draft, never the calculation graph; injecting
+    # them into a binding channel would force a non-numeric value through the
+    # Decimal channel and fail, so a bound casilla is only swept in when its
+    # ``data_type`` routes through the numeric (Decimal) channel. Restrict
+    # resolution to formula-consumed and bound-numeric-casilla bindings.
     formula_consumed: set[str] = set()
     formula_date_consumed: set[str] = set()
     for formula in snapshot.revision.formulas:
         formula_consumed.update(expression_binding_refs(formula.expression))
         formula_date_consumed.update(expression_date_binding_refs(formula.expression))
+    _numeric_casilla_data_types = {"decimal", "money", "integer", "ratio"}
+    bound_casilla_binding_ids: set[str] = {
+        str(casilla.binding)
+        for casilla in snapshot.revision.casillas
+        if casilla.binding is not None and casilla.data_type in _numeric_casilla_data_types
+    }
     profile_bindings = [
         binding
         for binding in snapshot.revision.bindings
         if binding.source == "profile"
-        and (str(binding.id) in formula_consumed or str(binding.id) in formula_date_consumed)
+        and (
+            str(binding.id) in formula_consumed
+            or str(binding.id) in formula_date_consumed
+            or str(binding.id) in bound_casilla_binding_ids
+        )
     ]
     if not profile_bindings:
         return ProfileSourcedBindingResult()
