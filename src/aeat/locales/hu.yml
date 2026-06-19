@@ -1268,6 +1268,7 @@ cli:
         list_header: "priority\tclassification\tpattern\trule_id"
         list_help: List stored classification rules ordered by priority.
         priority_help: Numeric priority; lower value is evaluated first (default 100).
+        empty_pattern: 'Egy szabályhoz nem üres --description-pattern szükséges (egy szó vagy kifejezés, pl. "software"), hogy illeszkedjen a tranzakciók leírásaihoz.'
     live:
       app_help: Csak olvasható AEAT élő megfigyelési parancsok.
       borrador:

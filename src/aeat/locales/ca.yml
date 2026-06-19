@@ -1332,6 +1332,7 @@ cli:
           prioritat.
         priority_help: Prioritat numèrica; un valor menor s'avalua primer (per defecte
           100).
+        empty_pattern: 'Una regla necessita un --description-pattern no buit (una paraula o frase, p. ex. "software") per coincidir amb les descripcions de les transaccions.'
     live:
       app_help: Ordres d'observació AEAT en viu de només lectura
       borrador:
