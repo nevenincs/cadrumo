@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core import Period
 from ...domain.calculations.registry import (
+    Modelo202Modality,
     RegistryModeloObservation,
     RegistryModeloObservationRequirement,
     RegistryRelationSourceRequirement,
@@ -144,6 +145,20 @@ class NoPriorObligationProvenanceKind(StrEnum):
     #: The facet-kind discriminator: this requirement was suppressed because its
     #: period is pre-activity (no prior obligation could have existed).
     NO_PRIOR_OBLIGATION_PRE_ACTIVITY = "no_prior_obligation_pre_activity"
+
+    #: The facet-kind discriminator: this Modelo 202 pago-fraccionado requirement
+    #: was suppressed because the taxpayer is a first-year Impuesto sobre
+    #: Sociedades filer under modalidad cuota (LIS art. 40.2). The pago fraccionado
+    #: in modalidad cuota is computed as a percentage of the cuota íntegra of the
+    #: LAST IS return whose filing deadline has elapsed (LIS art. 40.2); a company
+    #: whose first IS year is the target year has no such prior IS return, so the
+    #: art. 40.2 modality produces no pago-fraccionado obligation and the
+    #: cross-period dependency demanding evidence of a prior Modelo 200/202 that
+    #: never existed is scoped out. This applies ONLY to art. 40.2 (cuota) — under
+    #: art. 40.3 (base imponible, INCN > 6.000.000 €) the pago fraccionado is
+    #: computed on the current year's running base and IS owed in the first year,
+    #: so that modality is never suppressed.
+    NO_FRACTIONAL_PAYMENT_OBLIGATION_FIRST_YEAR = "no_fractional_payment_obligation_first_year"
 
     #: The activity-start date is the operator-declared ``activity_start_date``
     #: field (not corroborated by an AEAT censo snapshot). Carries the advisory.
@@ -351,18 +366,51 @@ class CrossPeriodDependencyEvidence(BaseModel):
 
     @property
     def suppressed_pre_activity(self) -> bool:
-        """True when this dependency was scoped out as no-prior-obligation pre-activity."""
-        return self.no_prior_obligation is not None
+        """True when this dependency was scoped out as no-prior-obligation pre-activity.
+
+        Scoped to the ``NO_PRIOR_OBLIGATION_PRE_ACTIVITY`` facet specifically: a
+        dependency suppressed under the first-year Modelo 202 modalidad-cuota facet
+        is NOT a pre-activity suppression and must not read as one (the two
+        suppressions raise different advisories — see
+        :attr:`suppressed_first_year_fractional`).
+        """
+        return (
+            self.no_prior_obligation is not None
+            and self.no_prior_obligation.facet_kind == NoPriorObligationProvenanceKind.NO_PRIOR_OBLIGATION_PRE_ACTIVITY
+        )
+
+    @property
+    def suppressed_first_year_fractional(self) -> bool:
+        """True when this dependency was scoped out as a first-year Modelo 202 modalidad-cuota.
+
+        ADR 2026-06-19-m202-first-period-attestation-adr: a first-year IS filer
+        under modalidad cuota (LIS art. 40.2) has no Modelo 202 pago-fraccionado
+        obligation, so the cross-period dependency demanding evidence of a prior
+        Modelo 200/202 that never existed is scoped out under the
+        ``NO_FRACTIONAL_PAYMENT_OBLIGATION_FIRST_YEAR`` facet.
+        """
+        return (
+            self.no_prior_obligation is not None
+            and self.no_prior_obligation.facet_kind
+            == NoPriorObligationProvenanceKind.NO_FRACTIONAL_PAYMENT_OBLIGATION_FIRST_YEAR
+        )
 
     @property
     def operator_declared_suppression_advisory(self) -> bool:
-        """True when the suppression rests on an operator-declared (uncorroborated) date.
+        """True when the PRE-ACTIVITY suppression rests on an operator-declared (uncorroborated) date.
 
         The verification caller raises a NON-BLOCKING advisory for this case per
         the accepted ADR (operator-declared now, censo-corroborated when the live
-        censo surface is fixed).
+        censo surface is fixed). Scoped to the pre-activity facet only: the
+        first-year Modelo 202 modalidad-cuota suppression carries its own distinct
+        advisory (:attr:`suppressed_first_year_fractional`) and must not cross-fire
+        this one.
         """
-        return self.no_prior_obligation is not None and self.no_prior_obligation.is_operator_declared
+        return (
+            self.suppressed_pre_activity
+            and self.no_prior_obligation is not None
+            and (self.no_prior_obligation.is_operator_declared)
+        )
 
 
 class CrossPeriodCleanStateVerdict(BaseModel):
@@ -410,8 +458,33 @@ class CrossPeriodCleanStateVerdict(BaseModel):
 
     @property
     def has_operator_declared_suppression_advisory(self) -> bool:
-        """True when any suppression rests on an operator-declared (uncorroborated) date."""
+        """True when any pre-activity suppression rests on an operator-declared (uncorroborated) date."""
         return any(item.operator_declared_suppression_advisory for item in self.dependencies)
+
+    @property
+    def suppressed_first_year_fractional_dependencies(self) -> tuple[CrossPeriodDependencyEvidence, ...]:
+        """Return dependencies scoped out as first-year Modelo 202 modalidad-cuota.
+
+        ADR 2026-06-19-m202-first-period-attestation-adr.
+
+        Returns:
+            The :class:`CrossPeriodDependencyEvidence` entries suppressed as a
+            first-year no-fractional-payment obligation (LIS art. 40.2).
+        """
+        return tuple(item for item in self.dependencies if item.suppressed_first_year_fractional)
+
+    @property
+    def has_first_year_fractional_suppression_advisory(self) -> bool:
+        """True when any dependency was scoped out as a first-year Modelo 202 modalidad-cuota.
+
+        The verification caller raises a NON-BLOCKING advisory for this case
+        (ADR 2026-06-19-m202-first-period-attestation-adr): a first-year IS filer
+        under modalidad cuota (LIS art. 40.2) has no Modelo 202 obligation, but if
+        the entity elected modalidad base (art. 40.3) it IS obligated; the operator
+        bears legal responsibility for the modality, so the suppression is surfaced
+        non-silently.
+        """
+        return any(item.suppressed_first_year_fractional for item in self.dependencies)
 
 
 def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[CrossPeriodDependencyRequirement, ...]:
@@ -560,6 +633,70 @@ def _suppressed_pre_activity_evidence(
     )
 
 
+def _suppressed_first_year_fractional_evidence(
+    requirement: CrossPeriodDependencyRequirement,
+    *,
+    activity_start_date: date,
+) -> CrossPeriodDependencyEvidence:
+    """Build the clean, facet-stamped evidence row for a first-year Modelo 202 modalidad-cuota dependency.
+
+    ADR 2026-06-19-m202-first-period-attestation-adr: the taxpayer is a first-year
+    Impuesto sobre Sociedades filer under modalidad cuota (LIS art. 40.2), whose
+    pago fraccionado is a percentage of the cuota íntegra of the LAST IS return
+    whose deadline has elapsed. A first-year IS company has no such prior return,
+    so the art. 40.2 modality produces no Modelo 202 obligation. There is no
+    observation to load and nothing to stamp; the requirement is scoped out and
+    recorded here as an explicit, auditable no-fractional-payment-obligation
+    outcome with NO blockers (the row is :attr:`CrossPeriodDependencyEvidence.clean`).
+
+    The provenance kind stays ``OPERATOR_DECLARED`` — the determination rests on the
+    operator-declared INCN (driving the derived modality) and the operator-declared
+    ``activity_start_date`` (proving the first IS year), neither corroborated against
+    an AEAT censo snapshot — so the suppression carries the operator-declared
+    advisory, never silently. The ``facet_kind`` records that this is the
+    modalidad-cuota first-year facet, distinct from the pre-activity facet.
+    """
+    return CrossPeriodDependencyEvidence(
+        requirement=requirement,
+        no_prior_obligation=NoPriorObligationProvenance(
+            facet_kind=NoPriorObligationProvenanceKind.NO_FRACTIONAL_PAYMENT_OBLIGATION_FIRST_YEAR,
+            activity_start_date=activity_start_date,
+            provenance_kind=NoPriorObligationProvenanceKind.OPERATOR_DECLARED,
+        ),
+    )
+
+
+def _qualifies_for_first_year_fractional_suppression(
+    requirement: CrossPeriodDependencyRequirement,
+    *,
+    modelo_202_modality: Modelo202Modality | None,
+    activity_start_date: date | None,
+    target_filing_year: int,
+) -> bool:
+    """Return whether ``requirement`` is a first-year Modelo 202 modalidad-cuota obligation to scope out.
+
+    ADR 2026-06-19-m202-first-period-attestation-adr. A requirement qualifies IFF
+    ALL hold (fail-closed — any unmet condition keeps the requirement in scope):
+
+    * the cross-period source is Modelo 202 (``source_modelo == "202"``);
+    * the derived Modelo 202 modality is ``ART_40_2_OPTIONAL`` (modalidad cuota,
+      INCN ≤ 6.000.000 €) — under ``ART_40_3_MANDATORY`` (base imponible) the pago
+      fraccionado IS owed in the first year, and ``INCOMPLETE`` / ``None`` means the
+      modality could not be derived, so neither is suppressed;
+    * an ``activity_start_date`` is recorded AND its year is on or after the target
+      filing year (``activity_start_date.year >= target_filing_year``) — the target
+      year is the taxpayer's first IS year, so no prior IS return provides the
+      art. 40.2 cuota basis.
+    """
+    if requirement.source_modelo != "202":
+        return False
+    if modelo_202_modality is not Modelo202Modality.ART_40_2_OPTIONAL:
+        return False
+    if activity_start_date is None:
+        return False
+    return activity_start_date.year >= target_filing_year
+
+
 def evaluate_cross_period_clean_state(
     snapshot: RegistrySnapshot,
     *,
@@ -572,6 +709,7 @@ def evaluate_cross_period_clean_state(
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
+    modelo_202_modality: Modelo202Modality | None = None,
 ) -> CrossPeriodCleanStateVerdict:
     """Evaluate cross-period dependencies and return a :class:`CrossPeriodCleanStateVerdict`.
 
@@ -585,6 +723,20 @@ def evaluate_cross_period_clean_state(
     facet-stamped evidence row instead of an evaluated blocker, and is NOT loaded
     from storage. When ``None`` every dependency is evaluated as before - the
     caller decides whether a missing declared date should fail closed.
+
+    ``modelo_202_modality`` is the derived Modelo 202 pago-fraccionado modality
+    (:func:`~aeat.domain.calculations.registry.derive_modelo_202_modality`). When it
+    is ``ART_40_2_OPTIONAL`` (modalidad cuota) AND the recorded
+    ``activity_start_date`` places the taxpayer's first IS year at or after the
+    target filing year, the Modelo 202 cross-period dependency is scoped out as a
+    first-year no-fractional-payment obligation
+    (ADR 2026-06-19-m202-first-period-attestation-adr): a first-year IS filer in
+    modalidad cuota has no prior IS return to provide the art. 40.2 cuota basis, so
+    no pago fraccionado is owed. It is fail-closed everywhere else: under
+    ``ART_40_3_MANDATORY`` / ``INCOMPLETE`` / ``None`` modality, when no
+    activity-start date is recorded, or when the year is not the first IS year, the
+    Modelo 202 dependency stays in scope and keeps blocking. The default ``None``
+    preserves the prior behaviour (no Modelo 202 suppression).
     """
     filing_catalogue = filing_repository.load()
     calculation_catalogue = calculation_repository.load()
@@ -595,6 +747,21 @@ def evaluate_cross_period_clean_state(
         cross_period_dependency_requirements(snapshot),
         activity_start_date=activity_start_date,
     )
+    # Among the activity-start-in-scope requirements, scope out the first-year
+    # Modelo 202 modalidad-cuota obligations (ADR 2026-06-19-m202-first-period-
+    # attestation-adr). Everything that does not qualify stays in scope and is
+    # evaluated normally (fail-closed).
+    first_year_fractional_requirements = tuple(
+        requirement
+        for requirement in partition.in_scope
+        if _qualifies_for_first_year_fractional_suppression(
+            requirement,
+            modelo_202_modality=modelo_202_modality,
+            activity_start_date=activity_start_date,
+            target_filing_year=snapshot.filing_year,
+        )
+    )
+    first_year_fractional_keys = {requirement.key for requirement in first_year_fractional_requirements}
     in_scope_dependencies = tuple(
         _evaluate_requirement(
             requirement,
@@ -610,6 +777,7 @@ def evaluate_cross_period_clean_state(
             ),
         )
         for requirement in partition.in_scope
+        if requirement.key not in first_year_fractional_keys
     )
     # ``activity_start_date`` is non-None whenever ``suppressed`` is non-empty.
     suppressed_dependencies = tuple(
@@ -617,12 +785,19 @@ def evaluate_cross_period_clean_state(
         for requirement in partition.suppressed
         if activity_start_date is not None
     )
+    # ``activity_start_date`` is non-None for every first-year fractional requirement
+    # (the qualification predicate requires a recorded date).
+    first_year_fractional_dependencies = tuple(
+        _suppressed_first_year_fractional_evidence(requirement, activity_start_date=activity_start_date)
+        for requirement in first_year_fractional_requirements
+        if activity_start_date is not None
+    )
     return CrossPeriodCleanStateVerdict(
         bucket_id=bucket_id,
         target_modelo=str(snapshot.modelo.id),
         target_filing_year=snapshot.filing_year,
         target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
-        dependencies=(*in_scope_dependencies, *suppressed_dependencies),
+        dependencies=(*in_scope_dependencies, *suppressed_dependencies, *first_year_fractional_dependencies),
     )
 
 
