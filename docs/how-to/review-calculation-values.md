@@ -163,10 +163,13 @@ filed revision`). Use the `source` to decide how to supply the value. The
   filed in `aeat`.
 - **Relation** - folded in from another modelo's earlier figures. Supply it with
   `--relation KEY=VALUE` only when the modelo's help names the relation.
-- **Manual** - only this kind needs you to type a value, with `--binding
+- **Manual** - this kind always needs you to type a value, with `--binding
   KEY=VALUE`, or `--casilla` for a box.
 
-Only the manual source needs a value you enter by hand.
+A manual field always needs a value you enter by hand. A **prior filed revision**
+field also needs one when there is no earlier filing yet to carry it forward —
+see the first-time-filing note below. Profile, ledger, and relation fields are
+filled for you; correct those at their source rather than typing the value.
 
 If you are filing for the first time and a field asks for a prior-period figure
 you do not have, record it as zero, for example `--binding <field-id>=0`. Enter a
@@ -227,6 +230,10 @@ aeat app modelo work calculate <work-unit-id> \
   --row 'miembro nif=00000001R porcentaje=40 importe=5000'
 ```
 
+Take `<work-unit-id>` from the `work_unit_id` field that `work create` prints.
+For these multi-record modelos, pass the work-unit id as the positional argument
+rather than the `--modelo / --year / --period` flags used elsewhere on this page.
+
 Use one of these record types:
 
 - `miembro` - an attribution member (Modelo 184).
@@ -249,7 +256,10 @@ them to confirm what was recorded.
 For specialized calculations, the CLI provides evaluation and comparison commands:
 
 - **Joint vs. individual IRPF comparison (`compare-taxation`)**: Compare filing
-  jointly as a family unit against filing individually for an active Modelo 100:
+  jointly as a family unit against filing individually for an active Modelo 100.
+  Create the Modelo 100 draft first (`aeat app modelo work create --modelo 100
+  --year 2026 --period 0A`), or the command refuses with `Ninguna unidad de
+  trabajo activa`:
   
   ```bash
   aeat app modelo work compare-taxation --modelo 100 --year 2026 --period 0A
