@@ -856,6 +856,7 @@ application:
         Torneu a crear la unitat de treball per vincular-la a la revisio actual.
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+      calculate_binding_is_date_sourced: '--binding %{key} es un binding de tipus data que s''obte del perfil actiu (una dada de data del contribuent, com la data de naixement); no es pot aportar mitjancant --binding, que nomes admet valors decimals i d''enumeracio. Defineix-lo com a dada del perfil i torna a calcular.'
     findings:
       art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
         de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;
@@ -2367,6 +2368,7 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
+      import_invalid_tax_id: 'L''identificador fiscal del paquet de perfil no és vàlid: %{error}. Corregeix l''identificador i torna a exportar, o importa un paquet vàlid.'
     recover:
       help: Recuperar el magatzem secret de fitxer amb una clau de recuperacio i vincular-lo
         a una nova contrasenya.

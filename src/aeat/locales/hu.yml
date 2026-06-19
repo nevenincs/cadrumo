@@ -802,6 +802,7 @@ application:
         létre újra a munkaegységet.
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
+      calculate_binding_is_date_sourced: 'A --binding %{key} egy datum tipusu kotes, amely az aktiv profilbol szarmazik (az adozo datumadata, peldaul a szuletesi datum); nem adhato meg --binding reven, amely csak decimalis es felsorolasi ertekeket fogad. Allitsd be profiladatkent (pl. aeat config profile create ... --taxpayer-birth-date EEEE-HH-NN), majd szamolj ujra.'
     findings:
       art20_reduccion_next_action: Ellenorizze, hogy a nem munkabol szarmazo egyeb
         jovedelme a mentes jovedelem nelkul az adoevben nem haladja-e meg a 6500 EUR-t;
@@ -2325,6 +2326,7 @@ cli:
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
+      import_invalid_tax_id: 'A profilcsomag adóazonosítója érvénytelen: %{error}. Javítsd az azonosítót és exportáld újra, vagy érvényes csomagot importálj.'
     recover:
       help: A fajlalapu titkos tar helyreallitasa helyreallitasi kulccsal es uj passphrase
         ertekhez kotese.

@@ -288,3 +288,50 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
         r_show_mut = _invoke(["config", "profile", "show", "idempotency-test-mutated"])
         assert r_show_mut.exit_code == 0, r_show_mut.output
         assert_public_profile_id_not_leaked(r_show_mut.output, mutated_id)
+
+
+# ---------------------------------------------------------------------------
+# contract — import re-enforces the NIF/CIF/NIE checksum (EDGE-CRIT-1)
+# ---------------------------------------------------------------------------
+
+
+def test_import_refuses_tampered_invalid_tax_id(tmp_path: Path) -> None:
+    """A bundle whose tax_id fails the checksum is refused on import.
+
+    `config profile create` validates the identifier via SubjectTaxId; the
+    import path is plaintext and tamperable, so it must enforce the same gate.
+    A tampered identifier (valid digits, wrong control letter) must NOT become a
+    registered, filing-grade profile.
+    """
+
+    bundle_path = tmp_path / "tax-tamper.json"
+    _create_minimal_profile_and_export(tmp_path, bundle_path)
+
+    raw = json.loads(bundle_path.read_text(encoding="utf-8"))
+    tampered = False
+    for fact in raw["profile"]["facts"]:
+        if fact.get("path") == "identity.tax_id":
+            fact["value"] = "12345678A"  # valid 8 digits, wrong checksum letter (Z is correct)
+            tampered = True
+    assert tampered, "exported bundle did not carry an identity.tax_id fact"
+    tampered_path = tmp_path / "tampered.json"
+    tampered_path.write_text(json.dumps(raw), encoding="utf-8")
+
+    dest_root = tmp_path / "dest"
+    with isolated_profile_storage_root(tmp_path=dest_root):
+        r = _invoke(["config", "profile", "import", str(tampered_path), "--label", "tampered-import"])
+        assert r.exit_code != 0, r.output
+        assert "Traceback" not in r.output
+        lowered = r.output.lower()
+        assert "checksum" in lowered or "identificador fiscal" in lowered or "tax identif" in lowered, r.output
+
+        # The refused profile must NOT be registered.
+        r_list = _invoke(["config", "profile", "list"])
+        assert r_list.exit_code == 0, r_list.output
+        assert "tampered-import" not in r_list.output
+
+    # A valid (untampered) bundle still imports cleanly.
+    clean_root = tmp_path / "clean"
+    with isolated_profile_storage_root(tmp_path=clean_root):
+        r_ok = _invoke(["config", "profile", "import", str(bundle_path), "--label", "clean-import"])
+        assert r_ok.exit_code == 0, r_ok.output
