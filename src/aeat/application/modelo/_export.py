@@ -35,6 +35,7 @@ from ...domain.buckets import (
     BucketEventType,
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry import derive_modelo_202_modality
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos import (
@@ -596,6 +597,7 @@ def export_modelo_revision(
         ),
         taxpayer_tax_id=workflow_profile.tax_id,
         activity_start_date=workflow_profile.activity_start_date,
+        modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
     )
     iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
 
