@@ -567,9 +567,19 @@ def export_modelo_revision(
         receipt = export_draft(approved, output_path=tmp_output, headers=headers)
     except filing_domain.FilingExportError as exc:
         _discard_tmp_output_after_failure(tmp_output, stage="draft-write")
+        # Surface the underlying FilingExportError cause in the typed context
+        # (cli-notices-are-the-only-diagnostic-channel: structured provenance
+        # rides on context). The generic write-failed message otherwise masks
+        # structural causes the operator must act on — most importantly a modelo
+        # whose registry snapshot declares no export layout (e.g. Modelo 202 has
+        # no Diseño de Registros authored, so a verified-complete revision cannot
+        # be written to fichero-BOE), which reads as a misleading disk/IO failure.
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
-            context={"calculation_revision_id": command.calculation_revision_id},
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause": str(exc),
+            },
         ) from exc
 
     # Route through the shared ``_emit_bucket_event`` helper every
