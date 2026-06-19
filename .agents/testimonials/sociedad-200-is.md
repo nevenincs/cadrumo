@@ -40,10 +40,20 @@ owner-clean fix was landed:
   real reason (reads like a disk/IO failure). Fix: the underlying cause is now
   surfaced in the typed error `context` (`cli-notices-are-the-only-diagnostic-channel`).
   Re-running my M202 export now prints `cause: declaration export requires a draft
-  built from the active registry snapshot`. The deeper fix — authoring the M202
-  Diseño de Registros so a `.boe` can actually be written — remains a large
-  M202-owned registry campaign (the export dir `…/modelos/202/…/export/` does not
-  exist). 10/10 export-verb integration tests pass.
+  built from the active registry snapshot`. 10/10 export-verb integration tests pass.
+
+  **CORRECTION (adversarial self-audit, 2026-06-19):** an earlier draft of this
+  entry claimed *"M202 has no Diseño de Registros / the export dir does not exist."*
+  That is **false** — M202 carries **12 `export_layouts`** (the fichero-BOE field
+  layout) and its snapshot exposes them. The real export-failure cause, now
+  surfaced by the F5 fix, is the `filing/_export.py:240` guard
+  `draft.schema_version != subview.schema_version` — a **stale draft built against
+  a registry fingerprint that changed before export** (a peer committed a registry
+  change between my calculate and export in this shared worktree). That guard is
+  *correct defensive behaviour* (re-calculate against the current registry, then
+  export), not a missing-layout bug. So F5 is purely the transparency fix; there is
+  no M202 export-layout gap. (The earlier directory survey checked `export/` rather
+  than the actual `export_layouts/` directory — a survey error, not a real gap.)
 - **Finding 1 — FIXED at the source of the silent zero (earliest-stage advisory).**
   RAG + grep confirm M200 has **zero ledger-source bindings**; resultado contable
   is operator-entered *accrual accounting*, so auto-aggregating the cash ledger
@@ -58,19 +68,24 @@ owner-clean fix was landed:
   (added for F2) — so a declared profit can no longer silently grant a zero return
   at any stage. Verify now fires the advisory (finding_count 7→8). (A peer is
   separately wiring M130 gastos, a different modelo with a genuine ledger basis.)
-- **Findings 3 (M202 cross-period gate) and 4 (new-entity scope-out) — safe by
-  design; blanket fix would be a regression.** The pre-activity scope-out
-  (`_cross_period_clean_state.py`, ADR `2026-06-13-first-filer-attestation-adr`)
-  rests on a *clean, provable* invariant: a period before the entity existed could
-  carry no obligation. "A first-year entity has no M202 obligation" is **not** a
-  clean invariant — it depends on modalidad election (art. 40.2 vs 40.3) and the
-  INCN ≥ 6M threshold, so a new entity *can* be M202-obligated. Auto-suppressing it
-  would risk a *silent under-declaration* (`no-silent-under-declaration`,
-  `aeat-safety-legal-gates`). The blocking-and-demand-evidence behaviour is the
-  safe default; the proper enhancement is an explicit, audited *operator
-  attestation* of "no fractional-payment obligation" (the same ADR's spirit), which
-  is a feature touching the peer-WIP verification flow (`_verification_actions.py`)
-  — deferred to that owning campaign rather than forced here.
+- **Findings 3 (M202 cross-period gate) and 4 (new-entity scope-out) — explicitly
+  excluded by an accepted ADR; require a NEW design decision.** Grounded
+  decisively against `2026-06-13-first-filer-attestation-adr`: that accepted ADR
+  suppresses only obligations whose `closes_on < activity_start_date` (pre-start)
+  and carries a **deliberate fail-closed safety mitigation** — verbatim, *"an
+  operator cannot scope away an obligation that fell after the claimed start."*
+  The 2024 M202 1P/2P/3P periods fall **after** the 2024-01-01 activity start, so
+  scoping them out is **the exact case the accepted ADR deliberately refuses** to
+  prevent abuse. The research's "Option C (registry-declared first-period
+  semantics) remains a [deferred option]." Therefore F3/F4 cannot be "fixed"
+  without (a) a *new* ADR overturning that safety mitigation (a design decision
+  the vaultspec pipeline requires before implementation, and one that loosens a
+  safety gate — not autonomously inventable), and (b) implementation in the
+  cross-period verify flow (`_verification_actions.py` et al.), which is actively
+  peer-WIP. The current blocking-and-demand-evidence behaviour is the accepted,
+  safe design. Routed to the owning cross-period/first-filer campaign with this
+  grounding; a blanket scope-out is excluded because it would ship a silent
+  under-declaration (`no-silent-under-declaration`, `aeat-safety-legal-gates`).
 
 ## 1. Persona
 
