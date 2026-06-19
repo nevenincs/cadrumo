@@ -694,6 +694,82 @@ is the `aeat-safety-legal-gates` / `local-filed-observations-are-non-official-ev
 holding, not a defect. The achievable from-nothing→BOE scope (first-period filings) is
 all-green across the end-to-end filing docs.
 
+## Second campaign — edge / adversarial persona wave (2026-06-19)
+
+Five edge-focused personas probed error paths, boundaries, and cross-feature flows beyond
+the happy-path docs. New bugs (each coordinator-to-confirm before fix):
+
+- **EDGE-CRIT-1 [APP][CRITICAL] `profile import` accepts an INVALID tax-id.** A tampered CIF
+  (bad control digit) and even garbage (`ZZZ99999`) import EXIT 0 and become the ACTIVE
+  filing profile; `profile validate` then reports `valid=True / ready`. The NIF/CIF/NIE
+  checksum that `create` enforces is bypassed on the import path. Source: edge-profile.
+- **EDGE-HIGH-1 [APP][HIGH] `ledger reset` bricked at 8+ transactions.** `reset --yes` raises a
+  pydantic `ValidationError` because the result field `removed_transaction_ids` is capped at
+  500 chars; the joined id string exceeds it at ~8 rows, so reset silently does nothing on any
+  realistic ledger (`--dry-run` masks it — reports a count, not the string). Source: edge-ledger.
+- **EDGE-HIGH-2 [APP][HIGH] M130 silently drops an OUTGOING expense tagged by irpf-category.**
+  An expense with `--irpf-category actividad_economica` but no `--classification BUSINESS` is
+  silently excluded from casilla 02 (gasto), while an INCOMING leg with the identical tag IS
+  counted in casilla 01 — asymmetric eligibility gate. Result: a real loss shows as a positive
+  payment with NO advisory (notices=[]) — a silent wrong figure, violating
+  `no-silent-under-declaration`. Also: 303 preflight flags the same row `not ready` — asymmetric
+  readiness contract. Source: edge-calc.
+- **EDGE-MED-1 [APP][MED] export output-path errors leak tracebacks + orphan financial bytes.**
+  `export --output <existing-dir>` → raw `PermissionError` traceback (exit 6) AND leaves an
+  orphaned `*.tmp` containing 946 B of real fichero-BOE data (atomic-replace temp not cleaned
+  on error — a confidentiality concern); `--output ""` → raw `ValueError`; `--year 1999` →
+  pydantic dict leak. Source: edge-export.
+- **EDGE-MED-2 [APP][MED] gestor `capabilities set cloud_evidence_upload on` reports `on`** while
+  resolution correctly floors it to a safety-bar — the `set` report is dishonest (effective
+  posture is safe). Plus `%{detail}` placeholder leak recurs on the calc-preflight block. Source:
+  edge-profile / edge-calc.
+- Robustness confirmations: validation/lifecycle/split-merge/import surfaces, loss handling,
+  cumulative figures, 303 compensación, idempotence, period boundaries, amend gating, and every
+  security/safety refusal held; export bytes are authentic fixed-width fichero-BOE and idempotent.
+
+## Invoice feature gap — CLOSED (2026-06-19)
+
+`aeat app ledger invoice catalogue create` / `catalogue list` added so the documented
+`invoice` → `link --invoice-id` flow works end to end (mints a registry-grounded rich
+`Invoice` via `InvoiceCatalogueRepository`, preserving the ADR `2026-06-10` slim-vs-rich split
+and the cross-bucket guard). Committed `7208bb3f0`; e2e + conformance gates green. A broader
+invoice-gap sweep + bespoke verification wave is the next coordinated step.
+
+## Second-campaign fixes + invoice verification wave (2026-06-19)
+
+Bug fixes from the edge wave (briefed out to per-issue agents):
+- **EDGE-HIGH-1 ledger reset cap — FIXED + COMMITTED** (`f483d3e1e`): dropped the overflow-prone
+  joined-id event payload key; reset now clears a 12-row ledger; per-id provenance kept on the
+  individual REMOVED events.
+- **EDGE-CRIT-1 profile import checksum — FIXED + COMMITTED** (`77df249d8`): import re-runs
+  `validate_spanish_tax_id` on the bundle's `identity.tax_id`; a tampered/garbage id is refused,
+  valid still imports. Regression test added.
+- **EDGE-MED-1 export output-path safety — FIXED (uncommitted)**: up-front `--output` validation
+  (empty/`.`/existing-dir/bad-parent → typed refusal) + try/except around the atomic replace that
+  discards the `.tmp` on any failure (no orphaned cleartext financial bytes). Tests assert no
+  `.tmp` orphan.
+- **EDGE-HIGH-2 M130 gasto silent-drop — PEER-OWNED, in flight**: a peer is implementing the
+  symmetric gasto-ledger path (`_renta_gasto_ledger.py`, a fail-closed advisory resolver, registry
+  bindings); our agent correctly aborted to avoid collision.
+
+Invoice feature gaps — IMPLEMENTED + VERIFIED:
+- `ledger invoice catalogue create / list / view / remove` (rich linkable Invoice), completing the
+  `add → link --invoice-id` flow (M17). Committed: catalogue-create `7208bb3f0`; the lifecycle
+  completion (view/remove + 5 locale keys + `manage-invoices.md` + tests) is uncommitted (held).
+- **Bespoke verification wave — 3 personas, all PASS**: CRUD lifecycle (all verbs + refusals);
+  link flow (add→link bidirectional, cross-bucket refused, remove-linked refused, evidence-link
+  works); evidence→export (link persists on tx and into the bundled filing evidence; bytes-not-
+  links holds). Minor polish (non-blocking): unsupported-IVA-rate error should list the accepted
+  set {0,4,10,21}; `link --invoice-id` should accept a prefix (it requires the full 64-char id);
+  `ledger view` should surface the linked catalogue invoice; a dedicated `unlink` verb is absent
+  (currently implicit via `ledger remove`).
+
+Commit-coordination note: the export-safety + invoice-lifecycle changes touch the shared
+`locales/*.yml`, which currently also carry an active peer campaign's (M130-gasto) keys. A clean
+isolated commit of just these changes would leave peer keys unreferenced at the tip and red the
+locale-parity gate, so those two commits are HELD until the peer's renta-gasto work lands; the work
+is complete, tested, and verified in the working tree meanwhile.
+
 ## Recommendations
 
 - Fix B1 (timezone-normalise `since_dt`/`until_dt` or `event.occurred_at` before
