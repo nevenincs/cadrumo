@@ -245,6 +245,47 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
     )
 
 
+def test_modelo_200_carries_cuota_liquida_under_declaration_advisory_predicate() -> None:
+    """The M200 2024 revision declares the cuota-stage silent-under-declaration guard.
+
+    Companion to the base-determination advisory
+    ``modelo-200-base-imponible-determinada-cuando-resultado-positivo``
+    (which guards the 00501→00552 stage): cuota líquida ``DP200014B:00592``
+    is an operator-entered manual input consumed directly by the
+    cuota-a-ingresar formula, so a positive computed cuota íntegra
+    ``DP200014:00562`` can sit beside a silently-zero cuota líquida and
+    grant VERIFICADO_COMPLETO with cuota a ingresar cero — a silent
+    under-declaration the ``no-silent-under-declaration`` rule forbids.
+    This grounds the registry-declared ADVISORY predicate so a future
+    edit that drops or downgrades it fails loudly. The predicate is an
+    ``implies_nonzero`` (holds when cuota íntegra ≤ 0, fires only when it
+    is strictly positive and cuota líquida is zero), kept ADVISORY because
+    a positive cuota íntegra fully absorbed by bonificaciones/deducciones
+    (LIS art. 31-39) legitimately yields a zero cuota líquida.
+    """
+    modelo, catalogues = _load_modelo_200()
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2024,
+        period="0A",
+    )
+
+    predicates = {p.predicate_id: p for p in snapshot.revision.verification_predicates}
+    guard = predicates.get("modelo-200-cuota-liquida-determinada-cuando-cuota-integra-positiva")
+    assert guard is not None, (
+        "M200 2024 must declare the cuota-stage under-declaration advisory "
+        "(no-silent-under-declaration): a positive cuota íntegra with a zero "
+        "cuota líquida must surface an operator-facing advisory"
+    )
+    assert guard.expression == 'implies_nonzero(["DP200014:00562", "DP200014B:00592"])'
+    assert guard.finding_kind == "ADVISORY", (
+        "the guard must stay non-blocking: a cuota íntegra fully absorbed by "
+        "bonificaciones/deducciones legitimately yields a zero cuota líquida"
+    )
+
+
 def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelacion_base() -> None:
     """The cuota íntegra chain applies the entity-type-dispatched rate to the post-nivelación base.
 
