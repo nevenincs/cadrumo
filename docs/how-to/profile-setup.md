@@ -168,6 +168,10 @@ Choose `actividad_economica` only when the taxpayer runs an activity. A pure
 landlord, a salaried-only taxpayer, or a pensioner with no activity should not
 select it.
 
+For an activity, record how IRPF estimates its yield. Direct estimation is the
+default and files Modelo 130. Add `--uses-objective-estimation-irpf` for the
+objective-estimation (módulos) regime, which files Modelo 131 instead.
+
 ### Identity
 
 The tax identifier (NIF, CIF, DNI, or NIE) is required. Spanish citizens use
@@ -190,8 +194,11 @@ corresponding Hacienda Foral under the Concierto Económico (Ley 12/2002), not
 with the AEAT. This CLI does not model foral declarations.
 ```
 
-For a non-resident, choose `non_resident_irnr` and supply the country of
-residence and, when required, a fiscal representative.
+For a non-resident, set `--fiscal-residency non_resident_irnr` (not
+`--tax-residence-ccaa`), then supply the country of residence with
+`--country-of-fiscal-residence` (an ISO 3166-1 alpha-2 code, such as `DE`) and,
+when required, a fiscal representative with `--representante-fiscal-nif` and
+`--representante-fiscal-nombre`.
 
 ### Which IVA regime applies
 
@@ -221,9 +228,7 @@ true:
   threshold.
 - `--professional-income-withholding-ge-70pct` - at least 70 percent of
   professional income already had IRPF withholding. This removes the Modelo 130
-  obligation for many freelancers, so record it when it's true. Set it together
-  with `--pays-professionals-with-retencion`. Otherwise the setup verifier flags
-  the pair as inconsistent.
+  obligation for many freelancers, so record it when it's true.
 
 Leaving an obligation flag unset is not the same as marking it false. When a
 fact is undeclared, the readiness check reports the related form as *incomplete*
