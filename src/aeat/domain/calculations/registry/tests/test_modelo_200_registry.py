@@ -245,6 +245,53 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
     )
 
 
+def test_modelo_200_carries_full_chain_under_declaration_advisory_predicates() -> None:
+    """The M200 2024 revision guards every manual handoff in the IS result chain.
+
+    The IS determination flows through operator-entered manual casillas at three
+    stages where a positive upstream value can silently produce a zero downstream
+    one (`no-silent-under-declaration`):
+
+    - ``00500`` (resultado contable, after-tax) → ``00501`` (resultado antes de IS)
+    - ``00501`` (resultado antes de IS) → ``DP200014:00552`` (base imponible)
+    - ``DP200014:00562`` (cuota íntegra) → ``DP200014B:00592`` (cuota líquida)
+
+    Each transition is guarded by an ADVISORY ``implies_nonzero`` predicate so a
+    positive accounting profit cannot silently grant VERIFICADO_COMPLETO with a
+    zero fiscal base or cuota. The earliest guard (00500→00501) is what catches the
+    operator who declares a profit but leaves the fiscal-base starting point at
+    zero — a case the 00501→00552 advisory cannot catch because 00501 is *its*
+    antecedent. This grounds all three so a future edit dropping any link fails.
+    """
+    modelo, catalogues = _load_modelo_200()
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2024,
+        period="0A",
+    )
+
+    predicates = {p.predicate_id: p.expression for p in snapshot.revision.verification_predicates}
+    expected = {
+        "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo": 'implies_nonzero(["00500", "00501"])',
+        "modelo-200-base-imponible-determinada-cuando-resultado-positivo": 'implies_nonzero(["00501", "DP200014:00552"])',
+        "modelo-200-cuota-liquida-determinada-cuando-cuota-integra-positiva": 'implies_nonzero(["DP200014:00562", "DP200014B:00592"])',
+    }
+    for predicate_id, expression in expected.items():
+        assert predicates.get(predicate_id) == expression, (
+            f"M200 2024 must guard the IS-chain handoff {predicate_id!r} with {expression!r} "
+            "(no-silent-under-declaration): a positive upstream value with a zero downstream "
+            "one must surface an operator-facing advisory"
+        )
+    for predicate_id in expected:
+        guard = next(p for p in snapshot.revision.verification_predicates if p.predicate_id == predicate_id)
+        assert guard.finding_kind == "ADVISORY", (
+            f"{predicate_id} must stay non-blocking: a legitimately zero downstream "
+            "(losses, full deductions) must not refuse the draft"
+        )
+
+
 def test_modelo_200_carries_cuota_liquida_under_declaration_advisory_predicate() -> None:
     """The M200 2024 revision declares the cuota-stage silent-under-declaration guard.
 
