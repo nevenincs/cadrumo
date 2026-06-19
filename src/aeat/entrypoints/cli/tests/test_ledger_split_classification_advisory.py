@@ -162,3 +162,71 @@ def test_split_classification_advisory_folds_into_text_lines() -> None:
     assert result.exit_code == 0, result.output
     assert "ADVISORY" in result.output
     assert "BUSINESS" in result.output
+
+
+def _merge_json(child_ids: list[str]) -> dict[str, Any]:
+    args = ["--format", "json", "app", "ledger", "merge"]
+    for child_id in child_ids:
+        args.extend(["--child-id", child_id])
+    args.append("--yes")
+    result = _RUNNER.invoke(app, args)
+    assert result.exit_code == 0, result.output
+    return json.loads(result.output)
+
+
+def test_split_emits_child_ids_that_merge_accepts() -> None:
+    """``split`` surfaces the child ids (full + short) and ``merge`` accepts them.
+
+    Audit M11: the documented undo path (``ledger merge --child-id``) requires
+    the full child ids and refuses a partial cohort, yet the split surface used
+    to print only the child *count*. This pins that the persisted child ids now
+    appear in both the typed payload and the text output, and that the exact
+    full ids the split emits are the cohort ``merge`` consumes — so the undo is
+    completable from CLI output alone.
+    """
+    parent = _add_row(amount="100.00", description="Subcontratacion", idempotency_key="row-4")
+
+    envelope = _split_json(parent)
+    result = envelope["result"]
+
+    full_ids = result["child_transaction_ids"]
+    child_rows = result["child_transactions"]
+    assert len(full_ids) == 2
+    assert [row["full_id"] for row in child_rows] == full_ids
+    # Each short display id is a real non-empty prefix of its full id.
+    for row in child_rows:
+        assert row["display_id"]
+        assert row["full_id"].startswith(row["display_id"])
+
+    # The full ids must also be visible in the human text output, so an operator
+    # reading the terminal (not the JSON) can recover them.
+    text_result = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "split",
+            _add_row(amount="100.00", description="Otra", idempotency_key="row-5"),
+            "--child-amount",
+            "40.00",
+            "--child-description",
+            "parte A",
+            "--child-amount",
+            "60.00",
+            "--child-description",
+            "parte B",
+            "--yes",
+        ],
+    )
+    assert text_result.exit_code == 0, text_result.output
+    text_full_ids = [
+        line.split("\t")[-1]
+        for line in text_result.output.splitlines()
+        if line.startswith("Child transaction id")
+    ]
+    assert len(text_full_ids) == 2
+
+    # Round-trip: the exact full ids the split emitted are the cohort merge accepts.
+    merge_envelope = _merge_json(full_ids)
+    assert merge_envelope["status"] == "success"
+    assert sorted(merge_envelope["result"]["source_child_ids"]) == sorted(full_ids)

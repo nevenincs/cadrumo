@@ -115,6 +115,7 @@ adapters:
         unsecured_mode_refused: Google OAuth s'ha rebutjat perquè el magatzem de secrets
           està en mode insegur i el perfil actiu porta un identificador fiscal espanyol
           real.
+        non_interactive: 'Google OAuth rebutjat: el flux interactiu de consentiment al navegador necessita un terminal interactiu, però aquesta ordre s''ha executat de manera no interactiva.'
       suggestions:
         close_loopback_port: Tanca l'aplicació que estigui ocupant un port loopback
           orfe i torna-ho a intentar.
@@ -124,6 +125,7 @@ adapters:
           el perfil actiu abans de tornar a provar l'ordre de Google.
         use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o canvia
           el perfil actiu a un identificador fiscal sintètic de prova.
+        run_from_interactive_terminal: 'Executa ''aeat config google login'' des d''un terminal interactiu amb un navegador web disponible.'
     profile_binding:
       errors:
         no_active_profile: No hi ha cap perfil AEAT actiu enllaçat per a Google OAuth.
@@ -1964,6 +1966,7 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        missing_binding_guidance_ledger: '%{base} Aquest valor s''agrega des del llibre major del bucket i no es pot aportar amb --binding. Afegeix o classifica les files corresponents del llibre major, executa `aeat app ledger preflight` i torna a calcular. Executa `%{discover}` per veure tots els bindings que el càlcul encara necessita.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -2117,6 +2120,7 @@ cli:
           funciona en mode no segur per a un perfil amb un NIF real.
         validation: 'Les dades proporcionades per a Google no han superat la validació:
           {detail}'
+        non_interactive: 'L''inici de sessió de Google necessita un terminal interactiu amb navegador web, però aquesta ordre s''ha executat de manera no interactiva: {detail}'
       folder:
         folder_id_help: Id de la carpeta de Google Drive
         get_help: Mostra la carpeta arrel de Google Drive configurada
@@ -2819,6 +2823,7 @@ cli:
       warning: Avís
       warnings: Avisos
       'yes': Sí
+      child_id: 'Id de transacció filla'
     link:
       actor_help: Etiqueta de l'operador registrada als esdeveniments del bucket.
       errors:
@@ -3339,7 +3344,6 @@ cli:
       invalid_state: 'Estat de revisió no vàlid: %{state}'
     labels:
       affected_object_id: Objecte
-      bucket: Bucket
       id: ID
       kind: Tipus
       legal_refs: Referències legals
@@ -4262,8 +4266,7 @@ errors:
       encara no està disponible.
     reconciliation_drift: La conciliació ha detectat una discrepància aritmètica o
       d'identitat entre declaracions. Revisa els imports abans de continuar.
-    reconciliation_evidence_invalid: L'evidència externa aportada no s'ha pogut interpretar.
-      Comprova el fitxer del justificant.
+    reconciliation_evidence_invalid: 'No s''ha pogut llegir el PDF. Comprova que el fitxer és el justificant d''AEAT i no un altre document, i que no estigui malmès.'
     refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
       està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
       actual.
@@ -4487,6 +4490,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    refused_google_non_interactive: 'L''inici de sessió de Google necessita un terminal interactiu amb navegador; executa''l des d''una shell interactiva.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -4631,7 +4635,7 @@ review:
       item_not_found: No s'ha trobat l'element sol.licitat a la cua de revisio.
       reserved_kind: El tipus de revisió està reservat i no és un element de revisió
         emès.
-      unknown_kind: Tipus d'element de revisió desconegut.
+      unknown_kind: 'Tipus d''element de revisió desconegut. Valors --kind admesos: %{accepted_kinds}.'
       unsupported_item_type: 'Tipus d''element de revisio no ames: %{item_type}.'
   transaction:
     summary: Transacció pendent de classificació

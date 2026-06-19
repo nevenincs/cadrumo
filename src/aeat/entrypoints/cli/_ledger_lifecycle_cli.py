@@ -5,6 +5,8 @@ Use of :class:`OutputSchema`, :class:`TransactionCatalogueRepository` for compli
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import typer
 from pydantic import ValidationError
 
@@ -15,6 +17,7 @@ from ...application.ledger import (
     apply_evidence_split,
     archive_manual_transaction,
     attach_manual_transaction_evidence,
+    compute_display_id_width,
     is_llm_provider_available,
     ledger_transaction_payload,
     ledger_transaction_review_status,
@@ -42,6 +45,9 @@ from ...domain.transactions import (
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
 from ._ledger_support import _resolve_id
 from ._schemas import OutputSchema
+
+if TYPE_CHECKING:
+    from ._ledger_payloads import LedgerSplitChildIdPayload
 
 
 def register_lifecycle_commands(app: typer.Typer) -> None:
@@ -546,14 +552,18 @@ def ledger_split(
         raise _ledger_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerSplitResult
 
+    child_id_rows = _split_child_id_rows(result.child_transaction_ids)
     notices = _split_classification_dropped_notices(result.parent_transaction.business_classification)
     lines = [
         f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
         f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
         f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
         f"{tr('cli.ledger.labels.children')}\t{len(result.child_transaction_ids)}",
-        f"{tr('cli.ledger.labels.event_id')}\t{result.bucket_event_id}",
     ]
+    lines.extend(
+        f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows
+    )
+    lines.append(f"{tr('cli.ledger.labels.event_id')}\t{result.bucket_event_id}")
     lines.extend(f"ADVISORY\t{notice.message}" for notice in notices)
     _emit_envelope(
         ctx,
@@ -564,12 +574,31 @@ def ledger_split(
                 "parent_transaction_id": result.parent_transaction_id,
                 "split_group_id": result.split_group_id,
                 "child_transaction_ids": list(result.child_transaction_ids),
+                "child_transactions": [row.model_dump(mode="json") for row in child_id_rows],
                 "bucket_event_id": result.bucket_event_id,
             },
         ),
         lines=lines,
         notices=notices or None,
     )
+
+
+def _split_child_id_rows(child_transaction_ids: tuple[str, ...]) -> list[LedgerSplitChildIdPayload]:
+    """Build the typed full + short id rows for the persisted split children.
+
+    ``ledger merge`` requires the full child ids and refuses a partial cohort,
+    so a persisted split must surface them (audit M11). The short ``display_id``
+    is the shortest unique prefix within the child cohort — the same
+    display-width convention the ledger list surface uses — so the operator can
+    read or copy either form into ``aeat app ledger merge --child-id ...``.
+    """
+    from ._ledger_payloads import LedgerSplitChildIdPayload
+
+    width = compute_display_id_width(child_transaction_ids)
+    return [
+        LedgerSplitChildIdPayload(full_id=child_id, display_id=child_id[:width])
+        for child_id in child_transaction_ids
+    ]
 
 
 def _split_classification_dropped_notices(
@@ -722,12 +751,14 @@ def _ledger_split_llm(
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
 
+    child_id_rows = _split_child_id_rows(applied.child_transaction_ids)
     result = LedgerSplitResult.model_validate(
         {
             "bucket_id": applied.bucket_id,
             "parent_transaction_id": applied.parent_transaction_id,
             "split_group_id": applied.split_group_id,
             "child_transaction_ids": list(applied.child_transaction_ids),
+            "child_transactions": [row.model_dump(mode="json") for row in child_id_rows],
             "llm": True,
             "persisted": True,
             "provider": suggestion.provider.value if suggestion.provider is not None else None,
@@ -742,8 +773,11 @@ def _ledger_split_llm(
         f"{tr('cli.ledger.labels.parent_id')}\t{applied.parent_transaction_id}",
         f"{tr('cli.ledger.labels.split_group_id')}\t{applied.split_group_id}",
         f"{tr('cli.ledger.labels.children')}\t{len(applied.child_transaction_ids)}",
-        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{applied.provenance}",
     ]
+    lines.extend(
+        f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows
+    )
+    lines.append(f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{applied.provenance}")
     _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
 
 

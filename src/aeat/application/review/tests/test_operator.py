@@ -8,7 +8,7 @@ from ....application.user_profile._orchestration import profile_create_storage_s
 from ....core.config import Settings, override_settings
 from ....core.errors import resolve_error_message
 from .._errors import ReviewError, ReviewKindReservedError
-from .._operator import _resolve_internal_kinds, project_review_item
+from .._operator import ACCEPTED_KINDS, _resolve_internal_kinds, project_review_item
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -23,9 +23,17 @@ def test_unknown_review_kind_error_omits_raw_operator_value() -> None:
     assert sensitive_kind not in str(exc_info.value)
     assert sensitive_kind not in repr(exc_info.value.context)
     assert exc_info.value.context is not None
+    # The accepted set rides on the context as a pre-joined string so the i18n
+    # interpolation renders it without a Python repr; the rendered refusal then
+    # names every accepted token (CLI-instructive-gate mandate).
     accepted_kinds = exc_info.value.context["accepted_kinds"]
-    assert isinstance(accepted_kinds, (list, tuple, set, frozenset))
-    assert "ledger_transaction" in accepted_kinds
+    assert isinstance(accepted_kinds, str)
+    assert accepted_kinds == ", ".join(ACCEPTED_KINDS)
+    for accepted in ACCEPTED_KINDS:
+        assert accepted in accepted_kinds
+    rendered = resolve_error_message(exc_info.value)
+    for accepted in ACCEPTED_KINDS:
+        assert accepted in rendered
 
 
 def test_project_review_item_not_found_error_omits_raw_item_id() -> None:

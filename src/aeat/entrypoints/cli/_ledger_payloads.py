@@ -195,6 +195,20 @@ class LedgerImportDiagnosticPayload(OutputSchema):
     affected_transaction_ids: list[str] = []
 
 
+class LedgerSplitChildIdPayload(OutputSchema):
+    """One persisted split-child id, carrying both the full and short forms.
+
+    Emitted on the manual / applied split surface so an operator can copy the
+    ids straight into ``aeat app ledger merge --child-id ...`` to undo the split.
+    ``full_id`` is the 64-char canonical id ``merge`` resolves; ``display_id`` is
+    the shortest unique prefix within the child cohort (the same display-width
+    convention :class:`LedgerListRowPayload` uses), suitable for human reading.
+    """
+
+    full_id: str
+    display_id: str
+
+
 class LedgerSplitChildProposalPayload(OutputSchema):
     """One proposed child of an evidence-driven LLM split (preview surface).
 
@@ -359,6 +373,10 @@ class LedgerSplitResult(OutputSchema):
     parent_transaction_id: str
     split_group_id: str | None = None
     child_transaction_ids: list[str] = []
+    # Persisted child ids in full + short form so the operator can copy them
+    # into ``ledger merge --child-id`` to undo the split (audit M11). Empty on
+    # the LLM preview path, where nothing is persisted yet.
+    child_transactions: list[LedgerSplitChildIdPayload] = []
     bucket_event_id: str | None = None
     # LLM evidence-driven path (--llm)
     llm: bool | None = None

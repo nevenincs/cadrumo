@@ -151,6 +151,26 @@ class ReconciliationEvidenceInvalidError(AeatError):
     """
 
 
+def _evidence_invalid_refusal(exc: BaseException) -> ReconciliationEvidenceInvalidError:
+    """Translate a justificante parse failure into a clean typed refusal.
+
+    The parser raises with a redacted, parser-internal message (e.g.
+    ``"pdfplumber failed to open <input-pdf>: PdfminerException"``). Surfacing
+    that verbatim leaks the parser backend's exception class to the operator and
+    omits the documented "is this the right document?" guidance. This helper
+    drops the raw cause into structured ``context`` for diagnostics and routes
+    the operator-facing text through the
+    ``errors.refused.reconciliation_evidence_invalid`` locale key, which carries
+    the documented ``evidence_invalid`` guidance. The exception ``__cause__``
+    chain preserves the original parse error for logs.
+    """
+    return ReconciliationEvidenceInvalidError(
+        translated_message="errors.refused.reconciliation_evidence_invalid",
+        context={"parse_failure": type(exc).__name__},
+        suggestion="aeat app modelo reconcile file WORK_UNIT_ID --file PATH/TO/justificante.pdf",
+    )
+
+
 class ReconciliationDeclaracionSourceUnsupportedError(AeatError):
     """Raised when ``from_declaration`` is requested before the declaration parser ships.
 
@@ -199,9 +219,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     try:
         justificante = parse_justificante(command.source_path)
     except JustificanteParseError as exc:
-        raise ReconciliationEvidenceInvalidError(
-            f"justificante at {command.source_path!s} could not be parsed: {exc}",
-        ) from exc
+        raise _evidence_invalid_refusal(exc) from exc
     return _reconcile_parsed_justificante(
         work_unit_id=command.work_unit_id,
         source_kind=command.source_kind,
@@ -229,9 +247,7 @@ def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloR
     try:
         justificante = parse_justificante_bytes(command.source_bytes)
     except JustificanteParseError as exc:
-        raise ReconciliationEvidenceInvalidError(
-            f"justificante at {command.source_ref} could not be parsed: {exc}",
-        ) from exc
+        raise _evidence_invalid_refusal(exc) from exc
     return _reconcile_parsed_justificante(
         work_unit_id=command.work_unit_id,
         source_kind=command.source_kind,

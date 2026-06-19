@@ -112,6 +112,7 @@ adapters:
         unsecured_mode_refused: A Google OAuth megtagadta a hozzáférést, mert a titkos
           tár nem biztonságos módban fut, és az aktív profil valódi spanyol adóazonosítót
           tartalmaz.
+        non_interactive: 'A Google OAuth elutasítva: az interaktív böngészős hozzájárulási folyamathoz vezérlő terminál szükséges, de ezt a parancsot nem interaktívan futtatták.'
       suggestions:
         close_loopback_port: Zárja be a szabad visszahurkos portot foglaló alkalmazást,
           és próbálja újra.
@@ -122,6 +123,7 @@ adapters:
           Google-parancsot.
         use_keyring_or_synthetic: Állítsa be az aeat_secret_store_backend=keyring
           értéket, vagy váltson az aktív profilt szintetikus teszt-adóazonosítóra.
+        run_from_interactive_terminal: 'Futtassa az ''aeat config google login'' parancsot interaktív terminálban, elérhető webböngészővel.'
     profile_binding:
       errors:
         no_active_profile: Nincs aktív AEAT-profil kötve a Google OAuth-hoz.
@@ -1909,6 +1911,7 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        missing_binding_guidance_ledger: '%{base} Ez az érték a bucket főkönyvéből összesítődik, és nem adható meg a --binding kapcsolóval. Adja hozzá vagy sorolja be a megfelelő főkönyvi sorokat, futtassa az `aeat app ledger preflight` parancsot, majd számoljon újra. Futtassa: `%{discover}` az összes hiányzó kötés listázásához.'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
@@ -2063,6 +2066,7 @@ cli:
           módban fut valódi NIF-el rendelkező profil esetén.
         validation: 'A Google-hoz megadott adatok nem feleltek meg az érvényesítésnek:
           {detail}'
+        non_interactive: 'A Google bejelentkezéshez interaktív terminál és webböngésző szükséges, de ezt a parancsot nem interaktívan futtatták: {detail}'
       folder:
         folder_id_help: Google Drive mappa azonosítója.
         get_help: A beállított Google Drive gyökérmappa megjelenítése.
@@ -2779,6 +2783,7 @@ cli:
       warning: Figyelmeztetés
       warnings: Figyelmeztetések
       'yes': Igen
+      child_id: 'Gyermektranzakció-azonosító'
     link:
       actor_help: A bucket esemenyekhez rogzitett operatori cimke.
       errors:
@@ -3306,7 +3311,6 @@ cli:
       invalid_state: 'Érvénytelen felülvizsgálati állapot: %{state}'
     labels:
       affected_object_id: Objektum
-      bucket: Mappa
       id: Azonosító
       kind: Típus
       legal_refs: Jogszabályi hivatkozások
@@ -4164,8 +4168,7 @@ errors:
       nem elérhető.
     reconciliation_drift: Az egyeztetés számtani vagy azonossági eltérést észlelt
       a bevallások között. A folytatás előtt tekintse át az összegeket.
-    reconciliation_evidence_invalid: A megadott külső igazolást nem sikerült elemezni.
-      Ellenőrizze a bizonylat fájlját.
+    reconciliation_evidence_invalid: 'A PDF nem volt olvasható. Ellenőrizd, hogy a fájl az AEAT-igazolás, és nem más dokumentum, és hogy nem sérült-e.'
     refused_access_gate_live_read_not_enabled: Az AEAT élő olvasási hozzáférés le
       van tiltva. Ez a művelet az aktuális konfiguráció alatt nem léphet kapcsolatba
       az AEAT-tal.
@@ -4373,6 +4376,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    refused_google_non_interactive: 'A Google bejelentkezéshez interaktív terminál és böngésző szükséges; futtassa interaktív shellből.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -4516,7 +4520,7 @@ review:
       item_not_found: A felülvizsgálati elem nem található.
       reserved_kind: A felülvizsgálati típus fenntartott, és nem kibocsátott felülvizsgálati
         elem.
-      unknown_kind: Ismeretlen felülvizsgálati elemtípus.
+      unknown_kind: 'Ismeretlen felülvizsgálati elemtípus. Elfogadott --kind értékek: %{accepted_kinds}.'
       unsupported_item_type: 'Nem támogatott felülvizsgálati elemtípus: %{item_type}.'
   transaction:
     summary: Tranzakció besorolásra vár
