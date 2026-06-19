@@ -15,14 +15,21 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import Period
+from ....core.resources import resources
 from ....domain.invoices import (
     InvoiceCatalogueRepository,
     InvoiceValidationError,
     PaymentStatus,
 )
-from ....domain.iva import InvoiceKind
+from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import build_catalogue_invoice, create_catalogue_invoice
+from ...aggregation import CalculationSourceContext
+from .. import (
+    InvoiceCatalogueSourceResolver,
+    build_catalogue_invoice,
+    create_catalogue_invoice,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -135,3 +142,79 @@ def test_create_catalogue_invoice_persists_and_refuses_duplicate(tmp_path) -> No
                 iva_rate=Decimal("21"),
                 currency="EUR",
             )
+
+
+def test_build_catalogue_invoice_carries_intra_community_category() -> None:
+    """The optional ``iva_category`` stamps the calculation-feeding classification.
+
+    The M349 recapitulative resolver reads ``iva_category`` to derive a
+    transaction's clave; without it the catalogue invoice defaults to a
+    domestic operation (``None``) that never reaches M349.
+    """
+    intra = build_catalogue_invoice(
+        bucket_id="bucket-x",
+        kind=InvoiceKind.ISSUED,
+        counterparty_name="Kunde GmbH",
+        counterparty_tax_id="DE345678901",
+        counterparty_country="DE",
+        invoice_number="EU-001",
+        issued_at=date(2026, 2, 10),
+        taxable_base=Decimal("2000.00"),
+        iva_rate=Decimal("0"),
+        currency="EUR",
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+    )
+    assert intra.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+
+    domestic = build_catalogue_invoice(
+        bucket_id="bucket-x",
+        kind=InvoiceKind.ISSUED,
+        counterparty_name="Cliente SL",
+        counterparty_tax_id="A58818501",
+        counterparty_country="ES",
+        invoice_number="FAC-001",
+        issued_at=date(2026, 2, 10),
+        taxable_base=Decimal("2000.00"),
+        iva_rate=Decimal("21"),
+        currency="EUR",
+    )
+    assert domestic.iva_category is None
+
+
+def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path) -> None:
+    """End-to-end: a stamped intra-community invoice reaches the M349 aggregate.
+
+    This is the anti-tautology proof that ``iva_category`` is not merely stored
+    but is read by the live :class:`InvoiceCatalogueSourceResolver`: an issued
+    intra-community supply of 2000 must surface as one operator declaring
+    2000 of operations for the period it was issued in.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
+        repository = InvoiceCatalogueRepository(bucket_id="operator")
+        create_catalogue_invoice(
+            bucket_id="operator",
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Kunde GmbH",
+            counterparty_tax_id="DE345678901",
+            counterparty_country="DE",
+            invoice_number="EU-2026-001",
+            issued_at=date(2026, 2, 10),
+            taxable_base=Decimal("2000.00"),
+            iva_rate=Decimal("0"),
+            currency="EUR",
+            iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            repository=repository,
+        )
+        snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+        resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="349",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                revision=snapshot.revision,
+            ),
+        )
+
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("2000.00")

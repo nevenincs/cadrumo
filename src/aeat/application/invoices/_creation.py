@@ -35,7 +35,7 @@ from ...domain.invoices import (
     IvaRate,
     PaymentStatus,
 )
-from ...domain.iva import InvoiceKind
+from ...domain.iva import InvoiceKind, IvaCategory
 
 _NUMERIC_IVA_RATE_SLOTS: dict[Decimal, IvaRate] = {
     Decimal("0"): IvaRate.RATE_0,
@@ -88,6 +88,7 @@ def build_catalogue_invoice(
     currency: str,
     payment_status: PaymentStatus = PaymentStatus.PENDING,
     notes: str = "",
+    iva_category: IvaCategory | None = None,
 ) -> Invoice:
     """Return a strict rich :class:`Invoice` from operator-supplied fields.
 
@@ -95,6 +96,12 @@ def build_catalogue_invoice(
     IVA rate slot; the invoice totals are derived from that line so the
     :class:`Invoice` arithmetic invariants hold. The returned invoice carries
     no linked transactions yet — ``link --invoice-id`` populates them later.
+
+    ``iva_category`` carries the intra-community classification the M349
+    recapitulative resolver reads to derive a transaction's clave (E/A/T); it
+    is the calculation-feeding companion to the slim record's free-text
+    ``operation_type``. When ``None`` the invoice is treated as a domestic
+    operation and does not contribute to M349.
     """
     from ...domain.invoices import iva_rate_percentage
 
@@ -134,6 +141,8 @@ def build_catalogue_invoice(
         "lines": [line],
         "notes": notes,
     }
+    if iva_category is not None:
+        invoice_payload["iva_category"] = iva_category.value
     return Invoice.model_validate(invoice_payload)
 
 
@@ -151,6 +160,7 @@ def create_catalogue_invoice(
     currency: str,
     payment_status: PaymentStatus = PaymentStatus.PENDING,
     notes: str = "",
+    iva_category: IvaCategory | None = None,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> CatalogueInvoiceCreateResult:
     """Persist one rich catalogue :class:`Invoice` and return the updated catalogue.
@@ -175,6 +185,7 @@ def create_catalogue_invoice(
         currency=currency,
         payment_status=payment_status,
         notes=notes,
+        iva_category=iva_category,
     )
     catalogue = repo.load()
     if invoice.invoice_id in catalogue:
