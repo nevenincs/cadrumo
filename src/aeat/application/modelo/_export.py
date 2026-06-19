@@ -145,6 +145,18 @@ class ModeloExportEvidenceMissingError(ModeloExportError):
     """Raised when a ledger-derived revision lacks exportable evidence."""
 
 
+class ModeloExportOutputPathError(ModeloExportError):
+    """Raised when the operator-supplied ``--output`` path cannot receive the artefact.
+
+    Validated up front, before any fichero-BOE bytes are written, so an
+    unusable destination (empty path, an existing directory, a missing or
+    unwritable parent directory) is refused with a typed, operator-facing
+    message instead of surfacing a raw ``OSError`` traceback from the
+    atomic-rename write — and crucially before any cleartext financial
+    bytes touch disk.
+    """
+
+
 class ModeloExportCommand(BaseModel):
     """Strict input contract for ``export_modelo_revision``.
 
@@ -216,6 +228,45 @@ class ModeloExportResult(BaseModel):
 
 def _sha256_ref(value: str) -> str:
     return f"sha256:{sha256_hex(value.encode('utf-8'))}"
+
+
+def _validate_output_path(output_path: Path) -> None:
+    """Refuse an unusable ``--output`` destination before writing any bytes.
+
+    A clean typed refusal here is the only safe place to reject a bad
+    destination: once the atomic-rename write has run, real fichero-BOE
+    financial bytes already exist in the sibling ``.tmp`` file, and a
+    late ``OSError`` at ``Path.replace`` would both surface a raw
+    traceback and (without the cleanup guard) strand those cleartext
+    bytes on disk.
+
+    Raises:
+        ModeloExportOutputPathError: When the path is empty, names an
+            existing directory, or its parent directory is missing or
+            not a directory.
+    """
+    raw = str(output_path).strip()
+    if not raw or raw == ".":
+        raise ModeloExportOutputPathError(
+            translated_message="application.modelo.errors.export_output_path_invalid",
+            context={"output_path": raw or "(empty)", "reason": "path is empty"},
+        )
+    if output_path.is_dir():
+        raise ModeloExportOutputPathError(
+            translated_message="application.modelo.errors.export_output_path_invalid",
+            context={"output_path": str(output_path), "reason": "path is an existing directory"},
+        )
+    parent = output_path.parent
+    if not parent.exists():
+        raise ModeloExportOutputPathError(
+            translated_message="application.modelo.errors.export_output_path_invalid",
+            context={"output_path": str(output_path), "reason": "parent directory does not exist"},
+        )
+    if not parent.is_dir():
+        raise ModeloExportOutputPathError(
+            translated_message="application.modelo.errors.export_output_path_invalid",
+            context={"output_path": str(output_path), "reason": "parent path is not a directory"},
+        )
 
 
 def _discard_tmp_output_after_failure(tmp_output: Path, *, stage: str) -> None:
@@ -501,6 +552,12 @@ def export_modelo_revision(
             translated_message="application.modelo.errors.export_no_active_bucket",
         )
 
+    # Validate the destination before touching the catalogue or writing any
+    # bytes: an unusable --output (empty, existing directory, missing parent)
+    # is a clean typed refusal here, never a raw OSError traceback at the
+    # late atomic-rename — and never after cleartext financial bytes exist.
+    _validate_output_path(command.output_path)
+
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
@@ -629,7 +686,22 @@ def export_modelo_revision(
     except Exception:
         _discard_tmp_output_after_failure(tmp_output, stage="bucket-event")
         raise
-    tmp_output.replace(command.output_path)
+
+    # Defence in depth: even though _validate_output_path refused an
+    # existing-directory / unwritable destination up front, a concurrent
+    # change to the destination (a TOCTOU race) can still make this atomic
+    # rename fail with an OSError. Sensitive fichero-BOE bytes already exist
+    # in tmp_output at this point, so any failure here MUST remove them
+    # (sensitive-financial-data-secure-storage) and surface a typed refusal
+    # rather than a raw traceback that strands cleartext financial data.
+    try:
+        tmp_output.replace(command.output_path)
+    except OSError as exc:
+        _discard_tmp_output_after_failure(tmp_output, stage="atomic-rename")
+        raise ModeloExportOutputPathError(
+            translated_message="application.modelo.errors.export_output_path_invalid",
+            context={"output_path": str(command.output_path), "reason": str(exc)},
+        ) from exc
 
     return ModeloExportResult(
         calculation_revision_id=command.calculation_revision_id,
@@ -655,6 +727,7 @@ __all__ = [
     "ModeloExportCrossBucketRefusedError",
     "ModeloExportEvidenceMissingError",
     "ModeloExportNoActiveBucketError",
+    "ModeloExportOutputPathError",
     "ModeloExportResult",
     "ModeloIvaWalletDecisionProvenance",
     "_raise_if_ledger_export_evidence_missing",

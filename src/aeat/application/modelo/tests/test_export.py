@@ -70,6 +70,7 @@ from .._export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
+    ModeloExportOutputPathError,
     ModeloExportResult,
     ModeloIvaWalletDecisionProvenance,
     _compose_export_headers,
@@ -689,10 +690,21 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
     assert not (tmp_path / "out.txt").exists()
 
 
-def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wallet_provenance(
-    isolated_backend: None,
-    tmp_path: Path,
-) -> None:
+def _build_verified_modelo_303_revision() -> tuple[
+    str,
+    str,
+    CalculationRevision,
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    BucketEventHistoryRepository,
+]:
+    """Seed and verify a real Modelo 303 2T revision ready for export.
+
+    Returns ``(taxpayer_nif, bucket_id, verified_revision, work_repo,
+    calc_repo, event_repo)``. Shared by the happy-path export test and the
+    output-path-safety regressions so each drives a fully registry-backed
+    verified revision rather than a synthetic stub.
+    """
     taxpayer_nif = _synthetic_valid_nif(12_345_678)
     bucket_id = _seed_profile(
         tax_id=taxpayer_nif,
@@ -750,6 +762,16 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
     )
     assert report.granted_verificado_completo is True
     verified = calc_repo.load().revisions[revision.calculation_revision_id]
+    return taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo
+
+
+def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wallet_provenance(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = (
+        _build_verified_modelo_303_revision()
+    )
 
     output_path = tmp_path / "modelo-303-wallet-only.txt"
     result = export_modelo_revision(
@@ -795,6 +817,113 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
     assert "1200" not in event_json
     assert "synthetic-modelo-303-export" not in result_json
     assert "synthetic-modelo-303-export" not in event_json
+
+
+def test_export_refuses_existing_directory_output_and_leaves_no_tmp_orphan(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """EDGE-MED-1: exporting onto an existing directory is a clean typed refusal.
+
+    The pre-fix behaviour wrote the fichero-BOE bytes to a sibling ``.tmp``,
+    committed the event, then raised a raw ``OSError`` at the atomic rename
+    onto the directory — surfacing a traceback AND stranding ~946 B of
+    cleartext financial data in the orphaned ``.tmp`` file. Assert both the
+    typed refusal and that no ``.tmp`` orphan remains on disk.
+    """
+    taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = (
+        _build_verified_modelo_303_revision()
+    )
+
+    existing_dir = tmp_path / "already-a-directory"
+    existing_dir.mkdir()
+    tmp_sibling = existing_dir.with_name(existing_dir.name + ".tmp")
+
+    with pytest.raises(ModeloExportOutputPathError):
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=verified.calculation_revision_id,
+                output_path=existing_dir,
+                actor="operator",
+            ),
+            workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime.GENERAL),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+        )
+
+    assert existing_dir.is_dir()
+    assert not tmp_sibling.exists(), "orphaned .tmp with cleartext financial bytes must not remain"
+    assert not any(p.suffix == ".tmp" for p in tmp_path.rglob("*")), "no .tmp orphan anywhere under output root"
+
+
+def test_export_refuses_empty_output_path(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """An empty / current-directory ``--output`` is refused before any write."""
+    taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = (
+        _build_verified_modelo_303_revision()
+    )
+
+    with pytest.raises(ModeloExportOutputPathError):
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=verified.calculation_revision_id,
+                output_path=Path(""),
+                actor="operator",
+            ),
+            workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime.GENERAL),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+        )
+    assert not any(p.suffix == ".tmp" for p in tmp_path.rglob("*"))
+
+
+def test_export_success_path_is_idempotent_overwrite(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """A valid file destination still exports, and a second export overwrites it cleanly."""
+    taxpayer_nif, _bucket_id, verified, work_repo, calc_repo, event_repo = (
+        _build_verified_modelo_303_revision()
+    )
+    output_path = tmp_path / "modelo-303.txt"
+    profile = TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime.GENERAL)
+
+    first = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=verified.calculation_revision_id,
+            output_path=output_path,
+            actor="operator",
+        ),
+        workflow_profile=profile,
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        bucket_event_repository=event_repo,
+        clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+    )
+    assert output_path.exists()
+    assert first.byte_size == output_path.stat().st_size
+
+    second = export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=verified.calculation_revision_id,
+            output_path=output_path,
+            actor="operator",
+        ),
+        workflow_profile=profile,
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        bucket_event_repository=event_repo,
+        clock=datetime(2026, 5, 21, 12, 4, tzinfo=UTC),
+    )
+    assert output_path.exists()
+    assert second.file_sha256 == first.file_sha256
+    assert not (output_path.with_name(output_path.name + ".tmp")).exists()
 
 
 def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocking_readiness(
