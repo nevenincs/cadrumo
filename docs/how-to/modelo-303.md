@@ -9,6 +9,53 @@ Anadido. Autoliquidacion."
 `aeat` does not submit Modelo 303 to AEAT. Export creates a local file that you
 upload through the official AEAT channel yourself.
 
+The tool needs a master-key passphrase. It prompts for it interactively, or
+read it from `AEAT_SECRET_PASSPHRASE` for non-interactive runs.
+
+## The complete first-quarter chain
+
+This is the full path from an empty store to an exported `.boe` for a
+first-period filer. Run these commands in order. Each load-bearing detail is
+explained below.
+
+```bash
+aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+  --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
+aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
+  --description "venta" --classification BUSINESS \
+  --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
+  --description "compra" --classification BUSINESS --category-id material_oficina \
+  --taxable-base 500 --iva-rate 0.21 --iva-amount 105
+aeat app modelo work create --modelo 303 --year 2026 --period 1T
+aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+aeat app modelo work verify --modelo 303 --year 2026 --period 1T
+aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+```
+
+Load-bearing details:
+
+- Create the profile with `--quiet` for the non-interactive form. A bare
+  `profile create me` opens an interactive wizard. The profile MUST carry
+  `--name` and `--surnames`, or export later refuses with "requires the
+  operator name".
+- `--activity-start-date 2026-01-01` scopes the prior-period dependency out for
+  a first period. Without it, verify blocks on the previous quarter.
+- `ledger add --amount` is the GROSS amount (`--taxable-base` + `--iva-amount`).
+  Here `1000 + 210 = 1210` and `500 + 105 = 605`. The tool enforces that the
+  taxable base plus IVA equals the gross to the cent.
+- A deductible-expense row needs `--category-id`. List the valid ids with
+  `aeat app ledger categories`. The example uses `material_oficina`.
+- `verify` reports `completeness complete` and `granted true`. `export` writes
+  the `.boe` and reports its path, byte size, and SHA-256 checksum.
+- Casilla 65 ("% atribuible a la Administración del Estado") resolves to 100
+  automatically for a común-territory profile, so casilla 66 and the headline
+  casilla 71 (Resultado final) carry the full régimen-general result. This tool
+  supports común-territory profiles only; foral regimes are refused at profile
+  creation.
+
+The rest of this guide explains each step and the checks around it.
+
 ## Before you create the draft
 
 Start with the pieces that decide whether Modelo 303 applies and which data can
@@ -64,12 +111,28 @@ business, personal, mixed-use, deductible, domestic, exempt, intracommunity, or
 reverse-charge. Rows that are unclassified or missing required IVA fields can
 block calculation or produce missing binding guidance.
 
+When you add a row by hand, pass the GROSS amount on `--amount` and the IVA
+detail explicitly:
+
+```bash
+aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
+  --description "venta" --classification BUSINESS \
+  --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+```
+
+`--amount` is `--taxable-base` plus `--iva-amount`, and the tool refuses the row
+if they do not match to the cent. A deductible-expense row also needs a
+`--category-id`; list the valid ids with `aeat app ledger categories`.
+
 ## Create the work unit
 
 Create or reuse the saved workspace for the active profile, modelo, filing year,
-period, and registry revision:
+period, and registry revision. This needs an active profile; create one first if
+you have none:
 
 ```bash
+aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+  --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
 aeat app modelo work create --modelo 303 --year 2026 --period 1T
 ```
 

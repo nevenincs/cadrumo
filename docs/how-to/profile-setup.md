@@ -298,10 +298,12 @@ pointer follows the rename:
 aeat config profile rename ana-2026 ana-real
 ```
 
-Duplicate a profile to start a second one from the same facts:
+Duplicate a profile to start a second one from the same facts. The second name
+you pass is the new profile's name - the name you address it by in every later
+command:
 
 ```bash
-aeat config profile duplicate ana-real ana-copy --display-name "Ana copy"
+aeat config profile duplicate ana-real ana-copy
 ```
 
 Delete a profile only when you mean to remove it. Deletion is local and

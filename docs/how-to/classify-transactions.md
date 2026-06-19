@@ -83,53 +83,54 @@ A mixed-use transaction is one you use partly for business and partly
 personally, such as a phone bill, a car cost, or a home-office expense. Record
 the business share so the calculation counts only the deductible part.
 
-Record the share in one of three ways, ordered from single-use to reusable:
+A `MIXED` row needs a proportionality reference before a modelo can calculate
+from it. The reference is a saved category ratio applied through
+`--usage-ratio-id`. A bare `--business-pct` records a percentage but does not
+make the row ready; preflight still reports `missing_proportionality_reference`
+until the row carries `--usage-ratio-id`.
 
-- A one-off percentage with `--business-pct` on the row. Use it for a single
-  transaction.
-- A saved category ratio, set with `aeat app ledger ratios set` and applied
-  through `--usage-ratio-id`. Use it when the same share applies to every
-  expense in a category.
-- A prorrata reference with `--prorrata-reference`, for the IVA prorrata rule
-  (regla de prorrata) when you also make IVA-exempt sales.
+`--usage-ratio-id` lives on the `allocate` verb (and on `add`), not on
+`classify`. Its value is the spending-category id, and the same category must
+already have a saved ratio. Record a mixed-use share in three steps.
 
-Set the share while you classify the row, with a percentage from `0` to `1`:
-
-```bash
-aeat app ledger classify <transaction-id> --classification MIXED --business-pct 0.5 --category-id <category-id>
-```
-
-Or record the share on a row you have already classified, using `allocate`:
-
-```bash
-aeat app ledger allocate <transaction-id> --business-pct 0.5 --category-id <category-id>
-```
-
-Most users need only `--business-pct`.
-
-For shared expenses, first check which category ratios are supported:
+Check which categories accept a ratio:
 
 ```bash
 aeat app ledger ratios eligible
-aeat app ledger ratios list
 ```
 
-Set or replace a category-level business-use ratio only when the category
-supports it:
+Save the ratio for the category, as a percentage from `0` to `1`:
 
 ```bash
 aeat app ledger ratios set <category-id> 0.5
+```
+
+Allocate the share on the row, naming the same category id for both
+`--usage-ratio-id` and `--category-id`:
+
+```bash
+aeat app ledger allocate <transaction-id> --business-pct 0.5 --usage-ratio-id <category-id> --category-id <category-id>
+```
+
+The `--business-pct` value must match the saved ratio for that category. The
+classification follows the share automatically: a `0.5` allocation becomes
+`MIXED`, a `1` allocation becomes `BUSINESS`, and a `0` allocation becomes
+`PERSONAL`.
+
+List or check the saved ratios at any time:
+
+```bash
+aeat app ledger ratios list
 aeat app ledger ratios validate
 ```
 
 Remove a category ratio you no longer want with
 `aeat app ledger ratios unset <category-id>`.
 
-For home-office expenses, you normally either classify the row as `MIXED` with
-an explicit `--business-pct`, or use a supported category ratio when your
-profile has one. If you have linked and applied Modelo 036 censo facts with
-valid home-office area data, `aeat` can seed censo-derived home-office ratios
-for relevant categories. See
+For home-office expenses, save a ratio for the relevant home-office category
+and allocate as above. If you have linked and applied Modelo 036 censo facts
+with valid home-office area data, `aeat` can seed censo-derived home-office
+ratios for relevant categories. See
 [Link Modelo 036 census information](censo-update.md) before relying on that
 ratio.
 

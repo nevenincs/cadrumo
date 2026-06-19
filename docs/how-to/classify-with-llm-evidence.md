@@ -75,9 +75,14 @@ of the following:
 aeat app ledger classify <transaction-id> --llm claude --read-evidence --evidence-acknowledged --saturate
 ```
 
-Without the acknowledgement, the command refuses and explains that reading
-text-layer evidence sends it to a cloud model. Scanned or image evidence is
-read on-host and needs none of this.
+When the transaction has a text-layer PDF attached and you pass
+`--read-evidence` without the acknowledgement, the command refuses and explains
+that reading text-layer evidence sends it to a cloud model. The acknowledgement
+gates the upload of the invoice text only. A transaction with no attached
+evidence sends nothing extra to the cloud provider: `--read-evidence` finds
+nothing to read, so the provider receives only the transaction row, exactly as
+in plain [Classify transactions with an LLM](classify-with-llm.md). Scanned or
+image evidence is read on-host and needs none of this.
 
 ## Split a multi-line invoice automatically
 
