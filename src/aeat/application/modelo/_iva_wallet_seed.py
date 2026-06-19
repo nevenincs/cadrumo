@@ -117,6 +117,93 @@ def seed_iva_compensation_period_for_bucket(
     )
 
 
+def record_iva_compensation_override_for_bucket(
+    *,
+    bucket_id: str,
+    period: Period,
+    amount: Decimal,
+    reason: str,
+    evidence_locator: str,
+) -> object:
+    """Record an explicit taxpayer override for Modelo 303 prior compensation.
+
+    Returns the persisted ``taxpayer_override`` reconciliation decision.
+
+    The Modelo 303 reconciliation refuses to AUTO-apply a seeded or local-recurrence
+    prior-compensation balance when no live AEAT wallet evidence is available; the
+    decision is blocked pending an explicit taxpayer override (see the
+    ``_missing_wallet_decision`` path). This is the operator-facing recorder of that
+    override. It:
+
+    - resolves the bucket's taxpayer NIF (refusing when absent, like seed/correct);
+    - refuses a negative amount (like seed/correct);
+    - builds an :class:`~aeat.domain.iva_compensation.IvaCompensationOverride`
+      carrying the operator ``amount``, ``reason``, and ``evidence_locator``
+      (provenance is mandatory at the model boundary);
+    - drives :func:`~aeat.application.calculations.reconcile_modelo_303_iva_compensation`
+      with that override and ``persist=True``, which produces and stores a
+      non-blocking ``taxpayer_override`` decision keyed by period through the single
+      decision repository (no parallel write path). A subsequent ``work calculate``
+      reads that decision and applies the amount to casilla 110, completing the
+      cross-period carry;
+    - emits a ``MODELO_IVA_WALLET_OVERRIDE_RECORDED`` audit event carrying the
+      reason and evidence locator.
+
+    The local app never files; recording an override touches no AEAT write surface
+    and does not relax the dependent-period verify gate, which still requires
+    official external evidence before a dependent period can be filed. Refusing to
+    overrule a *fresh* AEAT wallet decision is enforced at the verb boundary (the
+    local-only flow has no live wallet, so no fresh wallet decision exists to
+    overrule).
+    """
+    if amount < Decimal("0"):
+        raise ModeloIvaWalletSeedNegativeAmountError(
+            translated_message="application.modelo.iva_wallet.seed_negative_amount",
+            context={"amount": str(amount)},
+        )
+    taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
+    if taxpayer_nif is None:
+        raise ModeloIvaWalletSeedNoTaxpayerError(
+            translated_message="application.modelo.iva_wallet.seed_no_nif",
+            context={"bucket_id": bucket_id},
+        )
+
+    from ...core.resources import resources
+    from ...core.time import now
+    from ...domain.iva_compensation import IvaCompensationOverride
+    from ..calculations import reconcile_modelo_303_iva_compensation
+
+    snapshot = resources().modelos.authority.snapshot(
+        Modelo.M303.value,
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    )
+    override = IvaCompensationOverride(
+        amount=amount,
+        reason=reason,
+        evidence_locator=evidence_locator,
+        recorded_at=now(),
+    )
+    report = reconcile_modelo_303_iva_compensation(
+        snapshot,
+        taxpayer_nif=taxpayer_nif,
+        wallet=None,
+        override=override,
+        persist=True,
+    )
+
+    _emit_iva_wallet_override_event(
+        bucket_id=bucket_id,
+        taxpayer_nif=taxpayer_nif,
+        period=period,
+        amount=amount,
+        reason=reason,
+        evidence_locator=evidence_locator,
+    )
+
+    return report.decision
+
+
 def _sealed_modelo_303_blocker_for_period(
     *,
     bucket_id: str,
@@ -315,6 +402,63 @@ def _emit_iva_wallet_corrected_event(
     catalogue_repo.save(next_catalogue)
 
 
+def _emit_iva_wallet_override_event(
+    *,
+    bucket_id: str,
+    taxpayer_nif: str,
+    period: Period,
+    amount: Decimal,
+    reason: str,
+    evidence_locator: str,
+) -> None:
+    """Append the ``MODELO_IVA_WALLET_OVERRIDE_RECORDED`` audit event for an override."""
+    from ...core.time import now
+    from ...domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        BucketEventType,
+        append_bucket_event,
+        derive_bucket_event_id,
+    )
+
+    occurred_at = now()
+    object_id = f"303:{period.filing_year}:{period.registry_token}"
+    payload = {
+        "taxpayer_nif": taxpayer_nif,
+        "filing_year": str(period.filing_year),
+        "period": period.registry_token,
+        "amount": str(amount),
+        "reason": reason,
+        "evidence_locator": evidence_locator,
+    }
+    event_id = derive_bucket_event_id(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.MODELO_IVA_WALLET_OVERRIDE_RECORDED,
+        occurred_at=occurred_at,
+        actor="operator",
+        object_type=BucketEventObjectType.WORK_UNIT,
+        object_id=object_id,
+        payload=payload,
+    )
+    catalogue_repo = BucketEventHistoryRepository()
+    next_catalogue = append_bucket_event(
+        catalogue_repo.load(),
+        BucketEvent(
+            event_id=event_id,
+            bucket_id=bucket_id,
+            event_type=BucketEventType.MODELO_IVA_WALLET_OVERRIDE_RECORDED,
+            occurred_at=occurred_at,
+            actor="operator",
+            object_type=BucketEventObjectType.WORK_UNIT,
+            object_id=object_id,
+            payload_version=1,
+            payload=payload,
+        ),
+    )
+    catalogue_repo.save(next_catalogue)
+
+
 __all__ = [
     "ModeloIvaWalletCorrectionNoRecordError",
     "ModeloIvaWalletCorrectionSealedError",
@@ -322,5 +466,6 @@ __all__ = [
     "ModeloIvaWalletSeedNegativeAmountError",
     "ModeloIvaWalletSeedNoTaxpayerError",
     "correct_iva_compensation_period_for_bucket",
+    "record_iva_compensation_override_for_bucket",
     "seed_iva_compensation_period_for_bucket",
 ]
