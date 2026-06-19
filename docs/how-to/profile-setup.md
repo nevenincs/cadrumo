@@ -87,6 +87,13 @@ Spanish (for example `Tipo de entidad`, `Categorias de renta IRPF`), because
 they mirror the AEAT forms; the values you choose are stable command tokens that
 don't change with `--language`.
 
+The wizard prompts for your master-key passphrase before it stores anything. In
+a non-interactive shell, set `AEAT_SECRET_PASSPHRASE` first, or the command
+refuses with `AEAT_SECRET_PASSPHRASE is not set`.
+
+`aeat` prints its prompts, refusals, and error messages in Spanish. The output
+blocks quoted below are English translations of those messages.
+
 Use flags with `--quiet` when you want a repeatable, scriptable setup:
 
 ```bash
@@ -300,7 +307,7 @@ aeat config profile rename ana-2026 ana-real
 
 Duplicate a profile to start a second one from the same facts. The second name
 you pass is the new profile's name - the name you address it by in every later
-command:
+command. The new profile becomes the active one:
 
 ```bash
 aeat config profile duplicate ana-real ana-copy
@@ -327,7 +334,8 @@ aeat config profile export ana-real --to ./ana-real-profile.json
 ```
 
 Import a profile into another session or storage root. Import under a fresh label
-when one with the same name already exists:
+when one with the same name already exists. The imported profile becomes the
+active one:
 
 ```bash
 aeat config profile import ./ana-real-profile.json --label ana-restored
@@ -341,7 +349,8 @@ attach it to a support request unless you've removed personal details.
 
 Every change to a profile - creation, edits, imports, classifications,
 calculations, and filings - is recorded as an event in that profile's
-append-only history (a log you can read but not alter). Browse it to see what
+append-only history (a log you can read but not alter). Reading history needs an
+active profile, so switch to it first if you ran `logout`. Browse it to see what
 changed, when, and by which command:
 
 ```bash
