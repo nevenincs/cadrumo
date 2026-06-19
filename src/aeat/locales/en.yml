@@ -554,8 +554,10 @@ application:
   invoices:
     creation:
       errors:
-        duplicate_invoice: 'An invoice with the same identity already exists in the catalogue: %{invoice_id}.'
-        unsupported_iva_rate: 'IVA rate %{iva_rate} is not recognised; use one of: %{accepted}.'
+        duplicate_invoice: 'An invoice with the same identity already exists in the
+          catalogue: %{invoice_id}.'
+        unsupported_iva_rate: 'IVA rate %{iva_rate} is not recognised; use one of:
+          %{accepted}.'
     importing:
       errors:
         import_file_read_failed: 'The invoice import file could not be read: %{path_name}.'
@@ -1172,10 +1174,11 @@ cli:
       invoice:
         add_help: Register a new business invoice
         catalogue:
-          country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code (defaults to ES).'
-          create_help: 'Create a linkable reconciliation invoice in the catalogue.'
-          group_help: 'Reconciliation catalogue invoices that link to transactions.'
-          list_help: 'List reconciliation catalogue invoices.'
+          country_code_help: Counterparty ISO 3166-1 alpha-2 country code (defaults
+            to ES).
+          create_help: Create a linkable reconciliation invoice in the catalogue.
+          group_help: Reconciliation catalogue invoices that link to transactions.
+          list_help: List reconciliation catalogue invoices.
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
@@ -1550,7 +1553,6 @@ cli:
           for age supplement). Repeat for multiple overrides.
         ccaa_help: Autonomous community tax residence key for the M100 autonomic scale
           (e.g. cataluna, comunidad-valenciana). Must match the registry enum.
-        m100_calculation_error: 'Internal error: Modelo 100 calculation failed.'
         no_m130_revisions: No M130 revisions for the specified year. Run `aeat app
           modelo work calculate --modelo 130 --year %{year} --period 1T` for each
           quarter first.
@@ -2710,6 +2712,7 @@ cli:
         invoice add' id.
     list:
       by_group_help: Section the listing by group label.
+      column_header: "id\tfull_id\tdate\tamount\tdescription\treview_status"
       filter_help: Filter rows by status, period (a bare AEAT token, e.g. period=1T)
         plus year (e.g. year=2026), classification, issue, import, direction (ingreso/gasto),
         or text. To filter by organisational group label use the separate --group

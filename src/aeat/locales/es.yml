@@ -616,8 +616,10 @@ application:
   invoices:
     creation:
       errors:
-        duplicate_invoice: 'Ya existe una factura con la misma identidad en el catálogo: %{invoice_id}.'
-        unsupported_iva_rate: 'El tipo de IVA %{iva_rate} no se reconoce; usa uno de: %{accepted}.'
+        duplicate_invoice: 'Ya existe una factura con la misma identidad en el catálogo:
+          %{invoice_id}.'
+        unsupported_iva_rate: 'El tipo de IVA %{iva_rate} no se reconoce; usa uno
+          de: %{accepted}.'
     importing:
       errors:
         import_file_read_failed: 'No se pudo leer el archivo de importacion de facturas:
@@ -1260,10 +1262,11 @@ cli:
       invoice:
         add_help: Registra una nueva factura de negocio
         catalogue:
-          country_code_help: 'Código de país ISO 3166-1 alfa-2 de la contraparte (por defecto ES).'
-          create_help: 'Crea una factura de conciliación vinculable en el catálogo.'
-          group_help: 'Facturas del catálogo de conciliación que se vinculan a transacciones.'
-          list_help: 'Lista las facturas del catálogo de conciliación.'
+          country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (por
+            defecto ES).
+          create_help: Crea una factura de conciliación vinculable en el catálogo.
+          group_help: Facturas del catálogo de conciliación que se vinculan a transacciones.
+          list_help: Lista las facturas del catálogo de conciliación.
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
           intracomunitarias UE)
         eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
@@ -1671,7 +1674,6 @@ cli:
         binding_help: Valor de enlace con la sintaxis KEY=VALUE (repetible).
         casilla_help: Valor de casilla con la sintaxis CASILLA=DECIMAL (repetible).
         ccaa_help: Código de comunidad autónoma para la proyección territorial.
-        m100_calculation_error: 'Error interno: el cálculo del Modelo 100 ha fallado.'
         no_m130_revisions: No hay revisiones M130 para el ejercicio indicado. Ejecuta
           `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`
           para cada trimestre primero.
@@ -2902,6 +2904,7 @@ cli:
         NO es un id de 'aeat app ledger invoice add'.
     list:
       by_group_help: Agrupar el listado por etiqueta de grupo.
+      column_header: "id\tid_completo\tfecha\timporte\tdescripción\testado_revisión"
       filter_help: Filtre las filas por estado, periodo (un token AEAT simple, p.
         ej. period=1T) junto con el año (p. ej. year=2026), clasificacion, incidencia,
         importacion, direccion (ingreso/gasto) o texto. Para filtrar por etiqueta

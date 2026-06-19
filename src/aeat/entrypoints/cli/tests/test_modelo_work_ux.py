@@ -392,6 +392,53 @@ def test_work_dependencies_surfaces_current_clean_state_blockers(_isolated_cli_b
     )
 
 
+def test_work_dependencies_honours_activity_start_date_pre_activity_scoping(
+    _isolated_cli_backend: Path,
+) -> None:
+    """`work dependencies` threads the profile's activity-start-date into the
+    clean-state evaluation, so a prior-period dependency that falls strictly
+    before the declared activity start is scoped out (clean) - matching the
+    verify path. Regression for the handler omitting ``activity_start_date``
+    from ``evaluate_cross_period_clean_state``, which made the diagnostic
+    report a blocker that verify itself suppresses."""
+
+    create = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--activity", "design",
+            "--activity-start-date", "2025-01-01",
+        ],
+    )  # fmt: skip
+    assert create.exit_code == 0, create.output
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "dependencies",
+            "--year", "2025", "--modelo", "303", "--period", "1T",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    clean_state = _payload(result.output)["clean_state"]
+
+    # The 303/2025/1T target depends on the prior-year 303/2024/4T filing,
+    # whose span ends 2024-12-31 - strictly before the 2025-01-01 activity
+    # start - so it is suppressed as no-prior-obligation rather than blocking.
+    assert clean_state["requires_clean_state"] is True
+    assert clean_state["clean"] is True
+    assert clean_state["blockers"] == []
+    assert any(
+        dependency["source_modelo"] == "303"
+        and dependency["period"] == {"filing_year": 2024, "code": "4T"}
+        and dependency["clean"] is True
+        and dependency["blockers"] == []
+        for dependency in clean_state["dependencies"]
+    )
+
+
 def test_work_calculate_confirms_the_draft_was_saved(_isolated_cli_backend: Path) -> None:
     """After `work calculate` the operator is told the result was
     persisted as a draft revision and how to resume / re-inspect it -
