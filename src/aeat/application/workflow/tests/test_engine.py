@@ -597,6 +597,9 @@ class TestAbortReasons:
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
         last = result.steps[-1]
         assert last.stage is WorkflowStage.VALIDATING_DRAFT
+        # The abort summary surfaces the specific blocking-finding descriptions, not just a count.
+        assert "ERROR finding(s):" in result.summary
+        assert "error:" in result.summary
 
     def test_draft_has_errors_surfaces_next_action_pointer(self) -> None:
         """DRAFT_HAS_ERRORS abort step details must carry a next_action retrieval pointer."""
