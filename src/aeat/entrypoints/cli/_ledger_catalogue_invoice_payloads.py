@@ -47,6 +47,16 @@ class CatalogueInvoiceCreateResult(CatalogueInvoiceRecordPayload):
     """JSON envelope for ``aeat app ledger invoice catalogue create``."""
 
 
+@register_schema("ledger.invoice.catalogue.view")
+class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger invoice catalogue view``."""
+
+
+@register_schema("ledger.invoice.catalogue.remove")
+class CatalogueInvoiceRemoveResult(CatalogueInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger invoice catalogue remove``."""
+
+
 @register_schema("ledger.invoice.catalogue.list")
 class CatalogueInvoiceListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger invoice catalogue list``."""
@@ -60,4 +70,6 @@ __all__ = [
     "CatalogueInvoiceCreateResult",
     "CatalogueInvoiceListResult",
     "CatalogueInvoiceRecordPayload",
+    "CatalogueInvoiceRemoveResult",
+    "CatalogueInvoiceViewResult",
 ]

@@ -38,6 +38,12 @@ from ._importing import (
     merge_invoice_import,
     parse_invoice_payload,
 )
+from ._lifecycle import (
+    CatalogueInvoiceRemoveResult,
+    remove_catalogue_invoice,
+    resolve_catalogue_invoice,
+    resolve_catalogue_invoice_from_repository,
+)
 from ._linking import (
     InvoiceTransactionLinkResult,
     link_invoice_transaction_catalogues,
@@ -73,6 +79,7 @@ from ._source_resolver import InvoiceCatalogueSourceResolver, invoice_direction_
 
 __all__ = [
     "CatalogueInvoiceCreateResult",
+    "CatalogueInvoiceRemoveResult",
     "InvoiceCatalogueSourceResolver",
     "InvoiceImportResult",
     "InvoiceListRow",
@@ -106,6 +113,9 @@ __all__ = [
     "project_invoice_reviews",
     "reconcile_invoice_catalogues",
     "reconcile_invoice_repositories",
+    "remove_catalogue_invoice",
+    "resolve_catalogue_invoice",
+    "resolve_catalogue_invoice_from_repository",
     "suggest_reconciliations",
     "verify_invoice_repository_links",
     "verify_link_consistency",
