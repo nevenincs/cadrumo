@@ -865,6 +865,7 @@ application:
         Vuelva a crear la unidad de trabajo para vincularla a la revision actual.
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
+      calculate_binding_is_date_sourced: '--binding %{key} es un binding de tipo fecha que se obtiene del perfil activo (un dato de fecha del contribuyente, como la fecha de nacimiento); no puede aportarse mediante --binding, que solo admite valores decimales y de enumeracion. Definelo como dato del perfil y vuelve a calcular.'
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
@@ -2400,6 +2401,7 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+      import_invalid_tax_id: 'El identificador fiscal del paquete de perfil no es válido: %{error}. Corrige el identificador y vuelve a exportar, o importa un paquete válido.'
     recover:
       help: Recuperar el almacen secreto de archivo con una clave de recuperacion
         y vincularlo a una nueva contrasena.

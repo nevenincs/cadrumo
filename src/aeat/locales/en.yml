@@ -785,6 +785,7 @@ application:
         the work unit to bind it to the current revision.
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
+      calculate_binding_is_date_sourced: '--binding %{key} is a date-valued binding sourced from the active profile (a taxpayer date fact such as the birth date); it cannot be supplied through --binding, which carries only decimal and enum values. Set it as a profile fact and recalculate.'
     findings:
       art20_reduccion_next_action: Verify whether your other non-work income excluding
         exempt income for the year does not exceed 6500 EUR; if it does not, declare
@@ -2234,6 +2235,7 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
+      import_invalid_tax_id: 'The profile bundle''s tax identifier is invalid: %{error}. Fix the identifier and re-export, or import a valid bundle.'
     recover:
       help: Recover the file secret store with a recovery key and bind it to a new
         passphrase.

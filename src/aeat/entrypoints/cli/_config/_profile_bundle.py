@@ -244,6 +244,24 @@ def _register_profile_import_command(
         except UnsupportedBundleSchemaVersionError as exc:
             raise _CliRefusedBoundaryError(str(exc)) from exc
         record = bundle.profile
+        # The bundle is plaintext and may be tampered. `config profile create`
+        # validates the NIF/CIF/NIE checksum via SubjectTaxId; the import path must
+        # enforce the same gate so an invalid identifier cannot become an active,
+        # filing-grade profile (a tampered or garbage tax id otherwise imports clean).
+        from ....core.identity import IdentityError, validate_spanish_tax_id
+
+        _imported_tax_id = next(
+            (fact.value for fact in record.facts if fact.path == "identity.tax_id"),
+            None,
+        )
+        if isinstance(_imported_tax_id, str) and _imported_tax_id.strip():
+            try:
+                validate_spanish_tax_id(_imported_tax_id)
+            except IdentityError as exc:
+                raise _CliRefusedBoundaryError(
+                    translated_message="cli.config.profile.import_invalid_tax_id",
+                    context={"error": str(exc)},
+                ) from exc
         bundle_profile_id = record.profile_id
 
         explicit_label = label.strip() if label is not None and label.strip() else None
