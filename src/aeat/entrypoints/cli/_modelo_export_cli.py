@@ -18,6 +18,7 @@ from ...application.modelo import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
+    ModeloExportOutputPathError,
     ModeloIvaWalletReconciliationBlocked,
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
@@ -132,7 +133,7 @@ def register_export_commands(
         """Export a verified-complete or filed modelo revision to disk."""
         workflow_state = workflow_state_repository().load()
         workflow_profile = _profile_to_taxpayer(workflow_state)
-        if output is None:
+        if output is None or not str(output).strip() or str(output).strip() == ".":
             raise typer.BadParameter(
                 tr(
                     "cli.app.modelo.export.errors.output_required",
@@ -182,6 +183,7 @@ def register_export_commands(
             WorkUnitNotFoundError,
             ModeloExportCrossBucketRefusedError,
             ModeloExportNoActiveBucketError,
+            ModeloExportOutputPathError,
             ModeloIvaWalletReconciliationBlocked,
         ) as exc:
             raise bad_parameter_from_error(exc) from exc

@@ -257,6 +257,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._export.ModeloExportOutputPathError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_OUTPUT_PATH",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.fail.modelo_export",
+            default_suggestion="aeat app modelo export --output PATH",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.overview._errors.OverviewError",
         ErrorCode(
             code="FAIL_OVERVIEW",

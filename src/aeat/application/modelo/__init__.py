@@ -122,6 +122,7 @@ from ._export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
+    ModeloExportOutputPathError,
     ModeloExportResult,
     export_modelo_revision,
 )
@@ -375,6 +376,7 @@ __all__ = [
     "ModeloExportCommand",
     "ModeloExportCrossBucketRefusedError",
     "ModeloExportNoActiveBucketError",
+    "ModeloExportOutputPathError",
     "ModeloExportResult",
     "ModeloIvaWalletCorrectionNoRecordError",
     "ModeloIvaWalletCorrectionSealedError",
