@@ -775,6 +775,66 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
     assert events[-1].payload["reason"] == "contaminated import batch"
 
 
+def test_reset_ledger_catalogue_clears_a_large_ledger_without_payload_overflow(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A reset on a realistic (10+ row) ledger must succeed and clear every row.
+
+    The reset bucket event used to inline every removed id into a single
+    joined ``removed_transaction_ids`` payload value capped at 500 chars, so
+    a ledger of ~8 or more rows overflowed the cap and the reset raised a
+    pydantic ValidationError before any state was cleared. The per-id record
+    is carried by the individual ``LEDGER_TRANSACTION_REMOVED`` events and the
+    typed ``removed_transaction_ids`` on the report, never the capped payload.
+    """
+    transaction_repository, event_repository = _repositories(secure_objects)
+    row_count = 12
+    created_ids: list[str] = []
+    for index in range(row_count):
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id="bucket-a",
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("10.00") + Decimal(index),
+                direction=TransactionDirection.OUTGOING,
+                description=f"bulk reset row {index}",
+                idempotency_key=f"bulk-reset-{index}",
+            ),
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+            occurred_at=datetime(2026, 5, 4, 9, index, tzinfo=UTC),
+        )
+        created_ids.append(created.ref.transaction_id)
+
+    assert len(transaction_repository.load().transactions) == row_count
+
+    report = reset_ledger_catalogue(
+        bucket_id="bucket-a",
+        actor="operator-A",
+        reason="bulk wipe",
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
+    )
+
+    assert report.reset is True
+    assert report.removed_transaction_ids == tuple(sorted(created_ids))
+    assert transaction_repository.load().transactions == {}
+    reset_events = [
+        event
+        for event in event_repository.load().for_bucket("bucket-a")
+        if event.event_type is BucketEventType.LEDGER_CATALOGUE_RESET
+    ]
+    assert len(reset_events) == 1
+    assert reset_events[0].payload["removed_transaction_count"] == str(row_count)
+    removed_events = [
+        event
+        for event in event_repository.load().for_bucket("bucket-a")
+        if event.event_type is BucketEventType.LEDGER_TRANSACTION_REMOVED
+    ]
+    assert {event.object_id for event in removed_events} == set(created_ids)
+
+
 def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
