@@ -630,6 +630,15 @@ application:
         invalid_json_shape: El contenido JSON de facturas debe ser un objeto o una
           lista de objetos.
         invalid_kind: 'El tipo de factura no esta admitido: %{kind}.'
+    lifecycle:
+      errors:
+        ambiguous_invoice_prefix: 'El prefijo de identificador de factura %{invoice_id}
+          es ambiguo; coincide con: %{candidates}.'
+        invoice_id_required: Se requiere un identificador de factura.
+        invoice_not_found: 'Factura del catálogo no encontrada: %{invoice_id}.'
+        remove_linked_invoice: 'No se puede eliminar la factura %{invoice_id} mientras
+          siga vinculada a transacciones: %{linked_transaction_ids}. Desvincúlelas
+          primero.'
     linking:
       errors:
         linked_invoice_not_found: No se encontro la factura %{invoice_id} despues
@@ -722,6 +731,11 @@ application:
         faltan identificadores de casilla requeridos en el mapa corregido.'
       amendment_verification_refused_no_snapshot: El registro no tiene una instantánea
         para el modelo, año y período solicitados.
+      calculate_binding_is_date_sourced: --binding %{key} es un binding de tipo fecha
+        que se obtiene del perfil activo (un dato de fecha del contribuyente, como
+        la fecha de nacimiento); no puede aportarse mediante --binding, que solo admite
+        valores decimales y de enumeracion. Definelo como dato del perfil y vuelve
+        a calcular.
       calculate_binding_unknown: '--binding %{key} no coincide con ningun binding
         de esta revision. Bindings aceptados: %{accepted}. Use `aeat app modelo bindings
         list <MODELO>` para listar los bindings validos.'
@@ -776,6 +790,7 @@ application:
       export_operator_profile_missing: La exportacion necesita el nombre del operador
         del perfil activo, pero no existe un perfil persistido; completa identity.surnames
         e identity.name antes de exportar.
+      export_output_path_invalid: application.modelo.errors.export_output_path_invalid
       export_period_unmappable: La unidad de trabajo %{work_unit_id} contiene el periodo
         %{period}, que no se puede asignar a un periodo de registro.
       export_revision_state_refused: La revision de calculo %{calculation_revision_id}
@@ -865,7 +880,6 @@ application:
         Vuelva a crear la unidad de trabajo para vincularla a la revision actual.
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
-      calculate_binding_is_date_sourced: '--binding %{key} es un binding de tipo fecha que se obtiene del perfil activo (un dato de fecha del contribuyente, como la fecha de nacimiento); no puede aportarse mediante --binding, que solo admite valores decimales y de enumeracion. Definelo como dato del perfil y vuelve a calcular.'
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
@@ -1267,7 +1281,12 @@ cli:
             defecto ES).
           create_help: Crea una factura de conciliación vinculable en el catálogo.
           group_help: Facturas del catálogo de conciliación que se vinculan a transacciones.
+          invoice_id_help: 'Identificador de factura del catálogo (o prefijo no ambiguo).'
           list_help: Lista las facturas del catálogo de conciliación.
+          operation_type_unsupported: '--operation-type {value} todavía no puede alimentar
+            el Modelo 349 desde el catálogo; admitidos: {supported}.'
+          remove_help: 'Elimina una factura del catálogo de conciliación.'
+          view_help: 'Muestra una factura del catálogo de conciliación por identificador o prefijo no ambiguo.'
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
           intracomunitarias UE)
         eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
@@ -2343,6 +2362,9 @@ cli:
       import_help: Registra un paquete portátil de perfil desde un JSON
       import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al
         esquema del paquete de perfil.'
+      import_invalid_tax_id: 'El identificador fiscal del paquete de perfil no es
+        válido: %{error}. Corrige el identificador y vuelve a exportar, o importa
+        un paquete válido.'
       import_label_help: Nombre visible para el perfil importado; por defecto el nombre
         guardado en el paquete. Úsalo para importar una segunda copia con otro nombre.
       import_label_taken: Ya existe un perfil con el nombre %{name}. Vuelve a ejecutar
@@ -2401,7 +2423,6 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
-      import_invalid_tax_id: 'El identificador fiscal del paquete de perfil no es válido: %{error}. Corrige el identificador y vuelve a exportar, o importa un paquete válido.'
     recover:
       help: Recuperar el almacen secreto de archivo con una clave de recuperacion
         y vincularlo a una nueva contrasena.
@@ -2615,6 +2636,9 @@ cli:
         --source-jurisdiction explícitamente (TRLIRNR RDLeg 5/2004 art. 2 / art. 10).
         Use un código ISO 3166-1 alfa-2 de dos letras; sólo las filas con ES entran
         en la base del IRNR.
+      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna aeat automáticamente
+        y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL, MIXED, u
+        omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
       usage_ratio_help: Id de proporción de uso profesional proporcional
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
@@ -2738,6 +2762,8 @@ cli:
       split_recommended_message: La factura adjunta parece contener varias líneas
         de tipo o categoría. Vuelve a ejecutar con --auto-split para separarlas en
         hijos de base e IVA declarables de forma independiente.
+      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna aeat automáticamente
+        y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL, MIXED.'
       taxable_base_help: Importe de base imponible
       vision_model_help: Sustituye el modelo de visión local de Ollama para leer una
         factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo

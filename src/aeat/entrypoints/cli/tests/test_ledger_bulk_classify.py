@@ -99,6 +99,31 @@ def test_classify_from_csv_partial_failure_applies_valid_rows(tmp_path: Path) ->
     assert payload["failures"]  # at least one failure for unknown id
 
 
+def test_classify_from_csv_rejects_pipeline_managed_state(tmp_path: Path) -> None:
+    """A bulk row naming a pipeline-managed state reds (mirrors the single-classify guard).
+
+    ``SKIPPED_BY_RULE`` / ``FAILED_VALIDATION`` / ``PROCESSED_UNCLASSIFIED`` are
+    produced by the pipeline, never assigned by hand. The valid BUSINESS row
+    still applies (partial-success); the system-state row lands in ``failures``.
+    """
+    tx1, tx2 = _import_two_transactions(tmp_path)
+
+    csv_content = f"transaction_id,classification\n{tx1},BUSINESS\n{tx2},SKIPPED_BY_RULE\n"
+    csv_file = tmp_path / "system_state.csv"
+    csv_file.write_text(csv_content, encoding="utf-8")
+
+    result = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["applied"] == 1, payload
+    failure_ids = {f["transaction_id"] for f in payload["failures"]}
+    assert tx2 in failure_ids, payload
+    assert any("set automatically by aeat" in f["reason"] for f in payload["failures"]), payload
+
+
 def test_classify_from_csv_rejects_unknown_column(tmp_path: Path) -> None:
     tx1, _ = _import_two_transactions(tmp_path)
 

@@ -578,6 +578,14 @@ application:
         invalid_json_shape: A szamla JSON tartalma objektum vagy objektumlista kell
           legyen.
         invalid_kind: 'A szamla tipusa nem tamogatott: %{kind}.'
+    lifecycle:
+      errors:
+        ambiguous_invoice_prefix: 'A(z) %{invoice_id} számlaazonosító-előtag nem egyértelmű;
+          több találat: %{candidates}.'
+        invoice_id_required: Számlaazonosító megadása kötelező.
+        invoice_not_found: 'A katalógusban nem található számla: %{invoice_id}.'
+        remove_linked_invoice: 'A(z) %{invoice_id} számla nem törölhető, amíg tranzakciókhoz
+          kapcsolódik: %{linked_transaction_ids}. Előbb oldja fel a kapcsolatokat.'
     linking:
       errors:
         linked_invoice_not_found: A(z) %{invoice_id} szamla nem talalhato a kapcsolas
@@ -660,6 +668,11 @@ application:
         casilla-azonosítók hiányoznak a javított térképből.'
       amendment_verification_refused_no_snapshot: A nyilvántartásban nincs pillanatkép
         a kért modellhez, évhez és időszakhoz.
+      calculate_binding_is_date_sourced: A --binding %{key} egy datum tipusu kotes,
+        amely az aktiv profilbol szarmazik (az adozo datumadata, peldaul a szuletesi
+        datum); nem adhato meg --binding reven, amely csak decimalis es felsorolasi
+        ertekeket fogad. Allitsd be profiladatkent (pl. aeat config profile create
+        ... --taxpayer-birth-date EEEE-HH-NN), majd szamolj ujra.
       calculate_binding_unknown: '--binding %{key} egyik binding azonositonak sem
         felel meg ebben a revizioban. Elfogadott binding azonositok: %{accepted}.
         Hasznalja a `aeat app modelo bindings list <MODELO>` parancsot az ervenyes
@@ -713,6 +726,7 @@ application:
       export_operator_profile_missing: Az exportáláshoz szükség van az operátor nevére
         az aktív profilból, de nincs perzisztált profil; exportálás előtt töltse ki
         az identity.surnames és identity.name mezőket.
+      export_output_path_invalid: application.modelo.errors.export_output_path_invalid
       export_period_unmappable: A(z) %{work_unit_id} munkaegység %{period} időszakot
         tartalmaz, amely nem képezhető le regiszter bevallási időszakra.
       export_revision_state_refused: A(z) %{calculation_revision_id} számítási revízió
@@ -802,7 +816,6 @@ application:
         létre újra a munkaegységet.
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
-      calculate_binding_is_date_sourced: 'A --binding %{key} egy datum tipusu kotes, amely az aktiv profilbol szarmazik (az adozo datumadata, peldaul a szuletesi datum); nem adhato meg --binding reven, amely csak decimalis es felsorolasi ertekeket fogad. Allitsd be profiladatkent (pl. aeat config profile create ... --taxpayer-birth-date EEEE-HH-NN), majd szamolj ujra.'
     findings:
       art20_reduccion_next_action: Ellenorizze, hogy a nem munkabol szarmazo egyeb
         jovedelme a mentes jovedelem nelkul az adoevben nem haladja-e meg a 6500 EUR-t;
@@ -1197,7 +1210,12 @@ cli:
             ES).'
           create_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
           group_help: Egyeztetési katalógus számlái, amelyek tranzakciókhoz kapcsolhatók.
+          invoice_id_help: 'Katalógusbeli számla azonosítója (vagy egyértelmű előtag).'
           list_help: Az egyeztetési katalógus számláinak listázása.
+          operation_type_unsupported: 'A(z) --operation-type {value} még nem tudja
+            feltölteni a 349-es modellt a katalógusból; támogatott: {supported}.'
+          remove_help: 'Egy egyeztetési katalógusbeli számla törlése.'
+          view_help: 'Egy egyeztetési katalógusbeli számla megjelenítése azonosító vagy egyértelmű előtag alapján.'
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
           műveletek).
         eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
@@ -2264,6 +2282,8 @@ cli:
         ''aeat config switch <name>''.'
       import_help: Hordozható profilcsomag regisztrálása JSON-fájlból.
       import_invalid_bundle: 'Érvénytelen profilcsomag: a JSON nem felel meg a profilcsomag-sémának.'
+      import_invalid_tax_id: 'A profilcsomag adóazonosítója érvénytelen: %{error}.
+        Javítsd az azonosítót és exportáld újra, vagy érvényes csomagot importálj.'
       import_label_help: 'Az importált profil megjelenítési neve; alapértelmezés:
         a csomagban tárolt név. Használja második példány importálásához új felirat
         alatt.'
@@ -2326,7 +2346,6 @@ cli:
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
-      import_invalid_tax_id: 'A profilcsomag adóazonosítója érvénytelen: %{error}. Javítsd az azonosítót és exportáld újra, vagy érvényes csomagot importálj.'
     recover:
       help: A fajlalapu titkos tar helyreallitasa helyreallitasi kulccsal es uj passphrase
         ertekhez kotese.
@@ -2535,6 +2554,9 @@ cli:
         a külföldi forrású tételeket is bevonná az IRPF alapba (93.5 cikk szegregáció).
       source_jurisdiction_required_irnr: A --source-jurisdiction megadasa kotelezo
         nem rezidens IRNR profiloknal.
+      system_state_not_assignable: 'A(z) ''%{value}'' besorolást az aeat automatikusan
+        állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
+        vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
       taxable_base_help: ÁFA-mentes alapösszeg.
       usage_ratio_help: Felhasználási arány azonosítója az arányos üzleti használathoz.
       value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
@@ -2662,6 +2684,8 @@ cli:
       split_recommended_message: A csatolt számla több, eltérő kulcsú vagy kategóriájú
         sort tartalmazhat. Futtasd újra a --auto-split kapcsolóval, hogy önállóan
         bevallható alap- és áfa-gyermekekre váljon szét.
+      system_state_not_assignable: 'A(z) ''%{value}'' besorolást az aeat automatikusan
+        állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED.'
       taxable_base_help: Adóköteles alapösszeg.
       vision_model_help: Felülírja a helyi Ollama látómodellt egy beszkennelt vagy
         képi számla olvasásához (pl. qwen2.5vl:7b); alapértelmezetten a beállított

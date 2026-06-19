@@ -624,6 +624,15 @@ application:
         invalid_json_shape: El contingut JSON de factures ha de ser un objecte o una
           llista d objectes.
         invalid_kind: 'El tipus de factura no esta admes: %{kind}.'
+    lifecycle:
+      errors:
+        ambiguous_invoice_prefix: 'El prefix d''identificador de factura %{invoice_id}
+          és ambigu; coincideix amb: %{candidates}.'
+        invoice_id_required: Cal un identificador de factura.
+        invoice_not_found: 'Factura del catàleg no trobada: %{invoice_id}.'
+        remove_linked_invoice: 'No es pot eliminar la factura %{invoice_id} mentre
+          continuï vinculada a transaccions: %{linked_transaction_ids}. Desvinculeu-les
+          primer.'
     linking:
       errors:
         linked_invoice_not_found: No s ha trobat la factura %{invoice_id} despres
@@ -715,6 +724,10 @@ application:
         identificadors de casella requerits al mapa corregit.'
       amendment_verification_refused_no_snapshot: El registre no té una instantània
         per al model, any i període sol·licitats.
+      calculate_binding_is_date_sourced: --binding %{key} es un binding de tipus data
+        que s'obte del perfil actiu (una dada de data del contribuent, com la data
+        de naixement); no es pot aportar mitjancant --binding, que nomes admet valors
+        decimals i d'enumeracio. Defineix-lo com a dada del perfil i torna a calcular.
       calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta
         revisio. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list
         <MODELO>` per llistar els bindings valids.'
@@ -769,6 +782,7 @@ application:
       export_operator_profile_missing: L'exportacio necessita el nom de l'operador
         del perfil actiu, pero no existeix cap perfil persistit; completa identity.surnames
         i identity.name abans d'exportar.
+      export_output_path_invalid: application.modelo.errors.export_output_path_invalid
       export_period_unmappable: La unitat de treball %{work_unit_id} conte el periode
         %{period}, que no es pot assignar a un periode de registre.
       export_revision_state_refused: La revisio de calcul %{calculation_revision_id}
@@ -856,7 +870,6 @@ application:
         Torneu a crear la unitat de treball per vincular-la a la revisio actual.
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
-      calculate_binding_is_date_sourced: '--binding %{key} es un binding de tipus data que s''obte del perfil actiu (una dada de data del contribuent, com la data de naixement); no es pot aportar mitjancant --binding, que nomes admet valors decimals i d''enumeracio. Defineix-lo com a dada del perfil i torna a calcular.'
     findings:
       art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
         de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;
@@ -1258,7 +1271,12 @@ cli:
             defecte ES).
           create_help: Crea una factura de conciliació vinculable al catàleg.
           group_help: Factures del catàleg de conciliació que es vinculen a transaccions.
+          invoice_id_help: 'Identificador de factura del catàleg (o prefix no ambigu).'
           list_help: Llista les factures del catàleg de conciliació.
+          operation_type_unsupported: '--operation-type {value} encara no pot alimentar
+            el Model 349 des del catàleg; admesos: {supported}.'
+          remove_help: 'Elimina una factura del catàleg de conciliació.'
+          view_help: 'Mostra una factura del catàleg de conciliació per identificador o prefix no ambigu.'
         country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
           intracomunitàries UE)
         eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
@@ -2312,6 +2330,9 @@ cli:
       import_help: Registra un paquet portable de perfil des d'un JSON
       import_invalid_bundle: 'Paquet de perfil no vàlid: el JSON no s''ajusta a l''esquema
         del paquet de perfil.'
+      import_invalid_tax_id: 'L''identificador fiscal del paquet de perfil no és vàlid:
+        %{error}. Corregeix l''identificador i torna a exportar, o importa un paquet
+        vàlid.'
       import_label_help: Nom visible per al perfil importat; per defecte el nom desat
         al paquet. Fes-lo servir per importar una segona còpia amb un altre nom.
       import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
@@ -2368,7 +2389,6 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
-      import_invalid_tax_id: 'L''identificador fiscal del paquet de perfil no és vàlid: %{error}. Corregeix l''identificador i torna a exportar, o importa un paquet vàlid.'
     recover:
       help: Recuperar el magatzem secret de fitxer amb una clau de recuperacio i vincular-lo
         a una nova contrasenya.
@@ -2579,6 +2599,9 @@ cli:
         de l'IRPF (art. 93.5 segregació).
       source_jurisdiction_required_irnr: --source-jurisdiction es obligatori per a
         perfils de no resident IRNR.
+      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna aeat
+        automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
+        MIXED, o omet --classification per deixar la fila sense classificar.'
       taxable_base_help: Import de base imposable
       usage_ratio_help: Id de proporció d'ús professional proporcional
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
@@ -2702,6 +2725,9 @@ cli:
       split_recommended_message: La factura adjunta sembla contenir diverses línies
         de tipus o categoria. Torna a executar amb --auto-split per separar-les en
         fills de base i IVA declarables de manera independent.
+      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna aeat
+        automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
+        MIXED.'
       taxable_base_help: Import de base imposable
       vision_model_help: Substitueix el model de visió local d'Ollama per llegir una
         factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir

@@ -715,3 +715,99 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
     assert preflight.exit_code == 0, preflight.output
     assert "issues\t0" in preflight.output, preflight.output
     assert "ready\ttrue" in preflight.output, preflight.output
+
+
+# ---------------------------------------------------------------------------
+# contract  operator surfaces refuse pipeline-managed classification states
+#
+# BUSINESS / PERSONAL / MIXED are the only operator-assignable classifications.
+# NOT_YET_PROCESSED / PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE / FAILED_VALIDATION
+# are produced by the pipeline (rule apply, LLM, validation) and MUST NOT be
+# assignable by hand through ``add`` or ``classify``. The doc states this
+# contract ("others are set automatically by aeat"); these tests pin it.
+# ---------------------------------------------------------------------------
+
+
+def _flatten_box(text: str) -> str:
+    """Collapse a Rich error box into a single line so a wrapped phrase matches.
+
+    Rich word-wraps the message across box rows and inserts ``│`` borders, so a
+    multi-word fragment is split. Strip the borders and collapse whitespace.
+    """
+    return " ".join(text.replace("│", " ").split())
+
+
+@pytest.mark.parametrize("system_state", ["SKIPPED_BY_RULE", "FAILED_VALIDATION", "PROCESSED_UNCLASSIFIED"])
+def test_ledger_classify_refuses_pipeline_managed_state(tmp_path: Path, system_state: str) -> None:
+    """``ledger classify`` refuses a pipeline-managed state with an instructive error."""
+    txn_id = _add_eligible_mixed_expense()
+
+    result = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "classify", txn_id, "--classification", system_state],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+
+    assert result.exit_code != 0, result.output
+    flat = _flatten_box(result.output or "")
+    assert "set automatically by aeat" in flat, result.output
+    assert "BUSINESS, PERSONAL, MIXED" in flat, result.output
+
+
+@pytest.mark.parametrize("system_state", ["SKIPPED_BY_RULE", "FAILED_VALIDATION", "PROCESSED_UNCLASSIFIED"])
+def test_ledger_add_refuses_pipeline_managed_state(tmp_path: Path, system_state: str) -> None:
+    """``ledger add --classification <system state>`` is refused instructively."""
+    result = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "50.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "office supplies",
+            "--classification",
+            system_state,
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+
+    assert result.exit_code != 0, result.output
+    flat = _flatten_box(result.output or "")
+    assert "set automatically by aeat" in flat, result.output
+
+
+def test_ledger_add_default_classification_is_accepted(tmp_path: Path) -> None:
+    """``ledger add`` with no ``--classification`` keeps the NOT_YET_PROCESSED default.
+
+    The pipeline-managed guard must not refuse the import default; only the three
+    truly-internal states (PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE /
+    FAILED_VALIDATION) are blocked.
+    """
+    result = _RUNNER.invoke(
+        app,
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "50.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "office supplies",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["transaction"]["business_classification"] == "NOT_YET_PROCESSED", payload
