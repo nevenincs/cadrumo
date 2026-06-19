@@ -10,12 +10,30 @@ only; it does not and cannot file on your behalf.
 
 You need:
 
-- A verified saved calculation for the modelo and period you want to file. If
-  your draft isn't verified yet, see [verification reports](verification-reports.md).
+- An active taxpayer profile. If you have none yet, create one
+  non-interactively with `--quiet` (a bare `profile create NAME` opens an
+  interactive wizard instead):
+
+  ```bash
+  aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
+  ```
+
+  The profile must carry `--name` and `--surnames`, or the export refuses
+  because it cannot stamp the operator name. See
+  [Set up your taxpayer profile](profile-setup.md).
+- A verified saved calculation (work unit) for the modelo and period you want
+  to file. Create and calculate it first with
+  `aeat app modelo work create --modelo 303 --year 2026 --period 1T` and
+  `aeat app modelo work calculate --modelo 303 --year 2026 --period 1T`. If your
+  draft isn't verified yet, see [verification reports](verification-reports.md).
 - Your own AEAT portal credentials - a digital certificate or Cl@ve. These are
   your credentials for AEAT's website, separate from anything configured inside
   `aeat`. The tool's [AEAT authentication](authenticate-with-aeat.md) is for
   read-only data pulls, not for filing.
+
+Every `aeat` command on this page needs your master-key passphrase. The tool
+prompts for it, or set `AEAT_SECRET_PASSPHRASE` to run non-interactively. The
+tool's messages are in Spanish.
 
 If you're new to the workflow as a whole, start with the
 [quickstart](quickstart.md).

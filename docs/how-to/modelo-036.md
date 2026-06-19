@@ -11,9 +11,14 @@ registered census facts from AEAT into your profile, see
 
 You need:
 
-- An active profile - see [set up your taxpayer profile](profile-setup.md).
+- An active profile - see [set up your taxpayer profile](profile-setup.md). The
+  commands below refuse without one (`No hay un perfil activo`).
+- Your master-key passphrase. These commands open the encrypted store, so they
+  prompt for the passphrase (or read `AEAT_SECRET_PASSPHRASE` when set).
 - The date you filed the declaration at the sede.
 - Optional: the justificante - the receipt number the sede shows after you file.
+
+The runtime emits help, prompts, and messages in Spanish.
 
 ## Record the declaration
 

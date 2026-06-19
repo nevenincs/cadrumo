@@ -18,6 +18,17 @@ You need:
 - working AEAT authentication — see
   [Authenticate with AEAT](authenticate-with-aeat.md)
 
+Every command on this page needs your master-key passphrase. The tool prompts
+for it, or set `AEAT_SECRET_PASSPHRASE` to run non-interactively. The tool's
+messages are in Spanish.
+
+If you have no profile yet, create one non-interactively with `--quiet` (a bare
+`profile create NAME` opens an interactive wizard instead):
+
+```bash
+aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
+```
+
 ## Pull a receipt
 
 Fetch the justificante for one filed period and store it in your profile:
@@ -25,6 +36,16 @@ Fetch the justificante for one filed period and store it in your profile:
 ```bash
 aeat app live justificante pull --modelo 130 --year 2026 --period 1T
 ```
+
+`pull` is live-only: it reads from AEAT and needs the configured authentication
+session. `--modelo`, `--year`, and `--period` are all required. When auth is
+not set up, the pull refuses before contacting AEAT with a Cl@ve identity
+message (`La identidad de Cl@ve Móvil no coincide...`); on a first run the real
+cause is usually that no AEAT session is configured yet - set one up with
+[Authenticate with AEAT](authenticate-with-aeat.md). To work from a receipt PDF
+you already downloaded by hand, parse it locally instead with `aeat app modelo
+reconcile file --file PATH` (see
+[Reconcile a filed modelo against its justificante](reconcile.md)).
 
 The pull is read-only at AEAT. The output reports the stored capture: its
 snapshot id, the expediente it belongs to, the CSV verification code printed

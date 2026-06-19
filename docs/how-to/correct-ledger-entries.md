@@ -4,7 +4,13 @@ Fix wrong transactions in your ledger without losing track of what changed. Ever
 
 ## Before you start
 
-You need a ledger with transactions in it. To find the transaction you want to fix, list your transactions and view one in detail:
+You need:
+
+- An active taxpayer profile. Every command below works on the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
+- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `AEAT_SECRET_PASSPHRASE`.
+- A ledger with transactions in it.
+
+To find the transaction you want to fix, list your transactions and view one in detail:
 
 ```bash
 aeat app ledger list
@@ -57,25 +63,29 @@ aeat app ledger split <transaction-id> --child-amount 100.00 --child-description
 
 Amounts and descriptions pair up one per part: the first amount goes with the first description, and so on. The original transaction becomes the split parent, and the parts carry the balance from then on.
 
+The split output prints one `Id de transacción hija` row per part, each showing the short id and the full id. Copy those ids - the merge command needs them to undo the split.
+
 ## Merge split parts back
 
-To undo a split, merge the parts back together. Name every sibling part - the command refuses a partial merge:
+To undo a split, merge the parts back together using the child ids the split printed. Name every sibling part - the command refuses a partial merge:
 
 ```bash
 aeat app ledger merge --child-id <id1> --child-id <id2> --reason "undo split" --yes
 ```
 
-The parts and the original parent move to history, and the merge creates a fresh transaction in their place.
+The parts and the original parent move to history, and the merge creates a fresh transaction in their place. If you no longer have the split output, the parts are active rows: run `aeat app ledger list` and read their ids from the listing.
 
 ## Stash a transaction you are unsure about
 
-Stash sets a transaction aside. A stashed transaction leaves the everyday lists and totals.
+Stash sets a transaction aside for later. A stashed transaction is kept out of ordinary work.
 
 Use stash for a row you have not resolved yet and archive for a row you have deliberately set aside, such as a confirmed duplicate. Both are reversible: [restore](#restore-a-stashed-or-archived-transaction) returns the row to active.
 
 ```bash
 aeat app ledger stash <transaction-id> --reason "waiting for invoice" --yes
 ```
+
+The command prints the transaction's id, date, amount, and description, but not its new lifecycle state. To confirm the change took effect, view the row - `aeat app ledger view <transaction-id>` shows the lifecycle state (`STASHED`).
 
 ## Archive a transaction
 
@@ -85,6 +95,8 @@ Archive keeps a transaction in history but out of ordinary work - it's the right
 aeat app ledger archive <transaction-id> --reason "duplicate imported row" --yes
 ```
 
+Like stash, the command prints the transaction's fields but not its new lifecycle state. Run `aeat app ledger view <transaction-id>` to confirm the row reads `ARCHIVED`.
+
 ## Restore a stashed or archived transaction
 
 If you stashed or archived a transaction by mistake, restore it to active. Restore is the inverse of stash and archive: the row returns to your everyday lists and totals.
@@ -93,10 +105,10 @@ If you stashed or archived a transaction by mistake, restore it to active. Resto
 aeat app ledger restore <transaction-id> --reason "stashed by mistake" --yes
 ```
 
-Restore accepts the same id prefix the other commands accept. To recover several rows stashed by mistake, list the stashed rows first, then restore each one - you do not need to reset the whole ledger:
+Restore accepts the same id prefix the other commands accept. To recover several rows stashed by mistake, restore each one by id - you do not need to reset the whole ledger. List does not have a stashed-only filter, so identify the stashed rows from the ids you stashed, or from each row's lifecycle state shown by `view`:
 
 ```bash
-aeat app ledger list --filter classification=NOT_YET_PROCESSED
+aeat app ledger view <transaction-id>
 aeat app ledger restore <transaction-id> --reason "bulk stash undo" --yes
 ```
 

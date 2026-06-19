@@ -4,6 +4,20 @@ Use this after the ledger row exists in [Work with Transactions](import-bank-sta
 If the provider CLI is not installed, on `PATH`, and authenticated already,
 start with [Set up LLM classification providers](setup-llm-classification.md).
 
+## Before you start
+
+You need:
+
+- An active profile - see [set up your taxpayer profile](profile-setup.md) - and
+  at least one transaction in its ledger to classify.
+- Your master-key passphrase. The command opens the encrypted ledger, so it
+  prompts for the passphrase (or reads `AEAT_SECRET_PASSPHRASE` when set).
+- The provider CLI installed, on `PATH`, and logged in. A logged-out provider
+  makes the command refuse and relay the provider's own error (for example
+  `La clasificacion por LLM fallo: claude CLI exited with 1: 'Not logged in ...'`).
+
+The runtime emits help, prompts, and messages in Spanish.
+
 ```bash
 aeat app ledger classify <transaction-id> --llm claude
 ```
@@ -22,10 +36,18 @@ sends that row to the selected local provider CLI. The provider suggests:
 - an expense category, when it can choose one from the allowed category list
 - confidence and a short reason
 
-The preview output includes the transaction id, provider, suggested
-classification, suggested category when present, confidence, reason,
-provenance, and whether the result was persisted. In preview mode, it is not
-persisted.
+The default preview output shows the transaction id, the suggested
+classification, the suggested category when present, the confidence, and the
+reason, followed by a line telling you to re-run with `--apply`,
+`--classification`, or nothing. In preview mode nothing is saved.
+
+For the full machine-readable record - including the provider, the `provenance`
+(`llm:<provider>`), and `persisted` (`false` in preview) - run the same command
+with the global JSON flag before the subcommand:
+
+```bash
+aeat --format json app ledger classify <transaction-id> --llm claude
+```
 
 Classification does not contact AEAT and does not submit anything. The provider
 CLI may contact its own external service depending on your provider setup; see
@@ -119,9 +141,10 @@ Apply a suggestion only after review:
 aeat app ledger classify <transaction-id> --llm claude --apply
 ```
 
-The applied suggestion is saved to the active profile's ledger. It records
-that an LLM was used, along with the confidence and reason. Review it
-afterwards:
+The applied suggestion is saved to the active profile's ledger. The apply
+output shows the transaction id, `clasificado-por llm:<provider>`, and the new
+review status; the provenance, confidence, and reason are recorded with the
+classification event. Review it afterwards:
 
 ```bash
 aeat app ledger view <transaction-id>

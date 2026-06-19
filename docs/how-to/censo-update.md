@@ -20,6 +20,17 @@ You need:
 - AEAT authentication configured for read-only live access; see
   [Authenticate with AEAT](authenticate-with-aeat.md)
 
+Every command on this page needs your master-key passphrase. The tool prompts
+for it, or set `AEAT_SECRET_PASSPHRASE` to run non-interactively. The tool's
+messages are in Spanish.
+
+If you have no profile yet, create one non-interactively with `--quiet` (a bare
+`profile create NAME` opens an interactive wizard instead):
+
+```bash
+aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
+```
+
 Check the active profile first:
 
 ```bash
@@ -65,8 +76,14 @@ aeat config profile censo pull
 ```
 
 This live read uses the active profile and the configured AEAT authentication,
-and saves a snapshot under the profile. It does not apply those values yet. It
-requires an active AEAT authentication session.
+and saves a snapshot under the profile. It does not apply those values yet.
+
+The pull needs AEAT authentication configured for the active profile. When auth
+is not set up, it refuses before contacting AEAT with a Cl@ve identity message
+(`La identidad de Cl@ve Móvil no coincide con la identidad fiscal del perfil
+activo`). That wording points at an identity mismatch, but on a first run the
+real cause is usually that no AEAT session is configured yet - set one up with
+[Authenticate with AEAT](authenticate-with-aeat.md).
 
 If AEAT returns no usable censo facts, the pull can stop with a no-facts error.
 
