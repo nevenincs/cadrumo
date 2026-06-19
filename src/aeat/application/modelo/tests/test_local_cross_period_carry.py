@@ -67,16 +67,20 @@ _T4 = datetime(2026, 7, 10, 9, 0, 0, tzinfo=UTC)
 _CARRY_BINDING_ID = "modelo-130-resultados-negativos-anteriores"
 
 # Inputs that drive Modelo 130 1T to a NEGATIVE Diferencia (casilla 17):
-# rendimiento neto 30000 - 12000 = 18000; pago fraccionado 20% = 3600; minoracion
-# casilla 13 = 100 (prev-year net income binding defaults to 0); casilla 14 = 3500;
-# a manual casilla-16 deduction of 5000 forces casilla 17 = 3500 - 0 - 5000 = -1500,
-# so saldo-negativo-fin-periodo = max(0, 1500) = 1500 > 0 and seeds the next quarter.
+# casilla 01 (income) and 02 (gastos) are resolver-owned and resolve to 0 for this
+# empty transaction bucket, so rendimiento neto is 0; the manual casilla-16
+# deduction of 5000 then forces casilla 17 negative, so saldo-negativo-fin-periodo
+# > 0 and seeds the next quarter. The exact seed is read back from the persisted
+# revision (anti-tautology), never hand-derived from the formula.
 # Casilla 05 ("Pagos fraccionados anteriores") is now a bound carry (Stage 2);
 # at 1T its expanding span is empty (absent-by-design = 0), so it is NOT supplied
 # as a manual input here.
 _NEGATIVE_1T_INPUTS: dict[str, Decimal] = {
-    "01": Decimal("30000"),
-    "02": Decimal("12000"),
+    # Casilla 01 (income) and 02 (gastos) are resolver-owned (the enrolled
+    # LedgerRentaIncome/Gasto aggregation resolvers); they return 0 for this
+    # empty transaction bucket and must not be supplied as manual inputs. The
+    # negative result that seeds the carry comes from the manual casilla-16
+    # deduction below applied against a zero rendimiento neto.
     "06": Decimal("0"),
     "08": Decimal("0"),
     "10": Decimal("0"),
@@ -85,15 +89,16 @@ _NEGATIVE_1T_INPUTS: dict[str, Decimal] = {
     "18": Decimal("0"),
 }
 # Casilla "01" (actividad-económica gross income) is now owned by the enrolled
-# LedgerRentaIncomeAggregationSourceResolver.  Callers must not supply it
-# on the aggregation path; the resolver returns zero for an empty transaction
-# bucket, which is correct for these carry-forward tests that do not seed income
-# transactions.  The carry-forward assertion (casilla 15 == 1T saldo-negativo)
-# is independent of casilla 01 and remains valid with resolver-supplied zero.
-# Casilla 05 (now a bound carry) and casilla 15 (the carry under test) are both
-# resolved by the previous_filing pipeline at 2T, never supplied as manual inputs.
+# LedgerRentaIncomeAggregationSourceResolver, and casilla "02" (Gastos) by the
+# enrolled LedgerRentaGastoAggregationSourceResolver.  Callers must not supply
+# either on the aggregation path; both resolvers return zero for an empty
+# transaction bucket, which is correct for these carry-forward tests that do not
+# seed income or expense transactions.  The carry-forward assertion (casilla 15
+# == 1T saldo-negativo) is independent of casilla 01/02 and remains valid with
+# resolver-supplied zero.  Casilla 05 (now a bound carry) and casilla 15 (the
+# carry under test) are both resolved by the previous_filing pipeline at 2T,
+# never supplied as manual inputs.
 _2T_INPUTS_WITHOUT_15: dict[str, Decimal] = {
-    "02": Decimal("12000"),
     "06": Decimal("0"),
     "08": Decimal("0"),
     "10": Decimal("0"),
@@ -211,22 +216,21 @@ def test_app_filing_source_kind_is_not_official_evidence() -> None:
     assert APP_FILING_SOURCE_KIND not in _OFFICIAL_SOURCE_KINDS
 
 
-def test_locally_filed_upstream_does_not_satisfy_filing_clean_state(repos: _Repos) -> None:
-    """D1 (E2E): a locally-filed 1T does NOT let 2T FILE — it still blocks on evidence.
+def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) -> None:
+    """Decision B (same-year): a same-year locally-filed 1T lets 2T FILE with a disclosing advisory.
 
-    Filing 1T persists an ``app_filing`` carry observation. When 2T is then verified and
-    filed, the cross-period clean-state guard must still raise
-    ``LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE`` for the carried dependency: auto-carry
-    feeds calculate/draft, but filing a dependent period requires real external evidence.
-    The non-official source is the single decision that keeps the carry from laundering
-    an unevidenced chain past the filing gate.
+    Filing 1T persists an ``app_filing`` carry observation. A SAME-FILING-YEAR dependent
+    period (2T) is admitted: the clean-state guard clears the official-evidence-delta
+    blockers for the present, value-consistent app_filing chain and flags a non-blocking
+    ``non_official_local_chain_advisory`` so the non-official basis is surfaced
+    (``no-silent-under-declaration``). The ``app_filing`` source stays non-official, and a
+    cross-YEAR non-official prior still blocks. The within-year reconstruction can reach
+    export; the operator files every period with AEAT externally.
     """
     from ....domain.modelos import CalculationRevisionState, upsert_calculation_revision
     from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
     from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
     from ...calculations._cross_period_clean_state import CrossPeriodCleanStateBlocker
-    from .. import file_modelo_revision
-    from .._action_errors import ModeloCrossPeriodCleanStateError
     from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
@@ -264,11 +268,11 @@ def test_locally_filed_upstream_does_not_satisfy_filing_clean_state(repos: _Repo
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), verificado_2t))
     revision_2t = verificado_2t
 
-    # Structural proof (robust to message truncation): the 2T clean-state verdict for the
-    # 1T previous_filing dependency carries LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE, the
-    # exact blocker that fires because the upstream observation's source_kind is the
-    # non-official app_filing. This is the single decision that keeps the carry from
-    # laundering an unevidenced chain past the filing gate.
+    # Decision B (same-year scope): the same-year 1T (M130/2026) previous_filing
+    # dependency is admitted - its official-evidence-delta blockers are cleared (the row
+    # is clean) and it carries the disclosing non-official-local-chain advisory. A
+    # cross-YEAR dependency (the M100 prior-year minoración evidence) is NOT relaxed, so
+    # the anti-laundering scope holds. The app_filing source stays non-official.
     verdict = _cross_period_clean_state_verdict_for_work_unit(
         work_unit_2t,
         observation_repository=CalculationObservationRepository(),
@@ -277,33 +281,22 @@ def test_locally_filed_upstream_does_not_satisfy_filing_clean_state(repos: _Repo
         verification_repository=VerificationReportCatalogueRepository(objects=bv_repo.secure_object_repository),
     )
     assert verdict is not None
-    assert not verdict.clean
-    assert CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE in verdict.blockers
-
-    from ....domain.deadlines import IVARegime, TaxpayerProfile
-
-    profile = TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
+    same_year = [
+        d
+        for d in verdict.dependencies
+        if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026
+    ]
+    assert same_year, "expected the same-year M130/2026 carry dependency"
+    assert all(d.clean for d in same_year)
+    assert all(d.non_official_local_chain_advisory for d in same_year)
+    assert all(
+        CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE not in d.blockers
+        for d in same_year
     )
-    # And the filing transition itself is refused (verify the gate is wired, not just the
-    # verdict computable).
-    with pytest.raises(ModeloCrossPeriodCleanStateError):
-        file_modelo_revision(
-            revision_2t.calculation_revision_id,
-            actor="operator-A",
-            workflow_profile=profile,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=bv_repo,
-            clock=_T4,
-        )
+    assert verdict.has_non_official_local_chain_advisory
+    # The cross-YEAR dependency is NOT relaxed - the same-year scope is the safety boundary.
+    cross_year = [d for d in verdict.dependencies if d.requirement.filing_year != 2026]
+    assert all(not d.non_official_local_chain_advisory for d in cross_year)
 
 
 def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repos) -> None:
