@@ -953,7 +953,11 @@ class WorkflowEngine:
             f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == BaseSeverity.ERROR
         )
         if error_findings:
-            errors_summary = _summary_text(f"Draft {draft.draft_id} has {len(error_findings)} ERROR finding(s)")
+            descriptions = _draft_blocking_finding_descriptions(draft)
+            errors_summary = _summary_text(
+                f"Draft {draft.draft_id} has {len(error_findings)} ERROR finding(s): "
+                + ("; ".join(descriptions) if descriptions else "see verification report")
+            )
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.VALIDATING_DRAFT,
