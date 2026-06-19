@@ -85,7 +85,7 @@ For the legal references in machine-readable form, render the report as JSON. `-
 aeat --format json app modelo verification-report view <verification-report-id>
 ```
 
-Each finding in the JSON output carries `legal_refs` and `source_refs`. Some findings have no legal reference (for example, a cross-period advisory), so those fields are empty for them.
+Each finding in the JSON output carries `legal_refs` and `source_refs`. Most findings name a legal reference - a cross-period dependency, for example, cites the law behind the prior-filing carry. A few purely structural checks, such as an unresolved registry snapshot, have none, so those fields are empty for them.
 
 Blocking findings prevent the draft from becoming verified, and export needs a verified calculation. Warnings do not block; read them, decide whether they apply to you, and move on.
 
@@ -181,6 +181,8 @@ Verification does not check filing deadlines. It still runs for a past period an
 If the deadline has passed, file late through AEAT's own channels; consult AEAT or an advisor about any surcharges that may apply.
 
 ## Where to get help
+
+Command labels and messages display in Spanish to match the official AEAT forms, while this guide is in English. The field names this guide names - `granted_verificado_completo`, `completeness_status`, `finding_legal_refs` - match the output exactly, so you can map a Spanish line back to the step that describes it.
 
 If a report or an error message does not match what this guide describes, see [Diagnose and repair](troubleshooting.md). Unfamiliar terms are defined in the {doc}`glossary </_generated/glossary>`. Before you share command output to ask for help, remove personal tax identifiers such as your NIF, CIF, DNI, NIE, or NII.
 
