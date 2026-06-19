@@ -37,7 +37,7 @@ from ....application.user_profile._orchestration import profile_create_storage_s
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
-from ....domain.iva import InvoiceKind
+from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
 
@@ -198,3 +198,57 @@ def test_link_refuses_cross_bucket_catalogue_invoice(cli_runner: CliRunner) -> N
     reloaded = InvoiceCatalogueRepository().load().get(foreign_invoice.invoice_id)
     assert reloaded is not None
     assert reloaded.linked_transaction_ids == (), reloaded.linked_transaction_ids
+
+
+def test_catalogue_create_stamps_intra_community_category(cli_runner: CliRunner) -> None:
+    """``--operation-type E`` stamps the iva_category the M349 calculation reads.
+
+    Without it the catalogue invoice defaults to a domestic operation and never
+    reaches Modelo 349. The supported goods/triangular codes (E/A/T) map onto an
+    intra-community category; this is the CLI counterpart of the resolver test
+    that proves the category drives the M349 aggregate.
+    """
+    result = cli_runner.invoke(
+        app,
+        [
+            "app", "ledger", "invoice", "catalogue", "create",
+            "--kind", "issued",
+            "--counterparty-nif", "DE345678901",
+            "--counterparty-name", "Kunde GmbH",
+            "--invoice-number", "EU-2026-001",
+            "--invoice-date", "2026-02-10",
+            "--taxable-base", "2000.00", "--iva-rate", "0",
+            "--country-code", "DE", "--operation-type", "E",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    invoice_id = _line_value(result.output, "invoice_id")
+
+    stored = InvoiceCatalogueRepository().load().get(invoice_id)
+    assert stored is not None, "catalogue invoice missing after create"
+    assert stored.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+
+
+def test_catalogue_create_refuses_unrepresentable_operation_type(cli_runner: CliRunner) -> None:
+    """A service/rectification/miscellany code is refused, never silently dropped.
+
+    The recapitulative resolver derives a clave only for E/A/T, so an
+    ``--operation-type S`` invoice would vanish from M349. The verb refuses it
+    and names the supported set rather than persisting an invoice that cannot
+    reach the calculation it was created for.
+    """
+    result = cli_runner.invoke(
+        app,
+        [
+            "app", "ledger", "invoice", "catalogue", "create",
+            "--kind", "issued",
+            "--counterparty-nif", "DE345678901",
+            "--counterparty-name", "Kunde GmbH",
+            "--invoice-number", "EU-2026-002",
+            "--invoice-date", "2026-02-10",
+            "--taxable-base", "2000.00", "--iva-rate", "0",
+            "--country-code", "DE", "--operation-type", "S",
+        ],
+    )  # fmt: skip
+    assert result.exit_code != 0, result.output
+    assert "E, A, T" in result.output, result.output

@@ -13,7 +13,12 @@ from enum import StrEnum
 
 import typer
 
-from ...application.invoices import create_catalogue_invoice, invoice_direction_to_source_kind
+from ...application.invoices import (
+    create_catalogue_invoice,
+    invoice_direction_to_source_kind,
+    remove_catalogue_invoice,
+    resolve_catalogue_invoice_from_repository,
+)
 from ...application.ledger import (
     BusinessOperationInvoiceInputError,
     BusinessOperationInvoicePatch,
@@ -25,7 +30,7 @@ from ...application.ledger import (
 )
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
-from ...domain.iva import InvoiceKind
+from ...domain.iva import InvoiceKind, IvaCategory
 from ._common import (
     _bad,
     _emit_envelope,
@@ -41,6 +46,8 @@ from ._common import (
 from ._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceCreateResult,
     CatalogueInvoiceListResult,
+    CatalogueInvoiceRemoveResult,
+    CatalogueInvoiceViewResult,
 )
 from ._ledger_payloads import (
     InvoiceAddResult,
@@ -103,6 +110,48 @@ def _parse_intracom_operation_type(raw: str | None, *, translation_key: str) -> 
                 valid=valid,
             ),
         ) from None
+
+
+# M349 operation-type codes the calculation-feeding catalogue can represent
+# today: the resolver derives the intra-community clave (E/A/T) from the rich
+# invoice's ``iva_category``. Goods supplies (E), goods acquisitions (A), and
+# triangular operations (T) map onto a category; the service codes (S/I), the
+# rectification code (R), and the miscellany code (M) have no category the
+# resolver reads, so they are refused here rather than silently dropped.
+_OPERATION_TYPE_TO_IVA_CATEGORY: dict[IntracomOperationType, IvaCategory] = {
+    IntracomOperationType.E: IvaCategory.INTRA_COMMUNITY_SUPPLY,
+    IntracomOperationType.A: IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+    IntracomOperationType.T: IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
+}
+
+
+def _catalogue_iva_category_for_operation_type(
+    operation_type: IntracomOperationType | None,
+) -> IvaCategory | None:
+    """Map an M349 operation type onto the catalogue invoice's ``iva_category``.
+
+    Returns ``None`` when no operation type is supplied (a domestic invoice).
+    Refuses the service / rectification / miscellany codes the resolver cannot
+    yet represent, naming the supported set, so the operator is never misled
+    into believing an unrepresentable invoice will reach Modelo 349.
+    """
+    if operation_type is None:
+        return None
+    category = _OPERATION_TYPE_TO_IVA_CATEGORY.get(operation_type)
+    if category is None:
+        supported = ", ".join(t.value for t in _OPERATION_TYPE_TO_IVA_CATEGORY)
+        raise _bad(
+            tr(
+                "cli.app.ledger.invoice.catalogue.operation_type_unsupported",
+                default=(
+                    f"--operation-type {operation_type.value} cannot feed Modelo 349 "
+                    f"from the catalogue yet; supported: {supported}."
+                ),
+                value=operation_type.value,
+                supported=supported,
+            ),
+        )
+    return category
 
 
 def _business_invoice_payload(record) -> dict[str, object]:
@@ -446,19 +495,39 @@ def catalogue_create(
             default="Counterparty ISO 3166-1 alpha-2 country code.",
         ),
     ),
+    operation_type: str | None = typer.Option(
+        None,
+        "--operation-type",
+        help=tr(
+            "cli.app.ledger.invoice.operation_type_help",
+            default=(
+                "M349 operation type: E entrega, S servicios, T triangular,"
+                " R rectificación, A adquisición bienes, I adquisición servicios,"
+                " M miscelánea."
+            ),
+        ),
+    ),
     notes: str = typer.Option("", "--notes"),
 ) -> None:
     """Create a rich linkable invoice in the reconciliation catalogue.
 
     The slim ``invoice add`` record cannot be linked to a transaction; this
     verb mints the rich :class:`Invoice` whose content-addressed ``invoice_id``
-    is the value ``aeat app ledger link --invoice-id`` resolves.
+    is the value ``aeat app ledger link --invoice-id`` resolves. Supplying an
+    intra-community ``--operation-type`` (E/A/T) stamps the invoice's
+    ``iva_category`` so the Modelo 349 recapitulative calculation can read it.
     """
     from pydantic import ValidationError
 
     from ...domain.invoices import InvoiceValidationError
 
     bucket_id = _business_invoice_bucket_id()
+    iva_category = _catalogue_iva_category_for_operation_type(
+        _parse_intracom_operation_type(
+            operation_type,
+            translation_key="cli.app.ledger.invoice.operation_type_invalid",
+        ),
+    )
     try:
         result = create_catalogue_invoice(
             bucket_id=bucket_id,
@@ -472,6 +541,7 @@ def catalogue_create(
             iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
             currency=currency,
             notes=notes,
+            iva_category=iva_category,
         )
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
@@ -533,6 +603,87 @@ def catalogue_list(
         command="ledger.invoice.catalogue.list",
         result=CatalogueInvoiceListResult.model_validate(payload),
         lines=lines,
+    )
+
+
+@catalogue_app.command(
+    "view",
+    help=tr(
+        "cli.app.ledger.invoice.catalogue.view_help",
+        default="Show one reconciliation catalogue invoice by id or unambiguous prefix.",
+    ),
+)
+def catalogue_view(
+    ctx: typer.Context,
+    invoice_id: str = typer.Argument(
+        ...,
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.invoice_id_help",
+            default="Catalogue invoice id (or unambiguous prefix).",
+        ),
+    ),
+) -> None:
+    """Show one rich catalogue invoice, resolving a full id or unambiguous prefix.
+
+    The catalogue invoice carries a long content-addressed id that
+    ``aeat app ledger link --invoice-id`` resolves; this verb lets an operator
+    confirm that id and inspect the invoice's linked transactions before
+    linking or removing it. A not-found id, or a prefix matching more than one
+    invoice, is a typed refusal naming the candidates — never a silent miss.
+    """
+    bucket_id = _business_invoice_bucket_id()
+    invoice = resolve_catalogue_invoice_from_repository(bucket_id=bucket_id, invoice_id=invoice_id)
+    _emit_envelope(
+        ctx,
+        command="ledger.invoice.catalogue.view",
+        result=CatalogueInvoiceViewResult.model_validate(_catalogue_invoice_payload(invoice)),
+        lines=_catalogue_invoice_lines(invoice),
+    )
+
+
+@catalogue_app.command(
+    "remove",
+    help=tr(
+        "cli.app.ledger.invoice.catalogue.remove_help",
+        default="Delete one reconciliation catalogue invoice.",
+    ),
+)
+def catalogue_remove(
+    ctx: typer.Context,
+    invoice_id: str = typer.Argument(
+        ...,
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.invoice_id_help",
+            default="Catalogue invoice id (or unambiguous prefix).",
+        ),
+    ),
+    yes: bool = typer.Option(
+        False,
+        "--yes",
+        help=tr("cli.app.ledger.invoice.yes_help", default="Confirm removal."),
+    ),
+) -> None:
+    """Delete one rich catalogue invoice, resolving a full id or unambiguous prefix.
+
+    Removal is refused while the invoice still carries linked transactions:
+    deleting it from the catalogue alone would leave the transaction side
+    citing a vanished invoice — the operator must ``link``-unlink first. The
+    write rides the sanctioned :class:`InvoiceCatalogueRepository`.
+    """
+    if not yes:
+        raise _bad(
+            tr(
+                "cli.app.ledger.invoice.yes_required",
+                default="--yes is required to remove an invoice record",
+            ),
+        )
+    bucket_id = _business_invoice_bucket_id()
+    result = remove_catalogue_invoice(bucket_id=bucket_id, invoice_id=invoice_id)
+    _emit_envelope(
+        ctx,
+        command="ledger.invoice.catalogue.remove",
+        result=CatalogueInvoiceRemoveResult.model_validate(_catalogue_invoice_payload(result.invoice)),
+        lines=_catalogue_invoice_lines(result.invoice),
     )
 
 
