@@ -26,6 +26,7 @@ from ...core.logging import get_logger
 from ...core.time import now as _utcnow
 from ...domain.deadlines import (
     ModeloDeadline,
+    NoDeadlineWindowsError,
     ObligationStatus,
     Schedule,
     TaxpayerProfile,
@@ -422,7 +423,35 @@ class WorkflowEngine:
         """
         started = _utcnow()
         try:
-            schedule: Schedule = compute_obligation_schedule(self._deadline_engine, profile, today=today)
+            if (
+                purpose is WorkflowPurpose.FILE
+                and target_modelo is not None
+                and target_period is not None
+                and target_period.filing_year != today.year
+            ):
+                # Decision A (cross-period filing deadlock ADR): a late LOCAL
+                # `work file` for an explicitly targeted, closed-window prior
+                # period must still resolve its (now-overdue) obligation, so
+                # the next period's cross-period carry can read its filed
+                # observation. Resolve the schedule in the TARGET period's
+                # filing year rather than today's. The as-of-today
+                # ``pending_obligations`` projection keeps calling
+                # ``compute_obligation_schedule(today)`` (the common branch
+                # below), so the single-producer invariant is untouched.
+                try:
+                    schedule: Schedule = self._deadline_engine.compute(
+                        profile, target_period.filing_year, today=today
+                    )
+                except NoDeadlineWindowsError:
+                    # The target period's filing year has no registry deadline
+                    # windows at all (a year AEAT never published windows for -
+                    # a far-future or pre-registry year). No obligation could have
+                    # existed, so degrade to the as-of-today schedule; the absent
+                    # target then resolves to NO_PENDING_OBLIGATION below rather
+                    # than a spurious UNHANDLED_EXCEPTION.
+                    schedule = compute_obligation_schedule(self._deadline_engine, profile, today=today)
+            else:
+                schedule = compute_obligation_schedule(self._deadline_engine, profile, today=today)
         except SiteHealthError as exc:
             self._record_site_unavailable(
                 stage=WorkflowStage.COMPUTING_DEADLINES,
@@ -478,6 +507,37 @@ class WorkflowEngine:
             )
 
         if obligation.closes_on < today:
+            if target_modelo is not None and target_period is not None:
+                # Decision A: an explicitly targeted but closed-window
+                # obligation is filed LOCALLY and late (extemporánea, con
+                # recargo) rather than refused. `work file` records a local
+                # mark-as-filed and contacts AEAT zero times; the obligation
+                # genuinely existed, so this is the late-filer / prior-year
+                # reconstruction path that seeds the cross-period carry. A
+                # target that never had an obligation still falls through to
+                # NO_PENDING_OBLIGATION above.
+                overdue_summary = _summary_text(
+                    f"Obligation modelo={obligation.modelo} "
+                    f"period={obligation.period} closed on {obligation.closes_on.isoformat()}; "
+                    "recording a late local filing (extemporánea, con recargo).",
+                )
+                steps.append(
+                    WorkflowStep(
+                        stage=WorkflowStage.COMPUTING_DEADLINES,
+                        started_at=started,
+                        ended_at=_utcnow(),
+                        success=True,
+                        summary=overdue_summary,
+                        details={
+                            "modelo": obligation.modelo,
+                            "period": str(obligation.period),
+                            "closes_on": obligation.closes_on.isoformat(),
+                            "overdue": "true",
+                            "extemporanea": "true",
+                        },
+                    ),
+                )
+                return obligation
             closed_summary = _summary_text(
                 f"Deadline for modelo={obligation.modelo} "
                 f"period={obligation.period} closed on {obligation.closes_on.isoformat()}",
@@ -1057,10 +1117,22 @@ class WorkflowEngine:
             cert_details = {"cert_skipped": "not_wired"}
 
         try:
+            # The AEAT filing-window preflight gate is skipped for BOTH local
+            # purposes. VERIFY is calendar-independent (work-verify
+            # deadline-independence ADR). FILE is a LOCAL mark-as-filed that
+            # contacts AEAT zero times (cross-period filing deadlock ADR,
+            # Decision A): its obligation existence is already enforced at the
+            # deadline stage (NO_PENDING_OBLIGATION still refuses a never-existing
+            # obligation; an existing-but-overdue one is admitted late, con
+            # recargo). Re-applying the submission filing-window gate here would
+            # contradict that and re-block the legitimate late local filing that
+            # seeds the next period's cross-period carry. The window gate binds
+            # only an actual AEAT submission, which this app never performs.
+            skip_window = purpose in (WorkflowPurpose.VERIFY, WorkflowPurpose.FILE)
             self._submission_engine.preflight(
                 draft,
                 today=today,
-                skip_deadline_window=purpose is WorkflowPurpose.VERIFY,
+                skip_deadline_window=skip_window,
             )
         except SiteHealthError as exc:
             self._record_site_unavailable(
