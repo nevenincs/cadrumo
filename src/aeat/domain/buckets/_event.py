@@ -76,6 +76,7 @@ class BucketEventType(StrEnum):
     MODELO_RECONCILED = "modelo.reconciled"
     MODELO_EXPORTED = "modelo.exported"
     MODELO_IVA_WALLET_CORRECTED = "modelo.iva_wallet.corrected"
+    MODELO_IVA_WALLET_OVERRIDE_RECORDED = "modelo.iva_wallet.override_recorded"
     # Work-unit lifecycle
     MODELO_WORK_UNIT_CREATED = "modelo.work_unit.created"
     MODELO_WORK_UNIT_DISCARDED = "modelo.work_unit.discarded"

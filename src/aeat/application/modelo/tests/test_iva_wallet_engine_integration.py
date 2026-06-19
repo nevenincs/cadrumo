@@ -46,6 +46,7 @@ from .. import (
     calculate_modelo_revision,
     create_work_unit,
     file_modelo_revision,
+    record_iva_compensation_override_for_bucket,
     verify_modelo_revision,
 )
 from .._actions import _require_persisted_iva_compensation_decision_matches_revision
@@ -786,6 +787,67 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
         )
 
         assert revision.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("1200.00")
+
+
+def test_recorded_override_persists_decision_and_feeds_real_modelo_303_engine(tmp_path: Path) -> None:
+    """The operator-facing override recorder unblocks the cross-period carry.
+
+    `record_iva_compensation_override_for_bucket` persists a non-blocking
+    `taxpayer_override` decision, which a subsequent `calculate` (passed NO explicit
+    decision) loads from the repository and applies to casilla 110 — the operator
+    flow that releases the blocked carry without re-supplying the decision.
+    """
+    with _secure_backend(tmp_path):
+        _store_operator_profile()
+
+        decision = record_iva_compensation_override_for_bucket(
+            bucket_id="operator",
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
+            amount=Decimal("420.00"),
+            reason="Operator asserts the prior-quarter cuota a compensar pending live wallet evidence.",
+            evidence_locator="operator-review:modelo-303-prior-quarter-compensacion",
+        )
+
+        assert decision.selected_authority == "taxpayer_override"
+        assert decision.divergence == "override"
+        assert decision.blocked is False
+        assert decision.selected_amount == Decimal("420.00")
+
+        # The decision is persisted: a fresh load returns it without re-recording.
+        persisted = IvaWalletDecisionRepository().load_decision(
+            _TAXPAYER_NIF,
+            _period(_TARGET_YEAR, _TARGET_PERIOD),
+        )
+        assert persisted is not None
+        assert persisted.selected_authority == "taxpayer_override"
+        assert persisted.selected_amount == Decimal("420.00")
+
+        work_repo, calc_repo, event_repo = _work_unit_repositories()
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=_TARGET_YEAR, period=_TARGET_PERIOD)
+        work_unit = create_work_unit(
+            bucket_id="operator",
+            modelo="303",
+            filing_year=_TARGET_YEAR,
+            period=_period(_TARGET_YEAR, _TARGET_PERIOD),
+            revision_id=snapshot.revision.id,
+            repository=work_repo,
+            clock=_DECIDED_AT,
+        )
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator",
+            casilla_inputs={},
+            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+            backend_binding_values=_modelo_303_engine_inputs(),
+            iva_compensation_decision=None,
+            filing_period_date=date(2026, 6, 30),
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+            clock=_DECIDED_AT,
+        )
+
+        assert revision.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("420.00")
 
 
 def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Path) -> None:
