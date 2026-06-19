@@ -40,6 +40,7 @@ from ...domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
     TransactionIdPrefixError,
+    is_classified,
 )
 from ._common import (
     _bad,
@@ -235,6 +236,26 @@ def ledger_add(
     ),
 ) -> None:
     """Create one manual ledger transaction through the bucket-scoped backend."""
+    operator_assignable_on_add = (
+        is_classified(business_classification)
+        or business_classification is BusinessClassification.NOT_YET_PROCESSED
+    )
+    if not operator_assignable_on_add:
+        # PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE / FAILED_VALIDATION are
+        # produced by the classification pipeline, never assigned by hand. A new
+        # row is BUSINESS, PERSONAL, MIXED, or left at the NOT_YET_PROCESSED
+        # default; refuse the internal states instructively.
+        raise _bad(
+            tr(
+                "cli.ledger.add.system_state_not_assignable",
+                value=business_classification.value,
+                default=(
+                    f"Classification '{business_classification.value}' is set automatically by aeat "
+                    "and cannot be assigned by hand. Choose one of: BUSINESS, PERSONAL, MIXED, or "
+                    "omit --classification to leave the row unclassified."
+                ),
+            ),
+        )
     current_state = _state()
     transaction_repository = _tx_repo(current_state)
     validated_category_id = _validate_category_id(category_id)
@@ -536,6 +557,21 @@ def ledger_classify(
             tr(
                 "cli.ledger.classify.classification_required",
                 default="--classification is required when --from-csv is not provided.",
+            ),
+        )
+    if not is_classified(classification):
+        # NOT_YET_PROCESSED / PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE /
+        # FAILED_VALIDATION are pipeline-managed states; an operator classifies a
+        # row only as BUSINESS, PERSONAL, or MIXED. Refuse the system states
+        # instructively rather than letting the enum Choice apply one by hand.
+        raise _bad(
+            tr(
+                "cli.ledger.classify.system_state_not_assignable",
+                value=classification.value,
+                default=(
+                    f"Classification '{classification.value}' is set automatically by aeat and "
+                    "cannot be assigned by hand. Choose one of: BUSINESS, PERSONAL, MIXED."
+                ),
             ),
         )
     validated_category_id = _validate_category_id(category_id)

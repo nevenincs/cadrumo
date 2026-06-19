@@ -33,6 +33,7 @@ from ...domain.transactions import (
     Transaction,
     TransactionLifecycleState,
     TransactionValidationError,
+    is_classified,
 )
 from ...domain.transactions._protocols import TransactionCatalogueRepositoryProtocol
 from ._actions_common import (
@@ -108,18 +109,16 @@ def bulk_classify_from_csv(
     parse_failures: list[BulkClassifyFailure] = []
     for idx, raw_row in enumerate(reader):
         try:
-            parsed_rows.append(
-                BulkClassifyRow.model_validate(
-                    # A present-but-blank optional cell (e.g. an empty
-                    # ``taxable_base`` on a classification-only row) maps to
-                    # ``None`` so the row behaves exactly as if the column were
-                    # absent; a populated cell carries its trimmed text into the
-                    # same typed ``Decimal`` coercion the single-classify path
-                    # uses, so a malformed value reds the row rather than
-                    # coercing silently.
-                    {k: (v.strip() or None if v is not None else v) for k, v in raw_row.items()},
-                    strict=False,
-                ),
+            parsed = BulkClassifyRow.model_validate(
+                # A present-but-blank optional cell (e.g. an empty
+                # ``taxable_base`` on a classification-only row) maps to
+                # ``None`` so the row behaves exactly as if the column were
+                # absent; a populated cell carries its trimmed text into the
+                # same typed ``Decimal`` coercion the single-classify path
+                # uses, so a malformed value reds the row rather than
+                # coercing silently.
+                {k: (v.strip() or None if v is not None else v) for k, v in raw_row.items()},
+                strict=False,
             )
         except (ValidationError, ValueError, KeyError) as exc:
             parse_failures.append(
@@ -129,6 +128,23 @@ def bulk_classify_from_csv(
                     reason=str(exc),
                 ),
             )
+            continue
+        if not is_classified(parsed.classification):
+            # Mirror the single-classify guard: only BUSINESS / PERSONAL / MIXED
+            # are operator-assignable. A row naming a pipeline-managed state
+            # (SKIPPED_BY_RULE, FAILED_VALIDATION, …) reds rather than applying.
+            parse_failures.append(
+                BulkClassifyFailure(
+                    row_index=idx,
+                    transaction_id=parsed.transaction_id,
+                    reason=(
+                        f"classification '{parsed.classification.value}' is set automatically by aeat; "
+                        "use BUSINESS, PERSONAL, or MIXED"
+                    ),
+                ),
+            )
+            continue
+        parsed_rows.append(parsed)
 
     apply_failures: list[BulkClassifyFailure] = []
     all_event_ids: list[str] = []
