@@ -1341,6 +1341,7 @@ cli:
         list_help: Lista las reglas de clasificación almacenadas ordenadas por prioridad.
         priority_help: Prioridad numérica; un valor menor se evalúa primero (por defecto
           100).
+        empty_pattern: 'Una regla necesita un --description-pattern no vacío (una palabra o frase, p. ej. "software") para coincidir con las descripciones de las transacciones.'
     live:
       app_help: Comandos de observación AEAT en vivo de solo lectura
       borrador:

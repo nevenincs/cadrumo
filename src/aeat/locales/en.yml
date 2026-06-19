@@ -1245,6 +1245,7 @@ cli:
         list_header: "priority\tclassification\tpattern\trule_id"
         list_help: List stored classification rules ordered by priority.
         priority_help: Numeric priority; lower value is evaluated first (default 100).
+        empty_pattern: 'A rule needs a non-empty --description-pattern (a word or phrase, e.g. "software") to match transaction descriptions.'
     live:
       app_help: Read-only AEAT live observation commands
       borrador:

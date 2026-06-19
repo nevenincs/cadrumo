@@ -199,6 +199,26 @@ def test_rule_add_invalid_regex_rejected() -> None:
     assert result.exit_code != 0
 
 
+@pytest.mark.parametrize("pattern", ["", "   "])
+def test_rule_add_empty_or_whitespace_pattern_rejected_cleanly(pattern: str) -> None:
+    """``rule add`` with an empty/whitespace pattern is refused with a clean message.
+
+    The empty string trips the model's ``min_length=1`` as a raw pydantic
+    ``ValidationError`` (not a ``ValueError``); without the boundary guard it
+    leaked the pydantic repr/URL. A whitespace-only pattern matches nothing
+    useful. Both must surface the instructive refusal, never a pydantic dump.
+    """
+    result = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "rule", "add", "--description-pattern", pattern, "--classification", "BUSINESS"],
+    )
+    assert result.exit_code != 0, result.output
+    combined = result.output or ""
+    assert "pydantic.dev" not in combined, combined
+    assert "input_value" not in combined, combined
+    assert "--description-pattern" in combined, combined
+
+
 def test_rule_list_empty() -> None:
     list_result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "rule", "list"])
     assert list_result.exit_code == 0, list_result.output
