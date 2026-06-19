@@ -31,6 +31,25 @@ expression = 'implies_nonzero(["DP200014:00562", "DP200014B:00592"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31"]
 
+# Soundness gate (accounting-result stage): the pre-IS-tax accounting result must
+# be determined when the entity reports a positive after-tax accounting result.
+# casilla 00500 (RESULTADO DE LA CUENTA DE PÉRDIDAS Y GANANCIAS, after-tax) and
+# casilla 00501 (resultado contable ANTES de Impuesto Sociedades — the fiscal-base
+# starting point) are both operator-entered manual inputs; 00501 = 00500 + the IS
+# tax expense booked, so a positive 00500 implies a positive 00501. Without this
+# guard an operator can enter a positive accounting profit (00500) yet leave the
+# fiscal base starting point 00501 at zero, which cascades to base imponible cero
+# and cuota cero — a silent under-declaration the verify gate would otherwise
+# grant, and one the existing 00501→00552 advisory cannot catch because 00501 is
+# its antecedent. ADVISORY (non-blocking) and the earliest link in the IS-result
+# chain (00500→00501→00552→00562→00592); mirrors the no-silent-under-declaration
+# stance and the base-determination ADR Phase-1 advisory.
+[[revisions."2024-y-siguientes".verification_predicates]]
+predicate_id = "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo"
+expression = 'implies_nonzero(["00500", "00501"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-27-2014:art-10", "ley-27-2014:art-30"]
+
 # Elective-cap BLOCKING gate (LIS art. 26.1): the operator-elective applied BIN
 # compensation (DP200014:00547) must NOT exceed the computed art.26.1 ceiling
 # (DP200014:bin-aplicada-maxima = min(stock, max(1M, 70%·base previa))). When the

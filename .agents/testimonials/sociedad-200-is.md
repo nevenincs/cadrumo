@@ -44,14 +44,20 @@ owner-clean fix was landed:
   Diseño de Registros so a `.boe` can actually be written — remains a large
   M202-owned registry campaign (the export dir `…/modelos/202/…/export/` does not
   exist). 10/10 export-verb integration tests pass.
-- **Finding 1 — NOT a bug (reclassified after grounding).** RAG + grep confirm M200
-  has **zero ledger-source bindings**; the resultado contable / cuenta de pérdidas
-  y ganancias is operator-entered *accrual accounting* (manual casillas), not the
-  bank ledger. Auto-aggregating the cash ledger into the IS P&L would be
-  *tax-incorrect* (cash vs accrual basis). The correct mitigation is the
-  under-declaration advisory — the existing `00501→00552` base guard plus my new
-  `00562→00592` cuota guard. (A peer is separately wiring M130 gastos, a different
-  modelo with a genuine ledger basis.)
+- **Finding 1 — FIXED at the source of the silent zero (earliest-stage advisory).**
+  RAG + grep confirm M200 has **zero ledger-source bindings**; resultado contable
+  is operator-entered *accrual accounting*, so auto-aggregating the cash ledger
+  would be *tax-incorrect* (cash vs accrual). The real defect F1 names is the
+  *silent* zero-tax grant on positive activity. Grounded the chain: supplying only
+  `00500=80000` (resultado contable) leaves `00501=0` → base `0` → cuota `0`, and
+  the pre-existing `00501→00552` advisory **cannot** catch it (00501 is its
+  antecedent). Fix: added the earliest-stage ADVISORY
+  `implies_nonzero(["00500","00501"])` (resultado contable positivo → resultado
+  antes de IS ≠ 0). The IS result chain now has under-declaration guards at **every
+  manual handoff** — `00500→00501` (new), `00501→00552` (existing), `00562→00592`
+  (added for F2) — so a declared profit can no longer silently grant a zero return
+  at any stage. Verify now fires the advisory (finding_count 7→8). (A peer is
+  separately wiring M130 gastos, a different modelo with a genuine ledger basis.)
 - **Findings 3 (M202 cross-period gate) and 4 (new-entity scope-out) — safe by
   design; blanket fix would be a regression.** The pre-activity scope-out
   (`_cross_period_clean_state.py`, ADR `2026-06-13-first-filer-attestation-adr`)
