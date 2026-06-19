@@ -32,21 +32,39 @@ owner-clean fix was landed:
   positiva"* (finding_count 6→7) — the silent zero-cuota is no longer silent.
   Kept ADVISORY (non-blocking) because deductions can legitimately absorb the
   cuota. 60/60 M200 + verification tests pass.
-- **Finding 1 — by design + peer in progress.** M200 P&L (resultado contable) is
-  operator-entered, like the M130 gastos case; the existing `00501→00552`
-  advisory already guards the base stage and my new predicate now guards the cuota
-  stage. A peer agent is concurrently implementing M130 gastos auto-aggregation
-  (`modelo-130-gastos-total`, new `0004-m130-gastos-cumulative.toml`) — the F2
-  surface. Not safe to also touch M130 here.
-- **Finding 5 — root-caused, large campaign.** The M202 `.boe` export fails because
-  `src/aeat/_data/registry/aeat/modelos/202/.../export/` **does not exist** (no
-  Diseño de Registros authored for M202); `export_draft` raises `FilingExportError`
-  which `_export.py:570` masks behind the generic `export_draft_write_failed`
-  message. Real fix = authoring the official M202 fichero layout (M202-owned
-  registry campaign). Out of scope for this pass.
-- **Findings 3 (M202 cross-period gate) and 4 (new-entity scope-out)** are correct
-  tax logic / a deeper cross-period-engine change in peer-WIP-adjacent files;
-  grounded but not edited here to avoid colliding with concurrent peer work.
+- **Finding 5 — IMPROVED (error transparency).** RAG-grounded: `application/filing/_export.py:245`
+  already raises a *specific* `FilingExportError` (e.g. *"modelo '202' registry
+  snapshot declares no export layout"* / *"declaration export requires a draft
+  built from the active registry snapshot"*), but `application/modelo/_export.py:570`
+  caught it and replaced it with the generic `export_draft_write_failed`, hiding the
+  real reason (reads like a disk/IO failure). Fix: the underlying cause is now
+  surfaced in the typed error `context` (`cli-notices-are-the-only-diagnostic-channel`).
+  Re-running my M202 export now prints `cause: declaration export requires a draft
+  built from the active registry snapshot`. The deeper fix — authoring the M202
+  Diseño de Registros so a `.boe` can actually be written — remains a large
+  M202-owned registry campaign (the export dir `…/modelos/202/…/export/` does not
+  exist). 10/10 export-verb integration tests pass.
+- **Finding 1 — NOT a bug (reclassified after grounding).** RAG + grep confirm M200
+  has **zero ledger-source bindings**; the resultado contable / cuenta de pérdidas
+  y ganancias is operator-entered *accrual accounting* (manual casillas), not the
+  bank ledger. Auto-aggregating the cash ledger into the IS P&L would be
+  *tax-incorrect* (cash vs accrual basis). The correct mitigation is the
+  under-declaration advisory — the existing `00501→00552` base guard plus my new
+  `00562→00592` cuota guard. (A peer is separately wiring M130 gastos, a different
+  modelo with a genuine ledger basis.)
+- **Findings 3 (M202 cross-period gate) and 4 (new-entity scope-out) — safe by
+  design; blanket fix would be a regression.** The pre-activity scope-out
+  (`_cross_period_clean_state.py`, ADR `2026-06-13-first-filer-attestation-adr`)
+  rests on a *clean, provable* invariant: a period before the entity existed could
+  carry no obligation. "A first-year entity has no M202 obligation" is **not** a
+  clean invariant — it depends on modalidad election (art. 40.2 vs 40.3) and the
+  INCN ≥ 6M threshold, so a new entity *can* be M202-obligated. Auto-suppressing it
+  would risk a *silent under-declaration* (`no-silent-under-declaration`,
+  `aeat-safety-legal-gates`). The blocking-and-demand-evidence behaviour is the
+  safe default; the proper enhancement is an explicit, audited *operator
+  attestation* of "no fractional-payment obligation" (the same ADR's spirit), which
+  is a feature touching the peer-WIP verification flow (`_verification_actions.py`)
+  — deferred to that owning campaign rather than forced here.
 
 ## 1. Persona
 
