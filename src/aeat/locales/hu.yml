@@ -103,6 +103,9 @@ adapters:
         id_token_module_not_importable: A google-auth id_token modul nem importálható.
         id_token_verification_failed: A Google id_token ellenőrzése sikertelen.
         loopback_bind_failed: A helyi visszahurkos OAuth-vevő nem tudott portot foglalni.
+        non_interactive: 'A Google OAuth elutasítva: az interaktív böngészős hozzájárulási
+          folyamathoz vezérlő terminál szükséges, de ezt a parancsot nem interaktívan
+          futtatták.'
         oauthlib_not_importable: A google-auth-oauthlib nem importálható; az OAuth-folyamat
           nem indítható el.
         profile_state_unresolved: A Google OAuth nem tudja feloldani a kiválasztott
@@ -112,7 +115,6 @@ adapters:
         unsecured_mode_refused: A Google OAuth megtagadta a hozzáférést, mert a titkos
           tár nem biztonságos módban fut, és az aktív profil valódi spanyol adóazonosítót
           tartalmaz.
-        non_interactive: 'A Google OAuth elutasítva: az interaktív böngészős hozzájárulási folyamathoz vezérlő terminál szükséges, de ezt a parancsot nem interaktívan futtatták.'
       suggestions:
         close_loopback_port: Zárja be a szabad visszahurkos portot foglaló alkalmazást,
           és próbálja újra.
@@ -121,9 +123,10 @@ adapters:
         repair_profile_state: Futtassa az `aeat config profile health` parancsot,
           majd javítsa ki vagy váltsa át az aktív profilt, mielőtt újrapróbálja a
           Google-parancsot.
+        run_from_interactive_terminal: Futtassa az 'aeat config google login' parancsot
+          interaktív terminálban, elérhető webböngészővel.
         use_keyring_or_synthetic: Állítsa be az aeat_secret_store_backend=keyring
           értéket, vagy váltson az aktív profilt szintetikus teszt-adóazonosítóra.
-        run_from_interactive_terminal: 'Futtassa az ''aeat config google login'' parancsot interaktív terminálban, elérhető webböngészővel.'
     profile_binding:
       errors:
         no_active_profile: Nincs aktív AEAT-profil kötve a Google OAuth-hoz.
@@ -562,6 +565,10 @@ application:
           mozgast.
         invalid_valuation_method: 'A keszlet ertekelesi mod nem tamogatott: %{valuation_method}.'
   invoices:
+    creation:
+      errors:
+        duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
+        unsupported_iva_rate: 'A(z) %{iva_rate} áfakulcs nem ismert; használja az alábbiak egyikét: %{accepted}.'
     importing:
       errors:
         import_file_read_failed: 'A szamlaimport fajl nem olvashato: %{path_name}.'
@@ -652,7 +659,10 @@ application:
         casilla-azonosítók hiányoznak a javított térképből.'
       amendment_verification_refused_no_snapshot: A nyilvántartásban nincs pillanatkép
         a kért modellhez, évhez és időszakhoz.
-      calculate_binding_unknown: '--binding %{key} egyik binding azonositonak sem felel meg ebben a revizioban. Elfogadott binding azonositok: %{accepted}. Hasznalja a `aeat app modelo bindings list <MODELO>` parancsot az ervenyes azonositok listazasahoz.'
+      calculate_binding_unknown: '--binding %{key} egyik binding azonositonak sem
+        felel meg ebben a revizioban. Elfogadott binding azonositok: %{accepted}.
+        Hasznalja a `aeat app modelo bindings list <MODELO>` parancsot az ervenyes
+        azonositok listazasahoz.'
       calculate_casilla_ambiguous: 'A --casilla %{key} több casillához illeszkedik
         ebben a revízióban: %{candidates}. A pontosításhoz adja meg a PREFIX:NNNNN
         alakú azonosítót.'
@@ -1180,6 +1190,11 @@ cli:
         year_help: Adóév.
       invoice:
         add_help: Új üzleti számla regisztrálása.
+        catalogue:
+          country_code_help: 'A partner ISO 3166-1 alfa-2 országkódja (alapértelmezés: ES).'
+          create_help: 'Kapcsolható egyeztetési számla létrehozása a katalógusban.'
+          group_help: 'Egyeztetési katalógus számlái, amelyek tranzakciókhoz kapcsolhatók.'
+          list_help: 'Az egyeztetési katalógus számláinak listázása.'
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
           műveletek).
         eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
@@ -1773,6 +1788,11 @@ cli:
         missing_binding_guidance: '%{base} Adja meg az értéket a --binding KEY=VALUE
           kapcsolóval ezen a parancson, vagy futtassa: `%{discover}` az összes hiányzó
           kötés listázásához.'
+        missing_binding_guidance_ledger: '%{base} Ez az érték a bucket főkönyvéből
+          összesítődik, és nem adható meg a --binding kapcsolóval. Adja hozzá vagy
+          sorolja be a megfelelő főkönyvi sorokat, futtassa az `aeat app ledger preflight`
+          parancsot, majd számoljon újra. Futtassa: `%{discover}` az összes hiányzó
+          kötés listázásához.'
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         name_help: Opcionális megjelenítési név a munkaegységhez.
         name_required: Adja meg a --name erteket.
@@ -1911,7 +1931,6 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
-        missing_binding_guidance_ledger: '%{base} Ez az érték a bucket főkönyvéből összesítődik, és nem adható meg a --binding kapcsolóval. Adja hozzá vagy sorolja be a megfelelő főkönyvi sorokat, futtassa az `aeat app ledger preflight` parancsot, majd számoljon újra. Futtassa: `%{discover}` az összes hiányzó kötés listázásához.'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
@@ -2053,6 +2072,8 @@ cli:
         loopback_bind: 'Nem sikerült helyi portot megnyitni a Google-bejelentkezés
           befejezéséhez: {detail}'
         network: 'Nem sikerült elérni a Google-t: {detail}'
+        non_interactive: 'A Google bejelentkezéshez interaktív terminál és webböngésző
+          szükséges, de ezt a parancsot nem interaktívan futtatták: {detail}'
         profile_unbound: 'Nincs aktív profil. Futtasd: aeat config switch NÉV, vagy
           add meg a --profile kapcsolót.'
         scope_insufficient: 'A Google-hozzáféréshez megadott engedélyek nem elegendők.
@@ -2066,7 +2087,6 @@ cli:
           módban fut valódi NIF-el rendelkező profil esetén.
         validation: 'A Google-hoz megadott adatok nem feleltek meg az érvényesítésnek:
           {detail}'
-        non_interactive: 'A Google bejelentkezéshez interaktív terminál és webböngésző szükséges, de ezt a parancsot nem interaktívan futtatták: {detail}'
       folder:
         folder_id_help: Google Drive mappa azonosítója.
         get_help: A beállított Google Drive gyökérmappa megjelenítése.
@@ -2737,6 +2757,7 @@ cli:
       business_pct: Üzleti %
       category_id: Kategória
       checked: Ellenőrzött tranzakciók
+      child_id: Gyermektranzakció-azonosító
       children: Gyermek elemek
       counterparty: Szerződő fél
       created_event_id: Létrehozó bucket-esemény
@@ -2783,7 +2804,6 @@ cli:
       warning: Figyelmeztetés
       warnings: Figyelmeztetések
       'yes': Igen
-      child_id: 'Gyermektranzakció-azonosító'
     link:
       actor_help: A bucket esemenyekhez rogzitett operatori cimke.
       errors:
@@ -4168,7 +4188,8 @@ errors:
       nem elérhető.
     reconciliation_drift: Az egyeztetés számtani vagy azonossági eltérést észlelt
       a bevallások között. A folytatás előtt tekintse át az összegeket.
-    reconciliation_evidence_invalid: 'A PDF nem volt olvasható. Ellenőrizd, hogy a fájl az AEAT-igazolás, és nem más dokumentum, és hogy nem sérült-e.'
+    reconciliation_evidence_invalid: A PDF nem volt olvasható. Ellenőrizd, hogy a
+      fájl az AEAT-igazolás, és nem más dokumentum, és hogy nem sérült-e.
     refused_access_gate_live_read_not_enabled: Az AEAT élő olvasási hozzáférés le
       van tiltva. Ez a művelet az aktuális konfiguráció alatt nem léphet kapcsolatba
       az AEAT-tal.
@@ -4234,6 +4255,8 @@ errors:
       vagy összeg) nem ment át az érvényesítésen.
     refused_financial_usage_ratios_censo_mismatch: Egy mentett otthoni irodahasználati
       arány eltér a censotól, amely a kötelező jogi forrás. Igazítsa a censo értékéhez.
+    refused_google_non_interactive: A Google bejelentkezéshez interaktív terminál
+      és böngésző szükséges; futtassa interaktív shellből.
     refused_google_profile_unbound: Nincs aktív profil kötve. Válasszon profilt, vagy
       használja a --profile kapcsolót.
     refused_google_unsecured_mode: A Google nem engedélyezhető nem biztonságos tárolási
@@ -4376,7 +4399,6 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
-    refused_google_non_interactive: 'A Google bejelentkezéshez interaktív terminál és böngésző szükséges; futtassa interaktív shellből.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -4520,7 +4542,8 @@ review:
       item_not_found: A felülvizsgálati elem nem található.
       reserved_kind: A felülvizsgálati típus fenntartott, és nem kibocsátott felülvizsgálati
         elem.
-      unknown_kind: 'Ismeretlen felülvizsgálati elemtípus. Elfogadott --kind értékek: %{accepted_kinds}.'
+      unknown_kind: 'Ismeretlen felülvizsgálati elemtípus. Elfogadott --kind értékek:
+        %{accepted_kinds}.'
       unsupported_item_type: 'Nem támogatott felülvizsgálati elemtípus: %{item_type}.'
   transaction:
     summary: Tranzakció besorolásra vár

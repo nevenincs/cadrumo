@@ -85,12 +85,43 @@ aeat app ledger invoice remove <invoice-id> --kind received --yes
 and `remove` need `--kind` to address the record; `remove` refuses without
 `--yes`. An unambiguous prefix of the invoice id is enough.
 
-An invoice record from `invoice add` stands on its own and cannot currently be
-linked to a transaction. The `link --invoice-id` option exists, but it expects
-an id from the reconciliation invoice catalogue (the catalogue the import and
-reconcile flows populate), not an id from `invoice add`; passing an
-`invoice add` id is refused. To bind a document to a transaction, store it as
-evidence and link that instead - see below.
+An invoice record from `invoice add` stands on its own and is not the record
+`link --invoice-id` binds. `link --invoice-id` expects an id from the
+reconciliation invoice catalogue, not an id from `invoice add`; passing an
+`invoice add` id is refused.
+
+## Link an invoice to a transaction
+
+To bind an invoice to the transaction that settles it, create the invoice in
+the reconciliation catalogue, then link it. Create the catalogue invoice:
+
+```bash
+aeat app ledger invoice catalogue create --kind received --counterparty-nif A58818501 --counterparty-name "Papelería Sol SL" --invoice-number "2026-0142" --invoice-date 2026-03-10 --taxable-base 100.00 --iva-rate 21
+```
+
+`--kind`, `--counterparty-nif`, `--counterparty-name`, `--invoice-number`,
+`--invoice-date` (YYYY-MM-DD), and `--taxable-base` are required; `--iva-rate`
+takes one of 0, 4, 10, or 21 (omit it for an exempt invoice). The command
+prints the catalogue invoice id - a long id distinct from the short
+`invoice add` id. Note it down.
+
+Bind it to the transaction it settles:
+
+```bash
+aeat app ledger link <transaction-id> --invoice-id <catalogue-invoice-id>
+```
+
+The link is bidirectional: the invoice records the transaction and the
+transaction records the invoice. The invoice must belong to the active profile;
+an invoice from a different profile is refused. List the catalogue invoices any
+time:
+
+```bash
+aeat app ledger invoice catalogue list
+```
+
+To bind a document (a PDF or image) to a transaction, store it as evidence and
+link that instead - see below.
 
 ## List, view, update, and remove evidence records
 

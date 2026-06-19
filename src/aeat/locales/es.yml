@@ -108,6 +108,9 @@ adapters:
         id_token_verification_failed: La verificación del id_token de Google ha fallado.
         loopback_bind_failed: El receptor OAuth loopback local no pudo asignar un
           puerto.
+        non_interactive: 'Google OAuth rechazado: el flujo interactivo de consentimiento
+          en el navegador necesita un terminal interactivo, pero este comando se ejecutó
+          de forma no interactiva.'
         oauthlib_not_importable: google-auth-oauthlib no se puede importar; el flujo
           OAuth no puede iniciarse.
         profile_state_unresolved: Google OAuth no puede resolver el estado del perfil
@@ -117,7 +120,6 @@ adapters:
         unsecured_mode_refused: Google OAuth se rechazó porque el almacén de secretos
           está en modo inseguro y el perfil activo lleva un identificador fiscal español
           real.
-        non_interactive: 'Google OAuth rechazado: el flujo interactivo de consentimiento en el navegador necesita un terminal interactivo, pero este comando se ejecutó de forma no interactiva.'
       suggestions:
         close_loopback_port: Cierra la aplicación que esté ocupando un puerto loopback
           huérfano y vuelve a intentarlo.
@@ -125,9 +127,10 @@ adapters:
           impresa.
         repair_profile_state: Ejecuta `aeat config profile health` y repara o cambia
           el perfil activo antes de reintentar el comando de Google.
+        run_from_interactive_terminal: Ejecuta 'aeat config google login' desde un
+          terminal interactivo con un navegador web disponible.
         use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o cambia
           el perfil activo a un identificador fiscal sintético de prueba.
-        run_from_interactive_terminal: 'Ejecuta ''aeat config google login'' desde un terminal interactivo con un navegador web disponible.'
     profile_binding:
       errors:
         no_active_profile: No hay ningún perfil AEAT activo enlazado para Google OAuth.
@@ -611,6 +614,10 @@ application:
         invalid_valuation_method: 'El metodo de valoracion de inventario no esta admitido:
           %{valuation_method}.'
   invoices:
+    creation:
+      errors:
+        duplicate_invoice: 'Ya existe una factura con la misma identidad en el catálogo: %{invoice_id}.'
+        unsupported_iva_rate: 'El tipo de IVA %{iva_rate} no se reconoce; usa uno de: %{accepted}.'
     importing:
       errors:
         import_file_read_failed: 'No se pudo leer el archivo de importacion de facturas:
@@ -713,7 +720,9 @@ application:
         faltan identificadores de casilla requeridos en el mapa corregido.'
       amendment_verification_refused_no_snapshot: El registro no tiene una instantánea
         para el modelo, año y período solicitados.
-      calculate_binding_unknown: '--binding %{key} no coincide con ningun binding de esta revision. Bindings aceptados: %{accepted}. Use `aeat app modelo bindings list <MODELO>` para listar los bindings validos.'
+      calculate_binding_unknown: '--binding %{key} no coincide con ningun binding
+        de esta revision. Bindings aceptados: %{accepted}. Use `aeat app modelo bindings
+        list <MODELO>` para listar los bindings validos.'
       calculate_casilla_ambiguous: '--casilla %{key} coincide con varias casillas
         de esta revision: %{candidates}. Indica la forma cualificada PREFIX:NNNNN
         para desambiguar.'
@@ -1250,6 +1259,11 @@ cli:
         year_help: Ejercicio fiscal
       invoice:
         add_help: Registra una nueva factura de negocio
+        catalogue:
+          country_code_help: 'Código de país ISO 3166-1 alfa-2 de la contraparte (por defecto ES).'
+          create_help: 'Crea una factura de conciliación vinculable en el catálogo.'
+          group_help: 'Facturas del catálogo de conciliación que se vinculan a transacciones.'
+          list_help: 'Lista las facturas del catálogo de conciliación.'
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
           intracomunitarias UE)
         eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
@@ -1863,6 +1877,11 @@ cli:
         missing_binding_guidance: '%{base} Aporta el valor con --binding KEY=VALUE
           en este comando, o ejecuta `%{discover}` para ver todos los bindings que
           el cálculo todavía necesita.'
+        missing_binding_guidance_ledger: '%{base} Este valor se agrega desde el libro
+          mayor del bucket y no puede aportarse con --binding. Añade o clasifica las
+          filas correspondientes del libro mayor, ejecuta `aeat app ledger preflight`
+          y vuelve a calcular. Ejecuta `%{discover}` para ver todos los bindings que
+          el cálculo todavía necesita.'
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         name_help: Nombre de visualización opcional de la unidad de trabajo
         name_required: Proporcione --name.
@@ -1996,7 +2015,6 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
-        missing_binding_guidance_ledger: '%{base} Este valor se agrega desde el libro mayor del bucket y no puede aportarse con --binding. Añade o clasifica las filas correspondientes del libro mayor, ejecuta `aeat app ledger preflight` y vuelve a calcular. Ejecuta `%{discover}` para ver todos los bindings que el cálculo todavía necesita.'
   common:
     errors:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
@@ -2137,6 +2155,9 @@ cli:
         loopback_bind: 'No se pudo abrir un puerto local para completar el inicio
           de sesión en Google: {detail}'
         network: 'No se pudo contactar con Google: {detail}'
+        non_interactive: 'El inicio de sesión de Google necesita un terminal interactivo
+          con navegador web, pero este comando se ejecutó de forma no interactiva:
+          {detail}'
         profile_unbound: No hay ningun perfil activo. Ejecuta aeat config switch NAME
           o indica --profile.
         scope_insufficient: El acceso concedido a Google no incluye los permisos necesarios.
@@ -2150,7 +2171,6 @@ cli:
           funciona en modo no seguro para un perfil con un NIF real.
         validation: 'Los datos proporcionados para Google no superaron la validación:
           {detail}'
-        non_interactive: 'El inicio de sesión de Google necesita un terminal interactivo con navegador web, pero este comando se ejecutó de forma no interactiva: {detail}'
       folder:
         folder_id_help: Id de la carpeta de Google Drive
         get_help: Muestra la carpeta raíz de Google Drive configurada
@@ -2812,6 +2832,7 @@ cli:
       business_pct: Porcentaje de negocio
       category_id: Categoría
       checked: Movimientos comprobados
+      child_id: Id de transacción hija
       children: hijas
       counterparty: Contraparte
       created_event_id: Evento bucket de creación
@@ -2858,7 +2879,6 @@ cli:
       warning: Aviso
       warnings: Avisos
       'yes': Sí
-      child_id: 'Id de transacción hija'
     link:
       actor_help: Etiqueta del operador registrada en los eventos del bucket.
       errors:
@@ -4307,7 +4327,8 @@ errors:
       declaración todavía no está disponible.
     reconciliation_drift: La conciliación detectó una discrepancia aritmética o de
       identidad entre declaraciones. Revisa los importes antes de continuar.
-    reconciliation_evidence_invalid: 'No se pudo leer el PDF. Comprueba que el archivo es el justificante de AEAT y no otro documento, y que no esté dañado.'
+    reconciliation_evidence_invalid: No se pudo leer el PDF. Comprueba que el archivo
+      es el justificante de AEAT y no otro documento, y que no esté dañado.
     refused_access_gate_live_read_not_enabled: El acceso de lectura en vivo a la AEAT
       está desactivado. Esta operación no puede contactar con la AEAT en la configuración
       actual.
@@ -4380,6 +4401,8 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un porcentaje de uso de oficina
       en casa guardado no coincide con el censo, que es la fuente legal vinculante.
       Alinéalo con el valor del censo.
+    refused_google_non_interactive: El inicio de sesión de Google necesita un terminal
+      interactivo con navegador; ejecútalo desde una shell interactiva.
     refused_google_profile_unbound: No hay ningún perfil activo vinculado. Selecciona
       un perfil o usa --profile.
     refused_google_unsecured_mode: No se puede autorizar Google en modo de almacenamiento
@@ -4536,7 +4559,6 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_google_non_interactive: 'El inicio de sesión de Google necesita un terminal interactivo con navegador; ejecútalo desde una shell interactiva.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -4680,7 +4702,8 @@ review:
       item_not_found: No se encontro el elemento solicitado en la cola de revision.
       reserved_kind: El tipo de revisión está reservado y no es un elemento de revisión
         emitido.
-      unknown_kind: 'Tipo de elemento de revisión desconocido. Valores --kind admitidos: %{accepted_kinds}.'
+      unknown_kind: 'Tipo de elemento de revisión desconocido. Valores --kind admitidos:
+        %{accepted_kinds}.'
       unsupported_item_type: 'Tipo de elemento de revision no admitido: %{item_type}.'
   transaction:
     summary: Transacción pendiente de clasificación
