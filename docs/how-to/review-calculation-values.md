@@ -5,6 +5,27 @@ calculation, or when your form requires a value you must enter by hand — for
 example, a prior-year income figure or a compensation amount from an earlier
 period.
 
+## Before you start
+
+You need:
+
+- A master-key passphrase. `aeat` prompts for it, or you set
+  `AEAT_SECRET_PASSPHRASE` for a non-interactive run.
+- An active profile. Create one (the `--quiet` form skips the wizard):
+
+  ```bash
+  aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+    --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
+  ```
+
+  See [Set up your profile](profile-setup.md) for the full options.
+- A work unit for the filing you want to review. Create it before any review or
+  calculate command:
+
+  ```bash
+  aeat app modelo work create --modelo 130 --year 2026 --period 1T
+  ```
+
 ## Inspect the modelo before entering values
 
 Describe the modelo and available revisions:
@@ -37,6 +58,12 @@ aeat app modelo formulas 130 --period 1T --explain
 
 ## Review a saved calculation
 
+These commands read a saved calculation, so run a calculation first. On a fresh
+work unit with no calculation yet, they refuse with `work unit has no selectable
+current_calculation_revision_id`. Run `aeat app modelo work calculate` (see
+[Supply manual casilla values](#supply-manual-casilla-values) below) to produce a
+saved draft, then come back here.
+
 List calculation revisions for one filing:
 
 ```bash
@@ -62,15 +89,26 @@ export.
 
 ## Supply manual casilla values
 
-Use `--casilla` only when aeat asks you to supply a specific box value by
-hand. Use the box number printed on the official AEAT form — the same number
-you see on the paper or PDF version of the modelo. Run
-`aeat app modelo casillas 130 --period 1T` to see the list.
+Use `--casilla` only for a box whose input kind is `manual`. Use the box number
+printed on the official AEAT form — the same number you see on the paper or PDF
+version of the modelo. Run `aeat app modelo casillas 130 --period 1T` to see the
+list, and check the `input` column first.
 
-Example:
+`--casilla` works only on manual boxes. A `bound` box is filled from your ledger
+or another source, so `--casilla` refuses it with `cannot override bucket-derived
+source-bound casillas` (for example, Modelo 130 box `02` Gastos is `bound`). Fix
+the source instead — see [Supply a missing field value](#supply-a-missing-field-value).
+
+A first-period filing also needs its prior-period bindings supplied (record them
+as `0` when you have no prior figure). Supply the manual box and the bindings in
+the same calculate call. This example sets box `06` (Retenciones e ingresos a
+cuenta, a manual box) and seeds the three first-period bindings:
 
 ```bash
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --casilla 02=4000.00
+aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --casilla 06=100.00 \
+  --binding modelo-130-resultados-negativos-anteriores=0 \
+  --binding modelo-130-pagos-fraccionados-anteriores=0 \
+  --binding irpf.previous_year_economic_activity_net_income=0
 ```
 
 Do not enter a box value without checking the list first — read the label so
@@ -82,13 +120,13 @@ When aeat cannot fill a field automatically, the missing field appears in the
 bindings list. Use the list to see which fields need your input, then supply
 the value during calculation.
 
-List fields that still need a value:
+List every field the modelo binds, with its `source` and a `readiness` label:
 
 ```bash
 aeat app modelo bindings list --modelo 130 --year 2026 --period 1T
 ```
 
-Show only fields not yet resolved:
+Add `--missing` to focus on fields that have no value yet:
 
 ```bash
 aeat app modelo bindings list --modelo 130 --year 2026 --period 1T --missing
@@ -110,9 +148,11 @@ aeat app modelo work calculate --modelo 130 --year 2026 --period 1T --binding ir
 
 ### Where a field's value comes from
 
-The `bindings list` output shows, for each field, a `source` and a plain-language
-`readiness`. The `source` tells you who supplies the value; `readiness` says
-whether it is resolved yet. The `source` is one of:
+The `bindings list` output shows, for each field, a `source` and a `readiness`
+label. The `source` tells you who supplies the value; the `readiness` label
+restates that source in plain language (for example, `ledger source` or `prior
+filed revision`). Use the `source` to decide how to supply the value. The
+`source` is one of:
 
 - **Profile fact** - `aeat` fills it from your taxpayer profile, such as
   residence, declaration type, or family composition. Update your profile instead

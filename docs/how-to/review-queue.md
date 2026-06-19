@@ -54,9 +54,17 @@ aeat app review queue --kind modelo_finding --explain
 aeat app review view <item-id> --explain
 ```
 
-The JSON output always carries the `legal_refs`; `--explain` adds them to the
-text table. Transaction and invoice items carry no legal references — their
-obligation comes from your own records, not from a registry rule.
+Ask for JSON with the global `--format json` flag, placed before the command:
+
+```bash
+aeat --format json app review queue
+aeat --format json app review view <item-id>
+```
+
+The JSON output always carries a `legal_refs` field on every row; `--explain`
+adds the references to the text table. Transaction and invoice items carry an
+empty `legal_refs` — their obligation comes from your own records, not from a
+registry rule.
 
 ## Where items come from and what clears them
 

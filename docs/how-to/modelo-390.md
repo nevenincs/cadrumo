@@ -50,17 +50,60 @@ Start with the local filing context:
 
 Modelo 390 combines two kinds of values:
 
-- annual IVA ledger aggregates for the full filing year
-- previous-filing values from Modelo 303, where the registry names the 303
-  casillas and periods that feed the annual summary
+- annual IVA ledger aggregates for the full filing year (binding source
+  `ledger_iva_aggregation`)
+- 303-derived values pulled from the same year's quarters (binding source
+  `relation_prefill`, reported by verification findings as
+  `origin=registry_relation`), where the registry names the 303 casillas and
+  periods that feed the annual summary
 
-The 303-derived inputs must come from stored observations or be supplied
-explicitly. The CLI does not guarantee that remote AEAT history is current,
-captured, or reconciled.
+The 303-derived inputs depend on each quarter's filed evidence. Verification
+hard-blocks until that evidence is present (see "The 303 evidence the verify
+gate requires" below). The CLI does not guarantee that remote AEAT history is
+current, captured, or reconciled.
 
 The implemented 390 registry bindings include 303 quarter sums for annual
 devengada, deducible, and regimen-general result reconciliation. They also
 include compensation values copied or summed from the same year's 303 periods.
+
+## The 303 evidence the verify gate requires
+
+Modelo 390 verification depends on the four quarterly Modelo 303 returns.
+`work calculate` for Modelo 390 produces a draft, but `work verify` hard-blocks
+with `cross_period_dependency_unclean` blocking findings until each 303 quarter
+(`1T`, `2T`, `3T`, `4T`) has stored *filed* evidence. A calculated or verified
+303 draft is not enough: the gate reports
+`blockers=missing_observation, missing_current_filing_record` for every quarter
+that lacks a filed record.
+
+Establish each quarter's evidence one of two ways before you verify Modelo 390:
+
+- Mark each 303 quarter as filed locally, while its AEAT filing-obligation
+  window is open. Prepare and verify each quarter (see
+  [Prepare a Modelo 303 IVA filing](modelo-303.md)), then:
+
+  ```bash
+  aeat app modelo work file --modelo 303 --year 2025 --period 1T
+  ```
+
+  `work file` records the filing locally only; it does not submit to AEAT, and
+  it refuses outside the obligation window.
+
+- Capture or reconcile the official AEAT justificante for each quarter:
+
+  ```bash
+  aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A
+  aeat app modelo reconcile file --modelo 303 --year 2025 --period 1T \
+    --file ./303-2025-1T-justificante.pdf
+  ```
+
+  `live filed pull-sources` reads filed declarations from AEAT and refuses when
+  AEAT authentication is not configured (it needs a Cl@ve identity matching the
+  active profile). `reconcile file` reads a local justificante PDF and never
+  contacts AEAT.
+
+If you cannot establish a quarter's evidence, do not force the annual return
+past the block. Repair the missing 303 evidence first, or report the gap.
 
 ## Check each visible filing target
 
@@ -134,8 +177,12 @@ aeat app modelo iva-wallet balance --as-of-year 2025
 aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
 aeat app modelo iva-wallet correct --filing-year 2024 --period 4T --amount 1200.50 --reason "fix opening balance" --confirm
 aeat app live iva-wallet history
-aeat app live iva-wallet pull-history
+aeat app live iva-wallet pull-history --from-year 2024 --to-year 2025
 ```
+
+`pull-history` requires both `--from-year` and `--to-year`; it reads filed
+Modelo 303 history from AEAT and refuses when AEAT authentication is not
+configured.
 
 Use `seed` only when you have a real opening compensation balance from before
 the local Modelo 303 history. If you seeded a wrong amount, `correct` overwrites
@@ -160,11 +207,12 @@ aeat app modelo casillas 390 --period 0A
 aeat app modelo formulas 390 --period 0A --explain
 ```
 
-The binding list should show ledger IVA aggregation bindings and `previous_filing`
-bindings from Modelo 303. Treat the previous-filing rows as values that must be
-reviewed against the prior 303 periods. Do not assume `work calculate` scans
-every local 303 work unit, every calculation revision, or every local filing
-record automatically.
+The binding list shows ledger IVA aggregation bindings (source
+`ledger_iva_aggregation`) and 303-derived bindings (source `relation_prefill`,
+their ids prefixed `modelo-390-prev-303-`). Treat the 303-derived rows as values
+that must be reviewed against the prior 303 periods. Do not assume `work
+calculate` scans every local 303 work unit, every calculation revision, or every
+local filing record automatically.
 
 ## Calculate the annual draft
 
@@ -240,10 +288,13 @@ Verify the annual draft:
 aeat app modelo work verify --modelo 390 --year 2025 --period 0A
 ```
 
-If verification reports missing casillas, missing bindings, or other findings,
-fix the source data or reviewed inputs and calculate again. Verification promotes
-a complete draft to `verificado_completo`; it does not prove that AEAT has
-accepted the filing.
+If verification reports `cross_period_dependency_unclean` blocking findings,
+each named 303 quarter is missing filed evidence. Establish it first (see
+"The 303 evidence the verify gate requires" above), then verify again. If
+verification reports missing casillas, missing bindings, or other findings, fix
+the source data or reviewed inputs and calculate again. Verification promotes a
+complete draft to `verificado_completo`; it does not prove that AEAT has accepted
+the filing.
 
 Inspect the stored verification report when you need the detailed result:
 
@@ -299,24 +350,27 @@ for a dependable annual filing workflow.
 Use these limits when deciding how much evidence to review:
 
 - Modelo 390 does not look at all local filing history regardless of state.
-  Previous-filing resolution is keyed by modelo, filing year, and period.
-- Stored previous-filing observations can come from local app paths or parsed
-  AEAT/live capture paths. They carry `source_kind`; the resolver does not apply
-  a verified/filed/reconciled lifecycle-state filter.
+  303-derived resolution is keyed by modelo, filing year, and period.
+- The calculate-time resolver and the verify gate treat 303 evidence
+  differently. The resolver that prefills 303-derived values does not apply a
+  lifecycle-state filter, so `work calculate` can produce a draft. The verify
+  gate is stricter: it blocks until each 303 quarter has a filed record or a
+  captured/reconciled AEAT justificante (see "The 303 evidence the verify gate
+  requires").
 - The annual `work calculate` path should not be treated as a general "latest
   active 303 revision" selector. Use `work revision --select filed`,
   `latest-verified`, or exact revision IDs when you need a specific 303 value.
 - Local `work file` records, AEAT captured filed observations, and justificante
   reconciliation are related but separate evidence surfaces. The current CLI
   does not require them to be in sync before every Modelo 390 calculation.
-- Missing 303 history can leave 390 previous-filing bindings unavailable or
-  force operator-supplied reviewed values. Do not assume calculation always
-  fails early just because one prior period is absent.
+- Missing 303 history can leave 390 303-derived bindings unavailable or force
+  operator-supplied reviewed values. Calculation can still produce a draft, but
+  verify blocks until the missing quarters have filed evidence.
 - Remote AEAT state is not binding unless you explicitly capture or reconcile
   it in the workflow you are running.
 
 For a conservative annual close, calculate and review every 303 period, reconcile
-official evidence where available, inspect the 390 previous-filing bindings, and
+official evidence where available, inspect the 390 303-derived bindings, and
 verify the annual draft before export. If the CLI does not expose the check you
 need, report that gap instead of documenting it as enforced behavior.
 

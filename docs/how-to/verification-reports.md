@@ -6,8 +6,23 @@ Verification checks your saved calculation locally against the official form rul
 
 You need:
 
-- An active profile. See [Set up your profile](profile-setup.md).
-- A calculated draft for the filing you want to check. See the [quickstart](quickstart.md).
+- A master-key passphrase. `aeat` prompts for it, or you set `AEAT_SECRET_PASSPHRASE` for a non-interactive run.
+- An active profile with a name and surnames. The `--quiet` form skips the wizard:
+
+  ```bash
+  aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+    --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
+  ```
+
+  The `--activity-start-date` matters for a first filing: it scopes out the dependency on a prior period you never filed, so verification can pass. See [Set up your profile](profile-setup.md).
+- A calculated draft for the filing you want to check. For a first-period Modelo 303, record some business activity in the ledger, create the work unit, then calculate:
+
+  ```bash
+  aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
+    --description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+  aeat app modelo work create --modelo 303 --year 2026 --period 1T
+  aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+  ```
 
 If you want to understand how filings and saved calculations fit together, read [the filing spine](filing-spine.md) first.
 
@@ -21,7 +36,7 @@ aeat app modelo work verify --modelo 303 --year 2026 --period 1T
 
 Period tokens are `0A` for annual, `1T` to `4T` for quarters, and `01` to `12` for months.
 
-When the draft passes, the result shows `granted_verificado_completo` `true` and a `completeness_status` of `complete` - the saved calculation is now verified and ready to export.
+With the profile and draft above, this first-period Modelo 303 passes. When the draft passes, the result shows `granted_verificado_completo` `true` and a `completeness_status` of `complete` - the saved calculation is now verified and ready to export.
 
 When the draft does not pass, the result shows `granted_verificado_completo` `false` and a `completeness_status` of `incomplete` or `blocked`. The saved calculation stays a draft.
 
@@ -62,7 +77,15 @@ Each finding carries:
 - The affected casilla, where one applies.
 - A message describing what the rule checked.
 - A suggested next action.
-- The legal references behind the rule.
+- The legal references behind the rule, where the rule has them.
+
+For the legal references in machine-readable form, render the report as JSON. `--format json` is a global flag, so it goes before the command:
+
+```bash
+aeat --format json app modelo verification-report view <verification-report-id>
+```
+
+Each finding in the JSON output carries `legal_refs` and `source_refs`. Some findings have no legal reference (for example, a cross-period advisory), so those fields are empty for them.
 
 Blocking findings prevent the draft from becoming verified, and export needs a verified calculation. Warnings do not block; read them, decide whether they apply to you, and move on.
 
@@ -80,11 +103,13 @@ Confirm the finding you addressed is gone from the new report. Repeat until the 
 
 Incomplete means required casillas have no value yet. The report lists which ones under **missing required casillas**.
 
-Enter a value for each missing casilla and recalculate:
+For a casilla you enter by hand, supply its value and recalculate:
 
 ```bash
 aeat app modelo work calculate --modelo 303 --year 2026 --period 1T --casilla <ID>=<VALUE>
 ```
+
+`--casilla` works only on boxes whose input kind is `manual`. A box filled from your ledger or another source is `bound`, and `--casilla` refuses it with `cannot override bucket-derived source-bound casillas`. Fix the source for those — see [Review your calculation values](review-calculation-values.md). Check which kind a box is with `aeat app modelo casillas 303 --period 1T`.
 
 Then [re-run verification](#after-any-fix-re-run-verification). For the full input workflow, including where values come from and how to check them, see [Review your calculation values](review-calculation-values.md).
 
@@ -96,7 +121,13 @@ Read each finding's suggested next action first; it tells you what the tool expe
 
 - **A cross-field rule failed.** Two or more casillas disagree in a way the form rules do not allow. Check the values named in the finding against your records.
 - **A value could not be derived.** The tool needed to compute a casilla but your data did not provide enough input. Supply the missing input or enter the value directly.
-- **A prior-period record is missing.** This filing depends on a filing from an earlier period that is missing or unconfirmed. Record or confirm that earlier filing first.
+- **A prior-period record is missing.** This filing depends on a filing from an earlier period that is missing or unconfirmed. Record or confirm that earlier filing first. If you had no obligation in that earlier period because you had not started your activity yet, set your activity-start date on the profile so the dependency is scoped out:
+
+  ```bash
+  aeat config profile edit me --quiet --activity-start-date 2026-01-01
+  ```
+
+  Replace `me` with your profile name.
 
 After each fix, [re-run verification](#after-any-fix-re-run-verification).
 

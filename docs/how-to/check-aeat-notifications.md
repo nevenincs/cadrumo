@@ -8,8 +8,12 @@ of them file anything or change your AEAT records.
 ## Before you start
 
 You need:
-- an [active profile](profile-setup.md#what-the-active-profile-means)
+- an [active profile](profile-setup.md#what-the-active-profile-means). Create one
+  non-interactively with `aeat config profile create me --quiet --tax-id
+  <NIF/CIF/DNI/NIE> --name "Ana" --surnames "Garcia Lopez"`.
 - the taxpayer's fiscal ID (generalized as NIF, CIF, DNI, NIE, or NII) saved in that profile
+- the master-key passphrase that protects your local store. The tool prompts for
+  it, or set `AEAT_SECRET_PASSPHRASE` to run without a prompt.
 - AEAT live-read authentication configured; see [Authenticate with AEAT](authenticate-with-aeat.md)
 
 ---
@@ -77,7 +81,9 @@ aeat app live expedientes latest
 
 Download the box-by-box values from a return you have already filed with AEAT.
 
-List filed returns without downloading their full contents:
+List the filed returns AEAT holds, without saving their full box values. This
+still reads from AEAT live, so it needs configured authentication like any other
+live command:
 ```bash
 aeat app live filed list --modelo 303 --from-year 2020 --to-year 2026
 ```
@@ -138,8 +144,22 @@ aeat app live verify latest --surface nif_iva --nif ESB12345678
 View the list of official AEAT online portals the tool knows about and their
 authentication requirements:
 ```bash
-aeat app live portals list --category sede_modelo --modelo 303
+aeat app live portals list
 ```
+
+Narrow the list to the portals for one form with `--modelo`:
+```bash
+aeat app live portals list --modelo 303
+```
+
+Or narrow it to one category with `--category`. The accepted categories are
+`auth`, `filing`, `censo`, `consultation`, `borrador`, `payment`, and
+`calendar_reference`:
+```bash
+aeat app live portals list --category filing
+```
+
+Use `--modelo` or `--category`, not both — they are mutually exclusive.
 
 ### View portal details
 ```bash
