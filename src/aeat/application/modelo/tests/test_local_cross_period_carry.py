@@ -403,3 +403,54 @@ def _persist_prior_303(repository: CalculationObservationRepository) -> None:
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=_T1,
     )
+
+
+def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
+    """Reachability proof: with first-year activity-start, the M130 2T verdict is fully clean.
+
+    Adversarial check of the end-to-end reachability claim. The M130 minoración binding
+    (``irpf.previous_year_economic_activity_net_income``, source_modelo 100,
+    filing_year_delta -1) creates a CROSS-YEAR M100 prior-year dependency that Decision B
+    deliberately does NOT relax. For a first-year autónomo (activity-start in the filing
+    year) that cross-year M100 dep is strictly pre-activity, so the first-filer suppression
+    scopes it out; the same-year 1T dep is admitted by Decision B. Both handled => the
+    verdict is clean => the quarter is reachable to verify/export. If suppression did NOT
+    cover the previous_filing M100 dep, this verdict would be unclean (a real gap).
+    """
+    from datetime import date
+
+    from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
+    from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
+    from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
+
+    wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    _file_1t_with_negative_result(repos)
+    work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        work_unit_2t.work_unit_id,
+        casilla_inputs=_2T_INPUTS_WITHOUT_15,
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T4,
+    )
+
+    verdict = _cross_period_clean_state_verdict_for_work_unit(
+        work_unit_2t,
+        observation_repository=CalculationObservationRepository(),
+        filing_repository=ModeloRecordCatalogueRepository(objects=bv_repo.secure_object_repository),
+        calculation_repository=cr_repo,
+        verification_repository=VerificationReportCatalogueRepository(objects=bv_repo.secure_object_repository),
+        activity_start_date=date(2026, 1, 1),
+    )
+    assert verdict is not None
+    # The cross-year M100/2025 minoración dep is suppressed (pre-activity).
+    cross_year = [d for d in verdict.dependencies if d.requirement.filing_year != 2026]
+    assert cross_year, "expected the cross-year M100 prior-year minoración dependency"
+    assert all(d.suppressed_pre_activity for d in cross_year)
+    # The same-year M130/2026 dep is admitted with the disclosing advisory.
+    same_year = [d for d in verdict.dependencies if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026]
+    assert same_year and all(d.non_official_local_chain_advisory for d in same_year)
+    # Both handled -> the verdict is clean -> the quarter is reachable.
+    assert verdict.clean
