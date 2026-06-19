@@ -3,7 +3,29 @@
 Use this guide after completing the quickstart if you want to understand how
 the tool organises and stores your filing work between steps.
 
-The common command-line interface is the same one used in the quickstart:
+## Before you start
+
+You need an active profile, and the tool needs your master-key passphrase.
+
+Create a profile first if you do not have one. Pass `--quiet` for the
+non-interactive form (a bare `profile create NAME` opens an interactive wizard).
+A profile that will reach `export` must carry a name and surnames, or `export`
+refuses with "requires the operator name":
+
+```bash
+aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
+  --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
+```
+
+Every profile-scoped command needs the master-key passphrase. The tool prompts
+for it, or you can set `AEAT_SECRET_PASSPHRASE` for non-interactive runs.
+
+The CLI emits help, results, and refusals in Spanish.
+
+## The filing chain
+
+The command-line interface is the same one used in the quickstart. Run the four
+commands in order, from the profile above:
 
 ```bash
 aeat app modelo work create --modelo 303 --year 2026 --period 1T
@@ -11,6 +33,13 @@ aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
 aeat app modelo work verify --modelo 303 --year 2026 --period 1T
 aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
 ```
+
+The `--activity-start-date` in the profile above scopes out the prior-period
+dependency for this first filing, so `verify` reports `complete` and `export`
+writes the `.boe`. Without it, `verify` blocks on an unresolved cross-period
+dependency on the prior period and `export` refuses. To file a period that
+folds in a real prior period, import that prior filing's evidence first; see
+[Reconcile a filing](reconcile.md).
 
 `--modelo`, `--year`, and `--period` are the normal way to name the filing you
 are working on. Use that shape for routine create, calculate, verify, file,

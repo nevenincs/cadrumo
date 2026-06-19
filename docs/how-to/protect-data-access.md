@@ -9,6 +9,19 @@ Use this guide to set up a recovery key before you need it, change your
 passphrase, recover access after a lost passphrase, lock the session, and —
 as a last resort — wipe local state and start over.
 
+## Before you start
+
+You need:
+
+- An active profile - see [set up your taxpayer profile](profile-setup.md). The
+  first command below refuses without one (`No se pudo determinar ningún bucket
+  activo. Selecciona un perfil y vuelve a intentarlo.`).
+- Your master-key passphrase. These commands open the encrypted store, so they
+  prompt for the passphrase (or read `AEAT_SECRET_PASSPHRASE` when set). The
+  recovery and rekey commands below replace which passphrase opens the key.
+
+The runtime emits help, prompts, and messages in Spanish.
+
 ## Create your recovery key first
 
 Do this once, right after setup, while your passphrase still works:
@@ -17,10 +30,10 @@ Do this once, right after setup, while your passphrase still works:
 aeat config show-recovery
 ```
 
-If no recovery key exists yet, the command creates one and prints a list of
-recovery words. The words are shown exactly once and are never stored — only
-an encrypted wrapper of the master key is written to disk. Write the words
-down and keep them offline, separate from your computer.
+If no recovery key exists yet, the command creates one and prints a
+twenty-four-word recovery key. The words are shown exactly once and are never
+stored — only an encrypted wrapper of the master key is written to disk. Write
+the words down and keep them offline, separate from your computer.
 
 Run the same command again later to confirm enrollment: once a recovery key
 exists, the command reports its status and does not print the words again.
@@ -73,7 +86,9 @@ aeat config recover --recovery-key "word1 word2 word3 ..."
 
 The command prompts twice (hidden) for a new passphrase, unlocks the master
 key from the recovery wrapper, and rewraps it under the new passphrase. All
-stored data stays intact — nothing is deleted or re-encrypted.
+stored data stays intact — nothing is deleted or re-encrypted. For
+non-interactive use, pass `--new-passphrase` together with
+`--confirm-new-passphrase` instead of being prompted.
 
 If you have neither the passphrase nor the recovery words, the encrypted
 data is permanently unreadable. The only way forward is a reset (below),

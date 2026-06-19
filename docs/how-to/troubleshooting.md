@@ -2,6 +2,8 @@
 
 Every check on this page runs locally and the tool never submits anything to AEAT - building, validating, and exporting all happen on your machine. The only network step is the optional connectivity probe, which checks reachability and reads nothing. Find the error you see in the headings on this page and follow the steps under it. If your error is not listed, jump to [Prepare a privacy-safe support request](#prepare-a-privacy-safe-support-request).
 
+Every profile-scoped command needs your master-key passphrase. The tool prompts for it interactively. To run a command non-interactively, set `AEAT_SECRET_PASSPHRASE` in the environment first. The tool's output is in Spanish, so the error text you see may differ from the English shown on this page.
+
 ## "This operation requires an active profile"
 
 The command needs a taxpayer profile and none is active. Check what the tool thinks is active:
@@ -42,10 +44,10 @@ Switch to the right profile with `aeat config switch <profile-name>` - [Set up y
 The refusal looks like this:
 
 ```text
-ledger preflight blocks modelo calculation: ... Run `aeat app ledger preflight --year <YEAR> --period <TOKEN>` before calculating
+ledger preflight blocks modelo calculation: transaction <id> <reason>: <detail>. Run `aeat app ledger preflight --period <TOKEN>` before calculating.
 ```
 
-The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - the ledger preflight takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) with `--year`:
+The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - `ledger preflight` takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) and also requires `--year`, so add it even though the message above omits it:
 
 ```bash
 aeat app ledger preflight --year 2026 --period 1T
@@ -84,10 +86,16 @@ aeat app ledger preflight --year 2026 --period 03
 aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
 ```
 
-The ledger `--period` commands are `ledger preflight`, `ledger status`, `ledger export`, `ledger import`, and `overview status`. A bare token with no `--year` is refused with the year fix:
+The ledger `--period` commands are `ledger preflight`, `ledger status`, `ledger export`, `ledger import`, and `overview status`. On `ledger status` and `overview status`, where the period is optional, a bare token with no `--year` is refused with the year fix (shown here in English; the tool prints it in Spanish):
 
 ```text
-Period token '1T' needs a year on this command. Add --year (e.g. --period 1T --year 2024).
+El token de periodo '1T' necesita un año en este comando. Añada --year (e.g. --period 1T --year 2024).
+```
+
+On `ledger preflight` and `ledger export`, `--year` is a required option, so omitting it is refused before the token is read:
+
+```text
+Missing option '--year'.
 ```
 
 A modelo token that is not valid for the form lists the accepted tokens:
@@ -212,13 +220,15 @@ aeat app ledger participation rebuild
 
 The index is a derived cross-reference, safe to regenerate at any time: `rebuild` rescans the finalized calculation records and rewrites it. Run it if a participation lookup looks incomplete. Rebuilding changes no ledger or filing data.
 
+Both `participation` verbs read the active profile's encrypted bucket, so they need an unlocked profile session. If either refuses with `No hay una sesion de bucket activa`, switch to the profile first with `aeat config switch <profile-name>`.
+
 When nothing else recovers the problem, and only then, clear the saved progress of interrupted commands. This command is destructive:
 
 ```bash
 aeat config repair reset-progress --yes
 ```
 
-It removes saved interrupted-command progress and requires `--yes`.
+It removes saved interrupted-command progress and requires `--yes`. Like the participation verbs, it reads the active profile's bucket, so switch to the profile first if it refuses with `No hay una sesion de bucket activa`.
 
 ## Prepare a privacy-safe support request
 

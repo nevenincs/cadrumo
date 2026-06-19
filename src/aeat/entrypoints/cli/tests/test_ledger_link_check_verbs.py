@@ -89,3 +89,71 @@ def test_check_refuses_foreign_bucket_id_without_unlocked_session(cli_runner: Cl
     )
     assert result.exit_code != 0, result.output
     assert "Storage runtime is not ready" in result.output
+
+
+def _line_value(output: str, key: str) -> str:
+    """Return the value of one ``key\\tvalue`` line in CLI text output."""
+    for line in output.splitlines():
+        head, sep, tail = line.partition("\t")
+        if sep and head.strip() == key:
+            return tail.strip()
+    raise AssertionError(f"no {key!r} line in CLI output:\n{output}")
+
+
+def test_link_refuses_operator_invoice_add_id_instructively(cli_runner: CliRunner) -> None:
+    """`link --invoice-id` must refuse an id minted by ``invoice add``.
+
+    Per the accepted ``2026-06-10-ledger-invoice-unification-adr`` the slim
+    operator-CRUD ``BusinessOperationInvoice`` store (filled by ``invoice add``)
+    and the rich reconciliation ``InvoiceCatalogue`` that ``link --invoice-id``
+    targets are intentionally distinct: only the rich ``Invoice`` carries
+    ``linked_transaction_ids``. An ``invoice add`` id is therefore not a valid
+    ``--invoice-id`` target. This is the "documented sharp edge" the ADR fixes
+    explicitly so a future agent does not unify the two stores by mistake, and
+    it is the runtime fact the ledger-evidence how-to must reflect (audit M17).
+
+    The refusal must be the instructive typed message that names the ``invoice
+    add`` provenance and points at the evidence/attach path — never a silent
+    accept, a raw traceback, or a bare "value invalid".
+    """
+    added = cli_runner.invoke(
+        app,
+        [
+            "app", "ledger", "add",
+            "--date", "2026-03-10", "--amount", "121.00",
+            "--direction", "OUTGOING", "--description", "Supplier payment B12345678",
+        ],
+    )  # fmt: skip
+    assert added.exit_code == 0, added.output
+    transaction_id = _line_value(added.output, "ID")
+
+    invoice = cli_runner.invoke(
+        app,
+        [
+            "app", "ledger", "invoice", "add",
+            "--kind", "received",
+            "--counterparty-nif", "B12345678",
+            "--invoice-number", "2026-0142",
+            "--invoice-date", "2026-03-10",
+            "--taxable-base", "100.00", "--iva-rate", "21",
+            "--iva-amount", "21.00", "--total-amount", "121.00",
+        ],
+    )  # fmt: skip
+    assert invoice.exit_code == 0, invoice.output
+    invoice_add_id = _line_value(invoice.output, "invoice_id")
+
+    linked = cli_runner.invoke(
+        app,
+        ["app", "ledger", "link", transaction_id, "--invoice-id", invoice_add_id],
+    )
+
+    # The documented `invoice add` -> `link --invoice-id` chain is refused.
+    assert linked.exit_code != 0, linked.output
+    lowered = linked.output.lower()
+    # Instructive: the refusal names the `invoice add` provenance and routes the
+    # operator to the evidence path — not a bare invalid or a Python traceback.
+    # The shipped message is localized, so match the language-stable command
+    # token plus the shared evidence/`evidencia` stem rather than English prose.
+    assert "invoice add" in lowered, linked.output
+    assert "evidenc" in lowered, linked.output
+    assert "traceback" not in lowered, linked.output

@@ -7,6 +7,7 @@ A modelo is a numbered official AEAT tax form, such as 303 for IVA or 130 for qu
 You need:
 
 - An active profile with your taxpayer type, activity, and regime facts filled in. See the [profile setup guide](profile-setup.md), or the [quickstart](quickstart.md) if you're starting from nothing.
+- Your master-key passphrase. Every profile-scoped command needs it; the tool prompts for it, or set `AEAT_SECRET_PASSPHRASE` for non-interactive runs.
 
 Check the profile first:
 
@@ -14,7 +15,7 @@ Check the profile first:
 aeat config profile status
 ```
 
-The status confirms the profile exists and carries the basics. The explain output lists the facts that drive each applicability answer. If a fact is missing, the verdict says so.
+The status confirms the profile exists and carries the basics. The explain output lists the facts that drive each applicability answer. If a fact is missing, the verdict says so. The CLI emits the rationale, legal references, and refusals in Spanish.
 
 ## Ask whether one modelo applies
 
@@ -62,6 +63,8 @@ aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
 
 The preflight reports the profile facts still missing for that specific filing context. Where `overview explain` answers whether the form applies, preflight answers whether you're ready to work on it.
 
+These two commands read different facts, so they can disagree for the same profile and modelo, and that is expected. `overview explain` checks applicability facts (taxpayer type, regime, income categories); on a profile that has not declared its taxpayer type it returns `applicable false / verdict incomplete` ("el tipo de contribuyente no está declarado"). `profile preflight` checks filing-context facts for working on that period; the same profile can return `readiness ready / missing 0`. A `ready` preflight is not a confirmation that the form applies to you - read `overview explain` for applicability and `profile preflight` for filing readiness, not one as a proxy for the other.
+
 The preflight picks the active revision for that modelo, year, and period automatically. Add `--revision-id` only when you need to pin an exact past revision for replay.
 
 ## Browse the catalogue
@@ -73,7 +76,7 @@ aeat app modelo list
 aeat app modelo list --year 2026
 ```
 
-The list shows each modelo's code, official Spanish title, cadence, tax domain, and revision count. Cadence values include `quarterly`, `annual`, `monthly`, `ad_hoc`, and `profile_based` (the rhythm depends on your situation). Domains include IVA, IRPF, IS (corporate income tax), censo, and informative. Being listed does not mean a form applies to you - the catalogue covers everything the tool understands.
+The list shows each modelo's code, official Spanish title, cadence, tax domain, and revision count. Cadence values include `quarterly`, `annual`, `monthly`, `ad_hoc`, and `profile_based` (the rhythm depends on your situation). Domains include `iva`, `irpf`, `is` (corporate income tax), `censo`, `informative`, `cross_tax`, `irnr` (non-resident income tax), `patrimonio` (wealth tax), and `iae` (tax on economic activities). Being listed does not mean a form applies to you - the catalogue covers everything the tool understands.
 
 To look one form up in detail:
 
@@ -81,7 +84,7 @@ To look one form up in detail:
 aeat app modelo describe 303
 ```
 
-The description shows the form's official name, domain, cadence, active revision ID, and valid period tokens. Keep both commands as lookup aids. Applicability always comes from `overview explain`.
+The description shows the form's official name (Spanish), domain, cadence, active revision ID, the full list of revision IDs, the valid period tokens, and three structure counts - casillas (boxes), vinculaciones (data bindings), and fórmulas (formulas) - that describe how complex the form is. Keep both commands as lookup aids. Applicability always comes from `overview explain`.
 
 ## What these commands don't tell you
 

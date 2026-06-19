@@ -5,6 +5,18 @@ provider. `aeat` does not store LLM credentials and does not have a separate
 LLM account configuration command. It runs a provider CLI that is already installed and authenticated in your
 system. `aeat` does not store or manage LLM credentials itself.
 
+## Before you start
+
+You need:
+
+- An active profile - see [set up your taxpayer profile](profile-setup.md). The
+  smoke test also needs at least one unclassified transaction in its ledger -
+  see [Work with Transactions](import-bank-statements.md).
+- Your master-key passphrase. Profile-scoped commands open the encrypted store,
+  so they prompt for the passphrase (or read `AEAT_SECRET_PASSPHRASE` when set).
+
+The runtime emits help, prompts, and messages in Spanish.
+
 ## Supported providers
 
 The classification command accepts provider names such as `claude`,
@@ -27,7 +39,21 @@ aeat app ledger providers
 ```
 
 This command only checks whether each provider executable is discoverable. It
-does not spawn the provider and does not verify account login.
+does not spawn the provider and does not verify account login. Each row reports
+a provider, its status (`available` or `unavailable`), and a fix when something
+is missing. The local vision reader appears here too: `ollama-vision` shows
+`unavailable` with a fix (`start Ollama (ollama serve) ...`) until Ollama is
+running.
+
+For a wider check that also reports profile service capabilities, run:
+
+```bash
+aeat config check
+```
+
+It lists each external dependency - including every LLM provider as
+`llm-provider:claude`, `llm-provider:antigravity`, and `llm-provider:codex` -
+as `disponible` or `ausente`, and prints the fix for each problem.
 
 ## Configure the provider outside aeat
 
@@ -58,8 +84,10 @@ aeat app ledger classify <transaction-id> --llm claude
 
 A successful smoke test previews a suggestion and leaves the ledger unchanged.
 If the provider CLI is installed but not authenticated, the classification
-command can refuse with the provider's own error message. Complete that
-provider login and retry.
+command refuses and relays the provider's own error. With the `claude` CLI
+logged out, for example, it reports `La clasificacion por LLM fallo: claude CLI
+exited with 1: 'Not logged in ...'`. Complete that provider login with its own
+CLI and retry.
 
 Only use `--apply` after you have verified that preview works and you have
 reviewed the suggestion:

@@ -6,6 +6,8 @@ Store an evidence record for each invoice or receipt and link it to the transact
 
 You need:
 
+- An active taxpayer profile. Evidence is stored under the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
+- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `AEAT_SECRET_PASSPHRASE`.
 - Transactions in your ledger. If your ledger is empty, see [Work with transactions](import-bank-statements.md) first.
 - The invoice or receipt as a PDF or image file. aeat copies the file's bytes into encrypted storage together with the facts you type, plus a content fingerprint and the original location as provenance. Your original file is never needed again after `add`.
 
@@ -31,11 +33,9 @@ aeat app ledger attach <transaction-id> --purchase-invoice-evidence-id <evidence
 
 A transaction carries at most one purchase-invoice evidence record. The command refuses a second one, and refuses re-attaching the same one.
 
-Generic file attachments are separate. Use `--attachment-id` (repeatable) to attach stored files to a transaction without the purchase-invoice role:
+For most receipts and invoices, `--purchase-invoice-evidence-id` above is the path to use; the evidence id comes straight from `evidence add`.
 
-```bash
-aeat app ledger attach <transaction-id> --attachment-id <file-id>
-```
+The `attach` command also has an `--attachment-id` option (repeatable) for a generic secure attachment that does not carry the purchase-invoice role. It expects the 64-character content id of a blob already in encrypted attachment storage, and it refuses any id that has no stored blob (`attachment_ids must reference existing secure attachment manifests and blobs`). No operator command currently prints that 64-character id - the `evidence_id` from `evidence add` is a different, shorter id and is not accepted here. Until a command surfaces the attachment id, use `--purchase-invoice-evidence-id` or `doclink` instead.
 
 ## Pull a document from Google Drive instead
 
@@ -85,11 +85,12 @@ aeat app ledger invoice remove <invoice-id> --kind received --yes
 and `remove` need `--kind` to address the record; `remove` refuses without
 `--yes`. An unambiguous prefix of the invoice id is enough.
 
-Link an invoice record to the bank movement that settles it:
-
-```bash
-aeat app ledger link <transaction-id> --invoice-id <invoice-id>
-```
+An invoice record from `invoice add` stands on its own and cannot currently be
+linked to a transaction. The `link --invoice-id` option exists, but it expects
+an id from the reconciliation invoice catalogue (the catalogue the import and
+reconcile flows populate), not an id from `invoice add`; passing an
+`invoice add` id is refused. To bind a document to a transaction, store it as
+evidence and link that instead - see below.
 
 ## List, view, update, and remove evidence records
 
