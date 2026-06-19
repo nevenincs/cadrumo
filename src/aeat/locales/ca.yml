@@ -106,6 +106,9 @@ adapters:
         id_token_verification_failed: La verificació de l'id_token de Google ha fallat.
         loopback_bind_failed: El receptor OAuth loopback local no ha pogut assignar
           cap port.
+        non_interactive: 'Google OAuth rebutjat: el flux interactiu de consentiment
+          al navegador necessita un terminal interactiu, però aquesta ordre s''ha
+          executat de manera no interactiva.'
         oauthlib_not_importable: google-auth-oauthlib no es pot importar; el flux
           OAuth no es pot iniciar.
         profile_state_unresolved: Google OAuth no pot resoldre l'estat del perfil
@@ -115,7 +118,6 @@ adapters:
         unsecured_mode_refused: Google OAuth s'ha rebutjat perquè el magatzem de secrets
           està en mode insegur i el perfil actiu porta un identificador fiscal espanyol
           real.
-        non_interactive: 'Google OAuth rebutjat: el flux interactiu de consentiment al navegador necessita un terminal interactiu, però aquesta ordre s''ha executat de manera no interactiva.'
       suggestions:
         close_loopback_port: Tanca l'aplicació que estigui ocupant un port loopback
           orfe i torna-ho a intentar.
@@ -123,9 +125,10 @@ adapters:
           impresa.
         repair_profile_state: Executeu `aeat config profile health` i repareu o canvieu
           el perfil actiu abans de tornar a provar l'ordre de Google.
+        run_from_interactive_terminal: Executa 'aeat config google login' des d'un
+          terminal interactiu amb un navegador web disponible.
         use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o canvia
           el perfil actiu a un identificador fiscal sintètic de prova.
-        run_from_interactive_terminal: 'Executa ''aeat config google login'' des d''un terminal interactiu amb un navegador web disponible.'
     profile_binding:
       errors:
         no_active_profile: No hi ha cap perfil AEAT actiu enllaçat per a Google OAuth.
@@ -605,6 +608,10 @@ application:
         invalid_valuation_method: 'El metode de valoracio d inventari no esta admes:
           %{valuation_method}.'
   invoices:
+    creation:
+      errors:
+        duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg: %{invoice_id}.'
+        unsupported_iva_rate: 'El tipus d''IVA %{iva_rate} no es reconeix; useu un de: %{accepted}.'
     importing:
       errors:
         import_file_read_failed: 'No s ha pogut llegir el fitxer d importacio de factures:
@@ -706,7 +713,9 @@ application:
         identificadors de casella requerits al mapa corregit.'
       amendment_verification_refused_no_snapshot: El registre no té una instantània
         per al model, any i període sol·licitats.
-      calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta revisio. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list <MODELO>` per llistar els bindings valids.'
+      calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta
+        revisio. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list
+        <MODELO>` per llistar els bindings valids.'
       calculate_casilla_ambiguous: '--casilla %{key} coincideix amb diverses caselles
         d''aquesta revisio: %{candidates}. Indica la forma qualificada PREFIX:NNNNN
         per desambiguar.'
@@ -1241,6 +1250,11 @@ cli:
         year_help: Exercici fiscal
       invoice:
         add_help: Registra una nova factura de negoci
+        catalogue:
+          country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart (per defecte ES).'
+          create_help: 'Crea una factura de conciliació vinculable al catàleg.'
+          group_help: 'Factures del catàleg de conciliació que es vinculen a transaccions.'
+          list_help: 'Llista les factures del catàleg de conciliació.'
         country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
           intracomunitàries UE)
         eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
@@ -1832,6 +1846,11 @@ cli:
         missing_binding_guidance: '%{base} Aporta el valor amb --binding KEY=VALUE
           en aquesta ordre, o executa `%{discover}` per veure tots els bindings que
           el càlcul encara necessita.'
+        missing_binding_guidance_ledger: '%{base} Aquest valor s''agrega des del llibre
+          major del bucket i no es pot aportar amb --binding. Afegeix o classifica
+          les files corresponents del llibre major, executa `aeat app ledger preflight`
+          i torna a calcular. Executa `%{discover}` per veure tots els bindings que
+          el càlcul encara necessita.'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la unitat de treball
         name_required: Proporcioneu --name.
@@ -1966,7 +1985,6 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        missing_binding_guidance_ledger: '%{base} Aquest valor s''agrega des del llibre major del bucket i no es pot aportar amb --binding. Afegeix o classifica les files corresponents del llibre major, executa `aeat app ledger preflight` i torna a calcular. Executa `%{discover}` per veure tots els bindings que el càlcul encara necessita.'
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -2107,6 +2125,9 @@ cli:
         loopback_bind: 'No s''ha pogut obrir un port local per completar l''inici
           de sessió a Google: {detail}'
         network: 'No s''ha pogut contactar amb Google: {detail}'
+        non_interactive: 'L''inici de sessió de Google necessita un terminal interactiu
+          amb navegador web, però aquesta ordre s''ha executat de manera no interactiva:
+          {detail}'
         profile_unbound: No hi ha cap perfil actiu. Executa aeat config switch NAME
           o indica --profile.
         scope_insufficient: L'accés concedit a Google no inclou els permisos necessaris.
@@ -2120,7 +2141,6 @@ cli:
           funciona en mode no segur per a un perfil amb un NIF real.
         validation: 'Les dades proporcionades per a Google no han superat la validació:
           {detail}'
-        non_interactive: 'L''inici de sessió de Google necessita un terminal interactiu amb navegador web, però aquesta ordre s''ha executat de manera no interactiva: {detail}'
       folder:
         folder_id_help: Id de la carpeta de Google Drive
         get_help: Mostra la carpeta arrel de Google Drive configurada
@@ -2777,6 +2797,7 @@ cli:
       business_pct: Percentatge de negoci
       category_id: Categoria
       checked: Moviments comprovats
+      child_id: Id de transacció filla
       children: filles
       counterparty: Contrapart
       created_event_id: Esdeveniment bucket de creació
@@ -2823,7 +2844,6 @@ cli:
       warning: Avís
       warnings: Avisos
       'yes': Sí
-      child_id: 'Id de transacció filla'
     link:
       actor_help: Etiqueta de l'operador registrada als esdeveniments del bucket.
       errors:
@@ -4266,7 +4286,8 @@ errors:
       encara no està disponible.
     reconciliation_drift: La conciliació ha detectat una discrepància aritmètica o
       d'identitat entre declaracions. Revisa els imports abans de continuar.
-    reconciliation_evidence_invalid: 'No s''ha pogut llegir el PDF. Comprova que el fitxer és el justificant d''AEAT i no un altre document, i que no estigui malmès.'
+    reconciliation_evidence_invalid: No s'ha pogut llegir el PDF. Comprova que el
+      fitxer és el justificant d'AEAT i no un altre document, i que no estigui malmès.
     refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
       està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
       actual.
@@ -4338,6 +4359,8 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina a
       casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
       amb el valor del cens.
+    refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
+      interactiu amb navegador; executa'l des d'una shell interactiva.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
       un perfil o fes servir --profile.
     refused_google_unsecured_mode: No es pot autoritzar Google en mode d'emmagatzematge
@@ -4490,7 +4513,6 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    refused_google_non_interactive: 'L''inici de sessió de Google necessita un terminal interactiu amb navegador; executa''l des d''una shell interactiva.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -4635,7 +4657,8 @@ review:
       item_not_found: No s'ha trobat l'element sol.licitat a la cua de revisio.
       reserved_kind: El tipus de revisió està reservat i no és un element de revisió
         emès.
-      unknown_kind: 'Tipus d''element de revisió desconegut. Valors --kind admesos: %{accepted_kinds}.'
+      unknown_kind: 'Tipus d''element de revisió desconegut. Valors --kind admesos:
+        %{accepted_kinds}.'
       unsupported_item_type: 'Tipus d''element de revisio no ames: %{item_type}.'
   transaction:
     summary: Transacció pendent de classificació

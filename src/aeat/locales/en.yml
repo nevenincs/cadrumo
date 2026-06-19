@@ -102,6 +102,8 @@ adapters:
         id_token_module_not_importable: The google-auth id_token module is not importable.
         id_token_verification_failed: Google id_token verification failed.
         loopback_bind_failed: The local loopback OAuth receiver failed to bind a port.
+        non_interactive: 'Google OAuth refused: the interactive browser consent flow
+          needs a controlling terminal, but this command was run non-interactively.'
         oauthlib_not_importable: google-auth-oauthlib is not importable; the OAuth
           flow cannot start.
         profile_state_unresolved: Google OAuth cannot resolve the selected AEAT profile
@@ -110,16 +112,16 @@ adapters:
           scope.
         unsecured_mode_refused: Google OAuth refused because the secret store is running
           in unsecured mode and the active profile carries a real Spanish tax identifier.
-        non_interactive: 'Google OAuth refused: the interactive browser consent flow needs a controlling terminal, but this command was run non-interactively.'
       suggestions:
         close_loopback_port: Close the application holding a stray loopback port and
           retry.
         open_consent_url_manually: Open the printed consent URL manually in your browser.
         repair_profile_state: Run `aeat config profile health` and repair or switch
           the active profile before retrying the Google command.
+        run_from_interactive_terminal: Run 'aeat config google login' from an interactive
+          terminal with a web browser available.
         use_keyring_or_synthetic: Set aeat_secret_store_backend=keyring or switch
           the active profile to a synthetic test tax identifier.
-        run_from_interactive_terminal: 'Run ''aeat config google login'' from an interactive terminal with a web browser available.'
     profile_binding:
       errors:
         no_active_profile: No active AEAT profile is bound for Google OAuth.
@@ -550,6 +552,10 @@ application:
         invalid_valuation_method: 'The inventory valuation method is not supported:
           %{valuation_method}.'
   invoices:
+    creation:
+      errors:
+        duplicate_invoice: 'An invoice with the same identity already exists in the catalogue: %{invoice_id}.'
+        unsupported_iva_rate: 'IVA rate %{iva_rate} is not recognised; use one of: %{accepted}.'
     importing:
       errors:
         import_file_read_failed: 'The invoice import file could not be read: %{path_name}.'
@@ -641,7 +647,9 @@ application:
         required casilla ids are missing from the corrected map.'
       amendment_verification_refused_no_snapshot: Registry has no snapshot for the
         requested modelo, year, and period.
-      calculate_binding_unknown: '--binding %{key} does not match any binding id in this revision. Accepted binding ids: %{accepted}. Use `aeat app modelo bindings list <MODELO>` to list valid binding ids.'
+      calculate_binding_unknown: '--binding %{key} does not match any binding id in
+        this revision. Accepted binding ids: %{accepted}. Use `aeat app modelo bindings
+        list <MODELO>` to list valid binding ids.'
       calculate_casilla_ambiguous: '--casilla %{key} matches multiple casillas in
         this revision: %{candidates}. Supply the qualified PREFIX:NNNNN form to disambiguate.'
       calculate_casilla_non_numeric: --casilla %{casilla_id} targets non-numeric data
@@ -1163,6 +1171,11 @@ cli:
         year_help: Tax year
       invoice:
         add_help: Register a new business invoice
+        catalogue:
+          country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code (defaults to ES).'
+          create_help: 'Create a linkable reconciliation invoice in the catalogue.'
+          group_help: 'Reconciliation catalogue invoices that link to transactions.'
+          list_help: 'List reconciliation catalogue invoices.'
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
@@ -1727,6 +1740,10 @@ cli:
         missing_binding_guidance: '%{base} Supply the value with --binding KEY=VALUE
           on this command, or run `%{discover}` to list every binding the calculation
           still needs.'
+        missing_binding_guidance_ledger: '%{base} This value is aggregated from the
+          bucket ledger and cannot be supplied with --binding. Add or classify the
+          relevant ledger rows, run `aeat app ledger preflight`, then rerun calculate.
+          Run `%{discover}` to list every binding the calculation still needs.'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
         name_required: Supply --name.
@@ -1856,7 +1873,6 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        missing_binding_guidance_ledger: '%{base} This value is aggregated from the bucket ledger and cannot be supplied with --binding. Add or classify the relevant ledger rows, run `aeat app ledger preflight`, then rerun calculate. Run `%{discover}` to list every binding the calculation still needs.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
@@ -1989,6 +2005,8 @@ cli:
           locked or unavailable.
         loopback_bind: 'Could not open a local port to complete Google sign-in: {detail}'
         network: 'Could not reach Google: {detail}'
+        non_interactive: 'Google login needs an interactive terminal with a web browser,
+          but this command was run non-interactively: {detail}'
         profile_unbound: No active profile. Run aeat config switch NAME or pass --profile.
         scope_insufficient: The access granted for Google is missing required permissions.
           Run `aeat config google login` and accept every permission.
@@ -2000,7 +2018,6 @@ cli:
         unsecured_mode: Google access is blocked while the secret store runs in unsecured
           mode for a profile with a real NIF.
         validation: 'The data supplied for Google did not pass validation: {detail}'
-        non_interactive: 'Google login needs an interactive terminal with a web browser, but this command was run non-interactively: {detail}'
       folder:
         folder_id_help: Google Drive folder id
         get_help: Show the configured Google Drive root folder
@@ -2623,6 +2640,7 @@ cli:
       business_pct: Business %
       category_id: Category
       checked: Checked transactions
+      child_id: Child transaction id
       children: Children
       counterparty: Counterparty
       created_event_id: Created bucket event
@@ -2669,7 +2687,6 @@ cli:
       warning: Warning
       warnings: Warnings
       'yes': 'Yes'
-      child_id: 'Child transaction id'
     link:
       actor_help: Operator label recorded on bucket events.
       errors:
@@ -4038,7 +4055,8 @@ errors:
       is not available yet.
     reconciliation_drift: Reconciliation detected arithmetic or identity drift across
       declarations. Review the amounts before continuing.
-    reconciliation_evidence_invalid: 'The PDF could not be read. Check that the file is the AEAT justificante and not a different document, and that it is not corrupt.'
+    reconciliation_evidence_invalid: The PDF could not be read. Check that the file
+      is the AEAT justificante and not a different document, and that it is not corrupt.
     refused_access_gate_live_read_not_enabled: Live-read access to the AEAT is disabled.
       This operation cannot contact the AEAT under the current configuration.
     refused_apoderado_live_check_unavailable: The live check of representatives is
@@ -4103,6 +4121,8 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: A saved home-office usage ratio
       disagrees with the censo, which is the binding legal source. Align it with the
       censo value.
+    refused_google_non_interactive: Google login needs an interactive terminal with
+      a browser; run it from an interactive shell.
     refused_google_profile_unbound: No active profile is bound. Select a profile or
       use --profile.
     refused_google_unsecured_mode: Google cannot be authorized in unsecured-storage
@@ -4246,7 +4266,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    refused_google_non_interactive: 'Google login needs an interactive terminal with a browser; run it from an interactive shell.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'

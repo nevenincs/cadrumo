@@ -27,6 +27,11 @@ from ...domain.invoices._service import (
     suggest_reconciliations,
     verify_link_consistency,
 )
+from ._creation import (
+    CatalogueInvoiceCreateResult,
+    build_catalogue_invoice,
+    create_catalogue_invoice,
+)
 from ._importing import (
     InvoiceImportResult,
     import_invoices_from_path,
@@ -67,6 +72,7 @@ from ._reconciliation import (
 from ._source_resolver import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
 
 __all__ = [
+    "CatalogueInvoiceCreateResult",
     "InvoiceCatalogueSourceResolver",
     "InvoiceImportResult",
     "InvoiceListRow",
@@ -77,6 +83,8 @@ __all__ = [
     "InvoiceTransactionLinkResult",
     "ReconciliationSkippedSuggestion",
     "apply_manual_invoice_match",
+    "build_catalogue_invoice",
+    "create_catalogue_invoice",
     "find_invoice",
     "find_unmatched",
     "get_invoice_from_repository",
