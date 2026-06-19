@@ -906,6 +906,8 @@ application:
       seed_negative_amount: A vetőösszeg nem lehet negatív.
       seed_no_nif: Nincs NIF meghatarozva a vetoosszeg-muvelethez; rendelje hozza
         az aktiv profilhoz a vetoosszeg letrehozasa elott.
+      override_sealed_blocked: 'Felülbírálás elutasítva: egy már benyújtott 303-as modell (%{blocking_filing_year}/%{blocking_period}) már felhasználta ennek az időszaknak a kompenzációs alapját. A felülbírálás rögzítése módosítana egy benyújtott bevallást.'
+      override_fresh_wallet_blocked: 'Felülbírálás elutasítva: az AEAT pénztárának aktuális leolvasása már feloldja a 303-as modellt %{filing_year}/%{period}. A friss AEAT-bizonyíték a mérvadó, és a felülbírálás nem írhatja felül.'
     profile_binding:
       errors:
         date_value_type_invalid: 'A(z) %{binding_id} datumcsatornas kotes profiladata
@@ -1210,12 +1212,13 @@ cli:
             ES).'
           create_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
           group_help: Egyeztetési katalógus számlái, amelyek tranzakciókhoz kapcsolhatók.
-          invoice_id_help: 'Katalógusbeli számla azonosítója (vagy egyértelmű előtag).'
+          invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
           list_help: Az egyeztetési katalógus számláinak listázása.
           operation_type_unsupported: 'A(z) --operation-type {value} még nem tudja
             feltölteni a 349-es modellt a katalógusból; támogatott: {supported}.'
-          remove_help: 'Egy egyeztetési katalógusbeli számla törlése.'
-          view_help: 'Egy egyeztetési katalógusbeli számla megjelenítése azonosító vagy egyértelmű előtag alapján.'
+          remove_help: Egy egyeztetési katalógusbeli számla törlése.
+          view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító
+            vagy egyértelmű előtag alapján.
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
           műveletek).
         eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
@@ -1263,12 +1266,13 @@ cli:
         classification_help: Target classification for matching transactions.
         description_pattern_help: Regex pattern matched (case-insensitive) against
           transaction description.
+        empty_pattern: Egy szabályhoz nem üres --description-pattern szükséges (egy
+          szó vagy kifejezés, pl. "software"), hogy illeszkedjen a tranzakciók leírásaihoz.
         group_help: Manage and apply ledger classification rules.
         list_empty: (no rules stored)
         list_header: "priority\tclassification\tpattern\trule_id"
         list_help: List stored classification rules ordered by priority.
         priority_help: Numeric priority; lower value is evaluated first (default 100).
-        empty_pattern: 'Egy szabályhoz nem üres --description-pattern szükséges (egy szó vagy kifejezés, pl. "software"), hogy illeszkedjen a tranzakciók leírásaihoz.'
     live:
       app_help: Csak olvasható AEAT élő megfigyelési parancsok.
       borrador:
@@ -1564,6 +1568,16 @@ cli:
         correct_reason_required: 'Adja meg a --reason értéket: rögzítse, miért javítja
           a nyitó egyenleget; nem lehet üres.'
         group_help: Local IVA compensation wallet balance commands.
+        override_amount_help: cli.app.modelo.iva_wallet.override_amount_help
+        override_confirm_help: cli.app.modelo.iva_wallet.override_confirm_help
+        override_confirm_required: cli.app.modelo.iva_wallet.override_confirm_required
+        override_evidence_locator_help: cli.app.modelo.iva_wallet.override_evidence_locator_help
+        override_evidence_locator_required: cli.app.modelo.iva_wallet.override_evidence_locator_required
+        override_filing_year_help: cli.app.modelo.iva_wallet.override_filing_year_help
+        override_help: cli.app.modelo.iva_wallet.override_help
+        override_period_help: cli.app.modelo.iva_wallet.override_period_help
+        override_reason_help: cli.app.modelo.iva_wallet.override_reason_help
+        override_reason_required: cli.app.modelo.iva_wallet.override_reason_required
         seed_amount_help: Az IVA-kompenzáció kezdő összege decimálisban.
         seed_confirm_help: Erősítse meg a vetőösszeg műveletet.
         seed_confirm_required: Adja meg a --confirm kapcsolót a vetőösszeg-művelet

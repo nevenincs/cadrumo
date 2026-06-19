@@ -888,6 +888,8 @@ application:
       seed_negative_amount: The seed amount cannot be negative.
       seed_no_nif: No NIF defined for the seed operation; associate one with the active
         profile before seeding.
+      override_sealed_blocked: 'Override refused: an already-filed Modelo 303 (%{blocking_filing_year}/%{blocking_period}) has consumed this period''s compensation basis. Recording an override would alter a filed return.'
+      override_fresh_wallet_blocked: 'Override refused: a current AEAT wallet reading already resolves Modelo 303 %{filing_year}/%{period}. Fresh AEAT evidence is authoritative and an override must not overrule it.'
     profile_binding:
       errors:
         date_value_type_invalid: Profile fact for date-channel binding %{binding_id}
@@ -1191,12 +1193,13 @@ cli:
             to ES).
           create_help: Create a linkable reconciliation invoice in the catalogue.
           group_help: Reconciliation catalogue invoices that link to transactions.
-          invoice_id_help: 'Catalogue invoice id (or unambiguous prefix).'
+          invoice_id_help: Catalogue invoice id (or unambiguous prefix).
           list_help: List reconciliation catalogue invoices.
           operation_type_unsupported: '--operation-type {value} cannot feed Modelo
             349 from the catalogue yet; supported: {supported}.'
-          remove_help: 'Delete one reconciliation catalogue invoice.'
-          view_help: 'Show one reconciliation catalogue invoice by id or unambiguous prefix.'
+          remove_help: Delete one reconciliation catalogue invoice.
+          view_help: Show one reconciliation catalogue invoice by id or unambiguous
+            prefix.
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
@@ -1240,12 +1243,13 @@ cli:
         classification_help: Target classification for matching transactions.
         description_pattern_help: Regex pattern matched (case-insensitive) against
           transaction description.
+        empty_pattern: A rule needs a non-empty --description-pattern (a word or phrase,
+          e.g. "software") to match transaction descriptions.
         group_help: Manage and apply ledger classification rules.
         list_empty: (no rules stored)
         list_header: "priority\tclassification\tpattern\trule_id"
         list_help: List stored classification rules ordered by priority.
         priority_help: Numeric priority; lower value is evaluated first (default 100).
-        empty_pattern: 'A rule needs a non-empty --description-pattern (a word or phrase, e.g. "software") to match transaction descriptions.'
     live:
       app_help: Read-only AEAT live observation commands
       borrador:
@@ -1518,6 +1522,16 @@ cli:
         correct_reason_required: 'Provide --reason: record why the opening balance
           is being corrected; it must not be blank.'
         group_help: Local IVA compensation wallet balance commands.
+        override_amount_help: cli.app.modelo.iva_wallet.override_amount_help
+        override_confirm_help: cli.app.modelo.iva_wallet.override_confirm_help
+        override_confirm_required: cli.app.modelo.iva_wallet.override_confirm_required
+        override_evidence_locator_help: cli.app.modelo.iva_wallet.override_evidence_locator_help
+        override_evidence_locator_required: cli.app.modelo.iva_wallet.override_evidence_locator_required
+        override_filing_year_help: cli.app.modelo.iva_wallet.override_filing_year_help
+        override_help: cli.app.modelo.iva_wallet.override_help
+        override_period_help: cli.app.modelo.iva_wallet.override_period_help
+        override_reason_help: cli.app.modelo.iva_wallet.override_reason_help
+        override_reason_required: cli.app.modelo.iva_wallet.override_reason_required
         seed_amount_help: Carry-forward balance amount in EUR (decimal, e.g. 1200.50).
           This is the compensación pendiente de periodos anteriores for the NEXT period
           after the seeded one.
