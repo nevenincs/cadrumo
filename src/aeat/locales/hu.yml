@@ -568,7 +568,8 @@ application:
     creation:
       errors:
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
-        unsupported_iva_rate: 'A(z) %{iva_rate} áfakulcs nem ismert; használja az alábbiak egyikét: %{accepted}.'
+        unsupported_iva_rate: 'A(z) %{iva_rate} áfakulcs nem ismert; használja az
+          alábbiak egyikét: %{accepted}.'
     importing:
       errors:
         import_file_read_failed: 'A szamlaimport fajl nem olvashato: %{path_name}.'
@@ -1191,10 +1192,11 @@ cli:
       invoice:
         add_help: Új üzleti számla regisztrálása.
         catalogue:
-          country_code_help: 'A partner ISO 3166-1 alfa-2 országkódja (alapértelmezés: ES).'
-          create_help: 'Kapcsolható egyeztetési számla létrehozása a katalógusban.'
-          group_help: 'Egyeztetési katalógus számlái, amelyek tranzakciókhoz kapcsolhatók.'
-          list_help: 'Az egyeztetési katalógus számláinak listázása.'
+          country_code_help: 'A partner ISO 3166-1 alfa-2 országkódja (alapértelmezés:
+            ES).'
+          create_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
+          group_help: Egyeztetési katalógus számlái, amelyek tranzakciókhoz kapcsolhatók.
+          list_help: Az egyeztetési katalógus számláinak listázása.
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
           műveletek).
         eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
@@ -1588,7 +1590,6 @@ cli:
         binding_help: Kötési érték KEY=VALUE szintaxissal (ismételhető).
         casilla_help: Mezőérték CASILLA=DECIMAL szintaxissal (ismételhető).
         ccaa_help: Autonóm közösség kódja a területi vetítéshez.
-        m100_calculation_error: 'Belső hiba: Modelo 100 számítás sikertelen.'
         no_m130_revisions: 'Nincs M130-revízió a megadott évre. Először futtasd minden
           negyedévre: `aeat app modelo work calculate --modelo 130 --year %{year}
           --period 1T`.'
@@ -2828,6 +2829,7 @@ cli:
         ledger invoice add' azonosító.
     list:
       by_group_help: A lista csoportositasa csoportcimke szerint.
+      column_header: "id\tteljes_id\tdátum\tösszeg\tleírás\tellenőrzési_állapot"
       filter_help: Sorok szűrése állapot, időszak (egyszerű AEAT token, pl. period=1T)
         és év (pl. year=2026), besorolás, eltérés, import, irány (bevétel/kiadás)
         vagy szöveg szerint. Csoportcímke szerinti szűréshez használja a külön --group

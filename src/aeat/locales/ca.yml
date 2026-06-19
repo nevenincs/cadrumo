@@ -610,8 +610,10 @@ application:
   invoices:
     creation:
       errors:
-        duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg: %{invoice_id}.'
-        unsupported_iva_rate: 'El tipus d''IVA %{iva_rate} no es reconeix; useu un de: %{accepted}.'
+        duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg:
+          %{invoice_id}.'
+        unsupported_iva_rate: 'El tipus d''IVA %{iva_rate} no es reconeix; useu un
+          de: %{accepted}.'
     importing:
       errors:
         import_file_read_failed: 'No s ha pogut llegir el fitxer d importacio de factures:
@@ -1251,10 +1253,11 @@ cli:
       invoice:
         add_help: Registra una nova factura de negoci
         catalogue:
-          country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart (per defecte ES).'
-          create_help: 'Crea una factura de conciliació vinculable al catàleg.'
-          group_help: 'Factures del catàleg de conciliació que es vinculen a transaccions.'
-          list_help: 'Llista les factures del catàleg de conciliació.'
+          country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (per
+            defecte ES).
+          create_help: Crea una factura de conciliació vinculable al catàleg.
+          group_help: Factures del catàleg de conciliació que es vinculen a transaccions.
+          list_help: Llista les factures del catàleg de conciliació.
         country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
           intracomunitàries UE)
         eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
@@ -1640,7 +1643,6 @@ cli:
         binding_help: Valor d'enllaç amb la sintaxi KEY=VALUE (repetible).
         casilla_help: Valor de casilla amb la sintaxi CASILLA=DECIMAL (repetible).
         ccaa_help: Codi de comunitat autònoma per a la projecció territorial.
-        m100_calculation_error: 'Error intern: el càlcul del Modelo 100 ha fallat.'
         no_m130_revisions: No hi ha revisions M130 per a l'exercici indicat. Executa
           `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`
           per a cada trimestre primer.
@@ -2866,6 +2868,7 @@ cli:
         un id d''aeat app ledger invoice add'.
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
+      column_header: "id\tid_complet\tdata\timport\tdescripció\testat_revisió"
       filter_help: Filtreu les files per estat, periode (un testimoni AEAT simple,
         p. ex. period=1T) amb l'any (p. ex. year=2026), classificacio, incidencia,
         importacio, direccio (ingres/despesa) o text. Per filtrar per etiqueta de
