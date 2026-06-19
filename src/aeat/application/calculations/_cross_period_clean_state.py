@@ -345,6 +345,9 @@ class CrossPeriodDependencyEvidence(BaseModel):
     (``no-silent-under-declaration``). ``None`` for an in-scope dependency.
     """
 
+    non_official_local_chain_advisory: bool = False
+    """Non-blocking advisory: a same-year ``app_filing`` chain admitted, lacking only official AEAT evidence."""
+
     @property
     def clean(self) -> bool:
         return not self.blockers
@@ -397,6 +400,11 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     def has_unstamped_revision_advisory(self) -> bool:
         """True when any dependency carries a legacy unstamped-revision advisory."""
         return any(item.unstamped_revision_advisory for item in self.dependencies)
+
+    @property
+    def has_non_official_local_chain_advisory(self) -> bool:
+        """True when any dependency was admitted as a same-year non-official local chain."""
+        return any(item.non_official_local_chain_advisory for item in self.dependencies)
 
     @property
     def suppressed_pre_activity_dependencies(self) -> tuple[CrossPeriodDependencyEvidence, ...]:
@@ -560,6 +568,39 @@ def _suppressed_pre_activity_evidence(
     )
 
 
+_OFFICIAL_EVIDENCE_DELTA_BLOCKERS: Final = frozenset(
+    {
+        CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE,
+        CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE,
+        CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE,
+    },
+)
+"""The blocker set that distinguishes a locally-evidenced chain from an AEAT-evidenced one."""
+
+
+def _relax_same_year_local_chain(
+    evidence: CrossPeriodDependencyEvidence,
+    *,
+    target_filing_year: int,
+) -> CrossPeriodDependencyEvidence:
+    """Admit a same-year ``app_filing`` chain (only official-evidence-delta blockers) to verify/export with an advisory.
+
+    Cross-year deps, operator_manual sources, value/revision divergence, and missing
+    observation/filing keep their blockers (stay blocking); the source stays non-official.
+    """
+    if evidence.requirement.filing_year != target_filing_year:
+        return evidence
+    if evidence.observation_source_kind != "app_filing":
+        return evidence
+    if not evidence.blockers:
+        return evidence
+    if not set(evidence.blockers) <= _OFFICIAL_EVIDENCE_DELTA_BLOCKERS:
+        return evidence
+    return evidence.model_copy(
+        update={"blockers": (), "non_official_local_chain_advisory": True},
+    )
+
+
 def evaluate_cross_period_clean_state(
     snapshot: RegistrySnapshot,
     *,
@@ -610,6 +651,10 @@ def evaluate_cross_period_clean_state(
             ),
         )
         for requirement in partition.in_scope
+    )
+    in_scope_dependencies = tuple(
+        _relax_same_year_local_chain(evidence, target_filing_year=snapshot.filing_year)
+        for evidence in in_scope_dependencies
     )
     # ``activity_start_date`` is non-None whenever ``suppressed`` is non-empty.
     suppressed_dependencies = tuple(

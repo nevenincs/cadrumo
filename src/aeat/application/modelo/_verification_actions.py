@@ -619,6 +619,42 @@ _FIRST_FILER_CANDIDATE_BLOCKERS: frozenset[CrossPeriodCleanStateBlocker] = froze
 )
 
 
+#: Legal grounding for a cross-period dependency. A filing may fold in a prior
+#: period's declared figure only once that prior declaration is real and
+#: evidenced: LGT art. 120 (autoliquidaciones — the prior declaration AEAT may
+#: verify) over art. 119 (declaración tributaria; pending compensación /
+#: deducción balances). Surfaced on every cross-period finding so the operator
+#: sees the legal basis for requiring the prior filing's evidence.
+_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS: tuple[str, ...] = (
+    "ley-58-2003:art-119",
+    "ley-58-2003:art-120",
+)
+
+#: Additional grounding when the cross-period carry is an IVA compensación
+#: balance: LIVA art. 99 governs the compensación del exceso de cuotas a deducir
+#: en periodos sucesivos that the modelo-303 self-dependency carries forward.
+_IVA_COMPENSATION_CARRY_LEGAL_REF: str = "ley-37-1992:art-99"
+
+#: Legal grounding for the first-filer / activity-start findings. Whether a prior
+#: obligation existed turns on the start-of-activity censo declaration
+#: (RGAT — RD 1065/2007 — art. 9, declaración de alta en el censo).
+_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-9",)
+
+
+def _cross_period_dependency_legal_refs(origin_ids: tuple[str, ...]) -> tuple[str, ...]:
+    """Return the legal grounding for one cross-period dependency finding.
+
+    Every cross-period carry cites the prior-declaration basis
+    (:data:`_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS`); an IVA compensación carry
+    (its origin binding/relation id names the compensación balance) additionally
+    cites LIVA art. 99.
+    """
+    refs = list(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS)
+    if any("compensacion" in origin_id for origin_id in origin_ids):
+        refs.append(_IVA_COMPENSATION_CARRY_LEGAL_REF)
+    return tuple(refs)
+
+
 def _cross_period_clean_state_findings(
     verdict: CrossPeriodCleanStateVerdict | None,
     *,
@@ -674,12 +710,15 @@ def _cross_period_clean_state_findings(
                             f"origin_ids={origin_text} blockers={blocker_text}"
                         ),
                         next_action=_cross_period_clean_state_next_action(verdict, evidence),
+                        legal_refs=_cross_period_dependency_legal_refs(requirement.origin_ids),
                     ),
                 )
         if evidence.unstamped_revision_advisory:
             findings.append(_cross_period_unstamped_revision_advisory_finding(verdict, evidence))
         if evidence.operator_declared_suppression_advisory:
             findings.append(_cross_period_operator_declared_suppression_advisory_finding(verdict, evidence))
+        if evidence.non_official_local_chain_advisory:
+            findings.append(_cross_period_non_official_local_chain_advisory_finding(verdict, evidence))
     if activity_start_date is None and has_first_filer_candidate_block:
         findings.append(_cross_period_missing_activity_start_finding(verdict))
     return tuple(findings)
@@ -717,6 +756,7 @@ def _cross_period_operator_declared_suppression_advisory_finding(
             "Confirm the recorded activity-start date is correct. Once the live AEAT censo read is "
             "available, the date will be corroborated and this advisory cleared."
         ),
+        legal_refs=_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
     )
 
 
@@ -747,6 +787,7 @@ def _cross_period_missing_activity_start_finding(
             "(`aeat config profile edit`), then rerun verification. If a prior obligation genuinely "
             "existed, capture or import its AEAT justificante/CSV/live evidence instead."
         ),
+        legal_refs=_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
     )
 
 
@@ -785,6 +826,7 @@ def _cross_period_unstamped_revision_advisory_finding(
             f"Re-file the source period to capture a revision-stamped observation: run `{re_file_capture}`, "
             "then rerun verification so the carry is re-confirmed against the law-determined revision."
         ),
+        legal_refs=_cross_period_dependency_legal_refs(requirement.origin_ids),
     )
 
 
@@ -799,6 +841,33 @@ def _summarize_cross_period_ids(
     if len(text) <= max_chars:
         return text
     return f"{text[: max_chars - 4]}..."
+
+
+def _cross_period_non_official_local_chain_advisory_finding(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence: CrossPeriodDependencyEvidence,
+) -> ModeloVerificationFinding:
+    """Build the NON-BLOCKING advisory for a same-year non-official (``app_filing``) local chain.
+
+    Surfaces the non-official basis (``no-silent-under-declaration``); a cross-YEAR prior still blocks.
+    """
+    requirement = evidence.requirement
+    requirement_period = requirement.period.registry_token
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message=(
+            "cross-period carry used a same-year locally-filed prior period with no external "
+            f"AEAT evidence: modelo={requirement.source_modelo} year={requirement.filing_year} "
+            f"period={requirement_period} origin={requirement.origin.value}. The within-year chain "
+            "is admitted for local export, but the carried value is locally evidenced (app_filing), "
+            "not AEAT-evidenced; file every period with AEAT externally."
+        ),
+        next_action=(
+            "Export and file each period with AEAT externally, then import the official "
+            "justificante/CSV/live evidence to upgrade the local chain when available."
+        ),
+    )
 
 
 def _cross_period_clean_state_next_action(
@@ -1438,6 +1507,7 @@ def _iva_wallet_blocking_verification_finding(decision: object) -> ModeloVerific
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message=_iva_wallet_blocked_message(decision),
         next_action=tr("application.modelo.findings.iva_wallet_next_action"),
+        legal_refs=(_IVA_COMPENSATION_CARRY_LEGAL_REF,),
     )
 
 
@@ -1447,6 +1517,7 @@ def _iva_wallet_error_verification_finding(error: ModeloIvaWalletReconciliationB
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message=_translated_exception_message(error),
         next_action=tr("application.modelo.findings.iva_wallet_next_action"),
+        legal_refs=(_IVA_COMPENSATION_CARRY_LEGAL_REF,),
     )
 
 
