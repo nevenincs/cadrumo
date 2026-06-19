@@ -52,10 +52,12 @@ from ...application.modelo import (
     get_work_unit,
     guard_active_profile_foral_ccaa,
     modelo_work_address_from_operator_target,
+    registry_bindings_for_scope,
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
 )
 from ...core import Period, PeriodError
+from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
 from ...core.errors import AeatError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
@@ -569,30 +571,91 @@ def _bindings_discovery_command(unit: WorkUnit | None) -> str:
     )
 
 
+def _ledger_sourced_missing_binding(error: RegistryValidationError, unit: WorkUnit | None) -> bool:
+    """Return ``True`` when the unsatisfied binding is ledger-aggregation-sourced.
+
+    A ledger-aggregation binding (``LEDGER_BINDING_SOURCE_KINDS``) reads its
+    value from the bucket-scoped ledger and REFUSES a caller ``--binding``
+    override (``errors.error.error_modelo_aggregation_binding``: "Los bindings
+    de agregación derivados del bucket entran en conflicto con los datos
+    indicados"). The generic ``--binding KEY=VALUE`` guidance would therefore
+    steer the operator straight into that refusal, so such bindings need the
+    add-ledger-rows guidance instead.
+
+    The binding's typed ``source`` is resolved from the registry bindings report
+    for the work unit's exact filing scope. This is best-effort: a missing work
+    unit, no active session, or a binding id that does not match a known row
+    (e.g. a ``relation_value_missing`` whose context key is ``relation_id``)
+    degrades to ``False`` so the caller keeps the ``--binding`` guidance.
+    """
+    if unit is None:
+        return False
+    binding_id = (error.context or {}).get("binding_id")
+    if not isinstance(binding_id, str):
+        return False
+    try:
+        report = registry_bindings_for_scope(
+            str(unit.modelo),
+            period=unit.period,
+        )
+    except Exception:
+        _log.debug("missing-binding guidance source lookup failed", exc_info=True)
+        return False
+    ledger_values = {kind.value for kind in LEDGER_BINDING_SOURCE_KINDS}
+    for row in report.rows:
+        if str(row.binding_id) == binding_id:
+            return str(row.source) in ledger_values
+    return False
+
+
 def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str) -> str:
     """Return the missing-binding refusal enriched with operator guidance.
 
     The registry engine names the unsatisfied binding / relation but
     leaves the operator with no path forward. When the failure is a
-    missing-input class, append the ``--binding KEY=VALUE`` syntax and a
-    concrete ``bindings list --missing`` command scoped to the work
-    unit's modelo / year / period so the next attempt can succeed.
+    missing-input class, the guidance is routed by the binding's typed
+    ``source``:
+
+    * a ledger-aggregation binding (``LEDGER_BINDING_SOURCE_KINDS``) reads from
+      the bucket-scoped ledger and rejects a caller ``--binding``, so the
+      operator is told to add / classify the relevant ledger rows and run
+      ``ledger preflight`` — never to pass ``--binding`` (which the app refuses);
+    * every other ``--binding``-accepting source (``previous_filing`` carries,
+      enum / profile bindings) keeps the ``--binding KEY=VALUE`` guidance.
+
+    Both forms append a concrete ``bindings list --missing`` command scoped to
+    the work unit's modelo / year / period so the next attempt can succeed.
     Non-input registry-validation errors fall through unchanged.
     """
     base = tr(error.translated_message, **(error.context or {})) if error.translated_message is not None else str(error)
     if error.translated_message not in _MISSING_INPUT_TRANSLATED_MESSAGES:
         return base
 
-    # Loading the work unit only refines the discovery command with the
-    # concrete modelo / year / period. It is best-effort enrichment: any
-    # failure (missing unit, no active session) degrades to the generic
-    # bindings-list command rather than masking the original refusal.
+    # Loading the work unit refines the discovery command with the concrete
+    # modelo / year / period AND lets the source-kind router resolve the
+    # binding's typed source. It is best-effort enrichment: any failure
+    # (missing unit, no active session) degrades to the generic bindings-list
+    # command and the --binding guidance rather than masking the original
+    # refusal.
     try:
         unit: WorkUnit | None = get_work_unit(work_unit_id)
     except Exception:
         _log.debug("missing-binding guidance work-unit lookup failed", exc_info=True)
         unit = None
     discover_command = _bindings_discovery_command(unit)
+    if _ledger_sourced_missing_binding(error, unit):
+        return tr(
+            "cli.app.modelo.work.missing_binding_guidance_ledger",
+            default=(
+                "{base} This value is aggregated from the bucket ledger and "
+                "cannot be supplied with --binding. Add or classify the "
+                "relevant ledger rows, run `aeat app ledger preflight`, then "
+                "rerun calculate. Run `{discover}` to list every binding the "
+                "calculation still needs."
+            ),
+            base=base,
+            discover=discover_command,
+        )
     return tr(
         "cli.app.modelo.work.missing_binding_guidance",
         default=(

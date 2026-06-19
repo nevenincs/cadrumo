@@ -158,6 +158,58 @@ def test_ledger_add_rejects_negative_amount_with_instructive_error(tmp_path: Pat
     assert "--direction" in combined, combined
 
 
+def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
+    tmp_path: Path,
+) -> None:
+    """``ledger add`` with ``taxable_base + iva_amount != amount`` surfaces a
+    one-line typed refusal — never the raw ``RawTransaction(...)`` pydantic repr.
+
+    The gross-invariant validator (``Transaction._enforce_gross_equals_base_plus_iva``)
+    fires inside ``create_manual_transaction``, *after* the
+    ``ManualLedgerTransactionCommand`` construction. Before the fix the leaked
+    ``pydantic.ValidationError`` reached the generic CLI boundary, dumping the
+    whole ``RawTransaction(...)`` repr (~30 lines). The CLI handler must catch it
+    and route the human-readable validator message through ``_ledger_validation_bad``.
+    """
+    result = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "121.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "office supplies",
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "material_oficina",
+            "--taxable-base",
+            "100.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "50.00",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+
+    assert result.exit_code != 0, result.output
+    combined = result.output or ""
+    # The clean validator message is surfaced (Click's Rich box may wrap the
+    # line at the box border, so assert on a fragment that stays on one line).
+    assert "iva_amount must equal the gross to the cent" in combined, combined
+    # ... and the raw pydantic model repr is NOT dumped to the operator.
+    assert "RawTransaction(" not in combined, combined
+    assert "RawProvenance(" not in combined, combined
+    assert "mappingproxy(" not in combined, combined
+
+
 def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) -> None:
     """``ledger add --amount=49.99 --direction OUTGOING`` is accepted."""
     result = _RUNNER.invoke(
@@ -530,3 +582,136 @@ def test_ledger_add_honours_operator_source_jurisdiction_override_for_resident(
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["transaction"]["source_jurisdiction"] == "FR", payload
+
+
+# ---------------------------------------------------------------------------
+# contract  documented mixed-use flow reaches preflight-ready
+#
+# A MIXED row needs a proportionality reference (``usage_ratio_id``) to pass
+# preflight; ``--business-pct`` alone leaves it un-ready with reason
+# ``missing_proportionality_reference``. The documented working path is:
+#   ledger ratios set <category-id> <ratio>
+#   ledger allocate <tx> --business-pct <ratio> --usage-ratio-id <category-id> \
+#       --category-id <category-id>
+# ``--usage-ratio-id`` lives on ``allocate`` (and ``add``), not on ``classify``,
+# and its value is the spending-category id.
+# ---------------------------------------------------------------------------
+
+
+def _add_eligible_mixed_expense() -> str:
+    """Add one deductible-expense row in a usage-ratio-eligible category.
+
+    ``telefonia_movil`` is a ``USAGE_RATIO_PERSONAL`` category — eligible for a
+    saved usage ratio — so the documented mixed-use flow applies to it. The row
+    carries consistent IVA facts so the only outstanding preflight finding is
+    the proportionality reference.
+    """
+    result = _RUNNER.invoke(
+        app,
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-02-10",
+            "--amount",
+            "60.50",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "phone bill",
+            "--taxable-base",
+            "50.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "10.50",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert result.exit_code == 0, result.output
+    return json.loads(result.output)["result"]["transaction_id"]
+
+
+def test_mixed_row_with_business_pct_alone_is_not_preflight_ready(tmp_path: Path) -> None:
+    """A MIXED row classified with ``--business-pct`` alone fails preflight.
+
+    Preflight reports ``missing_proportionality_reference`` because the row has
+    no ``usage_ratio_id``. This pins the design the doc must describe: a bare
+    percentage is not enough for a MIXED row to be ready.
+    """
+    txn_id = _add_eligible_mixed_expense()
+
+    classified = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "classify",
+            txn_id,
+            "--classification",
+            "MIXED",
+            "--business-pct",
+            "0.5",
+            "--category-id",
+            "telefonia_movil",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert classified.exit_code == 0, classified.output
+
+    preflight = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "preflight", "--year", "2026", "--period", "1T"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert preflight.exit_code == 0, preflight.output
+    assert "ready\tfalse" in preflight.output, preflight.output
+    assert "missing_proportionality_reference" in preflight.output, preflight.output
+
+
+def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> None:
+    """The documented ratios-set + allocate flow makes a MIXED row preflight-ready.
+
+    Mirrors the corrected ``docs/how-to/classify-transactions.md`` mixed-use
+    steps end to end: save a category ratio, then allocate the row naming the
+    same category id for both ``--usage-ratio-id`` and ``--category-id``.
+    Preflight must then report zero issues and ready=true.
+    """
+    txn_id = _add_eligible_mixed_expense()
+
+    ratios_set = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "ratios", "set", "telefonia_movil", "0.5"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert ratios_set.exit_code == 0, ratios_set.output
+
+    allocate = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "allocate",
+            txn_id,
+            "--business-pct",
+            "0.5",
+            "--usage-ratio-id",
+            "telefonia_movil",
+            "--category-id",
+            "telefonia_movil",
+        ],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert allocate.exit_code == 0, allocate.output
+
+    preflight = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "preflight", "--year", "2026", "--period", "1T"],
+        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+    )
+    assert preflight.exit_code == 0, preflight.output
+    assert "issues\t0" in preflight.output, preflight.output
+    assert "ready\ttrue" in preflight.output, preflight.output

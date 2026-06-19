@@ -279,10 +279,20 @@ def ledger_add(
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
-    result = create_manual_transaction(
-        command,
-        transaction_repository=transaction_repository,
-    )
+    # The gross-invariant (`taxable_base + iva_amount == amount`) and other
+    # `Transaction.model_validate` rules fire inside `create_manual_transaction`,
+    # raising a pydantic `ValidationError` whose default rendering dumps the full
+    # `RawTransaction(...)` repr (~30 lines) to the operator. Catch it at the CLI
+    # boundary and surface only the human-readable validator message, matching
+    # the `ManualLedgerTransactionCommand` treatment above — CLI errors are
+    # typed refusals, never raw dumps.
+    try:
+        result = create_manual_transaction(
+            command,
+            transaction_repository=transaction_repository,
+        )
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerAddResult
 
     transaction_payload = ledger_transaction_payload(result.transaction)

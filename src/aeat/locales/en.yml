@@ -110,6 +110,7 @@ adapters:
           scope.
         unsecured_mode_refused: Google OAuth refused because the secret store is running
           in unsecured mode and the active profile carries a real Spanish tax identifier.
+        non_interactive: 'Google OAuth refused: the interactive browser consent flow needs a controlling terminal, but this command was run non-interactively.'
       suggestions:
         close_loopback_port: Close the application holding a stray loopback port and
           retry.
@@ -118,6 +119,7 @@ adapters:
           the active profile before retrying the Google command.
         use_keyring_or_synthetic: Set aeat_secret_store_backend=keyring or switch
           the active profile to a synthetic test tax identifier.
+        run_from_interactive_terminal: 'Run ''aeat config google login'' from an interactive terminal with a web browser available.'
     profile_binding:
       errors:
         no_active_profile: No active AEAT profile is bound for Google OAuth.
@@ -1854,6 +1856,7 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        missing_binding_guidance_ledger: '%{base} This value is aggregated from the bucket ledger and cannot be supplied with --binding. Add or classify the relevant ledger rows, run `aeat app ledger preflight`, then rerun calculate. Run `%{discover}` to list every binding the calculation still needs.'
   common:
     errors:
       draft_id_not_found: Draft ID %{draft_id} not found
@@ -1997,6 +2000,7 @@ cli:
         unsecured_mode: Google access is blocked while the secret store runs in unsecured
           mode for a profile with a real NIF.
         validation: 'The data supplied for Google did not pass validation: {detail}'
+        non_interactive: 'Google login needs an interactive terminal with a web browser, but this command was run non-interactively: {detail}'
       folder:
         folder_id_help: Google Drive folder id
         get_help: Show the configured Google Drive root folder
@@ -2665,6 +2669,7 @@ cli:
       warning: Warning
       warnings: Warnings
       'yes': 'Yes'
+      child_id: 'Child transaction id'
     link:
       actor_help: Operator label recorded on bucket events.
       errors:
@@ -3172,7 +3177,6 @@ cli:
       invalid_state: 'Invalid review state: %{state}'
     labels:
       affected_object_id: Object
-      bucket: Bucket
       id: ID
       kind: Kind
       legal_refs: Legal references
@@ -4034,8 +4038,7 @@ errors:
       is not available yet.
     reconciliation_drift: Reconciliation detected arithmetic or identity drift across
       declarations. Review the amounts before continuing.
-    reconciliation_evidence_invalid: The external evidence provided could not be parsed.
-      Check the receipt file.
+    reconciliation_evidence_invalid: 'The PDF could not be read. Check that the file is the AEAT justificante and not a different document, and that it is not corrupt.'
     refused_access_gate_live_read_not_enabled: Live-read access to the AEAT is disabled.
       This operation cannot contact the AEAT under the current configuration.
     refused_apoderado_live_check_unavailable: The live check of representatives is
@@ -4243,6 +4246,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    refused_google_non_interactive: 'Google login needs an interactive terminal with a browser; run it from an interactive shell.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -4382,7 +4386,7 @@ review:
     errors:
       item_not_found: Review item not found.
       reserved_kind: Review kind is reserved and is not an emitted review item.
-      unknown_kind: Unknown review kind.
+      unknown_kind: 'Unknown review kind. Accepted --kind values: %{accepted_kinds}.'
       unsupported_item_type: Unsupported review item type.
   transaction:
     summary: Transaction pending classification

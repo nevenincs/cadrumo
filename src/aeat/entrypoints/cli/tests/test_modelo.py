@@ -696,6 +696,81 @@ def test_verification_report_lines_omits_next_action_when_granted() -> None:
     assert not any(line.startswith("next_action\t") for line in lines)
 
 
+def test_verification_report_view_exposes_finding_legal_and_source_refs() -> None:
+    """`verification-report view` surfaces each finding's legal_refs and source_refs.
+
+    The verification-reports how-to promises every finding carries "the legal
+    references behind the rule". This locks both transports the ``view`` command
+    renders: the text ``finding_legal_refs`` / ``finding_source_refs`` lines and
+    the typed JSON ``VerificationReportShowResult.findings[*].legal_refs`` /
+    ``source_refs``. The grounding is pulled from the persisted finding, never
+    invented.
+    """
+    from datetime import UTC, datetime
+
+    from ....domain.modelos._verification_report import (
+        ModeloVerificationFinding,
+        ModeloVerificationFindingKind,
+        ModeloVerificationFindingSeverity,
+        VerificationCompletenessStatus,
+        VerificationReport,
+        derive_verification_report_id,
+    )
+    from .._modelo_payloads import VerificationReportShowResult
+    from .._modelo_rendering import (
+        verification_report_lines as _verification_report_lines,
+    )
+    from .._modelo_rendering import (
+        verification_report_payload as _verification_report_payload,
+    )
+
+    run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
+    calc_id = "c" * 64
+    report_id = derive_verification_report_id(
+        calculation_revision_id=calc_id,
+        run_at=run_at,
+        verified_by="test-actor",
+    )
+    legal = ("ley-37-1992:art-88", "rd-1624-1992:art-71")
+    sources = ("orden-eha-3786-2008:art-1",)
+    report = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=calc_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=(
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                casilla_id="0100",
+                message="cuota repercutida is under-declared",
+                legal_refs=legal,
+                source_refs=sources,
+            ),
+        ),
+        run_at=run_at,
+        verified_by="test-actor",
+        granted_verificado_completo=False,
+    )
+
+    # Text transport: the line iterator the view command emits in text mode.
+    lines = _verification_report_lines(report)
+    legal_lines = [line for line in lines if line.startswith("finding_legal_refs\t")]
+    source_lines = [line for line in lines if line.startswith("finding_source_refs\t")]
+    assert len(legal_lines) == 1
+    assert all(ref in legal_lines[0] for ref in legal)
+    assert len(source_lines) == 1
+    assert sources[0] in source_lines[0]
+
+    # JSON transport: the exact typed payload the view command validates and
+    # surfaces on the envelope's ``result``.
+    payload = _verification_report_payload(report)
+    result = VerificationReportShowResult.model_validate(payload.model_dump(mode="python"))
+    dumped = result.model_dump(mode="json")
+    finding = dumped["findings"][0]
+    assert finding["legal_refs"] == list(legal)
+    assert finding["source_refs"] == list(sources)
+
+
 # ---------------------------------------------------------------------------
 # contract — describe label localisation
 # ---------------------------------------------------------------------------

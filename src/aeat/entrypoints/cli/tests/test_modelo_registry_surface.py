@@ -321,6 +321,55 @@ def test_missing_binding_guidance_enriches_registry_validation_error() -> None:
     assert "irpf.previous_year_economic_activity_net_income" in guidance
 
 
+def test_missing_binding_guidance_routes_by_binding_source(tmp_path) -> None:
+    """The missing-binding guidance is routed by the binding's typed source.
+
+    A ledger-aggregation binding rejects a caller ``--binding`` (it reads from
+    the bucket ledger), so its guidance MUST steer the operator to add ledger
+    rows and run ``ledger preflight`` — NOT to pass ``--binding`` (which the app
+    refuses with ``error_modelo_aggregation_binding``). A ``previous_filing``
+    binding genuinely accepts ``--binding``, so it keeps the ``--binding``
+    guidance. Modelo 130 carries both source kinds, so it exercises both
+    branches against the real registry through one persisted work unit.
+    """
+
+    from ....application.modelo import create_work_unit
+    from ....core import Period
+    from ....domain.calculations.registry import RegistryValidationError
+    from ....tests.secure_sql import isolated_runtime_profile
+    from .._modelo import _missing_binding_guidance
+
+    period = Period.from_year_and_code(2025, "1T")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="missing-binding-route") as runtime:
+        unit = create_work_unit(
+            bucket_id=runtime.bucket_id,
+            modelo="130",
+            filing_year=2025,
+            period=period,
+            revision_id="2019-y-siguientes",
+        )
+
+        ledger_error = RegistryValidationError(
+            "binding 'modelo-130-actividad-economica-ingresos-cumulative' has no supplied value",
+            translated_message="errors.calc.binding_value_missing",
+            context={"binding_id": "modelo-130-actividad-economica-ingresos-cumulative"},
+        )
+        ledger_guidance = _missing_binding_guidance(ledger_error, unit.work_unit_id)
+        # Ledger-sourced: steer to ledger rows + preflight, NOT --binding.
+        assert "ledger preflight" in ledger_guidance
+        assert "--binding KEY=VALUE" not in ledger_guidance
+
+        prev_filing_error = RegistryValidationError(
+            "binding 'irpf.previous_year_economic_activity_net_income' has no supplied value",
+            translated_message="errors.calc.binding_value_missing",
+            context={"binding_id": "irpf.previous_year_economic_activity_net_income"},
+        )
+        prev_filing_guidance = _missing_binding_guidance(prev_filing_error, unit.work_unit_id)
+        # previous_filing-sourced: keep the --binding guidance, not ledger.
+        assert "--binding KEY=VALUE" in prev_filing_guidance
+        assert "ledger preflight" not in prev_filing_guidance
+
+
 def test_bindings_discovery_command_renders_runnable_period_token() -> None:
     """The work-unit-scoped discovery command must place only the bare AEAT
     period token after ``--period`` — never the combined ``"<year> <token>"``

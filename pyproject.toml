@@ -375,6 +375,7 @@ convention = "google"
   "S101",
   "S105",
   "S106",
+  "S603",
   "T20"
 ]
 # `_NAMESPACE_TOKEN` is a SecureObjectRepository namespace identifier,
