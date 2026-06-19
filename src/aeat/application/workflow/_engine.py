@@ -43,6 +43,9 @@ from ._engine_helpers import (
     classify_cert_expiry as _classify_cert_expiry,
 )
 from ._engine_helpers import (
+    draft_blocking_finding_descriptions as _draft_blocking_finding_descriptions,
+)
+from ._engine_helpers import (
     enum_value as _enum_value,
 )
 from ._engine_helpers import (
@@ -802,7 +805,11 @@ class WorkflowEngine:
         }
         if _enum_value(draft.status) not in ready_statuses:
             status_value = _enum_value(draft.status)
-            status_summary = _summary_text(f"Draft {draft.draft_id} not ready: status={status_value}")
+            blocking_findings = _draft_blocking_finding_descriptions(draft)
+            findings_clause = f"; blocking findings: {'; '.join(blocking_findings)}" if blocking_findings else ""
+            status_summary = _summary_text(
+                f"Draft {draft.draft_id} not ready: status={status_value}{findings_clause}",
+            )
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.BUILDING_DRAFT,
@@ -810,7 +817,15 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=False,
                     summary=status_summary,
-                    details={"draft_id": draft.draft_id, "status": status_value},
+                    details={
+                        "draft_id": draft.draft_id,
+                        "status": status_value,
+                        "blocking_findings": "; ".join(blocking_findings) if blocking_findings else "",
+                        "next_action": (
+                            "Run: aeat app modelo verification-report list"
+                            " --calculation-revision-id <calculation_revision_id>"
+                        ),
+                    },
                 ),
             )
             raise WorkflowAbortSignalError(
