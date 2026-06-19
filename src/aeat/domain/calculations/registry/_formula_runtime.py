@@ -342,6 +342,7 @@ def calculate_registry_snapshot(
                             "casilla_id": target,
                             "casilla_number": target_casilla.number,
                             "value": str(value),
+                            "violation": str(violation),
                             "formula_id": formula.id,
                             "legal_refs": ",".join(target_casilla.constraints.legal_refs),
                             "source_refs": ",".join(target_casilla.constraints.source_refs),
