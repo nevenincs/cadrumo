@@ -103,6 +103,9 @@ adapters:
         id_token_module_not_importable: A google-auth id_token modul nem importálható.
         id_token_verification_failed: A Google id_token ellenőrzése sikertelen.
         loopback_bind_failed: A helyi visszahurkos OAuth-vevő nem tudott portot foglalni.
+        non_interactive: 'A Google OAuth elutasítva: az interaktív böngészős hozzájárulási
+          folyamathoz vezérlő terminál szükséges, de ezt a parancsot nem interaktívan
+          futtatták.'
         oauthlib_not_importable: A google-auth-oauthlib nem importálható; az OAuth-folyamat
           nem indítható el.
         profile_state_unresolved: A Google OAuth nem tudja feloldani a kiválasztott
@@ -120,6 +123,8 @@ adapters:
         repair_profile_state: Futtassa az `aeat config profile health` parancsot,
           majd javítsa ki vagy váltsa át az aktív profilt, mielőtt újrapróbálja a
           Google-parancsot.
+        run_from_interactive_terminal: Futtassa az 'aeat config google login' parancsot
+          interaktív terminálban, elérhető webböngészővel.
         use_keyring_or_synthetic: Állítsa be az aeat_secret_store_backend=keyring
           értéket, vagy váltson az aktív profilt szintetikus teszt-adóazonosítóra.
     profile_binding:
@@ -560,6 +565,11 @@ application:
           mozgast.
         invalid_valuation_method: 'A keszlet ertekelesi mod nem tamogatott: %{valuation_method}.'
   invoices:
+    creation:
+      errors:
+        duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
+        unsupported_iva_rate: 'A(z) %{iva_rate} áfakulcs nem ismert; használja az
+          alábbiak egyikét: %{accepted}.'
     importing:
       errors:
         import_file_read_failed: 'A szamlaimport fajl nem olvashato: %{path_name}.'
@@ -568,6 +578,14 @@ application:
         invalid_json_shape: A szamla JSON tartalma objektum vagy objektumlista kell
           legyen.
         invalid_kind: 'A szamla tipusa nem tamogatott: %{kind}.'
+    lifecycle:
+      errors:
+        ambiguous_invoice_prefix: 'A(z) %{invoice_id} számlaazonosító-előtag nem egyértelmű;
+          több találat: %{candidates}.'
+        invoice_id_required: Számlaazonosító megadása kötelező.
+        invoice_not_found: 'A katalógusban nem található számla: %{invoice_id}.'
+        remove_linked_invoice: 'A(z) %{invoice_id} számla nem törölhető, amíg tranzakciókhoz
+          kapcsolódik: %{linked_transaction_ids}. Előbb oldja fel a kapcsolatokat.'
     linking:
       errors:
         linked_invoice_not_found: A(z) %{invoice_id} szamla nem talalhato a kapcsolas
@@ -650,7 +668,15 @@ application:
         casilla-azonosítók hiányoznak a javított térképből.'
       amendment_verification_refused_no_snapshot: A nyilvántartásban nincs pillanatkép
         a kért modellhez, évhez és időszakhoz.
-      calculate_binding_unknown: '--binding %{key} egyik binding azonositonak sem felel meg ebben a revizioban. Elfogadott binding azonositok: %{accepted}. Hasznalja a `aeat app modelo bindings list <MODELO>` parancsot az ervenyes azonositok listazasahoz.'
+      calculate_binding_is_date_sourced: A --binding %{key} egy datum tipusu kotes,
+        amely az aktiv profilbol szarmazik (az adozo datumadata, peldaul a szuletesi
+        datum); nem adhato meg --binding reven, amely csak decimalis es felsorolasi
+        ertekeket fogad. Allitsd be profiladatkent (pl. aeat config profile create
+        ... --taxpayer-birth-date EEEE-HH-NN), majd szamolj ujra.
+      calculate_binding_unknown: '--binding %{key} egyik binding azonositonak sem
+        felel meg ebben a revizioban. Elfogadott binding azonositok: %{accepted}.
+        Hasznalja a `aeat app modelo bindings list <MODELO>` parancsot az ervenyes
+        azonositok listazasahoz.'
       calculate_casilla_ambiguous: 'A --casilla %{key} több casillához illeszkedik
         ebben a revízióban: %{candidates}. A pontosításhoz adja meg a PREFIX:NNNNN
         alakú azonosítót.'
@@ -700,6 +726,7 @@ application:
       export_operator_profile_missing: Az exportáláshoz szükség van az operátor nevére
         az aktív profilból, de nincs perzisztált profil; exportálás előtt töltse ki
         az identity.surnames és identity.name mezőket.
+      export_output_path_invalid: application.modelo.errors.export_output_path_invalid
       export_period_unmappable: A(z) %{work_unit_id} munkaegység %{period} időszakot
         tartalmaz, amely nem képezhető le regiszter bevallási időszakra.
       export_revision_state_refused: A(z) %{calculation_revision_id} számítási revízió
@@ -879,6 +906,8 @@ application:
       seed_negative_amount: A vetőösszeg nem lehet negatív.
       seed_no_nif: Nincs NIF meghatarozva a vetoosszeg-muvelethez; rendelje hozza
         az aktiv profilhoz a vetoosszeg letrehozasa elott.
+      override_sealed_blocked: 'Felülbírálás elutasítva: egy már benyújtott 303-as modell (%{blocking_filing_year}/%{blocking_period}) már felhasználta ennek az időszaknak a kompenzációs alapját. A felülbírálás rögzítése módosítana egy benyújtott bevallást.'
+      override_fresh_wallet_blocked: 'Felülbírálás elutasítva: az AEAT pénztárának aktuális leolvasása már feloldja a 303-as modellt %{filing_year}/%{period}. A friss AEAT-bizonyíték a mérvadó, és a felülbírálás nem írhatja felül.'
     profile_binding:
       errors:
         date_value_type_invalid: 'A(z) %{binding_id} datumcsatornas kotes profiladata
@@ -1178,6 +1207,18 @@ cli:
         year_help: Adóév.
       invoice:
         add_help: Új üzleti számla regisztrálása.
+        catalogue:
+          country_code_help: 'A partner ISO 3166-1 alfa-2 országkódja (alapértelmezés:
+            ES).'
+          create_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
+          group_help: Egyeztetési katalógus számlái, amelyek tranzakciókhoz kapcsolhatók.
+          invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
+          list_help: Az egyeztetési katalógus számláinak listázása.
+          operation_type_unsupported: 'A(z) --operation-type {value} még nem tudja
+            feltölteni a 349-es modellt a katalógusból; támogatott: {supported}.'
+          remove_help: Egy egyeztetési katalógusbeli számla törlése.
+          view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító
+            vagy egyértelmű előtag alapján.
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
           műveletek).
         eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
@@ -1225,6 +1266,8 @@ cli:
         classification_help: Target classification for matching transactions.
         description_pattern_help: Regex pattern matched (case-insensitive) against
           transaction description.
+        empty_pattern: Egy szabályhoz nem üres --description-pattern szükséges (egy
+          szó vagy kifejezés, pl. "software"), hogy illeszkedjen a tranzakciók leírásaihoz.
         group_help: Manage and apply ledger classification rules.
         list_empty: (no rules stored)
         list_header: "priority\tclassification\tpattern\trule_id"
@@ -1525,6 +1568,16 @@ cli:
         correct_reason_required: 'Adja meg a --reason értéket: rögzítse, miért javítja
           a nyitó egyenleget; nem lehet üres.'
         group_help: Local IVA compensation wallet balance commands.
+        override_amount_help: cli.app.modelo.iva_wallet.override_amount_help
+        override_confirm_help: cli.app.modelo.iva_wallet.override_confirm_help
+        override_confirm_required: cli.app.modelo.iva_wallet.override_confirm_required
+        override_evidence_locator_help: cli.app.modelo.iva_wallet.override_evidence_locator_help
+        override_evidence_locator_required: cli.app.modelo.iva_wallet.override_evidence_locator_required
+        override_filing_year_help: cli.app.modelo.iva_wallet.override_filing_year_help
+        override_help: cli.app.modelo.iva_wallet.override_help
+        override_period_help: cli.app.modelo.iva_wallet.override_period_help
+        override_reason_help: cli.app.modelo.iva_wallet.override_reason_help
+        override_reason_required: cli.app.modelo.iva_wallet.override_reason_required
         seed_amount_help: Az IVA-kompenzáció kezdő összege decimálisban.
         seed_confirm_help: Erősítse meg a vetőösszeg műveletet.
         seed_confirm_required: Adja meg a --confirm kapcsolót a vetőösszeg-művelet
@@ -1571,7 +1624,6 @@ cli:
         binding_help: Kötési érték KEY=VALUE szintaxissal (ismételhető).
         casilla_help: Mezőérték CASILLA=DECIMAL szintaxissal (ismételhető).
         ccaa_help: Autonóm közösség kódja a területi vetítéshez.
-        m100_calculation_error: 'Belső hiba: Modelo 100 számítás sikertelen.'
         no_m130_revisions: 'Nincs M130-revízió a megadott évre. Először futtasd minden
           negyedévre: `aeat app modelo work calculate --modelo 130 --year %{year}
           --period 1T`.'
@@ -1770,6 +1822,11 @@ cli:
           esetén 0–12 közé kell esnie; kapott {meses} ebben: {spec}.'
         missing_binding_guidance: '%{base} Adja meg az értéket a --binding KEY=VALUE
           kapcsolóval ezen a parancson, vagy futtassa: `%{discover}` az összes hiányzó
+          kötés listázásához.'
+        missing_binding_guidance_ledger: '%{base} Ez az érték a bucket főkönyvéből
+          összesítődik, és nem adható meg a --binding kapcsolóval. Adja hozzá vagy
+          sorolja be a megfelelő főkönyvi sorokat, futtassa az `aeat app ledger preflight`
+          parancsot, majd számoljon újra. Futtassa: `%{discover}` az összes hiányzó
           kötés listázásához.'
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         name_help: Opcionális megjelenítési név a munkaegységhez.
@@ -2050,6 +2107,8 @@ cli:
         loopback_bind: 'Nem sikerült helyi portot megnyitni a Google-bejelentkezés
           befejezéséhez: {detail}'
         network: 'Nem sikerült elérni a Google-t: {detail}'
+        non_interactive: 'A Google bejelentkezéshez interaktív terminál és webböngésző
+          szükséges, de ezt a parancsot nem interaktívan futtatták: {detail}'
         profile_unbound: 'Nincs aktív profil. Futtasd: aeat config switch NÉV, vagy
           add meg a --profile kapcsolót.'
         scope_insufficient: 'A Google-hozzáféréshez megadott engedélyek nem elegendők.
@@ -2238,6 +2297,8 @@ cli:
         ''aeat config switch <name>''.'
       import_help: Hordozható profilcsomag regisztrálása JSON-fájlból.
       import_invalid_bundle: 'Érvénytelen profilcsomag: a JSON nem felel meg a profilcsomag-sémának.'
+      import_invalid_tax_id: 'A profilcsomag adóazonosítója érvénytelen: %{error}.
+        Javítsd az azonosítót és exportáld újra, vagy érvényes csomagot importálj.'
       import_label_help: 'Az importált profil megjelenítési neve; alapértelmezés:
         a csomagban tárolt név. Használja második példány importálásához új felirat
         alatt.'
@@ -2508,6 +2569,9 @@ cli:
         a külföldi forrású tételeket is bevonná az IRPF alapba (93.5 cikk szegregáció).
       source_jurisdiction_required_irnr: A --source-jurisdiction megadasa kotelezo
         nem rezidens IRNR profiloknal.
+      system_state_not_assignable: 'A(z) ''%{value}'' besorolást az aeat automatikusan
+        állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
+        vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
       taxable_base_help: ÁFA-mentes alapösszeg.
       usage_ratio_help: Felhasználási arány azonosítója az arányos üzleti használathoz.
       value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
@@ -2635,6 +2699,8 @@ cli:
       split_recommended_message: A csatolt számla több, eltérő kulcsú vagy kategóriájú
         sort tartalmazhat. Futtasd újra a --auto-split kapcsolóval, hogy önállóan
         bevallható alap- és áfa-gyermekekre váljon szét.
+      system_state_not_assignable: 'A(z) ''%{value}'' besorolást az aeat automatikusan
+        állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED.'
       taxable_base_help: Adóköteles alapösszeg.
       vision_model_help: Felülírja a helyi Ollama látómodellt egy beszkennelt vagy
         képi számla olvasásához (pl. qwen2.5vl:7b); alapértelmezetten a beállított
@@ -2733,6 +2799,7 @@ cli:
       business_pct: Üzleti %
       category_id: Kategória
       checked: Ellenőrzött tranzakciók
+      child_id: Gyermektranzakció-azonosító
       children: Gyermek elemek
       counterparty: Szerződő fél
       created_event_id: Létrehozó bucket-esemény
@@ -2803,6 +2870,7 @@ cli:
         ledger invoice add' azonosító.
     list:
       by_group_help: A lista csoportositasa csoportcimke szerint.
+      column_header: "id\tteljes_id\tdátum\tösszeg\tleírás\tellenőrzési_állapot"
       filter_help: Sorok szűrése állapot, időszak (egyszerű AEAT token, pl. period=1T)
         és év (pl. year=2026), besorolás, eltérés, import, irány (bevétel/kiadás)
         vagy szöveg szerint. Csoportcímke szerinti szűréshez használja a külön --group
@@ -3306,7 +3374,6 @@ cli:
       invalid_state: 'Érvénytelen felülvizsgálati állapot: %{state}'
     labels:
       affected_object_id: Objektum
-      bucket: Mappa
       id: Azonosító
       kind: Típus
       legal_refs: Jogszabályi hivatkozások
@@ -4164,8 +4231,8 @@ errors:
       nem elérhető.
     reconciliation_drift: Az egyeztetés számtani vagy azonossági eltérést észlelt
       a bevallások között. A folytatás előtt tekintse át az összegeket.
-    reconciliation_evidence_invalid: A megadott külső igazolást nem sikerült elemezni.
-      Ellenőrizze a bizonylat fájlját.
+    reconciliation_evidence_invalid: A PDF nem volt olvasható. Ellenőrizd, hogy a
+      fájl az AEAT-igazolás, és nem más dokumentum, és hogy nem sérült-e.
     refused_access_gate_live_read_not_enabled: Az AEAT élő olvasási hozzáférés le
       van tiltva. Ez a művelet az aktuális konfiguráció alatt nem léphet kapcsolatba
       az AEAT-tal.
@@ -4231,6 +4298,8 @@ errors:
       vagy összeg) nem ment át az érvényesítésen.
     refused_financial_usage_ratios_censo_mismatch: Egy mentett otthoni irodahasználati
       arány eltér a censotól, amely a kötelező jogi forrás. Igazítsa a censo értékéhez.
+    refused_google_non_interactive: A Google bejelentkezéshez interaktív terminál
+      és böngésző szükséges; futtassa interaktív shellből.
     refused_google_profile_unbound: Nincs aktív profil kötve. Válasszon profilt, vagy
       használja a --profile kapcsolót.
     refused_google_unsecured_mode: A Google nem engedélyezhető nem biztonságos tárolási
@@ -4516,7 +4585,8 @@ review:
       item_not_found: A felülvizsgálati elem nem található.
       reserved_kind: A felülvizsgálati típus fenntartott, és nem kibocsátott felülvizsgálati
         elem.
-      unknown_kind: Ismeretlen felülvizsgálati elemtípus.
+      unknown_kind: 'Ismeretlen felülvizsgálati elemtípus. Elfogadott --kind értékek:
+        %{accepted_kinds}.'
       unsupported_item_type: 'Nem támogatott felülvizsgálati elemtípus: %{item_type}.'
   transaction:
     summary: Tranzakció besorolásra vár

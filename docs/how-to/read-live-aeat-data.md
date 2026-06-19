@@ -45,10 +45,18 @@ aeat config profile censo pull
 This reads your censo from AEAT and saves a snapshot. It changes nothing in your
 profile until you review and apply it.
 
-The `aeat app live` command group collects the read-only commands, such as
-`aeat app live justificante pull`, `aeat app live notifications pull`, and
-`aeat app live filed pull`. Run `aeat app live --help` to see them, or follow the
-per-surface guides for each one.
+The `aeat app live` command group collects the read-only commands. Each one
+takes the arguments that scope the read. For example:
+
+- `aeat app live justificante pull --modelo 303 --year 2026 --period 1T` — all
+  three of `--modelo`, `--year`, and `--period` are required.
+- `aeat app live filed pull --modelo 303 --year 2026` — `--year` is required;
+  add `--period` to narrow to one period, or use `--from-year`/`--to-year` for a
+  range.
+- `aeat app live notifications pull` — needs no scope arguments.
+
+Run `aeat app live --help` to see the full set, or follow the per-surface guides
+for each one.
 
 ## Downloaded facts change only your local records
 
@@ -66,8 +74,17 @@ active profile.
 
 ## If a live read fails
 
-A live read needs configured authentication and a current session. If a read
-reports that authentication is missing or the session expired, re-check it with
+A live read needs configured authentication and a current session. Before it
+contacts AEAT it runs an authentication preflight. If you have not configured a
+provider yet, the read refuses at that preflight. The refusal text mentions a
+Cl@ve identity check, but the underlying cause is that authentication is not
+configured (the preflight reports `auth_configured=False`). Configure a provider
+first; see [Authenticate with AEAT](authenticate-with-aeat.md).
+
+The CLI prints its messages in Spanish. A typical refusal reads `Refused. La
+identidad de Cl@ve Móvil no coincide...` followed by a `-> Run` next step.
+
+If a read reports that the session expired, re-check authentication with
 [Authenticate with AEAT](authenticate-with-aeat.md), then see
 [Diagnose and repair your local setup](troubleshooting.md). When the
 troubleshooting steps don't resolve it, follow the privacy-safe support request

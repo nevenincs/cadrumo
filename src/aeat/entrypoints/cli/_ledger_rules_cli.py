@@ -107,6 +107,20 @@ def rule_add(
     from ...core import resolve_active_bucket_id
 
     bucket_id = _rule_bucket_id()
+    if not description_pattern.strip():
+        # An empty pattern trips the model's ``min_length=1`` as a raw pydantic
+        # ValidationError (not a ValueError, so the except below misses it) and a
+        # whitespace-only pattern matches nothing useful. Refuse both at the
+        # boundary with an instructive message instead of leaking the pydantic repr.
+        raise _bad(
+            tr(
+                "cli.app.ledger.rule.empty_pattern",
+                default=(
+                    'A rule needs a non-empty --description-pattern (a word or phrase, e.g. "software") '
+                    "to match transaction descriptions."
+                ),
+            ),
+        )
     validated_category_id = _validate_category_id(category_id)
     try:
         rule = add_classification_rule(

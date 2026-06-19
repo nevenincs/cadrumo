@@ -115,7 +115,6 @@ def review_show(
         f"{tr('cli.review.labels.kind')}\t{row.kind}",
         f"{tr('cli.review.labels.source_kind')}\t{row.source_kind or ''}",
         f"{tr('cli.review.labels.affected_object_id')}\t{row.affected_object_id}",
-        f"{tr('cli.review.labels.bucket')}\t{row.bucket_id}",
         f"{tr('cli.review.labels.severity')}\t{row.severity.value}",
         f"{tr('cli.review.labels.next')}\t{row.canonical_next_command}",
     ]
@@ -136,7 +135,6 @@ def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[st
         f"{tr('cli.review.labels.kind')}\t"
         f"{tr('cli.review.labels.source_kind')}\t"
         f"{tr('cli.review.labels.affected_object_id')}\t"
-        f"{tr('cli.review.labels.bucket')}\t"
         f"{tr('cli.review.labels.period')}\t"
         f"{tr('cli.review.labels.severity')}\t"
         f"{tr('cli.review.labels.next')}"
@@ -147,7 +145,7 @@ def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[st
     for row in report.rows:
         base = (
             f"{row.item_id}\t{row.kind}\t{row.source_kind or ''}\t{row.affected_object_id}\t"
-            f"{row.bucket_id}\t{row.period or ''}\t{row.severity.value}\t{row.canonical_next_command}"
+            f"{row.period or ''}\t{row.severity.value}\t{row.canonical_next_command}"
         )
         if explain:
             base = f"{base}\t{', '.join(row.legal_refs)}"

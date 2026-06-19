@@ -69,6 +69,16 @@ _ACCEPTED_KIND_TO_INTERNAL: Mapping[str, frozenset[ReviewItemKind]] = MappingPro
     },
 )
 
+# The operator-facing ``--kind`` vocabulary: only the source kinds that map to an
+# emitted review item, in the order documented in
+# ``docs/how-to/review-queue.md``. ``live_notification`` / ``sync_divergence`` are
+# parseable but emit nothing, so they are not advertised in the instructive
+# refusal — surfacing them would invite an operator to filter on a kind that can
+# never produce a row.
+ACCEPTED_KINDS: tuple[str, ...] = tuple(
+    str(kind) for kind, internal in _ACCEPTED_KIND_TO_INTERNAL.items() if internal
+)
+
 
 def project_review_queue(
     *,
@@ -127,7 +137,12 @@ def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] |
             raise ReviewError(
                 message="unknown review kind",
                 translated_message="review.operator.errors.unknown_kind",
-                context={"accepted_kinds": tuple(sorted(str(kind) for kind in _ACCEPTED_KIND_TO_INTERNAL))},
+                # Surface the accepted set in the refusal (CLI-instructive-gate
+                # mandate) without echoing the raw selector, which may carry
+                # operator-private text. ``accepted_kinds`` is a pre-joined
+                # string because the i18n interpolation renders the value with
+                # ``str(...)`` and a bare tuple would print as a Python repr.
+                context={"accepted_kinds": ", ".join(ACCEPTED_KINDS)},
             )
         internal.update(mapped)
     return frozenset(internal)

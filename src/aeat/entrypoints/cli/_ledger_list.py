@@ -304,7 +304,13 @@ def _ledger_list_rows_and_lines(
     by_group: bool,
 ) -> tuple[list[LedgerListRowPayload], list[str]]:
     rows: list[LedgerListRowPayload] = []
-    lines = [tr("cli.ledger.list.header")]
+    lines = [
+        tr("cli.ledger.list.header"),
+        tr(
+            "cli.ledger.list.column_header",
+            default="id\tfull_id\tdate\tamount\tdescription\treview_status",
+        ),
+    ]
     display_width = compute_display_id_width(all_transaction_ids)
     current_group: str | None = None
     first_group_seen = False

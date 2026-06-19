@@ -99,6 +99,31 @@ def test_classify_from_csv_partial_failure_applies_valid_rows(tmp_path: Path) ->
     assert payload["failures"]  # at least one failure for unknown id
 
 
+def test_classify_from_csv_rejects_pipeline_managed_state(tmp_path: Path) -> None:
+    """A bulk row naming a pipeline-managed state reds (mirrors the single-classify guard).
+
+    ``SKIPPED_BY_RULE`` / ``FAILED_VALIDATION`` / ``PROCESSED_UNCLASSIFIED`` are
+    produced by the pipeline, never assigned by hand. The valid BUSINESS row
+    still applies (partial-success); the system-state row lands in ``failures``.
+    """
+    tx1, tx2 = _import_two_transactions(tmp_path)
+
+    csv_content = f"transaction_id,classification\n{tx1},BUSINESS\n{tx2},SKIPPED_BY_RULE\n"
+    csv_file = tmp_path / "system_state.csv"
+    csv_file.write_text(csv_content, encoding="utf-8")
+
+    result = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["applied"] == 1, payload
+    failure_ids = {f["transaction_id"] for f in payload["failures"]}
+    assert tx2 in failure_ids, payload
+    assert any("set automatically by aeat" in f["reason"] for f in payload["failures"]), payload
+
+
 def test_classify_from_csv_rejects_unknown_column(tmp_path: Path) -> None:
     tx1, _ = _import_two_transactions(tmp_path)
 
@@ -172,6 +197,26 @@ def test_rule_add_invalid_regex_rejected() -> None:
         ["app", "ledger", "rule", "add", "--description-pattern", "[invalid", "--classification", "BUSINESS"],
     )
     assert result.exit_code != 0
+
+
+@pytest.mark.parametrize("pattern", ["", "   "])
+def test_rule_add_empty_or_whitespace_pattern_rejected_cleanly(pattern: str) -> None:
+    """``rule add`` with an empty/whitespace pattern is refused with a clean message.
+
+    The empty string trips the model's ``min_length=1`` as a raw pydantic
+    ``ValidationError`` (not a ``ValueError``); without the boundary guard it
+    leaked the pydantic repr/URL. A whitespace-only pattern matches nothing
+    useful. Both must surface the instructive refusal, never a pydantic dump.
+    """
+    result = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "rule", "add", "--description-pattern", pattern, "--classification", "BUSINESS"],
+    )
+    assert result.exit_code != 0, result.output
+    combined = result.output or ""
+    assert "pydantic.dev" not in combined, combined
+    assert "input_value" not in combined, combined
+    assert "--description-pattern" in combined, combined
 
 
 def test_rule_list_empty() -> None:

@@ -290,3 +290,41 @@ def test_providers_lists_availability(tmp_path: Path) -> None:
     assert names == {"claude", "antigravity", "codex"}
     for p in payload["providers"]:
         assert isinstance(p["available"], bool)
+
+
+# ---------------------------------------------------------------------------
+# unknown option: --nif is refused, never silently ignored (audit m18)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("extra_flags", [[], ["--saturate"]])
+def test_llm_classify_rejects_unknown_nif_option(
+    tmp_path: Path,
+    _deterministic_claude: _DeterministicClassifier,
+    extra_flags: list[str],
+) -> None:
+    """``--nif`` is not a classify flag: it must be refused, never silently dropped.
+
+    Audit finding m18 observed ``--nif`` appearing to be *silently ignored* on the
+    LLM-assisted classify surface (the real identity flag is ``--tax-id`` on
+    ``config profile create``, never on ``ledger classify``). The silent-accept
+    appearance only arose when no profile was active and the cold-start write guard
+    refused first, masking option parsing. With an active profile present (this
+    module's autouse fixture), the unknown option must be rejected with a non-zero
+    exit, the offending flag named, and *nothing* classified — never accepted as a
+    no-op scoping flag. This regression fails the moment a no-op ``--nif`` (or
+    ``ignore_unknown_options``) is added to the surface.
+    """
+    tx = _import_one_transaction(tmp_path)
+
+    result = _RUNNER.invoke(
+        app,
+        ["app", "ledger", "classify", tx, "--llm", "claude", *extra_flags, "--nif", "12345678Z"],
+    )
+
+    assert result.exit_code != 0, result.output
+    # The refusal names the offending flag rather than swallowing it.
+    assert "--nif" in result.output
+    # No silent-ignore: the row was not classified as a side effect of the
+    # rejected invocation.
+    assert _row_by_id(tx)["business_classification"] == "NOT_YET_PROCESSED"

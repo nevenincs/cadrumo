@@ -49,9 +49,13 @@ finalised yet. In plain terms, the check asks three things:
 - Is there anything that blocks the form from being treated as complete?
 
 The check reads the agency's published rules for that modelo and year, then
-measures your draft against them. It produces a report and saves it, whatever
-the result - even a draft that fails leaves a record, so you can see what was
-checked and when.
+measures your draft against them. It also checks things outside the draft itself
+that still have to hold before the form can be treated as complete: that any
+earlier period this form builds on is filed and evidenced (its clean-state
+guard), that the running IVA balance carried between periods reconciles, and that
+every carried-forward figure still points at the revision it was filed under. It
+produces a report and saves it, whatever the result - even a draft that fails
+leaves a record, so you can see what was checked and when.
 
 ## Complete, incomplete, or blocked
 
@@ -62,9 +66,11 @@ A draft lands in one of three states after the check:
   state.
 - **Incomplete.** The only thing standing in the way is required boxes with no
   value yet. An incomplete draft needs those boxes filled and the check re-run.
-- **Blocked.** The check found an issue that stops the draft - a rule that
-  failed, or a consistency problem - that you need to resolve before it can be
-  marked complete.
+- **Blocked.** The check found an issue that stops the draft. It may be inside
+  the draft - a rule that failed or a consistency problem - or it may be a
+  dependency outside it: an earlier period that isn't filed and evidenced yet, an
+  IVA balance that doesn't reconcile, or a carried-forward figure whose source
+  has moved. The saved report names which, so you know where to look.
 
 The saved report is where the detail lives: which required boxes are still
 empty, which rules failed, and what to do next. It separates issues that block

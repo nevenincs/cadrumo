@@ -122,6 +122,7 @@ from ._export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
+    ModeloExportOutputPathError,
     ModeloExportResult,
     export_modelo_revision,
 )
@@ -149,10 +150,13 @@ from ._iva_wallet_gate import (
 from ._iva_wallet_seed import (
     ModeloIvaWalletCorrectionNoRecordError,
     ModeloIvaWalletCorrectionSealedError,
+    ModeloIvaWalletOverrideFreshWalletError,
+    ModeloIvaWalletOverrideSealedError,
     ModeloIvaWalletSeedError,
     ModeloIvaWalletSeedNegativeAmountError,
     ModeloIvaWalletSeedNoTaxpayerError,
     correct_iva_compensation_period_for_bucket,
+    record_iva_compensation_override_for_bucket,
     seed_iva_compensation_period_for_bucket,
 )
 from ._m036_lifecycle import (
@@ -375,9 +379,12 @@ __all__ = [
     "ModeloExportCommand",
     "ModeloExportCrossBucketRefusedError",
     "ModeloExportNoActiveBucketError",
+    "ModeloExportOutputPathError",
     "ModeloExportResult",
     "ModeloIvaWalletCorrectionNoRecordError",
     "ModeloIvaWalletCorrectionSealedError",
+    "ModeloIvaWalletOverrideFreshWalletError",
+    "ModeloIvaWalletOverrideSealedError",
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloIvaWalletReconciliationBlockedError",
     "ModeloIvaWalletSeedError",
@@ -501,6 +508,7 @@ __all__ = [
     "project_modelo_work_unit",
     "read_m036_declaration",
     "rebuild_participation_index",
+    "record_iva_compensation_override_for_bucket",
     "record_m036_declaration",
     "registry_bindings",
     "registry_bindings_for_scope",

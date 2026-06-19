@@ -74,9 +74,16 @@ from ._models import (
     ReviewItem,
     TransactionReviewItem,
 )
-from ._operator import ReviewQueueReport, ReviewQueueRow, project_review_item, project_review_queue
+from ._operator import (
+    ACCEPTED_KINDS,
+    ReviewQueueReport,
+    ReviewQueueRow,
+    project_review_item,
+    project_review_queue,
+)
 
 __all__ = [
+    "ACCEPTED_KINDS",
     "DeclaracionEditSpec",
     "DeclaracionReviewFilterKey",
     "DeclaracionReviewFilterSpec",

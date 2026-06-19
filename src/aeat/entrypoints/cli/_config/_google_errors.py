@@ -23,6 +23,7 @@ _GOOGLE_ERROR_KEY_SUFFIX: dict[str, str] = {
     "GoogleAuthNetworkError": "network",
     "GoogleAuthLoopbackBindError": "loopback_bind",
     "GoogleAuthBrowserOpenError": "browser_open",
+    "GoogleAuthNonInteractiveError": "non_interactive",
     "GoogleAuthUnsecuredModeRefusedError": "unsecured_mode",
     "GoogleAuthKeychainLockedError": "keychain_locked",
     "GoogleAuthProfileUnboundError": "profile_unbound",

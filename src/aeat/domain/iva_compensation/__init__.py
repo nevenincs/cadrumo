@@ -29,6 +29,9 @@ from ._errors import (
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
 )
+from ._reconciliation import (
+    IvaCompensationOverride,
+)
 
 __all__ = [
     "IvaCompensationCarryForwardLot",
@@ -36,6 +39,7 @@ __all__ = [
     "IvaCompensationCarryForwardReport",
     "IvaCompensationDecimalParseError",
     "IvaCompensationExpiryReviewState",
+    "IvaCompensationOverride",
     "IvaCompensationPeriodState",
     "IvaCompensationReconciliationInputError",
     "IvaCompensationSeedConflictError",

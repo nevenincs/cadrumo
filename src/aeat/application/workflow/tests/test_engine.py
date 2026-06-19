@@ -436,8 +436,16 @@ class TestAbortReasons:
         assert result.final_stage is WorkflowStage.ABORTED
         assert result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
 
-    def test_deadline_passed_via_run_for_period(self) -> None:
-        """A closed-window target triggers DEADLINE_PASSED."""
+    def test_targeted_overdue_obligation_admitted_as_late_filing(self) -> None:
+        """A closed-window TARGET is admitted as a late local filing, not refused.
+
+        A late `work file` for an
+        explicitly targeted but closed (overdue) obligation that genuinely
+        existed is admitted (extemporánea, con recargo) so the next period's
+        cross-period carry can read its filed observation. It is NOT refused
+        with DEADLINE_PASSED; only a target that never had an obligation
+        refuses (NO_PENDING_OBLIGATION).
+        """
         fx = _fixtures()
         past = _obligation(period=_period(2025, "4T"), closes_on=date(2026, 1, 20))
         fx.deadline_engine = _ConcreteDeadlineEngine(obligation=past, profile=fx.profile)
@@ -449,7 +457,10 @@ class TestAbortReasons:
                 today=fx.today,
             ),
         )
-        assert result.aborted_reason is WorkflowAbortReason.DEADLINE_PASSED
+        assert result.aborted_reason is not WorkflowAbortReason.DEADLINE_PASSED
+        deadline_step = next(s for s in result.steps if s.stage is WorkflowStage.COMPUTING_DEADLINES)
+        assert deadline_step.success
+        assert deadline_step.details.get("extemporanea") == "true"
 
     def test_inbox_blocking_requerimiento(self) -> None:
         fx = _fixtures()
@@ -500,6 +511,32 @@ class TestAbortReasons:
         fx.draft_builder.draft = fx.draft
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
+
+    def test_draft_not_ready_abort_surfaces_blocking_findings(self) -> None:
+        """A not-ready draft abort enumerates the findings that kept it out of the ready state.
+
+        Without this the BUILDING_DRAFT abort is opaque (``status=BORRADOR`` only),
+        forcing the operator to read source to learn *why* verify refused.
+        """
+        fx = _fixtures()
+        fx.draft = _ConcreteDraft(
+            status=ModeloDraftStatus.BORRADOR,
+            findings=(
+                ModeloFinding(severity=BaseSeverity.ERROR, message="translation"),
+                ModeloFinding(severity=BaseSeverity.WARNING, message="translation"),
+            ),
+        )
+        fx.draft_builder.draft = fx.draft
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
+        building_step = next(
+            step for step in reversed(result.steps) if step.stage is WorkflowStage.BUILDING_DRAFT and not step.success
+        )
+        assert building_step.details is not None
+        blocking = building_step.details["blocking_findings"]
+        assert "error:" in blocking
+        assert "warning:" in blocking
+        assert "blocking findings" in building_step.summary
 
     def test_draft_schema_must_match_registry_obligation(self) -> None:
         fx = _fixtures()
@@ -560,6 +597,9 @@ class TestAbortReasons:
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
         last = result.steps[-1]
         assert last.stage is WorkflowStage.VALIDATING_DRAFT
+        # The abort summary surfaces the specific blocking-finding descriptions, not just a count.
+        assert "ERROR finding(s):" in result.summary
+        assert "error:" in result.summary
 
     def test_draft_has_errors_surfaces_next_action_pointer(self) -> None:
         """DRAFT_HAS_ERRORS abort step details must carry a next_action retrieval pointer."""
@@ -702,7 +742,12 @@ class TestVerifyPurpose:
         assert verify_result.aborted_reason is None
 
     def test_verify_reaches_done_for_a_closed_filing_window(self) -> None:
-        """Closed-window target: ``FILE`` aborts DEADLINE_PASSED, ``VERIFY`` proceeds."""
+        """Closed-window target: both ``FILE`` (late, extemporánea) and ``VERIFY`` proceed.
+
+        A closed-window ``FILE`` is no
+        longer refused with DEADLINE_PASSED; it is admitted as a late local filing.
+        ``VERIFY`` remains calendar-independent.
+        """
         fx = _fixtures()
         past = _obligation(period=_period(2025, "4T"), closes_on=date(2026, 1, 20))
         fx.deadline_engine = _ConcreteDeadlineEngine(obligation=past, profile=fx.profile)
@@ -718,7 +763,7 @@ class TestVerifyPurpose:
                 purpose=WorkflowPurpose.FILE,
             ),
         )
-        assert file_result.aborted_reason is WorkflowAbortReason.DEADLINE_PASSED
+        assert file_result.aborted_reason is not WorkflowAbortReason.DEADLINE_PASSED
 
         verify_result = asyncio.run(
             fx.engine().run_for_period(
@@ -754,8 +799,16 @@ class TestVerifyPurpose:
         assert deadline_step.details["filing_window"] == "absent"
 
     def test_verify_skips_the_preflight_deadline_window_gate(self) -> None:
-        """The verify preflight call passes ``skip_deadline_window=True``;
-        the default ``FILE`` run passes ``False``."""
+        """Both LOCAL purposes skip the AEAT filing-window preflight gate.
+
+        VERIFY is calendar-independent.
+        FILE is a LOCAL mark-as-filed that contacts AEAT zero times;
+        re-applying the AEAT
+        filing-window gate in preflight would re-block the legitimate late local
+        filing that seeds the next period's cross-period carry. Obligation
+        existence is still enforced at the deadline stage; only the redundant
+        submission-window re-check is skipped here. The window gate binds only an
+        actual AEAT submission, which this app never performs."""
         fx = _fixtures()
 
         asyncio.run(
@@ -779,7 +832,7 @@ class TestVerifyPurpose:
                 purpose=WorkflowPurpose.FILE,
             ),
         )
-        assert fresh.submission_engine.skip_deadline_window_calls == [False]
+        assert fresh.submission_engine.skip_deadline_window_calls == [True]
 
     def test_verify_still_refuses_an_unsound_draft(self) -> None:
         """Deadline-independence does not weaken verification: a draft

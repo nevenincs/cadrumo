@@ -11,7 +11,10 @@ Calendar commands use real dates:
 aeat app overview calendar --from 2026-01-01 --to 2026-12-31
 ```
 
-Both dates are inclusive and use `YYYY-MM-DD`.
+Both dates are inclusive and use `YYYY-MM-DD`. The calendar needs an active
+profile that declares at least one obligation, or it refuses; see
+[Plan your filing calendar](filing-calendar.md) for the profile facts it reads
+and the `--allow-incomplete` option.
 
 ## Modelo period tokens
 
@@ -21,7 +24,7 @@ Modelo work commands usually separate the filing year from the registry period:
 aeat app modelo work status --modelo 303 --year 2026 --period 1T
 ```
 
-Common period tokens are:
+The period tokens are:
 
 - `1T`: first quarter, January 1 through March 31
 - `2T`: second quarter, April 1 through June 30
@@ -30,9 +33,17 @@ Common period tokens are:
 - `0A`: annual period, January 1 through December 31
 - `01` through `12`: monthly periods
 
-Every command takes the year separately with `--year` and the period as one
-of these AEAT tokens. Calendar shapes such as `2026Q1` or bare `2026` are not
-accepted; pass `--year 2026 --period 1T` instead.
+Which tokens a modelo accepts is modelo-specific, not universal. A quarterly
+modelo such as 130 accepts only `1T` through `4T`; an annual modelo such as 390
+accepts only `0A`; Modelo 303 accepts `1T` through `4T` and `01` through `12`,
+but not `0A`. A token the modelo does not accept is refused (for example, 303
+with `0A` reports "no revision for ... period='0A'"). To see the tokens one
+modelo accepts, run `aeat app modelo describe 303` and read its `Períodos` line.
+
+Every command takes the year separately with `--year` and the period as one of
+these AEAT tokens. Calendar shapes such as `2026Q1` or bare `2026` are not
+accepted; pass `--year 2026 --period 1T` instead. The CLI emits help, results,
+and refusals in Spanish.
 
 ## Period filters on ledger lists
 

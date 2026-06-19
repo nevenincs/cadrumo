@@ -18,6 +18,7 @@ Two policy gates fire before any network IO happens:
 
 from __future__ import annotations
 
+import sys
 from datetime import datetime
 from typing import NoReturn
 
@@ -30,11 +31,44 @@ from ._errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthLoopbackBindError,
     GoogleAuthNetworkError,
+    GoogleAuthNonInteractiveError,
     GoogleAuthProfileUnboundError,
     GoogleAuthScopeInsufficientError,
     GoogleAuthUnsecuredModeRefusedError,
 )
 from ._records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
+
+# Upper bound (seconds) on how long the loopback consent receiver blocks
+# waiting for the operator to complete the browser flow. Defence in depth
+# behind ``require_interactive_terminal``: even when a TTY is present the
+# flow must not block indefinitely if the operator abandons consent.
+_CONSENT_WAIT_TIMEOUT_SECONDS = 300
+
+
+def require_interactive_terminal() -> None:
+    """Refuse the consent flow when no controlling terminal can drive it.
+
+    The Desktop OAuth flow opens the consent screen in the operator's
+    browser and then blocks a loopback HTTP receiver until consent
+    completes. In a non-interactive invocation (piped, redirected, cron,
+    or another agent) ``stdin`` is not a TTY, no operator can complete
+    the flow, and the receiver would block forever — the silent-hang
+    failure mode this guard eliminates.
+
+    Raises:
+        GoogleAuthNonInteractiveError: When ``sys.stdin`` is not attached
+            to a terminal (no TTY). Carries the interactive-terminal
+            prerequisite as a suggestion.
+    """
+    stdin = sys.stdin
+    isatty = getattr(stdin, "isatty", None)
+    if stdin is None or isatty is None or not isatty():
+        raise GoogleAuthNonInteractiveError(
+            "google OAuth refused: interactive browser consent requires a controlling terminal",
+            context={"reason": "stdin_not_a_tty"},
+            suggestion=tr("adapters.google.oauth_flow.suggestions.run_from_interactive_terminal"),
+            translated_message="adapters.google.oauth_flow.errors.non_interactive",
+        )
 
 
 def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
@@ -159,6 +193,12 @@ def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuth
         A 2-tuple of (:class:`OAuthToken`, :class:`OAuthMetadata`) ready for persistence.
     """
     check_unsecured_mode_safety(profile, resolve_active_tax_id(profile))
+    # Gate the blocking loopback consent receiver: refuse fast in a
+    # non-interactive shell rather than hang forever waiting for a browser
+    # redirect no operator can complete. Placed after the profile / unsecured
+    # gates so their more-specific refusals take precedence, and immediately
+    # before the only call that would block.
+    require_interactive_terminal()
     refresh_token, token_uri, account_email, granted_scopes = _run_local_server(client)
     return credentials_to_records(
         refresh_token=refresh_token,
@@ -205,7 +245,7 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
         ) from exc
 
     try:
-        credentials = flow.run_local_server(port=0)
+        credentials = flow.run_local_server(port=0, timeout_seconds=_CONSENT_WAIT_TIMEOUT_SECONDS)
     except OSError as exc:
         raise GoogleAuthLoopbackBindError(
             f"loopback receiver failed to bind: {exc}",
@@ -311,6 +351,7 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
 __all__ = [
     "check_unsecured_mode_safety",
     "credentials_to_records",
+    "require_interactive_terminal",
     "resolve_active_tax_id",
     "run_login_flow",
 ]

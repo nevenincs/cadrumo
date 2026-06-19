@@ -412,6 +412,57 @@ def test_config_profile_duplicate_refuses_existing_target(cli_runner: CliRunner)
     assert result.exit_code != 0
 
 
+def test_config_profile_duplicate_target_token_is_the_addressable_label(
+    cli_runner: CliRunner,
+) -> None:
+    """``duplicate SOURCE TARGET`` makes the new profile addressable as TARGET.
+
+    Profiles are addressed by their display label (the bucket manifest
+    label), and ``duplicate`` adopts the positional ``TARGET`` token as
+    that label. The documented follow-on commands address the new
+    profile by the same token, so ``duplicate ana-real ana-copy`` must be
+    deletable / switchable as ``ana-copy`` without any further argument.
+
+    Before the docs fix the how-to passed ``--display-name "Ana copy"``,
+    which re-labelled the bucket to ``"Ana copy"`` and left the doc's own
+    next command ``delete ana-copy`` refusing with ``Unknown profile``.
+    This test pins the token-equals-label contract the docs now rely on.
+    """
+    seed("operator")
+
+    duplicated = cli_runner.invoke(profile_app, ["duplicate", "operator", "operator-copy"])
+    assert duplicated.exit_code == 0, duplicated.output
+    assert "display_name\toperator-copy" in duplicated.output
+
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+
+    assert read_profile_bucket("operator-copy") is not None
+
+    # The doc's own next command: delete by the positional TARGET token.
+    deleted = cli_runner.invoke(profile_app, ["delete", "operator-copy", "--yes"])
+    assert deleted.exit_code == 0, deleted.output
+
+
+def test_config_profile_duplicate_target_token_is_switchable(
+    cli_runner: CliRunner,
+) -> None:
+    """A duplicated profile is switchable by its positional TARGET token.
+
+    Companion to the delete-by-token contract: ``switch`` must also
+    resolve the duplicate by the same token used to create it, so an
+    operator who ran ``duplicate operator operator-copy`` can return to
+    it with ``switch operator-copy``.
+    """
+    seed("operator")
+
+    duplicated = cli_runner.invoke(profile_app, ["duplicate", "operator", "operator-copy"])
+    assert duplicated.exit_code == 0, duplicated.output
+
+    switched = cli_runner.invoke(root_app, ["config", "switch", "operator-copy"])
+    assert switched.exit_code == 0, switched.output
+    assert "active_profile\toperator-copy" in switched.output
+
+
 def test_config_profile_show_runs_validation_inline(cli_runner: CliRunner) -> None:
     seed("operator")
     result = cli_runner.invoke(profile_app, ["show"])

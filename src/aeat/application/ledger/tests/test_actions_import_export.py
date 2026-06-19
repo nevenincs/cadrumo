@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import pytest
 
 from ._action_test_support import (
@@ -224,6 +226,49 @@ def test_import_ledger_source_missing_file_raises_localised_error(tmp_path: Path
     rendered = resolve_error_message(error)
     assert "El archivo de origen no existe" in rendered
     assert str(missing) in rendered
+
+
+def test_import_ledger_source_auto_missing_file_is_clean_refusal_without_probe_noise(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """``--provider auto`` on a missing file refuses cleanly without probe noise.
+
+    Regression guard for audit finding m1: a non-existent path with
+    ``provider="auto"`` previously ran the format-detection probe loop
+    before the existence check, dumping a raw ``FileNotFoundError``
+    traceback and spurious provider-probe ``ERROR`` log lines (the OFX and
+    PDF parsers) before finally raising the auto-detection failure. The fix
+    refuses up front with the path-naming ``source_file_not_found`` typed
+    error, and the detection probe loop never runs, so no provider emits an
+    ERROR-level probe-failure record.
+    """
+    from ....core.errors import resolve_error_message
+
+    missing = tmp_path / "no-such-statement.csv"
+    with (
+        caplog.at_level("ERROR", logger="aeat.adapters.inbound.financial.providers"),
+        pytest.raises(TransactionValidationError) as excinfo,
+    ):
+        import_ledger_source(
+            LedgerSourceImportCommand(path=missing, provider="auto", dry_run=True),
+        )
+
+    error = excinfo.value
+    # The refusal names the missing path; it is NOT the downstream
+    # "auto-detection of ledger format failed" error the probe loop raised.
+    assert error.translated_message == "errors.financial.source_file_not_found"
+    assert error.context == {"path": str(missing)}
+    rendered = resolve_error_message(error)
+    assert str(missing) in rendered
+    assert "auto-detection" not in rendered
+    # No provider-probe ERROR records leaked to the operator-facing log.
+    probe_errors = [
+        record
+        for record in caplog.records
+        if record.levelno >= logging.ERROR and record.name.startswith("aeat.adapters.inbound.financial.providers")
+    ]
+    assert probe_errors == []
 
 
 def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_event(

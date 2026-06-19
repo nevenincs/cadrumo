@@ -31,10 +31,11 @@ dependency, whether it is available, and the exact command to fix any gap. It
 also shows your profile's capability posture. It exits with an error when a
 capability you turned on has a missing dependency.
 
-Run the check directly for machine-readable output:
+Run the check directly for machine-readable output. `--format json` is a global
+flag, so it goes before the command:
 
 ```bash
-aeat config check --format json
+aeat --format json config check
 ```
 
 ## Install optional integrations
@@ -69,12 +70,12 @@ and pull the model named in the report:
 
 ```bash
 ollama serve
-ollama pull qwen2.5vl:7b
+ollama pull qwen2.5vl:3b
 ```
 
 Install a cloud LLM provider CLI when you want cloud classification. Put its
 executable on `PATH` and sign in with that provider's own flow. See
-[LLM provider setup](setup-llm-classification.md).
+[LLM provider setup](how-to/setup-llm-classification.md).
 
 Run `just doctor` again after each change to confirm the gap is closed.
 
@@ -102,11 +103,11 @@ aeat config profile capabilities set cloud_evidence_upload on
 ```
 
 The setup wizard also asks these questions when you create or edit a profile, so
-you can set them during onboarding. See [Set up a profile](profile-setup.md).
+you can set them during onboarding. See [Set up a profile](how-to/profile-setup.md).
 
 ## Next steps
 
-- [Quickstart](quickstart.md)
-- [Set up a profile](profile-setup.md)
-- [LLM provider setup](setup-llm-classification.md)
-- [Troubleshooting](troubleshooting.md)
+- [Quickstart](how-to/quickstart.md)
+- [Set up a profile](how-to/profile-setup.md)
+- [LLM provider setup](how-to/setup-llm-classification.md)
+- [Troubleshooting](how-to/troubleshooting.md)

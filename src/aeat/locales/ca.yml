@@ -106,6 +106,9 @@ adapters:
         id_token_verification_failed: La verificació de l'id_token de Google ha fallat.
         loopback_bind_failed: El receptor OAuth loopback local no ha pogut assignar
           cap port.
+        non_interactive: 'Google OAuth rebutjat: el flux interactiu de consentiment
+          al navegador necessita un terminal interactiu, però aquesta ordre s''ha
+          executat de manera no interactiva.'
         oauthlib_not_importable: google-auth-oauthlib no es pot importar; el flux
           OAuth no es pot iniciar.
         profile_state_unresolved: Google OAuth no pot resoldre l'estat del perfil
@@ -122,6 +125,8 @@ adapters:
           impresa.
         repair_profile_state: Executeu `aeat config profile health` i repareu o canvieu
           el perfil actiu abans de tornar a provar l'ordre de Google.
+        run_from_interactive_terminal: Executa 'aeat config google login' des d'un
+          terminal interactiu amb un navegador web disponible.
         use_keyring_or_synthetic: Configura aeat_secret_store_backend=keyring o canvia
           el perfil actiu a un identificador fiscal sintètic de prova.
     profile_binding:
@@ -603,6 +608,12 @@ application:
         invalid_valuation_method: 'El metode de valoracio d inventari no esta admes:
           %{valuation_method}.'
   invoices:
+    creation:
+      errors:
+        duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg:
+          %{invoice_id}.'
+        unsupported_iva_rate: 'El tipus d''IVA %{iva_rate} no es reconeix; useu un
+          de: %{accepted}.'
     importing:
       errors:
         import_file_read_failed: 'No s ha pogut llegir el fitxer d importacio de factures:
@@ -613,6 +624,15 @@ application:
         invalid_json_shape: El contingut JSON de factures ha de ser un objecte o una
           llista d objectes.
         invalid_kind: 'El tipus de factura no esta admes: %{kind}.'
+    lifecycle:
+      errors:
+        ambiguous_invoice_prefix: 'El prefix d''identificador de factura %{invoice_id}
+          és ambigu; coincideix amb: %{candidates}.'
+        invoice_id_required: Cal un identificador de factura.
+        invoice_not_found: 'Factura del catàleg no trobada: %{invoice_id}.'
+        remove_linked_invoice: 'No es pot eliminar la factura %{invoice_id} mentre
+          continuï vinculada a transaccions: %{linked_transaction_ids}. Desvinculeu-les
+          primer.'
     linking:
       errors:
         linked_invoice_not_found: No s ha trobat la factura %{invoice_id} despres
@@ -704,7 +724,13 @@ application:
         identificadors de casella requerits al mapa corregit.'
       amendment_verification_refused_no_snapshot: El registre no té una instantània
         per al model, any i període sol·licitats.
-      calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta revisio. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list <MODELO>` per llistar els bindings valids.'
+      calculate_binding_is_date_sourced: --binding %{key} es un binding de tipus data
+        que s'obte del perfil actiu (una dada de data del contribuent, com la data
+        de naixement); no es pot aportar mitjancant --binding, que nomes admet valors
+        decimals i d'enumeracio. Defineix-lo com a dada del perfil i torna a calcular.
+      calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta
+        revisio. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list
+        <MODELO>` per llistar els bindings valids.'
       calculate_casilla_ambiguous: '--casilla %{key} coincideix amb diverses caselles
         d''aquesta revisio: %{candidates}. Indica la forma qualificada PREFIX:NNNNN
         per desambiguar.'
@@ -756,6 +782,7 @@ application:
       export_operator_profile_missing: L'exportacio necessita el nom de l'operador
         del perfil actiu, pero no existeix cap perfil persistit; completa identity.surnames
         i identity.name abans d'exportar.
+      export_output_path_invalid: application.modelo.errors.export_output_path_invalid
       export_period_unmappable: La unitat de treball %{work_unit_id} conte el periode
         %{period}, que no es pot assignar a un periode de registre.
       export_revision_state_refused: La revisio de calcul %{calculation_revision_id}
@@ -933,6 +960,8 @@ application:
       seed_negative_amount: L'import inicial no pot ser negatiu.
       seed_no_nif: No hi ha NIF definit per a l'operació d'import inicial; associeu-lo
         al perfil actiu.
+      override_sealed_blocked: 'Anul·lació rebutjada: un Model 303 ja presentat (%{blocking_filing_year}/%{blocking_period}) ha consumit la base de compensació d''aquest període. Registrar una anul·lació alteraria una declaració ja presentada.'
+      override_fresh_wallet_blocked: 'Anul·lació rebutjada: una lectura actual de la cartera d''AEAT ja resol el Model 303 %{filing_year}/%{period}. L''evidència recent d''AEAT és l''autoritat i una anul·lació no l''ha de substituir.'
     profile_binding:
       errors:
         date_value_type_invalid: La dada de perfil per al binding de data %{binding_id}
@@ -1239,6 +1268,18 @@ cli:
         year_help: Exercici fiscal
       invoice:
         add_help: Registra una nova factura de negoci
+        catalogue:
+          country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (per
+            defecte ES).
+          create_help: Crea una factura de conciliació vinculable al catàleg.
+          group_help: Factures del catàleg de conciliació que es vinculen a transaccions.
+          invoice_id_help: Identificador de factura del catàleg (o prefix no ambigu).
+          list_help: Llista les factures del catàleg de conciliació.
+          operation_type_unsupported: '--operation-type {value} encara no pot alimentar
+            el Model 349 des del catàleg; admesos: {supported}.'
+          remove_help: Elimina una factura del catàleg de conciliació.
+          view_help: Mostra una factura del catàleg de conciliació per identificador
+            o prefix no ambigu.
         country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
           intracomunitàries UE)
         eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
@@ -1287,6 +1328,8 @@ cli:
         classification_help: Classificació objectiu per a les transaccions coincidents.
         description_pattern_help: Patró regex comparat (sense distinció de majúscules)
           amb la descripció de la transacció.
+        empty_pattern: Una regla necessita un --description-pattern no buit (una paraula
+          o frase, p. ex. "software") per coincidir amb les descripcions de les transaccions.
         group_help: Gestiona i aplica regles de classificació del llibre.
         list_empty: (no hi ha regles emmagatzemades)
         list_header: "prioritat\tclassificació\tpatró\trule_id"
@@ -1581,6 +1624,16 @@ cli:
         correct_reason_required: 'Indica --reason: registra per què es corregeix el
           saldo inicial; no pot estar buit.'
         group_help: Ordres de saldo local de la cartera de compensació IVA.
+        override_amount_help: cli.app.modelo.iva_wallet.override_amount_help
+        override_confirm_help: cli.app.modelo.iva_wallet.override_confirm_help
+        override_confirm_required: cli.app.modelo.iva_wallet.override_confirm_required
+        override_evidence_locator_help: cli.app.modelo.iva_wallet.override_evidence_locator_help
+        override_evidence_locator_required: cli.app.modelo.iva_wallet.override_evidence_locator_required
+        override_filing_year_help: cli.app.modelo.iva_wallet.override_filing_year_help
+        override_help: cli.app.modelo.iva_wallet.override_help
+        override_period_help: cli.app.modelo.iva_wallet.override_period_help
+        override_reason_help: cli.app.modelo.iva_wallet.override_reason_help
+        override_reason_required: cli.app.modelo.iva_wallet.override_reason_required
         seed_amount_help: Import inicial de la compensació d'IVA en decimal.
         seed_confirm_help: Confirmeu l'operació d'import inicial.
         seed_confirm_required: Proporcioneu el modificador --confirm per confirmar
@@ -1624,7 +1677,6 @@ cli:
         binding_help: Valor d'enllaç amb la sintaxi KEY=VALUE (repetible).
         casilla_help: Valor de casilla amb la sintaxi CASILLA=DECIMAL (repetible).
         ccaa_help: Codi de comunitat autònoma per a la projecció territorial.
-        m100_calculation_error: 'Error intern: el càlcul del Modelo 100 ha fallat.'
         no_m130_revisions: No hi ha revisions M130 per a l'exercici indicat. Executa
           `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`
           per a cada trimestre primer.
@@ -1829,6 +1881,11 @@ cli:
           ha d''estar entre 0 i 12; s''ha rebut {meses} a: {spec}.'
         missing_binding_guidance: '%{base} Aporta el valor amb --binding KEY=VALUE
           en aquesta ordre, o executa `%{discover}` per veure tots els bindings que
+          el càlcul encara necessita.'
+        missing_binding_guidance_ledger: '%{base} Aquest valor s''agrega des del llibre
+          major del bucket i no es pot aportar amb --binding. Afegeix o classifica
+          les files corresponents del llibre major, executa `aeat app ledger preflight`
+          i torna a calcular. Executa `%{discover}` per veure tots els bindings que
           el càlcul encara necessita.'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la unitat de treball
@@ -2104,6 +2161,9 @@ cli:
         loopback_bind: 'No s''ha pogut obrir un port local per completar l''inici
           de sessió a Google: {detail}'
         network: 'No s''ha pogut contactar amb Google: {detail}'
+        non_interactive: 'L''inici de sessió de Google necessita un terminal interactiu
+          amb navegador web, però aquesta ordre s''ha executat de manera no interactiva:
+          {detail}'
         profile_unbound: No hi ha cap perfil actiu. Executa aeat config switch NAME
           o indica --profile.
         scope_insufficient: L'accés concedit a Google no inclou els permisos necessaris.
@@ -2285,6 +2345,9 @@ cli:
       import_help: Registra un paquet portable de perfil des d'un JSON
       import_invalid_bundle: 'Paquet de perfil no vàlid: el JSON no s''ajusta a l''esquema
         del paquet de perfil.'
+      import_invalid_tax_id: 'L''identificador fiscal del paquet de perfil no és vàlid:
+        %{error}. Corregeix l''identificador i torna a exportar, o importa un paquet
+        vàlid.'
       import_label_help: Nom visible per al perfil importat; per defecte el nom desat
         al paquet. Fes-lo servir per importar una segona còpia amb un altre nom.
       import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
@@ -2551,6 +2614,9 @@ cli:
         de l'IRPF (art. 93.5 segregació).
       source_jurisdiction_required_irnr: --source-jurisdiction es obligatori per a
         perfils de no resident IRNR.
+      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna aeat
+        automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
+        MIXED, o omet --classification per deixar la fila sense classificar.'
       taxable_base_help: Import de base imposable
       usage_ratio_help: Id de proporció d'ús professional proporcional
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
@@ -2674,6 +2740,9 @@ cli:
       split_recommended_message: La factura adjunta sembla contenir diverses línies
         de tipus o categoria. Torna a executar amb --auto-split per separar-les en
         fills de base i IVA declarables de manera independent.
+      system_state_not_assignable: 'La classificació ''%{value}'' l''assigna aeat
+        automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
+        MIXED.'
       taxable_base_help: Import de base imposable
       vision_model_help: Substitueix el model de visió local d'Ollama per llegir una
         factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir
@@ -2773,6 +2842,7 @@ cli:
       business_pct: Percentatge de negoci
       category_id: Categoria
       checked: Moviments comprovats
+      child_id: Id de transacció filla
       children: filles
       counterparty: Contrapart
       created_event_id: Esdeveniment bucket de creació
@@ -2841,6 +2911,7 @@ cli:
         un id d''aeat app ledger invoice add'.
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
+      column_header: "id\tid_complet\tdata\timport\tdescripció\testat_revisió"
       filter_help: Filtreu les files per estat, periode (un testimoni AEAT simple,
         p. ex. period=1T) amb l'any (p. ex. year=2026), classificacio, incidencia,
         importacio, direccio (ingres/despesa) o text. Per filtrar per etiqueta de
@@ -3339,7 +3410,6 @@ cli:
       invalid_state: 'Estat de revisió no vàlid: %{state}'
     labels:
       affected_object_id: Objecte
-      bucket: Bucket
       id: ID
       kind: Tipus
       legal_refs: Referències legals
@@ -4262,8 +4332,8 @@ errors:
       encara no està disponible.
     reconciliation_drift: La conciliació ha detectat una discrepància aritmètica o
       d'identitat entre declaracions. Revisa els imports abans de continuar.
-    reconciliation_evidence_invalid: L'evidència externa aportada no s'ha pogut interpretar.
-      Comprova el fitxer del justificant.
+    reconciliation_evidence_invalid: No s'ha pogut llegir el PDF. Comprova que el
+      fitxer és el justificant d'AEAT i no un altre document, i que no estigui malmès.
     refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
       està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
       actual.
@@ -4335,6 +4405,8 @@ errors:
     refused_financial_usage_ratios_censo_mismatch: Un percentatge d'ús d'oficina a
       casa desat no coincideix amb el cens, que és la font legal vinculant. Alinea'l
       amb el valor del cens.
+    refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
+      interactiu amb navegador; executa'l des d'una shell interactiva.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
       un perfil o fes servir --profile.
     refused_google_unsecured_mode: No es pot autoritzar Google en mode d'emmagatzematge
@@ -4631,7 +4703,8 @@ review:
       item_not_found: No s'ha trobat l'element sol.licitat a la cua de revisio.
       reserved_kind: El tipus de revisió està reservat i no és un element de revisió
         emès.
-      unknown_kind: Tipus d'element de revisió desconegut.
+      unknown_kind: 'Tipus d''element de revisió desconegut. Valors --kind admesos:
+        %{accepted_kinds}.'
       unsupported_item_type: 'Tipus d''element de revisio no ames: %{item_type}.'
   transaction:
     summary: Transacció pendent de classificació

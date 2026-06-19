@@ -210,7 +210,13 @@ class PdfN26Provider(FinancialProvider):
         # with library versions, so the broad catch is intentional to
         # guarantee conversion to InvalidFinancialSourceError.
         except Exception as exc:
-            _logger.error(
+            # Debug, not error: this is reached during the ``--provider auto``
+            # detection probe loop for every non-PDF (or unreadable) input,
+            # where a parse miss is the expected, non-fatal signal that this
+            # provider does not match. The failure is converted to an
+            # InvalidFinancialSourceError that detection treats as a miss; the
+            # operator-facing refusal is raised once by the caller.
+            _logger.debug(
                 "pdf_n26_provider: failed to parse PDF file %s: %s",
                 _INPUT_PDF_SOURCE_LABEL,
                 type(exc).__name__,

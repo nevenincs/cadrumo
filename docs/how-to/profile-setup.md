@@ -87,6 +87,13 @@ Spanish (for example `Tipo de entidad`, `Categorias de renta IRPF`), because
 they mirror the AEAT forms; the values you choose are stable command tokens that
 don't change with `--language`.
 
+The wizard prompts for your master-key passphrase before it stores anything. In
+a non-interactive shell, set `AEAT_SECRET_PASSPHRASE` first, or the command
+refuses with `AEAT_SECRET_PASSPHRASE is not set`.
+
+`aeat` prints its prompts, refusals, and error messages in Spanish. The output
+blocks quoted below are English translations of those messages.
+
 Use flags with `--quiet` when you want a repeatable, scriptable setup:
 
 ```bash
@@ -161,6 +168,10 @@ Choose `actividad_economica` only when the taxpayer runs an activity. A pure
 landlord, a salaried-only taxpayer, or a pensioner with no activity should not
 select it.
 
+For an activity, record how IRPF estimates its yield. Direct estimation is the
+default and files Modelo 130. Add `--uses-objective-estimation-irpf` for the
+objective-estimation (módulos) regime, which files Modelo 131 instead.
+
 ### Identity
 
 The tax identifier (NIF, CIF, DNI, or NIE) is required. Spanish citizens use
@@ -183,8 +194,11 @@ corresponding Hacienda Foral under the Concierto Económico (Ley 12/2002), not
 with the AEAT. This CLI does not model foral declarations.
 ```
 
-For a non-resident, choose `non_resident_irnr` and supply the country of
-residence and, when required, a fiscal representative.
+For a non-resident, set `--fiscal-residency non_resident_irnr` (not
+`--tax-residence-ccaa`), then supply the country of residence with
+`--country-of-fiscal-residence` (an ISO 3166-1 alpha-2 code, such as `DE`) and,
+when required, a fiscal representative with `--representante-fiscal-nif` and
+`--representante-fiscal-nombre`.
 
 ### Which IVA regime applies
 
@@ -214,9 +228,7 @@ true:
   threshold.
 - `--professional-income-withholding-ge-70pct` - at least 70 percent of
   professional income already had IRPF withholding. This removes the Modelo 130
-  obligation for many freelancers, so record it when it's true. Set it together
-  with `--pays-professionals-with-retencion`. Otherwise the setup verifier flags
-  the pair as inconsistent.
+  obligation for many freelancers, so record it when it's true.
 
 Leaving an obligation flag unset is not the same as marking it false. When a
 fact is undeclared, the readiness check reports the related form as *incomplete*
@@ -298,10 +310,12 @@ pointer follows the rename:
 aeat config profile rename ana-2026 ana-real
 ```
 
-Duplicate a profile to start a second one from the same facts:
+Duplicate a profile to start a second one from the same facts. The second name
+you pass is the new profile's name - the name you address it by in every later
+command. The new profile becomes the active one:
 
 ```bash
-aeat config profile duplicate ana-real ana-copy --display-name "Ana copy"
+aeat config profile duplicate ana-real ana-copy
 ```
 
 Delete a profile only when you mean to remove it. Deletion is local and
@@ -325,7 +339,8 @@ aeat config profile export ana-real --to ./ana-real-profile.json
 ```
 
 Import a profile into another session or storage root. Import under a fresh label
-when one with the same name already exists:
+when one with the same name already exists. The imported profile becomes the
+active one:
 
 ```bash
 aeat config profile import ./ana-real-profile.json --label ana-restored
@@ -339,7 +354,8 @@ attach it to a support request unless you've removed personal details.
 
 Every change to a profile - creation, edits, imports, classifications,
 calculations, and filings - is recorded as an event in that profile's
-append-only history (a log you can read but not alter). Browse it to see what
+append-only history (a log you can read but not alter). Reading history needs an
+active profile, so switch to it first if you ran `logout`. Browse it to see what
 changed, when, and by which command:
 
 ```bash

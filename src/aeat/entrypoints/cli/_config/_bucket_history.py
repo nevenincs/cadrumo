@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import typing
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import UTC, datetime
 
 import typer
 
@@ -159,11 +159,17 @@ def _parse_bucket_history_instant(raw: str | None, *, flag: str) -> datetime | N
         return None
 
     try:
-        return datetime.fromisoformat(raw.strip())
+        parsed = datetime.fromisoformat(raw.strip())
     except ValueError as exc:
         raise typer.BadParameter(
             tr("cli.config.profile.history.invalid_timestamp", flag=flag, raw=raw),
         ) from exc
+    # Bucket events stamp ``occurred_at`` as timezone-aware UTC; a bare ``--since
+    # 2026-01-01`` parses naive and would raise ``TypeError`` on comparison. Treat a
+    # naive operator instant as UTC so the filter compares against stored events.
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed
 
 
 def _bucket_history_event_matches(

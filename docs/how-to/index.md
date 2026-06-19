@@ -8,13 +8,6 @@ options, use the [command-line reference](../cli/index.rst).
 ::::{grid} 1 2 2 3
 :gutter: 3
 
-:::{grid-item-card} Fresh Workstation Setup
-:link: onboarding
-:link-type: doc
-
-Install on a clean machine, check what is missing, and choose optional services.
-:::
-
 :::{grid-item-card} Quickstart
 :link: quickstart
 :link-type: doc
@@ -97,6 +90,13 @@ Import, add, edit, remove, and review ledger rows.
 :link-type: doc
 
 Classify rows manually, in bulk, with allocation, or with LLM assistance.
+:::
+
+:::{grid-item-card} Manage Business Invoices
+:link: manage-invoices
+:link-type: doc
+
+Record issued and received invoices and feed intra-community operations to Modelo 349.
 :::
 
 :::{grid-item-card} Attach Invoices and Receipts
@@ -248,7 +248,6 @@ records.
 ```{toctree}
 :hidden:
 
-onboarding
 quickstart
 profile-setup
 censo-update
@@ -260,6 +259,7 @@ read-live-aeat-data
 import-bank-statements
 classify-transactions
 ledger-evidence
+manage-invoices
 correct-ledger-entries
 review-queue
 modelo-036

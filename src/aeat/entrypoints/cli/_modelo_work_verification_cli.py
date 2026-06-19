@@ -251,6 +251,7 @@ def _register_work_dependencies_command(
                     verification_repository=VerificationReportCatalogueRepository(),
                     expected_member_sets=_profile_expected_member_sets(workflow_profile),
                     taxpayer_tax_id=workflow_profile.tax_id,
+                    activity_start_date=workflow_profile.activity_start_date,
                 )
         except (FileNotFoundError, RegistrySnapshotError, ValueError) as exc:
             raise bad_parameter_from_error(exc) from exc

@@ -26,6 +26,7 @@ from ...core.logging import get_logger
 from ...core.time import now as _utcnow
 from ...domain.deadlines import (
     ModeloDeadline,
+    NoDeadlineWindowsError,
     ObligationStatus,
     Schedule,
     TaxpayerProfile,
@@ -41,6 +42,9 @@ from ._engine_helpers import (
 )
 from ._engine_helpers import (
     classify_cert_expiry as _classify_cert_expiry,
+)
+from ._engine_helpers import (
+    draft_blocking_finding_descriptions as _draft_blocking_finding_descriptions,
 )
 from ._engine_helpers import (
     enum_value as _enum_value,
@@ -419,7 +423,26 @@ class WorkflowEngine:
         """
         started = _utcnow()
         try:
-            schedule: Schedule = compute_obligation_schedule(self._deadline_engine, profile, today=today)
+            if (
+                purpose is WorkflowPurpose.FILE
+                and target_modelo is not None
+                and target_period is not None
+                and target_period.filing_year != today.year
+            ):
+                # Resolve the schedule in the TARGET period's filing year (not
+                # today's) so a late local `work file` finds its overdue
+                # obligation; the as-of-today projection is unaffected.
+                try:
+                    schedule: Schedule = self._deadline_engine.compute(
+                        profile, target_period.filing_year, today=today
+                    )
+                except NoDeadlineWindowsError:
+                    # No registry windows for the target year: degrade to the
+                    # as-of-today schedule so the absent target yields
+                    # NO_PENDING_OBLIGATION, not an unhandled error.
+                    schedule = compute_obligation_schedule(self._deadline_engine, profile, today=today)
+            else:
+                schedule = compute_obligation_schedule(self._deadline_engine, profile, today=today)
         except SiteHealthError as exc:
             self._record_site_unavailable(
                 stage=WorkflowStage.COMPUTING_DEADLINES,
@@ -475,6 +498,32 @@ class WorkflowEngine:
             )
 
         if obligation.closes_on < today:
+            if target_modelo is not None and target_period is not None:
+                # A targeted but closed-window obligation that genuinely
+                # existed is filed locally and late (extemporánea, con recargo)
+                # rather than refused; `work file` contacts AEAT zero times.
+                overdue_summary = _summary_text(
+                    f"Obligation modelo={obligation.modelo} "
+                    f"period={obligation.period} closed on {obligation.closes_on.isoformat()}; "
+                    "recording a late local filing (extemporánea, con recargo).",
+                )
+                steps.append(
+                    WorkflowStep(
+                        stage=WorkflowStage.COMPUTING_DEADLINES,
+                        started_at=started,
+                        ended_at=_utcnow(),
+                        success=True,
+                        summary=overdue_summary,
+                        details={
+                            "modelo": obligation.modelo,
+                            "period": str(obligation.period),
+                            "closes_on": obligation.closes_on.isoformat(),
+                            "overdue": "true",
+                            "extemporanea": "true",
+                        },
+                    ),
+                )
+                return obligation
             closed_summary = _summary_text(
                 f"Deadline for modelo={obligation.modelo} "
                 f"period={obligation.period} closed on {obligation.closes_on.isoformat()}",
@@ -802,7 +851,11 @@ class WorkflowEngine:
         }
         if _enum_value(draft.status) not in ready_statuses:
             status_value = _enum_value(draft.status)
-            status_summary = _summary_text(f"Draft {draft.draft_id} not ready: status={status_value}")
+            blocking_findings = _draft_blocking_finding_descriptions(draft)
+            findings_clause = f"; blocking findings: {'; '.join(blocking_findings)}" if blocking_findings else ""
+            status_summary = _summary_text(
+                f"Draft {draft.draft_id} not ready: status={status_value}{findings_clause}",
+            )
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.BUILDING_DRAFT,
@@ -810,7 +863,15 @@ class WorkflowEngine:
                     ended_at=_utcnow(),
                     success=False,
                     summary=status_summary,
-                    details={"draft_id": draft.draft_id, "status": status_value},
+                    details={
+                        "draft_id": draft.draft_id,
+                        "status": status_value,
+                        "blocking_findings": "; ".join(blocking_findings) if blocking_findings else "",
+                        "next_action": (
+                            "Run: aeat app modelo verification-report list"
+                            " --calculation-revision-id <calculation_revision_id>"
+                        ),
+                    },
                 ),
             )
             raise WorkflowAbortSignalError(
@@ -892,7 +953,11 @@ class WorkflowEngine:
             f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == BaseSeverity.ERROR
         )
         if error_findings:
-            errors_summary = _summary_text(f"Draft {draft.draft_id} has {len(error_findings)} ERROR finding(s)")
+            descriptions = _draft_blocking_finding_descriptions(draft)
+            errors_summary = _summary_text(
+                f"Draft {draft.draft_id} has {len(error_findings)} ERROR finding(s): "
+                + ("; ".join(descriptions) if descriptions else "see verification report")
+            )
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.VALIDATING_DRAFT,
@@ -1042,10 +1107,22 @@ class WorkflowEngine:
             cert_details = {"cert_skipped": "not_wired"}
 
         try:
+            # The AEAT filing-window preflight gate is skipped for BOTH local
+            # purposes. VERIFY is calendar-independent (work-verify
+            # deadline-independence ADR). FILE is a LOCAL mark-as-filed that
+            # contacts AEAT zero times (cross-period filing deadlock ADR,
+            # Decision A): its obligation existence is already enforced at the
+            # deadline stage (NO_PENDING_OBLIGATION still refuses a never-existing
+            # obligation; an existing-but-overdue one is admitted late, con
+            # recargo). Re-applying the submission filing-window gate here would
+            # contradict that and re-block the legitimate late local filing that
+            # seeds the next period's cross-period carry. The window gate binds
+            # only an actual AEAT submission, which this app never performs.
+            skip_window = purpose in (WorkflowPurpose.VERIFY, WorkflowPurpose.FILE)
             self._submission_engine.preflight(
                 draft,
                 today=today,
-                skip_deadline_window=purpose is WorkflowPurpose.VERIFY,
+                skip_deadline_window=skip_window,
             )
         except SiteHealthError as exc:
             self._record_site_unavailable(

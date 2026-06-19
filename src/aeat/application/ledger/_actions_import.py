@@ -295,6 +295,12 @@ def import_ledger_source(
 
     Returns a :class:`LedgerSourceImportResult`.
     """
+    # Refuse a missing/unreadable source up front, before provider
+    # resolution. With ``--provider auto`` resolution runs the detection
+    # probe loop, which would otherwise open a non-existent path through
+    # every candidate provider and surface raw parse tracebacks instead of
+    # one clean, path-naming refusal.
+    _require_readable_source(command.path)
     provider = _resolve_financial_provider(command.provider, command.path)
     validation = _validate_import_source(provider, command.path)
     source_verification = _build_source_verification(source=command.source, verify=command.verify)
@@ -437,12 +443,23 @@ def _resolve_financial_provider(provider: str, path: Path) -> FinancialProviderP
     return PdfN26Provider()
 
 
-def _validate_import_source(provider: FinancialProviderProtocol, path: Path) -> ProviderValidation:
+def _require_readable_source(path: Path) -> None:
+    """Refuse a missing or non-regular import source with a typed refusal.
+
+    Naming the path in the refusal lets the operator correct the argument
+    without reading a Python traceback, and short-circuiting before
+    provider resolution keeps the ``--provider auto`` detection probe loop
+    from opening a non-existent path through every candidate provider.
+    """
     if not path.exists() or not path.is_file():
         raise TransactionValidationError(
             translated_message="errors.financial.source_file_not_found",
             context={"path": str(path)},
         )
+
+
+def _validate_import_source(provider: FinancialProviderProtocol, path: Path) -> ProviderValidation:
+    _require_readable_source(path)
     validation = provider.validate_source(path)
     if not validation.is_valid:
         reason = "; ".join(validation.warnings) or tr("errors.transaction.import_source_invalid")

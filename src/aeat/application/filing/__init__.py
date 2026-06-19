@@ -185,11 +185,24 @@ def build_draft(
         raise ModeloBuilderError(f"registry calculation failed: {exc}") from exc
     entries = {entry.target: entry for entry in result.entries}
     schema_ids = {casilla.id for casilla in collection.all()}
+    # A computed casilla's formula_trace documents the static casilla inputs its
+    # formula declares (the validator checks the trace against
+    # ``CasillaSchema.formula_inputs``). It must NOT be the branch-dependent
+    # runtime operand set: ``if_then_else`` short-circuits, so a conditional
+    # formula (e.g. M303 ``iva.prorrata-porcentaje``) emits operand_refs for only
+    # the branch actually taken — a subset of the declared inputs — which the
+    # formula-divergence rule then rejects, leaving the draft in BORRADOR. Read
+    # the deterministic declared input set from the schema collection instead.
+    formula_inputs_by_casilla = {
+        schema.id: tuple(schema.formula_inputs) for schema in collection.all() if schema.formula is not None
+    }
     values: list[ModeloValue] = []
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind == _InputKind.COMPUTED:
             entry = entries[casilla.id]
-            trace = tuple(ref for ref in entry.operand_refs if ref in schema_ids)
+            trace = formula_inputs_by_casilla.get(casilla.id)
+            if trace is None:
+                trace = tuple(ref for ref in entry.operand_refs if ref in schema_ids)
             values.append(
                 ModeloValue(
                     casilla_id=casilla.id,

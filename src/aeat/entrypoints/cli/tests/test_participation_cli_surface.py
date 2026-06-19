@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 import typer
 from typer.core import TyperGroup
+from typer.testing import CliRunner
 
 from ....application.ledger import get_transaction_participation
 from ....core import Period
@@ -70,6 +71,51 @@ def test_participation_rebuild_subcommand_is_registered() -> None:
     group = _participation_group()
 
     assert "rebuild" in group.commands
+
+
+def _participation_app() -> typer.Typer:
+    def _resolve(_repo: object, transaction_id: str) -> str:
+        return transaction_id
+
+    app = typer.Typer()
+    register_participation_commands(app, resolve_transaction_id=_resolve)
+    return app
+
+
+def test_participation_rebuild_dispatches_not_swallowed_as_id(tmp_path: Path) -> None:
+    """``participation rebuild`` dispatches the subcommand, not the lookup.
+
+    Regression for audit B4: the group used ``invoke_without_command=True`` with
+    an optional positional ``transaction_id``, so Click bound the literal
+    ``rebuild`` token to ``transaction_id`` and the lookup tried to hex-validate
+    it instead of regenerating the index. The fix forwards a reserved
+    subcommand name to its command. Asserts the rebuild action runs to a
+    success exit (the typed rebuild counts), never the hex-validation failure.
+    """
+    bucket_id = "participation-cli-rebuild"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+        result = CliRunner().invoke(_participation_app(), ["participation", "rebuild"])
+
+    assert result.exit_code == 0, result.output
+    assert "no hexadecimales" not in result.output
+    assert "revision_count" in result.output
+
+
+def test_participation_lookup_still_works_for_transaction_id(tmp_path: Path) -> None:
+    """``participation <transaction-id>`` keeps its documented lookup UX.
+
+    A 64-hex id that is not a reserved subcommand name reaches the lookup action
+    and emits the typed participation payload (empty participations for an
+    untracked transaction), proving the reserved-name guard does not divert
+    genuine lookup ids.
+    """
+    bucket_id = "participation-cli-lookup"
+    transaction_id = "a" * 64
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+        result = CliRunner().invoke(_participation_app(), ["participation", transaction_id])
+
+    assert result.exit_code == 0, result.output
+    assert transaction_id in result.output
 
 
 def test_ledger_track_result_schema_carries_participated_in() -> None:

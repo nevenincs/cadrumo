@@ -114,6 +114,40 @@ def test_registry_formula_runtime_rejects_inputs_for_computed_casillas(
         )
 
 
+def test_casilla_constraint_violation_message_interpolates_with_raise_site_context() -> None:
+    """The casilla-constraint-violation locale template renders cleanly with the
+    exact context the raise site supplies.
+
+    Regression for a placeholder leak: the
+    ``errors.calc.casilla_constraint_violation`` template references
+    ``{violation}``, but the raise site in
+    ``_formula_runtime.calculate_registry_snapshot`` originally omitted that key
+    from its ``context`` dict. A missing kwarg makes the renderer return the
+    template uninterpolated, so EVERY placeholder
+    (``{casilla_id}``/``{value}``/``{violation}``/``{legal_refs}``) leaked to the
+    operator. This test renders the real template with the raise-site context and
+    asserts no ``{name}`` placeholder survives. The AST placeholder-parity gate
+    does not cover error ``context=`` dicts, so this guard is explicit.
+    """
+    from .....core.i18n import tr
+
+    # Mirror the context built at the raise site (keep in sync with
+    # _formula_runtime.calculate_registry_snapshot).
+    context = {
+        "casilla_id": "iva.prorrata-porcentaje",
+        "casilla_number": "prorrata-porcentaje",
+        "value": "200",
+        "violation": "value 200 above max_value 100",
+        "formula_id": "modelo-303-iva-prorrata-porcentaje",
+        "legal_refs": "ley-37-1992:art-104",
+        "source_refs": "aeat-modelo-303-procedure",
+    }
+    rendered = tr("errors.calc.casilla_constraint_violation", **context)
+    assert "iva.prorrata-porcentaje" in rendered
+    assert "value 200 above max_value 100" in rendered
+    assert "{" not in rendered and "%{" not in rendered, rendered
+
+
 def test_registry_formula_runtime_preserves_signed_intermediate_results_from_official_instructions(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:

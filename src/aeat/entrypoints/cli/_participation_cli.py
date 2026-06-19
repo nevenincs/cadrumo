@@ -59,6 +59,15 @@ def register_participation_commands(
         if transaction_id is None:
             emit_help_text(ctx)
             raise typer.Exit(code=0)
+        # ``invoke_without_command=True`` plus an optional positional makes Click
+        # bind a bare subcommand token (e.g. ``rebuild``) to ``transaction_id``
+        # instead of dispatching the subcommand. Detect a reserved subcommand
+        # name and forward to it so ``participation rebuild`` works while
+        # ``participation <id>`` keeps its documented lookup UX.
+        if transaction_id in _reserved_subcommand_names(participation):
+            command = typer.main.get_command(participation)
+            ctx.invoke(command.commands[transaction_id].callback)
+            return
         _emit_participation_lookup(
             ctx,
             transaction_id=transaction_id,
@@ -67,6 +76,20 @@ def register_participation_commands(
 
     _register_rebuild_command(participation)
     app.add_typer(participation, name="participation")
+
+
+def _reserved_subcommand_names(participation: typer.Typer) -> frozenset[str]:
+    """Return the names of subcommands registered under the ``participation`` group.
+
+    The group callback's optional positional ``transaction_id`` would otherwise
+    swallow a bare subcommand token (e.g. ``rebuild``); these names are reserved
+    so the callback can forward them to their command instead of treating them
+    as a transaction id.
+    """
+    return frozenset(
+        info.name or (info.callback.__name__ if info.callback is not None else "")
+        for info in participation.registered_commands
+    )
 
 
 def _emit_participation_lookup(

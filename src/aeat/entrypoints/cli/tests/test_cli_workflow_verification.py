@@ -349,3 +349,38 @@ def test_config_app_round_trip_review_row_canonical_next_command_is_review_verb(
     assert canonical_next_command.startswith("aeat app ledger review ")
     assert " edit " not in canonical_next_command
     assert "--set" not in canonical_next_command
+
+
+def test_config_app_round_trip_review_row_carries_legal_refs_field(
+    _isolated_cli_backend: Path,
+) -> None:
+    """Every JSON review row exposes a ``legal_refs`` field.
+
+    The how-to guide promises the JSON output always carries ``legal_refs``;
+    a ledger-transaction row grounds its obligation in the operator's own
+    records, so the field is present and empty rather than absent.
+    """
+    outcome = _drive_workflow_round_trip(_isolated_cli_backend)
+    row = _review_rows(outcome)[0]
+    assert "legal_refs" in row
+    assert row["legal_refs"] == []
+
+
+def test_config_app_round_trip_review_queue_text_omits_bucket_placeholder(
+    _isolated_cli_backend: Path,
+) -> None:
+    """The text queue table does not render the redacted bucket placeholder.
+
+    The profile-wide queue always scopes to the active bucket, so a per-row
+    Bucket column adds no operator value and only ever printed the paste-safe
+    ``<profile-id>`` placeholder (the m17 leak). The column is removed; the
+    JSON ``bucket_id`` (redacted) remains for tooling.
+    """
+    _drive_workflow_round_trip(_isolated_cli_backend)
+
+    text_queue = _invoke(["app", "review", "queue"])
+    assert text_queue.exit_code == 0, text_queue.output
+    assert CLI_PROFILE_ID_PLACEHOLDER not in text_queue.output
+    assert CLI_BUCKET_ID_PLACEHOLDER not in text_queue.output
+    # The row itself still surfaces (the column removal must not drop data).
+    assert "ledger_transaction" in text_queue.output

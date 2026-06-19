@@ -19,15 +19,19 @@ import pytest
 from ....core.config import Settings
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.transactions import (
+    BusinessClassification,
+    LLMClassificationResponse,
     RawProvenance,
     RawTransaction,
     SourceFormat,
     Transaction,
+    TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
-from .._llm_classification import _resolve_evidence
+from .._llm_classification import _resolve_evidence, suggest_llm_classification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -127,3 +131,66 @@ def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfi
     # Permitted but not acknowledged this invocation -> refused.
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
         _resolve_evidence(txn, bucket_id="bucket-001", settings=consenting, evidence_acknowledged=False)
+
+
+class _RecordingClassifier:
+    """Real ``LLMClassifier`` stand-in for the external provider subprocess.
+
+    Records the ``evidence_text`` it is handed so a test can assert exactly what
+    reaches the cloud boundary. The actual provider is an out-of-process CLI that
+    cannot run in a unit test; this is the dependency-injection seam the
+    production ``classifier=`` parameter already exposes, not a mock of the
+    system under test (the evidence-routing logic in ``_llm_classification``).
+    """
+
+    def __init__(self) -> None:
+        self.seen_evidence_text: str | None = "<<unset>>"
+
+    @property
+    def decided_by(self) -> str:
+        return "llm:test-provider:test-model"
+
+    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
+        self.seen_evidence_text = evidence_text
+        return LLMClassificationResponse(
+            classification=BusinessClassification.BUSINESS,
+            confidence=Decimal("0.9"),
+            reason="recorded classification",
+        )
+
+
+def test_no_evidence_transaction_does_not_trigger_consent_gate_and_uploads_no_evidence(
+    profile: TestRuntimeProfile,
+) -> None:
+    """A no-evidence transaction read with --read-evidence sends nothing sensitive.
+
+    Audit M20: the cloud-upload consent gate governs evidence bytes. When a
+    transaction has no linked evidence there is nothing to upload, so the gate
+    correctly does not fire even under the default (consent-off, not-acknowledged)
+    posture, and the cloud classifier is handed ``evidence_text=None`` -- only the
+    transaction row, the documented baseline ``--llm`` input. This locks the
+    "no evidence = no upload = no consent needed" invariant.
+    """
+    txn = _transaction(evidence_id=None)
+    repository = TransactionCatalogueRepository(bucket_id="bucket-001", objects=profile.repository)
+    repository.save(TransactionCatalogue.from_transactions((txn,)))
+
+    # Default posture: cloud upload not permitted AND not acknowledged.
+    assert profile.settings.aeat_evidence_cloud_upload_permitted is False
+    classifier = _RecordingClassifier()
+
+    suggestion = suggest_llm_classification(
+        bucket_id="bucket-001",
+        transaction_id=txn.transaction_id,
+        provider=None,
+        classifier=classifier,
+        transaction_repository=repository,
+        read_evidence=True,
+        evidence_acknowledged=False,
+        settings=profile.settings,
+    )
+
+    # No refusal raised, and nothing evidence-derived crossed the cloud boundary.
+    assert classifier.seen_evidence_text is None
+    assert suggestion.evidence_id is None
+    assert suggestion.classification is BusinessClassification.BUSINESS

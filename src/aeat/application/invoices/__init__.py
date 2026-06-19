@@ -27,11 +27,22 @@ from ...domain.invoices._service import (
     suggest_reconciliations,
     verify_link_consistency,
 )
+from ._creation import (
+    CatalogueInvoiceCreateResult,
+    build_catalogue_invoice,
+    create_catalogue_invoice,
+)
 from ._importing import (
     InvoiceImportResult,
     import_invoices_from_path,
     merge_invoice_import,
     parse_invoice_payload,
+)
+from ._lifecycle import (
+    CatalogueInvoiceRemoveResult,
+    remove_catalogue_invoice,
+    resolve_catalogue_invoice,
+    resolve_catalogue_invoice_from_repository,
 )
 from ._linking import (
     InvoiceTransactionLinkResult,
@@ -67,6 +78,8 @@ from ._reconciliation import (
 from ._source_resolver import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
 
 __all__ = [
+    "CatalogueInvoiceCreateResult",
+    "CatalogueInvoiceRemoveResult",
     "InvoiceCatalogueSourceResolver",
     "InvoiceImportResult",
     "InvoiceListRow",
@@ -77,6 +90,8 @@ __all__ = [
     "InvoiceTransactionLinkResult",
     "ReconciliationSkippedSuggestion",
     "apply_manual_invoice_match",
+    "build_catalogue_invoice",
+    "create_catalogue_invoice",
     "find_invoice",
     "find_unmatched",
     "get_invoice_from_repository",
@@ -98,6 +113,9 @@ __all__ = [
     "project_invoice_reviews",
     "reconcile_invoice_catalogues",
     "reconcile_invoice_repositories",
+    "remove_catalogue_invoice",
+    "resolve_catalogue_invoice",
+    "resolve_catalogue_invoice_from_repository",
     "suggest_reconciliations",
     "verify_invoice_repository_links",
     "verify_link_consistency",

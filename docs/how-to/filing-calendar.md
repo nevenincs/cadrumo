@@ -11,8 +11,15 @@ Estatal de Administracion Tributaria (AEAT).
 
 ## Before you start
 
-You need an [active taxpayer profile](profile-setup.md#what-the-active-profile-means).
-If you do not have one, create it with
+You need an [active taxpayer profile](profile-setup.md#what-the-active-profile-means),
+and the tool needs your master-key passphrase (it prompts for it, or set
+`AEAT_SECRET_PASSPHRASE` for non-interactive runs). If you do not have a
+profile, create it with [Set up your taxpayer profile](profile-setup.md).
+
+The profile must declare at least one obligation, or these commands refuse with
+"El perfil activo no declara este modelo fiscal". A profile created without
+taxpayer type, estimation regime, or IVA regime declares no modelo and shows
+nothing. Declare those facts first with
 [Set up your taxpayer profile](profile-setup.md).
 
 Calendar results depend on profile facts: taxpayer type, activity start date,
@@ -22,9 +29,10 @@ compare or apply AEAT Modelo 036 censo facts with
 [Link Modelo 036 census information](censo-update.md), but censo linking is
 not universally required.
 
-If a profile is incomplete, calendar commands may stop and name the missing
-facts. Fix the profile first. If you want to see partial results before the
-profile is complete, add `--allow-incomplete` to skip that check.
+If a profile is still incomplete, a command may stop and name the missing facts.
+Fix the profile first. To see partial results before the profile is complete,
+add `--allow-incomplete` where the command accepts it (`agenda`, `backlog`, and
+`calendar`). The CLI emits help, results, and refusals in Spanish.
 
 ## What are my filing obligations?
 
@@ -105,6 +113,18 @@ aeat app overview calendar --from 2026-01-01 --to 2026-12-31
 
 Both dates are required in `YYYY-MM-DD` format. The calendar applies national
 public holidays and business-day shifts before printing deadlines.
+
+The calendar is stricter than `agenda` and `backlog`: it also refuses while a
+profile check is unresolved, such as `censo.enrolment_unverified`. When it does,
+either resolve the check (run `aeat config profile censo pull` then
+`aeat config profile censo apply`; see
+[Link Modelo 036 census information](censo-update.md)) or add `--allow-incomplete`
+to print a provisional calendar. Provisional entries are marked
+`censo_enrolment=unverified`:
+
+```bash
+aeat app overview calendar --from 2026-01-01 --to 2026-12-31 --allow-incomplete
+```
 
 To see every registered profile instead of only the
 [active profile](profile-setup.md#what-the-active-profile-means), add

@@ -38,9 +38,9 @@ For the steps, see [Reconcile a filed modelo against its justificante](../how-to
 
 State this plainly, because it's easy to expect more than the tool delivers.
 
-The comparison confirms that your local record matches the receipt's headline figures - the modelo, the period, your tax ID, and the totals the receipt prints. If your saved numbers and the receipt agree, it tells you so. If they disagree, it names the fields that don't match.
+The comparison confirms that your local record matches the receipt's header fields - the modelo, the filing year, the period, and your tax ID. If your record and the receipt agree, it tells you so. If they disagree, it names the fields that don't match. It does not compare the individual box values; it checks that the receipt is for the same return.
 
-It is **not** a live re-check of your maths against the agency. The tool does not ask AEAT to recompute your return and compare answers. It compares your record against a receipt you already hold, at the level of the figures that receipt shows.
+It is **not** a live re-check of your maths against the agency. The tool does not ask AEAT to recompute your return and compare answers. It compares your record against a receipt you already hold, at the level of the header fields that identify the return.
 
 The tool can also save read-only copies of the agency's own record as evidence - keeping a copy of what AEAT holds, so you have it on file. That too is comparison and record-keeping, not a fresh calculation. None of these steps re-derives your tax; they confirm what was filed and keep proof of it.
 

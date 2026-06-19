@@ -179,10 +179,16 @@ class OfxProvider(FinancialProvider):
         # The library does not expose a typed exception hierarchy, so a
         # broad catch is required to guarantee conversion.
         except Exception as exc:
-            _logger.error(
+            # Debug, not error: this is reached during the ``--provider auto``
+            # detection probe loop for every non-OFX (or unreadable) input,
+            # where a parse miss is the expected, non-fatal signal that this
+            # provider does not match. The failure is converted to an
+            # InvalidFinancialSourceError that detection treats as a miss; the
+            # operator-facing refusal is raised once by the caller. exc_info is
+            # dropped so a probe miss never dumps a traceback to the operator.
+            _logger.debug(
                 "ofx_provider: failed to parse OFX file <input-ofx>: %s",
                 type(exc).__name__,
-                exc_info=True,
             )
             raise InvalidFinancialSourceError(f"could not parse OFX file: {_INPUT_OFX_SOURCE_LABEL}") from exc
         accounts = []

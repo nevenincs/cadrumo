@@ -276,3 +276,45 @@ def test_modelo_reconcile_refuses_malformed_evidence(tmp_path: Path) -> None:
                 source_path=not_a_justificante,
             ),
         )
+
+
+def test_modelo_reconcile_malformed_evidence_refusal_is_clean_and_instructive(
+    tmp_path: Path,
+) -> None:
+    """A malformed PDF surfaces a clean, instructive typed refusal.
+
+    The operator-facing message must carry the documented ``evidence_invalid``
+    "is this the right document?" guidance and a recovery suggestion, and must
+    NOT leak the parser-internal exception class (``PdfminerException``), the
+    ``pdfplumber`` backend name, or the ``<input-pdf>`` redaction placeholder.
+    Regression for audit reconcile m11 / docs-hardening m16: before the fix the
+    refusal echoed the raw parser message verbatim.
+    """
+    from ....core.errors._registry import (
+        get_error_suggestion,
+        resolve_error_message,
+    )
+
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    not_a_justificante = tmp_path / "garbage.pdf"
+    not_a_justificante.write_bytes(b"%PDF-1.4\nnot a real pdf body at all\n")
+
+    with pytest.raises(ReconciliationEvidenceInvalidError) as caught:
+        modelo_reconcile(
+            ModeloReconciliationCommand(
+                work_unit_id=work_unit_id,
+                source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+                source_path=not_a_justificante,
+            ),
+        )
+
+    error = caught.value
+    message = resolve_error_message(error)
+    for leak in ("PdfminerException", "pdfplumber", "<input-pdf>", "Traceback"):
+        assert leak not in message, f"parser-internal token leaked into refusal: {leak!r}"
+    # The documented "wrong document" guidance is surfaced (es locale default).
+    assert "justificante" in message.lower()
+    assert "documento" in message.lower()
+    assert get_error_suggestion(error) is not None
+    # The raw cause is preserved for diagnostics off the operator surface.
+    assert error.__cause__ is not None

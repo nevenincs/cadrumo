@@ -334,6 +334,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.outbound.google._errors.GoogleAuthNonInteractiveError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_NON_INTERACTIVE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_google_non_interactive",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.outbound.google._errors.GoogleAuthUnsecuredModeRefusedError",
         ErrorCode(
             code="REFUSED_GOOGLE_UNSECURED_MODE",

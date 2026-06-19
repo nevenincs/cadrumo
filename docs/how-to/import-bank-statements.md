@@ -15,6 +15,9 @@ You need:
 
 - a working `aeat` command
 - an active taxpayer profile; see [Set up your taxpayer profile](profile-setup.md)
+- a master-key passphrase. The tool prompts for it the first time it opens your
+  encrypted storage in a session; for a non-interactive shell, set
+  `AEAT_SECRET_PASSPHRASE`
 - a bank statement file or directory, unless you are adding transactions by hand
 - for AEAT census-derived home-office ratios, reviewed censo facts; see
   [Link Modelo 036 census information](censo-update.md)
@@ -25,6 +28,21 @@ Confirm the active profile before you write transaction data:
 aeat config profile status
 ```
 
+## Statement file format
+
+A bank CSV uses a semicolon (`;`) separator and comma decimals. The first
+line is the column header; each later line is one movement:
+
+```text
+Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda
+2026-02-10;2026-02-10;Venta cliente;1.210,00;1.210,00;EUR
+2026-02-11;2026-02-11;Compra material;-605,00;605,00;EUR
+```
+
+The sign of `Importe` carries the direction: a positive amount is income, a
+negative amount is an expense. Save this as `statement.csv` and import it with
+`--provider auto`.
+
 ## Preview an import
 
 Run a dry run first. A dry run shows what `aeat` would import and saves no
@@ -34,10 +52,14 @@ rows:
 aeat app ledger import ./statement.csv --provider auto --dry-run
 ```
 
-`--provider auto` asks `aeat` to detect the statement format. If detection
-picks the wrong format, replace `auto` with the exact provider - run
-`aeat app ledger import --help` or see the [CLI reference](../cli/index.rst)
-for the current provider list.
+`--provider auto` asks `aeat` to detect the statement format. The recognized
+providers are `auto`, `csv`, `ofx`, `qfx`, `xlsx`, `excel`, `n26`, `pdf`, and
+`pdf-n26`. If detection picks the wrong format, replace `auto` with the exact
+provider - run `aeat app ledger import --help` or see the
+[CLI reference](../cli/index.rst) for the current provider list.
+
+If the path does not exist, the command refuses cleanly and names the missing
+file (`El archivo de origen no existe: ...`); fix the path and run it again.
 
 ## Save imported rows
 
@@ -219,16 +241,22 @@ Add or modify notes when you need a short operator explanation:
 aeat app ledger update <transaction-id> --notes "Receipt checked against supplier PDF"
 ```
 
-Attach secure purchase evidence, link an invoice, or bind a stored attachment id:
+Attach secure purchase evidence to a transaction. The evidence id comes from
+`aeat app ledger evidence add` (it prints `evidence_id`):
 
 ```bash
-# Attach purchase evidence or other attachment files to a transaction
+# Attach purchase evidence to a transaction
 aeat app ledger attach <transaction-id> --purchase-invoice-evidence-id <evidence-id>
-aeat app ledger attach <transaction-id> --attachment-id <attachment-id>
 
-# Link a transaction bidirectionally with an invoice and/or purchase evidence in one command
-aeat app ledger link <transaction-id> --invoice-id <invoice-id> --evidence-id <evidence-id>
+# Same purchase-evidence link through the link command
+aeat app ledger link <transaction-id> --evidence-id <evidence-id>
 ```
+
+`link --invoice-id` expects an id from the reconciliation invoice catalogue
+(populated by the import and reconcile flows), not an id from
+`aeat app ledger invoice add`. See [Attach invoices and receipts](ledger-evidence.md)
+for the full evidence and invoice-record workflow, including the
+`--attachment-id` option and its current limitation.
 
 Pull a document straight from Google Drive into encrypted evidence storage:
 
@@ -254,14 +282,17 @@ aeat app ledger split <transaction-id> --child-amount 100.00 --child-description
 ```
 
 aeat replaces the original transaction with two separate entries — one for
-each part. Classify each one separately:
+each part. The split output prints one `Id de transacción hija` row per part,
+each carrying the short id and the full id; copy them. Classify each one
+separately:
 
 ```bash
 aeat app ledger classify <business-child-id> --classification BUSINESS --category-id <category-id>
 aeat app ledger classify <personal-child-id> --classification PERSONAL
 ```
 
-If the split was wrong, merge the complete child cohort:
+If the split was wrong, merge the complete child cohort. Use the child ids the
+split printed:
 
 ```bash
 aeat app ledger merge --child-id <business-child-id> --child-id <personal-child-id> --reason "undo split" --yes

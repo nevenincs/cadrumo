@@ -6,6 +6,17 @@ pulling Modelo 036 census information.
 Authentication is local setup for read access. It does not let `aeat` submit
 filings, register Modelo 036 changes, or modify AEAT records.
 
+## Before you start
+
+You need:
+
+- an [active profile](profile-setup.md#what-the-active-profile-means) — `aeat
+  config auth configure` refuses with `No hay un perfil activo` until you create
+  one. Create one non-interactively with `aeat config profile create me --quiet
+  --tax-id <NIF/CIF/DNI/NIE> --name "Ana" --surnames "Garcia Lopez"`.
+- the master-key passphrase that protects your local store. The tool prompts for
+  it, or set `AEAT_SECRET_PASSPHRASE` to run without a prompt.
+
 ## See supported providers
 
 List providers:
@@ -14,14 +25,21 @@ List providers:
 aeat config auth providers
 ```
 
-Available providers include:
+The list marks each provider as `disponible` (available now) or `reservado (no
+disponible aún)` (reserved, not available yet). Only two are available:
 
-- `certificate` — your digital certificate file (certificado digital)
-- `clave_pin` — Cl@ve PIN (a one-time code system from AEAT)
+- `certificate` — your digital certificate file (certificado digital).
+  Available.
+- `clave_movil` — mobile-based Cl@ve. Available.
+
+Three more are listed but reserved, so you cannot configure them yet:
+
+- `clave_pin` — Cl@ve PIN (a one-time code system from AEAT). Reserved.
 - `clave_permanente` — Cl@ve Permanente (a username and password for
-  government services)
-- `clave_movil` — mobile-based Cl@ve
-- `dnie_pkcs` — the national ID card (DNI electrónico)
+  government services). Reserved.
+- `dnie_pkcs` — the national ID card (DNI electrónico). Reserved.
+
+Configure one of the two available providers.
 
 ## Configure a provider
 

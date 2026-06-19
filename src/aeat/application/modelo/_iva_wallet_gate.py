@@ -139,6 +139,7 @@ def apply_iva_compensation_decision_binding(
             "IVA wallet reconciliation blocks automatic Modelo 303 calculation: "
             f"{decision.divergence}: {decision.reason}",
             translated_message="application.modelo.errors.iva_wallet_blocked",
+            context={"divergence": str(decision.divergence), "reason": str(decision.reason)},
         )
     if decision.selected_amount is None:
         raise ModeloIvaWalletReconciliationBlocked(
@@ -301,6 +302,7 @@ def require_persisted_iva_compensation_decision_matches_revision(
         raise ModeloIvaWalletReconciliationBlocked(
             iva_wallet_blocked_message(decision),
             translated_message="application.modelo.errors.iva_wallet_blocked",
+            context={"divergence": str(decision.divergence), "reason": str(decision.reason)},
         )
     if decision.target_period != work_unit.period:
         raise ModeloIvaWalletReconciliationBlocked(

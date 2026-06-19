@@ -56,6 +56,18 @@ class GoogleAuthBrowserOpenError(GoogleAuthError):
     """Raised when the OS-default browser launcher fails to open the consent URL."""
 
 
+class GoogleAuthNonInteractiveError(GoogleAuthError):
+    """Raised when the interactive browser consent flow is attempted without a controlling terminal.
+
+    The Desktop OAuth flow opens the consent screen in a browser and then
+    blocks a loopback HTTP receiver until the operator completes consent.
+    With no controlling TTY (a piped, redirected, or detached invocation)
+    no operator can complete the flow, so the receiver would block forever.
+    This refusal fails fast instead, naming the interactive-terminal
+    prerequisite.
+    """
+
+
 class GoogleAuthUnsecuredModeRefusedError(GoogleAuthError):
     """Raised on OAuth attempts under ``aeat_secret_store_backend=unsecured`` with a real NIF profile."""
 
@@ -77,6 +89,7 @@ __all__ = [
     "GoogleAuthKeychainLockedError",
     "GoogleAuthLoopbackBindError",
     "GoogleAuthNetworkError",
+    "GoogleAuthNonInteractiveError",
     "GoogleAuthProfileUnboundError",
     "GoogleAuthRevokedError",
     "GoogleAuthScopeInsufficientError",
