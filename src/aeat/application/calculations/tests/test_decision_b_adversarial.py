@@ -152,39 +152,3 @@ def test_not_applicable_evidence_is_clean_and_explicitly_flagged() -> None:
     assert ev.clean
     assert ev.blockers == ()
     assert ev.modelo_not_applicable_advisory
-
-
-# --- C3: integration against the real M100 snapshot ---
-
-from ....core.resources import resources  # noqa: E402
-from .._cross_period_clean_state import cross_period_dependency_requirements  # noqa: E402
-
-
-def test_real_m100_withholding_deps_suppressed_for_employee_but_not_for_a_filer() -> None:
-    """End-to-end: an employee's M100 cross-period withholding deps are scoped out; a filer's are not.
-
-    Proves C3 against the real registry: M100 declares cross-period dependencies on withholding /
-    instalment modelos (111/115/123/130/131/193). A salaried/rental taxpayer who files only renta
-    (`applicable = {"100"}`) has those deps scoped out as not-applicable -> M100 reachable. A taxpayer
-    who also files 130 keeps the 130 dependency (safety: a filed modelo is never suppressed).
-    """
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
-    reqs = cross_period_dependency_requirements(snapshot)
-    source_modelos = {r.source_modelo for r in reqs}
-    # The defect surface: M100 declares deps on withholding / instalment modelos.
-    assert source_modelos & {"111", "115", "130"}, f"expected withholding-modelo deps; got {source_modelos}"
-
-    # Employee (files only renta) -> withholding deps scoped out as not-applicable.
-    employee = partition_cross_period_requirements_by_modelo_applicability(
-        reqs, applicable_source_modelos=frozenset({"100"})
-    )
-    suppressed = {r.source_modelo for r in employee.suppressed}
-    assert (source_modelos & {"111", "115", "123", "130", "131", "193"}) <= suppressed, suppressed
-    assert all(r.source_modelo == "100" or r.source_modelo not in suppressed for r in employee.in_scope)
-
-    # Safety: a taxpayer who files 130 keeps the 130 dependency (never suppressed).
-    if "130" in source_modelos:
-        filer = partition_cross_period_requirements_by_modelo_applicability(
-            reqs, applicable_source_modelos=frozenset({"100", "130"})
-        )
-        assert "130" not in {r.source_modelo for r in filer.suppressed}

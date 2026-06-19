@@ -559,25 +559,6 @@ def _cross_period_expected_member_sets_from_profile(
     return (*profile_sets, *tuple(explicit_member_sets))
 
 
-def _applicable_source_modelos(profile: TaxpayerProfile, *, filing_year: int) -> frozenset[str] | None:
-    """Return the set of modelo ids the taxpayer files, or ``None`` on any failure (fail-safe).
-
-    Uses the deadline engine's obligation schedule (its ``applies_to`` authority for which
-    modelos a profile files in ``filing_year``) so a cross-period dependency on a modelo the
-    taxpayer does NOT file (e.g. a salaried taxpayer's 111/115/130) is scoped out as
-    not-applicable. On any error (no windows, registry failure) returns ``None`` -> NO
-    suppression (the gate stays strict; never a silent relaxation).
-    """
-    from ...domain.deadlines import DeadlineEngine
-    from ...domain.deadlines._errors import NoDeadlineWindowsError, ScheduleComputationError
-
-    try:
-        schedule = DeadlineEngine().compute(profile, filing_year)
-    except (NoDeadlineWindowsError, ScheduleComputationError, FileNotFoundError):
-        return None
-    return frozenset(str(o.modelo) for o in schedule.obligations)
-
-
 def _cross_period_clean_state_verdict_for_work_unit(
     work_unit: WorkUnit,
     *,
@@ -588,7 +569,6 @@ def _cross_period_clean_state_verdict_for_work_unit(
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
-    applicable_source_modelos: frozenset[str] | None = None,
 ) -> CrossPeriodCleanStateVerdict | None:
     """Evaluate the cross-period clean-state verdict for a work unit.
 
@@ -618,7 +598,6 @@ def _cross_period_clean_state_verdict_for_work_unit(
         expected_member_sets=expected_member_sets,
         taxpayer_tax_id=taxpayer_tax_id,
         activity_start_date=activity_start_date,
-        applicable_source_modelos=applicable_source_modelos,
     )
 
 
@@ -991,7 +970,6 @@ def _require_cross_period_clean_state(
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
-    applicable_source_modelos: frozenset[str] | None = None,
 ) -> None:
     verdict = _cross_period_clean_state_verdict_for_work_unit(
         work_unit,
@@ -1002,7 +980,6 @@ def _require_cross_period_clean_state(
         expected_member_sets=expected_member_sets,
         taxpayer_tax_id=taxpayer_tax_id,
         activity_start_date=activity_start_date,
-        applicable_source_modelos=applicable_source_modelos,
     )
     findings = _cross_period_clean_state_findings(
         verdict,
@@ -1202,9 +1179,6 @@ def verify_modelo_revision(
                 ),
                 taxpayer_tax_id=workflow_profile.tax_id,
                 activity_start_date=workflow_profile.activity_start_date,
-                applicable_source_modelos=_applicable_source_modelos(
-                    workflow_profile, filing_year=work_unit.filing_year
-                ),
             ),
             iva_compensation_decision=iva_compensation_decision,
             activity_start_date=workflow_profile.activity_start_date,
