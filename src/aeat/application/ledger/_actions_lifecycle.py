@@ -437,7 +437,6 @@ def reset_ledger_catalogue(
             "source_command": trimmed_source_command,
             "reason": reason.strip(),
             "removed_transaction_count": str(len(removed_ids)),
-            "removed_transaction_ids": ",".join(removed_ids),
         },
     )
     if invoices is None or updated_invoice_catalogue is None:
