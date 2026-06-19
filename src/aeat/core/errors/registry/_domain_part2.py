@@ -479,6 +479,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._iva_wallet_seed.ModeloIvaWalletOverrideSealedError",
+        ErrorCode(
+            code="REFUSED_MODELO_IVA_WALLET_OVERRIDE_SEALED",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.iva_wallet.override_sealed_blocked",
+            default_suggestion="aeat app modelo work revisions",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._iva_wallet_seed.ModeloIvaWalletOverrideFreshWalletError",
+        ErrorCode(
+            code="REFUSED_MODELO_IVA_WALLET_OVERRIDE_FRESH_WALLET",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.iva_wallet.override_fresh_wallet_blocked",
+            default_suggestion="aeat app modelo iva-wallet balance",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._action_errors.ModeloRecordNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_FILING_RECORD_NOT_FOUND",

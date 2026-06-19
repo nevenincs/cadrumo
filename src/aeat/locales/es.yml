@@ -972,6 +972,8 @@ application:
       seed_negative_amount: El importe inicial no puede ser negativo.
       seed_no_nif: No hay NIF definido para la operación de importe inicial; asócielo
         al perfil activo.
+      override_sealed_blocked: 'Anulación rechazada: un Modelo 303 ya presentado (%{blocking_filing_year}/%{blocking_period}) ha consumido la base de compensación de este periodo. Registrar una anulación alteraría una declaración ya presentada.'
+      override_fresh_wallet_blocked: 'Anulación rechazada: una lectura actual de la cartera de AEAT ya resuelve el Modelo 303 %{filing_year}/%{period}. La evidencia reciente de AEAT es la autoridad y una anulación no debe sustituirla.'
     profile_binding:
       errors:
         date_value_type_invalid: El dato de perfil para el binding de fecha %{binding_id}
@@ -1281,12 +1283,13 @@ cli:
             defecto ES).
           create_help: Crea una factura de conciliación vinculable en el catálogo.
           group_help: Facturas del catálogo de conciliación que se vinculan a transacciones.
-          invoice_id_help: 'Identificador de factura del catálogo (o prefijo no ambiguo).'
+          invoice_id_help: Identificador de factura del catálogo (o prefijo no ambiguo).
           list_help: Lista las facturas del catálogo de conciliación.
           operation_type_unsupported: '--operation-type {value} todavía no puede alimentar
             el Modelo 349 desde el catálogo; admitidos: {supported}.'
-          remove_help: 'Elimina una factura del catálogo de conciliación.'
-          view_help: 'Muestra una factura del catálogo de conciliación por identificador o prefijo no ambiguo.'
+          remove_help: Elimina una factura del catálogo de conciliación.
+          view_help: Muestra una factura del catálogo de conciliación por identificador
+            o prefijo no ambiguo.
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
           intracomunitarias UE)
         eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
@@ -1335,13 +1338,15 @@ cli:
         classification_help: Clasificación objetivo para las transacciones coincidentes.
         description_pattern_help: Patrón regex comparado (sin distinción de mayúsculas)
           con la descripción de la transacción.
+        empty_pattern: Una regla necesita un --description-pattern no vacío (una palabra
+          o frase, p. ej. "software") para coincidir con las descripciones de las
+          transacciones.
         group_help: Gestiona y aplica reglas de clasificación del libro.
         list_empty: (no hay reglas almacenadas)
         list_header: "prioridad\tclasificación\tpatrón\trule_id"
         list_help: Lista las reglas de clasificación almacenadas ordenadas por prioridad.
         priority_help: Prioridad numérica; un valor menor se evalúa primero (por defecto
           100).
-        empty_pattern: 'Una regla necesita un --description-pattern no vacío (una palabra o frase, p. ej. "software") para coincidir con las descripciones de las transacciones.'
     live:
       app_help: Comandos de observación AEAT en vivo de solo lectura
       borrador:
@@ -1643,6 +1648,16 @@ cli:
         correct_reason_required: 'Indica --reason: registra por qué se corrige el
           saldo inicial; no puede estar vacío.'
         group_help: Comandos de saldo local de la cartera de compensación IVA.
+        override_amount_help: cli.app.modelo.iva_wallet.override_amount_help
+        override_confirm_help: cli.app.modelo.iva_wallet.override_confirm_help
+        override_confirm_required: cli.app.modelo.iva_wallet.override_confirm_required
+        override_evidence_locator_help: cli.app.modelo.iva_wallet.override_evidence_locator_help
+        override_evidence_locator_required: cli.app.modelo.iva_wallet.override_evidence_locator_required
+        override_filing_year_help: cli.app.modelo.iva_wallet.override_filing_year_help
+        override_help: cli.app.modelo.iva_wallet.override_help
+        override_period_help: cli.app.modelo.iva_wallet.override_period_help
+        override_reason_help: cli.app.modelo.iva_wallet.override_reason_help
+        override_reason_required: cli.app.modelo.iva_wallet.override_reason_required
         seed_amount_help: Importe inicial de la compensación de IVA en decimal.
         seed_confirm_help: Confirme la operación de importe inicial.
         seed_confirm_required: Proporcione el modificador --confirm para confirmar
