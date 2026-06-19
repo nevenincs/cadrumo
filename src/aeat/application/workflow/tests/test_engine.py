@@ -439,7 +439,7 @@ class TestAbortReasons:
     def test_targeted_overdue_obligation_admitted_as_late_filing(self) -> None:
         """A closed-window TARGET is admitted as a late local filing, not refused.
 
-        Cross-period filing deadlock ADR, Decision A: a `work file` for an
+        A late `work file` for an
         explicitly targeted but closed (overdue) obligation that genuinely
         existed is admitted (extemporánea, con recargo) so the next period's
         cross-period carry can read its filed observation. It is NOT refused
@@ -741,7 +741,7 @@ class TestVerifyPurpose:
     def test_verify_reaches_done_for_a_closed_filing_window(self) -> None:
         """Closed-window target: both ``FILE`` (late, extemporánea) and ``VERIFY`` proceed.
 
-        Cross-period filing deadlock ADR, Decision A: a closed-window ``FILE`` is no
+        A closed-window ``FILE`` is no
         longer refused with DEADLINE_PASSED; it is admitted as a late local filing.
         ``VERIFY`` remains calendar-independent.
         """
@@ -798,9 +798,9 @@ class TestVerifyPurpose:
     def test_verify_skips_the_preflight_deadline_window_gate(self) -> None:
         """Both LOCAL purposes skip the AEAT filing-window preflight gate.
 
-        VERIFY is calendar-independent (work-verify deadline-independence ADR).
-        FILE is a LOCAL mark-as-filed that contacts AEAT zero times
-        (cross-period filing deadlock ADR, Decision A): re-applying the AEAT
+        VERIFY is calendar-independent.
+        FILE is a LOCAL mark-as-filed that contacts AEAT zero times;
+        re-applying the AEAT
         filing-window gate in preflight would re-block the legitimate late local
         filing that seeds the next period's cross-period carry. Obligation
         existence is still enforced at the deadline stage; only the redundant

@@ -429,26 +429,17 @@ class WorkflowEngine:
                 and target_period is not None
                 and target_period.filing_year != today.year
             ):
-                # Decision A (cross-period filing deadlock ADR): a late LOCAL
-                # `work file` for an explicitly targeted, closed-window prior
-                # period must still resolve its (now-overdue) obligation, so
-                # the next period's cross-period carry can read its filed
-                # observation. Resolve the schedule in the TARGET period's
-                # filing year rather than today's. The as-of-today
-                # ``pending_obligations`` projection keeps calling
-                # ``compute_obligation_schedule(today)`` (the common branch
-                # below), so the single-producer invariant is untouched.
+                # Resolve the schedule in the TARGET period's filing year (not
+                # today's) so a late local `work file` finds its overdue
+                # obligation; the as-of-today projection is unaffected.
                 try:
                     schedule: Schedule = self._deadline_engine.compute(
                         profile, target_period.filing_year, today=today
                     )
                 except NoDeadlineWindowsError:
-                    # The target period's filing year has no registry deadline
-                    # windows at all (a year AEAT never published windows for -
-                    # a far-future or pre-registry year). No obligation could have
-                    # existed, so degrade to the as-of-today schedule; the absent
-                    # target then resolves to NO_PENDING_OBLIGATION below rather
-                    # than a spurious UNHANDLED_EXCEPTION.
+                    # No registry windows for the target year: degrade to the
+                    # as-of-today schedule so the absent target yields
+                    # NO_PENDING_OBLIGATION, not an unhandled error.
                     schedule = compute_obligation_schedule(self._deadline_engine, profile, today=today)
             else:
                 schedule = compute_obligation_schedule(self._deadline_engine, profile, today=today)
@@ -508,14 +499,9 @@ class WorkflowEngine:
 
         if obligation.closes_on < today:
             if target_modelo is not None and target_period is not None:
-                # Decision A: an explicitly targeted but closed-window
-                # obligation is filed LOCALLY and late (extemporánea, con
-                # recargo) rather than refused. `work file` records a local
-                # mark-as-filed and contacts AEAT zero times; the obligation
-                # genuinely existed, so this is the late-filer / prior-year
-                # reconstruction path that seeds the cross-period carry. A
-                # target that never had an obligation still falls through to
-                # NO_PENDING_OBLIGATION above.
+                # A targeted but closed-window obligation that genuinely
+                # existed is filed locally and late (extemporánea, con recargo)
+                # rather than refused; `work file` contacts AEAT zero times.
                 overdue_summary = _summary_text(
                     f"Obligation modelo={obligation.modelo} "
                     f"period={obligation.period} closed on {obligation.closes_on.isoformat()}; "
