@@ -560,7 +560,14 @@ def _cross_period_expected_member_sets_from_profile(
 
 
 def _applicable_source_modelos(profile: TaxpayerProfile, *, filing_year: int) -> frozenset[str] | None:
-    """Modelo ids the taxpayer files (deadline-engine obligation schedule), or ``None`` on any error (fail-safe: no suppression)."""
+    """Return the set of modelo ids the taxpayer files, or ``None`` on any failure (fail-safe).
+
+    Uses the deadline engine's obligation schedule (its ``applies_to`` authority for which
+    modelos a profile files in ``filing_year``) so a cross-period dependency on a modelo the
+    taxpayer does NOT file (e.g. a salaried taxpayer's 111/115/130) is scoped out as
+    not-applicable. On any error (no windows, registry failure) returns ``None`` -> NO
+    suppression (the gate stays strict; never a silent relaxation).
+    """
     from ...domain.deadlines import DeadlineEngine
     from ...domain.deadlines._errors import NoDeadlineWindowsError, ScheduleComputationError
 
@@ -735,31 +742,7 @@ def _cross_period_clean_state_findings(
             findings.append(_cross_period_non_official_local_chain_advisory_finding(verdict, evidence))
     if activity_start_date is None and has_first_filer_candidate_block:
         findings.append(_cross_period_missing_activity_start_finding(verdict))
-    if verdict.has_modelo_not_applicable_advisory:
-        findings.append(_cross_period_modelo_not_applicable_advisory_finding(verdict))
     return tuple(findings)
-
-
-def _cross_period_modelo_not_applicable_advisory_finding(
-    verdict: CrossPeriodCleanStateVerdict,
-) -> ModeloVerificationFinding:
-    """NON-BLOCKING summary advisory: deps on modelos the taxpayer does not file were scoped out.
-
-    Surfaced so the not-applicable suppression is operator-visible (no-silent-under-declaration).
-    """
-    modelos = sorted({
-        d.requirement.source_modelo for d in verdict.dependencies if d.modelo_not_applicable_advisory
-    })
-    return ModeloVerificationFinding(
-        kind=ModeloVerificationFindingKind.ADVISORY,
-        severity=ModeloVerificationFindingSeverity.WARNING,
-        message=(
-            "cross-period dependencies on modelos the taxpayer does not file were scoped out as "
-            f"not-applicable: {', '.join(modelos)}. Their values come from income data, not a filed "
-            "return; if you do file any of these, record the obligation so the dependency is enforced."
-        ),
-        next_action="Confirm you do not file these modelos; otherwise update the taxpayer profile.",
-    )
 
 
 def _cross_period_operator_declared_suppression_advisory_finding(

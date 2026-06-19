@@ -348,7 +348,14 @@ class CrossPeriodDependencyEvidence(BaseModel):
     non_official_local_chain_advisory: bool = False
     """Non-blocking advisory: a same-year ``app_filing`` chain admitted, lacking only official AEAT evidence."""
     modelo_not_applicable_advisory: bool = False
-    """Non-blocking advisory: dependency on a modelo the taxpayer does not file, scoped out as not-applicable (never silent)."""
+    """Non-blocking advisory: a dependency on a modelo the taxpayer does not file, scoped out as not-applicable.
+
+    The taxpayer has no filing obligation for the dependency's source modelo (per the deadline
+    engine's ``applies_to`` authority - e.g. a salaried/rental taxpayer who files no 111/115/130).
+    The requirement is scoped out (its blockers cleared, the row :attr:`clean`) and surfaced as an
+    explicit advisory, NEVER a silent drop (``no-silent-under-declaration``): a modelo the taxpayer
+    DOES file is never suppressed. ``False`` for an applicable dependency.
+    """
 
     @property
     def clean(self) -> bool:
@@ -503,10 +510,15 @@ def partition_cross_period_requirements_by_modelo_applicability(
     *,
     applicable_source_modelos: frozenset[str] | None,
 ) -> _RequirementPartition:
-    """Split requirements by whether the taxpayer files the source modelo (deadline-engine applies_to authority).
+    """Split requirements into applicable and not-applicable by the taxpayer's filed modelos.
 
-    A modelo NOT in ``applicable_source_modelos`` is scoped out as not-applicable; one the taxpayer
-    files stays in scope. ``None`` => no suppression. Origin-agnostic.
+    A dependency on a source modelo the taxpayer does not file (its modelo is NOT in
+    ``applicable_source_modelos``) is scoped out as not-applicable - e.g. a salaried/rental
+    taxpayer's M100 depends on 111/115/130 they never file (the payer does). The applicable
+    set is the deadline engine's ``applies_to`` authority for which modelos the profile files.
+    A modelo the taxpayer DOES file stays in scope (still blocks until evidenced). When
+    ``applicable_source_modelos`` is ``None`` every requirement stays in scope (no suppression).
+    Origin-agnostic, mirroring the activity-start partition.
     """
     if applicable_source_modelos is None:
         return _RequirementPartition(tuple(requirements), ())
@@ -523,7 +535,12 @@ def partition_cross_period_requirements_by_modelo_applicability(
 def _suppressed_modelo_not_applicable_evidence(
     requirement: CrossPeriodDependencyRequirement,
 ) -> CrossPeriodDependencyEvidence:
-    """Clean, advisory-stamped row for a not-applicable dependency (no blockers, explicit facet)."""
+    """Build the clean, advisory-stamped evidence row for a not-applicable dependency.
+
+    The taxpayer files no return for this dependency's source modelo, so there is nothing to
+    load or evidence; the row is :attr:`clean` with NO blockers and carries the explicit
+    ``modelo_not_applicable_advisory`` facet (auditable, never silent).
+    """
     return CrossPeriodDependencyEvidence(
         requirement=requirement,
         modelo_not_applicable_advisory=True,

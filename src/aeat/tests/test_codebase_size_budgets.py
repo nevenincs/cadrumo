@@ -18,10 +18,10 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # before growing them further. Entries marked SPLIT-CANDIDATE grew past a
     # prior pin under concurrent feature work and are re-pinned to hold the new
     # ceiling; their owners should extract submodules during their next pass.
-    "src/aeat/application/calculations/_cross_period_clean_state.py": 1350,  # SPLIT-CANDIDATE
+    "src/aeat/application/calculations/_cross_period_clean_state.py": 1300,  # SPLIT-CANDIDATE
     "src/aeat/application/calculations/tests/test_cross_period_clean_state.py": 1440,  # SPLIT-CANDIDATE
     "src/aeat/application/ledger/_llm_classification.py": 1664,  # SPLIT-CANDIDATE (active LLM-ledger growth)
-    "src/aeat/application/modelo/_verification_actions.py": 1600,  # SPLIT-CANDIDATE
+    "src/aeat/application/modelo/_verification_actions.py": 1480,  # SPLIT-CANDIDATE
     # Centralised live-test opt-in added the live_tests_* predicates, the Google
     # opt-in field, and the opt-in constants; re-pinned to the present size.
     "src/aeat/core/config.py": 1281,
