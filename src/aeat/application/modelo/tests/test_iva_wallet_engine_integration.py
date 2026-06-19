@@ -493,6 +493,12 @@ def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
 
     # Blocked on the filed-history-only divergence — never silently carried.
     assert "filed_history_only" in str(exc_info.value) or exc_info.value.translated_message is not None
+    # The blocked error MUST carry the divergence/reason context so the localized
+    # `iva_wallet_blocked` template renders them instead of leaking `%{divergence}`/`%{reason}`.
+    assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_blocked"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["divergence"] == "filed_history_only"
+    assert exc_info.value.context.get("reason")
 
 
 def test_modelo_303_lifecycle_gate_requires_persisted_wallet_authority(tmp_path: Path) -> None:

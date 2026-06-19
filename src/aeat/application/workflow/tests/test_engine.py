@@ -501,6 +501,32 @@ class TestAbortReasons:
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
 
+    def test_draft_not_ready_abort_surfaces_blocking_findings(self) -> None:
+        """A not-ready draft abort enumerates the findings that kept it out of the ready state.
+
+        Without this the BUILDING_DRAFT abort is opaque (``status=BORRADOR`` only),
+        forcing the operator to read source to learn *why* verify refused.
+        """
+        fx = _fixtures()
+        fx.draft = _ConcreteDraft(
+            status=ModeloDraftStatus.BORRADOR,
+            findings=(
+                ModeloFinding(severity=BaseSeverity.ERROR, message="translation"),
+                ModeloFinding(severity=BaseSeverity.WARNING, message="translation"),
+            ),
+        )
+        fx.draft_builder.draft = fx.draft
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
+        building_step = next(
+            step for step in reversed(result.steps) if step.stage is WorkflowStage.BUILDING_DRAFT and not step.success
+        )
+        assert building_step.details is not None
+        blocking = building_step.details["blocking_findings"]
+        assert "error:" in blocking
+        assert "warning:" in blocking
+        assert "blocking findings" in building_step.summary
+
     def test_draft_schema_must_match_registry_obligation(self) -> None:
         fx = _fixtures()
         fx.draft = _ConcreteDraft(schema_version="registry:303:unregistered")
