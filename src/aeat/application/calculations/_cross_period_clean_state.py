@@ -347,6 +347,15 @@ class CrossPeriodDependencyEvidence(BaseModel):
 
     non_official_local_chain_advisory: bool = False
     """Non-blocking advisory: a same-year ``app_filing`` chain admitted, lacking only official AEAT evidence."""
+    modelo_not_applicable_advisory: bool = False
+    """Non-blocking advisory: a dependency on a modelo the taxpayer does not file, scoped out as not-applicable.
+
+    The taxpayer has no filing obligation for the dependency's source modelo (per the deadline
+    engine's ``applies_to`` authority - e.g. a salaried/rental taxpayer who files no 111/115/130).
+    The requirement is scoped out (its blockers cleared, the row :attr:`clean`) and surfaced as an
+    explicit advisory, NEVER a silent drop (``no-silent-under-declaration``): a modelo the taxpayer
+    DOES file is never suppressed. ``False`` for an applicable dependency.
+    """
 
     @property
     def clean(self) -> bool:
@@ -405,6 +414,11 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     def has_non_official_local_chain_advisory(self) -> bool:
         """True when any dependency was admitted as a same-year non-official local chain."""
         return any(item.non_official_local_chain_advisory for item in self.dependencies)
+
+    @property
+    def has_modelo_not_applicable_advisory(self) -> bool:
+        """True when any dependency was scoped out as not-applicable (taxpayer files no such modelo)."""
+        return any(item.modelo_not_applicable_advisory for item in self.dependencies)
 
     @property
     def suppressed_pre_activity_dependencies(self) -> tuple[CrossPeriodDependencyEvidence, ...]:
@@ -489,6 +503,48 @@ def partition_cross_period_requirements_by_activity_start(
         else:
             in_scope.append(requirement)
     return _RequirementPartition(tuple(in_scope), tuple(suppressed))
+
+
+def partition_cross_period_requirements_by_modelo_applicability(
+    requirements: Iterable[CrossPeriodDependencyRequirement],
+    *,
+    applicable_source_modelos: frozenset[str] | None,
+) -> _RequirementPartition:
+    """Split requirements into applicable and not-applicable by the taxpayer's filed modelos.
+
+    A dependency on a source modelo the taxpayer does not file (its modelo is NOT in
+    ``applicable_source_modelos``) is scoped out as not-applicable - e.g. a salaried/rental
+    taxpayer's M100 depends on 111/115/130 they never file (the payer does). The applicable
+    set is the deadline engine's ``applies_to`` authority for which modelos the profile files.
+    A modelo the taxpayer DOES file stays in scope (still blocks until evidenced). When
+    ``applicable_source_modelos`` is ``None`` every requirement stays in scope (no suppression).
+    Origin-agnostic, mirroring the activity-start partition.
+    """
+    if applicable_source_modelos is None:
+        return _RequirementPartition(tuple(requirements), ())
+    in_scope: list[CrossPeriodDependencyRequirement] = []
+    suppressed: list[CrossPeriodDependencyRequirement] = []
+    for requirement in requirements:
+        if requirement.source_modelo in applicable_source_modelos:
+            in_scope.append(requirement)
+        else:
+            suppressed.append(requirement)
+    return _RequirementPartition(tuple(in_scope), tuple(suppressed))
+
+
+def _suppressed_modelo_not_applicable_evidence(
+    requirement: CrossPeriodDependencyRequirement,
+) -> CrossPeriodDependencyEvidence:
+    """Build the clean, advisory-stamped evidence row for a not-applicable dependency.
+
+    The taxpayer files no return for this dependency's source modelo, so there is nothing to
+    load or evidence; the row is :attr:`clean` with NO blockers and carries the explicit
+    ``modelo_not_applicable_advisory`` facet (auditable, never silent).
+    """
+    return CrossPeriodDependencyEvidence(
+        requirement=requirement,
+        modelo_not_applicable_advisory=True,
+    )
 
 
 def cross_period_dependency_inventory(
@@ -613,6 +669,7 @@ def evaluate_cross_period_clean_state(
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
+    applicable_source_modelos: frozenset[str] | None = None,
 ) -> CrossPeriodCleanStateVerdict:
     """Evaluate cross-period dependencies and return a :class:`CrossPeriodCleanStateVerdict`.
 
@@ -636,6 +693,10 @@ def evaluate_cross_period_clean_state(
         cross_period_dependency_requirements(snapshot),
         activity_start_date=activity_start_date,
     )
+    applicability = partition_cross_period_requirements_by_modelo_applicability(
+        partition.in_scope,
+        applicable_source_modelos=applicable_source_modelos,
+    )
     in_scope_dependencies = tuple(
         _evaluate_requirement(
             requirement,
@@ -650,7 +711,7 @@ def evaluate_cross_period_clean_state(
                 (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token),
             ),
         )
-        for requirement in partition.in_scope
+        for requirement in applicability.in_scope
     )
     in_scope_dependencies = tuple(
         _relax_same_year_local_chain(evidence, target_filing_year=snapshot.filing_year)
@@ -662,12 +723,16 @@ def evaluate_cross_period_clean_state(
         for requirement in partition.suppressed
         if activity_start_date is not None
     )
+    not_applicable_dependencies = tuple(
+        _suppressed_modelo_not_applicable_evidence(requirement)
+        for requirement in applicability.suppressed
+    )
     return CrossPeriodCleanStateVerdict(
         bucket_id=bucket_id,
         target_modelo=str(snapshot.modelo.id),
         target_filing_year=snapshot.filing_year,
         target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
-        dependencies=(*in_scope_dependencies, *suppressed_dependencies),
+        dependencies=(*in_scope_dependencies, *suppressed_dependencies, *not_applicable_dependencies),
     )
 
 
