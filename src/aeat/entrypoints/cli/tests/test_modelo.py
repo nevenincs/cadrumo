@@ -771,6 +771,61 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
     assert finding["source_refs"] == list(sources)
 
 
+def test_verification_report_view_lists_missing_required_casillas() -> None:
+    """`verification-report view` lists each missing required casilla, not just a count.
+
+    The verification-reports how-to ("The report says incomplete") promises the
+    report lists which required casillas are still missing. This locks the text
+    transport's per-id ``missing_casilla`` lines and the typed JSON
+    ``missing_required_casillas`` list against the bare ``count`` so the page's
+    "lists which ones" claim cannot silently regress to a count-only view.
+    """
+    from datetime import UTC, datetime
+
+    from ....domain.modelos._verification_report import (
+        VerificationCompletenessStatus,
+        VerificationReport,
+        derive_verification_report_id,
+    )
+    from .._modelo_payloads import VerificationReportShowResult
+    from .._modelo_rendering import (
+        verification_report_lines as _verification_report_lines,
+    )
+    from .._modelo_rendering import (
+        verification_report_payload as _verification_report_payload,
+    )
+
+    run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
+    calc_id = "d" * 64
+    report_id = derive_verification_report_id(
+        calculation_revision_id=calc_id,
+        run_at=run_at,
+        verified_by="test-actor",
+    )
+    missing = ("00501", "00552")
+    report = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=calc_id,
+        completeness_status=VerificationCompletenessStatus.INCOMPLETE,
+        missing_required_casillas=missing,
+        run_at=run_at,
+        verified_by="test-actor",
+        granted_verificado_completo=False,
+    )
+
+    # Text transport: one ``missing_casilla`` line per id, alongside the count.
+    lines = _verification_report_lines(report)
+    missing_lines = [line for line in lines if line.startswith("missing_casilla\t")]
+    assert {line.split("\t", 1)[1] for line in missing_lines} == set(missing)
+    assert f"missing_required_casilla_count\t{len(missing)}" in lines
+
+    # JSON transport: the typed payload carries the full list, not just the count.
+    payload = _verification_report_payload(report)
+    result = VerificationReportShowResult.model_validate(payload.model_dump(mode="python"))
+    dumped = result.model_dump(mode="json")
+    assert dumped["missing_required_casillas"] == list(missing)
+
+
 # ---------------------------------------------------------------------------
 # contract — describe label localisation
 # ---------------------------------------------------------------------------
