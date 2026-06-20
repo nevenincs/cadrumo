@@ -2,6 +2,7 @@
 id = "renta-2023-dep-111"
 source_modelo = "111"
 treatment = "direct_annual_settlement"
+taxpayer_files_source = false
 target_constructs = ["renta-2023-dependent-modelos"]
 relation_refs = ["renta-2023-rel-111-retenciones-trimestrales", "renta-2023-rel-111-retenciones-mensuales"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]

@@ -347,6 +347,8 @@ class CrossPeriodDependencyEvidence(BaseModel):
 
     non_official_local_chain_advisory: bool = False
     """Non-blocking advisory: a same-year ``app_filing`` chain admitted, lacking only official AEAT evidence."""
+    modelo_not_applicable_advisory: bool = False
+    """Non-blocking advisory: a dependency on a modelo the taxpayer suffers but does not file (not-applicable)."""
 
     @property
     def clean(self) -> bool:
@@ -405,6 +407,11 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     def has_non_official_local_chain_advisory(self) -> bool:
         """True when any dependency was admitted as a same-year non-official local chain."""
         return any(item.non_official_local_chain_advisory for item in self.dependencies)
+
+    @property
+    def has_modelo_not_applicable_advisory(self) -> bool:
+        """True when any dependency was scoped out as not-applicable (taxpayer suffers, does not file)."""
+        return any(item.modelo_not_applicable_advisory for item in self.dependencies)
 
     @property
     def suppressed_pre_activity_dependencies(self) -> tuple[CrossPeriodDependencyEvidence, ...]:
@@ -601,6 +608,16 @@ def _relax_same_year_local_chain(
     )
 
 
+def _suppressed_modelo_not_applicable_evidence(
+    requirement: CrossPeriodDependencyRequirement,
+) -> CrossPeriodDependencyEvidence:
+    """Clean, advisory-stamped row for a not-applicable dependency (taxpayer suffers, does not file)."""
+    return CrossPeriodDependencyEvidence(
+        requirement=requirement,
+        modelo_not_applicable_advisory=True,
+    )
+
+
 def evaluate_cross_period_clean_state(
     snapshot: RegistrySnapshot,
     *,
@@ -632,8 +649,19 @@ def evaluate_cross_period_clean_state(
     verification_catalogue = verification_repository.load()
     resolved_justificante_repository = justificante_repository or JustificanteRepository()
     expected_member_sets_by_key = _expected_member_sets_by_key(expected_member_sets)
+    non_filer_modelos = frozenset(
+        classification.source_modelo
+        for classification in snapshot.revision.dependency_classifications
+        if not classification.taxpayer_files_source
+    )
+    all_requirements = cross_period_dependency_requirements(snapshot)
+    not_applicable_dependencies = tuple(
+        _suppressed_modelo_not_applicable_evidence(requirement)
+        for requirement in all_requirements
+        if requirement.source_modelo in non_filer_modelos
+    )
     partition = partition_cross_period_requirements_by_activity_start(
-        cross_period_dependency_requirements(snapshot),
+        tuple(r for r in all_requirements if r.source_modelo not in non_filer_modelos),
         activity_start_date=activity_start_date,
     )
     in_scope_dependencies = tuple(
@@ -667,7 +695,7 @@ def evaluate_cross_period_clean_state(
         target_modelo=str(snapshot.modelo.id),
         target_filing_year=snapshot.filing_year,
         target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
-        dependencies=(*in_scope_dependencies, *suppressed_dependencies),
+        dependencies=(*in_scope_dependencies, *suppressed_dependencies, *not_applicable_dependencies),
     )
 
 
