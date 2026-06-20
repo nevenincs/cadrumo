@@ -90,6 +90,79 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
     assert {event.payload["provider_name"] for event in events} == {"CSV provider"}
 
 
+def test_import_keeps_genuine_intrabatch_twins_with_distinct_ids(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Two genuine same-day/same-amount/same-narrative movements in ONE statement
+    carry distinct provider row ids (``synthesize_transaction_id`` embeds the
+    source row index), so both must import — collapsing them on the coarser
+    import fingerprint (date + amount + narrative) silently drops a real movement
+    and under-declares the return. Re-importing the same rows still dedups against
+    the persisted catalogue. Regression for the intra-batch fingerprint skip."""
+    transaction_repository, event_repository = _repositories(secure_objects)
+    twin_a = _parsed_import_transaction(
+        transaction_id="provider-row-1",
+        amount=Decimal("605.00"),
+        description="Cobro factura recurrente",
+    )
+    twin_b = _parsed_import_transaction(
+        transaction_id="provider-row-2",
+        amount=Decimal("605.00"),
+        description="Cobro factura recurrente",
+    )
+
+    first = import_ledger_transactions(
+        bucket_id="bucket-a",
+        parsed_rows=(twin_a, twin_b),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        actor="operator-A",
+        occurred_at=datetime(2026, 6, 7, 9, 0, tzinfo=UTC),
+    )
+    assert first.summary.imported == 2
+    assert first.summary.skipped == 0
+    assert len(transaction_repository.load().transactions) == 2
+
+    second = import_ledger_transactions(
+        bucket_id="bucket-a",
+        parsed_rows=(twin_a, twin_b),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        actor="operator-A",
+        occurred_at=datetime(2026, 6, 7, 9, 5, tzinfo=UTC),
+    )
+    assert second.summary.imported == 0
+    assert second.summary.skipped == 2
+    assert len(transaction_repository.load().transactions) == 2
+
+
+def test_import_skips_true_transaction_id_collision_within_batch(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Two rows resolving to the SAME content transaction id (identical provider
+    id + date + amount + narrative) cannot both persist — the catalogue keys on
+    that id and the later would overwrite the earlier — so the later is skipped to
+    keep the imported and stored counts consistent."""
+    transaction_repository, event_repository = _repositories(secure_objects)
+    row = _parsed_import_transaction(
+        transaction_id="same-provider-id",
+        amount=Decimal("605.00"),
+        description="Cobro factura recurrente",
+    )
+
+    result = import_ledger_transactions(
+        bucket_id="bucket-a",
+        parsed_rows=(row, row),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        actor="operator-A",
+        occurred_at=datetime(2026, 6, 7, 9, 0, tzinfo=UTC),
+    )
+    assert result.summary.imported == 1
+    assert result.summary.skipped == 1
+    assert len(transaction_repository.load().transactions) == 1
+
+
 def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
