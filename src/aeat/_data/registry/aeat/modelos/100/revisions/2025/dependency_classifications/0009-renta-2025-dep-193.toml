@@ -2,6 +2,7 @@
 id = "renta-2025-dep-193"
 source_modelo = "193"
 treatment = "factual_evidence"
+taxpayer_files_source = false
 target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-movable-capital"]
 relation_refs = ["renta-2025-rel-193-retenciones-anuales"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1"]

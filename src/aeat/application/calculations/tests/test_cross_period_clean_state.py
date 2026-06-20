@@ -781,6 +781,34 @@ def test_cross_period_clean_state_blocks_missing_required_prior_filings(tmp_path
     assert CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD in verdict.blockers
 
 
+def test_m100_suffered_retencion_deps_scoped_out_self_filed_enforced(tmp_path: Path) -> None:
+    """M100 deps on suffered retenciones (111/115/123/193) scope out as not-applicable; self-filed (130/131) still block.
+
+    The grounded payee/payer distinction (``taxpayer_files_source = false`` on the suffered
+    classifications) lets a salaried taxpayer reach export, while pagos-fraccionados the taxpayer
+    DOES file stay enforced. Classification-driven, not schedule-driven (the reverted Option 1).
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        verdict = evaluate_cross_period_clean_state(
+            resources().modelos.authority.snapshot("100", filing_year=2024, period="0A"),
+            bucket_id=_BUCKET_ID,
+            observation_repository=CalculationObservationRepository(),
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            taxpayer_tax_id="X1234567L",
+        )
+
+    suffered = {"111", "115", "123", "193"}
+    scoped_out = {
+        item.requirement.source_modelo for item in verdict.dependencies if item.modelo_not_applicable_advisory
+    }
+    assert suffered <= scoped_out, f"suffered deps must be scoped out, got {scoped_out}"
+    assert verdict.has_modelo_not_applicable_advisory is True
+    assert all(item.clean for item in verdict.dependencies if item.modelo_not_applicable_advisory)
+    assert scoped_out.isdisjoint({"130", "131"}), "self-filed pagos fraccionados must NOT be scoped out"
+
+
 def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         snapshot = resources().modelos.authority.snapshot("180", filing_year=2026, period="0A")

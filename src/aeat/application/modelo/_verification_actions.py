@@ -721,6 +721,8 @@ def _cross_period_clean_state_findings(
             findings.append(_cross_period_non_official_local_chain_advisory_finding(verdict, evidence))
     if activity_start_date is None and has_first_filer_candidate_block:
         findings.append(_cross_period_missing_activity_start_finding(verdict))
+    if verdict.has_modelo_not_applicable_advisory:
+        findings.append(_cross_period_modelo_not_applicable_advisory_finding(verdict))
     return tuple(findings)
 
 
@@ -841,6 +843,31 @@ def _summarize_cross_period_ids(
     if len(text) <= max_chars:
         return text
     return f"{text[: max_chars - 4]}..."
+
+
+def _cross_period_modelo_not_applicable_advisory_finding(
+    verdict: CrossPeriodCleanStateVerdict,
+) -> ModeloVerificationFinding:
+    """NON-BLOCKING summary advisory: deps on retenciones modelos the taxpayer suffers but does not file.
+
+    Surfaces the not-applicable suppression so it is operator-visible (no-silent-under-declaration).
+    """
+    modelos = sorted({
+        item.requirement.source_modelo
+        for item in verdict.dependencies
+        if item.modelo_not_applicable_advisory
+    })
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message=(
+            "cross-period dependencies on retenciones modelos the taxpayer suffers but does not file "
+            f"were scoped out as not-applicable: {', '.join(modelos)}. Their retenciones come from the "
+            "income certificate (operator-provided or a filed source), not a return the taxpayer files; "
+            "enter the suffered retenciones on the corresponding casilla."
+        ),
+        next_action="Enter the suffered retenciones from your income certificate on the retenciones casilla.",
+    )
 
 
 def _cross_period_non_official_local_chain_advisory_finding(
