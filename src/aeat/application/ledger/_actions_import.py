@@ -157,12 +157,29 @@ def _evaluate_import_rows(
     imported: list[Transaction] = []
     skipped_refs: list[BucketTransactionRef] = []
     likely_duplicate_refs: list[BucketTransactionRef] = []
-    batch_fingerprints: set[str] = set()
+    batch_transaction_ids: set[str] = set()
     for parsed in parsed_rows:
         raw = parsed.raw
         fingerprint = derive_import_fingerprint(raw)
-        if fingerprint in existing_fingerprints or fingerprint in batch_fingerprints:
-            skipped_refs.append(BucketTransactionRef(bucket_id=bucket_id, transaction_id=derive_transaction_id(raw)))
+        transaction_id = derive_transaction_id(raw)
+        # Re-import dedup keys on the persisted catalogue only: a fingerprint
+        # already stored is the same movement seen before (re-importing the same
+        # statement, or the same movement re-exported in another file format), so
+        # it is skipped. An intra-batch fingerprint collision is NOT a re-import:
+        # the provider synthesises a distinct, row-index-bearing transaction id
+        # per source row (``synthesize_transaction_id``), so two same-signature
+        # rows in ONE statement are two genuine movements (e.g. two identical
+        # same-day retainers/subscriptions) carrying collision-free ids — both
+        # must import, or the return silently under-declares. The only intra-batch
+        # skip is a true content-id collision: two rows resolving to the SAME
+        # transaction id cannot both persist (the catalogue keys on that id; the
+        # later would overwrite the earlier), so the later is skipped to keep the
+        # count honest.
+        if fingerprint in existing_fingerprints:
+            skipped_refs.append(BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction_id))
+            continue
+        if transaction_id in batch_transaction_ids:
+            skipped_refs.append(BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction_id))
             continue
         fx_rate, value_in_eur, rate_source, rate_date = _apply_fx_conversion(raw, currency_normalizer)
         stamped_at = occurred_at if occurred_at is not None else raw.provenance.ingested_at
@@ -180,7 +197,7 @@ def _evaluate_import_rows(
                 "modified_at": stamped_at,
             },
         )
-        batch_fingerprints.add(fingerprint)
+        batch_transaction_ids.add(transaction_id)
         imported.append(transaction)
         if derive_movement_day_key(raw) in existing_day_keys:
             likely_duplicate_refs.append(
