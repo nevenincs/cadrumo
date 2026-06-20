@@ -882,6 +882,17 @@ class DependencyClassificationDefinition(RegistryModel):
     id: DependencyClassificationId
     source_modelo: ModeloId
     treatment: Literal["direct_annual_settlement", "factual_evidence", "non_dependency"]
+    taxpayer_files_source: bool = True
+    """Whether the taxpayer FILES the source modelo (True) or merely SUFFERS its withholding (False).
+
+    True (default) for modelos the taxpayer is the obligor of (e.g. 130/131 pagos fraccionados the
+    autónomo files). False for retenciones the taxpayer SUFFERS but the PAYER files (e.g. 111/115/
+    123/193) - the taxpayer cannot file these, so the M100 cross-period dependency on them is not a
+    filing the taxpayer must evidence; the clean-state gate scopes such a dependency out as
+    not-applicable (advisory), the value coming from the income certificate (operator override or a
+    filed source where one exists). A regulated payee/payer distinction, grounded per the AEAT M100
+    dictionary and LIRPF art. 99 (retenciones e ingresos a cuenta).
+    """
     target_constructs: tuple[ConstructId, ...] = ()
     relation_refs: tuple[RelationId, ...] = ()
     legal_refs: LegalRefs
