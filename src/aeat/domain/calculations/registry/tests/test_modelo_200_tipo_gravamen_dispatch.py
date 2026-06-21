@@ -204,7 +204,7 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
                 "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
                 "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
             },
-            relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+            relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"), "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0")},
             date_context={"filing_period": date(2024, 12, 31)},
         )
         return result.values["DP200014:00558"], result.values["DP200014:00562"]
@@ -256,7 +256,7 @@ def test_tipo_gravamen_dispatch_raises_when_legal_entity_form_is_unsupplied() ->
                 "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
                 "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
             },
-            relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+            relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"), "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0")},
             date_context={"filing_period": date(2024, 12, 31)},
         )
 
@@ -289,7 +289,7 @@ def test_tipo_gravamen_dispatch_raises_on_unrecognised_legal_entity_form() -> No
                 "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
                 "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
             },
-            relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+            relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"), "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0")},
             date_context={"filing_period": date(2024, 12, 31)},
         )
 
@@ -361,7 +361,7 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
         inputs=base_inputs,
         enum_binding_values={_DISPATCH_BINDING: "sal"},
         binding_values=common_bindings,
-        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"), "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
     )
     result_sl = calculate_registry_snapshot(
@@ -369,7 +369,7 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
         inputs=base_inputs,
         enum_binding_values={_DISPATCH_BINDING: "sl"},
         binding_values=common_bindings,
-        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"), "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
     )
 
@@ -414,7 +414,7 @@ def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> 
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
-        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"), "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
     )
     assert result.values["DP200014:00558"] == Decimal("25"), (
@@ -451,7 +451,7 @@ def test_new_entity_flag_overrides_erd_threshold() -> None:
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
-        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"), "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
     )
     assert result.values["DP200014:00558"] == Decimal("15"), (
@@ -488,7 +488,7 @@ def test_cooperativa_retains_20_percent_even_when_incn_below_1m() -> None:
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
-        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"), "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
     )
     assert result.values["DP200014:00558"] == Decimal("20"), "cooperativa with INCN 500k must retain 20 %, not ERD 23 %"
