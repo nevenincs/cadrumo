@@ -21,6 +21,8 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
+from ....core.resources import resources
+from ....domain.calculations.registry import resolve_ledger_renta_income_aggregation_binding_values
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -37,6 +39,7 @@ from .._renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
     aggregate_renta_income_ledger,
     aggregate_renta_income_ledger_from_repositories,
+    aggregate_renta_m100_income_ledger,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -204,13 +207,14 @@ def test_non_eur_transaction_excluded_with_reason() -> None:
     assert result.issues[0].reason == RentaIncomeLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY
 
 
-def test_outgoing_business_expense_surfaces_deducible_expense_advisory() -> None:
-    """A business OUTGOING row is a dropped deducible gasto, not an income oddity.
+def test_outgoing_business_expense_is_skipped_silently_by_income_pipeline() -> None:
+    """A business OUTGOING row is the gasto pipeline's concern, not income's.
 
-    M130 casilla 02 (Gastos) has no ledger aggregation binding, so the
-    expense cannot fold into the filing. The exclusion must speak expense
-    vocabulary and name the drop loudly (no-silent-under-declaration) —
-    never the misleading "not an income flow" income-pipeline message.
+    Deductible OUTGOING expenses are aggregated into M130 casilla 02 by the
+    companion ``ledger_renta_gasto_aggregation`` pipeline. The income pass no
+    longer claims the expense was "dropped" — it skips OUTGOING rows silently so
+    no spurious advisory surfaces. The deductible-expense aggregation itself is
+    proven in ``test_renta_gasto_aggregation.py``.
     """
     tx = Transaction.model_validate(
         {
@@ -237,21 +241,14 @@ def test_outgoing_business_expense_surfaces_deducible_expense_advisory() -> None
 
     result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
+    # No income observation and — critically — no issue/advisory: the income
+    # pipeline does not own deductible expenses.
     assert result.observations == ()
-    assert len(result.issues) == 1
-    issue = result.issues[0]
-    assert issue.reason == RentaIncomeLedgerAggregationIssueReason.DEDUCIBLE_EXPENSE_NOT_AGGREGATED
-    # Expense vocabulary: the operator must learn the deducible expense was
-    # dropped and which casilla it belongs to — not that it "is not income".
-    assert "gasto" in issue.detail
-    assert "casilla 02" in issue.detail
-    assert "material_oficina" in issue.detail
-    assert "100" in issue.detail
-    assert "not an income flow" not in issue.detail
+    assert result.issues == ()
 
 
-def test_outgoing_personal_transaction_keeps_unsupported_direction_reason() -> None:
-    """A personal OUTGOING row is not a deducible gasto candidate."""
+def test_outgoing_personal_transaction_is_skipped_silently_by_income_pipeline() -> None:
+    """A personal OUTGOING row is neither income nor a deducible gasto."""
     tx = Transaction.model_validate(
         {
             "raw": _raw_transaction("out", booked_date=date(2024, 3, 1), value_date=date(2024, 3, 1)),
@@ -273,7 +270,7 @@ def test_outgoing_personal_transaction_keeps_unsupported_direction_reason() -> N
     result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     assert result.observations == ()
-    assert result.issues[0].reason == RentaIncomeLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION
+    assert result.issues == ()
 
 
 def test_inactive_transaction_skipped_silently() -> None:
@@ -691,3 +688,62 @@ def test_renta_income_aggregation_mixes_es_and_foreign_source() -> None:
     by_id = {obs.transaction_id: obs for obs in result.observations}
     assert by_id[es_row.transaction_id].source_jurisdiction == "ES"
     assert by_id[fr_row.transaction_id].source_jurisdiction == "FR"
+
+
+# ---------------------------------------------------------------------------
+# Modelo 100 annual actividad-económica income aggregation (casilla 0171)
+# ---------------------------------------------------------------------------
+
+
+def test_m100_annual_income_sums_full_ejercicio_into_casilla_0171() -> None:
+    """The annual M100 path sums actividad income over the full year into 0171.
+
+    Unlike the M130 cumulative-quarter window, the annual window spans Jan 1 to
+    Dec 31, so a December receipt is included and the target is the M100 income
+    leaf 0171, not the M130 casilla 01.
+    """
+    jan_amount, dec_amount = Decimal("3000.00"), Decimal("5000.00")
+    jan = _income_transaction("m100-jan", value_date=date(2024, 1, 20), amount=jan_amount)
+    dec = _income_transaction("m100-dec", value_date=date(2024, 12, 28), amount=dec_amount)
+    prior = _income_transaction("m100-prior", value_date=date(2023, 12, 31), amount=Decimal("999.00"))
+    catalogue = TransactionCatalogue.from_transactions((jan, dec, prior))
+
+    result = aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+
+    assert all(o.target_casilla == "0171" for o in result.observations)
+    assert result.casilla_aggregation.modelo == "100"
+    # Prior-year row excluded; in-year receipts summed into 0171.
+    assert {o.transaction_id for o in result.observations} == {jan.transaction_id, dec.transaction_id}
+    assert result.casilla_aggregation.casilla_values["0171"] == sum((jan_amount, dec_amount), Decimal("0"))
+
+
+def test_m100_annual_income_rejects_non_annual_period() -> None:
+    """The annual M100 income aggregator refuses a quarterly period."""
+    from .._errors import AggregationPeriodError
+
+    catalogue = TransactionCatalogue.from_transactions(())
+    with pytest.raises(AggregationPeriodError):
+        aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+
+
+def test_m100_revision_binds_0171_to_income_source_and_resolves() -> None:
+    """The real M100 2025 revision binds casilla 0171 to the income source and folds it.
+
+    Uses the live registry revision so the binding id, selector, and casilla
+    wiring under test are exactly what ships. Expected value derived from the
+    input, never copied from engine output.
+    """
+    modelo_def = next(item for item in resources().modelos.all() if item.id == "100")
+    revision = modelo_def.revisions["2025"]
+    casilla_0171 = next(c for c in revision.casillas if c.id == "0171")
+    assert str(casilla_0171.input_kind) == "bound"
+    binding = next(b for b in revision.bindings if b.id == casilla_0171.binding)
+    assert str(binding.source) == "ledger_renta_income_aggregation"
+
+    base = Decimal("4200.00")
+    tx = _income_transaction("m100-res", value_date=date(2024, 6, 1), amount=base)
+    catalogue = TransactionCatalogue.from_transactions((tx,))
+    aggregation = aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
+
+    resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
+    assert resolved[binding.id] == base

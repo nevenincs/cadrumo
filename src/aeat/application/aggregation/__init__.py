@@ -76,6 +76,7 @@ from ._ledger_filing_snapshot import stale_filed_revisions
 from ._modelo_bindings import (
     LedgerIvaAggregationSourceResolver,
     LedgerRentaExpenseAggregationSourceResolver,
+    LedgerRentaGastoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
     ModeloLedgerBindingAggregation,
     aggregation_period_for_modelo,
@@ -180,6 +181,7 @@ __all__ = [
     "IvaOperationKind",
     "LedgerIvaAggregationSourceResolver",
     "LedgerRentaExpenseAggregationSourceResolver",
+    "LedgerRentaGastoAggregationSourceResolver",
     "LedgerRentaIncomeAggregationSourceResolver",
     "ModeloLedgerBindingAggregation",
     "ModeloSourceResolver",

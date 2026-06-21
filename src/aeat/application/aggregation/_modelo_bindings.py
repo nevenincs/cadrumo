@@ -21,14 +21,16 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period, PeriodError
+from ...core import Modelo, Period, PeriodError
 from ...domain.calculations.registry import (
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
+    resolve_ledger_renta_gasto_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
     unsupported_ledger_iva_observations,
     unsupported_ledger_renta_expense_observations,
+    unsupported_ledger_renta_gasto_observations,
     unsupported_ledger_renta_income_observations,
 )
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoicePersistenceError
@@ -39,9 +41,11 @@ from ._iva_ledger import (
     IvaLedgerAggregationIssue,
     aggregate_iva_ledger_observations_from_repositories,
 )
+from ._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 from ._renta_income_ledger import (
     RentaIncomeLedgerAggregationIssue,
     aggregate_renta_income_ledger_from_repositories,
+    aggregate_renta_m100_income_ledger_from_repositories,
 )
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
@@ -336,8 +340,16 @@ class LedgerRentaIncomeAggregationSourceResolver:
             filing_year=context.filing_year,
             code=context.period.registry_token,
         )
+        # Modelo 100 (annual IRPF) aggregates actividad income over the full
+        # ejercicio into casilla 0171; Modelo 130 uses the cumulative-quarter path.
+        # Same source kind, same actividad eligibility, different window/target.
+        income_aggregator = (
+            aggregate_renta_m100_income_ledger_from_repositories
+            if str(context.modelo) == Modelo.M100.value
+            else aggregate_renta_income_ledger_from_repositories
+        )
         try:
-            aggregation = aggregate_renta_income_ledger_from_repositories(
+            aggregation = income_aggregator(
                 bucket_id=context.bucket_id,
                 period=aggregation_period,
                 transaction_repository=self._transaction_repository,
@@ -389,6 +401,90 @@ class LedgerRentaIncomeAggregationSourceResolver:
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="ledger_renta_income_aggregation",
+                    source_ref=f"transaction:{observation.transaction_id}",
+                )
+                for observation in aggregation.observations
+            ),
+        )
+
+
+class LedgerRentaGastoAggregationSourceResolver:
+    """Source mesh resolver for repository-backed M130 deductible-expense (gasto) bindings.
+
+    The OUTGOING sibling of :class:`LedgerRentaIncomeAggregationSourceResolver`:
+    folds deductible business expenses into Modelo 130 casilla 02 over the same
+    cumulative year-to-date quarterly window.
+    """
+
+    resolver_id = "ledger_renta_gasto_aggregation"
+    owned_sources = ("ledger_renta_gasto_aggregation",)
+
+    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
+        self._transaction_repository = transaction_repository
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        if not _revision_has_binding_source(context.revision, "ledger_renta_gasto_aggregation"):
+            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+
+        aggregation_period = aggregation_period_for_modelo(
+            filing_year=context.filing_year,
+            code=context.period.registry_token,
+        )
+        try:
+            aggregation = aggregate_renta_gasto_ledger_from_repositories(
+                bucket_id=context.bucket_id,
+                period=aggregation_period,
+                transaction_repository=self._transaction_repository,
+            )
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
+        # Fail-closed advisory parity with the income screen: a non-zero
+        # declarable gasto whose target_casilla matches no
+        # ledger_renta_gasto_aggregation binding would otherwise be silently
+        # dropped (no-silent-under-declaration). Calculate still succeeds; the
+        # operator sees the unrouted expense instead of an under-declared form.
+        unrouted = unsupported_ledger_renta_gasto_observations(context.revision, aggregation.observations)
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=resolve_ledger_renta_gasto_aggregation_binding_values(
+                context.revision,
+                aggregation.observations,
+            ),
+            source_transaction_ids=tuple(
+                sorted(observation.transaction_id for observation in aggregation.observations),
+            ),
+            diagnostics=tuple(
+                CalculationSourceDiagnostic(
+                    reason="source_issue",
+                    source_kind="ledger_renta_gasto_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=issue.detail,
+                )
+                for issue in aggregation.issues
+            )
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="unrouted_observation",
+                    source_kind="ledger_renta_gasto_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        f"declarable renta gasto observation (target_casilla="
+                        f"{observation.target_casilla!r}, deductible_amount={observation.deductible_amount}) "
+                        f"is not consumed by any ledger_renta_gasto_aggregation binding on revision "
+                        f"{context.revision.id!r}; its deductible expense is not declared on this calculation"
+                    ),
+                )
+                for observation in unrouted
+            ),
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    source_kind="ledger_renta_gasto_aggregation",
                     source_ref=f"transaction:{observation.transaction_id}",
                 )
                 for observation in aggregation.observations
@@ -451,6 +547,7 @@ def _renta_observation_provenance(
 __all__ = [
     "LedgerIvaAggregationSourceResolver",
     "LedgerRentaExpenseAggregationSourceResolver",
+    "LedgerRentaGastoAggregationSourceResolver",
     "LedgerRentaIncomeAggregationSourceResolver",
     "ModeloLedgerBindingAggregation",
     "aggregation_period_for_modelo",
