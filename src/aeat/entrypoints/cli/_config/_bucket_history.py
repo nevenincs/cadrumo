@@ -13,6 +13,7 @@ import typer
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
+from ....core.time import coerce_utc_aware
 from ....domain.buckets import BucketEvent, BucketEventType
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
@@ -165,11 +166,9 @@ def _parse_bucket_history_instant(raw: str | None, *, flag: str) -> datetime | N
             tr("cli.config.profile.history.invalid_timestamp", flag=flag, raw=raw),
         ) from exc
     # Bucket events stamp ``occurred_at`` as timezone-aware UTC; a bare ``--since
-    # 2026-01-01`` parses naive and would raise ``TypeError`` on comparison. Treat a
-    # naive operator instant as UTC so the filter compares against stored events.
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=UTC)
-    return parsed
+    # 2026-01-01`` parses naive and would raise ``TypeError`` on comparison. Coerce a
+    # naive operator instant to UTC (central helper) so the filter compares cleanly.
+    return coerce_utc_aware(parsed)
 
 
 def _bucket_history_event_matches(

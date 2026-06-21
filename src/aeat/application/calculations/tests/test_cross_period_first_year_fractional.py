@@ -1,6 +1,6 @@
 """Real-behavior coverage for first-year Modelo 202 modalidad-cuota suppression.
 
-ADR 2026-06-19-m202-first-period-attestation-adr: a first-year Impuesto sobre
+decision record 2026-06-19-m202-first-period-attestation: a first-year Impuesto sobre
 Sociedades filer under modalidad cuota (LIS art. 40.2) has no Modelo 202 pago-
 fraccionado obligation; the cross-period dependency demanding evidence of a prior
 Modelo 200/202 that never existed is scoped out under a distinct typed facet, with

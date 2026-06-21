@@ -962,7 +962,7 @@ def unsupported_ledger_renta_gasto_observations(
     revision: ModeloRevision,
     observations: Iterable[RentaGastoObservationProtocol],
 ) -> tuple[RentaGastoObservationProtocol, ...]:
-    """Return the gasto observations no binding on ``revision`` can consume.
+    """Return the gasto observations no binding on the :class:`ModeloRevision` ``revision`` can consume.
 
     Fail-closed counterpart to
     :func:`resolve_ledger_renta_gasto_aggregation_binding_values`, mirroring

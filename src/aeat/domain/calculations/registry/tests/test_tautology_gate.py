@@ -417,6 +417,16 @@ _HAND_SUMMED_WAIVERS: frozenset[str] = frozenset(
         # gate coincidentally matches 450+100 (a repercutido cuota and a
         # pendiente value). No author hand-sum produces the 550.
         "src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py::test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_history",
+        # Sibling of the *_from_prior_year_history waiver above. The
+        # baseline iva.resultado (1000.00) and the post-override
+        # iva.resultado (550.00) are BOTH engine-computed from the M303
+        # inputs; recording a 450.00 compensación override reduces the
+        # engine result by exactly that applied amount (1000 - 450 = 550).
+        # The gate coincidentally matches 450+550=1000 and 450+100=550 —
+        # neither target is a hand-summed aggregate; both are engine
+        # outputs of the override-reduces-result behaviour grounded in the
+        # M303 IVA-wallet compensación decision record.
+        "src/aeat/application/modelo/tests/test_iva_wallet_engine_integration.py::test_recorded_override_unblocks_carry_and_reduces_final_result",
         # Both -20.000 (cuota del ejercicio 00599) and -30.000 (cuota
         # diferencial 00611) are AEAT-published oracle figures lifted
         # verbatim from the Manual práctico de Sociedades 2024 worked

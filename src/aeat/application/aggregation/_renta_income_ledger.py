@@ -268,7 +268,7 @@ def aggregate_renta_m100_income_ledger(
     bucket_id: str,
     period: Period,
 ) -> RentaIncomeLedgerAggregation:
-    """Aggregate annual actividad-económica income into Modelo 100 casilla 0171.
+    """Aggregate annual actividad-económica income from a :class:`TransactionCatalogue` into Modelo 100 casilla 0171.
 
     The annual counterpart of :func:`aggregate_renta_income_ledger`: it applies the
     same actividad-económica eligibility (excluding nómina/trabajo and personal

@@ -65,7 +65,7 @@ def test_cli_builds_with_every_optional_extra_blocked() -> None:
     from typer.testing import CliRunner
 
     with _block_imports("anthropic", "playwright", "playwright_stealth", "googleapiclient", "google_auth_oauthlib"):
-        from aeat.entrypoints.cli import app
+        from ..entrypoints.cli import app
 
         result = CliRunner().invoke(app, ["--help"])
     assert result.exit_code == 0, result.output
@@ -73,10 +73,10 @@ def test_cli_builds_with_every_optional_extra_blocked() -> None:
 
 def test_anthropic_boundary_refuses_instructively_without_the_extra() -> None:
     """Building the Anthropic adapter without the extra raises LLMConfigError, not ModuleNotFoundError."""
-    from aeat.adapters.outbound.llm._client import LLMClient
-    from aeat.adapters.outbound.llm._errors import LLMConfigError
-    from aeat.adapters.outbound.llm._models import LLMProvider
-    from aeat.core.config import load_settings
+    from ..adapters.outbound.llm._client import LLMClient
+    from ..adapters.outbound.llm._errors import LLMConfigError
+    from ..adapters.outbound.llm._models import LLMProvider
+    from ..core.config import load_settings
 
     client = LLMClient(settings=load_settings())
     with _block_imports("anthropic"), pytest.raises(LLMConfigError) as raised:
@@ -87,10 +87,10 @@ def test_anthropic_boundary_refuses_instructively_without_the_extra() -> None:
 @pytest.mark.asyncio
 async def test_browser_boundary_refuses_instructively_without_the_extra() -> None:
     """Starting the Playwright runtime without the extra raises BrowserError with the install hint."""
-    from aeat.adapters.outbound.aeat.browser._errors import BrowserError
+    from ..adapters.outbound.aeat.browser._errors import BrowserError
 
     with _block_imports("playwright", "playwright_stealth"):
-        from aeat.adapters.outbound.aeat.browser import _factory
+        from ..adapters.outbound.aeat.browser import _factory
 
         with pytest.raises(BrowserError) as raised:
             await _factory._start_playwright()
@@ -99,7 +99,7 @@ async def test_browser_boundary_refuses_instructively_without_the_extra() -> Non
 
 def test_google_extra_unavailable_is_observed_by_the_probe_without_the_extra() -> None:
     """With the google stack blocked the doctor probe reports it absent + the install hint."""
-    from aeat.core import GOOGLE_EXTRA, optional_extra_available
+    from ..core import GOOGLE_EXTRA, optional_extra_available
 
     with _block_imports("googleapiclient", "google_auth_oauthlib"):
         assert optional_extra_available(GOOGLE_EXTRA) is False
