@@ -30,7 +30,7 @@ from ...domain.calculations.registry import (
     VerificationPredicateDefinition,
     derive_modelo_202_modality,
 )
-from ...domain.deadlines import FiscalResidency, TaxpayerProfile
+from ...domain.deadlines import FiscalResidency, IrpfIncomeCategory, TaxpayerProfile
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -561,6 +561,19 @@ def _cross_period_expected_member_sets_from_profile(
     return (*profile_sets, *tuple(explicit_member_sets))
 
 
+def _taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | None:
+    """Whether the taxpayer files actividad-económica pagos fraccionados (130/131).
+
+    ``True`` when the profile declares actividad-económica income; ``False`` when it declares
+    income categories that exclude it (a salaried/rental-only filer never files 130/131);
+    ``None`` when income categories are undeclared (fail-closed: the 130/131 dependency stays
+    enforced). LIRPF art. 99 / RIRPF art. 109.
+    """
+    if not profile.irpf_income_categories:
+        return None
+    return IrpfIncomeCategory.ACTIVIDAD_ECONOMICA in profile.irpf_income_categories
+
+
 def _cross_period_clean_state_verdict_for_work_unit(
     work_unit: WorkUnit,
     *,
@@ -572,6 +585,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
     modelo_202_modality: Modelo202Modality | None = None,
+    taxpayer_files_economic_activity: bool | None = None,
 ) -> CrossPeriodCleanStateVerdict | None:
     """Evaluate the cross-period clean-state verdict for a work unit.
 
@@ -608,6 +622,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
         taxpayer_tax_id=taxpayer_tax_id,
         activity_start_date=activity_start_date,
         modelo_202_modality=modelo_202_modality,
+        taxpayer_files_economic_activity=taxpayer_files_economic_activity,
     )
 
 
@@ -1061,6 +1076,7 @@ def _require_cross_period_clean_state(
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
     modelo_202_modality: Modelo202Modality | None = None,
+    taxpayer_files_economic_activity: bool | None = None,
 ) -> None:
     verdict = _cross_period_clean_state_verdict_for_work_unit(
         work_unit,
@@ -1072,6 +1088,7 @@ def _require_cross_period_clean_state(
         taxpayer_tax_id=taxpayer_tax_id,
         activity_start_date=activity_start_date,
         modelo_202_modality=modelo_202_modality,
+        taxpayer_files_economic_activity=taxpayer_files_economic_activity,
     )
     findings = _cross_period_clean_state_findings(
         verdict,
@@ -1272,6 +1289,7 @@ def verify_modelo_revision(
                 taxpayer_tax_id=workflow_profile.tax_id,
                 activity_start_date=workflow_profile.activity_start_date,
                 modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
+                taxpayer_files_economic_activity=_taxpayer_files_economic_activity(workflow_profile),
             ),
             iva_compensation_decision=iva_compensation_decision,
             activity_start_date=workflow_profile.activity_start_date,

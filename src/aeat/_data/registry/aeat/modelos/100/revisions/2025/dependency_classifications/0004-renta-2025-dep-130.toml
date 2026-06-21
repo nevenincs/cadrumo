@@ -2,6 +2,7 @@
 id = "renta-2025-dep-130"
 source_modelo = "130"
 treatment = "direct_annual_settlement"
+conditional_on_economic_activity = true
 target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-economic-activities"]
 relation_refs = ["renta-2025-rel-130-pagos-fraccionados"]
 legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]

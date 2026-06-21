@@ -893,6 +893,17 @@ class DependencyClassificationDefinition(RegistryModel):
     filed source where one exists). A regulated payee/payer distinction, grounded per the AEAT M100
     dictionary and LIRPF art. 99 (retenciones e ingresos a cuenta).
     """
+    conditional_on_economic_activity: bool = False
+    """Whether the taxpayer files the source modelo ONLY when they have economic activity.
+
+    True for pagos-fraccionados modelos an autónomo files IFF they carry on an economic
+    activity (130 estimación directa / 131 objetiva). The clean-state gate scopes such a
+    dependency out as not-applicable when the taxpayer has DECLARED income categories that do
+    not include actividad económica (a salaried/rental-only filer never files 130/131). Fail-
+    closed: when economic-activity status is undeclared the dependency stays enforced. Only
+    meaningful together with ``taxpayer_files_source = true``. Grounded in LIRPF art. 99 /
+    RIRPF art. 109 (pago fraccionado of actividades económicas).
+    """
     target_constructs: tuple[ConstructId, ...] = ()
     relation_refs: tuple[RelationId, ...] = ()
     legal_refs: LegalRefs
