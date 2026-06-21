@@ -822,13 +822,11 @@ def _cross_period_first_year_fractional_suppression_advisory_finding(
         severity=ModeloVerificationFindingSeverity.WARNING,
         message=(
             "Modelo 202 cross-period dependency scoped out as a first-year no-fractional-payment "
-            f"obligation: modelo={requirement.source_modelo} year={requirement.filing_year} "
-            f"period={requirement_period} origin={requirement.origin.value}. A first-year Impuesto "
-            "sobre Sociedades filer under modalidad cuota (LIS art. 40.2) has no Modelo 202 "
-            f"pago-fraccionado obligation, because no prior IS return (declared activity-start "
-            f"{declared_date}) provides the cuota basis. If this entity elected modalidad base "
-            "(LIS art. 40.3), it IS obligated to file Modelo 202; the operator bears legal "
-            "responsibility for confirming the modality."
+            f"obligation (modelo={requirement.source_modelo} year={requirement.filing_year} "
+            f"period={requirement_period}): a first-year IS filer under modalidad cuota "
+            f"(LIS art. 40.2) has no Modelo 202 obligation, as no prior IS return (activity-start "
+            f"{declared_date}) provides the cuota basis. If modalidad base (art. 40.3) was elected, "
+            "the entity IS obligated — the operator confirms the modality (see next action)."
         ),
         next_action=(
             "Confirm the entity files Modelo 202 under modalidad cuota (LIS art. 40.2) and that this "
