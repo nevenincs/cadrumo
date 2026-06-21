@@ -14,6 +14,7 @@ from ...core.config import Settings
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry import derive_modelo_202_modality
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import CalculationRevisionState
@@ -174,6 +175,7 @@ def file_modelo_revision(
         ),
         taxpayer_tax_id=workflow_profile.tax_id,
         activity_start_date=workflow_profile.activity_start_date,
+        modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
     )
 
     now = clock or _utc_now()

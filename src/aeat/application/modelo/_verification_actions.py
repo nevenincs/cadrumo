@@ -25,8 +25,10 @@ from ...domain.calculations.registry import (
     CasillaDefinition,
     CasillaObservation,
     InputKind,
+    Modelo202Modality,
     RegistrySnapshot,
     VerificationPredicateDefinition,
+    derive_modelo_202_modality,
 )
 from ...domain.deadlines import FiscalResidency, TaxpayerProfile
 from ...domain.modelos._calculation_repository import (
@@ -569,6 +571,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
+    modelo_202_modality: Modelo202Modality | None = None,
 ) -> CrossPeriodCleanStateVerdict | None:
     """Evaluate the cross-period clean-state verdict for a work unit.
 
@@ -577,6 +580,12 @@ def _cross_period_clean_state_verdict_for_work_unit(
     engine consumes for pre-start obligation suppression. When supplied, a
     dependency whose period falls strictly before it is scoped out as
     no-prior-obligation (ADR 2026-06-13-first-filer-attestation-adr).
+
+    ``modelo_202_modality`` is the derived Modelo 202 pago-fraccionado modality.
+    When it is ``ART_40_2_OPTIONAL`` and the recorded ``activity_start_date`` places
+    the first IS year at or after the target year, the Modelo 202 cross-period
+    dependency is scoped out as a first-year no-fractional-payment obligation
+    (ADR 2026-06-19-m202-first-period-attestation-adr); fail-closed otherwise.
     """
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -598,6 +607,7 @@ def _cross_period_clean_state_verdict_for_work_unit(
         expected_member_sets=expected_member_sets,
         taxpayer_tax_id=taxpayer_tax_id,
         activity_start_date=activity_start_date,
+        modelo_202_modality=modelo_202_modality,
     )
 
 
@@ -719,6 +729,8 @@ def _cross_period_clean_state_findings(
             findings.append(_cross_period_operator_declared_suppression_advisory_finding(verdict, evidence))
         if evidence.non_official_local_chain_advisory:
             findings.append(_cross_period_non_official_local_chain_advisory_finding(verdict, evidence))
+        if evidence.suppressed_first_year_fractional:
+            findings.append(_cross_period_first_year_fractional_suppression_advisory_finding(verdict, evidence))
     if activity_start_date is None and has_first_filer_candidate_block:
         findings.append(_cross_period_missing_activity_start_finding(verdict))
     if verdict.has_modelo_not_applicable_advisory:
@@ -759,6 +771,57 @@ def _cross_period_operator_declared_suppression_advisory_finding(
             "available, the date will be corroborated and this advisory cleared."
         ),
         legal_refs=_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
+    )
+
+
+#: LIS art. 40.2 (modalidad cuota) and art. 40.3 (modalidad base imponible) — the
+#: legal grounding for the first-year Modelo 202 suppression and its modality split.
+_M202_FIRST_YEAR_LEGAL_REFS: tuple[str, ...] = (
+    "ley-27-2014:art-40",
+    "ley-27-2014:art-40-3",
+)
+
+
+def _cross_period_first_year_fractional_suppression_advisory_finding(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence: CrossPeriodDependencyEvidence,
+) -> ModeloVerificationFinding:
+    """Build the NON-BLOCKING advisory for a first-year Modelo 202 modalidad-cuota suppression.
+
+    ADR 2026-06-19-m202-first-period-attestation-adr: the Modelo 202 cross-period
+    dependency was scoped out because the taxpayer is a first-year Impuesto sobre
+    Sociedades filer under modalidad cuota (LIS art. 40.2), which has no pago
+    fraccionado obligation in the first IS year (no prior IS return provides the
+    cuota basis). The assumption rests on the operator-declared INCN (driving the
+    derived modality) and activity-start date, so the suppression is surfaced as a
+    non-blocking advisory naming the operator's legal responsibility — in
+    particular that an entity that elected modalidad base (art. 40.3) IS obligated
+    and must file Modelo 202.
+    """
+    requirement = evidence.requirement
+    requirement_period = requirement.period.registry_token
+    provenance = evidence.no_prior_obligation
+    declared_date = provenance.activity_start_date.isoformat() if provenance is not None else "unknown"
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message=(
+            "Modelo 202 cross-period dependency scoped out as a first-year no-fractional-payment "
+            f"obligation: modelo={requirement.source_modelo} year={requirement.filing_year} "
+            f"period={requirement_period} origin={requirement.origin.value}. A first-year Impuesto "
+            "sobre Sociedades filer under modalidad cuota (LIS art. 40.2) has no Modelo 202 "
+            f"pago-fraccionado obligation, because no prior IS return (declared activity-start "
+            f"{declared_date}) provides the cuota basis. If this entity elected modalidad base "
+            "(LIS art. 40.3), it IS obligated to file Modelo 202; the operator bears legal "
+            "responsibility for confirming the modality."
+        ),
+        next_action=(
+            "Confirm the entity files Modelo 202 under modalidad cuota (LIS art. 40.2) and that this "
+            "is its first Impuesto sobre Sociedades year. If it elected modalidad base (art. 40.3) or "
+            "a prior IS return exists, capture or import the prior Modelo 200/202 AEAT evidence and "
+            "rerun verification."
+        ),
+        legal_refs=_M202_FIRST_YEAR_LEGAL_REFS,
     )
 
 
@@ -997,6 +1060,7 @@ def _require_cross_period_clean_state(
     expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
+    modelo_202_modality: Modelo202Modality | None = None,
 ) -> None:
     verdict = _cross_period_clean_state_verdict_for_work_unit(
         work_unit,
@@ -1007,6 +1071,7 @@ def _require_cross_period_clean_state(
         expected_member_sets=expected_member_sets,
         taxpayer_tax_id=taxpayer_tax_id,
         activity_start_date=activity_start_date,
+        modelo_202_modality=modelo_202_modality,
     )
     findings = _cross_period_clean_state_findings(
         verdict,
@@ -1206,6 +1271,7 @@ def verify_modelo_revision(
                 ),
                 taxpayer_tax_id=workflow_profile.tax_id,
                 activity_start_date=workflow_profile.activity_start_date,
+                modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
             ),
             iva_compensation_decision=iva_compensation_decision,
             activity_start_date=workflow_profile.activity_start_date,
