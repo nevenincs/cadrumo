@@ -6,6 +6,7 @@ date: '2026-06-21'
 modified: '2026-06-21'
 related:
   - "[[2026-06-21-redeme-company-refund-adr]]"
+  - "[[2026-06-21-redeme-company-refund-research]]"
 ---
 
 # `m303-carry-reconciliation` adr: `Modelo 303 refunded period generates zero carry-forward: disposition feeds compensacion-disponible` | (**status:** `proposed`)
