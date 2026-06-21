@@ -20,12 +20,17 @@ from ....adapters.outbound.aeat.sede._schema import (
 from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaObservation,
+    RegistryModeloObservation,
+    materialize_relation_binding_values,
+)
 from ....domain.iva_compensation._carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
     IvaCompensationPeriodState,
     build_iva_compensation_carry_forward_report,
+    derive_iva_compensation_year_end_carry_partition,
     enforce_iva_compensation_four_year_window,
 )
 from ....domain.iva_compensation._errors import (
@@ -211,13 +216,11 @@ def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_an
 
 
 def test_modelo_390_annual_summary_cross_checks_multiyear_303_carry_forward() -> None:
-    report = build_iva_compensation_carry_forward_report(
-        (
-            _state(filing_year=2026, period="1T", generated=Decimal("50.00")),
-            _state(filing_year=2026, period="4T", generated=Decimal("100.00")),
-        ),
-        as_of_year=2026,
+    states = (
+        _state(filing_year=2026, period="1T", generated=Decimal("50.00")),
+        _state(filing_year=2026, period="4T", generated=Decimal("100.00")),
     )
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
     summary = iva_compensation_annual_summary_from_filed_observation(
         _filed_390_observation(
             last_period_compensation=Decimal("100.00"),
@@ -225,7 +228,7 @@ def test_modelo_390_annual_summary_cross_checks_multiyear_303_carry_forward() ->
         ),
     )
 
-    cross_check = cross_check_iva_compensation_annual_summary(report, summary)
+    cross_check = cross_check_iva_compensation_annual_summary(report, summary, period_states=states)
 
     assert summary.last_period_compensation_amount == Decimal("100.00")
     assert summary.generated_not_in_last_period_amount == Decimal("50.00")
@@ -243,10 +246,8 @@ def test_modelo_390_annual_summary_cross_checks_multiyear_303_carry_forward() ->
 
 
 def test_modelo_390_annual_summary_cross_check_flags_303_390_divergence() -> None:
-    report = build_iva_compensation_carry_forward_report(
-        (_state(filing_year=2026, period="4T", generated=Decimal("100.00")),),
-        as_of_year=2026,
-    )
+    states = (_state(filing_year=2026, period="4T", generated=Decimal("100.00")),)
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
     summary = iva_compensation_annual_summary_from_filed_observation(
         _filed_390_observation(
             last_period_compensation=Decimal("80.00"),
@@ -254,7 +255,7 @@ def test_modelo_390_annual_summary_cross_check_flags_303_390_divergence() -> Non
         ),
     )
 
-    cross_check = cross_check_iva_compensation_annual_summary(report, summary)
+    cross_check = cross_check_iva_compensation_annual_summary(report, summary, period_states=states)
 
     assert cross_check.carry_forward_remaining_amount == Decimal("100.00")
     assert cross_check.modelo_390_total_pending_amount == Decimal("80.00")
@@ -268,13 +269,11 @@ def test_modelo_390_annual_summary_cross_check_flags_303_390_divergence() -> Non
 
 
 def test_modelo_390_cross_check_keeps_active_prior_year_lots_out_of_annual_fields() -> None:
-    report = build_iva_compensation_carry_forward_report(
-        (
-            _state(filing_year=2025, period="4T", generated=Decimal("25.00")),
-            _state(filing_year=2026, period="4T", generated=Decimal("100.00")),
-        ),
-        as_of_year=2026,
+    states = (
+        _state(filing_year=2025, period="4T", generated=Decimal("25.00")),
+        _state(filing_year=2026, period="4T", generated=Decimal("100.00")),
     )
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
     summary = iva_compensation_annual_summary_from_filed_observation(
         _filed_390_observation(
             last_period_compensation=Decimal("100.00"),
@@ -282,7 +281,7 @@ def test_modelo_390_cross_check_keeps_active_prior_year_lots_out_of_annual_field
         ),
     )
 
-    cross_check = cross_check_iva_compensation_annual_summary(report, summary)
+    cross_check = cross_check_iva_compensation_annual_summary(report, summary, period_states=states)
 
     assert report.lots[0].expiry_review_state is IvaCompensationExpiryReviewState.ACTIVE
     assert cross_check.carry_forward_remaining_amount == Decimal("100.00")
@@ -293,13 +292,11 @@ def test_modelo_390_cross_check_keeps_active_prior_year_lots_out_of_annual_field
 
 
 def test_modelo_390_cross_check_keeps_expired_prior_year_lots_out_of_annual_fields() -> None:
-    report = build_iva_compensation_carry_forward_report(
-        (
-            _state(filing_year=2021, period="4T", generated=Decimal("25.00")),
-            _state(filing_year=2026, period="4T", generated=Decimal("100.00")),
-        ),
-        as_of_year=2026,
+    states = (
+        _state(filing_year=2021, period="4T", generated=Decimal("25.00")),
+        _state(filing_year=2026, period="4T", generated=Decimal("100.00")),
     )
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
     summary = iva_compensation_annual_summary_from_filed_observation(
         _filed_390_observation(
             last_period_compensation=Decimal("100.00"),
@@ -307,7 +304,7 @@ def test_modelo_390_cross_check_keeps_expired_prior_year_lots_out_of_annual_fiel
         ),
     )
 
-    cross_check = cross_check_iva_compensation_annual_summary(report, summary)
+    cross_check = cross_check_iva_compensation_annual_summary(report, summary, period_states=states)
 
     assert report.lots[0].expiry_review_state is IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED
     assert cross_check.carry_forward_remaining_amount == Decimal("100.00")
@@ -317,6 +314,140 @@ def test_modelo_390_cross_check_keeps_expired_prior_year_lots_out_of_annual_fiel
     assert cross_check.mismatched_casillas == ()
     assert cross_check.matches is True
     assert "expired_review_required" in cross_check.expiry_review_states
+
+
+#: Modelo 390 year-end carry box binding ids (the FIFO-projected slots).
+_BOX_97_BINDING = "modelo-390-prev-303-compensacion-ultimo-periodo"
+_BOX_662_BINDING = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
+
+
+def test_year_end_carry_partition_carried_pending_satisfies_aeat_identity_no_double_count() -> None:
+    """Carried-pending FIFO scenario: box 97 + box 662 = total pending, counted once.
+
+    The case both pre-fix relations get wrong. 1T generates 100 carried forward;
+    2T applies 30 of it (70 remains, carries on); 4T generates 50. Everything
+    still pending (70 + 50 = 120) carries into 4T's autoliquidación, so the FIFO
+    partition puts ALL of it in box 97 and box 662 is zero.
+
+    Non-tautological oracle: the per-period relations would emit box 97 = 4T
+    generada = 50 and box 662 = sum(1T-3T generada) = 100 → 150, which both
+    DOUBLE-COUNTS the 30 already applied and mis-splits the carry. The AEAT
+    identity demands box 97 + box 662 == the year's total pending remaining
+    (120), counted once. This asserts that identity against the FIFO total, not
+    a per-period sum.
+    """
+    states = (
+        _state(filing_year=2026, period="1T", generated=Decimal("100.00"), available=Decimal("100.00")),
+        _state(filing_year=2026, period="2T", applied=Decimal("30.00"), available=Decimal("70.00")),
+        _state(filing_year=2026, period="3T", available=Decimal("70.00")),
+        _state(filing_year=2026, period="4T", generated=Decimal("50.00"), available=Decimal("120.00")),
+    )
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
+
+    partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=2026)
+
+    # FIFO total pending counted once = 1T remaining (100-30=70) + 4T (50) = 120.
+    total_pending = sum((lot.remaining_amount for lot in report.lots if lot.source_filing_year == 2026), Decimal("0"))
+    assert total_pending == Decimal("120.00")
+    # AEAT identity: box 97 + box 662 == total pending (no double-count, no drop).
+    assert partition.last_period_amount + partition.generated_not_in_last_amount == total_pending
+    # Everything pending carried into the last period → all in box 97, box 662 = 0.
+    assert partition.last_period_amount == Decimal("120.00")
+    assert partition.generated_not_in_last_amount == Decimal("0.00")
+    # The double-count guard: the naive per-period split (4T generada + sum 1T-3T
+    # generada) would be 50 + 100 = 150, NOT the correct 120 — prove we differ.
+    naive_per_period = Decimal("50.00") + Decimal("100.00")
+    assert partition.last_period_amount + partition.generated_not_in_last_amount != naive_per_period
+
+
+def test_year_end_carry_partition_uncarried_credit_lands_in_box_662() -> None:
+    """A year credit NOT carried into the last period lands in box 662, not box 97.
+
+    1T generates 40 that does NOT carry into the 4T autoliquidación (it left the
+    chain — e.g. refunded mid-year), so 4T's disponible (100) carries only its
+    own credit. The year's total pending is 140; box 97 holds the last period's
+    carry (100) and box 662 holds the uncarried year credit (40). This is the
+    control where box 97 = last-period carry and box 662 = the rest, and it must
+    still satisfy the identity.
+    """
+    states = (
+        _state(filing_year=2026, period="1T", generated=Decimal("40.00"), available=Decimal("40.00")),
+        _state(filing_year=2026, period="4T", generated=Decimal("100.00"), available=Decimal("100.00")),
+    )
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
+
+    partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=2026)
+
+    total_pending = sum((lot.remaining_amount for lot in report.lots if lot.source_filing_year == 2026), Decimal("0"))
+    assert total_pending == Decimal("140.00")
+    assert partition.last_period_amount == Decimal("100.00")
+    assert partition.generated_not_in_last_amount == Decimal("40.00")
+    assert partition.last_period_amount + partition.generated_not_in_last_amount == total_pending
+
+
+def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pending(tmp_path: Path) -> None:
+    """End-to-end: the M390 box-97 / box-662 BINDING values come from the FIFO partition.
+
+    Files four 303 quarters with a real carried-pending chain (1T credit carried,
+    2T applies part of it, 4T generates more) as observations, then resolves the
+    M390 relations through the production relation resolver and materialises the
+    binding slots. The two carry-box bindings must carry the FIFO partition
+    (box 97 = 120, box 662 = 0), NOT the per-period relation sums (50 / 100),
+    proving the wiring overrides the double-counting per-period path.
+    """
+    # period: (generada, aplicada, disponible) — the 303 compensation chain.
+    quarter_chain = [
+        ("1T", Decimal("100.00"), Decimal("0.00"), Decimal("100.00")),
+        ("2T", Decimal("0.00"), Decimal("30.00"), Decimal("70.00")),
+        ("3T", Decimal("0.00"), Decimal("0.00"), Decimal("70.00")),
+        ("4T", Decimal("50.00"), Decimal("0.00"), Decimal("120.00")),
+    ]
+    from .._relation_prefill import _fifo_compensation_carry_binding_values, _gather_observations_for_snapshot
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="m390-fifo-carry"):
+        observation_repo = CalculationObservationRepository()
+        for period, generada, aplicada, disponible in quarter_chain:
+            observation_repo.save_observation(
+                RegistryModeloObservation(
+                    modelo="303",
+                    filing_year=2026,
+                    period=period,
+                    observations=(
+                        CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=generada),
+                        CasillaObservation(casilla_id="iva.compensacion-aplicada-periodo", value=aplicada),
+                        CasillaObservation(casilla_id="iva.compensacion-disponible-fin-periodo", value=disponible),
+                    ),
+                ),
+                source_kind="app_filing",
+                captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+            )
+
+        snapshot = resources().modelos.authority.snapshot("390", filing_year=2026, period="0A")
+        relation_vals = resolve_relations_from_local_store(
+            snapshot,
+            repository=observation_repo,
+            captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+        )
+        # The generic relation values (per-period sum/copy of generada) still
+        # resolve; the FIFO override is applied at the binding-materialisation
+        # boundary, which is what the production resolver feeds the M390 calc.
+        relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
+        resolved = materialize_relation_binding_values(snapshot.revision, relation_values_map, period="0A")
+        for binding_id, value in _fifo_compensation_carry_binding_values(
+            snapshot,
+            _gather_observations_for_snapshot(snapshot, repository=observation_repo),
+        ).items():
+            if binding_id in resolved:
+                resolved[binding_id] = value
+
+    # FIFO partition (correct), not per-period relation sums (50 / 100).
+    assert resolved[_BOX_97_BINDING] == Decimal("120.00")
+    assert resolved[_BOX_662_BINDING] == Decimal("0.00")
+    # The per-period relations (the pre-fix path) would have produced 50 / 100.
+    assert relation_values_map["modelo-390-rel-303-compensacion-ultimo-periodo"] == Decimal("50.00")
+    assert relation_values_map["modelo-390-rel-303-compensacion-generada-ejercicio-no-97"] == Decimal("100.00")
+    # AEAT identity holds at the binding boundary.
+    assert resolved[_BOX_97_BINDING] + resolved[_BOX_662_BINDING] == Decimal("120.00")
 
 
 def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_path: Path) -> None:
@@ -364,8 +495,6 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
             repository=observation_repo,
             captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
         )
-
-    from ....domain.calculations.registry import materialize_relation_binding_values
 
     relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
     resolved = materialize_relation_binding_values(snapshot.revision, relation_values_map, period="0A")
