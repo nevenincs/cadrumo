@@ -1,0 +1,21 @@
+# Casilla 02 — "Gastos" (AEAT M130 instructions): the deductible business
+# expenses (gastos fiscalmente deducibles) accumulated from the start of the
+# fiscal year through the end of the declared quarter, the expense side of the
+# estimación directa rendimiento neto (ingresos - gastos) per RD 439/2007
+# art. 110.2. IVA soportado is recovered through Modelo 303 and is NOT a Renta
+# gasto, so each transaction contributes its IVA-exclusive base imponible
+# (taxable_base); an untagged transaction is surfaced (MISSING_TAXABLE_BASE)
+# rather than gross-folded. Resolved by the ledger_renta_gasto_aggregation
+# source — the OUTGOING sibling of modelo-130-actividad-economica-ingresos-
+# cumulative — over the same cumulative year-to-date quarterly window.
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-actividad-economica-gastos-cumulative"
+source = "ledger_renta_gasto_aggregation"
+selector = { modelo = "130", target_casilla = "02", fact = "deductible_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Gastos"]
