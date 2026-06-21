@@ -18,8 +18,10 @@ from ._carry_forward import (
     IvaCompensationCarryForwardReport,
     IvaCompensationExpiryReviewState,
     IvaCompensationPeriodState,
+    IvaCompensationYearEndCarryPartition,
     build_iva_compensation_carry_forward_report,
     derive_303_compensation_available,
+    derive_iva_compensation_year_end_carry_partition,
     enforce_iva_compensation_four_year_window,
 )
 from ._errors import (
@@ -43,10 +45,12 @@ __all__ = [
     "IvaCompensationPeriodState",
     "IvaCompensationReconciliationInputError",
     "IvaCompensationSeedConflictError",
+    "IvaCompensationYearEndCarryPartition",
     "IvaCompensationYearRangeError",
     "IvaWalletBalanceReport",
     "build_iva_compensation_carry_forward_report",
     "build_iva_wallet_balance_report",
     "derive_303_compensation_available",
+    "derive_iva_compensation_year_end_carry_partition",
     "enforce_iva_compensation_four_year_window",
 ]
