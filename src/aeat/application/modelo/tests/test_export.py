@@ -139,7 +139,9 @@ def _seed_revision(
     modelo: str = "130",
     filing_year: int = 2026,
     period: str = "1T",
+    casilla_values: dict[str, Decimal] | None = None,
 ) -> tuple[str, str]:
+    casilla_values = dict(casilla_values or {})
     revision_id_suffix = state.value.lower()[:3]
     base = revision_id_suffix + "0" * (63 - len(revision_id_suffix))
     revision_id = "r" + base
@@ -170,7 +172,7 @@ def _seed_revision(
         work_unit_id=work_unit_id,
         inputs_snapshot={},
         binding_overrides={},
-        casilla_values={},
+        casilla_values=casilla_values,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -178,6 +180,7 @@ def _seed_revision(
         state=state,
         created_at=now,
         updated_at=now,
+        casilla_values=casilla_values,
         verified_at=now if state is not CalculationRevisionState.BORRADOR else None,
         verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
     )
@@ -287,6 +290,48 @@ def test_redeme_refund_election_upgrades_m303_carry_to_devolucion() -> None:
         _apply_refund_election(declaration_type="B", work_unit=_wu("130"), workflow_profile=redeme, period=_p("1T"))
         == "B"
     )
+
+
+def test_compose_export_headers_emits_devolucion_for_redeme_negative_303(isolated_backend: None) -> None:
+    """End-to-end through the real header composition: a REDEME company's negative
+    Modelo 303 (monthly period) composes a fichero with Tipo de declaración "D"
+    (solicitud de devolución); an otherwise-identical ordinary company composes "C"
+    (a compensar). The only difference is the REDEME enrolment on the passed profile.
+    """
+    from ....domain.deadlines._models import ModeloIVAProfile
+
+    bucket_id = _seed_profile(profile_overrides={"identity.surnames": "Redeme", "identity.name": "Company"})
+    work_unit_id, revision_id = _seed_revision(
+        bucket_id=bucket_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        modelo="303",
+        filing_year=2026,
+        period="02",
+        casilla_values={"71": Decimal("-210.00")},
+    )
+    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
+    revision = CalculationRevisionCatalogueRepository().load().get(revision_id)
+    assert work_unit is not None
+    assert revision is not None
+
+    period = Period.from_year_and_code(2026, "02")
+    redeme = TaxpayerProfile(
+        tax_id="redemecompany",
+        iva_regime=IVARegime.GENERAL,
+        iva=ModeloIVAProfile(redeme_enrolled=True),
+    )
+
+    headers_redeme = _compose_export_headers(
+        work_unit=work_unit, revision=revision, workflow_profile=redeme, period=period
+    )
+    headers_ordinary = _compose_export_headers(
+        work_unit=work_unit, revision=revision, workflow_profile=_profile(), period=period
+    )
+
+    # The REDEME company's negative period is a refund "D"; the ordinary company's
+    # identical negative period carries forward "C" (regression control).
+    assert headers_redeme["declaration_type"] == "D"
+    assert headers_ordinary["declaration_type"] == "C"
 
 
 def test_export_headers_use_typed_instalment_period_dates(isolated_backend: None) -> None:
