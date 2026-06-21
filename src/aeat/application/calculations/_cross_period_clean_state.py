@@ -768,6 +768,7 @@ def evaluate_cross_period_clean_state(
     taxpayer_tax_id: str | None = None,
     activity_start_date: date | None = None,
     modelo_202_modality: Modelo202Modality | None = None,
+    taxpayer_files_economic_activity: bool | None = None,
 ) -> CrossPeriodCleanStateVerdict:
     """Evaluate cross-period dependencies and return a :class:`CrossPeriodCleanStateVerdict`.
 
@@ -804,7 +805,11 @@ def evaluate_cross_period_clean_state(
     non_filer_modelos = frozenset(
         classification.source_modelo
         for classification in snapshot.revision.dependency_classifications
-        if not classification.taxpayer_files_source
+        if (not classification.taxpayer_files_source)
+        or (
+            classification.conditional_on_economic_activity
+            and taxpayer_files_economic_activity is False
+        )
     )
     all_requirements = cross_period_dependency_requirements(snapshot)
     not_applicable_dependencies = tuple(

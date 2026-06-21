@@ -809,6 +809,37 @@ def test_m100_suffered_retencion_deps_scoped_out_self_filed_enforced(tmp_path: P
     assert scoped_out.isdisjoint({"130", "131"}), "self-filed pagos fraccionados must NOT be scoped out"
 
 
+def test_m100_pagos_fraccionados_conditional_on_economic_activity(tmp_path: Path) -> None:
+    """130/131 pagos fraccionados scope out for a DECLARED employee; stay enforced for an autónomo and (fail-closed) when undeclared."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        snap = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+        common = {
+            "bucket_id": _BUCKET_ID,
+            "observation_repository": CalculationObservationRepository(),
+            "filing_repository": ModeloRecordCatalogueRepository(),
+            "calculation_repository": CalculationRevisionCatalogueRepository(),
+            "verification_repository": VerificationReportCatalogueRepository(),
+            "taxpayer_tax_id": "X1234567L",
+        }
+        employee = evaluate_cross_period_clean_state(snap, taxpayer_files_economic_activity=False, **common)
+        autonomo = evaluate_cross_period_clean_state(snap, taxpayer_files_economic_activity=True, **common)
+        undeclared = evaluate_cross_period_clean_state(snap, taxpayer_files_economic_activity=None, **common)
+
+    def scoped(verdict: CrossPeriodCleanStateVerdict) -> set[str]:
+        return {item.requirement.source_modelo for item in verdict.dependencies if item.modelo_not_applicable_advisory}
+
+    def blocking(verdict: CrossPeriodCleanStateVerdict) -> set[str]:
+        return {item.requirement.source_modelo for item in verdict.dependencies if not item.clean}
+
+    # Declared employee (no actividad económica): 130/131 scope out as not-applicable.
+    assert {"130", "131"} <= scoped(employee)
+    # Autónomo (declares actividad económica): 130/131 stay enforced (still block, never scoped).
+    assert scoped(autonomo).isdisjoint({"130", "131"})
+    assert {"130", "131"} & blocking(autonomo)
+    # Undeclared income categories: fail-closed — 130/131 stay enforced.
+    assert scoped(undeclared).isdisjoint({"130", "131"})
+
+
 def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         snapshot = resources().modelos.authority.snapshot("180", filing_year=2026, period="0A")
