@@ -4,6 +4,7 @@ title = "Modelo 390 IVA annual summary declaration"
 legal_refs = [
     "orden-eha-3111-2009:art-1",
     "orden-eha-3111-2009:art-8",
+    "ley-37-1992:art-17",
     "ley-37-1992:art-84",
     "ley-37-1992:art-88",
     "ley-37-1992:art-90",
@@ -26,6 +27,7 @@ casillas = [
     "iva.anual.repercutido.reducido",
     "iva.anual.repercutido.super-reducido",
     "iva.anual.soportado.interiores",
+    "iva.anual.soportado.importaciones",
     "iva.anual.autorepercutido.intracomunitaria",
     "iva.anual.reconciliacion.devengada-303",
     "iva.anual.reconciliacion.deducible-303",
@@ -48,6 +50,7 @@ bindings = [
     "modelo-390-iva-repercutido-reducido-cuota",
     "modelo-390-iva-repercutido-super-reducido-cuota",
     "modelo-390-iva-soportado-interiores-cuota",
+    "modelo-390-iva-soportado-importaciones-cuota",
     "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
     "modelo-390-prev-303-cuota-devengada-total",
     "modelo-390-prev-303-cuota-deducible-total",

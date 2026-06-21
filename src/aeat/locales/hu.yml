@@ -328,6 +328,8 @@ aggregation:
       period_mismatch: Az időszak nem egyezik a várt Renta főkönyvi időszakkal.
       quarterly_period_required: Az M130 jövedelemaggregáláshoz negyedéves időszak
         szükséges (pl. 2024Q1).
+      unsupported_period: A Modelo 100 bevétel-összesítéshez éves időszak szükséges
+        (pl. 2024-0A).
   service:
     errors:
       envelope_modelo_mismatch: aggregation.service.errors.envelope_modelo_mismatch
@@ -903,11 +905,16 @@ application:
       correct_sealed_blocked: 'A javítás elutasítva: egy már benyújtott Modelo 303
         (%{blocking_filing_year}/%{blocking_period}) felhasználta ezt a beállított
         kompenzációs alapot. Módosítása egy benyújtott bevallást változtatna meg.'
+      override_fresh_wallet_blocked: 'Felülbírálás elutasítva: az AEAT pénztárának
+        aktuális leolvasása már feloldja a 303-as modellt %{filing_year}/%{period}.
+        A friss AEAT-bizonyíték a mérvadó, és a felülbírálás nem írhatja felül.'
+      override_sealed_blocked: 'Felülbírálás elutasítva: egy már benyújtott 303-as
+        modell (%{blocking_filing_year}/%{blocking_period}) már felhasználta ennek
+        az időszaknak a kompenzációs alapját. A felülbírálás rögzítése módosítana
+        egy benyújtott bevallást.'
       seed_negative_amount: A vetőösszeg nem lehet negatív.
       seed_no_nif: Nincs NIF meghatarozva a vetoosszeg-muvelethez; rendelje hozza
         az aktiv profilhoz a vetoosszeg letrehozasa elott.
-      override_sealed_blocked: 'Felülbírálás elutasítva: egy már benyújtott 303-as modell (%{blocking_filing_year}/%{blocking_period}) már felhasználta ennek az időszaknak a kompenzációs alapját. A felülbírálás rögzítése módosítana egy benyújtott bevallást.'
-      override_fresh_wallet_blocked: 'Felülbírálás elutasítva: az AEAT pénztárának aktuális leolvasása már feloldja a 303-as modellt %{filing_year}/%{period}. A friss AEAT-bizonyíték a mérvadó, és a felülbírálás nem írhatja felül.'
     profile_binding:
       errors:
         date_value_type_invalid: 'A(z) %{binding_id} datumcsatornas kotes profiladata
@@ -2560,6 +2567,9 @@ cli:
       notes_help: A tranzakcióval együtt tárolt üzemeltetői megjegyzések.
       prorrata_reference_help: IVA prorrata alapjának hivatkozása.
       purchase_invoice_evidence_help: Kanonikus vásárlásiszámla-bizonyíték azonosítója.
+      recargo_amount_help: A recargo de equivalencia rendszerű kiskereskedőnek történő
+        értékesítésre felszámított recargo-tétel (LIVA 161. cikk); a Modelo 303 recargo-tételébe
+        IVA-kulcs szerint összesítve
       source_jurisdiction_help: Két betűs ISO 3166-1 alfa-2 országkód, amely azonosítja
         a jövedelem vagy költség szabályozási forrásjogszabályát (pl. ES spanyol forrás,
         FR francia forrás). Az IRNR és a Beckham-szűrő (LIRPF 93. cikk) követelménye.
@@ -3454,6 +3464,9 @@ core:
       output_language_type: core.profile.errors.output_language_type
       registration_duplicate_callable: A projektválaszok implementációja kétszer lett
         regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
+domain:
+  iva:
+    refund:
 dotted:
   key: Pontozott kulcs
 entries:

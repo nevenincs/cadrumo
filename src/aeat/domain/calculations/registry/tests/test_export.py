@@ -14,11 +14,13 @@ calculation tautologies.
 
 from __future__ import annotations
 
+import tomllib
 from decimal import Decimal
 from typing import Any
 
 import pytest
 
+from .....core.resources import bundled_path
 from .._errors import RegistryValidationError
 from .._export import (
     _binding_data_type,
@@ -30,6 +32,66 @@ from .._export import (
 from .._schema import DataBindingDefinition, ExportFieldDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+#: Minimum byte width of fixed-width header values that have a known length, so a
+#: copy-paste of the header_key onto a too-short field cannot silently truncate /
+#: overflow the emitted fichero. ``devengo_start_date`` is a ``ddmmaaaa`` date.
+_MIN_HEADER_FIELD_WIDTH: dict[str, int] = {
+    "devengo_start_date": 8,
+    "fecha_inicio_periodo": 8,
+    "fecha_fin_periodo": 8,
+}
+
+
+def _walk_header_fields(node: object) -> list[tuple[str, int, str]]:
+    """Recursively collect (header_key, length, id) from any nested export-layout dict.
+
+    Export-layout TOML nests differently across modelos (``export_layouts`` is a
+    single table for some, an array of tables for others), so a recursive walk over
+    dicts/lists is the robust way to reach every field record.
+    """
+    found: list[tuple[str, int, str]] = []
+    if isinstance(node, dict):
+        header_key = node.get("header_key")
+        length = node.get("length")
+        if isinstance(header_key, str) and isinstance(length, int):
+            found.append((header_key, length, str(node.get("id", "?"))))
+        for value in node.values():
+            found.extend(_walk_header_fields(value))
+    elif isinstance(node, list):
+        for value in node:
+            found.extend(_walk_header_fields(value))
+    return found
+
+
+def _walk_export_layout_fields() -> list[tuple[str, str, str, int]]:
+    """Yield (file, field_id, header_key, length) for every export-layout header field."""
+    registry_root = bundled_path("registry", "aeat")
+    rows: list[tuple[str, str, str, int]] = []
+    for toml_path in registry_root.glob("modelos/*/revisions/*/export*/*.toml"):
+        data = tomllib.loads(toml_path.read_text(encoding="utf-8"))
+        for header_key, length, field_id in _walk_header_fields(data):
+            rows.append((toml_path.name, field_id, header_key, length))
+    return rows
+
+
+def test_no_fixed_width_header_field_is_too_short_for_its_value() -> None:
+    """A header field must be wide enough for the fixed-width value it carries.
+
+    Regression for the M202 export-blocking defect: several length-1
+    "datos adicionales" indicator fields were copy-paste mis-keyed to
+    ``header_key = "devengo_start_date"`` (an 8-char ``ddmmaaaa`` date), so
+    ``encode`` raised "value exceeds length 1" and the IS pago fraccionado could
+    not be exported at all. This scans every export-layout TOML and fails if any
+    field carries a known fixed-width header value in a field too short to hold it.
+    """
+    offenders = [
+        f"{file}:{field_id} header_key={header_key!r} length={length} < {_MIN_HEADER_FIELD_WIDTH[header_key]}"
+        for file, field_id, header_key, length in _walk_export_layout_fields()
+        if header_key in _MIN_HEADER_FIELD_WIDTH and length < _MIN_HEADER_FIELD_WIDTH[header_key]
+    ]
+    assert not offenders, "Fixed-width header value mapped to a too-short export field:\n  " + "\n  ".join(offenders)
 
 
 def _field(

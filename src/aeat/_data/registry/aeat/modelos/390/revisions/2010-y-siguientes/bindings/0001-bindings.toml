@@ -46,6 +46,21 @@ source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-
 source_ref = "boe-modelo-390-2009-form"
 required_text = ["modelo 390"]
 
+# Annual IVA soportado deducible en importaciones — mirrors the M303
+# import-deducible cuota onto the annual resumen so the deducible total includes
+# imports. Selects import_third_country soportado lines across the rate tiers.
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-soportado-importaciones-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"

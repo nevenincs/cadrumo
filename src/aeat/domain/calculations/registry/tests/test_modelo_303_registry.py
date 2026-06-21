@@ -431,6 +431,13 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
         "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
         "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
+        "modelo-303-iva-repercutido-general-base": Decimal("0"),
+        "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
+        "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
+        "modelo-303-iva-soportado-interiores-base": Decimal("0"),
+        "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
+        "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),
+        "modelo-303-recargo-equivalencia-super-reducido-cuota": Decimal("0"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00"),
         # No autoconsumo promotor in this period; zero disables the formula path.
         "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
@@ -559,6 +566,13 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
         "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
         "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
+        "modelo-303-iva-repercutido-general-base": Decimal("0"),
+        "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
+        "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
+        "modelo-303-iva-soportado-interiores-base": Decimal("0"),
+        "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
+        "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),
+        "modelo-303-recargo-equivalencia-super-reducido-cuota": Decimal("0"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-autoconsumo-promotor-base": Decimal("1400000"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
@@ -610,6 +624,13 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
         "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
         "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
+        "modelo-303-iva-repercutido-general-base": Decimal("0"),
+        "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
+        "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
+        "modelo-303-iva-soportado-interiores-base": Decimal("0"),
+        "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
+        "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),
+        "modelo-303-recargo-equivalencia-super-reducido-cuota": Decimal("0"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
@@ -641,3 +662,51 @@ def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:
     assert parity.workbook_source == "aeat-dr-303-2025"
     assert parity.formula_coverage == "record_design_layout"
     assert parity.fixture_id == "modelo-303-2025-record-design-layout"
+
+
+def test_modelo_303_prorrata_defaults_to_100_when_no_volume_data() -> None:
+    """Regression for defect C2: prorrata-porcentaje defaults to 100, never 0.
+
+    A fully-taxable trader who declares no prorrata-volume data (volumen-total = 0)
+    has no exempt-without-right operation limiting deduction, so the LIVA art. 94
+    full right to deduct applies and the percentage is 100. The previous else-0
+    default zeroed every deduction and blocked the filing. The expected value is
+    derived from the regulated full-deduction default, not from re-running the
+    formula under test.
+    """
+    from .. import calculate_registry_snapshot, resolve_bound_casilla_inputs
+
+    modelo, catalogues = _load_modelo_303()
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
+    zero_bindings: dict[str, Decimal] = {
+        "modelo-303-iva-repercutido-general-cuota": Decimal("0.00"),
+        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
+        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
+        "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
+        "modelo-303-iva-soportado-importaciones-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-interior-devengado-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
+        "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
+        "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
+        "modelo-303-iva-repercutido-general-base": Decimal("0"),
+        "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
+        "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
+        "modelo-303-iva-soportado-interiores-base": Decimal("0"),
+        "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
+        "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),
+        "modelo-303-recargo-equivalencia-super-reducido-cuota": Decimal("0"),
+        "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
+        "modelo-303-autoconsumo-promotor-base": Decimal("0"),
+    }
+    bound = resolve_bound_casilla_inputs(snapshot.revision, zero_bindings)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=bound,
+        binding_values=zero_bindings,
+        date_context={"filing_period": date(2025, 3, 31)},
+    )
+    assert result.values["iva.prorrata-porcentaje"] == Decimal("100")

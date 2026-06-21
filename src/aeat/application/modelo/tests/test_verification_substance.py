@@ -3,10 +3,12 @@
 contract: Unit tests for the predicate DSL evaluator (_evaluate_predicate_expression,
      _evaluate_verification_predicates).
 
-contract: Regression — Modelo 130 with all casilla values zero (specifically casilla
-     02 Gastos absent) is NOT granted verificado_completo. The Layer 1
-     required=true gate on casilla 02 blocks the transition; this test pins
-     that the enforcement is in place after contract.
+contract: Regression — Modelo 130 casilla 02 (Gastos) is now ledger-bound
+     (the H1 fix), so the gasto resolver populates it (0 when there are no
+     expenses) and an absent manual value no longer blocks verificado_completo
+     (finding M4 resolved). The missing-required gate fires only for MANUAL
+     required casillas; this module pins that behaviour and the provenance the
+     finding carries.
 """
 
 from __future__ import annotations
@@ -28,7 +30,6 @@ from ....domain.modelos._calculation_revision import CalculationRevisionCatalogu
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.modelos._verification_report import (
     ModeloVerificationFindingKind,
-    VerificationCompletenessStatus,
 )
 from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
@@ -418,20 +419,24 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
         yield wu, cr, vr, bv
 
 
-def test_m130_all_zero_without_gastos_is_blocked(repos: _Repos) -> None:
-    """M130 revision with casilla 02 (Gastos) absent is blocked even when other casillas are zero.
+def test_m130_casilla_02_gastos_is_ledger_bound_not_manual_blocking(repos: _Repos) -> None:
+    """M130 casilla 02 (Gastos) is ledger-bound, so an absent manual value never blocks.
 
-    contract regression: Layer 1 required=true on casilla 02 must block the
-    VERIFICADO_COMPLETO transition when Gastos is not supplied. Before contract
-    this filing would have been granted; after contract it is blocked.
+    Regression for finding M4: casilla 02 used to be ``input_kind = manual``,
+    so a filer with no gastos was blocked with a MISSING_REQUIRED_CASILLA finding
+    until they hand-entered ``--casilla 02=0``. Casilla 02 is now bound to the
+    ``ledger_renta_gasto_aggregation`` source (the H1 fix): the gasto resolver
+    populates it from the ledger (0 when there are no expenses), so the
+    missing-required gate — which fires only for MANUAL required casillas — never
+    flags it. The required=true flag is retained but is inert for a bound casilla.
     """
     wu_repo, cr_repo, vr_repo, bv_repo = repos
 
-    # Verify that the registry declares casilla 02 as required
     snap = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
     casilla_02 = next((c for c in snap.revision.casillas if str(c.id) == "02"), None)
     assert casilla_02 is not None, "M130 must have casilla 02 in registry"
-    assert casilla_02.required is True, "M130 casilla 02 must be required=true (S73 Layer 1)"
+    assert str(casilla_02.input_kind) == "bound", "M130 casilla 02 must be ledger-bound (H1 fix)"
+    assert casilla_02.binding == "modelo-130-actividad-economica-gastos-cumulative"
 
     work_unit = create_work_unit(
         bucket_id="default",
@@ -443,9 +448,7 @@ def test_m130_all_zero_without_gastos_is_blocked(repos: _Repos) -> None:
         clock=_T0,
     )
 
-    # Provide all casillas as zero EXCEPT casilla 02 (Gastos) which is required.
-    # Casilla 15 is a previous_filing bound casilla — supply its binding value
-    # (not as a casilla input) so the formula engine can resolve it.
+    # Casilla 02 is deliberately NOT supplied (no ledger gastos, no manual value).
     casilla_inputs: dict[str, Decimal] = {
         "05": Decimal("0"),
         "06": Decimal("0"),
@@ -453,7 +456,6 @@ def test_m130_all_zero_without_gastos_is_blocked(repos: _Repos) -> None:
         "10": Decimal("0"),
         "16": Decimal("0"),
         "18": Decimal("0"),
-        # casilla 01 is bound (from ledger), casilla 02 deliberately absent
     }
 
     revision = calculate_modelo_revision(
@@ -480,14 +482,14 @@ def test_m130_all_zero_without_gastos_is_blocked(repos: _Repos) -> None:
         clock=_T2,
     )
 
-    assert report.granted_verificado_completo is False
-    assert report.completeness_status is not VerificationCompletenessStatus.COMPLETE
-    assert "02" in report.missing_required_casillas, (
-        "Casilla 02 must appear in missing_required_casillas when absent from inputs"
-    )
-
-    missing_kinds = {f.kind for f in report.findings}
-    assert ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA in missing_kinds
+    # M4 resolved: casilla 02 is bound, so it is NOT a manual missing-required block.
+    assert "02" not in report.missing_required_casillas
+    casilla_02_missing = [
+        f
+        for f in report.findings
+        if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA and f.casilla_id == "02"
+    ]
+    assert not casilla_02_missing, "bound casilla 02 must not produce a MISSING_REQUIRED_CASILLA finding"
 
 
 def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
@@ -805,99 +807,42 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
 # contract: legal_refs / source_refs threading through verification findings
 # ---------------------------------------------------------------------------
 
-# M130 casilla 02 oracle values drawn from:
-#   src/aeat/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/casillas/0001-casillas.toml
-_M130_CASILLA_02_LEGAL_REFS = frozenset(
-    {
-        "rd-439-2007:art-110",
-        "orden-eha-672-2007:art-1",
-        "ley-35-2006:art-99",
-        "rd-439-2007:art-95",
-    },
-)
-_M130_CASILLA_02_SOURCE_REFS = frozenset(
-    {
-        "aeat-dr-130-2019-v12",
-        "aeat-modelo-130-instructions",
-    },
-)
-
-
-def test_missing_required_casilla_finding_carries_registry_provenance(repos: _Repos) -> None:
+def test_missing_required_casilla_finding_carries_registry_provenance() -> None:
     """A MISSING_REQUIRED_CASILLA finding must carry legal_refs and source_refs
     drawn from the registry casilla definition.
 
     contract regression: before this fix findings had empty legal_refs/source_refs,
     making provenance invisible at the operator-facing verify surface.
 
-    Expected values are drawn from the M130 casilla 02 TOML definition (the
-    external authority), not hand-computed from the same formula.
+    Exercises the finding builder directly against the live M130 casilla 02
+    registry definition (its provenance is unchanged by the H1 bind: the casilla
+    keeps its legal_refs/source_refs whether manual or bound). The oracle is read
+    from the registry casilla definition — the authority the finding draws from —
+    so the assertion proves the finding's provenance equals the registry's, not a
+    hand-copied list. The companion
+    ``test_missing_casilla_finding_legal_refs_empty_when_casilla_def_absent`` is
+    the anti-tautology proof that the refs are threaded from the def, not a
+    constant default.
     """
-    wu_repo, cr_repo, vr_repo, bv_repo = repos
+    from .._verification_actions import _missing_required_casilla_finding
 
-    work_unit = create_work_unit(
-        bucket_id="default",
-        modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
-        repository=wu_repo,
-        clock=_T0,
-    )
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    casilla_02 = next(c for c in snapshot.revision.casillas if str(c.id) == "02")
+    expected_legal_refs = frozenset(str(r) for r in casilla_02.legal_refs)
+    expected_source_refs = frozenset(str(r) for r in casilla_02.source_refs)
+    assert expected_legal_refs, "registry casilla 02 must declare legal_refs (oracle precondition)"
+    assert expected_source_refs, "registry casilla 02 must declare source_refs (oracle precondition)"
 
-    # Deliberately omit casilla 02 (Gastos) so a MISSING_REQUIRED_CASILLA
-    # finding is produced for it.
-    casilla_inputs: dict[str, Decimal] = {
-        "05": Decimal("0"),
-        "06": Decimal("0"),
-        "08": Decimal("0"),
-        "10": Decimal("0"),
-        "16": Decimal("0"),
-        "18": Decimal("0"),
-    }
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=casilla_inputs,
-        binding_values={
-            "irpf.previous_year_economic_activity_net_income": Decimal("0"),
-            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
-        },
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T1,
-    )
-    report = verify_modelo_revision(
-        revision.calculation_revision_id,
-        actor="operator-test",
-        workflow_profile=_workflow_profile(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T2,
-    )
+    finding = _missing_required_casilla_finding("02", "wu-test-id", casilla_def=casilla_02)
 
-    casilla_02_findings = [
-        f
-        for f in report.findings
-        if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA and f.casilla_id == "02"
-    ]
-    assert casilla_02_findings, "Expected a MISSING_REQUIRED_CASILLA finding for casilla 02"
-    finding = casilla_02_findings[0]
-
-    # legal_refs must be non-empty and match the TOML oracle.
+    assert finding.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
+    assert finding.casilla_id == "02"
     assert finding.legal_refs, "finding.legal_refs must not be empty for a registry-backed casilla"
-    assert frozenset(finding.legal_refs) == _M130_CASILLA_02_LEGAL_REFS, (
-        f"finding.legal_refs {finding.legal_refs!r} does not match registry oracle "
-        f"{sorted(_M130_CASILLA_02_LEGAL_REFS)!r}"
+    assert frozenset(finding.legal_refs) == expected_legal_refs, (
+        f"finding.legal_refs {finding.legal_refs!r} does not match registry oracle {sorted(expected_legal_refs)!r}"
     )
-
-    # source_refs must also be threaded through.
-    assert finding.source_refs, "finding.source_refs must not be empty for a registry-backed casilla"
-    assert frozenset(finding.source_refs) == _M130_CASILLA_02_SOURCE_REFS, (
-        f"finding.source_refs {finding.source_refs!r} does not match registry oracle "
-        f"{sorted(_M130_CASILLA_02_SOURCE_REFS)!r}"
+    assert frozenset(finding.source_refs) == expected_source_refs, (
+        f"finding.source_refs {finding.source_refs!r} does not match registry oracle {sorted(expected_source_refs)!r}"
     )
 
 

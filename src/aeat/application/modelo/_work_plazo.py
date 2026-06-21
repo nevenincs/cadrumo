@@ -60,7 +60,8 @@ def modelo_work_plazo_summary(
 
     try:
         recovery = build_recovery_for_overdue(
-            days_late=days_overdue,
+            closes_on=closes_on,
+            reference_today=resolved_today,
             modelo=str(work_unit.modelo),
             period=work_unit.period,
         )

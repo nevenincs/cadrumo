@@ -210,11 +210,21 @@ class BindingSourceKind(StrEnum):
     PREVIOUS_FILING = "previous_filing"
     RELATION_PREFILL = "relation_prefill"
     MANUAL_INPUT = "manual_input"
-    # Ledger-aggregation sources (all four ledger kinds).
+    # Ledger-aggregation sources (all five ledger kinds).
     LEDGER_OSS_AGGREGATION = "ledger_oss_aggregation"
     LEDGER_IVA_AGGREGATION = "ledger_iva_aggregation"
     LEDGER_RENTA_EXPENSE_AGGREGATION = "ledger_renta_expense_aggregation"
     LEDGER_RENTA_INCOME_AGGREGATION = "ledger_renta_income_aggregation"
+    # Modelo 130 pago-fraccionado deductible-expense (casilla 02 "Gastos")
+    # cumulative aggregation. The OUTGOING sibling of
+    # ``ledger_renta_income_aggregation``: the same lightweight ledger-projection
+    # mechanism and cumulative year-to-date window, applied to the expense
+    # dimension. Spanish stem ``gasto`` per the AEAT casilla 02 "Gastos" surface
+    # (aeat-spanish-stem-naming); the M100 first-slice annual-expense source
+    # ``ledger_renta_expense_aggregation`` is a constraint-shape-divergent
+    # mechanism (invoice-evidence + category-profile + annual-window) and is
+    # deliberately not reused for the M130 quarterly cumulative gasto sum.
+    LEDGER_RENTA_GASTO_AGGREGATION = "ledger_renta_gasto_aggregation"
     # Invoice / counterpart aggregation sources (value-aligned with
     # AggregationSourceKind).
     PAYABLE_INVOICE = AggregationSourceKind.PAYABLE_INVOICE.value
@@ -266,15 +276,16 @@ LEDGER_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
         BindingSourceKind.LEDGER_IVA_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
     },
 )
-"""Ledger-aggregation binding source kinds (all four), derived from the enum.
+"""Ledger-aggregation binding source kinds (all five), derived from the enum.
 
 Every binding whose ``source`` is a member reads its values from the
-bucket-scoped ledger (transaction-classified IVA / OSS aggregation or Renta
-first-slice income/expense aggregation). Cross-domain consumers route through
-this frozenset so the registry stays the single source of truth for ledger
-readiness.
+bucket-scoped ledger (transaction-classified IVA / OSS aggregation, Renta
+first-slice income/expense aggregation, or the M130 pago-fraccionado gasto
+cumulative aggregation). Cross-domain consumers route through this frozenset
+so the registry stays the single source of truth for ledger readiness.
 """
 
 

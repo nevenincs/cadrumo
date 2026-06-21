@@ -33,7 +33,7 @@ from ....application.user_profile._repository import UserProfileLifecycleReposit
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from ._m130_source_support import seed_m130_income_transaction
+from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -375,12 +375,18 @@ def test_modelo_130_resultado_apartado_i_direct_estimation(
         filing_year=2026,
         source_key="oracle-calc",
     )
+    # Casilla 02 (gastos) is bucket-bound (ledger-aggregated); seed the 4.000 gasto
+    # as a deductible expense row rather than supplying --casilla 02.
+    seed_m130_expense_transaction(
+        amount=Decimal("4000.00"),
+        filing_year=2026,
+        source_key="oracle-calc",
+    )
 
     result = invoke_cached_cli(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "02=4000.00",
             "--casilla", "05=0.00",
             "--casilla", "06=0.00",
             "--binding",

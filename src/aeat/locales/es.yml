@@ -356,6 +356,8 @@ aggregation:
         Renta.
       quarterly_period_required: Se requiere un periodo trimestral para la agregación
         de ingresos del Modelo 130 (p.ej. 2024Q1).
+      unsupported_period: Se requiere un periodo anual para la agregación de ingresos
+        del Modelo 100 (p.ej. 2024-0A).
   service:
     errors:
       envelope_modelo_mismatch: El modelo del envoltorio no coincide con el modelo
@@ -969,11 +971,15 @@ application:
       correct_sealed_blocked: 'Corrección rechazada: un Modelo 303 ya presentado (%{blocking_filing_year}/%{blocking_period})
         ha consumido esta base de compensación sembrada. Cambiarla alteraría una declaración
         presentada.'
+      override_fresh_wallet_blocked: 'Anulación rechazada: una lectura actual de la
+        cartera de AEAT ya resuelve el Modelo 303 %{filing_year}/%{period}. La evidencia
+        reciente de AEAT es la autoridad y una anulación no debe sustituirla.'
+      override_sealed_blocked: 'Anulación rechazada: un Modelo 303 ya presentado (%{blocking_filing_year}/%{blocking_period})
+        ha consumido la base de compensación de este periodo. Registrar una anulación
+        alteraría una declaración ya presentada.'
       seed_negative_amount: El importe inicial no puede ser negativo.
       seed_no_nif: No hay NIF definido para la operación de importe inicial; asócielo
         al perfil activo.
-      override_sealed_blocked: 'Anulación rechazada: un Modelo 303 ya presentado (%{blocking_filing_year}/%{blocking_period}) ha consumido la base de compensación de este periodo. Registrar una anulación alteraría una declaración ya presentada.'
-      override_fresh_wallet_blocked: 'Anulación rechazada: una lectura actual de la cartera de AEAT ya resuelve el Modelo 303 %{filing_year}/%{period}. La evidencia reciente de AEAT es la autoridad y una anulación no debe sustituirla.'
     profile_binding:
       errors:
         date_value_type_invalid: El dato de perfil para el binding de fecha %{binding_id}
@@ -2639,6 +2645,9 @@ cli:
       notes_help: Notas del operador guardadas con la transacción
       prorrata_reference_help: Referencia de prorrata de IVA
       purchase_invoice_evidence_help: Id de justificante de factura de compra
+      recargo_amount_help: Cuota del recargo de equivalencia repercutida en esta venta
+        a un minorista en recargo (art. 161 LIVA); se agrega a la cuota de recargo
+        del Modelo 303 por tipo de IVA
       source_jurisdiction_help: Código de país ISO 3166-1 alfa-2 (dos letras) que
         identifica la jurisdicción fiscal de origen del ingreso o gasto (p. ej. ES
         para fuente española, FR para fuente francesa). Necesario para IRNR y para
@@ -3537,6 +3546,9 @@ core:
       registration_duplicate_callable: La implementación de respuestas de proyecto
         se registró dos veces con distintos invocables; debe registrarse exactamente
         una vez.
+domain:
+  iva:
+    refund:
 dotted:
   key: Clave con puntos
 entries:

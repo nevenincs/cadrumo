@@ -1114,6 +1114,29 @@ class IvaWalletSeedResult(OutputSchema):
     status: str
 
 
+@register_schema("modelo.iva_wallet.override")
+class IvaWalletOverrideResult(OutputSchema):
+    """IVA compensation taxpayer-override decision confirmation.
+
+    Records the explicit taxpayer override that releases the Modelo 303
+    cross-period compensación carry the reconciliation gate refuses to auto-apply
+    without live AEAT wallet evidence. ``selected_authority`` is ``taxpayer_override``
+    and ``divergence`` is ``override``; ``reason`` and ``evidence_locator`` carry the
+    mandatory provenance. The override unblocks the carry CALCULATION only — it does
+    not satisfy the dependent period's official-evidence verify gate.
+    """
+
+    operation: str = "modelo.iva_wallet.override"
+    filing_year: int
+    period: Period
+    taxpayer_nif: str
+    amount: str
+    reason: str
+    evidence_locator: str
+    selected_authority: str
+    divergence: str
+
+
 @register_schema("modelo.work.resume")
 class WorkResumeResult(OutputSchema):
     """Workflow resume precondition and context result."""

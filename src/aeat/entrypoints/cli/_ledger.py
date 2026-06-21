@@ -205,6 +205,7 @@ def ledger_add(
     taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.ledger.add.taxable_base_help")),
     iva_rate: str | None = typer.Option(None, "--iva-rate", help=tr("cli.ledger.add.iva_rate_help")),
     iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.add.iva_amount_help")),
+    recargo_amount: str | None = typer.Option(None, "--recargo-amount", help=tr("cli.ledger.add.recargo_amount_help")),
     irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.add.irpf_category_help")),
     usage_ratio_id: str | None = typer.Option(None, "--usage-ratio-id", help=tr("cli.ledger.add.usage_ratio_help")),
     prorrata_reference: str | None = typer.Option(
@@ -287,6 +288,7 @@ def ledger_add(
             taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
             iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
             iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+            recargo_amount=_parse_decimal(recargo_amount, label="recargo-amount"),
             irpf_category=irpf_category,
             usage_ratio_id=usage_ratio_id,
             prorrata_reference=prorrata_reference,

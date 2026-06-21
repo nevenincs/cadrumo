@@ -68,12 +68,6 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
     # belong to IRPF rendimientos del trabajo, not actividad económica,
     # and must not feed M130 casillas.
     TRABAJO_INCOME = "trabajo_income"
-    # An OUTGOING business-classified row is a deducible gasto candidate.
-    # M130 casilla 02 (Gastos) has no ledger aggregation binding yet, so
-    # the expense is NOT folded into the filing; per
-    # no-silent-under-declaration the drop must surface loudly in expense
-    # vocabulary, never as a generic "not an income flow" exclusion.
-    DEDUCIBLE_EXPENSE_NOT_AGGREGATED = "deducible_expense_not_aggregated"
 
 
 class RentaIncomeLedgerAggregationIssue(BaseModel):
@@ -227,6 +221,8 @@ def aggregate_renta_income_ledger(
             cumulative_start=cumulative_start,
             cumulative_end=cumulative_end,
         )
+        if outcome is None:
+            continue
         if isinstance(outcome, RentaIncomeLedgerAggregationIssue):
             issues.append(outcome)
         else:
@@ -239,6 +235,110 @@ def aggregate_renta_income_ledger(
         observations=tuple(observations),
         issues=tuple(issues),
         casilla_aggregation=casilla_aggregation,
+    )
+
+
+# Modelo 100 estimación-directa "Ingresos de explotación" leaf. The annual IRPF
+# return aggregates the same actividad-económica income the M130 quarterly path
+# sums, but over the full ejercicio and into the M100 income leaf rather than the
+# M130 cumulative casilla.
+_TARGET_CASILLA_M100_INGRESOS = "0171"
+
+
+def aggregate_renta_m100_income_ledger_from_repositories(
+    *,
+    bucket_id: str,
+    period: Period,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+) -> RentaIncomeLedgerAggregation:
+    """Load the catalogue and aggregate the annual Modelo 100 actividad income."""
+    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    if repository.bucket_id != bucket_id:
+        raise AggregationValidationError(
+            t("aggregation.renta_ledger.errors.bucket_mismatch"),
+            context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
+        )
+    transactions = repository.load()
+    return aggregate_renta_m100_income_ledger(transactions, bucket_id=bucket_id, period=period)
+
+
+def aggregate_renta_m100_income_ledger(
+    transactions: TransactionCatalogue,
+    *,
+    bucket_id: str,
+    period: Period,
+) -> RentaIncomeLedgerAggregation:
+    """Aggregate annual actividad-económica income into Modelo 100 casilla 0171.
+
+    The annual counterpart of :func:`aggregate_renta_income_ledger`: it applies the
+    same actividad-económica eligibility (excluding nómina/trabajo and personal
+    flows) over the FULL ejercicio (Jan 1 to Dec 31 of ``period.year``) and targets
+    the M100 "Ingresos de explotación" leaf (0171) instead of the M130 cumulative
+    casilla. ``period`` must be the annual period.
+    """
+    if period.kind is not PeriodKind.ANNUAL:
+        raise AggregationPeriodError(
+            t("aggregation.renta_ledger.errors.unsupported_period"),
+            context={"period": str(period)},
+        )
+    window_start = date(period.year, 1, 1)
+    window_end = date(period.year, 12, 31)
+
+    observations: list[RentaIncomeObservation] = []
+    issues: list[RentaIncomeLedgerAggregationIssue] = []
+    for transaction in transactions.values():
+        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
+        outcome = _classify_income_transaction(
+            transaction,
+            cumulative_start=window_start,
+            cumulative_end=window_end,
+        )
+        if outcome is None:
+            continue
+        if isinstance(outcome, RentaIncomeLedgerAggregationIssue):
+            issues.append(outcome)
+        else:
+            # The classifier targets the M130 casilla 01; re-target the same
+            # eligible observation to the M100 income leaf 0171.
+            observations.append(outcome.model_copy(update={"target_casilla": _TARGET_CASILLA_M100_INGRESOS}))
+
+    casilla_aggregation = _m100_income_casilla_aggregation(period, observations)
+    return RentaIncomeLedgerAggregation(
+        modelo=Modelo.M100.value,
+        period=period,
+        observations=tuple(observations),
+        issues=tuple(issues),
+        casilla_aggregation=casilla_aggregation,
+    )
+
+
+def _m100_income_casilla_aggregation(
+    period: Period,
+    observations: Sequence[RentaIncomeObservation],
+) -> CasillaAggregation:
+    totals: dict[str, Decimal] = {}
+    grouped: dict[str, list[RentaIncomeObservation]] = {}
+    for observation in observations:
+        totals[observation.target_casilla] = totals.get(
+            observation.target_casilla,
+            Decimal("0"),
+        ) + _computable_income_amount(observation)
+        grouped.setdefault(observation.target_casilla, []).append(observation)
+    provenance_rows = [
+        CasillaProvenance(
+            casilla=casilla,
+            category_id=None,
+            transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
+            subtotal=sum((_computable_income_amount(row) for row in rows), start=Decimal("0")),
+        )
+        for casilla, rows in sorted(grouped.items())
+    ]
+    return CasillaAggregation(
+        modelo=Modelo.M100.value,
+        period=period,
+        casilla_values=totals,
+        provenance=tuple(provenance_rows),
     )
 
 
@@ -261,40 +361,25 @@ def _classify_income_transaction(
     *,
     cumulative_start: date,
     cumulative_end: date,
-) -> RentaIncomeObservation | RentaIncomeLedgerAggregationIssue:
-    """Filter one ledger transaction against the M130 income pipeline."""
+) -> RentaIncomeObservation | RentaIncomeLedgerAggregationIssue | None:
+    """Filter one ledger transaction against the M130 income pipeline.
+
+    Returns a :class:`RentaIncomeObservation` for an eligible receipt, a
+    :class:`RentaIncomeLedgerAggregationIssue` for an INCOMING row that fails a
+    gate, or ``None`` for an OUTGOING row this income pipeline does not own —
+    deductible OUTGOING expenses are aggregated into casilla 02 by the
+    companion ``ledger_renta_gasto_aggregation`` pipeline
+    (:mod:`~._renta_gasto_ledger`), so the income pass skips them silently
+    rather than emitting a misleading "expense dropped" advisory.
+    """
     transaction_id = transaction.transaction_id
 
     if transaction.direction is not TransactionDirection.INCOMING:
-        if transaction.direction is TransactionDirection.OUTGOING and transaction.business_classification in (
-            BusinessClassification.BUSINESS,
-            BusinessClassification.MIXED,
-        ):
-            # A business-classified OUTGOING row is a deducible gasto
-            # candidate. There is no M130 casilla 02 (Gastos) ledger
-            # aggregation binding yet, so this expense will NOT reduce the
-            # rendimiento neto unless the operator declares gastos
-            # manually. Surface the drop in expense vocabulary so the
-            # operator is never left with a silent under-declared expense
-            # side (no-silent-under-declaration).
-            base = transaction.taxable_base if transaction.taxable_base is not None else abs(transaction.raw.amount)
-            category = transaction.category_id or "unclassified"
-            return RentaIncomeLedgerAggregationIssue(
-                transaction_id=transaction_id,
-                reason=RentaIncomeLedgerAggregationIssueReason.DEDUCIBLE_EXPENSE_NOT_AGGREGATED,
-                detail=(
-                    f"deducible expense (gasto) candidate dropped: OUTGOING business transaction "
-                    f"(category {category!r}, base {base}) is not aggregated into Modelo 130 "
-                    "casilla 02 (Gastos) — no expense aggregation binding exists yet; declare the "
-                    "quarter's gastos manually (e.g. --binding for casilla 02) or the filing "
-                    "overstates rendimiento neto"
-                ),
-            )
-        return RentaIncomeLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=RentaIncomeLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
-            detail=f"transaction direction {transaction.direction.value!r} is not an income flow",
-        )
+        # OUTGOING (and any non-income) rows are out of scope for the income
+        # pass. Deductible business expenses are owned by the gasto pipeline;
+        # they are no longer surfaced here as a drop (no-silent-under-declaration
+        # is upheld by that pipeline aggregating them into casilla 02).
+        return None
     if is_non_eur_without_conversion(transaction):
         return RentaIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
@@ -426,4 +511,6 @@ __all__ = [
     "RentaIncomeObservation",
     "aggregate_renta_income_ledger",
     "aggregate_renta_income_ledger_from_repositories",
+    "aggregate_renta_m100_income_ledger",
+    "aggregate_renta_m100_income_ledger_from_repositories",
 ]

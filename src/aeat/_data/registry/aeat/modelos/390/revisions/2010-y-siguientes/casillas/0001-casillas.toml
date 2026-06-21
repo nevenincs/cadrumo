@@ -50,6 +50,24 @@ binding = "modelo-390-iva-soportado-interiores-cuota"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
+# Annual IVA soportado deducible en importaciones de bienes corrientes. Mirrors
+# the M303 import-deducible cuota (LIVA art. 17 hecho imponible + art. 92
+# deducción) so the annual deducible total includes imports; without it the M390
+# resultado over-states the importer's amount to pay. Internal (no fichero
+# export), bound to the same ledger import aggregation M303 uses.
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.soportado.importaciones"
+number = "iva.anual.soportado.importaciones"
+label = "Cuota IVA soportado deducible en importaciones de bienes corrientes - anual"
+section = ["iva", "anual", "deducible"]
+data_type = "money"
+semantic_role = "iva_cuota_soportada_importaciones"
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-soportado-importaciones-cuota"
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.autorepercutido.intracomunitaria"
 number = "iva.anual.autorepercutido.intracomunitaria"
