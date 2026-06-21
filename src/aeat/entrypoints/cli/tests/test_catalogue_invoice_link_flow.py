@@ -6,7 +6,7 @@ unreachable: ``invoice add`` writes the slim
 ``linked_transaction_ids``), while ``link --invoice-id`` resolves the rich
 :class:`~aeat.domain.invoices.Invoice` in the
 :class:`~aeat.domain.invoices.InvoiceCatalogue`. Per the accepted
-``2026-06-10-ledger-invoice-unification-adr`` the two stores stay distinct, so
+``2026-06-10-ledger-invoice-unification`` the two stores stay distinct, so
 the gap is closed by giving the operator a verb that mints a rich *linkable*
 invoice: ``aeat app ledger invoice catalogue create``.
 
@@ -16,7 +16,7 @@ These tests assert the now-working flow at the CLI boundary:
   is bidirectional (the invoice cites the transaction and the transaction cites
   the invoice), same active bucket; and
 * an invoice stamped to a *different* bucket is still refused by the cross-bucket
-  link guard (the guard the ADR mandates is preserved, not weakened).
+  link guard (the guard the decision record mandates is preserved, not weakened).
 
 Real behaviour only: a real encrypted bucket session, the live Typer tree, and
 the real repositories. No mocks, stubs, or monkeypatch.

@@ -408,7 +408,7 @@ def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
 def test_cli_override_verb_records_taxpayer_override_decision(tmp_path: Path) -> None:
     """The override verb records a non-blocking taxpayer_override decision.
 
-    Per ADR ``2026-06-19-iva-compensation-override-cli``: the Modelo 303
+    Per the decision record ``2026-06-19-iva-compensation-override-cli``: the Modelo 303
     reconciliation refuses to AUTO-apply a local prior-compensación carry without
     live AEAT wallet evidence; this verb records the operator-asserted amount with
     mandatory ``--reason`` and ``--evidence-locator`` provenance, persisting a

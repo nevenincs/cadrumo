@@ -1,5 +1,7 @@
 """Application lifecycle services for the rich catalogue :class:`Invoice`.
 
+Reads and mutates the :class:`InvoiceCatalogue` aggregate.
+
 The reconciliation catalogue gained ``create`` and ``list`` operator verbs but
 no way to inspect or delete a single record. Without a single-record read an
 operator cannot confirm the long content-addressed ``invoice_id`` that
@@ -41,7 +43,7 @@ class CatalogueInvoiceRemoveResult(BaseModel):
 
 
 def resolve_catalogue_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> Invoice:
-    """Return one catalogue invoice by full id or unambiguous prefix.
+    """Return one :class:`InvoiceCatalogue` invoice by full id or unambiguous prefix.
 
     A catalogue invoice carries a long content-addressed id; operators rarely
     type it in full. An exact match wins outright. Otherwise a case-sensitive
