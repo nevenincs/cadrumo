@@ -34,6 +34,11 @@ from ._capabilities import ServiceCapability
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._modelo import NON_REGISTRY_MODELOS, Modelo
 from ._models import STRICT_FROZEN_CONFIG
+from ._result_disposition import (
+    ResultDisposition,
+    derive_result_disposition,
+    modelo_has_codified_disposition,
+)
 from ._optional_extras import (
     ANTHROPIC_EXTRA,
     BROWSER_EXTRA,
@@ -85,6 +90,9 @@ __all__: list[str] = [
     "LedgerSortOrder",
     "MissingOptionalExtraError",
     "Modelo",
+    "ResultDisposition",
+    "derive_result_disposition",
+    "modelo_has_codified_disposition",
     "OptionalExtra",
     "Period",
     "PeriodError",
