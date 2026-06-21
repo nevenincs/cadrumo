@@ -134,4 +134,5 @@ disclaimer
 architecture/index
 authoring-guide
 api/aeat
+workstation-setup
 ```

@@ -1,16 +1,15 @@
-"""Tests for extemporaneidad detection and Art. 27 LGT recargo computation.
+"""Tests for extemporaneidad detection and Art. 27.2 LGT recargo computation.
 
 External authority: Ley 58/2003 (LGT) Art. 27.2, post-Ley 11/2021
 amendment.  Surcharge escalation:
 
-  - 1% per month for months 1-12 (fractions treated as full months
-    by the bracket table; see ley-58-2003-recargo-bands.toml).
-  - After 12 months: 15% plus intereses de demora.
+  - 1% plus a further 1% per COMPLETED month of delay, with no intereses de
+    demora for the first 12 months. A fractional (incomplete) month does NOT
+    count ("por cada mes completo de retraso").
+  - Once 12 completed months elapse: 15% plus intereses de demora.
 
-The anti-tautology test is deliberately divorced from the registry
-formula that would compute the same result: it drives the domain
-``resolve_recargo_band`` function with a date arithmetic value
-derived from Ley 58/2003 directly, not from the registry TOML.
+The tests drive the domain functions with calendar dates and assert against
+the Ley 58/2003 statutory text, not against a day-bracket approximation.
 """
 
 from __future__ import annotations
@@ -22,36 +21,37 @@ import pytest
 
 from ....core import Period
 from .._plazo import resolve_filing_closes_on
-from .._recargo import build_recovery_for_overdue, load_recargo_bands, resolve_recargo_band
+from .._recargo import (
+    build_recovery_for_overdue,
+    completed_months_late,
+    load_recargo_bands,
+    resolve_recargo_band,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 # ---------------------------------------------------------------------------
-# Anti-tautology: Art. 27.2 LGT 12-month overdue case
+# Art. 27.2 LGT — completed-month surcharge schedule
 # ---------------------------------------------------------------------------
 
 
 def test_after_12_months_overdue_yields_15_pct_plus_interest() -> None:
-    """Plazo closed 2024-11-30; today 2026-05-27 → 543 days late → after_12_months band.
+    """Plazo closed 2024-11-30; presented 2026-05-27 → 17 completed months.
 
-    External authority: Ley 58/2003 Art. 27.2 (post-Ley 11/2021).
-    After 12 months (366+ days) the applicable recargo is 15% plus
-    intereses de demora.  543 days = 17.8 months, clearly in the
-    after_12_months bracket.
-
-    This test does NOT re-derive the days-late value from the same
-    formula the registry declares; it computes the days from the two
-    calendar dates and asserts against the Ley 58/2003 statutory text.
+    External authority: Ley 58/2003 Art. 27.2 (post-Ley 11/2021). Once 12
+    completed months have elapsed the recargo is 15% plus intereses de demora.
+    The completed-month count is derived from the two calendar dates.
     """
     plazo_closes_on = date(2024, 11, 30)
     reference_today = date(2026, 5, 27)
-    days_late = (reference_today - plazo_closes_on).days
-    # 543 days — independently: from Nov 30 2024 to May 27 2026 is 543 days.
-    assert days_late == 543
+    months = completed_months_late(plazo_closes_on, reference_today)
+    # Nov 30 2024 → May 27 2026: 17 completed months (the May-30 anniversary is
+    # not yet reached on May 27), well beyond the 12-month interest threshold.
+    assert months == 17
 
     bands = load_recargo_bands()
-    band = resolve_recargo_band(days_late, bands)
+    band = resolve_recargo_band(months, bands)
 
     assert band.id == "after_12_months"
     assert band.surcharge_pct == Decimal("15.00")
@@ -60,8 +60,13 @@ def test_after_12_months_overdue_yields_15_pct_plus_interest() -> None:
 
 
 def test_after_12_months_recovery_payload() -> None:
-    """build_recovery_for_overdue with 543 days produces a fully-populated Recovery."""
-    recovery = build_recovery_for_overdue(days_late=543, modelo="303", period=Period.from_year_and_code(2024, "4T"))
+    """build_recovery_for_overdue past 12 completed months → 15% + interest."""
+    recovery = build_recovery_for_overdue(
+        closes_on=date(2024, 11, 30),
+        reference_today=date(2026, 5, 27),
+        modelo="303",
+        period=Period.from_year_and_code(2024, "4T"),
+    )
     assert recovery.still_filable is True
     assert recovery.recargo_band.id == "after_12_months"
     assert recovery.recargo_band.interest_applies is True
@@ -69,41 +74,31 @@ def test_after_12_months_recovery_payload() -> None:
     assert recovery.next_command == "aeat app modelo work --help"
 
 
-def test_within_30_days_no_interest() -> None:
-    """15 days overdue → within_30_days band, 1% recargo, no interest.
+def test_zero_completed_months_no_interest() -> None:
+    """Filed late but within the first incomplete month → 1% recargo, no interest.
 
-    External authority: Ley 58/2003 Art. 27.2 post-Ley 11/2021,
-    first bracket (1-30 days → 1%).
+    External authority: Ley 58/2003 Art. 27.2 post-Ley 11/2021 — the 1% base
+    applies before any month is completed.
     """
     bands = load_recargo_bands()
-    band = resolve_recargo_band(15, bands)
-    assert band.id == "within_30_days"
+    band = resolve_recargo_band(0, bands)
     assert band.surcharge_pct == Decimal("1.00")
     assert band.interest_applies is False
 
 
-def test_within_6_months_no_interest() -> None:
-    """120 days overdue → within_6_months band, 6% recargo, no interest.
-
-    120 days falls in the 91-180 day bracket (months 4-6) per
-    Ley 58/2003 Art. 27.2.
-    """
+def test_four_completed_months_no_interest() -> None:
+    """4 completed months → 1% base + 4% = 5% recargo, no interest (Art. 27.2)."""
     bands = load_recargo_bands()
-    band = resolve_recargo_band(120, bands)
-    assert band.id == "within_6_months"
-    assert band.surcharge_pct == Decimal("6.00")
+    band = resolve_recargo_band(4, bands)
+    assert band.surcharge_pct == Decimal("5.00")
     assert band.interest_applies is False
 
 
-def test_within_12_months_no_interest() -> None:
-    """300 days overdue (about 10 months) → within_12_months band, 12% recargo, no interest.
-
-    300 days is within the 181-365 day bracket per Ley 58/2003 Art. 27.2.
-    """
+def test_ten_completed_months_no_interest() -> None:
+    """10 completed months → 1% base + 10% = 11% recargo, no interest (Art. 27.2)."""
     bands = load_recargo_bands()
-    band = resolve_recargo_band(300, bands)
-    assert band.id == "within_12_months"
-    assert band.surcharge_pct == Decimal("12.00")
+    band = resolve_recargo_band(10, bands)
+    assert band.surcharge_pct == Decimal("11.00")
     assert band.interest_applies is False
 
 

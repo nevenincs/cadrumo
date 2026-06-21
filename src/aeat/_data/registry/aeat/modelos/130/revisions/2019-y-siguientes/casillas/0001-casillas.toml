@@ -9,7 +9,10 @@ required = false
 input_kind = "bound"
 binding = "modelo-130-actividad-economica-ingresos-cumulative"
 export_refs = ["modelo-130-casilla-01"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+# Pago-fraccionado computation provision (art-110) plus the LIRPF articles that
+# ESTABLISH actividad-económica income: art-27 (concept of rendimientos de
+# actividades económicas) and art-28 (reglas generales de cálculo).
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-27", "ley-35-2006:art-28"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -20,9 +23,13 @@ section = ["actividades_economicas_estimacion_directa"]
 data_type = "money"
 semantic_role = "irpf_pf_gastos"
 required = true
-input_kind = "manual"
+input_kind = "bound"
+binding = "modelo-130-actividad-economica-gastos-cumulative"
 export_refs = ["modelo-130-casilla-02"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+# Pago-fraccionado computation provision (art-110) plus the LIRPF articles that
+# ESTABLISH deductible gastos in estimación directa: art-28 (reglas generales)
+# and art-30 (estimación directa, gastos fiscalmente deducibles).
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -44,7 +51,10 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-rendimiento-neto"
 export_refs = ["modelo-130-casilla-03"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+# Rendimiento neto = ingresos - gastos: art-110 (pago-fraccionado base) plus the
+# LIRPF establishing articles art-28 (reglas generales) and art-30 (estimación
+# directa).
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]

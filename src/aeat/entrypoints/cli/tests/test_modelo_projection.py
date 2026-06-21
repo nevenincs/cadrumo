@@ -28,18 +28,21 @@ Authority for M130 oracle inputs:
   «Resultado final»; IRPF Art. 99 (BOE-A-2006-20764);
   RD 439/2007 Art. 110.
 
-  Per-quarter worked example (4 identical quarters for determinism):
-    casilla 01 (ingresos):           12.000,00 EUR
-    casilla 02 (gastos):              4.000,00 EUR
-    casilla 03 (rendimiento neto):    8.000,00 EUR  [= 01 - 02]
-    casilla 04 (pago fraccionado):    1.600,00 EUR  [= 20% x 8.000]
-    casilla 13 (minoración):              0,00 EUR  [prev_year > 12.000]
-    casilla 17 (diferencia):          1.600,00 EUR
-    casilla 19 (resultado final):     1.600,00 EUR  [= 17 - 18 = 17 - 0]
+  Cumulative worked example (one 12.000 cobro per quarter; M130 casilla 01 is
+  the year-to-date source window, so each quarter sees the running total):
+    quarter   casilla 01 (cum.)   casilla 03 (cum.)   casilla 05 (prior pf)   casilla 19
+    1T        12.000,00           12.000,00            0,00                   2.400,00
+    2T        24.000,00           24.000,00            2.400,00               2.400,00
+    3T        36.000,00           36.000,00            4.800,00               2.400,00
+    4T        48.000,00           48.000,00            7.200,00               2.400,00
+  (gastos 0; minoración casilla 13 = 0 because prev_year > 12.000; casilla 04 =
+  20% of casilla 03; casilla 19 = 04 − 05, the incremental amount paid.)
 
-  4 quarters accumulated:
-    0171 (ingresos explotación, injection leaf): 32.000,00 EUR
-    0604 (pagos fraccionados):                    6.400,00 EUR
+  Annual projection (NOT the sum of the cumulative snapshots):
+    0171 (ingresos explotación, injection leaf) = 48.000,00 EUR  [latest quarter
+      casilla 03, the year-to-date total — summing all four would quadruple-count]
+    0604 (pagos fraccionados) = 9.600,00 EUR  [Σ casilla 19 = 4 x 2.400, the
+      incremental amounts actually paid]
 """
 
 from __future__ import annotations
@@ -83,7 +86,8 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
         m130_snapshot,
         inputs={
             "01": Decimal("10000.00"),
-            "02": Decimal("4000.00"),
+            # Casilla 02 (gastos) is no longer a manual input (it is bound/computed);
+            # it resolves to 0 here with no gastos source, so casilla 03 = 01.
             # Casilla 05 (pagos fraccionados anteriores) is a previous-filing-bound
             # carry; at 1T its expanding span is empty so the engine materialises it
             # as the absent-by-design zero. Supplying it as a raw input is now
@@ -130,16 +134,34 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
 
 _PROFILE_ID = "m130-projection-test-profile"
 
-# Per-quarter M130 oracle inputs (AEAT DR 130 Instrucciones, Casilla 07).
-# One Q1 income row remains in the cumulative source window for each quarter.
+# Per-quarter incremental M130 income: one 12.000 cobro per quarter. Because
+# M130 casilla 01 is the year-to-date cumulative source window, the four quarters
+# see cumulative income 12.000 / 24.000 / 36.000 / 48.000 (gastos 0).
 _Q_INGRESOS = Decimal("12000.00")
-_Q_GASTOS = Decimal("4000.00")
-# prev_year > 12.000 → minoración = 0
+# prev_year > 12.000 → minoración (casilla 13) = 0
 _PREV_YEAR_INCOME = Decimal("13000.00")
 
-# Derived oracle accumulation over 4 quarters
-_TOTAL_RENDIMIENTO_NETO = Decimal("32000.00")  # 4 x 8.000
-_TOTAL_PAGOS_FRACCIONADOS = Decimal("6400.00")  # 4 x 1.600
+# Per-quarter cumulative rendimiento neto (casilla 03 = cumulative casilla 01).
+_CUMULATIVE_RENDIMIENTO = {
+    "1T": Decimal("12000.00"),
+    "2T": Decimal("24000.00"),
+    "3T": Decimal("36000.00"),
+    "4T": Decimal("48000.00"),
+}
+# Per-quarter prior pagos fraccionados carry (casilla 05 = Σ earlier casilla 19).
+_PRIOR_PAGOS = {
+    "1T": Decimal("0.00"),
+    "2T": Decimal("2400.00"),
+    "3T": Decimal("4800.00"),
+    "4T": Decimal("7200.00"),
+}
+# Each quarter's resultado final (casilla 19) is the incremental 2.400 paid.
+_Q_RESULTADO = Decimal("2400.00")
+
+# Annual basis: the latest quarter's cumulative rendimiento (NOT the sum of the
+# four cumulative snapshots, which would quadruple-count the same income).
+_ANNUAL_RENDIMIENTO_NETO = Decimal("48000.00")
+_TOTAL_PAGOS_FRACCIONADOS = Decimal("9600.00")  # Σ casilla 19 = 4 x 2.400
 
 _FILING_YEAR = 2024
 _CCAA = "madrid"
@@ -281,67 +303,82 @@ def test_modelo_project_no_revisions_guides_natural_m130_calculation(
 def test_modelo_project_m130_to_m100_full_year_aggregation(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
-    """Project verb aggregates 4 M130 quarters into M100 cuota correctly.
+    """Project verb folds 4 cumulative M130 quarters into M100 correctly.
 
-    Drive side: create 4 M130 work units (1T-4T 2024), calculate each with
-    identical oracle inputs, then invoke `project --year 2024 --ccaa madrid`.
+    Drive side: seed one 12.000 cobro per quarter (so M130's year-to-date
+    casilla 01 grows 12.000 → 24.000 → 36.000 → 48.000), create + calculate
+    4 M130 work units (1T-4T 2024) carrying the prior pagos fraccionados, then
+    invoke `project --year 2024 --ccaa madrid`.
 
-    Oracle side: call `calculate_registry_snapshot` directly with the
-    accumulated inputs `0171 = 32.000,00 EUR` (EDS ingresos de explotación,
-    manual-kind leaf casilla) and `0604 = 6.400,00 EUR` plus the same
+    Oracle side: call `calculate_registry_snapshot` directly with the annual
+    inputs `0171 = 48.000,00 EUR` (the latest quarter's cumulative rendimiento
+    neto — NOT the sum of the four cumulative snapshots) and the relation
+    `rel-130-pagos-fraccionados = 9.600,00 EUR` (Σ casilla 19) plus the same
     default bindings the project verb applies.  Casilla 0505 is computed
-    (max(0, 0500 − 0527)) and cannot be supplied as an engine input; both
-    the project verb and this oracle inject at the leaf casilla 0171.
+    (max(0, 0500 − 0527)) and cannot be supplied as an engine input; both the
+    project verb and this oracle inject at the leaf casilla 0171.
 
-    Per `no-tautological-calculation-tests.md` the oracle is the M100
-    registry engine itself, not a re-implementation of the projection
-    formula.  Both paths exercise different code entry points: the project
-    verb traverses stored CalculationRevision records; the oracle calls the
-    engine directly.
+    Regression guard: the projection used to SUM the cumulative casilla 03/01
+    across quarters, reporting 120.000 of phantom income; it now reads the
+    latest quarter's cumulative value (48.000), the true annual basis.
+
+    Per `no-tautological-calculation-tests.md` the oracle is the M100 registry
+    engine itself, not a re-implementation of the projection formula.  Both
+    paths exercise different code entry points: the project verb traverses
+    stored CalculationRevision records; the oracle calls the engine directly.
 
     Authority: AEAT DR 130 Instrucciones (RD 439/2007 Art. 110; IRPF
-    Art. 99 BOE-A-2006-20764); accumulated inputs stated above.
+    Art. 99 BOE-A-2006-20764); cumulative inputs stated above.
     """
 
     _seed_autónomo_profile(runtime_profile)
-    seed_m130_income_transaction(
-        amount=_Q_INGRESOS,
-        filing_year=_FILING_YEAR,
-        source_key="projection",
-    )
+    quarter_dates = {
+        "1T": date(_FILING_YEAR, 2, 15),
+        "2T": date(_FILING_YEAR, 5, 15),
+        "3T": date(_FILING_YEAR, 8, 15),
+        "4T": date(_FILING_YEAR, 11, 15),
+    }
+    for period, value_date in quarter_dates.items():
+        seed_m130_income_transaction(
+            amount=_Q_INGRESOS,
+            filing_year=_FILING_YEAR,
+            source_key=f"projection-{period}",
+            value_date=value_date,
+        )
 
     # -- Create and calculate 4 M130 quarterly work units -------------------
-    quarters = ["1T", "2T", "3T", "4T"]
-    for period in quarters:
+    for period in ("1T", "2T", "3T", "4T"):
         work_unit_id = _create_work_unit(
             modelo="130",
             year=str(_FILING_YEAR),
             period=period,
             revision="2019-y-siguientes",
         )
-        calc_result = invoke_cached_cli(
-            [
-                "--format", "json",
-                "app", "modelo", "work", "calculate", work_unit_id,
-                "--casilla", f"02={_Q_GASTOS}",
-                "--casilla", "05=0.00",
-                "--casilla", "06=0.00",
-                # prev_year > 12.000 → minoración = 0 (AEAT DR 130 Casilla 13)
-                "--binding", f"irpf.previous_year_economic_activity_net_income={_PREV_YEAR_INCOME}",
-                "--binding", "modelo-130-resultados-negativos-anteriores=0",
-            ],
-        )  # fmt: skip
+        calc_args = [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            # Casilla 02 (gastos) is computed and resolves to 0 with no expense
+            # rows in the ledger; no manual gastos input is needed.
+            # prev_year > 12.000 → minoración = 0 (AEAT DR 130 Casilla 13)
+            "--binding", f"irpf.previous_year_economic_activity_net_income={_PREV_YEAR_INCOME}",
+            "--binding", "modelo-130-resultados-negativos-anteriores=0",
+        ]  # fmt: skip
+        if period != "1T":
+            # Carry the prior quarters' pagos fraccionados into casilla 05.
+            calc_args += ["--binding", f"modelo-130-pagos-fraccionados-anteriores={_PRIOR_PAGOS[period]}"]
+        calc_result = invoke_cached_cli(calc_args)
         assert calc_result.exit_code == 0, f"M130 calculate failed for period {period}: {calc_result.output}"
         quarter_payload = _payload(calc_result.output)
         assert "casilla_values" in quarter_payload, calc_result.output
-        # Verify oracle inputs produce expected per-quarter values.
-        assert Decimal(quarter_payload["casilla_values"]["03"]) == Decimal("8000.00"), (
-            f"Period {period} casilla 03 (rendimiento neto): expected 8000.00, "
-            f"got {quarter_payload['casilla_values']['03']!r}"
+        # casilla 03 is the cumulative (year-to-date) rendimiento neto.
+        assert Decimal(quarter_payload["casilla_values"]["03"]) == _CUMULATIVE_RENDIMIENTO[period], (
+            f"Period {period} casilla 03 (cumulative rendimiento neto): expected "
+            f"{_CUMULATIVE_RENDIMIENTO[period]}, got {quarter_payload['casilla_values']['03']!r}"
         )
-        assert Decimal(quarter_payload["casilla_values"]["19"]) == Decimal("1600.00"), (
-            f"Period {period} casilla 19 (resultado final): expected 1600.00 "
-            f"(20% x 8000, AEAT DR 130 Casilla 04), got "
+        # casilla 19 is the incremental amount paid this quarter (04 − 05).
+        assert Decimal(quarter_payload["casilla_values"]["19"]) == _Q_RESULTADO, (
+            f"Period {period} casilla 19 (resultado final): expected {_Q_RESULTADO} "
+            f"(20% cumulative − prior pagos, AEAT DR 130), got "
             f"{quarter_payload['casilla_values']['19']!r}"
         )
 
@@ -362,8 +399,8 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     assert proj_payload["is_extrapolated"] is False
 
     # Verify accumulated aggregation matches oracle totals.
-    assert Decimal(proj_payload["m130_accumulated"]["rendimiento_neto"]) == _TOTAL_RENDIMIENTO_NETO, (
-        f"Accumulated rendimiento neto: expected {_TOTAL_RENDIMIENTO_NETO}, "
+    assert Decimal(proj_payload["m130_accumulated"]["rendimiento_neto"]) == _ANNUAL_RENDIMIENTO_NETO, (
+        f"Accumulated rendimiento neto: expected {_ANNUAL_RENDIMIENTO_NETO}, "
         f"got {proj_payload['m130_accumulated']['rendimiento_neto']!r}"
     )
     assert Decimal(proj_payload["m130_accumulated"]["pagos_fraccionados"]) == _TOTAL_PAGOS_FRACCIONADOS, (
@@ -399,7 +436,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     oracle_result = calculate_registry_snapshot(
         m100_snapshot,
         inputs={
-            "0171": _TOTAL_RENDIMIENTO_NETO,  # EDS ingresos explotación leaf (manual-kind)
+            "0171": _ANNUAL_RENDIMIENTO_NETO,  # EDS ingresos explotación leaf (manual-kind)
         },
         date_context={"filing_period": date(_FILING_YEAR, 12, 31)},
         # Mirror the project verb's merged_bindings shape exactly. The verb
@@ -455,7 +492,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         assert projected_value == oracle_value, (
             f"M100 casilla {casilla_id}: project verb returned {projected_value}, "
             f"oracle (direct calculate_registry_snapshot) returned {oracle_value}. "
-            f"Inputs: 0171={_TOTAL_RENDIMIENTO_NETO}; "
+            f"Inputs: 0171={_ANNUAL_RENDIMIENTO_NETO}; "
             f"rel-130-pagos-fraccionados={_TOTAL_PAGOS_FRACCIONADOS}; "
             f"ccaa={_CCAA!r}."
         )

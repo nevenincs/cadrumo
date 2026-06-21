@@ -405,6 +405,115 @@ def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
     assert stored.available_end_amount == Decimal("1200.50")
 
 
+def test_cli_override_verb_records_taxpayer_override_decision(tmp_path: Path) -> None:
+    """The override verb records a non-blocking taxpayer_override decision.
+
+    Per ADR ``2026-06-19-iva-compensation-override-cli``: the Modelo 303
+    reconciliation refuses to AUTO-apply a local prior-compensación carry without
+    live AEAT wallet evidence; this verb records the operator-asserted amount with
+    mandatory ``--reason`` and ``--evidence-locator`` provenance, persisting a
+    ``taxpayer_override`` decision so a subsequent ``work calculate`` applies it to
+    casilla 110 (the cross-period carry into the dependent period). It contacts
+    AEAT zero times. Real-behaviour: invokes the verb and asserts the recorded
+    decision authority/divergence and the provenance round-trip.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+        _store_profile_with_nif(_NIF)
+        result = _RUNNER.invoke(
+            app,
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "iva-wallet",
+                "override",
+                "--filing-year",
+                "2025",
+                "--period",
+                "2T",
+                "--amount",
+                "210.00",
+                "--reason",
+                "1T 2025 credit a compensar carried forward",
+                "--evidence-locator",
+                "local M303 1T-2025 filed revision",
+                "--confirm",
+            ],
+            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        )
+
+    assert result.exit_code == 0, result.output
+    payload = _unwrap_envelope(json.loads(result.output))
+    assert payload["operation"] == "modelo.iva_wallet.override"
+    assert payload["filing_year"] == 2025
+    assert payload["period"] == {"filing_year": 2025, "code": "2T"}
+    assert payload["amount"] == "210.00"
+    assert payload["selected_authority"] == "taxpayer_override"
+    assert payload["divergence"] == "override"
+    # Provenance must round-trip — an override with no recorded basis is exactly
+    # the silent under-declaration the safety gate exists to prevent.
+    assert payload["reason"] == "1T 2025 credit a compensar carried forward"
+    assert payload["evidence_locator"] == "local M303 1T-2025 filed revision"
+
+
+def test_cli_override_verb_refuses_without_confirm(tmp_path: Path) -> None:
+    """Override verb requires --confirm; without it, exit code is non-zero (no decision written)."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+        _store_profile_with_nif(_NIF)
+        result = _RUNNER.invoke(
+            app,
+            [
+                "app",
+                "modelo",
+                "iva-wallet",
+                "override",
+                "--filing-year",
+                "2025",
+                "--period",
+                "2T",
+                "--amount",
+                "210.00",
+                "--reason",
+                "x",
+                "--evidence-locator",
+                "y",
+            ],
+            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        )
+
+    assert result.exit_code != 0
+
+
+def test_cli_override_verb_requires_evidence_locator(tmp_path: Path) -> None:
+    """A blank --evidence-locator is refused: provenance is mandatory, not optional."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
+        _store_profile_with_nif(_NIF)
+        result = _RUNNER.invoke(
+            app,
+            [
+                "app",
+                "modelo",
+                "iva-wallet",
+                "override",
+                "--filing-year",
+                "2025",
+                "--period",
+                "2T",
+                "--amount",
+                "210.00",
+                "--reason",
+                "valid reason",
+                "--evidence-locator",
+                "   ",
+                "--confirm",
+            ],
+            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        )
+
+    assert result.exit_code != 0
+
+
 def test_cli_seed_verb_refuses_duplicate(tmp_path: Path) -> None:
     """Seed verb refuses a second seed for the same period."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):

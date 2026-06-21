@@ -20,6 +20,7 @@ id = "modelo-390-iva-anual-cuota-deducible-total"
 target = "iva.anual.cuota-deducible-total"
 expression = { op = "add", args = [
     { casilla = "iva.anual.soportado.interiores" },
+    { casilla = "iva.anual.soportado.importaciones" },
     { casilla = "iva.anual.autorepercutido.intracomunitaria" },
 ] }
 rounding = "money-2"

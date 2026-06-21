@@ -203,18 +203,25 @@ def _seed_clean_cross_period_sources_for_m130(
     return observation_repository
 
 
-def test_verify_refuses_when_required_casillas_absent_m130(repos: _Repos) -> None:
-    """M130 revision with no required casilla is NOT granted verificado_completo.
+def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(repos: _Repos) -> None:
+    """After the H1 gasto bind, M130 has zero required MANUAL casillas (M4 resolved).
 
-    The test uses the real M130 registry to determine which casillas are
-    required. It calculates a revision with those casillas absent and
-    asserts the verifier produces ≥1 MISSING_REQUIRED_CASILLA finding.
+    Casilla 02 (Gastos) used to be the lone ``input_kind = manual`` + ``required``
+    casilla, so a filer with no gastos was blocked with a MISSING_REQUIRED_CASILLA
+    finding until they hand-entered ``--casilla 02=0`` (finding M4). The H1 fix
+    binds casilla 02 to the ``ledger_renta_gasto_aggregation`` source, so it is
+    auto-populated (0 when there are no expenses) and the missing-required gate —
+    which fires only for MANUAL required casillas — has nothing to flag. This test
+    pins that no required manual casilla remains and that an M130 revision with no
+    casilla inputs surfaces no MISSING_REQUIRED_CASILLA finding. The
+    missing-required mechanism itself is exercised against a real registry casilla
+    definition in ``test_missing_required_casilla_finding_carries_registry_provenance``.
     """
     wu_repo, cr_repo, _filing_repo, vr_repo, bv_repo = repos
     required = _required_manual_casillas_for_m130()
-    assert len(required) >= 1, (
-        "M130 registry must declare at least one required manual casilla; "
-        "check casillas/0001-casillas.toml required = true declarations"
+    assert required == (), (
+        "M130 must have no required MANUAL casillas after the H1 gasto bind "
+        f"(casilla 02 is now ledger-bound); registry still declares {required!r}"
     )
 
     work_unit = create_work_unit(
@@ -227,27 +234,18 @@ def test_verify_refuses_when_required_casillas_absent_m130(repos: _Repos) -> Non
         clock=_T0,
     )
 
-    # Calculate with empty required casillas — supply only the bound casilla
-    # (01) and non-required manual casillas so the engine can run, but omit
-    # the required ones entirely.
-    inputs_without_required: dict[str, Decimal] = {
-        "05": Decimal("0"),
-        "06": Decimal("0"),
-        "08": Decimal("0"),
-        "10": Decimal("0"),
-        "16": Decimal("0"),
-        "18": Decimal("0"),
-    }
-    # Explicitly exclude any casilla in the required set
-    casilla_inputs = {k: v for k, v in inputs_without_required.items() if k not in required}
-
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs=casilla_inputs,
+        casilla_inputs={
+            "05": Decimal("0"),
+            "06": Decimal("0"),
+            "08": Decimal("0"),
+            "10": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("0"),
-            # previous_filing binding for casilla 15 carry-forward (no period anchor;
-            # supply zero for Q1 where no prior quarter exists within the ejercicio)
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         work_unit_repository=wu_repo,
@@ -267,20 +265,14 @@ def test_verify_refuses_when_required_casillas_absent_m130(repos: _Repos) -> Non
         clock=_T2,
     )
 
-    assert report.granted_verificado_completo is False
-    assert report.completeness_status is VerificationCompletenessStatus.INCOMPLETE
-
     missing_finding_casillas = {
         f.casilla_id for f in report.findings if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
     }
-    # Every casilla in the missing finding set must be registry-required
-    assert missing_finding_casillas, "Expected at least one MISSING_REQUIRED_CASILLA finding"
-    assert missing_finding_casillas <= set(required), (
-        f"Findings reference casillas not declared required in registry: {missing_finding_casillas - set(required)}"
+    assert missing_finding_casillas == set(), (
+        f"M130 has no required manual casilla, so no MISSING_REQUIRED_CASILLA finding is expected; "
+        f"got {missing_finding_casillas!r}"
     )
-    # The required casillas we omitted must appear in missing_required_casillas
-    for casilla_id in required:
-        assert casilla_id in report.missing_required_casillas
+    assert report.missing_required_casillas == ()
 
 
 def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> None:

@@ -133,12 +133,14 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
 
+    # Casilla 02 (gastos) is bucket-bound (aggregated from deductible ledger
+    # rows) and cannot be supplied via --casilla; with no expense seeded it
+    # resolves to 0, which is immaterial to this cross-period clean-state check.
     calculated = _invoke(
         [
             "--format", "json",
             "app", "modelo", "work", "calculate",
             "--modelo", "130", "--year", "2025", "--period", "1T",
-            "--casilla", "02=3000.00",
             "--binding", "irpf.previous_year_economic_activity_net_income=13000",
             "--binding", "modelo-130-resultados-negativos-anteriores=0",
         ],

@@ -318,6 +318,8 @@ aggregation:
       period_mismatch: Period does not match the expected Renta ledger period.
       quarterly_period_required: Quarterly period is required for M130 income aggregation
         (e.g. 2024Q1).
+      unsupported_period: Annual period is required for Modelo 100 income aggregation
+        (e.g. 2024-0A).
   service:
     errors:
       envelope_modelo_mismatch: Aggregation modelo does not match result modelo.
@@ -885,11 +887,15 @@ application:
       correct_sealed_blocked: 'Correction refused: an already-filed Modelo 303 (%{blocking_filing_year}/%{blocking_period})
         has consumed this seeded compensation basis. Changing it would alter a filed
         return.'
+      override_fresh_wallet_blocked: 'Override refused: a current AEAT wallet reading
+        already resolves Modelo 303 %{filing_year}/%{period}. Fresh AEAT evidence
+        is authoritative and an override must not overrule it.'
+      override_sealed_blocked: 'Override refused: an already-filed Modelo 303 (%{blocking_filing_year}/%{blocking_period})
+        has consumed this period''s compensation basis. Recording an override would
+        alter a filed return.'
       seed_negative_amount: The seed amount cannot be negative.
       seed_no_nif: No NIF defined for the seed operation; associate one with the active
         profile before seeding.
-      override_sealed_blocked: 'Override refused: an already-filed Modelo 303 (%{blocking_filing_year}/%{blocking_period}) has consumed this period''s compensation basis. Recording an override would alter a filed return.'
-      override_fresh_wallet_blocked: 'Override refused: a current AEAT wallet reading already resolves Modelo 303 %{filing_year}/%{period}. Fresh AEAT evidence is authoritative and an override must not overrule it.'
     profile_binding:
       errors:
         date_value_type_invalid: Profile fact for date-channel binding %{binding_id}
@@ -2456,6 +2462,9 @@ cli:
       notes_help: Operator notes stored with the transaction
       prorrata_reference_help: IVA prorrata substrate reference
       purchase_invoice_evidence_help: Canonical purchase-invoice evidence id
+      recargo_amount_help: Recargo de equivalencia cuota charged on this sale to a
+        recargo-regime retailer (LIVA art. 161); aggregated into the Modelo 303 recargo
+        cuota by IVA rate tier
       source_jurisdiction_help: Two-letter ISO 3166-1 alpha-2 country code identifying
         the regulatory source jurisdiction of the income or expense (e.g. ES for Spanish-source,
         FR for French-source). Required for IRNR scope and the Art. 93 LIRPF Beckham
@@ -3320,6 +3329,9 @@ core:
       output_language_type: core.profile.errors.output_language_type
       registration_duplicate_callable: Project answers implementation registered twice
         with different callables; it must be registered exactly once.
+domain:
+  iva:
+    refund:
 dotted:
   key: Dotted key
 entries:

@@ -15,13 +15,14 @@ from ...application.modelo import (
     ModeloIvaWalletSeedNegativeAmountError,
     ModeloIvaWalletSeedNoTaxpayerError,
     correct_iva_compensation_period_for_bucket,
+    record_iva_compensation_override_for_bucket,
     seed_iva_compensation_period_for_bucket,
 )
 from ...core import Period
 from ...core.i18n import tr
 from ...domain.iva_compensation._errors import IvaCompensationSeedConflictError
 from ._common import _emit_envelope
-from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletSeedResult
+from ._modelo_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
 from ._modelo_payloads_m036 import IvaWalletCorrectResult
 
 
@@ -44,6 +45,7 @@ def register_iva_wallet_commands(
     _register_iva_wallet_balance_command(iva_wallet_app)
     _register_iva_wallet_seed_command(iva_wallet_app, active_bucket_id=active_bucket_id)
     _register_iva_wallet_correct_command(iva_wallet_app, active_bucket_id=active_bucket_id)
+    _register_iva_wallet_override_command(iva_wallet_app, active_bucket_id=active_bucket_id)
 
 
 def _register_iva_wallet_balance_command(iva_wallet_app: typer.Typer) -> None:
@@ -412,6 +414,177 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
             f"reason\t{clean_reason}",
         ]
         _emit_envelope(ctx, command="modelo.iva_wallet.correct", result=correct_result, lines=lines)
+
+
+def _register_iva_wallet_override_command(iva_wallet_app: typer.Typer, *, active_bucket_id: Callable[[], str]) -> None:
+    @iva_wallet_app.command(
+        "override",
+        help=tr(
+            "cli.app.modelo.iva_wallet.override_help",
+            default=(
+                "Record an explicit taxpayer override for the Modelo 303 prior-period "
+                "compensación carry (casilla 110). The reconciliation refuses to auto-apply a "
+                "seeded/local carry without live AEAT wallet evidence; this verb records the "
+                "operator-asserted amount with mandatory --reason and --evidence-locator "
+                "provenance, persisting a non-blocking taxpayer_override decision so the next "
+                "'work calculate' applies it to casilla 110. It unblocks the carry CALCULATION "
+                "only — it does NOT satisfy the dependent period's official-evidence verify gate, "
+                "and contacts AEAT zero times. Requires --confirm."
+            ),
+        ),
+    )
+    def iva_wallet_override_cmd(
+        ctx: typer.Context,
+        filing_year: Annotated[
+            int,
+            typer.Option(
+                "--filing-year",
+                min=2000,
+                max=2099,
+                help=tr(
+                    "cli.app.modelo.iva_wallet.override_filing_year_help",
+                    default="Filing year of the Modelo 303 period whose prior-compensation carry is overridden.",
+                ),
+            ),
+        ],
+        period: Annotated[
+            str,
+            typer.Option(
+                "--period",
+                help=tr(
+                    "cli.app.modelo.iva_wallet.override_period_help",
+                    default="Period of the dependent Modelo 303 filing receiving the carry (e.g. 2T, 3T).",
+                ),
+            ),
+        ],
+        amount: Annotated[
+            str,
+            typer.Option(
+                "--amount",
+                help=tr(
+                    "cli.app.modelo.iva_wallet.override_amount_help",
+                    default="Overridden prior-compensación amount in EUR applied to casilla 110 (decimal, e.g. 420.00).",
+                ),
+            ),
+        ],
+        reason: Annotated[
+            str,
+            typer.Option(
+                "--reason",
+                help=tr(
+                    "cli.app.modelo.iva_wallet.override_reason_help",
+                    default="Required basis for the override, recorded as auditable provenance.",
+                ),
+            ),
+        ],
+        evidence_locator: Annotated[
+            str,
+            typer.Option(
+                "--evidence-locator",
+                help=tr(
+                    "cli.app.modelo.iva_wallet.override_evidence_locator_help",
+                    default="Required locator of the evidence supporting the override (e.g. prior justificante reference).",
+                ),
+            ),
+        ],
+        confirm: Annotated[
+            bool,
+            typer.Option(
+                "--confirm",
+                "--yes",
+                help=tr(
+                    "cli.app.modelo.iva_wallet.override_confirm_help",
+                    default=(
+                        "Required confirmation flag. Acknowledge that this override changes the filed "
+                        "casilla 110 figure and filing accuracy depends on the value supplied."
+                    ),
+                ),
+            ),
+        ] = False,
+    ) -> None:
+        """Record an explicit taxpayer override releasing the M303 prior-compensación carry."""
+        if not confirm:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.iva_wallet.override_confirm_required",
+                    default=(
+                        "Pass --confirm to acknowledge: this records a taxpayer override of the M303 "
+                        "prior-compensación carry. Filing accuracy depends on the value supplied."
+                    ),
+                ),
+            )
+
+        clean_reason = reason.strip()
+        if not clean_reason:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.iva_wallet.override_reason_required",
+                    default="--reason must not be blank; record the basis for the override.",
+                ),
+            )
+        clean_locator = evidence_locator.strip()
+        if not clean_locator:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.iva_wallet.override_evidence_locator_required",
+                    default="--evidence-locator must not be blank; record where the override's evidence lives.",
+                ),
+            )
+
+        try:
+            override_amount = Decimal(amount)
+        except InvalidOperation as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.iva_wallet.seed_invalid_amount",
+                    amount=amount,
+                    default=f"Amount {amount!r} is not a valid decimal.",
+                ),
+            ) from exc
+
+        filing_period = Period.from_year_and_code(filing_year, period)
+        try:
+            decision = record_iva_compensation_override_for_bucket(
+                bucket_id=active_bucket_id(),
+                period=filing_period,
+                amount=override_amount,
+                reason=clean_reason,
+                evidence_locator=clean_locator,
+            )
+        except ModeloIvaWalletSeedNegativeAmountError as exc:
+            assert exc.translated_message is not None
+            raise typer.BadParameter(tr(exc.translated_message, default="Amount must be non-negative.")) from exc
+        except ModeloIvaWalletSeedNoTaxpayerError as exc:
+            assert exc.translated_message is not None
+            raise typer.BadParameter(
+                tr(
+                    exc.translated_message,
+                    default="Active profile has no identity.tax_id configured. Set it via config profile.",
+                ),
+            ) from exc
+
+        selected_amount = getattr(decision, "selected_amount", None)
+        override_result = IvaWalletOverrideResult(
+            filing_year=filing_year,
+            period=filing_period,
+            taxpayer_nif=str(getattr(decision, "taxpayer_nif", "")),
+            amount=str(selected_amount if selected_amount is not None else override_amount),
+            reason=clean_reason,
+            evidence_locator=clean_locator,
+            selected_authority=str(getattr(decision, "selected_authority", "taxpayer_override")),
+            divergence=str(getattr(decision, "divergence", "override")),
+        )
+        lines = [
+            "operation\tmodelo.iva-wallet.override",
+            f"filing_year\t{filing_year}",
+            f"period\t{filing_period.registry_token}",
+            f"amount\t{override_result.amount}",
+            f"selected_authority\t{override_result.selected_authority}",
+            f"divergence\t{override_result.divergence}",
+            f"reason\t{clean_reason}",
+            f"evidence_locator\t{clean_locator}",
+        ]
+        _emit_envelope(ctx, command="modelo.iva_wallet.override", result=override_result, lines=lines)
 
 
 def _load_existing_seeded_period(bucket_id: str, period: Period):
