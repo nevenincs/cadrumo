@@ -730,6 +730,7 @@ formulas = [
 ]
 bindings = [
     "modelo-200-2024-pagos-fraccionados-anuales",
+    "modelo-200-2024-pagos-fraccionados-anuales-40-2",
     "modelo-200-2024-profile-legal-entity-form",
     "modelo-200-2024-bin-pendiente-ejercicios-anteriores",
 ]
