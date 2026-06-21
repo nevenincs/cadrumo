@@ -13,6 +13,26 @@ required_text = [
     "pagos fraccionados",
 ]
 
+# Companion to the binding above for the OTHER M202 modality. The fold-in above
+# reads M202 casilla 34 (modalidad base imponible, art. 40.3 LIS); this one reads
+# casilla 03 (modalidad cuota, art. 40.2 LIS). The two modalidades are mutually
+# exclusive per filing (the non-elected one computes 0), so the cuota-diferencial
+# formula subtracts BOTH relations and a 40.2 filer's instalments are now credited.
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-200-2024-pagos-fraccionados-anuales-40-2"
+source = "relation_prefill"
+selector = { source_modelo = "202" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = [
+    "modelo 202 de pago fraccionado",
+    "pagos fraccionados",
+]
+
 # Calculation-only enum binding: carries the taxpayer's recognised
 # legal form (sociedad limitada / anonima / cooperativa / sociedad
 # civil mercantil / sin fines lucrativos / other) so the cuota-integra
