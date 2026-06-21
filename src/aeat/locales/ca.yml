@@ -3503,9 +3503,6 @@ core:
       registration_duplicate_callable: La implementació de respostes del projecte
         s'ha registrat dues vegades amb invocables distintos; s'ha de registrar exactament
         una vegada.
-domain:
-  iva:
-    refund:
 dotted:
   key: Clau amb punts
 entries:

@@ -3329,9 +3329,6 @@ core:
       output_language_type: core.profile.errors.output_language_type
       registration_duplicate_callable: Project answers implementation registered twice
         with different callables; it must be registered exactly once.
-domain:
-  iva:
-    refund:
 dotted:
   key: Dotted key
 entries:
