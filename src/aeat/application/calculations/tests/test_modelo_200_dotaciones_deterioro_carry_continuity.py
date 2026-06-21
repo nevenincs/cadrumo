@@ -81,6 +81,7 @@ _STOCK_BY_SOURCE_YEAR: dict[int, dict[str, Decimal]] = {
 }
 
 _M200_PAGOS_RELATION = "modelo-200-2024-rel-202-pagos-fraccionados"
+_M200_PAGOS_RELATION_40_2 = "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
 
 _PROFILE_DECIMAL_BINDINGS: dict[str, Decimal] = {
     "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
@@ -147,6 +148,7 @@ def _resolve_relations(*, filing_year: int, obs_repo: CalculationObservationRepo
         if item.value is not None
     }
     resolved.setdefault(_M200_PAGOS_RELATION, Decimal("0"))
+    resolved.setdefault(_M200_PAGOS_RELATION_40_2, Decimal("0"))
     return resolved
 
 
