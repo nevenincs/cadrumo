@@ -12,7 +12,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import CasillaObservation, Modelo202Modality, RegistryModeloObservation
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante, JustificanteRepository
 from ....domain.modelos import (
@@ -1442,6 +1442,129 @@ def test_real_prior_filing_post_dating_alta_still_blocks_anti_tautology(tmp_path
     assert verdict.suppressed_pre_activity_dependencies == ()
     assert CrossPeriodCleanStateBlocker.MISSING_OBSERVATION in verdict.blockers
     assert CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD in verdict.blockers
+
+
+def _snapshot_202():
+    return resources().modelos.authority.snapshot("202", filing_year=2026, period="2P")
+
+
+def test_first_year_modalidad_cuota_suppresses_m202_dependency_through_evaluator(tmp_path: Path) -> None:
+    """A first-year modalidad-cuota IS filer clears the M202 cross-period gate.
+
+    The M202/2026/2P snapshot derives a self-prior M202 pago-fraccionado
+    dependency. With the derived modality ART_40_2_OPTIONAL and an activity-start
+    date inside the target year (first IS year), the source-202 dependencies are
+    scoped out as first-year no-fractional-payment obligations: no observation is
+    seeded, yet every 202-source dependency is clean and carries the typed facet,
+    and the verdict reports the advisory.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_202(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=CalculationObservationRepository(),
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            taxpayer_tax_id="B12345678",
+            activity_start_date=date(2026, 2, 1),
+            modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
+        )
+
+    m202_dependencies = [e for e in verdict.dependencies if e.requirement.source_modelo == "202"]
+    assert m202_dependencies, "expected at least one M202-source cross-period dependency"
+    assert all(e.suppressed_first_year_fractional for e in m202_dependencies)
+    assert all(e.clean for e in m202_dependencies)
+    assert all(
+        e.no_prior_obligation is not None
+        and e.no_prior_obligation.facet_kind
+        is NoPriorObligationProvenanceKind.NO_FRACTIONAL_PAYMENT_OBLIGATION_FIRST_YEAR
+        for e in m202_dependencies
+    )
+    assert verdict.has_first_year_fractional_suppression_advisory is True
+    suppressed_periods = {
+        e.requirement.period.registry_token for e in verdict.suppressed_first_year_fractional_dependencies
+    }
+    assert suppressed_periods
+
+
+def test_mandatory_modalidad_base_keeps_m202_dependency_in_scope_through_evaluator(tmp_path: Path) -> None:
+    """ART_40_3_MANDATORY keeps the M202 dependency in scope and blocking (fail-closed).
+
+    Under modalidad base the pago fraccionado is owed in the first year, so the
+    self-prior M202 dependency is NOT suppressed; with no AEAT evidence seeded it
+    blocks exactly as it would without the modality, proving the suppression is
+    refused for the mandatory modality.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_202(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=CalculationObservationRepository(),
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            taxpayer_tax_id="B12345678",
+            activity_start_date=date(2026, 2, 1),
+            modelo_202_modality=Modelo202Modality.ART_40_3_MANDATORY,
+        )
+
+    m202_dependencies = [e for e in verdict.dependencies if e.requirement.source_modelo == "202"]
+    assert m202_dependencies
+    assert verdict.suppressed_first_year_fractional_dependencies == ()
+    assert verdict.has_first_year_fractional_suppression_advisory is False
+    assert any(not e.clean for e in m202_dependencies)
+
+
+def test_incomplete_modality_keeps_m202_dependency_in_scope_through_evaluator(tmp_path: Path) -> None:
+    """INCOMPLETE / unthreaded modality never suppresses the M202 dependency (fail-closed).
+
+    When the modality cannot be derived (or is not threaded), the self-prior M202
+    dependency stays in scope and blocks with no evidence seeded — a missing
+    modality is never read as 'no obligation'.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        for modality in (Modelo202Modality.INCOMPLETE, None):
+            verdict = evaluate_cross_period_clean_state(
+                _snapshot_202(),
+                bucket_id=_BUCKET_ID,
+                observation_repository=CalculationObservationRepository(),
+                filing_repository=ModeloRecordCatalogueRepository(),
+                calculation_repository=CalculationRevisionCatalogueRepository(),
+                verification_repository=VerificationReportCatalogueRepository(),
+                taxpayer_tax_id="B12345678",
+                activity_start_date=date(2026, 2, 1),
+                modelo_202_modality=modality,
+            )
+            assert verdict.suppressed_first_year_fractional_dependencies == ()
+            assert verdict.has_first_year_fractional_suppression_advisory is False
+            assert verdict.clean is False
+
+
+def test_non_first_year_keeps_m202_dependency_in_scope_through_evaluator(tmp_path: Path) -> None:
+    """An activity-start year before the target year keeps the M202 dependency in scope.
+
+    With activity start in 2025 (a prior IS year exists to provide the cuota
+    basis), the modalidad-cuota M202 dependency is NOT suppressed and blocks on
+    missing evidence — an operator cannot scope away a real prior obligation by
+    declaring modalidad cuota.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        verdict = evaluate_cross_period_clean_state(
+            _snapshot_202(),
+            bucket_id=_BUCKET_ID,
+            observation_repository=CalculationObservationRepository(),
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            taxpayer_tax_id="B12345678",
+            activity_start_date=date(2025, 6, 1),
+            modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
+        )
+
+    assert verdict.suppressed_first_year_fractional_dependencies == ()
+    assert verdict.has_first_year_fractional_suppression_advisory is False
+    assert verdict.clean is False
 
 
 def test_partition_keeps_non_calendar_anchors_in_scope(tmp_path: Path) -> None:
