@@ -333,15 +333,22 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
     # Quarter observations: (period, devengada, deducible, regimen_general, compensacion_generada)
     # The compensacion-generada-periodo casilla must be present so the
     # relation resolver can populate the two compensacion fold bindings.
+    # Columns: period, devengada, deducible, regimen_general, compensacion-generada,
+    # compensacion-disponible-fin-periodo. Box 97 reads the 4T *disponible* (the total
+    # the last period carries = unapplied prior pending + generada this period); the 4T
+    # disponible (130) intentionally exceeds the 4T generada (100) by a 30 unapplied
+    # prior-pending component, so box 97 = 130 proves the fold captures the prior pending
+    # (the old behaviour read only generada = 100 and dropped it). Box 662 still reads
+    # the 1T-3T generada.
     quarter_data = [
-        ("1T", Decimal("100.00"), Decimal("40.00"), Decimal("60.00"), Decimal("20.00")),
-        ("2T", Decimal("80.00"), Decimal("30.00"), Decimal("50.00"), Decimal("10.00")),
-        ("3T", Decimal("120.00"), Decimal("50.00"), Decimal("70.00"), Decimal("20.00")),
-        ("4T", Decimal("90.00"), Decimal("60.00"), Decimal("30.00"), Decimal("100.00")),
+        ("1T", Decimal("100.00"), Decimal("40.00"), Decimal("60.00"), Decimal("20.00"), Decimal("20.00")),
+        ("2T", Decimal("80.00"), Decimal("30.00"), Decimal("50.00"), Decimal("10.00"), Decimal("10.00")),
+        ("3T", Decimal("120.00"), Decimal("50.00"), Decimal("70.00"), Decimal("20.00"), Decimal("20.00")),
+        ("4T", Decimal("90.00"), Decimal("60.00"), Decimal("30.00"), Decimal("100.00"), Decimal("130.00")),
     ]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="m390-compensation-history"):
         observation_repo = CalculationObservationRepository()
-        for period, devengada, deducible, regimen_general, compensacion in quarter_data:
+        for period, devengada, deducible, regimen_general, compensacion, disponible in quarter_data:
             observation_repo.save_observation(
                 RegistryModeloObservation(
                     modelo="303",
@@ -352,6 +359,7 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
                         CasillaObservation(casilla_id="iva.cuota-deducible-total", value=deducible),
                         CasillaObservation(casilla_id="iva.resultado-regimen-general", value=regimen_general),
                         CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=compensacion),
+                        CasillaObservation(casilla_id="iva.compensacion-disponible-fin-periodo", value=disponible),
                     ),
                 ),
                 source_kind="app_filing",
@@ -378,8 +386,11 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
     assert resolved["modelo-390-prev-303-resultado-regimen-general"] == Decimal("210.00")
     # compensacion-generada-no-97: sum of 1T+2T+3T = 20+10+20 = 50
     assert resolved["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"] == Decimal("50.00")
-    # compensacion-ultimo-periodo: copy of 4T = 100
-    assert resolved["modelo-390-prev-303-compensacion-ultimo-periodo"] == Decimal("100.00")
+    # compensacion-ultimo-periodo (box 97): copy of the 4T compensacion-disponible-fin-
+    # periodo = 130 (the total the last period carries: 100 generada + 30 unapplied
+    # prior pending). The old fold read iva.compensacion-generada-periodo (100) and
+    # dropped the prior-pending component — the AEAT identity requires box 97 to carry it.
+    assert resolved["modelo-390-prev-303-compensacion-ultimo-periodo"] == Decimal("130.00")
     # All five resolved from local_filing provenance (no iva_history fallback needed)
     resolved_rels = {rv.relation for rv in relation_vals.values if rv.value is not None}
     assert resolved_rels >= {

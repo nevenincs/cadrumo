@@ -4,7 +4,14 @@ kind = "cross_model_output"
 dependency_role = "factual_evidence"
 source_modelo = "303"
 source_revision_selector = { year_from = 2009 }
-source_output = "iva.compensacion-generada-periodo"
+# Box 97 "Resultado de la última autoliquidación. A compensar" is the TOTAL credit
+# the last period (4T) carries forward to compensate — the end-of-period available
+# saldo = casilla 87 (pendiente posteriores, unapplied prior) + generada this period
+# (iva.compensacion-disponible-fin-periodo) — NOT only the credit generated in 4T.
+# The AEAT M390 identity [86] = [84] - [85] = [95] - [97] - [98] - [662] requires the
+# unapplied prior pending (which box 662 excludes — 662 is "generadas EN EL EJERCICIO")
+# to appear in box 97; reading only iva.compensacion-generada-periodo dropped it.
+source_output = "iva.compensacion-disponible-fin-periodo"
 target_binding = "modelo-390-prev-303-compensacion-ultimo-periodo"
 period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["4T"]
