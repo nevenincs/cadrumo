@@ -27,6 +27,7 @@ Submodules
    aeat.application.aggregation._oss_ioss
    aeat.application.aggregation._prorrata
    aeat.application.aggregation._registry_provider
+   aeat.application.aggregation._renta_gasto_ledger
    aeat.application.aggregation._renta_income_ledger
    aeat.application.aggregation._renta_ledger
    aeat.application.aggregation._retenciones

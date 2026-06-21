@@ -121,6 +121,7 @@ _PRIOR_M200_YEAR = 2024  # filing_year_delta = -1 from the 2025 M202 ejercicio
 # read; M200 source_output DP200014B:00592 is the prior cuota líquida the
 # cuota-base relation reads.
 _M202_PAGO_OUTPUT = "34"
+_M202_PAGO_OUTPUT_40_2 = "03"  # modalidad cuota (art. 40.2); folds alongside casilla 34
 _M200_CUOTA_LIQUIDA = "DP200014B:00592"
 
 # Bound casillas on the M202/2025 revision under test.
@@ -208,7 +209,10 @@ def _seed_m202_pago_for_m200(*, period: str, value: Decimal, obs_repo: Calculati
             modelo=_M202,
             filing_year=_FILING_YEAR,
             period=period,
-            observations=(CasillaObservation(casilla_id=_M202_PAGO_OUTPUT, value=value),),
+            observations=(
+                CasillaObservation(casilla_id=_M202_PAGO_OUTPUT, value=value),
+                CasillaObservation(casilla_id=_M202_PAGO_OUTPUT_40_2, value=Decimal("0")),
+            ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=_T0,
@@ -293,7 +297,10 @@ def _seed_m202_pago(*, period: str, value: Decimal, obs_repo: CalculationObserva
             modelo=_M202,
             filing_year=_FILING_YEAR,
             period=period,
-            observations=(CasillaObservation(casilla_id=_M202_PAGO_OUTPUT, value=value),),
+            observations=(
+                CasillaObservation(casilla_id=_M202_PAGO_OUTPUT, value=value),
+                CasillaObservation(casilla_id=_M202_PAGO_OUTPUT_40_2, value=Decimal("0")),
+            ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=_T0,

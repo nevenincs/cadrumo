@@ -115,8 +115,8 @@ def _calculate_m130(work_unit_id: str) -> Any:
             "work",
             "calculate",
             work_unit_id,
-            "--casilla",
-            "02=4000.00",
+            # Casilla 02 (gastos) is bucket-bound (ledger-aggregated) and cannot
+            # be supplied via --casilla; immaterial to the recargo-notice assertions.
             "--casilla",
             "05=0.00",
             "--casilla",
@@ -243,8 +243,6 @@ def test_calculate_overdue_period_surfaces_recargo_notice_with_legal_context() -
             "work",
             "calculate",
             work_unit_id,
-            "--casilla",
-            "02=4000.00",
             "--casilla",
             "05=0.00",
             "--casilla",

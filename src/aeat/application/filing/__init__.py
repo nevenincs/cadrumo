@@ -40,7 +40,7 @@ from ...domain.calculations.registry import (
     enum_consumed_binding_ids as _enum_consumed_binding_ids,
 )
 from ...domain.calculations.registry import (
-    expression_date_binding_refs as _expression_date_binding_refs,
+    revision_date_binding_ids as _revision_date_binding_ids,
 )
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
@@ -344,12 +344,10 @@ def _date_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:
     consumed by ``age_at_year_end``) travel on the engine's
     ``date_binding_values`` channel, distinct from the Decimal binding
     channel. A draft replay must supply them or the formula runtime
-    refuses the calculation.
+    refuses the calculation. Delegates to the canonical
+    :func:`revision_date_binding_ids` registry query (single source of truth).
     """
-    date_binding_ids: set[str] = set()
-    for formula in snapshot.revision.formulas:
-        date_binding_ids.update(_expression_date_binding_refs(formula.expression))
-    return date_binding_ids
+    return set(_revision_date_binding_ids(snapshot.revision))
 
 
 def _relation_ids(snapshot: _RegistrySnapshot) -> set[str]:

@@ -501,6 +501,7 @@ def _classify_iva_transaction(
         )
     base_amount = transaction.taxable_base * proportionality
     iva_amount = transaction.iva_amount * proportionality
+    recargo_amount = (transaction.recargo_amount or Decimal("0")) * proportionality
 
     # Resolve the effective IVA category: explicit override takes priority over
     # the rate-kind-derived domestic category (D5 decision from ADR).
@@ -546,6 +547,7 @@ def _classify_iva_transaction(
         flow_direction=flow_direction,
         base_amount=base_amount,
         iva_amount=iva_amount,
+        recargo_amount=recargo_amount,
         prorrata_reference_id=linked_prorrata_id,
     )
     return _IvaTransactionOutcome(

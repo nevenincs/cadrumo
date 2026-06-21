@@ -88,6 +88,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
     iva_amount: Decimal | None = None
+    recargo_amount: Decimal | None = None
     irpf_category: str | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
@@ -196,6 +197,7 @@ class ManualLedgerTransactionCommand(BaseModel):
             "taxable_base": self.taxable_base,
             "iva_rate": self.iva_rate,
             "iva_amount": self.iva_amount,
+            "recargo_amount": self.recargo_amount,
             "irpf_category": self.irpf_category,
             "usage_ratio_id": self.usage_ratio_id,
             "prorrata_reference": self.prorrata_reference,
@@ -226,6 +228,7 @@ class ManualLedgerTransactionPatch(BaseModel):
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
     iva_amount: Decimal | None = None
+    recargo_amount: Decimal | None = None
     irpf_category: str | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None

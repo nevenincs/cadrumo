@@ -1,5 +1,7 @@
 """JSON-contract payloads for the rich catalogue-invoice CLI verbs.
 
+Each payload is an :class:`OutputSchema` subclass on the shared CLI envelope.
+
 The unified ``aeat app ledger invoice`` group drives the slim
 :class:`~aeat.application.ledger.BusinessOperationInvoice` operator record
 (payloads in :mod:`._ledger_payloads`). The ``catalogue`` subgroup added here

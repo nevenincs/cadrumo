@@ -150,12 +150,14 @@ _M130_EXPECTED_INGRESOS = Decimal("1200.00") + Decimal("850.50") + Decimal("433.
 _M130_PRIOR_YEAR = 2025
 _M130_PRIOR_YEAR_NET_INCOME = Decimal("8000")
 
-# Manual casillas the M130 engine consumes downstream of casilla 01 (Gastos and
-# the various retención / deducción slots). Supplied as zero through the caller
+# Manual casillas the M130 engine consumes downstream of casilla 01 (the
+# various retención / deducción slots). Supplied as zero through the caller
 # channel — they are manual_input (not source-owned), so the override is allowed.
-# Gastos = 0 leaves rendimiento neto == ingresos so a wrong fold would surface.
+# Casilla 02 (Gastos) is now bound to ledger_renta_gasto_aggregation (a locked
+# source), so it is NOT supplied here: with no OUTGOING transactions seeded the
+# gasto resolver returns 0, leaving rendimiento neto == ingresos so a wrong
+# income fold would still surface.
 _M130_MANUAL_INPUTS: dict[str, Decimal] = {
-    "02": Decimal("0"),
     "05": Decimal("0"),
     "06": Decimal("0"),
     "08": Decimal("0"),

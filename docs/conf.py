@@ -226,7 +226,6 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", str(_INVENTORIES / "python.inv")),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", str(_INVENTORIES / "sqlalchemy.inv")),
     "pydantic": ("https://docs.pydantic.dev/latest", None),
-    "httpx": ("https://www.python-httpx.org/", None),
     "typer": ("https://typer.tiangolo.com/", None),
 }
 _SELF_INVENTORY = Path(__file__).resolve().parent / "_build" / "html" / "objects.inv"

@@ -660,6 +660,7 @@ def _command_from_patch(
     taxable_base = _optional_patched(patch, patch_fields, "taxable_base", current.taxable_base)
     iva_rate = _optional_patched(patch, patch_fields, "iva_rate", current.iva_rate)
     iva_amount = _optional_patched(patch, patch_fields, "iva_amount", current.iva_amount)
+    recargo_amount = _optional_patched(patch, patch_fields, "recargo_amount", current.recargo_amount)
     irpf_category = _optional_patched(patch, patch_fields, "irpf_category", current.irpf_category)
     usage_ratio_id = _optional_patched(patch, patch_fields, "usage_ratio_id", current.usage_ratio_id)
     prorrata_reference = _optional_patched(patch, patch_fields, "prorrata_reference", current.prorrata_reference)
@@ -674,6 +675,7 @@ def _command_from_patch(
         taxable_base = None
         iva_rate = None
         iva_amount = None
+        recargo_amount = None
         irpf_category = None
         prorrata_reference = None
     notes = _required_patched(patch, patch_fields, "notes", current.notes)
@@ -701,6 +703,7 @@ def _command_from_patch(
         taxable_base=taxable_base,
         iva_rate=iva_rate,
         iva_amount=iva_amount,
+        recargo_amount=recargo_amount,
         irpf_category=irpf_category,
         usage_ratio_id=usage_ratio_id,
         prorrata_reference=prorrata_reference,
@@ -938,6 +941,7 @@ def _transaction_from_command(
         "taxable_base": command.taxable_base,
         "iva_rate": command.iva_rate,
         "iva_amount": command.iva_amount,
+        "recargo_amount": command.recargo_amount,
         "irpf_category": command.irpf_category,
         "usage_ratio_id": command.usage_ratio_id,
         "prorrata_reference": command.prorrata_reference,
@@ -1038,6 +1042,7 @@ def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
         "taxable_base": _optional_decimal(command.taxable_base),
         "iva_rate": _optional_decimal(command.iva_rate),
         "iva_amount": _optional_decimal(command.iva_amount),
+        "recargo_amount": _optional_decimal(command.recargo_amount),
         "irpf_category": command.irpf_category or "",
         "usage_ratio_id": command.usage_ratio_id or "",
         "prorrata_reference": command.prorrata_reference or "",

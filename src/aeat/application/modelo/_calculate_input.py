@@ -16,7 +16,11 @@ from ...core import Modelo
 from ...core.errors import AeatError
 from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.resources import resources
-from ...domain.calculations.registry import ModeloRevision, enum_consumed_binding_ids
+from ...domain.calculations.registry import (
+    ModeloRevision,
+    enum_consumed_binding_ids,
+    revision_date_binding_ids,
+)
 from ...domain.contribuyente._deduccion_maternidad import compute_deduccion_maternidad_0611
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._dt12_reduccion import compute_dt12_reduccion_plan_pensiones
@@ -220,7 +224,18 @@ def build_work_calculate_input_bundle(
     if binding_overrides:
         known_binding_ids = {str(binding.id) for binding in revision.bindings}
         enum_channel_ids = enum_consumed_binding_ids(revision)
+        date_channel_ids = revision_date_binding_ids(revision)
         for key, raw_value in binding_overrides.items():
+            if key in date_channel_ids:
+                raise ModeloCalculateBindingInputError(
+                    f"--binding {key!r} is a date-valued binding sourced from the active "
+                    "profile (a taxpayer date fact such as the birth date); it cannot be "
+                    "supplied through --binding, which carries only decimal and enum "
+                    "values. Set it as a profile fact (e.g. `aeat config profile create "
+                    "... --taxpayer-birth-date YYYY-MM-DD`) and recalculate.",
+                    context={"key": key},
+                    translated_message="application.modelo.errors.calculate_binding_is_date_sourced",
+                )
             channel = _binding_input_channel(key, revision, known_binding_ids, enum_channel_ids)
             if channel == "enum":
                 enum_binding_values[key] = raw_value

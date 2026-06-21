@@ -734,11 +734,12 @@ class RecargoBand(BaseModel):
     by ``id``.
 
     Attributes:
-        id: Stable identifier (``within_30_days``, ``after_12_months``,
+        id: Stable identifier (``completed_months_0``, ``after_12_months``,
             ...). Used by the CLI for per-band rendering.
-        min_days_late: Inclusive lower bound on the days-late window
-            this band covers.
-        max_days_late: Inclusive upper bound, or ``None`` for the
+        min_completed_months: Inclusive lower bound on the completed-months
+            window this band covers. Art. 27.2 LGT counts only COMPLETED
+            months of delay; a fractional month does not count.
+        max_completed_months: Inclusive upper bound, or ``None`` for the
             open-ended ``after_12_months`` band.
         surcharge_pct: Recargo percentage applied on the cuota.
         interest_applies: True only for the after-12-months band; the
@@ -749,18 +750,18 @@ class RecargoBand(BaseModel):
     model_config = _STRICT_FROZEN
 
     id: str = Field(min_length=1, max_length=64)
-    min_days_late: int = Field(ge=1)
-    max_days_late: int | None = None
+    min_completed_months: int = Field(ge=0)
+    max_completed_months: int | None = None
     surcharge_pct: Decimal
     interest_applies: bool = False
     legal_ref: str = Field(min_length=1, max_length=128)
 
     @model_validator(mode="after")
     def _validate_window(self) -> Self:
-        if self.max_days_late is not None and self.max_days_late < self.min_days_late:
+        if self.max_completed_months is not None and self.max_completed_months < self.min_completed_months:
             raise DeadlineValidationError(
-                f"RecargoBand {self.id}: max_days_late ({self.max_days_late}) "
-                f"is below min_days_late ({self.min_days_late})",
+                f"RecargoBand {self.id}: max_completed_months ({self.max_completed_months}) "
+                f"is below min_completed_months ({self.min_completed_months})",
             )
         return self
 
@@ -780,7 +781,7 @@ class Recovery(BaseModel):
             for absolutely-time-barred filings can be added without
             reshaping the model.
         recargo_band: The :class:`RecargoBand` resolved from the
-            ``days_late`` window.
+            completed-months window (Art. 27.2 LGT).
         legal_ref: Same as ``recargo_band.legal_ref``; carried at the
             top level so renderers do not dereference.
         next_command: Literal shell command the operator can copy to

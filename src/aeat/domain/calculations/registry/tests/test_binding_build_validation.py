@@ -144,6 +144,16 @@ _FAMILY_CASES: tuple[
         "selector violates",
     ),
     (
+        "ledger_renta_gasto_aggregation",
+        "ledger_renta_gasto_aggregation",
+        {"modelo": "130", "target_casilla": "02", "fact": "deductible_amount_sum"},
+        BindingAggregationOp.SUM,
+        # An unknown fact value trips the typed selector Literal at build time.
+        {"modelo": "130", "target_casilla": "02", "fact": "not_a_real_fact"},
+        BindingAggregationOp.SUM,
+        "selector violates",
+    ),
+    (
         "related_party_operation",
         "related_party_operation",
         {"fact": "row_field", "row_field": "amount"},

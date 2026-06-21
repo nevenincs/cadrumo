@@ -160,3 +160,31 @@ number = "59"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 number = "60"
+
+# Recargo de equivalencia cuota casillas join the calculation closure once their
+# ledger_iva_aggregation recargo_amount_sum bindings landed (LIVA art. 161 tiers:
+# general 5.2%, reducido 1.4%, super-reducido 0.5%).
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "158"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "21"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "24"
+
+# Régimen-general per-tier base casillas (01 super-reducido 4%, 04 reducido 10%,
+# 07 general 21%) and the deducible soportado-interiores base (28) join the
+# calculation closure once their ledger_iva_aggregation base_amount_sum bindings
+# landed (LIVA art. 88 repercutido base / art. 92 soportado base).
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "01"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "04"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "07"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+number = "28"

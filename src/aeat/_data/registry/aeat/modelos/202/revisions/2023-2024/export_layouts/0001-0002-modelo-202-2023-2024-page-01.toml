@@ -229,11 +229,10 @@ signed = false
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2023"]
 [[revisions.2023-2024.export_layouts.records.fields]]
-id = "modelo-202-2023-2024-page-01-header-devengo_start_date-pos-125"
+id = "modelo-202-2023-2024-page-01-filler-pos-125"
 offset = 125
 length = 1
-kind = "header"
-header_key = "devengo_start_date"
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -268,11 +267,10 @@ signed = false
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2023"]
 [[revisions.2023-2024.export_layouts.records.fields]]
-id = "modelo-202-2023-2024-page-01-header-devengo_start_date-pos-132"
+id = "modelo-202-2023-2024-page-01-filler-pos-132"
 offset = 132
 length = 1
-kind = "header"
-header_key = "devengo_start_date"
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"

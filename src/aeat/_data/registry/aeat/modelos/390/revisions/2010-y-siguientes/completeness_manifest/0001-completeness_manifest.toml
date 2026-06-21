@@ -41,3 +41,6 @@ number = "iva.anual.resultado-regimen-general"
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 number = "iva.anual.soportado.interiores"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+number = "iva.anual.soportado.importaciones"

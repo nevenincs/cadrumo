@@ -325,8 +325,14 @@ literal = "100"
 [[revisions.2023-y-siguientes.formulas.expression.args.args]]
 casilla = "iva.prorrata-volumen-total"
 
+# No prorrata-volume data declared (volumen-total = 0) means no exempt-without-
+# right operations limit the deduction, so the prorrata percentage defaults to
+# 100 (full right to deduct, LIVA art. 94) — never 0, which would zero every
+# deduction and block a fully-taxable trader's filing (defect C2). A trader who
+# genuinely applies prorrata declares the volume casillas, and the computed
+# branch above takes over.
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-literal = "0"
+literal = "100"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-compensacion-aplicada-periodo"
@@ -901,6 +907,7 @@ legal_refs = [
     "ley-37-1992:art-92",
     "ley-37-1992:art-94",
     "ley-37-1992:art-95",
+    "ley-37-1992:art-161",
     "rd-1624-1992:art-71",
     "ley-37-1992:art-99",
     "ley-37-1992:art-115",
@@ -954,6 +961,13 @@ casillas = [
     "iva.prorrata-volumen-total",
     "iva.prorrata-porcentaje",
     "iva.regularizacion-inversiones",
+    "158",
+    "21",
+    "24",
+    "01",
+    "04",
+    "07",
+    "28",
     "decl.ejercicio",
     "decl.periodo",
 ]
@@ -995,6 +1009,13 @@ bindings = [
     "modelo-303-iva-autorepercutido-interior-deducible-cuota",
     "modelo-303-compensacion-pendiente-anteriores",
     "modelo-303-autoconsumo-promotor-base",
+    "modelo-303-recargo-equivalencia-general-cuota",
+    "modelo-303-recargo-equivalencia-reducido-cuota",
+    "modelo-303-recargo-equivalencia-super-reducido-cuota",
+    "modelo-303-iva-repercutido-general-base",
+    "modelo-303-iva-repercutido-reducido-base",
+    "modelo-303-iva-repercutido-super-reducido-base",
+    "modelo-303-iva-soportado-interiores-base",
 ]
 relations = ["modelo-303-rel-self-compensacion-anteriores"]
 dependency_classifications = ["modelo-303-dep-self-prior-quarter"]

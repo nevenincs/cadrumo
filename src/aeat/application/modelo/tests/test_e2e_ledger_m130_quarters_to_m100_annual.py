@@ -123,11 +123,13 @@ _EXPECTED_CUMULATIVE_C01: dict[str, Decimal] = {
     "4T": Decimal("14000.00"),
 }
 
-# M130 manual casillas (gastos / retenciones / agrarian / vivienda / prior
+# M130 manual casillas (retenciones / agrarian / vivienda / prior
 # autoliquidaciones). All zero for this pure-estimación-directa, no-retención
-# persona so casilla 03 == casilla 01 and casilla 19 == casilla 12.
+# persona so casilla 03 == casilla 01 and casilla 19 == casilla 12. Casilla 02
+# (Gastos) is a source-owned bound casilla (ledger renta gasto aggregation) and is
+# NOT supplied here: with no expense transactions seeded its resolver returns 0,
+# so casilla 03 == casilla 01 as before.
 _M130_MANUAL_INPUTS: dict[str, Decimal] = {
-    "02": Decimal("0"),
     "06": Decimal("0"),
     "08": Decimal("0"),
     "10": Decimal("0"),
@@ -324,7 +326,17 @@ def _m100_non_relation_zero_bindings() -> dict[str, Decimal]:
     return {
         str(binding.id): Decimal("0")
         for binding in snapshot.revision.bindings
-        if binding.source not in ("profile", _RELATION_PREFILL_SOURCE)
+        if binding.source
+        not in (
+            "profile",
+            _RELATION_PREFILL_SOURCE,
+            "ledger_renta_income_aggregation",
+            "ledger_renta_expense_aggregation",
+            "ledger_iva_aggregation",
+            "ledger_oss_aggregation",
+            "collectible_invoice",
+            "payable_invoice",
+        )
     }
 
 

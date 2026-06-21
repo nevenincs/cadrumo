@@ -403,14 +403,24 @@ def validate_m347_threshold(rows: Sequence[Modelo347ContraparteRow]) -> None:
     """Enforce the Modelo 347 per-counterparty declarability threshold.
 
     RD 1065/2007 art. 33.1: only counterparties whose annual operations exceed
-    EUR 3,005.06 are declarable. The check is per row (one row = one counterparty).
+    EUR 3,005.06 are declarable. The threshold applies to the SUM of every
+    operation with the same person (same NIF), aggregated across all contraparte
+    rows — not to each row in isolation. A counterparty's operations may be split
+    across several rows (e.g. entregas and adquisiciones), so a per-row check would
+    wrongly reject a counterparty whose individual rows are each at/below the
+    threshold while their annual aggregate exceeds it (a missed declaration), and
+    would never apply the "same person" threshold the regulation defines.
 
     Raises:
-        Modelo347ThresholdError: on the first contraparte at or below the threshold.
+        Modelo347ThresholdError: for the first counterparty (in NIF first-appearance
+            order) whose AGGREGATED annual total is at or below the threshold.
     """
+    totals_by_nif: dict[str, Decimal] = {}
     for row in rows:
-        if row.importe_total <= M347_THRESHOLD_EUR:
-            raise Modelo347ThresholdError(nif=row.nif, total=row.importe_total)
+        totals_by_nif[row.nif] = totals_by_nif.get(row.nif, Decimal("0")) + row.importe_total
+    for nif, total in totals_by_nif.items():
+        if total <= M347_THRESHOLD_EUR:
+            raise Modelo347ThresholdError(nif=nif, total=total)
 
 
 def validate_m184_member_share_sum(rows: Sequence[Modelo184MemberRow]) -> None:

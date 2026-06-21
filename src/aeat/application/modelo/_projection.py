@@ -223,25 +223,26 @@ def project_modelo_100_from_m130(
         )
 
     quarters_filed = len(m130_quarters)
-    total_rendimiento_neto = sum(
-        (revision.casilla_values.get("03", Decimal("0")) for revision in m130_quarters.values()),
-        Decimal("0"),
-    )
+    # Modelo 130 casillas 01/02/03 are year-to-date cumulative (their registry
+    # bindings are named ``...-cumulative``): each quarter's value already
+    # aggregates Jan 1 → end of that quarter. The annual basis is therefore the
+    # latest available quarter's value, NOT the sum of the per-quarter snapshots
+    # (summing them double/triple/quadruple-counts the same income).
+    latest_token = max(m130_quarters, key=lambda token: int(token[0]))
+    latest_ordinal = int(latest_token[0])
+    latest_revision = m130_quarters[latest_token]
+    total_rendimiento_neto = latest_revision.casilla_values.get("03", Decimal("0"))
+    total_ingresos = latest_revision.casilla_values.get("01", Decimal("0"))
+    total_gastos = latest_revision.casilla_values.get("02", Decimal("0"))
+    # Casilla 19 (resultado final) is the per-quarter incremental amount paid, so
+    # the annual credit is the sum of the available quarters' results.
     total_pagos_fraccionados = sum(
         (revision.casilla_values.get("19", Decimal("0")) for revision in m130_quarters.values()),
         Decimal("0"),
     )
-    total_ingresos = sum(
-        (revision.casilla_values.get("01", Decimal("0")) for revision in m130_quarters.values()),
-        Decimal("0"),
-    )
-    total_gastos = sum(
-        (revision.casilla_values.get("02", Decimal("0")) for revision in m130_quarters.values()),
-        Decimal("0"),
-    )
 
-    if quarters_filed < 4:
-        projected_rendimiento_neto = (total_rendimiento_neto * Decimal(4) / Decimal(quarters_filed)).quantize(
+    if latest_ordinal < 4:
+        projected_rendimiento_neto = (total_rendimiento_neto * Decimal(4) / Decimal(latest_ordinal)).quantize(
             Decimal("0.01"),
         )
         is_extrapolated = True

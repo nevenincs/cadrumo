@@ -1,0 +1,44 @@
+# Modelo 303 recargo de equivalencia cuotas (LIVA art. 161). A supplier to
+# recargo-regime retailers charges recargo alongside IVA on a repercutido sale;
+# the recargo cuota is carried per transaction as recargo_amount and aggregated
+# here by IVA rate tier into the official recargo cuota casillas. The tier-to-rate
+# mapping (general 21% -> 5.2%, reducido 10% -> 1.4%, super-reducido 4% -> 0.5%)
+# is the grounded LIVA art. 161 schedule (liva-art-161:recargo-rate-* parameters,
+# review_status reviewed). Without these binds the recargo cuotas reported zero
+# even when a supplier charged recargo (silent under-declaration).
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-recargo-equivalencia-general-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general_21"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "recargo_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-recargo-equivalencia-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reduced_10"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-recargo-equivalencia-super-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_super_reduced_4"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "recargo_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]

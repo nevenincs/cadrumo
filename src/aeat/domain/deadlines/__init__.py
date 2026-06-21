@@ -82,6 +82,7 @@ from ._plazo import resolve_filing_closes_on
 from ._profiles import taxpayer_profile_from_mapping
 from ._recargo import (
     build_recovery_for_overdue,
+    completed_months_late,
     load_recargo_bands,
     resolve_recargo_band,
 )
@@ -118,6 +119,7 @@ __all__ = [
     "TaxpayerProfile",
     "applies_to",
     "build_recovery_for_overdue",
+    "completed_months_late",
     "compute_obligation_schedule",
     "evaluate_multiple_pagadores_obligation",
     "explain",

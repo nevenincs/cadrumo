@@ -273,11 +273,11 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 source_refs = ["aeat-dr-202-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = "modelo-202-page-01-header-devengo_start_date-pos-127"
+id = "modelo-202-page-01-header-datos_adicionales-incn-12-meses-pos-127"
 offset = 127
 length = 1
 kind = "header"
-header_key = "devengo_start_date"
+header_key = "datos_adicionales_importe-neto-cifra-negocios-doce-meses-a"
 data_type = "text"
 required = false
 padding = "right_space"
@@ -357,11 +357,10 @@ legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 source_refs = ["aeat-dr-202-2025"]
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = "modelo-202-page-01-header-devengo_start_date-pos-147"
+id = "modelo-202-page-01-filler-pos-147"
 offset = 147
 length = 1
-kind = "header"
-header_key = "devengo_start_date"
+kind = "filler"
 data_type = "text"
 required = false
 padding = "right_space"

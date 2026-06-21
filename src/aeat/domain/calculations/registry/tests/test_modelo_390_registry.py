@@ -131,6 +131,7 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
         "modelo-390-iva-repercutido-reducido-cuota",
         "modelo-390-iva-repercutido-super-reducido-cuota",
         "modelo-390-iva-soportado-interiores-cuota",
+        "modelo-390-iva-soportado-importaciones-cuota",
         "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
     }
 

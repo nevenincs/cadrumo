@@ -72,6 +72,7 @@ def _observation(
     flow: IvaFlowDirection = IvaFlowDirection.REPERCUTIDO,
     base: Decimal = Decimal("1000"),
     iva: Decimal = Decimal("210"),
+    recargo: Decimal = Decimal("0"),
 ) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id=ledger_id,
@@ -81,6 +82,7 @@ def _observation(
         flow_direction=flow,
         base_amount=base,
         iva_amount=iva,
+        recargo_amount=recargo,
     )
 
 
@@ -832,7 +834,97 @@ def test_box_60_carries_substantive_export_grounding() -> None:
         assert "ley-37-1992:art-22" in refs, f"{revision_id}: box 60 must cite art-22"
 
 
+def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
+    """Regression: casillas 07/28 (base imponible) aggregate the ledger base.
+
+    Before the domestic base bindings landed, casillas 01/04/07/28 were
+    ``input_kind = "manual"`` with no binding, so the base imponible stayed 0
+    while the cuota (09/29) resolved from the ledger — a structurally
+    inconsistent M303 (cuota without base) that nonetheless passed verify. The
+    base now aggregates via ``fact = "base_amount_sum"``, mirroring the existing
+    59/60 export / intra-community base bindings.
+
+    Expected values are the declared observation base sums (ground truth from the
+    inputs, not a re-run of the registry formula), so a regression to the manual
+    no-binding state (base -> 0) fails this test loudly.
+    """
+    repercutido = _observation(
+        category=IvaCategory.DOMESTIC_GENERAL_21,
+        rate_kind=IvaRateKind.GENERAL,
+        flow=IvaFlowDirection.REPERCUTIDO,
+        base=Decimal("6500"),
+        iva=Decimal("1365"),
+    )
+    soportado = _observation(
+        category=IvaCategory.DOMESTIC_GENERAL_21,
+        rate_kind=IvaRateKind.GENERAL,
+        flow=IvaFlowDirection.SOPORTADO,
+        base=Decimal("300"),
+        iva=Decimal("63"),
+    )
+    result = _calculate_303_from_observations(
+        filing_year=2024,
+        period="2T",
+        observations=(repercutido, soportado),
+    )
+    # Base imponible boxes now carry the ledger base sum (the regression target).
+    assert result.values["07"] == Decimal("6500")
+    assert result.values["28"] == Decimal("300")
+    # Cuota boxes are unchanged — the base binding is independent of the cuota
+    # binding (casilla 09 is not base x tipo here, it is its own aggregation).
+    assert result.values["09"] == Decimal("1365")
+    assert result.values["29"] == Decimal("63")
+    # No reduced / super-reduced operations -> those base boxes resolve to zero.
+    assert result.values["01"] == Decimal("0")
+    assert result.values["04"] == Decimal("0")
+
+
 def test_iva_ledger_observation_is_strict_and_frozen() -> None:
     obs = _observation()
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         obs.iva_amount = Decimal("999")
+
+
+def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> None:
+    """A supplier's recargo charged on a repercutido sale aggregates into the M303
+    recargo cuota casillas by IVA tier (LIVA art. 161), instead of reporting zero.
+
+    Expected values derive from the recargo amounts placed on the observations,
+    routed by category to the matching tier binding — not from re-running the sum
+    under test. Proves the recargo_amount_sum fact closes the recargo silent zero.
+    """
+    revision = resources().modelos.get("303").revisions["2023-y-siguientes"]
+    general = _observation(
+        ledger_id="rec-general",
+        category=IvaCategory.DOMESTIC_GENERAL_21,
+        rate_kind=IvaRateKind.GENERAL,
+        flow=IvaFlowDirection.REPERCUTIDO,
+        base=Decimal("1000"),
+        iva=Decimal("210"),
+        recargo=Decimal("52.00"),
+    )
+    reduced = _observation(
+        ledger_id="rec-reduced",
+        category=IvaCategory.DOMESTIC_REDUCED_10,
+        rate_kind=IvaRateKind.REDUCED,
+        flow=IvaFlowDirection.REPERCUTIDO,
+        base=Decimal("1000"),
+        iva=Decimal("100"),
+        recargo=Decimal("14.00"),
+    )
+    # A normal sale with no recargo contributes zero to the recargo cuota.
+    plain = _observation(
+        ledger_id="plain-general",
+        category=IvaCategory.DOMESTIC_GENERAL_21,
+        rate_kind=IvaRateKind.GENERAL,
+        flow=IvaFlowDirection.REPERCUTIDO,
+        base=Decimal("2000"),
+        iva=Decimal("420"),
+        recargo=Decimal("0"),
+    )
+
+    resolved = resolve_ledger_iva_aggregation_binding_values(revision, (general, reduced, plain))
+
+    assert resolved["modelo-303-recargo-equivalencia-general-cuota"] == Decimal("52.00")
+    assert resolved["modelo-303-recargo-equivalencia-reducido-cuota"] == Decimal("14.00")
+    assert resolved["modelo-303-recargo-equivalencia-super-reducido-cuota"] == Decimal("0")

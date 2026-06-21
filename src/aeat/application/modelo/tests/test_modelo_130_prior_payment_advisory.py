@@ -86,13 +86,14 @@ _PRIOR_1T_CASILLA_07 = Decimal("200")
 
 # Casilla 01 (Ingresos) is a source-owned bound casilla (ledger renta income
 # aggregation) — it MUST NOT be supplied through the caller channel, or the
-# source-override guard refuses the calculate. Casilla 05 (Pagos fraccionados
-# anteriores) is now a BOUND carry (Stage 2) and likewise must not be supplied as
-# a manual input. The manual inputs cover only the remaining non-source casillas;
-# casilla 01 folds from seeded income transactions. Gastos (02) = 0 leaves
-# rendimiento neto == ingresos, so casilla 04 is a clean positive pago fraccionado.
+# source-override guard refuses the calculate. Casilla 02 (Gastos) is likewise a
+# source-owned bound casilla now (ledger renta gasto aggregation): with no expense
+# transactions seeded its resolver returns 0, leaving rendimiento neto == ingresos
+# so casilla 04 is a clean positive pago fraccionado. Casilla 05 (Pagos
+# fraccionados anteriores) is a BOUND carry (Stage 2) and likewise must not be
+# supplied. The manual inputs cover only the remaining non-source casillas;
+# casilla 01 folds from seeded income transactions.
 _MANUAL_INPUTS: dict[str, Decimal] = {
-    "02": Decimal("0"),
     "06": Decimal("0"),
     "08": Decimal("0"),
     "10": Decimal("0"),

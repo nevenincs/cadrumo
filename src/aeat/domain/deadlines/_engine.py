@@ -369,7 +369,8 @@ def _overdue_recovery_or_none(
         return None
     try:
         return build_recovery_for_overdue(
-            days_late=days_late,
+            closes_on=window.closes_on,
+            reference_today=reference_today,
             modelo=modelo,
             period=window.period,
         )

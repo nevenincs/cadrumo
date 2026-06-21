@@ -162,6 +162,27 @@ def enum_consumed_binding_ids(revision: ModeloRevision) -> frozenset[str]:
     return frozenset(refs)
 
 
+def revision_date_binding_ids(revision: ModeloRevision) -> frozenset[str]:
+    """Return every date_binding id the revision's formulas consume.
+
+    Date bindings carry date-valued profile facts (e.g. taxpayer birth date)
+    consumed by ops such as ``age_at_year_end``. They are read from the
+    ``date_binding_values`` channel, distinct from the Decimal ``binding_values``
+    and string ``enum_binding_values`` channels. This is the revision-level
+    sibling of :func:`enum_consumed_binding_ids`: callers use it to populate the
+    date channel and to refuse a date-valued binding supplied through a
+    decimal/enum override.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose formula graph is inspected
+            for ``date_binding`` leaf references.
+    """
+    refs: list[str] = []
+    for formula in revision.formulas:
+        refs.extend(expression_date_binding_refs(formula.expression))
+    return frozenset(refs)
+
+
 def _collect_parameter_refs(expression: FormulaExpression, refs: list[str]) -> None:
     if expression.parameter is not None:
         refs.append(expression.parameter)

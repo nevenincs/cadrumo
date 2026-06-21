@@ -115,6 +115,7 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
         },
         relation_values={
             "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
+            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
         },
     )
 
@@ -164,6 +165,7 @@ def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation
         },
         relation_values={
             "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
+            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
         },
     )
 

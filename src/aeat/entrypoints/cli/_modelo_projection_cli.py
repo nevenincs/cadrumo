@@ -155,12 +155,7 @@ def _register_modelo_project_command(
         except RegistrySnapshotError as exc:
             raise bad_parameter_from_error(exc) from exc
         except RegistryValidationError as exc:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.project.m100_calculation_error",
-                    default=f"M100 projection calculation failed: {exc}",
-                ),
-            ) from exc
+            raise bad_parameter_from_error(exc) from exc
 
         project_result = ModeloProjectResult(
             year=service_result.year,

@@ -29,6 +29,7 @@ source_refs = [
 ]
 bindings = [
     "renta-2025-modelo-100-estimacion-directa-es-normal",
+    "renta-2025-ledger-income-0171",
     "renta-2025-ledger-expense-0186-deductible",
     "renta-2025-ledger-expense-0192-deductible",
     "renta-2025-ledger-expense-0199-deductible",

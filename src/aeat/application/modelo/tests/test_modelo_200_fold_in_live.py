@@ -104,6 +104,7 @@ _M202 = "202"
 # carry under test, so seed it as zero (no instalments this scenario) to keep the
 # live calculate focused on the BIN / dotaciones self-carries.
 _M202_PAGO_OUTPUT = "34"
+_M202_PAGO_OUTPUT_40_2 = "03"  # modalidad cuota (art. 40.2); folds alongside casilla 34
 _M202_PAGO_PERIODS = ("1P", "2P", "3P")
 _M202_PAGO_RELATION = "modelo-200-2024-rel-202-pagos-fraccionados"
 _CASILLA_CUOTA_DIFERENCIAL = "DP200014B:00611"
@@ -211,7 +212,10 @@ def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None
                 modelo=_M202,
                 filing_year=_FILING_YEAR,
                 period=period,
-                observations=(CasillaObservation(casilla_id=_M202_PAGO_OUTPUT, value=Decimal("0")),),
+                observations=(
+                    CasillaObservation(casilla_id=_M202_PAGO_OUTPUT, value=Decimal("0")),
+                    CasillaObservation(casilla_id=_M202_PAGO_OUTPUT_40_2, value=Decimal("0")),
+                ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,

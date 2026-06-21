@@ -29,6 +29,7 @@ from ...domain.iva_compensation._carry_forward import (
     IvaCompensationCarryForwardReport,
     IvaCompensationPeriodState,
     _period_sort_key,
+    derive_iva_compensation_year_end_carry_partition,
 )
 from ...domain.iva_compensation._errors import (
     IvaCompensationDecimalParseError,
@@ -39,7 +40,6 @@ from ._errors import IvaCompensationModeloError
 from ._ports import FiledDeclaracionObservationProtocol
 
 _ZERO = Decimal("0")
-_FINAL_QUARTER = "4T"
 
 
 class IvaCompensationAnnualSummary(BaseModel):
@@ -318,24 +318,27 @@ def iva_compensation_annual_summary_from_filed_observation(
 def cross_check_iva_compensation_annual_summary(
     report: IvaCompensationCarryForwardReport,
     summary: IvaCompensationAnnualSummary,
+    *,
+    period_states: tuple[IvaCompensationPeriodState, ...] = (),
 ) -> IvaCompensationAnnualCrossCheck:
-    """Compare projections with filed evidence and return an :class:`IvaCompensationAnnualCrossCheck`."""
-    last_period = sum(
-        (
-            lot.generated_amount
-            for lot in report.lots
-            if lot.source_filing_year == summary.filing_year and lot.source_period.registry_token == _FINAL_QUARTER
-        ),
-        _ZERO,
+    """Compare projections with filed evidence and return an :class:`IvaCompensationAnnualCrossCheck`.
+
+    The expected box 97 / box 662 figures are derived through the SAME FIFO
+    carry partition that drives the Modelo 390 calculation
+    (:func:`derive_iva_compensation_year_end_carry_partition`), so the
+    cross-check, the box-97 binding, and the box-662 binding cannot diverge: all
+    three read one partition of the year's pending credit. ``period_states`` is
+    the same tuple of filed Modelo 303 states the carry-forward ``report`` was
+    built from; it supplies the last period's disponible that discriminates box
+    97 (carried into the last period) from box 662 (generated-not-carried).
+    """
+    partition = derive_iva_compensation_year_end_carry_partition(
+        report,
+        period_states,
+        filing_year=summary.filing_year,
     )
-    generated_not_in_last = sum(
-        (
-            lot.remaining_amount
-            for lot in report.lots
-            if lot.source_filing_year == summary.filing_year and lot.source_period.registry_token != _FINAL_QUARTER
-        ),
-        _ZERO,
-    )
+    last_period = partition.last_period_amount
+    generated_not_in_last = partition.generated_not_in_last_amount
     remaining = last_period + generated_not_in_last
     difference = remaining - summary.total_pending_amount
     last_period_difference = last_period - summary.last_period_compensation_amount

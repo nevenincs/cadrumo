@@ -111,6 +111,9 @@ resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva
 #   ledger_iva_aggregation        — LedgerIvaAggregationSourceResolver
 #   ledger_renta_expense_aggregation — LedgerRentaExpenseAggregationSourceResolver
 #   ledger_renta_income_aggregation  — LedgerRentaIncomeAggregationSourceResolver (S09)
+#   ledger_renta_gasto_aggregation   — LedgerRentaGastoAggregationSourceResolver
+#                                      (M130 casilla 02 deductible expenses; OUTGOING
+#                                      sibling of the income resolver)
 #   ledger_oss_aggregation           — OssIossLedgerSourceResolver (S09)
 #   collectible_invoice              — InvoiceCatalogueSourceResolver (S09)
 #   payable_invoice                  — InvoiceCatalogueSourceResolver (S09, declared no
@@ -131,6 +134,7 @@ _BUCKET_AGGREGATION_OWNED_SOURCES = frozenset(
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
         "ledger_renta_income_aggregation",
+        "ledger_renta_gasto_aggregation",
         "ledger_oss_aggregation",
         "collectible_invoice",
         "payable_invoice",
@@ -154,6 +158,7 @@ _BUCKET_AGGREGATION_LOCK_SOURCES = frozenset(
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
         "ledger_renta_income_aggregation",
+        "ledger_renta_gasto_aggregation",
         "ledger_oss_aggregation",
         "collectible_invoice",
         "payable_invoice",
@@ -516,6 +521,7 @@ def _resolve_bucket_source_mesh(
         CalculationSourceContext,
         LedgerIvaAggregationSourceResolver,
         LedgerRentaExpenseAggregationSourceResolver,
+        LedgerRentaGastoAggregationSourceResolver,
         LedgerRentaIncomeAggregationSourceResolver,
         OssIossLedgerSourceResolver,
         collect_unhandled_source_diagnostics,
@@ -540,6 +546,12 @@ def _resolve_bucket_source_mesh(
             ).resolve(context),
             # M130 actividad-económica income (ledger_renta_income_aggregation).
             LedgerRentaIncomeAggregationSourceResolver(
+                transaction_repository=transaction_repository,
+            ).resolve(context),
+            # M130 deductible-expense / gasto into casilla 02
+            # (ledger_renta_gasto_aggregation) — the OUTGOING sibling of the
+            # income resolver, same cumulative quarterly window.
+            LedgerRentaGastoAggregationSourceResolver(
                 transaction_repository=transaction_repository,
             ).resolve(context),
             # M369 OSS/IOSS (ledger_oss_aggregation).  The live path projects

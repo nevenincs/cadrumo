@@ -23,7 +23,10 @@ import pytest
 
 from ....core.errors import AeatError, build_error_envelope
 from ....core.resources import resources
-from ....domain.calculations.registry import enum_consumed_binding_ids
+from ....domain.calculations.registry import (
+    enum_consumed_binding_ids,
+    revision_date_binding_ids,
+)
 from .._calculate_input import (
     ModeloCalculateBindingInputError,
     _binding_input_channel,
@@ -35,6 +38,10 @@ _MODELO = "200"
 _REVISION = "2024-y-siguientes"
 _ENUM_BINDING = "modelo-200-2024-profile-legal-entity-form"
 _DECIMAL_BINDING = "modelo-200-2024-pagos-fraccionados-anuales"
+
+# Modelo 100 declares a date-valued binding (taxpayer birth date) consumed by
+# the ``age_at_year_end`` op; it is profile-sourced, not a --binding channel.
+_M100_DATE_BINDING = "renta-2024-profile-taxpayer-birth-date"
 
 
 def _revision():
@@ -86,3 +93,21 @@ def test_unknown_binding_id_refuses_with_accepted_set() -> None:
     assert "no-such-binding-id" in str(error)
     assert _DECIMAL_BINDING in str(error)
     assert build_error_envelope(error).code == "REFUSED_MODELO_CALCULATE_BINDING_INPUT"
+
+
+def test_date_sourced_binding_is_detected_as_a_date_channel() -> None:
+    """A date-valued profile binding is the ``date`` channel, not decimal/enum.
+
+    The calculate path uses :func:`revision_date_binding_ids` to refuse a
+    date-valued ``--binding`` override with an actionable "set it on the profile"
+    message, instead of the misleading "is not a decimal" coercion failure. The
+    fixture is anti-tautological: it first confirms M100 declares the birth-date
+    date binding in the live registry, so a regression that stops detecting it
+    fails here rather than passing vacuously.
+    """
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+    revision = snapshot.revision
+    date_ids = revision_date_binding_ids(revision)
+    assert _M100_DATE_BINDING in date_ids
+    # A date binding is neither an enum nor a plain decimal override channel.
+    assert _M100_DATE_BINDING not in enum_consumed_binding_ids(revision)

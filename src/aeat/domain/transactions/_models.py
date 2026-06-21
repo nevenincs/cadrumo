@@ -249,6 +249,11 @@ _NON_NEGATIVE_DECIMAL_HINTS = {
     ),
     "iva_amount": "iva_amount must be non-negative; it is the IVA charged on the row, never a signed delta",
     "iva_rate": "iva_rate must be non-negative; express the rate as a fraction such as 0.21",
+    "recargo_amount": (
+        "recargo_amount must be non-negative; it is the recargo de equivalencia "
+        "cuota the supplier charged on a repercutido sale to a recargo-regime "
+        "retailer, never a signed delta"
+    ),
 }
 
 
@@ -276,6 +281,7 @@ _TRANSACTION_DECIMAL_KEYS: tuple[str, ...] = (
     "taxable_base",
     "iva_rate",
     "iva_amount",
+    "recargo_amount",
     "classification_confidence",
     "fx_rate",
     "value_in_eur",
@@ -792,6 +798,7 @@ class Transaction(BaseModel):
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
     iva_amount: Decimal | None = None
+    recargo_amount: Decimal | None = None
     irpf_category: str | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
@@ -893,7 +900,7 @@ class Transaction(BaseModel):
         """Trim and freeze attachment identifiers."""
         return _normalize_identifier_tuple(value)
 
-    @field_validator("taxable_base", "iva_rate", "iva_amount")
+    @field_validator("taxable_base", "iva_rate", "iva_amount", "recargo_amount")
     @classmethod
     def _validate_tax_amounts(cls, value: Decimal | None, info: core_schema.ValidationInfo) -> Decimal | None:
         """Reject negative tax substrate values."""

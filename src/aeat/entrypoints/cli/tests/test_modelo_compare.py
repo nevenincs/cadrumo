@@ -43,7 +43,7 @@ from ....domain.calculations.registry import CasillaObservation, calculate_regis
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from ._m130_source_support import seed_m130_income_transaction
+from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -146,11 +146,21 @@ def _calculate_m130(work_unit_id: str, *, filing_year: int, ingresos: Decimal, g
     """Calculate M130 and return casilla_values dict.
 
     Oracle inputs (AEAT DR 130 Instrucciones):
-      casilla 01 = source-owned ingresos, 02 = gastos, 05 = 0, 06 = 0.
+      casilla 01 = source-owned ingresos, 02 = source-owned gastos (both
+      bucket-derived from the ledger), 05 = 0, 06 = 0.
       prev_year_income > 12,000 so minoración (13) = 0.
+
+    Casilla 02 (gastos) is a bucket-bound casilla aggregated from deductible
+    OUTGOING ledger rows; it cannot be supplied via ``--casilla``, so the gasto
+    is seeded as a real expense transaction.
     """
     seed_m130_income_transaction(
         amount=ingresos,
+        filing_year=filing_year,
+        source_key=f"compare-{filing_year}",
+    )
+    seed_m130_expense_transaction(
+        amount=Decimal(gastos),
         filing_year=filing_year,
         source_key=f"compare-{filing_year}",
     )
@@ -158,7 +168,6 @@ def _calculate_m130(work_unit_id: str, *, filing_year: int, ingresos: Decimal, g
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", f"02={gastos}",
             "--casilla", "05=0.00",
             "--casilla", "06=0.00",
             "--binding", f"irpf.previous_year_economic_activity_net_income={_PREV_YEAR_INCOME}",

@@ -103,12 +103,12 @@ def _line_value(output: str, key: str) -> str:
 def test_link_refuses_operator_invoice_add_id_instructively(cli_runner: CliRunner) -> None:
     """`link --invoice-id` must refuse an id minted by ``invoice add``.
 
-    Per the accepted ``2026-06-10-ledger-invoice-unification-adr`` the slim
+    Per the accepted ``2026-06-10-ledger-invoice-unification`` the slim
     operator-CRUD ``BusinessOperationInvoice`` store (filled by ``invoice add``)
     and the rich reconciliation ``InvoiceCatalogue`` that ``link --invoice-id``
     targets are intentionally distinct: only the rich ``Invoice`` carries
     ``linked_transaction_ids``. An ``invoice add`` id is therefore not a valid
-    ``--invoice-id`` target. This is the "documented sharp edge" the ADR fixes
+    ``--invoice-id`` target. This is the "documented sharp edge" the decision record fixes
     explicitly so a future agent does not unify the two stores by mistake, and
     it is the runtime fact the ledger-evidence how-to must reflect (audit M17).
 
