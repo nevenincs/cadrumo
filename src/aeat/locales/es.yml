@@ -3546,9 +3546,6 @@ core:
       registration_duplicate_callable: La implementación de respuestas de proyecto
         se registró dos veces con distintos invocables; debe registrarse exactamente
         una vez.
-domain:
-  iva:
-    refund:
 dotted:
   key: Clave con puntos
 entries:

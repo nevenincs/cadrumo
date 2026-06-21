@@ -3464,9 +3464,6 @@ core:
       output_language_type: core.profile.errors.output_language_type
       registration_duplicate_callable: A projektválaszok implementációja kétszer lett
         regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
-domain:
-  iva:
-    refund:
 dotted:
   key: Pontozott kulcs
 entries:
