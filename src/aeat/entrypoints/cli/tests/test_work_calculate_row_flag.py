@@ -305,6 +305,42 @@ class TestValidateM347Threshold:
         )
         validate_m347_threshold(rows)  # total=4005.07 > 3005.06, must not raise
 
+    def test_same_nif_split_across_rows_aggregates_over_threshold(self) -> None:
+        """Two rows for the SAME counterparty (e.g. entregas + adquisiciones), each
+        at/below the threshold, whose annual aggregate exceeds it, must pass.
+
+        Oracle: RD 1065/2007 art. 33.1 — the threshold is on the operations with
+        the same person, summed across rows. 2000 + 2000 = 4000 > 3005.06.
+        """
+        rows = (
+            Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("2000")),
+            Modelo347ContraparteRow(nif="12345678A", importe_Q3=Decimal("2000")),
+        )
+        validate_m347_threshold(rows)  # per-NIF total 4000 > 3005.06, must not raise
+
+    def test_same_nif_split_across_rows_aggregate_below_threshold_rejected(self) -> None:
+        """Same-NIF rows whose AGGREGATE is at/below the threshold are rejected,
+        and the error reports the aggregated per-NIF total (1000+1500=2500)."""
+        rows = (
+            Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("1000")),
+            Modelo347ContraparteRow(nif="12345678A", importe_Q2=Decimal("1500")),
+        )
+        with pytest.raises(Modelo347ThresholdError) as exc:
+            validate_m347_threshold(rows)
+        assert exc.value.total == Decimal("2500")
+        assert exc.value.nif == "12345678A"
+
+    def test_distinct_nifs_thresholded_independently(self) -> None:
+        """Aggregation is per-NIF: a declarable counterparty does not rescue a
+        different counterparty below the threshold."""
+        rows = (
+            Modelo347ContraparteRow(nif="11111111H", importe_Q1=Decimal("5000")),
+            Modelo347ContraparteRow(nif="22222222J", importe_Q1=Decimal("1000")),
+        )
+        with pytest.raises(Modelo347ThresholdError) as exc:
+            validate_m347_threshold(rows)
+        assert exc.value.nif == "22222222J"
+
 
 # ---------------------------------------------------------------------------
 # Revision view surfaces persisted detail rows (regression for #200)
