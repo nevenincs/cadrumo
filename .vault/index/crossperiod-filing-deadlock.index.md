@@ -19,6 +19,7 @@ related:
   - '[[2026-06-21-crossperiod-filing-deadlock-P02-S09]]'
   - '[[2026-06-21-crossperiod-filing-deadlock-P02-S10]]'
   - '[[2026-06-21-crossperiod-filing-deadlock-P02-S11]]'
+  - '[[2026-06-21-crossperiod-filing-deadlock-audit]]'
   - '[[2026-06-21-crossperiod-filing-deadlock-plan]]'
 ---
 
@@ -31,6 +32,10 @@ Auto-generated index of all documents tagged with `#crossperiod-filing-deadlock`
 ### adr
 
 - `2026-06-19-crossperiod-filing-deadlock-adr` - `crossperiod-filing-deadlock` adr: `Cross-period filing deadlock: late local work file and local-chain export` | (**status:** `accepted` — Decision A implemented; Decision B implemented in a refined same-year scope)
+
+### audit
+
+- `2026-06-21-crossperiod-filing-deadlock-audit` - `crossperiod-filing-deadlock` audit: `Cross-period filing deadlock remediation - code review`
 
 ### exec
 
