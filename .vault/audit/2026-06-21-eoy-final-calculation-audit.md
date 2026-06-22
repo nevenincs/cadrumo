@@ -66,6 +66,16 @@ FY-specific statutory caps with per-category legal grounding) — deferred as ou
 scope; tracked under this audit's fix campaign. The original finding text below stands as the
 as-discovered record.
 
+**Update 2026-06-21 (later) — F1 FULLY RESOLVED for 2024 (income + expense).** The expense half
+also landed: a new `categories/profiles/2024.toml` (41 categories at parity with the reviewed 2025
+profile; first-slice categories `full_deductible` per LIRPF art. 28.1, dietas/seguro caps per RD
+439/2007 art. 9 / LIRPF art. 30.2.5ª — framework values, no fabricated FY-specific figures) plus the
+four first-slice expense bindings `0186/0192/0199/0203` with casillas bound and construct wired.
+Verified: M100 2024 casilla 0199 = 2662 (asesoría routed), rendimiento 0224 = 16471.10; non-first-slice
+gastos correctly advisory/manual (first-slice is intentionally incomplete in both 2024 and 2025). All
+six M100 revisions build; full suite 1148 passed. F1 is closed for 2024; the remaining residue is the
+deliberately-advisory non-first-slice gastos (by-design, parity with 2025).
+
 An autónomo who declares actividad económica and has a full year of ledger income/expenses (annual
 rendimiento neto 16000) finds that the **annual Modelo 100 carries none of it**. The full
 `bindings list --modelo 100 --year 2024 --period 0A --missing` set contains only retenciones
@@ -97,7 +107,17 @@ and cuota íntegra correctly but the final amount-to-pay collapses to zero:
 - `DP200014B:00599` cuota del ejercicio a ingresar = **0.00** (WRONG — expected ≈18400)
 
 A company with €80 000 of taxable profit shows €0 to pay at year-end. The cuota íntegra never
-reaches cuota líquida / cuota del ejercicio a ingresar. Commit `b06cf499f` added a non-blocking
+reaches cuota líquida / cuota del ejercicio a ingresar.
+
+**Root cause (confirmed 2026-06-21 at HEAD, after task #5's M202→M200 pagos fix — F2 is distinct and
+still open):** casilla `DP200014B:00592` (cuota líquida) is declared `input_kind = "manual"` — it is
+NOT computed from cuota íntegra (`DP200014:00562`) minus bonificaciones/deducciones. The downstream
+chain is sound: supplying `--casilla DP200014B:00592=18400` makes `DP200014B:00599` (cuota a ingresar)
+compute correctly to 18400.00. So the single defect is the missing cuota-íntegra → cuota-líquida
+derivation: 00562 computes (18400) but 00592 stays a hand-entry box at 0, silently zeroing the final
+result. The recommended fix is to make 00592 a computed casilla (cuota íntegra − the bonificación /
+deducción casillas) rather than a bare manual input — the F2 analogue of F1 (a load-bearing casilla
+left unbound). Commit `b06cf499f` added a non-blocking
 *advisory* for the positive-íntegra / zero-líquida case (honouring no-silent-under-declaration at the
 notice level), but the underlying number is still wrong. The M202 pagos-fraccionados fold-in is
 separately gated (needs filed M202 1P/2P/3P), and is moot here because the chain breaks before it.
