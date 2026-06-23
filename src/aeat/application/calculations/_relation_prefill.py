@@ -35,7 +35,7 @@ from typing import Final
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
-from ...core import Period
+from ...core import Modelo, Period
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -143,11 +143,51 @@ def _provenance_note(
     )
 
 
+def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> bool:
+    """Engine-side counterpart of the clean-state first-year-fractional suppression (IS-3).
+
+    Reuses the SINGLE modality definition (:func:`derive_modelo_202_modality`) and
+    the SINGLE profile builder (:func:`taxpayer_profile_from_mapping`) — no
+    duplicated INCN/threshold logic. Fail-closed: a missing or unprojectable
+    profile, a missing activity-start date, or any modality other than
+    ``ART_40_2_OPTIONAL`` (i.e. ``ART_40_3_MANDATORY`` / ``INCOMPLETE``) returns
+    ``False``, so the Modelo 202 relation stays unresolved and the gate keeps
+    blocking — never a silent under-declaration. ADR
+    2026-06-19-m202-first-period-attestation.
+    """
+    from pydantic import ValidationError
+
+    from ...core.wizard_catalogue import WizardCatalogueNotRegisteredError
+    from ...domain.calculations.registry import Modelo202Modality, derive_modelo_202_modality
+    from ...domain.deadlines import ProfileError, taxpayer_profile_from_mapping
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile._profile_repository import ProfileRepository
+    from ..user_profile._projections import record_to_path_values
+
+    try:
+        aggregate = ProfileRepository().load(bucket_id)
+        profile = taxpayer_profile_from_mapping(
+            record_to_path_values(aggregate.record),
+            tax_id_default="",
+        )
+    except (ProfileNotFoundError, ProfileError, WizardCatalogueNotRegisteredError, ValidationError):
+        # Fail-closed: an absent / unprojectable profile, or an unregistered wizard
+        # catalogue (non-operator contexts), keeps the M202 relation unresolved and
+        # the gate blocking — never a silent under-declaration.
+        return False
+    if derive_modelo_202_modality(profile).modality is not Modelo202Modality.ART_40_2_OPTIONAL:
+        return False
+    if profile.activity_start_date is None:
+        return False
+    return profile.activity_start_date.year >= filing_year
+
+
 def resolve_relations_from_local_store(
     snapshot: RegistrySnapshot,
     *,
     repository: CalculationObservationRepository | None = None,
     captured_at: datetime | None = None,
+    modelo_202_first_year_cuota: bool = False,
 ) -> RelationValues:
     """Build a :class:`RelationValues` record from the local observation store.
 
@@ -158,6 +198,12 @@ def resolve_relations_from_local_store(
             profile's calculation observation repository.
         captured_at: Optional timestamp for relation provenance. Defaults to
             the current clock.
+        modelo_202_first_year_cuota: When ``True`` (IS-3), an otherwise-unresolved
+            Modelo 202 (``source_modelo == "202"``) fold-in relation resolves to
+            ``0`` instead of ``None`` — a first-year IS filer under modalidad cuota
+            (LIS art. 40.2) has no pago-fraccionado obligation. The caller derives
+            this fail-closed (only for a Modelo 200 target); a resolved M202 value
+            is never overridden.
 
     Returns a :class:`RelationValues` whose ``values`` tuple has one
     ``RelationValue`` per relation declared in the snapshot's
@@ -197,6 +243,36 @@ def resolve_relations_from_local_store(
         source_periods = requirement.periods if requirement is not None else tuple(relation.source_periods)
         resolved = resolved_map.get(relation.id)
         if resolved is None:
+            # IS-3 / ADR 2026-06-19-m202-first-period-attestation: a first-year IS
+            # filer under modalidad cuota (LIS art. 40.2) has no Modelo 202
+            # pago-fraccionado obligation, so the M202 fold-in relation has no
+            # source filing to resolve. Resolve it to 0 (rather than leaving it
+            # None, which would crash draft-build on the cuota-diferencial formula
+            # that requires the value). Fail-closed: only when the caller derived
+            # the first-year-modalidad-cuota flag AND the source is Modelo 202 — a
+            # genuinely-resolved M202 value, modalidad base, or an undeterminable
+            # modality is never zeroed here. The clean-state gate surfaces the
+            # operator-facing advisory; this mirrors that single determination.
+            if (
+                modelo_202_first_year_cuota
+                and requirement is not None
+                and requirement.source_modelo == str(Modelo.M202)
+            ):
+                values.append(
+                    RelationValue(
+                        relation=relation.id,
+                        value=Decimal("0"),
+                        provenance="operator_manual",
+                        source_filing_year=target_year,
+                        source_periods=source_periods,
+                        resolved_at=when,
+                        note=(
+                            "first-year IS filer under modalidad cuota (LIS art. 40.2): no Modelo 202 "
+                            "pago-fraccionado obligation; relation resolved to 0 (see verify advisory)"
+                        ),
+                    ),
+                )
+                continue
             values.append(RelationValue(relation=relation.id, value=None))
             continue
         values.append(
@@ -480,6 +556,17 @@ class RelationPrefillSourceResolver:
                 snapshot,
                 repository=self._repository,
                 captured_at=self._captured_at or context.calculated_at,
+                # Scope the first-year M202 zero-resolution to the Modelo 200 annual
+                # fold-in target only — NEVER to a Modelo 202 snapshot's own
+                # intra-year cumulation (2P folds 1P, also source_modelo 202), which
+                # must keep its real prior-instalment values.
+                modelo_202_first_year_cuota=(
+                    str(context.modelo) == str(Modelo.M200)
+                    and _first_year_modalidad_cuota_no_m202(
+                        str(context.bucket_id),
+                        filing_year=context.filing_year,
+                    )
+                ),
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
