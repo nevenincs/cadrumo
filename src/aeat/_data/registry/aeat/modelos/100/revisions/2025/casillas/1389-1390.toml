@@ -1,8 +1,17 @@
+# Ley 35/2006 art. 48 — ejercicio 2024 origin negative general base
+# remaining pending after this period's compensation: the opening pending
+# (casilla 1388, bound from the prior filing's 1391) minus the amount
+# applied this period (casilla 1389). This remainder rolls forward to the
+# subsequent ejercicio inside the four-year window ("su importe se
+# compensará en los cuatro años siguientes"). Computed, never re-keyed.
 [[revisions."2025".casillas]]
 id = "1390"
 number = "1390"
 label = "Ejercicio 2024: Pendiente de aplicación en ejercicios futuros"
 section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
 semantic_role = "irpf_anexo_c_base_liq_neg_pendiente_fin"
-legal_refs = ["ley-35-2006:art-50", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+input_kind = "computed"
+formula = "renta-2025-base-liquidable-negativa-general-2024-pendiente-fin"
+data_type = "money"
+legal_refs = ["ley-35-2006:art-48", "ley-35-2006:art-50", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

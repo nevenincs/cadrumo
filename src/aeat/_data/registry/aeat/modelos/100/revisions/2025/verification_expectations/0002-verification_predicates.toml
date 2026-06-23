@@ -1,0 +1,27 @@
+# Ley 35/2006 art. 48 — base imponible general negativa compensation, fail-closed
+# gates on the operator-elective applied amount (casilla 1389), ejercicio-2024
+# origin. Compensation is a RIGHT bounded by these ceilings, not a mandate:
+# applying LESS than the maximum is permitted (cap_le_when_positive holds when
+# the ceiling <= 0 and when the applied amount <= the ceiling); only
+# OVER-application is refused.
+
+# Stock BLOCKING gate (art. 48): the applied compensation (1389) cannot exceed
+# the negative general base pending at the start of the period (casilla 1388,
+# bound from the prior filing's 1391). You cannot compensate more negative base
+# than you hold.
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-100-2025-compensacion-base-neg-general-no-excede-stock"
+expression = 'cap_le_when_positive(["1389", "1388"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-35-2006:art-48"]
+
+# Límite BLOCKING gate (art. 48): the applied compensation (1389) must NOT exceed
+# the computed art. 48 ceiling (casilla base-liq-neg-general-2024-aplicada-maxima
+# = min(1388 stock, max(0, 25%·0432 − 0433))). When the ceiling is positive, an
+# applied amount above it is an over-compensation the verify gate refuses;
+# electing LESS than the ceiling is permitted (compensation is a right).
+[[revisions."2025".verification_predicates]]
+predicate_id = "modelo-100-2025-compensacion-base-neg-general-no-excede-limite"
+expression = 'cap_le_when_positive(["1389", "base-liq-neg-general-2024-aplicada-maxima"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["ley-35-2006:art-48"]
