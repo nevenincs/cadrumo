@@ -181,16 +181,18 @@ def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_min
 
 
 def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> None:
-    """0435 = 0432 - 0433 where 0433 is the AEAT-positive cap on the G/P loss."""
+    """0435 = max(0, 0432 - 0433 - 1389) where 0433 is the AEAT-positive cap on the G/P loss."""
     # AEAT convention (per 2025 record-design dictionary HSALDO3 entry):
     # 0421 = max(0, 0419 - 0418) — positive magnitude of the net G/P loss balance
     # 0433 = min(0421, 25% of 0432) — capped portion that integrates into the base
-    # 0435 = 0432 - 0433 — base imponible general after subtracting the cap
+    # 0435 = max(0, 0432 - 0433 - 1389) — base imponible general after subtracting
+    #   the cap AND the art. 48 prior-negative-base compensation applied (1389),
+    #   which is zero here (no prior negative general base seeded).
     # Inputs: 1585 = 5000 propagates through 1607 → 0419 → 0421 → 0433.
     #   1607 = sum(1585) = 5000 → 0419 = sum(1607, 0307) = 5000
     #   0421 = max(0, 0419 - 0418) = 5000
     #   0433 = min(0421, 25% of 0432) = min(5000, 7500) = 5000
-    # Expected: 0435 = 30000 - 5000 = 25000.
+    # Expected: 0435 = 30000 - 5000 - 0 = 25000.
     scenario = _scenario_2025(
         "base-imponible-with-negative-capital-gains",
         overrides={
@@ -199,7 +201,9 @@ def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> No
         },
         expected=(
             RegistryScenarioExpectedOutput(target="0432", value=Decimal("30000.00")),
-            RegistryScenarioExpectedOutput(target="0435", value=Decimal("25000.00"), operand_refs=("0432", "0433")),
+            RegistryScenarioExpectedOutput(
+                target="0435", value=Decimal("25000.00"), operand_refs=("0432", "0433", "1389")
+            ),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
