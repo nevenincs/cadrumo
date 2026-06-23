@@ -1,8 +1,23 @@
+# Ley 35/2006 art. 48 — base imponible general negativa carry-forward,
+# ejercicio 2024 origin: the amount of the carried negative general base
+# (opening pending casilla 1388) the taxpayer ELECTS to compensate this
+# period. Operator-elective manual input: compensation is a RIGHT, not a
+# mandate ("su importe se compensará en los cuatro años siguientes ... La
+# compensación deberá efectuarse en la cuantía máxima que permita cada uno
+# de los ejercicios siguientes"), so applying LESS than the available
+# pending / the 25% headroom is permitted. OVER-application is refused by
+# the BLOCKING verification predicates
+# modelo-100-2025-compensacion-base-neg-general-no-excede-stock (1389 <=
+# 1388) and modelo-100-2025-compensacion-base-neg-general-no-excede-limite
+# (1389 <= cap 1388-aplicada-maxima). The applied amount is consumed by the
+# base imponible general formula (casilla 0435) as the art. 48 subtrahend,
+# clamped non-negative; the remainder rolls to casilla 1390.
 [[revisions."2025".casillas]]
 id = "1389"
 number = "1389"
 label = "Ejercicio 2024: Aplicado en esta  declaración"
 section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
 semantic_role = "irpf_anexo_c_base_liq_neg_aplicado"
-legal_refs = ["ley-35-2006:art-50", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-48", "ley-35-2006:art-50", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

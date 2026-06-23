@@ -366,6 +366,14 @@ def derive_calculation_completeness_casillas(
             # completeness gate fires on the omission instead.
             continue
         if not multi_segment:
+            if (segmento, number) in internal_only_identities:
+                # App-internal computed casilla intentionally absent from the
+                # AEAT-published structure (e.g. a regulatory ceiling materialised
+                # so verification predicates can bound an operator-elective
+                # amount). The schema validator guarantees it carries no
+                # export_refs and is formula-derived; it is not an AEAT box, so it
+                # never appears in the completeness manifest.
+                continue
             ordered.append(DerivedDisenoCasilla(segmento=None, number=number))
             continue
         if (segmento, number) in internal_only_identities:
