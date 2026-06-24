@@ -67,7 +67,7 @@ validated distinct-NIF primitive; P03 cuts the family over and locks pull==calcu
 Strictly sequential by phase: P02 depends on P01's store existing (the resolver reads it); P03
 depends on P02's resolver+binding being enrolled (re-pointing the formula before the resolver exists
 would leave the binding blank - no-dormant-source). Within P03, S07 (M180) and S08 (M190/M193) are
-independent registry edits; S09 (tests) follows both. P03 touches the relation/binding surface —
+independent registry edits; S09 (tests) follows both. P03 touches the relation/binding surface -
 sequence against active M303/relation peer work (re-read HEAD, explicit pathspec), since the
 `_relation_prefill.py`-adjacent files are hot.
 
