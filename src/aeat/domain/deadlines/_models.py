@@ -10,6 +10,7 @@ from :mod:`aeat.domain.deadlines`.
 
 from __future__ import annotations
 
+import re
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -224,6 +225,91 @@ class ModeloEnrollment(BaseModel):
     public_administration_budget_gt_6000000: bool = False
 
 
+_IBAN_SHAPE_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$")
+
+
+def _iban_mod_97(canonical: str) -> int:
+    """Compute the IBAN mod-97 check residue for an already-canonical IBAN.
+
+    Grounded on ISO 13616: move the leading four characters to the
+    tail, replace each letter with its ``A=10 … Z=35`` numeric form, and
+    take the resulting integer modulo 97. A valid IBAN yields a residue
+    of 1. Mirrors the canonical registry-boundary check in
+    :func:`aeat.domain.calculations.registry._schema_scalars._validate_iban_string`.
+    """
+    rearranged = canonical[4:] + canonical[:4]
+    numeric = "".join(ch if ch.isdigit() else str(ord(ch) - ord("A") + 10) for ch in rearranged)
+    return int(numeric) % 97
+
+
+class RefundAccount(BaseModel):
+    """The cuenta-devolución refund account AEAT pays a Modelo 303 refund into.
+
+    Groups the IBAN with the foreign-bank block used for a non-SEPA
+    account. Every field is sensitive financial identity data: per the
+    ``sensitive-financial-data-secure-storage-only`` invariant it lives
+    only in the encrypted secure-object store (``sensitivity="financial"``
+    on the profile schema), is read transiently into memory at export
+    time, and is never written to plaintext, logs, or a side store.
+
+    The IBAN is validated structurally at this boundary — country code,
+    check digits, BBAN length, and the ISO 13616 mod-97 residue — so a
+    malformed IBAN is rejected on input rather than deferred to
+    fichero-write time.
+
+    Attributes:
+        iban: The refund account IBAN (canonical, whitespace- and
+            hyphen-stripped, upper-cased). ``None`` when no refund
+            account is on file.
+        swift_bic: SWIFT-BIC of the bank for a non-SEPA account.
+        bank_name: Bank name for a non-SEPA (Resto Países) account.
+        bank_address: Bank address for a non-SEPA account.
+        bank_city: Bank city for a non-SEPA account.
+        bank_country_code: ISO 3166-1 alpha-2 country code of the bank
+            for a non-SEPA account.
+        sepa_marca: The derived Marca SEPA token (``"1"`` Cuenta España /
+            ``"2"`` UE SEPA / ``"3"`` Resto Países). Derived from the
+            account country at export, not an operator input.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    iban: str | None = None
+    swift_bic: str = ""
+    bank_name: str = ""
+    bank_address: str = ""
+    bank_city: str = ""
+    bank_country_code: str = ""
+    sepa_marca: str = ""
+
+    @field_validator("iban", mode="before")
+    @classmethod
+    def _validate_iban(cls, value: object) -> object:
+        """Reject a malformed IBAN at the secure-storage boundary.
+
+        Strips whitespace and hyphens, upper-cases, then enforces the
+        ISO 13616 shape (``CC kk BBAN``, total 15–34 chars) and the
+        mod-97 residue check. ``None`` and the empty string mean "no
+        refund account on file" and pass through as ``None``.
+        """
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            raise DeadlineValidationError("refund-account iban must be a string")
+        canonical = value.replace(" ", "").replace("-", "").upper()
+        if not canonical:
+            return None
+        if not _IBAN_SHAPE_RE.match(canonical):
+            raise DeadlineValidationError(
+                f"refund-account iban {value!r} does not match the ISO 13616 shape",
+            )
+        if _iban_mod_97(canonical) != 1:
+            raise DeadlineValidationError(
+                f"refund-account iban {value!r} fails the mod-97 check",
+            )
+        return canonical
+
+
 class ModeloIVAProfile(BaseModel):
     """IVA facts used by registry filing schedules.
 
@@ -239,6 +325,11 @@ class ModeloIVAProfile(BaseModel):
             IVA collective; voluntary for everyone else.
         redeme_enrolled: Registered in REDEME (Registro de Devolución
             Mensual del IVA) — one of the mandatory-SII triggers.
+        refund_account: The encrypted cuenta-devolución refund account
+            AEAT pays a Modelo 303 refund into. ``None`` when no refund
+            account is on file; a refund disposition with no refund
+            account is refused at export rather than emitting an empty
+            DID block.
     """
 
     model_config = _STRICT_FROZEN
@@ -248,6 +339,7 @@ class ModeloIVAProfile(BaseModel):
     intracommunity_operations_exceed_50000_eur: bool = False
     sii_enrolled: bool = False
     redeme_enrolled: bool = False
+    refund_account: RefundAccount | None = None
 
 
 class CrossPeriodGroupMemberRoster(BaseModel):

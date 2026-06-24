@@ -676,6 +676,7 @@ effective_dated = true
 description = "Whether the taxpayer is registered in REDEME (Registro de Devolucion Mensual del IVA). REDEME registration switches the IVA self-assessment period to monthly and is one of the mandatory-SII triggers."
 model_selectors = ["iva.redeme_enrolled"]
 schedule_predicates = ["iva.redeme_enrolled"]
+export_headers = ["redeme"]
 legal_refs = ["RIVA RD 1624/1992 Art. 30 (BOE-A-1992-28925)"]
 
 [[sections.fields]]
@@ -774,6 +775,54 @@ required = false
 sensitivity = "financial"
 description = "Payment account when required by filing context."
 export_headers = ["iban"]
+
+[[sections.fields]]
+key = "swift_bic"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "SWIFT-BIC of the refund account's bank for a non-SEPA cuenta-devolucion. Emitted on the Modelo 303 DID refund-account page (DR303 position 12). Read transiently at export from encrypted secure storage; never logged."
+export_headers = ["swift_bic"]
+
+[[sections.fields]]
+key = "bank_name"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Bank name for a non-SEPA refund account (Marca SEPA 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 57). Read transiently at export from encrypted secure storage; never logged."
+export_headers = ["bank_name"]
+
+[[sections.fields]]
+key = "bank_address"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Bank address for a non-SEPA refund account (Marca SEPA 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 127). Read transiently at export from encrypted secure storage; never logged."
+export_headers = ["bank_address"]
+
+[[sections.fields]]
+key = "bank_city"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Bank city for a non-SEPA refund account (Marca SEPA 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 162). Read transiently at export from encrypted secure storage; never logged."
+export_headers = ["bank_city"]
+
+[[sections.fields]]
+key = "bank_country_code"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "ISO 3166-1 alpha-2 country code of the bank for a non-SEPA refund account (Marca SEPA 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 192). Read transiently at export from encrypted secure storage; never logged."
+export_headers = ["bank_country_code"]
+
+[[sections.fields]]
+key = "sepa_marca"
+type = "string"
+required = false
+sensitivity = "financial"
+description = "Marca SEPA derived from the refund account country (1 Cuenta Espana / 2 UE SEPA / 3 Resto Paises). Emitted on the Modelo 303 DID refund-account page (DR303 position 194). Read transiently at export from encrypted secure storage; never logged."
+export_headers = ["sepa_marca"]
 
 [[sections.fields]]
 key = "aeat_seal"
