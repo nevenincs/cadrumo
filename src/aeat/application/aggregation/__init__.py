@@ -110,6 +110,11 @@ from ._renta_ledger import (
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
 )
+from ._retencion_observations_repository import (
+    RetencionObservationRepository,
+    persist_retencion_observations,
+    retencion_observation_key,
+)
 from ._retenciones import (
     RetencionesAggregation,
     RetencionObservation,
@@ -203,6 +208,7 @@ __all__ = [
     "RentaLedgerAggregationIssueReason",
     "RentaLedgerExpenseAggregation",
     "RetencionObservation",
+    "RetencionObservationRepository",
     "RetencionPerceptorRollup",
     "RetencionScheme",
     "RetencionesAggregation",
@@ -238,7 +244,9 @@ __all__ = [
     "merge_source_resolutions",
     "missing_evidence_advisory_observations",
     "oss_ioss_candidates_from_repositories",
+    "persist_retencion_observations",
     "resolve_per_modelo_registry_binding_values",
+    "retencion_observation_key",
     "stale_filed_revisions",
     "storage_degradation_resolution",
     "validate_iva_ledger_observation",
