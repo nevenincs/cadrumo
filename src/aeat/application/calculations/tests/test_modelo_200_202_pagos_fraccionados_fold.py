@@ -60,8 +60,10 @@ def test_m200_fold_in_credits_modalidad_40_2_instalments(tmp_path: Path) -> None
                 source_kind="app_filing",
             )
         values = _resolve_m200_pagos_fraccionados(repository)
-        # The 40.2 relation captures the modalidad-cuota instalments: 300 + 450 + 250.
-        assert values.get(_REL_40_2) == Decimal("1000.00")
+        # The 40.2 relation captures the modalidad-cuota instalments — the sum of the
+        # quarterly casilla-03 values the relation aggregated (computed from the inputs,
+        # not a hand-summed literal, so the assertion proves the aggregation wiring).
+        assert values.get(_REL_40_2) == sum(amounts.values(), Decimal("0"))
         # The 40.3 relation is 0 for a 40.2 filer (casilla 34 = 0 every quarter).
         assert values.get(_REL_40_3) == Decimal("0")
 
@@ -78,7 +80,7 @@ def test_m200_fold_in_credits_modalidad_40_3_instalments(tmp_path: Path) -> None
                 source_kind="app_filing",
             )
         values = _resolve_m200_pagos_fraccionados(repository)
-        assert values.get(_REL_40_3) == Decimal("450.00")
+        assert values.get(_REL_40_3) == sum(amounts.values(), Decimal("0"))
         assert values.get(_REL_40_2) == Decimal("0")
 
 
@@ -130,5 +132,6 @@ def test_is3_first_year_flag_never_overrides_a_filed_m202_value(tmp_path: Path) 
                 source_kind="app_filing",
             )
         values = _all_m202_relation_values(repository, first_year_cuota=True)
-        assert values.get(_REL_40_2) == Decimal("1000.00")  # filed value preserved, NOT zeroed
+        # filed value preserved (the sum of the quarterly casilla-03 inputs), NOT zeroed
+        assert values.get(_REL_40_2) == sum(amounts.values(), Decimal("0"))
         assert values.get(_REL_40_3) == Decimal("0")  # casilla 34 = 0 each quarter (genuinely 0)
