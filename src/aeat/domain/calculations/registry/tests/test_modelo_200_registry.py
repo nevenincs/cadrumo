@@ -11,6 +11,9 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import RegistryValidator, build_snapshot, calculate_registry_snapshot, load_registry_tree, resolve_export_layout
+from .._errors import RegistryValidationError
+from .._runtime_graph import expression_casilla_refs
+from .._schema import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -121,9 +124,11 @@ def test_modelo_200_liquidacion_cuota_chain_casillas_resolve_under_their_segment
         "DP200014:00552": ("DP200014", "00552"),
         "DP200014:00558": ("DP200014", "00558"),
         "DP200014:00562": ("DP200014", "00562"),
+        "DP200014:00582": ("DP200014", "00582"),
         "DP200014B:00592": ("DP200014B", "00592"),
         "DP200014B:00599": ("DP200014B", "00599"),
         "DP200014B:00611": ("DP200014B", "00611"),
+        "DP200014B:00619": ("DP200014B", "00619"),
     }
     for casilla_id, (segmento, number) in expected.items():
         casilla = casilla_by_id.get(casilla_id)
@@ -175,6 +180,112 @@ def test_modelo_200_page_014_export_binding_resolves_00562_to_liquidacion() -> N
     assert liquidacion_casilla.number == "00562"
 
 
+def test_modelo_200_liquidacion_014_014b_formulas_and_exports_use_segment_identities() -> None:
+    """Liquidación III/IV formulas and BOE fields cannot bind reused bare ECPN numbers."""
+    modelo, catalogues = _load_modelo_200()
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2024,
+        period="0A",
+    )
+
+    formulas_by_target = {formula.target: formula for formula in snapshot.revision.formulas}
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+
+    assert casillas_by_id["DP200014:00582"].input_kind == InputKind.COMPUTED
+    assert casillas_by_id["DP200014:00582"].formula == "modelo-200-cuota-integra-ajustada-positiva"
+    assert casillas_by_id["DP200014B:00592"].input_kind == InputKind.COMPUTED
+    assert casillas_by_id["DP200014B:00592"].formula == "modelo-200-cuota-liquida"
+
+    ajustada_refs = set(expression_casilla_refs(formulas_by_target["DP200014:00582"].expression))
+    assert {
+        "DP200014:00562",
+        "DP200014:00567",
+        "DP200014:00568",
+        "DP200014:00563",
+        "DP200014:00566",
+        "DP200014:00576",
+        "DP200014:00569",
+        "DP200014:00570",
+        "DP200014:00572",
+        "DP200014:00571",
+        "DP200014:00575",
+        "DP200014:00577",
+        "DP200014:00581",
+    } <= ajustada_refs
+    assert not {
+        "00567",
+        "00568",
+        "00563",
+        "00566",
+        "00576",
+        "00569",
+        "00570",
+        "00572",
+        "00571",
+        "00575",
+        "00577",
+        "00581",
+        "00582",
+    } & ajustada_refs
+
+    liquida_refs = set(expression_casilla_refs(formulas_by_target["DP200014B:00592"].expression))
+    assert {
+        "DP200014:00582",
+        "DP200014B:00619",
+        "DP200014B:00583",
+        "DP200014B:00585",
+        "DP200014B:00584",
+        "DP200014B:00588",
+        "DP200014B:00565",
+        "DP200014B:00590",
+        "DP200014B:00399",
+        "DP200014B:00082",
+    } <= liquida_refs
+    assert not {
+        "00582",
+        "00619",
+        "00583",
+        "00585",
+        "00584",
+        "00588",
+        "00565",
+        "00590",
+        "00399",
+        "00082",
+    } & liquida_refs
+
+    layout = resolve_export_layout(snapshot, "modelo-200-fichero-boe")
+    expected_exports = {
+        "modelo-200-page-014-casilla-00567": "DP200014:00567",
+        "modelo-200-page-014-casilla-00568": "DP200014:00568",
+        "modelo-200-page-014-casilla-00563": "DP200014:00563",
+        "modelo-200-page-014-casilla-00566": "DP200014:00566",
+        "modelo-200-page-014-casilla-00576": "DP200014:00576",
+        "modelo-200-page-014-casilla-00569": "DP200014:00569",
+        "modelo-200-page-014-casilla-00570": "DP200014:00570",
+        "modelo-200-page-014-casilla-00572": "DP200014:00572",
+        "modelo-200-page-014-casilla-00571": "DP200014:00571",
+        "modelo-200-page-014-casilla-00575": "DP200014:00575",
+        "modelo-200-page-014-casilla-00577": "DP200014:00577",
+        "modelo-200-page-014-casilla-00581": "DP200014:00581",
+        "modelo-200-page-014-casilla-00582": "DP200014:00582",
+        "modelo-200-page-014b-casilla-00583": "DP200014B:00583",
+        "modelo-200-page-014b-casilla-00585": "DP200014B:00585",
+        "modelo-200-page-014b-casilla-00584": "DP200014B:00584",
+        "modelo-200-page-014b-casilla-00588": "DP200014B:00588",
+        "modelo-200-page-014b-casilla-00565": "DP200014B:00565",
+        "modelo-200-page-014b-casilla-00590": "DP200014B:00590",
+        "modelo-200-page-014b-casilla-00399": "DP200014B:00399",
+        "modelo-200-page-014b-casilla-00082": "DP200014B:00082",
+        "modelo-200-page-014b-casilla-00619": "DP200014B:00619",
+    }
+    actual_exports = {field_id: layout.fields_by_id[field_id].casilla for field_id in expected_exports}
+    assert actual_exports == expected_exports
+
+
 def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> None:
     """The page-14 cuota chain evaluates to the AEAT manual's worked-example oracle.
 
@@ -220,7 +331,9 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
-            "DP200014B:00592": Decimal("0"),
+            "00501": Decimal("0"),
+            "DP200014:01033": Decimal("0"),
+            "DP200014:01034": Decimal("0"),
             "DP200014B:01766": Decimal("20000"),
             "DP200014B:01784": Decimal("0"),
         },
@@ -248,23 +361,24 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
     )
 
 
-def test_modelo_200_carries_full_chain_under_declaration_advisory_predicates() -> None:
-    """The M200 2024 revision guards every manual handoff in the IS result chain.
+def test_modelo_200_carries_manual_handoff_under_declaration_advisory_predicates() -> None:
+    """The M200 2024 revision guards the remaining manual handoffs in the IS result chain.
 
-    The IS determination flows through operator-entered manual casillas at three
+    The IS determination flows through operator-entered manual casillas at two
     stages where a positive upstream value can silently produce a zero downstream
     one (`no-silent-under-declaration`):
 
     - ``00500`` (resultado contable, after-tax) → ``00501`` (resultado antes de IS)
     - ``00501`` (resultado antes de IS) → ``DP200014:00552`` (base imponible)
-    - ``DP200014:00562`` (cuota íntegra) → ``DP200014B:00592`` (cuota líquida)
 
-    Each transition is guarded by an ADVISORY ``implies_nonzero`` predicate so a
-    positive accounting profit cannot silently grant VERIFICADO_COMPLETO with a
-    zero fiscal base or cuota. The earliest guard (00500→00501) is what catches the
+    Each remaining manual transition is guarded by an ADVISORY
+    ``implies_nonzero`` predicate so a positive accounting profit cannot silently
+    grant VERIFICADO_COMPLETO with a zero fiscal base. The earliest guard
+    (00500→00501) is what catches the
     operator who declares a profit but leaves the fiscal-base starting point at
     zero — a case the 00501→00552 advisory cannot catch because 00501 is *its*
-    antecedent. This grounds all three so a future edit dropping any link fails.
+    antecedent. The cuota stage is now formula-owned, so a stale advisory there
+    would be a false green signal and must not reappear.
     """
     modelo, catalogues = _load_modelo_200()
     snapshot = build_snapshot(
@@ -277,9 +391,12 @@ def test_modelo_200_carries_full_chain_under_declaration_advisory_predicates() -
 
     predicates = {p.predicate_id: p.expression for p in snapshot.revision.verification_predicates}
     expected = {
-        "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo": 'implies_nonzero(["00500", "00501"])',
-        "modelo-200-base-imponible-determinada-cuando-resultado-positivo": 'implies_nonzero(["00501", "DP200014:00552"])',
-        "modelo-200-cuota-liquida-determinada-cuando-cuota-integra-positiva": 'implies_nonzero(["DP200014:00562", "DP200014B:00592"])',
+        "modelo-200-resultado-antes-impuesto-determinado-cuando-resultado-contable-positivo": (
+            'implies_nonzero(["00500", "00501"])'
+        ),
+        "modelo-200-base-imponible-determinada-cuando-resultado-positivo": (
+            'implies_nonzero(["00501", "DP200014:00552"])'
+        ),
     }
     for predicate_id, expression in expected.items():
         assert predicates.get(predicate_id) == expression, (
@@ -293,26 +410,11 @@ def test_modelo_200_carries_full_chain_under_declaration_advisory_predicates() -
             f"{predicate_id} must stay non-blocking: a legitimately zero downstream "
             "(losses, full deductions) must not refuse the draft"
         )
+    assert "modelo-200-cuota-liquida-determinada-cuando-cuota-integra-positiva" not in predicates
 
 
-def test_modelo_200_carries_cuota_liquida_under_declaration_advisory_predicate() -> None:
-    """The M200 2024 revision declares the cuota-stage silent-under-declaration guard.
-
-    Companion to the base-determination advisory
-    ``modelo-200-base-imponible-determinada-cuando-resultado-positivo``
-    (which guards the 00501→00552 stage): cuota líquida ``DP200014B:00592``
-    is an operator-entered manual input consumed directly by the
-    cuota-a-ingresar formula, so a positive computed cuota íntegra
-    ``DP200014:00562`` can sit beside a silently-zero cuota líquida and
-    grant VERIFICADO_COMPLETO with cuota a ingresar cero — a silent
-    under-declaration the ``no-silent-under-declaration`` rule forbids.
-    This grounds the registry-declared ADVISORY predicate so a future
-    edit that drops or downgrades it fails loudly. The predicate is an
-    ``implies_nonzero`` (holds when cuota íntegra ≤ 0, fires only when it
-    is strictly positive and cuota líquida is zero), kept ADVISORY because
-    a positive cuota íntegra fully absorbed by bonificaciones/deducciones
-    (LIS art. 31-39) legitimately yields a zero cuota líquida.
-    """
+def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None:
+    """DP200014B:00592 is formula-owned; direct operator input fails fast."""
     modelo, catalogues = _load_modelo_200()
     snapshot = build_snapshot(
         modelo,
@@ -322,18 +424,26 @@ def test_modelo_200_carries_cuota_liquida_under_declaration_advisory_predicate()
         period="0A",
     )
 
-    predicates = {p.predicate_id: p for p in snapshot.revision.verification_predicates}
-    guard = predicates.get("modelo-200-cuota-liquida-determinada-cuando-cuota-integra-positiva")
-    assert guard is not None, (
-        "M200 2024 must declare the cuota-stage under-declaration advisory "
-        "(no-silent-under-declaration): a positive cuota íntegra with a zero "
-        "cuota líquida must surface an operator-facing advisory"
-    )
-    assert guard.expression == 'implies_nonzero(["DP200014:00562", "DP200014B:00592"])'
-    assert guard.finding_kind == "ADVISORY", (
-        "the guard must stay non-blocking: a cuota íntegra fully absorbed by "
-        "bonificaciones/deducciones legitimately yields a zero cuota líquida"
-    )
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    assert casillas_by_id["DP200014:00582"].input_kind == InputKind.COMPUTED
+    assert casillas_by_id["DP200014B:00592"].input_kind == InputKind.COMPUTED
+
+    with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"):
+        calculate_registry_snapshot(
+            snapshot,
+            inputs={"DP200014B:00592": Decimal("0")},
+            enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
+            binding_values={
+                "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+                "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
+                "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            },
+            relation_values={
+                "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
+                "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+            },
+            date_context={"filing_period": date(2024, 12, 31)},
+        )
 
 
 def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelacion_base() -> None:
@@ -380,7 +490,6 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
             "00501": Decimal("1000000"),
             "DP200014:01033": Decimal("0"),
             "DP200014:01034": Decimal("0"),
-            "DP200014B:00592": Decimal("0"),
             "DP200014B:01766": Decimal("0"),
             "DP200014B:01784": Decimal("0"),
         },

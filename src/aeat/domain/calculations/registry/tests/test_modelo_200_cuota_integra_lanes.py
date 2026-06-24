@@ -92,7 +92,6 @@ def _cuota_for(
             "DP200014:00547": Decimal("0"),
             "DP200014:01033": Decimal("0"),
             "DP200014:01034": Decimal("0"),
-            "DP200014B:00592": Decimal("0"),
             "DP200014B:01766": Decimal("0"),
             "DP200014B:01784": Decimal("0"),
         },
@@ -436,16 +435,20 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
     specification: for a common-regime entity (100 %) with
     ``00592 = 20.000``, ``01766 = 0``, ``01784 = 0``, the formula
     produces ``00599 = (100/100) x 20.000 = 20.000``.  The 20.000
-    figure is the AEAT Manual de Sociedades 2024 (pages 399/401) cuota
-    líquida before the retenciones are netted; using it here as a
-    structural probe (not a netted cuota-ejercicio figure) is
-    non-tautological because the formula multiplier is what this test
-    is grounding, not the cuota líquida arithmetic.
+    figure is produced by the upstream cuota chain from an 80.000 base
+    at the general 25 % rate with zero deductions, so the test does not
+    bypass the formula-owned cuota líquida casilla.
     """
     result = calculate_registry_snapshot(
         _snapshot(),
         inputs={
-            "DP200014B:00592": Decimal("20000"),
+            "00501": Decimal("80000"),
+            "DP200013:00417": Decimal("0"),
+            "DP200013:00418": Decimal("0"),
+            "01032": Decimal("0"),
+            "DP200014:00547": Decimal("0"),
+            "DP200014:01033": Decimal("0"),
+            "DP200014:01034": Decimal("0"),
             "DP200014B:01766": Decimal("0"),
             "DP200014B:01784": Decimal("0"),
         },
@@ -487,7 +490,13 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
         calculate_registry_snapshot(
             _snapshot(),
             inputs={
-                "DP200014B:00592": Decimal("20000"),
+                "00501": Decimal("80000"),
+                "DP200013:00417": Decimal("0"),
+                "DP200013:00418": Decimal("0"),
+                "01032": Decimal("0"),
+                "DP200014:00547": Decimal("0"),
+                "DP200014:01033": Decimal("0"),
+                "DP200014:01034": Decimal("0"),
                 "DP200014B:01766": Decimal("0"),
                 "DP200014B:01784": Decimal("0"),
             },
@@ -502,8 +511,8 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
                 "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
             },
             relation_values={
-            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
-            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
-        },
+                "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
+                "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+            },
             date_context={"filing_period": date(2024, 12, 31)},
         )

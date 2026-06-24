@@ -13,24 +13,6 @@ expression = 'implies_nonzero(["00501", "DP200014:00552"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-27-2014:art-30"]
 
-# Soundness gate (cuota stage): the cuota líquida must be determined when the
-# entity has a positive cuota íntegra. casilla DP200014B:00592 (cuota líquida) is
-# an operator-entered manual input (the bonificaciones/deducciones sub-form is
-# filled outside the engine) consumed directly by the cuota-a-ingresar formula
-# (DP200014B:00599). Without this guard a positive cuota íntegra (DP200014:00562)
-# can sit beside a silently-zero cuota líquida, yielding cuota del ejercicio a
-# ingresar cero -- a silent under-declaration the verify gate would otherwise
-# grant. ADVISORY (non-blocking): a positive cuota íntegra with a legitimately
-# zero cuota líquida is possible (bonificaciones/deducciones that fully absorb the
-# cuota, art. 31-39), so this surfaces an operator-facing advisory rather than
-# refusing the draft. Mirrors the base-determination advisory above and the
-# no-silent-under-declaration stance (positive input, zero dependent).
-[[revisions."2024-y-siguientes".verification_predicates]]
-predicate_id = "modelo-200-cuota-liquida-determinada-cuando-cuota-integra-positiva"
-expression = 'implies_nonzero(["DP200014:00562", "DP200014B:00592"])'
-finding_kind = "ADVISORY"
-legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31"]
-
 # Soundness gate (accounting-result stage): the pre-IS-tax accounting result must
 # be determined when the entity reports a positive after-tax accounting result.
 # casilla 00500 (RESULTADO DE LA CUENTA DE PÉRDIDAS Y GANANCIAS, after-tax) and
