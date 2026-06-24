@@ -10,6 +10,7 @@ must not mask structural failures.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -21,7 +22,11 @@ from ....domain.calculations.registry import CasillaObservation, RegistryModeloO
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext, CalculationSourceResolution
 from .._observations_repository import CalculationObservationRepository
-from .._relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
+from .._relation_prefill import (
+    RelationPrefillSourceResolver,
+    _scoped_relation_source_requirements,
+    resolve_relations_from_local_store,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -229,3 +234,86 @@ def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Pa
         "an unresolved non-formula relation that materialises no binding slot produced no "
         "diagnostic — the narrow silent gap this guard closes"
     )
+
+
+# ---------------------------------------------------------------------------
+# IRPF-1: activity-start-scoped relation fold (partial-year-start filer)
+# ---------------------------------------------------------------------------
+
+
+def _modelo_130_pagos_observations(values_by_period: dict[str, Decimal]) -> tuple[RegistryModeloObservation, ...]:
+    """Build M130 observations carrying casilla 19 (resultado / pago fraccionado) per period."""
+    return tuple(
+        RegistryModeloObservation(
+            modelo="130",
+            filing_year=2024,
+            period=period,
+            observations=(CasillaObservation(casilla_id="19", value=value),),
+        )
+        for period, value in values_by_period.items()
+    )
+
+
+def _m130_pagos_requirement(requirements: tuple) -> object:
+    return next(r for r in requirements if r.source_modelo == "130" and r.source_output == "19")
+
+
+def test_scoped_relation_source_requirements_drops_pre_activity_quarters() -> None:
+    """A mid-year-start filer's pre-activity source quarters are scoped out of the fold (IRPF-1).
+
+    Grounded in the activity-start first-filer rule (the same partition the
+    cross-period clean-state gate applies): a quarter whose span ends strictly
+    before the operator's activity start carries no filing obligation, so it must
+    not be required by the annual fold. Expected period sets derive from the
+    calendar boundary (1T ends 31-Mar), not from the relation formula.
+    """
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+    # Activity started 2024-04-01: 1T (ends 2024-03-31) is STRICTLY before it.
+    scoped = _scoped_relation_source_requirements(snapshot, date(2024, 4, 1))
+    assert _m130_pagos_requirement(scoped).periods == ("2T", "3T", "4T")
+    # Full-year filer (activity 2024-01-01): the alta-containing 1T is in scope; nothing dropped.
+    full = _scoped_relation_source_requirements(snapshot, date(2024, 1, 1))
+    assert _m130_pagos_requirement(full).periods == ("1T", "2T", "3T", "4T")
+    # None (fail-closed / non-operator context): no scoping.
+    none = _scoped_relation_source_requirements(snapshot, None)
+    assert _m130_pagos_requirement(none).periods == ("1T", "2T", "3T", "4T")
+
+
+def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Path) -> None:
+    """A Q2-start filer folds the quarters it filed; the pre-activity 1T is scoped, not left unresolved (IRPF-1)."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        # The filer started activity in Q2, so it has no 1T M130 obligation; it
+        # filed 2T/3T/4T only. Expected fold = 640 + 760 + 800 (AEAT: Σ available
+        # casilla-19 pagos), NOT unresolved-because-1T-missing.
+        for observation in _modelo_130_pagos_observations(
+            {"2T": Decimal("640"), "3T": Decimal("760"), "4T": Decimal("800")},
+        ):
+            repository.save_observation(observation, source_kind="app_filing")
+        snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+        prefill = resolve_relations_from_local_store(
+            snapshot,
+            repository=repository,
+            activity_start_date=date(2024, 4, 1),
+        )
+        m130 = next(v for v in prefill.values if v.relation == "renta-2024-rel-130-pagos-fraccionados")
+        assert m130.value == Decimal("2200")
+
+
+def test_genuinely_missing_in_scope_quarter_still_unresolves(tmp_path: Path) -> None:
+    """A missing POST-activity quarter still unresolves — no-silent-under-declaration is preserved (IRPF-1)."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        # Q2-start filer filed 2T and 4T but NOT 3T — a genuine in-scope gap, not a
+        # pre-activity period. The fold must stay unresolved (blank for the operator
+        # to confirm), never silently summed over the hole.
+        for observation in _modelo_130_pagos_observations({"2T": Decimal("640"), "4T": Decimal("800")}):
+            repository.save_observation(observation, source_kind="app_filing")
+        snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+        prefill = resolve_relations_from_local_store(
+            snapshot,
+            repository=repository,
+            activity_start_date=date(2024, 4, 1),
+        )
+        m130 = next(v for v in prefill.values if v.relation == "renta-2024-rel-130-pagos-fraccionados")
+        assert m130.value is None

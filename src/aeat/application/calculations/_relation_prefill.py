@@ -29,7 +29,7 @@ on the operator's preferences and the local store's coverage.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Final
 
@@ -82,6 +82,7 @@ def _gather_observations_for_snapshot(
     snapshot: RegistrySnapshot,
     *,
     repository: CalculationObservationRepository,
+    activity_start_date: date | None = None,
 ) -> tuple[RegistryModeloObservation, ...]:
     """Collect every observation a relation in `snapshot.revision` could need.
 
@@ -89,14 +90,13 @@ def _gather_observations_for_snapshot(
     `(source_modelo, filing_year, period)` requirements, and pulls matching observations
     from the local store. Returns the union (deduplicated) so the
     runtime resolver can fold them through the declared aggregation
-    in one pass.
+    in one pass. ``activity_start_date`` scopes out source periods strictly
+    before the operator's activity start (a mid-year-start filer has no
+    obligation for the pre-start quarters), so the gather set matches the scoped
+    requirement set the resolver folds.
     """
     needed: dict[tuple[str, int, str], RegistryModeloObservation] = {}
-    requirements = relation_source_requirements(
-        snapshot.revision,
-        filing_year=snapshot.filing_year,
-        period=snapshot.period,
-    )
+    requirements = _scoped_relation_source_requirements(snapshot, activity_start_date)
     for requirement in requirements:
         for period in requirement.periods:
             payload = repository.load_observation(
@@ -179,12 +179,97 @@ def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> 
     return profile.activity_start_date.year >= filing_year
 
 
+def _activity_start_date_for_bucket(bucket_id: str) -> date | None:
+    """Load the operator-declared activity-start date for ``bucket_id``, or ``None``.
+
+    Mirrors the profile load in :func:`_first_year_modalidad_cuota_no_m202` (the
+    SINGLE profile builder) so the relation fold-in scopes its source periods on
+    the SAME operator-declared ``activity_start_date`` the cross-period
+    clean-state gate partitions against. Fail-closed: a missing / unprojectable
+    profile, an unregistered wizard catalogue (non-operator contexts), or an
+    absent activity-start date returns ``None`` — no period is scoped and the
+    resolver keeps its full all-quarters behaviour (never a silent drop).
+    """
+    from pydantic import ValidationError
+
+    from ...core.wizard_catalogue import WizardCatalogueNotRegisteredError
+    from ...domain.deadlines import ProfileError, taxpayer_profile_from_mapping
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile._profile_repository import ProfileRepository
+    from ..user_profile._projections import record_to_path_values
+
+    try:
+        aggregate = ProfileRepository().load(bucket_id)
+        profile = taxpayer_profile_from_mapping(
+            record_to_path_values(aggregate.record),
+            tax_id_default="",
+        )
+    except (ProfileNotFoundError, ProfileError, WizardCatalogueNotRegisteredError, ValidationError):
+        return None
+    return profile.activity_start_date
+
+
+def _scoped_relation_source_requirements(
+    snapshot: RegistrySnapshot,
+    activity_start_date: date | None,
+) -> tuple[RegistryRelationSourceRequirement, ...]:
+    """``relation_source_requirements`` with pre-activity-start source periods scoped out.
+
+    A quarterly source period STRICTLY before the operator-declared activity
+    start is a period in which the taxpayer had no filing obligation, so its
+    absence must NOT unresolve the whole fold (the partial-year-start
+    enhancement for a mid-year-start filer). Reuses the cross-period clean-state
+    gate's :func:`_period_strictly_before_activity_start` predicate — one shared
+    partition governs both the gate and the relation fold-in (one-aggregation-
+    path; no parallel scoping math). Non-calendar instalment claves (1P/2P/3P)
+    have no date span and are never scoped, so sociedad Modelo 202 cumulation is
+    unaffected. A genuinely-absent IN-SCOPE quarter still unresolves the
+    requirement downstream, preserving ``no-silent-under-declaration``. Returns
+    the requirements unchanged when ``activity_start_date`` is ``None`` (the
+    common full-year / fail-closed case).
+    """
+    requirements = relation_source_requirements(
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
+    if activity_start_date is None:
+        return requirements
+
+    from ._cross_period_clean_state import _period_strictly_before_activity_start
+
+    scoped: list[RegistryRelationSourceRequirement] = []
+    for requirement in requirements:
+        kept = tuple(
+            token
+            for token in requirement.periods
+            if not _period_strictly_before_activity_start(
+                Period.from_year_and_code(requirement.filing_year, token),
+                activity_start_date,
+            )
+        )
+        if len(kept) == len(requirement.periods):
+            scoped.append(requirement)
+        elif kept:
+            kept_filing = tuple(
+                period
+                for period in requirement.filing_periods
+                if not _period_strictly_before_activity_start(period, activity_start_date)
+            )
+            scoped.append(requirement.model_copy(update={"periods": kept, "filing_periods": kept_filing}))
+        # else: EVERY source period is strictly pre-activity → no obligation at
+        # all; drop the requirement (its ``periods`` field is min_length=1 and
+        # cannot be emptied). The relation then resolves to None as before.
+    return tuple(scoped)
+
+
 def resolve_relations_from_local_store(
     snapshot: RegistrySnapshot,
     *,
     repository: CalculationObservationRepository | None = None,
     captured_at: datetime | None = None,
     modelo_202_first_year_cuota: bool = False,
+    activity_start_date: date | None = None,
 ) -> RelationValues:
     """Build a :class:`RelationValues` record from the local observation store.
 
@@ -201,6 +286,11 @@ def resolve_relations_from_local_store(
             (LIS art. 40.2) has no pago-fraccionado obligation. The caller derives
             this fail-closed (only for a Modelo 200 target); a resolved M202 value
             is never overridden.
+        activity_start_date: When set (IRPF-1), source periods strictly before the
+            operator's activity start are scoped out of every relation requirement,
+            so a mid-year-start filer folds only the quarters it actually had an
+            obligation for instead of leaving the annual fold unresolved. ``None``
+            (the default / fail-closed case) keeps the full all-quarters behaviour.
 
     Returns a :class:`RelationValues` whose ``values`` tuple has one
     ``RelationValue`` per relation declared in the snapshot's
@@ -211,14 +301,25 @@ def resolve_relations_from_local_store(
     """
     repo = repository if repository is not None else CalculationObservationRepository()
     when = captured_at if captured_at is not None else now()
-    observations = _gather_observations_for_snapshot(snapshot, repository=repo)
+    if activity_start_date is None:
+        # Default to the active bucket's activity start so BOTH live surfaces scope
+        # identically (one-aggregation-path: the mesh/calculate path passes an
+        # explicit value from its context bucket; the Sheets-pull path calls this
+        # bare). An explicit caller value (e.g. a deterministic test) is never
+        # overridden; absent an active bucket, derivation returns None (no scoping).
+        from ...core import resolve_active_bucket_id
+
+        active_bucket_id = resolve_active_bucket_id()
+        if active_bucket_id is not None:
+            activity_start_date = _activity_start_date_for_bucket(active_bucket_id)
+    observations = _gather_observations_for_snapshot(
+        snapshot,
+        repository=repo,
+        activity_start_date=activity_start_date,
+    )
     requirements_by_relation = {
         relation_id: requirement
-        for requirement in relation_source_requirements(
-            snapshot.revision,
-            filing_year=snapshot.filing_year,
-            period=snapshot.period,
-        )
+        for requirement in _scoped_relation_source_requirements(snapshot, activity_start_date)
         for relation_id in requirement.relation_ids
     }
 
@@ -563,6 +664,12 @@ class RelationPrefillSourceResolver:
                 filing_year=context.filing_year,
                 period=context.period.registry_token,
             )
+        # Activity-start scoping (IRPF-1): a mid-year-start filer has no obligation
+        # for source quarters strictly before the activity start, so those quarters
+        # are scoped out of the relation fold so their absence does not unresolve
+        # the whole fold. Derived once from the bucket profile and shared by the
+        # resolution and the diagnostic so both see the same scoped requirement set.
+        activity_start_date = _activity_start_date_for_bucket(str(context.bucket_id))
         try:
             relation_values = resolve_relations_from_local_store(
                 snapshot,
@@ -579,6 +686,7 @@ class RelationPrefillSourceResolver:
                         filing_year=context.filing_year,
                     )
                 ),
+                activity_start_date=activity_start_date,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
@@ -589,11 +697,7 @@ class RelationPrefillSourceResolver:
             )
         requirements_by_relation = {
             relation_id: requirement
-            for requirement in relation_source_requirements(
-                snapshot.revision,
-                filing_year=snapshot.filing_year,
-                period=snapshot.period,
-            )
+            for requirement in _scoped_relation_source_requirements(snapshot, activity_start_date)
             for relation_id in requirement.relation_ids
         }
         resolved = tuple(item for item in relation_values.values if item.value is not None)
