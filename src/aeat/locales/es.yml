@@ -964,6 +964,7 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
+      modelo_200_bin_stock_cierre_reconcilia_roll_forward: 'El saldo final de bases imponibles negativas pendientes (C671) no concilia con el arrastre (apertura C670 menos aplicado C547 más la BIN generada en el periodo); revise el saldo a compensar en ejercicios futuros.'
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
@@ -1675,8 +1676,9 @@ cli:
           \ IVA para un período anterior al historial local. Se rechaza si ya existe\
           \ un registro para el período.\n\nDos casos:\n\n  --amount 0   Primer período\
           \ real: es la primera declaración del Modelo 303 del contribuyente bajo\
-          \ este NIF. La casilla 110 es cero porque no existe saldo previo (LIVA art.\
-          \ 99.5, Ley 37/1992). El módulo de conciliación lo trata como first_period_zero,\
+          \ este NIF. iva.compensacion-pendiente-periodos-anteriores (número AEAT 110)\
+          \ es cero porque no existe saldo previo (LIVA art. 99.5, Ley 37/1992).\
+          \ El módulo de conciliación lo trata como first_period_zero,\
           \ no bloqueante.\n\n --amount X   Traspaso: el contribuyente ha presentado\
           \ M303 anteriores con otra herramienta o directamente en la AEAT. X es la\
           \ compensación pendiente de períodos posteriores de la última declaración\

@@ -880,6 +880,7 @@ application:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
+      modelo_200_bin_stock_cierre_reconcilia_roll_forward: 'The BIN closing stock (C671) does not reconcile to the roll-forward (opening C670 minus applied C547 plus the BIN generated this period); review the carryforward so future-year compensation is not mis-stated.'
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing

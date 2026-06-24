@@ -952,6 +952,7 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
+      modelo_200_bin_stock_cierre_reconcilia_roll_forward: 'El saldo final de bases imposables negatives pendents (C671) no concilia amb l''arrossegament (obertura C670 menys aplicat C547 més la BIN generada en el període); reviseu el saldo a compensar en exercicis futurs.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu

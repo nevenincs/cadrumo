@@ -898,6 +898,7 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
+      modelo_200_bin_stock_cierre_reconcilia_roll_forward: 'A negatív adóalap záró egyenlege (C671) nem egyezik a göngyölítéssel (nyitó C670 mínusz a tárgyidőszakban felhasznált C547 plusz a tárgyidőszakban keletkezett negatív adóalap); ellenőrizze a jövőbeli időszakokra átvitt egyenleget.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás
