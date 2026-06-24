@@ -23,7 +23,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period, ResultDisposition, derive_result_disposition
+from ...core import Period
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.logging import get_logger
@@ -37,7 +37,6 @@ from ...domain.buckets import (
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import derive_modelo_202_modality
 from ...domain.deadlines import TaxpayerProfile
-from ...domain.iva import refund_disposition_available
 from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos import (
     ModeloRecordCatalogueRepository,
@@ -80,6 +79,7 @@ from ._action_errors import (
     CalculationRevisionStateError,
     WorkUnitNotFoundError,
 )
+from ._result_disposition_resolution import resolve_modelo_result_disposition
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 from ._verification_actions import _cross_period_expected_member_sets_from_profile, _require_cross_period_clean_state
 
@@ -90,18 +90,6 @@ from ._verification_actions import _cross_period_expected_member_sets_from_profi
 #: from the package ``__version__`` — AEAT program codes are assigned
 #: per submission tool, not per release.
 _PROGRAM_VERSION_CODE = "A001"
-
-#: Provisional fallback "Tipo de declaración" disposition for any modelo that
-#: declares this header but lacks a codified, diseño-grounded result-disposition
-#: spec. The AEAT fichero field encodes the RESULT disposition (a ingresar / a
-#: compensar / a devolver / negativa), NOT the amendment type (amendment is the
-#: separate "Rectificativa" field). Every modelo that currently declares
-#: ``declaration_type`` — 303 / 130 / 131 / 111 / 115 / 123 / 200 / 202 — is
-#: codified and derives its disposition from the computed result via
-#: :func:`derive_result_disposition`; this fallback only guards a future modelo
-#: added without a spec, and ``INGRESO`` ("I") is wrong for a credit/zero result,
-#: so a new modelo MUST be added to the spec rather than relying on it.
-_DECLARATION_TYPE_FALLBACK = ResultDisposition.INGRESO.value
 
 #: Canonical user-profile fact paths for the operator's legal name.
 _PROFILE_SURNAMES_PATH = "identity.surnames"
@@ -398,52 +386,6 @@ def _ddmmaaaa(value: date) -> str:
     return f"{value.day:02d}{value.month:02d}{value.year:04d}"
 
 
-def _derive_declaration_type(*, work_unit: WorkUnit, revision: CalculationRevision) -> str:
-    """Derive the fichero "Tipo de declaración" result-disposition code.
-
-    The disposition is computed from the modelo's final-result casilla via the
-    codified per-modelo :func:`derive_result_disposition` (303/130/131/111/115/123
-    are grounded in their bundled diseños): a positive result files as ``I``
-    (ingreso), a credit as the modelo's credit code (``C`` for IVA, ``B`` for IRPF
-    pagos fraccionados), and a zero/negativa result as ``N``. Modelos without a
-    codified spec (200/202) fall back to ``INGRESO`` pending IS-domain grounding.
-    """
-    disposition = derive_result_disposition(work_unit.modelo, revision.casilla_values)
-    if disposition is not None:
-        return disposition.value
-    return _DECLARATION_TYPE_FALLBACK
-
-
-def _apply_refund_election(
-    *,
-    declaration_type: str,
-    work_unit: WorkUnit,
-    workflow_profile: TaxpayerProfile,
-    period: Period,
-) -> str:
-    """Upgrade a Modelo 303 carry-forward (``C``) to a refund (``D``) for a REDEME taxpayer.
-
-    A taxpayer inscribed in the Registro de devolución mensual (REDEME, art. 30
-    RD 1624/1992) files a negative Modelo 303 period as a monthly refund
-    (solicitud de devolución, Tipo de declaración ``D``; Ley 37/1992 art. 116)
-    rather than carrying the credit forward (``C``). The inscription is the
-    standing refund election; the eligibility gate
-    (:func:`~aeat.domain.iva.refund_disposition_available`) confirms it is lawful
-    for the period (REDEME makes the refund available every period). A non-REDEME
-    taxpayer keeps the carry-forward ``C`` here (the last-period refund election is
-    an explicit opt-in handled separately); every other disposition is untouched.
-    """
-    redeme = workflow_profile.iva.redeme_enrolled
-    if (
-        work_unit.modelo == Modelo.M303.value
-        and declaration_type == ResultDisposition.COMPENSACION.value
-        and redeme
-        and refund_disposition_available(redeme_enrolled=redeme, period=period)
-    ):
-        return ResultDisposition.DEVOLUCION.value
-    return declaration_type
-
-
 def _compose_export_headers(
     *,
     work_unit: WorkUnit,
@@ -496,16 +438,18 @@ def _compose_export_headers(
     # as ``C`` (compensación), a zero result as ``N``, never silently ``I``.
     # The amendment (complementaria/sustitutiva) is an orthogonal marker set
     # below and does NOT change the result disposition.
-    declaration_type = _derive_declaration_type(work_unit=work_unit, revision=revision)
-    # REDEME monthly-refund election: a taxpayer inscribed in the Registro de
-    # devolución mensual files a negative Modelo 303 period as a refund ("D")
-    # rather than carrying forward ("C"). art. 30 RD 1624/1992 / LIVA art. 116.
-    declaration_type = _apply_refund_election(
-        declaration_type=declaration_type,
+    #
+    # The REDEME monthly-refund election (``C`` -> ``D`` devolución) is applied
+    # by the SINGLE shared resolver `resolve_modelo_result_disposition`, the one
+    # place the disposition is determined; the cross-period carry persistence
+    # reads the same fact, so the fichero "D" and the casilla-110 carry can never
+    # disagree (art. 30 RD 1624/1992 / LIVA art. 116).
+    declaration_type = resolve_modelo_result_disposition(
         work_unit=work_unit,
+        revision=revision,
         workflow_profile=workflow_profile,
         period=period,
-    )
+    ).value
     headers: dict[str, str] = {
         "declaration_type": declaration_type,
         "surnames": surnames,

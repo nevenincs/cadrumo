@@ -41,6 +41,7 @@ from ._action_errors import (
 from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
+from ._result_disposition_resolution import revision_is_refund_disposition
 from ._revision_persistence import persist_filed_revision
 from ._verification_actions import (
     _cross_period_expected_member_sets_from_profile,
@@ -201,6 +202,20 @@ def file_modelo_revision(
         run_repository=run_repo,
     )
 
+    # Determine the filing disposition ONCE from the same shared resolver the
+    # export reads (resolve_modelo_result_disposition): a Modelo 303 devolución
+    # period (REDEME monthly-refund or last-period election) returns the credit,
+    # so the cross-period carry persisted below must generate zero compensación
+    # rather than double-claim the refunded credit into the next period's casilla
+    # 110. The export's fichero "D" and this carry now read one determined fact
+    # (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
+    refunded = revision_is_refund_disposition(
+        work_unit=work_unit,
+        revision=target,
+        workflow_profile=workflow_profile,
+        period=work_unit.period,
+    )
+
     return persist_filed_revision(
         target=target,
         work_unit=work_unit,
@@ -213,6 +228,7 @@ def file_modelo_revision(
         work_unit_repository=wu_repo,
         bucket_event_repository=bv_repo,
         calculation_observation_repository=obs_repo,
+        refunded=refunded,
     )
 
 
