@@ -122,6 +122,42 @@ def _equals_predicate_arity_failures(prefix: str, owner: str, expression: str) -
     return []
 
 
+# roll_forward_balances(["closing", "opening", "applied", "base"]) — the
+# carry-forward continuity operator must name EXACTLY four casilla ids, each an
+# existing casilla on the revision. Mirrors the runtime regex in
+# aeat.application.modelo._verification_actions._PREDICATE_ROLL_FORWARD_BALANCES;
+# this authoring-time gate fails a malformed arity / typo'd id at registry load
+# rather than letting the runtime evaluator's bad-arity branch silently hold (or,
+# for the ADVISORY form, silently never fire).
+_ROLL_FORWARD_BALANCES_PREDICATE = _re.compile(r"^roll_forward_balances\(\[(?P<ids>[^\]]*)\]\)$")
+
+
+def _roll_forward_balances_predicate_arity_failures(
+    prefix: str,
+    owner: str,
+    expression: str,
+    casillas: set[str],
+) -> list[str]:
+    """Return failures for a malformed ``roll_forward_balances`` predicate."""
+    match = _ROLL_FORWARD_BALANCES_PREDICATE.match(expression.strip())
+    if match is None:
+        return [
+            f"{prefix}: {owner} roll_forward_balances expression {expression!r} is malformed; expected "
+            'roll_forward_balances(["closing_id", "opening_id", "applied_id", "base_id"])',
+        ]
+    ids = [token.strip().strip('"').strip("'") for token in match.group("ids").split(",") if token.strip()]
+    failures: list[str] = []
+    if len(ids) != 4:
+        failures.append(
+            f"{prefix}: {owner} roll_forward_balances must name exactly four casilla ids "
+            f"(closing, opening, applied, base), got {len(ids)}: {ids!r}",
+        )
+    for casilla_id in ids:
+        if casilla_id not in casillas:
+            failures.append(f"{prefix}: {owner} roll_forward_balances references unknown casilla {casilla_id!r}")
+    return failures
+
+
 def validate_verification_expectation_section(
     failures: list[str],
     *,
@@ -167,6 +203,14 @@ def validate_verification_expectation_section(
             # malformed arity at authoring time rather than letting the runtime
             # evaluator silently hold (its <2-id defensive branch returns True).
             failures.extend(_equals_predicate_arity_failures(prefix, owner, predicate.expression))
+        elif op_name == "roll_forward_balances":
+            # roll_forward_balances(["closing", "opening", "applied", "base"]) is a
+            # four-casilla continuity check; reject a malformed arity or unknown
+            # casilla id at authoring time rather than letting the runtime
+            # evaluator's bad-arity branch silently hold / never fire.
+            failures.extend(
+                _roll_forward_balances_predicate_arity_failures(prefix, owner, predicate.expression, casillas),
+            )
 
 
 def validate_application_link_section(

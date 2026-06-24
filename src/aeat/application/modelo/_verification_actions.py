@@ -172,6 +172,15 @@ def _resolve_predicate_next_action(predicate_id: str) -> str | None:
 _PREDICATE_ADVISORY_WHEN_RATIO_GE = _re.compile(
     r'^advisory_when_ratio_ge\(\["(?P<num>[^"]+)",\s*"(?P<den>[^"]+)",\s*"(?P<thr>[^"]+)"\]\)$',
 )
+# roll_forward_balances(["closing_id", "opening_id", "applied_id", "base_id"]) —
+# carry-forward stock continuity: closing == opening − applied + max(0, −base),
+# within a one-cent tolerance. See _roll_forward_balance_reconciles.
+_PREDICATE_ROLL_FORWARD_BALANCES = _re.compile(r"^roll_forward_balances\(\[(?P<ids>[^\]]*)\]\)$")
+
+#: One-cent tolerance for the roll-forward continuity reconciliation — absorbs the
+#: sub-cent drift a total-of-per-year-detail figure can accumulate without masking
+#: a genuine discontinuity (which is euros, not cents).
+_BALANCE_CENT_TOLERANCE = Decimal("0.01")
 
 
 def _parse_predicate_casilla_ids(ids_fragment: str) -> list[str]:
@@ -182,6 +191,38 @@ def _parse_predicate_casilla_ids(ids_fragment: str) -> list[str]:
         if token:
             ids.append(token)
     return ids
+
+
+def _roll_forward_balance_reconciles(
+    ids: list[str],
+    casilla_values: Mapping[str, Decimal],
+) -> bool | None:
+    """Return whether a carry-forward closing balance reconciles to its roll-forward.
+
+    ``ids`` is ``[closing, opening, applied, base]``. The carry-forward stock
+    continuity invariant is::
+
+        closing == opening − applied + max(0, −base)
+
+    the opening stock less the amount applied (consumed) this period plus any
+    stock newly generated this period — the ``base`` being negative when a new
+    negative base / BIN is generated, so ``max(0, −base)`` is the generated
+    amount and contributes nothing in a profit year. Holds within a one-cent
+    tolerance to absorb per-year-detail rounding. Returns ``None`` on a malformed
+    arity (the caller treats that as "not applicable"); a missing casilla reads as
+    ``Decimal(0)`` via ``.get`` so an absent closing/opening does not crash the
+    gate. Authored for the Modelo 200 BIN total-pendiente roll-forward
+    (modelo-200-bin-continuity ADR); general to any carry-forward stock.
+    """
+    if len(ids) != 4:
+        return None
+    closing = casilla_values.get(ids[0], Decimal(0))
+    opening = casilla_values.get(ids[1], Decimal(0))
+    applied = casilla_values.get(ids[2], Decimal(0))
+    base = casilla_values.get(ids[3], Decimal(0))
+    generated = max(Decimal(0), -base)
+    expected = opening - applied + generated
+    return abs(closing - expected) <= _BALANCE_CENT_TOLERANCE
 
 
 def _evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) -> bool:
@@ -339,6 +380,16 @@ def _evaluate_predicate_expression(
         field_value = getattr(profile, field_name, None)
         return not (field_value is None or (isinstance(field_value, str) and not field_value.strip()))
 
+    m = _PREDICATE_ROLL_FORWARD_BALANCES.match(expr)
+    if m:
+        # roll_forward_balances(["closing", "opening", "applied", "base"]) — as a
+        # BLOCKING_RULE the predicate HOLDS (returns True) when the closing
+        # balance reconciles to opening − applied + max(0, −base) within a cent.
+        # A malformed arity reads as holding (defensive, like the other
+        # operators); the authoring validator rejects it at registry load.
+        reconciles = _roll_forward_balance_reconciles(_parse_predicate_casilla_ids(m.group("ids")), casilla_values)
+        return True if reconciles is None else reconciles
+
     return True
 
 
@@ -449,6 +500,16 @@ def _evaluate_advisory_predicate_fires(
         if antecedent <= Decimal(0):
             return False
         return all(casilla_values.get(cid, Decimal(0)) == Decimal(0) for cid in ids[1:])
+    m = _PREDICATE_ROLL_FORWARD_BALANCES.match(expr)
+    if m:
+        # roll_forward_balances(["closing", "opening", "applied", "base"]) — as an
+        # ADVISORY the predicate FIRES (returns True, advisory shown) when the
+        # closing balance does NOT reconcile to opening − applied + max(0, −base):
+        # a carry-forward stock discontinuity (e.g. a silently-dropped BIN
+        # carryforward) that would compound into future-year compensation. A
+        # reconciling balance (within a cent) or a malformed arity does not fire.
+        reconciles = _roll_forward_balance_reconciles(_parse_predicate_casilla_ids(m.group("ids")), casilla_values)
+        return reconciles is False
     return False
 
 
