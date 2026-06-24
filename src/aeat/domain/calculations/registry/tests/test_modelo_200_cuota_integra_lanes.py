@@ -107,7 +107,10 @@ def _cuota_for(
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
-        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        relation_values={
+            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
+            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+        },
         date_context={"filing_period": filing_period},
     )
     return result.values["DP200014:00562"]
@@ -456,7 +459,10 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
-        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        relation_values={
+            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
+            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+        },
         date_context={"filing_period": date(2024, 12, 31)},
     )
     cuota_ejercicio = result.values["DP200014B:00599"]
@@ -495,6 +501,9 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
                 "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
                 "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
             },
-            relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+            relation_values={
+            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
+            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+        },
             date_context={"filing_period": date(2024, 12, 31)},
         )
