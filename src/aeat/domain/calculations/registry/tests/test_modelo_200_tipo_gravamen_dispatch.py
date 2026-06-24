@@ -193,7 +193,6 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
         "00501": Decimal("1000000"),
         "DP200014:01033": Decimal("0"),
         "DP200014:01034": Decimal("0"),
-        "DP200014B:00592": Decimal("0"),
         "DP200014B:01766": Decimal("0"),
         "DP200014B:01784": Decimal("0"),
     }
@@ -251,7 +250,6 @@ def test_tipo_gravamen_dispatch_raises_when_legal_entity_form_is_unsupplied() ->
                 "00501": Decimal("1000000"),
                 "DP200014:01033": Decimal("0"),
                 "DP200014:01034": Decimal("0"),
-                "DP200014B:00592": Decimal("0"),
                 "DP200014B:01766": Decimal("0"),
                 "DP200014B:01784": Decimal("0"),
             },
@@ -283,7 +281,6 @@ def test_tipo_gravamen_dispatch_raises_on_unrecognised_legal_entity_form() -> No
                 "00501": Decimal("1000000"),
                 "DP200014:01033": Decimal("0"),
                 "DP200014:01034": Decimal("0"),
-                "DP200014B:00592": Decimal("0"),
                 "DP200014B:01766": Decimal("0"),
                 "DP200014B:01784": Decimal("0"),
             },
@@ -350,7 +347,6 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
         "00501": Decimal("1000000"),
         "DP200014:01033": Decimal("0"),
         "DP200014:01034": Decimal("0"),
-        "DP200014B:00592": Decimal("0"),
         "DP200014B:01766": Decimal("0"),
         "DP200014B:01784": Decimal("0"),
     }
@@ -404,7 +400,6 @@ def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> 
         "00501": Decimal("1000000"),
         "DP200014:01033": Decimal("0"),
         "DP200014:01034": Decimal("0"),
-        "DP200014B:00592": Decimal("0"),
         "DP200014B:01766": Decimal("0"),
         "DP200014B:01784": Decimal("0"),
     }
@@ -441,7 +436,6 @@ def test_new_entity_flag_overrides_erd_threshold() -> None:
         "00501": Decimal("500000"),
         "DP200014:01033": Decimal("0"),
         "DP200014:01034": Decimal("0"),
-        "DP200014B:00592": Decimal("0"),
         "DP200014B:01766": Decimal("0"),
         "DP200014B:01784": Decimal("0"),
     }
@@ -478,7 +472,6 @@ def test_cooperativa_retains_20_percent_even_when_incn_below_1m() -> None:
         "00501": Decimal("1000000"),
         "DP200014:01033": Decimal("0"),
         "DP200014:01034": Decimal("0"),
-        "DP200014B:00592": Decimal("0"),
         "DP200014B:01766": Decimal("0"),
         "DP200014B:01784": Decimal("0"),
     }

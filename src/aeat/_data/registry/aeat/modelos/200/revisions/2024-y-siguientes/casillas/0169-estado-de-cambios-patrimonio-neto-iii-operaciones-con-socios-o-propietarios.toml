@@ -1,6 +1,7 @@
 [[revisions."2024-y-siguientes".casillas]]
-id = "00611"
+id = "DP200011:00611"
 number = "00611"
+segmento = "DP200011"
 label = "Estado de cambios patrimonio neto (III) - Operaciones con socios o propietarios - Otras operaciones con socios o propietarios - Resultado del ejercicio [00611]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
 data_type = "money"

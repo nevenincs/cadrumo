@@ -111,7 +111,6 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
             "00501": Decimal("100000"),
             "DP200014:01033": Decimal("0"),
             "DP200014:01034": Decimal("0"),
-            "DP200014B:00592": Decimal("0"),
             "DP200014B:01766": Decimal("0"),
             "DP200014B:01784": Decimal("0"),
         },
@@ -293,7 +292,6 @@ def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
         "00501": Decimal("200000"),
         "DP200014:01033": Decimal("0"),
         "DP200014:01034": Decimal("0"),
-        "DP200014B:00592": Decimal("0"),
         "DP200014B:01766": Decimal("0"),
         "DP200014B:01784": Decimal("0"),
     }
