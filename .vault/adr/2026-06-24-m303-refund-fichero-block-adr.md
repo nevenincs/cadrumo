@@ -9,7 +9,7 @@ related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
 ---
 
-# `m303-refund-fichero-block` adr: `REDEME field and IBAN/SWIFT-BIC secure-storage refund block` | (**status:** `proposed`)
+# `m303-refund-fichero-block` adr: `REDEME field and IBAN/SWIFT-BIC secure-storage refund block` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -75,6 +75,20 @@ but the domain model exposes no `iban`/`swift_bic`/bank/`sepa_marca` carrier, an
 - The DID page record gains a refund-disposition emission guard (a new record-level
   conditional keyed on the determined disposition), so a non-refund filing does not emit
   an empty 823-byte DID page where the Diseño intends none.
+- If the determined disposition IS a refund (the operator elected DEVOLVER and the period
+  is eligible) but the profile carries NO refund account (no `iban`), the export REFUSES
+  with an instructive error (or blocking advisory) naming the gap and the remedy
+  (configure a refund account) — it NEVER emits an empty or partial DID block. An empty
+  DID block on a refund filing produces a fichero AEAT cannot pay: a silent defective
+  filing, the no-silent-under-declaration sibling of the election's eligibility refusal.
+- The refund-account model validates the IBAN structurally at the secure-storage boundary
+  (a field validator on the encrypted model), rejecting a malformed IBAN on input rather
+  than deferring the failure to fichero-write time.
+- The DID sub-fields are emitted conditionally on the derived `sepa_marca`: IBAN-only for a
+  SEPA account (marca 1 España / 2 UE SEPA); SWIFT-BIC plus the foreign-bank block
+  (name/address/city/country) for a non-SEPA account (marca 3 Resto Países), grounded
+  against the Diseño DID layout — each marca emits exactly the fields the Diseño declares
+  for it.
 
 ## Rationale
 
@@ -99,6 +113,11 @@ golden-SHA against the published Diseño offsets keeps the byte-level change aud
 - **Pitfall:** a hand-tuned golden SHA, or any IBAN value reaching a log / plaintext side
   store — the secure-storage roundtrip plus the Diseño-grounded per-offset assertions guard
   both.
+- **Pitfall:** a refund disposition with NO refund-account on file must REFUSE, never emit
+  an empty DID page — an empty refund block files a devolución AEAT cannot pay. The
+  no-account refusal, plus a verification case (refund disposition + empty refund-account →
+  refused/advised, NOT an empty DID page), guard it. This is the no-silent-under-declaration
+  sibling of the election's eligibility refusal.
 
 ## Codification candidates
 
