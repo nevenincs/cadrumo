@@ -10,23 +10,15 @@ related:
 ---
 
 
-
-
-
-
-
-
 # `retenciones-perceptor-count` plan
 
 ### Phase `P01` - Dedicated per-perceptor retención-observation store
 
 Create the persisted distinct-NIF perceptor source the calc path lacks: a typed, encrypted, bucket-scoped retención-observation store populated from the same inputs the pull path uses.
 
-
-
-- [ ] `P01.S01` - Define the typed per-perceptor retención-observation record (perceptor NIF + scheme + percibido/retencion + modelo + period), pydantic-strict; `src/aeat/application/aggregation`.
-- [ ] `P01.S02` - Persist records in a bucket-scoped encrypted secure-object namespace via SecureObjectRepository, populated from the same input path that feeds the pull aggregate_per_modelo observations; `src/aeat/application/aggregation`.
-- [ ] `P01.S03` - Add a strict save-load-equality roundtrip + anti-tautology proof for the store, every defaultable field populated non-default; `src/aeat/application/aggregation/tests`.
+- [x] `P01.S01` - Define the typed per-perceptor retención-observation record (perceptor NIF + scheme + percibido/retencion + modelo + period), pydantic-strict; `src/aeat/application/aggregation`.
+- [x] `P01.S02` - Persist records in a bucket-scoped encrypted secure-object namespace via SecureObjectRepository, populated from the same input path that feeds the pull aggregate_per_modelo observations; `src/aeat/application/aggregation`.
+- [x] `P01.S03` - Add a strict save-load-equality roundtrip + anti-tautology proof for the store, every defaultable field populated non-default; `src/aeat/application/aggregation/tests`.
 
 ### Phase `P02` - Calc-mesh distinct-perceptor source resolver + enrollment
 
@@ -42,7 +34,7 @@ Retire the M115-sum count relation and re-point the family onto the one distinct
 
 - [ ] `P03.S07` - Retire the M180 perceptores op=sum relation in both revisions, re-point modelo-180-total-perceptores at the binding, re-stamp the binding source; `keep the base/retenciones monetary relations; `src/aeat/_data/registry/aeat/modelos/180`.
 - [ ] `P03.S08` - Extend the distinct-perceptor source to the M190 and M193 perceptor_count bindings; `src/aeat/_data/registry/aeat/modelos/193`.
-- [ ] `P03.S09` - Add grounded tests: landlord across two quarters counts once; pull==calculate perceptor-count parity; distinct-NIF anti-tautology proof; expected from the AEAT Diseño not the formula; `src/aeat/application/calculations/tests`.
+- [ ] `P03.S09` - Add grounded tests: landlord across two quarters counts once; `pull==calculate perceptor-count parity; distinct-NIF anti-tautology proof; expected from the AEAT Diseño not the formula; `src/aeat/application/calculations/tests`.
 
 ## Description
 
@@ -81,4 +73,3 @@ from both M180 revisions with no dormant/blank source (`assert_no_novel_source_k
 roundtrip + anti-tautology proof; M190/M193 counts derive from the same source; expected counts
 grounded in the AEAT Diseño (not the formula under test); full registry builds and the feature-scoped
 suite + `vaultspec-core vault check` are green.
-
