@@ -34,11 +34,6 @@ from ._capabilities import ServiceCapability
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._modelo import NON_REGISTRY_MODELOS, Modelo
 from ._models import STRICT_FROZEN_CONFIG
-from ._result_disposition import (
-    ResultDisposition,
-    derive_result_disposition,
-    modelo_has_codified_disposition,
-)
 from ._optional_extras import (
     ANTHROPIC_EXTRA,
     BROWSER_EXTRA,
@@ -57,6 +52,12 @@ from ._period import (
     StandardPeriodCode,
     accepted_period_codes,
     accepted_period_patterns,
+)
+from ._result_disposition import (
+    ResultDisposition,
+    derive_result_disposition,
+    modelo_has_codified_disposition,
+    result_disposition_is_refund,
 )
 from ._tax_domain import TaxDomain
 from ._toml import freeze_toml, freeze_toml_value, parse_toml_text, read_toml, to_str_keyed_dict
@@ -90,21 +91,21 @@ __all__: list[str] = [
     "LedgerSortOrder",
     "MissingOptionalExtraError",
     "Modelo",
-    "ResultDisposition",
-    "derive_result_disposition",
-    "modelo_has_codified_disposition",
     "OptionalExtra",
     "Period",
     "PeriodError",
     "PeriodKind",
     "RegistryPeriodCode",
+    "ResultDisposition",
     "ServiceCapability",
     "StandardPeriodCode",
     "TaxDomain",
     "accepted_period_codes",
     "accepted_period_patterns",
+    "derive_result_disposition",
     "freeze_toml",
     "freeze_toml_value",
+    "modelo_has_codified_disposition",
     "optional_extra_available",
     "parse_toml_text",
     "pointer_path",
@@ -114,6 +115,7 @@ __all__: list[str] = [
     "require_optional_extra",
     "resolve_active_bucket_id",
     "resolve_repository_bucket_id",
+    "result_disposition_is_refund",
     "to_str_keyed_dict",
     "write_pointer",
 ]
