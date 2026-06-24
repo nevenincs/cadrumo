@@ -617,6 +617,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     # 2024 revision (M200 base-determination design note).
     assert relation_ids == {
         "modelo-200-2024-rel-202-pagos-fraccionados",
+        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
         "modelo-200-2024-rel-self-bin-pendiente-anterior",
         "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior",
         "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior",
@@ -683,19 +684,26 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     diferencial_entry = entries["DP200014B:00611"]
     assert diferencial_entry.formula_id == "modelo-200-cuota-diferencial"
     assert diferencial_entry.op == "subtract"
+    # The netting subtracts add(40.3, 40.2): the engine flattens the
+    # expression tree into leaf operands, so the cuota del ejercicio is
+    # followed by both pagos-fraccionados relations (modalidad 40.3
+    # casilla 34, then modalidad 40.2 casilla 03).
     assert set(diferencial_entry.operand_refs) == {
         "DP200014B:00599",
         "modelo-200-2024-rel-202-pagos-fraccionados",
+        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
     }
     assert diferencial_entry.operand_refs == (
         "DP200014B:00599",
         "modelo-200-2024-rel-202-pagos-fraccionados",
+        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
     )
-    # The relation operand value the cuota-diferencial formula consumed
-    # is exactly the aggregated 1P/2P/3P pagos fraccionados the relation
-    # resolver produced — the netting subtracts the resolver output, not
-    # a literal hand-summed by the test author.
+    # The relation operand values the cuota-diferencial formula consumed
+    # are exactly the aggregated 1P/2P/3P pagos fraccionados the relation
+    # resolver produced under each modality — the netting subtracts the
+    # resolver output, not a literal hand-summed by the test author.
     assert diferencial_entry.operand_values[1] == relation_values["modelo-200-2024-rel-202-pagos-fraccionados"]
+    assert diferencial_entry.operand_values[2] == relation_values["modelo-200-2024-rel-202-pagos-fraccionados-40-2"]
 
 
 def _observations_from_requirements(

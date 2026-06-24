@@ -125,7 +125,10 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
-        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        relation_values={
+            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
+            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+        },
         date_context={"filing_period": date(2024, 12, 31)},
     )
     # The cuota íntegra for a micro-empresa SL at the 2024 flat pyme rate
@@ -311,7 +314,10 @@ def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
-        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        relation_values={
+            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
+            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+        },
         date_context={"filing_period": date(2024, 12, 31)},
     )
     assert "DP200014:00562" in result.values, (

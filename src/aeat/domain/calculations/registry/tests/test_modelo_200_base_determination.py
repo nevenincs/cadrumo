@@ -73,7 +73,10 @@ def _calculate(inputs: dict[str, Decimal]):
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
             "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
-        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        relation_values={
+            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
+            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+        },
         date_context={"filing_period": date(2024, 12, 31)},
     )
 
