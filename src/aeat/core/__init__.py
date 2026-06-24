@@ -53,6 +53,7 @@ from ._period import (
     accepted_period_codes,
     accepted_period_patterns,
 )
+from ._refund_election import RefundElection
 from ._result_disposition import (
     ResultDisposition,
     derive_result_disposition,
@@ -95,6 +96,7 @@ __all__: list[str] = [
     "Period",
     "PeriodError",
     "PeriodKind",
+    "RefundElection",
     "RegistryPeriodCode",
     "ResultDisposition",
     "ServiceCapability",

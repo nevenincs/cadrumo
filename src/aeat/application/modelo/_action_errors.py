@@ -111,6 +111,20 @@ class ModeloApplicabilityFilterError(ModeloError):
     """Raised when an unknown applicability filter name is encountered."""
 
 
+class ModeloRefundElectionNotEligibleError(ModeloError):
+    """Raised when an operator elects a Modelo 303 refund for an ineligible period.
+
+    A non-REDEME taxpayer may request a negative Modelo 303 result back as a refund
+    (devolución, Tipo de declaración ``D``) only in the last filing period of the
+    year (the annual liquidación, Ley 37/1992 art. 116). Electing ``devolver`` for
+    any earlier period is refused rather than silently downgraded to compensación —
+    a silent downgrade would hide that the operator's refund request was discarded,
+    and a silent upgrade would file a refund the law does not permit for the period.
+    The fix is operator-driven: carry the credit forward (``compensar``), or make
+    the election in the year's last period.
+    """
+
+
 class WorkUnitRevisionDivergenceError(ModeloError):
     """Raised when the registry's law-determined revision diverges from the work unit's pinned revision.
 
@@ -137,6 +151,7 @@ __all__ = [
     "ModeloApplicabilityFilterError",
     "ModeloCrossPeriodCleanStateError",
     "ModeloRecordNotFoundError",
+    "ModeloRefundElectionNotEligibleError",
     "ModeloWorkflowGateError",
     "StoredCalculationDriftError",
     "VerificationReportNotFoundError",

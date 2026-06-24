@@ -8,7 +8,7 @@ related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
 ---
 
-# `m303-refund-election` adr: `Non-REDEME last-period refund opt-in election` | (**status:** `proposed`)
+# `m303-refund-election` adr: `Non-REDEME last-period refund opt-in election` | (**status:** `accepted`)
 
 ## Problem Statement
 
