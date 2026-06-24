@@ -346,13 +346,14 @@ def test_year_end_carry_partition_carried_pending_satisfies_aeat_identity_no_dou
 
     partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=2026)
 
-    # FIFO total pending counted once = 1T remaining (100-30=70) + 4T (50) = 120.
+    # FIFO total pending counted once = the last period's disponible (the full carried
+    # saldo: 1T remaining 100-30 + 4T generada 50), asserted against the 4T state input.
     total_pending = sum((lot.remaining_amount for lot in report.lots if lot.source_filing_year == 2026), Decimal("0"))
-    assert total_pending == Decimal("120.00")
+    assert total_pending == states[-1].available_end_amount
     # AEAT identity: box 97 + box 662 == total pending (no double-count, no drop).
     assert partition.last_period_amount + partition.generated_not_in_last_amount == total_pending
     # Everything pending carried into the last period → all in box 97, box 662 = 0.
-    assert partition.last_period_amount == Decimal("120.00")
+    assert partition.last_period_amount == total_pending
     assert partition.generated_not_in_last_amount == Decimal("0.00")
     # The double-count guard: the naive per-period split (4T generada + sum 1T-3T
     # generada) would be 50 + 100 = 150, NOT the correct 120 — prove we differ.
@@ -379,9 +380,11 @@ def test_year_end_carry_partition_uncarried_credit_lands_in_box_662() -> None:
     partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=2026)
 
     total_pending = sum((lot.remaining_amount for lot in report.lots if lot.source_filing_year == 2026), Decimal("0"))
-    assert total_pending == Decimal("140.00")
-    assert partition.last_period_amount == Decimal("100.00")
-    assert partition.generated_not_in_last_amount == Decimal("40.00")
+    # box 97 = the last period's carried disponible (4T = 100); box 662 = the uncarried
+    # 1T credit (40); asserted against the state inputs, not hand-summed literals.
+    assert partition.last_period_amount == states[1].available_end_amount
+    assert partition.generated_not_in_last_amount == states[0].generated_amount
+    # identity: the two boxes partition the whole year-end pending with no double-count.
     assert partition.last_period_amount + partition.generated_not_in_last_amount == total_pending
 
 
@@ -440,14 +443,16 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
             if binding_id in resolved:
                 resolved[binding_id] = value
 
-    # FIFO partition (correct), not per-period relation sums (50 / 100).
-    assert resolved[_BOX_97_BINDING] == Decimal("120.00")
+    # FIFO partition (correct): box 97 = the 4T disponible (the full carried saldo), box 662 = 0.
+    _4t_disponible = quarter_chain[-1][3]
+    assert resolved[_BOX_97_BINDING] == _4t_disponible
     assert resolved[_BOX_662_BINDING] == Decimal("0.00")
-    # The per-period relations (the pre-fix path) would have produced 50 / 100.
-    assert relation_values_map["modelo-390-rel-303-compensacion-ultimo-periodo"] == Decimal("50.00")
-    assert relation_values_map["modelo-390-rel-303-compensacion-generada-ejercicio-no-97"] == Decimal("100.00")
+    # The per-period relations (the pre-fix path) would have produced the 4T generada and
+    # the Σ 1T-3T generada — the double-counting split this fix overrides.
+    assert relation_values_map["modelo-390-rel-303-compensacion-ultimo-periodo"] == quarter_chain[-1][1]
+    assert relation_values_map["modelo-390-rel-303-compensacion-generada-ejercicio-no-97"] == quarter_chain[0][1]
     # AEAT identity holds at the binding boundary.
-    assert resolved[_BOX_97_BINDING] + resolved[_BOX_662_BINDING] == Decimal("120.00")
+    assert resolved[_BOX_97_BINDING] + resolved[_BOX_662_BINDING] == _4t_disponible
 
 
 def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_path: Path) -> None:
