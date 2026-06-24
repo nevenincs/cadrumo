@@ -70,3 +70,24 @@ predicate_id = "modelo-200-dotaciones-deterioro-cumplido-disponible-integrar"
 expression = 'implies_nonzero(["01495", "01496"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-27-2014:art-13"]
+
+# BIN closing-stock roll-forward continuity ADVISORY (LIS art. 26). casilla 00671
+# (Detalle compensación BIN — TOTAL — pendiente de aplicación en periodos futuros)
+# is the closing stock of negative tax bases carried to future years, entered as a
+# manual TOTAL of the operator's per-year detail rows (00646…03404). The BIN area
+# already BLOCKS over-application (00547 ≤ art-26 límite, 00547 ≤ opening stock
+# 00670) but NOTHING reconciles the CLOSING balance, so a wrong 00671 silently
+# mis-states future-year BIN stock — the cross-period-carry class, compounding
+# across years. Reconcile (do NOT recompute — the per-year límite-column split a
+# single total cannot capture stays operator-owned) to the AEAT roll-forward:
+# closing total = opening total (00670, bound) − applied this period
+# (DP200014:00547) + BIN generated this period (max(0, −DP200014:00552), the base
+# imponible being negative when a new BIN is generated). ADVISORY: a
+# legitimately-zero closing (all applied, none generated) stays permissible — the
+# guard fires only on a genuine discontinuity, mirroring the M200 base/dotaciones
+# advisories and no-silent-under-declaration. modelo-200-bin-continuity ADR.
+[[revisions."2024-y-siguientes".verification_predicates]]
+predicate_id = "modelo-200-bin-stock-cierre-reconcilia-roll-forward"
+expression = 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-27-2014:art-26"]
