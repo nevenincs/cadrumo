@@ -71,13 +71,10 @@ _log = get_logger(__name__)
 #: per-period sum, so the relation path is OVERRIDDEN by the FIFO projection for
 #: these two bindings (ADR 2026-06-21-m390-iva-carry-boxes).
 _M303_COMPENSACION_GENERADA_SOURCE: Final = "iva.compensacion-generada-periodo"
-#: Modelo 303 compensation casilla semantic ids (and their official box-number
-#: aliases) read from the filed 303 observation to reconstruct each period's
-#: FIFO state. A justificante may key a value by either form.
-_303_GENERADA_IDS: Final = ("iva.compensacion-generada-periodo", "compensacion-generada-periodo")
-_303_APLICADA_IDS: Final = ("iva.compensacion-aplicada-periodo", "78")
-_303_DISPONIBLE_IDS: Final = ("iva.compensacion-disponible-fin-periodo", "compensacion-disponible-fin-periodo")
-_303_POSTERIOR_IDS: Final = ("iva.compensacion-pendiente-periodos-posteriores", "87")
+_303_GENERADA_ID: Final = "iva.compensacion-generada-periodo"
+_303_APLICADA_ID: Final = "iva.compensacion-aplicada-periodo"
+_303_DISPONIBLE_ID: Final = "iva.compensacion-disponible-fin-periodo"
+_303_POSTERIOR_ID: Final = "iva.compensacion-pendiente-periodos-posteriores"
 _ZERO: Final = Decimal("0")
 
 
@@ -419,12 +416,25 @@ def _unresolved_relation_diagnostics(
     return tuple(diagnostics)
 
 
-def _observed_value(values: Mapping[str, Decimal], *candidate_ids: str) -> Decimal | None:
-    for candidate in candidate_ids:
-        value = values.get(candidate)
-        if value is not None:
-            return value
-    return None
+def _observed_value(values: Mapping[str, Decimal], casilla_id: str) -> Decimal | None:
+    return values.get(casilla_id)
+
+
+def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
+    from ...core.resources import resources
+
+    snapshot = resources().modelos.authority.snapshot(
+        observation.modelo,
+        filing_year=observation.filing_year,
+        period=observation.period,
+    )
+    canonical_ids = frozenset(casilla.id for casilla in snapshot.revision.casillas)
+    invalid = tuple(sorted(set(observation.casilla_values) - canonical_ids))
+    if invalid:
+        raise RegistryValidationError(
+            "Modelo 303 compensation observations must use canonical casilla.id values declared by "
+            f"revision {snapshot.revision.id}; got noncanonical references {invalid!r}",
+        )
 
 
 def _period_state_from_303_observation(observation: RegistryModeloObservation) -> IvaCompensationPeriodState:
@@ -437,11 +447,12 @@ def _period_state_from_303_observation(observation: RegistryModeloObservation) -
     with no carry chain) it falls back to ``posterior + generated``, which for a
     stand-alone period equals its own generated credit.
     """
+    _validate_303_observation_casilla_ids(observation)
     values = observation.casilla_values
-    generated = _observed_value(values, *_303_GENERADA_IDS) or _ZERO
-    applied = _observed_value(values, *_303_APLICADA_IDS) or _ZERO
-    posterior = _observed_value(values, *_303_POSTERIOR_IDS)
-    available = _observed_value(values, *_303_DISPONIBLE_IDS)
+    generated = _observed_value(values, _303_GENERADA_ID) or _ZERO
+    applied = _observed_value(values, _303_APLICADA_ID) or _ZERO
+    posterior = _observed_value(values, _303_POSTERIOR_ID)
+    available = _observed_value(values, _303_DISPONIBLE_ID)
     if available is None:
         available = (posterior or _ZERO) + generated
     period = Period.from_year_and_code(observation.filing_year, observation.period)
@@ -464,33 +475,34 @@ def _period_state_from_303_observation(observation: RegistryModeloObservation) -
 
 
 def _compensation_carry_binding_ids(snapshot: RegistrySnapshot) -> tuple[str | None, str | None]:
-    """Identify the box-97 (ultimo-periodo) and box-662 (generada-no-97) binding ids.
+    """Identify the annual carry binding ids for the FIFO partition.
 
     Resolved structurally from the revision's relations: both fold the shared
-    303 ``iva.compensacion-generada-periodo`` source-output; box 97 is the
-    ``copy`` of the last period (its ``source_periods`` does not span the early
-    quarters) and box 662 is the ``sum`` of the non-last periods. Returns
-    ``(box_97_binding_id, box_662_binding_id)``; either is ``None`` when the
-    revision declares no such relation (every non-390 revision).
+    303 ``iva.compensacion-generada-periodo`` source-output;
+    ``iva.anual.compensacion-ultimo-periodo-97`` is the ``copy`` of the last
+    period (its ``source_periods`` does not span the early quarters), and
+    ``iva.anual.compensacion-generada-ejercicio-no-97`` is the ``sum`` of the
+    non-last periods. Either binding id is ``None`` when the revision declares
+    no such relation (every non-390 revision).
     """
-    box_97: str | None = None
-    box_662: str | None = None
+    last_period_binding_id: str | None = None
+    generated_not_in_last_binding_id: str | None = None
     for relation in snapshot.revision.relations:
         if relation.source_output != _M303_COMPENSACION_GENERADA_SOURCE:
             continue
         op = str((relation.aggregation or {}).get("op", ""))
         if op == "copy":
-            box_97 = str(relation.target_binding)
+            last_period_binding_id = str(relation.target_binding)
         elif op == "sum":
-            box_662 = str(relation.target_binding)
-    return box_97, box_662
+            generated_not_in_last_binding_id = str(relation.target_binding)
+    return last_period_binding_id, generated_not_in_last_binding_id
 
 
 def _fifo_compensation_carry_binding_values(
     snapshot: RegistrySnapshot,
     observations: tuple[RegistryModeloObservation, ...],
 ) -> dict[str, Decimal]:
-    """Derive the box-97 / box-662 binding values from the FIFO carry partition.
+    """Derive Modelo 390 annual carry binding values from the FIFO partition.
 
     The two Modelo 390 year-end carry boxes are ONE FIFO partition of the year's
     pending compensation credit (no double-count, no drop, the AEAT identity
@@ -500,13 +512,13 @@ def _fifo_compensation_carry_binding_values(
     303-casilla sums. Returns the slot values for whichever of the two bindings
     the revision declares; empty when the revision has no carry boxes.
     """
-    box_97_binding, box_662_binding = _compensation_carry_binding_ids(snapshot)
-    if box_97_binding is None and box_662_binding is None:
+    last_period_binding_id, generated_not_in_last_binding_id = _compensation_carry_binding_ids(snapshot)
+    if last_period_binding_id is None and generated_not_in_last_binding_id is None:
         return {}
     states = tuple(
         _period_state_from_303_observation(observation)
         for observation in observations
-        if observation.modelo == "303" and observation.filing_year == snapshot.filing_year
+        if observation.modelo == Modelo.M303.value and observation.filing_year == snapshot.filing_year
     )
     if not states:
         return {}
@@ -517,10 +529,10 @@ def _fifo_compensation_carry_binding_values(
         filing_year=snapshot.filing_year,
     )
     overrides: dict[str, Decimal] = {}
-    if box_97_binding is not None:
-        overrides[box_97_binding] = partition.last_period_amount
-    if box_662_binding is not None:
-        overrides[box_662_binding] = partition.generated_not_in_last_amount
+    if last_period_binding_id is not None:
+        overrides[last_period_binding_id] = partition.last_period_amount
+    if generated_not_in_last_binding_id is not None:
+        overrides[generated_not_in_last_binding_id] = partition.generated_not_in_last_amount
     return overrides
 
 
