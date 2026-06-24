@@ -189,18 +189,21 @@ def _seed_revision(
     return work_unit_id, calculation_revision_id
 
 
-def test_derive_declaration_type_maps_m303_result_to_disposition() -> None:
+def test_resolve_modelo_result_disposition_maps_m303_result_to_disposition() -> None:
     """The fichero 'Tipo de declaración' is derived from the M303 result, never hardcoded.
 
     Regression for the credit-misfiling defect: the export used to emit a constant
     ``"I"`` (ingreso) for every return, so a credit (a compensar) filed as a payment
-    owed. The disposition must follow the computed final result (casilla 71):
+    owed. The shared resolver follows the computed final result (casilla 71):
     positive -> I, negative -> C, zero -> N. Grounded in the bundled AEAT diseño.
+    A non-REDEME profile leaves the M303 credit as ``C`` (no refund election).
     """
     from decimal import Decimal
     from types import SimpleNamespace
 
-    from .._export import _derive_declaration_type
+    from .._result_disposition_resolution import resolve_modelo_result_disposition
+
+    ordinary = _profile()  # redeme_enrolled defaults to False; no refund election
 
     def _wu(modelo: str) -> object:
         return SimpleNamespace(modelo=modelo)
@@ -208,45 +211,48 @@ def test_derive_declaration_type_maps_m303_result_to_disposition() -> None:
     def _rev(result: str) -> object:
         return SimpleNamespace(casilla_values={"71": Decimal(result)})
 
-    assert _derive_declaration_type(work_unit=_wu("303"), revision=_rev("357.00")) == "I"
-    assert _derive_declaration_type(work_unit=_wu("303"), revision=_rev("-210.00")) == "C"
-    assert _derive_declaration_type(work_unit=_wu("303"), revision=_rev("0.00")) == "N"
+    def _disp(work_unit: object, revision: object) -> str:
+        return resolve_modelo_result_disposition(
+            work_unit=work_unit,
+            revision=revision,
+            workflow_profile=ordinary,
+            period=Period.from_year_and_code(2024, "1T"),
+        ).value
+
+    assert _disp(_wu("303"), _rev("357.00")) == "I"
+    assert _disp(_wu("303"), _rev("-210.00")) == "C"
+    assert _disp(_wu("303"), _rev("0.00")) == "N"
     # A missing result casilla defaults to zero -> negativa (N), not ingreso.
-    assert _derive_declaration_type(work_unit=_wu("303"), revision=SimpleNamespace(casilla_values={})) == "N"
+    assert _disp(_wu("303"), SimpleNamespace(casilla_values={})) == "N"
     # M130 (IRPF pago fraccionado) is codified: a credit is B (resultado a deducir).
-    assert (
-        _derive_declaration_type(
-            work_unit=_wu("130"),
-            revision=SimpleNamespace(casilla_values={"19": Decimal("-50.00")}),
-        )
-        == "B"
-    )
+    assert _disp(_wu("130"), SimpleNamespace(casilla_values={"19": Decimal("-50.00")})) == "B"
     # M200 (IS annual) is codified: a refund (negative 00599) is D (devolución), not I.
-    assert (
-        _derive_declaration_type(
-            work_unit=_wu("200"),
-            revision=SimpleNamespace(casilla_values={"DP200014B:00599": Decimal("-1000.00")}),
-        )
-        == "D"
-    )
+    assert _disp(_wu("200"), SimpleNamespace(casilla_values={"DP200014B:00599": Decimal("-1000.00")})) == "D"
     # A modelo without a codified spec falls back to the ingreso disposition
     # (documented provisional fallback), not a crash.
-    assert _derive_declaration_type(work_unit=_wu("390"), revision=_rev("-1000.00")) == "I"
+    assert _disp(_wu("390"), _rev("-1000.00")) == "I"
 
 
-def test_redeme_refund_election_upgrades_m303_carry_to_devolucion() -> None:
+def test_resolve_modelo_result_disposition_redeme_upgrades_m303_carry_to_devolucion() -> None:
     """REDEME monthly-refund election: a REDEME taxpayer's negative Modelo 303 period
-    files as a refund "D" (devolución, art. 30 RD 1624/1992 / LIVA art. 116) every
+    resolves to a refund "D" (devolución, art. 30 RD 1624/1992 / LIVA art. 116) every
     period; a non-REDEME taxpayer keeps the carry-forward "C". Only an M303
     carry-forward is upgraded. Cross-period + cross-entity multi-persona verification.
+
+    Exercises the SINGLE shared resolver both the export and the cross-period carry
+    persistence now read.
     """
+    from decimal import Decimal
     from types import SimpleNamespace
 
     from ....domain.deadlines._models import ModeloIVAProfile
-    from .._export import _apply_refund_election
+    from .._result_disposition_resolution import resolve_modelo_result_disposition
 
     def _wu(modelo: str) -> object:
         return SimpleNamespace(modelo=modelo)
+
+    def _rev(result: str) -> object:
+        return SimpleNamespace(casilla_values={"71": Decimal(result)})
 
     def _p(code: str) -> Period:
         return Period.from_year_and_code(2024, code)
@@ -258,38 +264,29 @@ def test_redeme_refund_election_upgrades_m303_carry_to_devolucion() -> None:
     )
     ordinary = _profile()  # redeme_enrolled defaults to False
 
-    # Persona 1 — REDEME company filing monthly: a negative period files as a refund
+    def _disp(work_unit: object, revision: object, profile: TaxpayerProfile, period: Period) -> str:
+        return resolve_modelo_result_disposition(
+            work_unit=work_unit,
+            revision=revision,
+            workflow_profile=profile,
+            period=period,
+        ).value
+
+    # Persona 1 — REDEME company filing monthly: a negative period resolves to a refund
     # "D", EVERY period (the inscription is the standing monthly-refund election).
     for code in ("01", "02", "03", "12"):
-        assert (
-            _apply_refund_election(declaration_type="C", work_unit=_wu("303"), workflow_profile=redeme, period=_p(code))
-            == "D"
-        )
+        assert _disp(_wu("303"), _rev("-210.00"), redeme, _p(code)) == "D"
 
     # Persona 2 (regression control) — ordinary non-REDEME company: the negative
     # period stays "C" (carry forward), unchanged from prior behaviour, in every period.
     for code in ("01", "1T", "4T"):
-        assert (
-            _apply_refund_election(
-                declaration_type="C", work_unit=_wu("303"), workflow_profile=ordinary, period=_p(code)
-            )
-            == "C"
-        )
+        assert _disp(_wu("303"), _rev("-210.00"), ordinary, _p(code)) == "C"
 
-    # Only a carry-forward ("C") on Modelo 303 is upgraded; a positive ("I"), a zero
-    # ("N"), and a non-303 modelo are never touched (REDEME profile throughout).
-    assert (
-        _apply_refund_election(declaration_type="I", work_unit=_wu("303"), workflow_profile=redeme, period=_p("01"))
-        == "I"
-    )
-    assert (
-        _apply_refund_election(declaration_type="N", work_unit=_wu("303"), workflow_profile=redeme, period=_p("01"))
-        == "N"
-    )
-    assert (
-        _apply_refund_election(declaration_type="B", work_unit=_wu("130"), workflow_profile=redeme, period=_p("1T"))
-        == "B"
-    )
+    # A positive ("I"), a zero ("N"), and a non-303 modelo are never upgraded to a
+    # refund (REDEME profile throughout).
+    assert _disp(_wu("303"), _rev("357.00"), redeme, _p("01")) == "I"
+    assert _disp(_wu("303"), _rev("0.00"), redeme, _p("01")) == "N"
+    assert _disp(_wu("130"), SimpleNamespace(casilla_values={"19": Decimal("-50.00")}), redeme, _p("1T")) == "B"
 
 
 def test_compose_export_headers_emits_devolucion_for_redeme_negative_303(isolated_backend: None) -> None:
