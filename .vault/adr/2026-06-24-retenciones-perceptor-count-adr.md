@@ -8,7 +8,7 @@ related:
   - '[[2026-06-21-eoy-final-calculation-audit]]'
 ---
 
-# `retenciones-perceptor-count` adr: `Retenciones perceptor count must derive from one repository-backed distinct-NIF source in the calc mesh` | (**status:** `proposed`)
+# `retenciones-perceptor-count` adr: `Retenciones perceptor count must derive from one repository-backed distinct-NIF source in the calc mesh` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -69,8 +69,11 @@ per-perceptor source in the live calc path.
   distinct-NIF fixture, not the relation formula under test.
 - **Sensitive data.** Perceptor NIFs are financial identity data; any persisted per-perceptor store
   must live in the encrypted secure-object substrate, never a plaintext side store.
-- **Gated on a data-model decision** (below): the implementation cannot start until the
-  per-perceptor source of truth is chosen.
+- **Data-model decision RATIFIED (2026-06-24): a DEDICATED persisted retención-observation
+  store** — NOT ledger perceptor modelling. Per-perceptor records (perceptor NIF + scheme +
+  amounts) live in their own bucket-scoped encrypted secure-object namespace, keeping perceptor
+  identity out of the ledger transaction model (`sensitive-financial-data-secure-storage-only`)
+  and serving the pull and calculate surfaces from one source. The plan may proceed on this basis.
 
 ## Implementation
 
@@ -116,9 +119,10 @@ per-perceptor store — a real data-model addition, not wiring; it must live in 
 substrate and be populated coherently for both surfaces. Pitfalls: re-pointing the count before the
 repository exists would leave the binding blank (no-dormant-source); the monetary relations must be
 left untouched; the distinct-count semantics must follow the Diseño's per-type-2-record rule; tests
-must be grounded, not tautological. Open decision: whether per-perceptor records are modelled on the
-ledger or persisted as a dedicated retención-observation store — this gates the plan and should be
-ratified before execution.
+must be grounded, not tautological. Decision (ratified 2026-06-24): per-perceptor records are
+persisted as a DEDICATED retención-observation store in the encrypted secure-object substrate (NOT
+ledger-modelled), so perceptor identity stays out of the ledger transaction model and one store
+serves both surfaces; the plan proceeds on this basis.
 
 ## Codification candidates
 
