@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...core import RefundElection
 from ...core.config import Settings
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository
@@ -61,6 +62,7 @@ def file_modelo_revision(
     actor: str,
     workflow_profile: TaxpayerProfile,
     notes: str | None = None,
+    refund_election: RefundElection = RefundElection.COMPENSAR,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
@@ -102,6 +104,12 @@ def file_modelo_revision(
         workflow_profile: The :class:`TaxpayerProfile` used to evaluate workflow
             gate conditions.
         notes: Optional operator-supplied filing notes.
+        refund_election: The operator's per-filing Modelo 303 negative-result
+            disposition election. Defaults to ``COMPENSAR`` (carry the credit
+            forward). ``DEVOLVER`` requests the credit back as a refund and is
+            honoured only when the period is a lawful refund period (the year's
+            last filing period for a non-REDEME taxpayer; every period for REDEME).
+            An out-of-window ``DEVOLVER`` is refused.
         work_unit_repository: Optional work-unit catalogue repository override.
         calculation_repository: Optional calculation-revision catalogue
             repository override.
@@ -204,16 +212,19 @@ def file_modelo_revision(
 
     # Determine the filing disposition ONCE from the same shared resolver the
     # export reads (resolve_modelo_result_disposition): a Modelo 303 devolución
-    # period (REDEME monthly-refund or last-period election) returns the credit,
-    # so the cross-period carry persisted below must generate zero compensación
-    # rather than double-claim the refunded credit into the next period's casilla
-    # 110. The export's fichero "D" and this carry now read one determined fact
-    # (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
+    # period (REDEME monthly-refund or non-REDEME last-period opt-in) returns the
+    # credit, so the cross-period carry persisted below must generate zero
+    # compensación rather than double-claim the refunded credit into the next
+    # period's casilla 110. The export's fichero "D" and this carry now read one
+    # determined fact from the same ``refund_election`` (RD 1624/1992 art. 30 /
+    # Ley 37/1992 art. 116). An out-of-window ``DEVOLVER`` election is refused
+    # here, before the filing transition persists.
     refunded = revision_is_refund_disposition(
         work_unit=work_unit,
         revision=target,
         workflow_profile=workflow_profile,
         period=work_unit.period,
+        refund_election=refund_election,
     )
 
     return persist_filed_revision(

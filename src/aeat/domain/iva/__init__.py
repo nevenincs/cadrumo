@@ -24,6 +24,7 @@ Callers from outside this subpackage must import exclusively from
 
 from __future__ import annotations
 
+from ...core import RefundElection
 from ._catalogue import load_iva_catalogues, resolve_catalogue
 from ._classification import (
     CustomerTaxStatus,
@@ -170,6 +171,7 @@ __all__ = [
     "ProrrataResult",
     "ProrrataSector",
     "ProrrataSectorError",
+    "RefundElection",
     "RefundEligibilityReason",
     "RegimePeriodicity",
     "TransactionKind",

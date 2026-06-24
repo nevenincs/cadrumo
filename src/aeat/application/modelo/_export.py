@@ -23,7 +23,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core import Period, RefundElection
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.logging import get_logger
@@ -167,6 +167,12 @@ class ModeloExportCommand(BaseModel):
         actor: Operator identifier captured into the
             ``MODELO_EXPORTED`` event payload and used as the draft
             ``approved_by`` field for the transient export draft.
+        refund_election: The operator's per-filing Modelo 303 negative-result
+            disposition election threaded into the shared disposition resolver so
+            the exported fichero "Tipo de declaración" matches the election made at
+            filing. Defaults to ``COMPENSAR``; ``DEVOLVER`` requests the credit
+            back and is honoured only for a lawful refund period (refused
+            otherwise).
     """
 
     model_config = _STRICT_FROZEN
@@ -174,6 +180,7 @@ class ModeloExportCommand(BaseModel):
     calculation_revision_id: CalculationRevisionId
     output_path: Path
     actor: str = Field(min_length=1, max_length=128)
+    refund_election: RefundElection = RefundElection.COMPENSAR
 
 
 class ModeloExportResult(BaseModel):
@@ -392,6 +399,7 @@ def _compose_export_headers(
     revision: CalculationRevision,
     workflow_profile: TaxpayerProfile,
     period: Period,
+    refund_election: RefundElection = RefundElection.COMPENSAR,
 ) -> dict[str, str]:
     """Compose the full fichero-BOE export header dict for a revision.
 
@@ -439,16 +447,17 @@ def _compose_export_headers(
     # The amendment (complementaria/sustitutiva) is an orthogonal marker set
     # below and does NOT change the result disposition.
     #
-    # The REDEME monthly-refund election (``C`` -> ``D`` devolución) is applied
-    # by the SINGLE shared resolver `resolve_modelo_result_disposition`, the one
-    # place the disposition is determined; the cross-period carry persistence
-    # reads the same fact, so the fichero "D" and the casilla-110 carry can never
-    # disagree (art. 30 RD 1624/1992 / LIVA art. 116).
+    # The refund election (``C`` -> ``D`` devolución) is applied by the SINGLE
+    # shared resolver `resolve_modelo_result_disposition`, the one place the
+    # disposition is determined; the cross-period carry persistence reads the same
+    # fact from the same ``refund_election``, so the fichero "D" and the
+    # casilla-110 carry can never disagree (art. 30 RD 1624/1992 / LIVA art. 116).
     declaration_type = resolve_modelo_result_disposition(
         work_unit=work_unit,
         revision=revision,
         workflow_profile=workflow_profile,
         period=period,
+        refund_election=refund_election,
     ).value
     headers: dict[str, str] = {
         "declaration_type": declaration_type,
@@ -631,6 +640,7 @@ def export_modelo_revision(
         revision=revision,
         workflow_profile=workflow_profile,
         period=export_period,
+        refund_election=command.refund_election,
     )
     tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
     try:

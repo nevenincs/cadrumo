@@ -20,6 +20,7 @@ from ...application.modelo import (
     ModeloExportNoActiveBucketError,
     ModeloExportOutputPathError,
     ModeloIvaWalletReconciliationBlocked,
+    ModeloRefundElectionNotEligibleError,
     ModeloWorkAddressNotFoundError,
     ModeloWorkPeriodTokenError,
     WorkUnitNotFoundError,
@@ -27,7 +28,7 @@ from ...application.modelo import (
     resolve_modelo_revision_for_operator_target,
 )
 from ...application.workflow import workflow_state_repository
-from ...core import Period
+from ...core import Period, RefundElection
 from ...core.i18n import tr
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_cli_support import (
@@ -129,6 +130,13 @@ def register_export_commands(
                 ),
             ),
         ] = None,
+        disposition: Annotated[
+            RefundElection,
+            typer.Option(
+                "--disposition",
+                help=tr("cli.app.modelo.work.disposition_help"),
+            ),
+        ] = RefundElection.COMPENSAR,
     ) -> None:
         """Export a verified-complete or filed modelo revision to disk."""
         workflow_state = workflow_state_repository().load()
@@ -174,6 +182,7 @@ def register_export_commands(
                     calculation_revision_id=target_revision_id,
                     output_path=output,
                     actor=actor or resolve_default_actor(),
+                    refund_election=disposition,
                 ),
                 workflow_profile=workflow_profile,
             )
@@ -185,6 +194,7 @@ def register_export_commands(
             ModeloExportNoActiveBucketError,
             ModeloExportOutputPathError,
             ModeloIvaWalletReconciliationBlocked,
+            ModeloRefundElectionNotEligibleError,
         ) as exc:
             raise bad_parameter_from_error(exc) from exc
 

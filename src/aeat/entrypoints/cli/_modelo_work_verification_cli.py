@@ -19,12 +19,14 @@ from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloCalculationRevisionSelector,
+    ModeloRefundElectionNotEligibleError,
     ModeloVerifySelector,
     WorkUnitNotFoundError,
     file_modelo_revision,
     verify_modelo_revision,
 )
 from ...application.workflow import workflow_state_repository
+from ...core import RefundElection
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.resources import resources
@@ -455,6 +457,13 @@ def _register_work_file_command(
             str | None,
             typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),
         ] = None,
+        disposition: Annotated[
+            RefundElection,
+            typer.Option(
+                "--disposition",
+                help=tr("cli.app.modelo.work.disposition_help"),
+            ),
+        ] = RefundElection.COMPENSAR,
         output_language: OutputLanguage | None = typer.Option(
             None,
             "--output-language",
@@ -483,6 +492,7 @@ def _register_work_file_command(
                 actor=actor or resolve_default_actor(),
                 workflow_profile=workflow_profile,
                 notes=notes,
+                refund_election=disposition,
             )
         except CalculationRevisionNotFoundError as exc:
             if calculation_revision_id is not None:
@@ -490,6 +500,7 @@ def _register_work_file_command(
             raise bad_parameter_from_error(exc) from exc
         except (
             CalculationRevisionStateError,
+            ModeloRefundElectionNotEligibleError,
             WorkUnitNotFoundError,
         ) as exc:
             raise bad_parameter_from_error(exc) from exc
