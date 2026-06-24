@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#eoy-final-calculation'
 date: '2026-06-22'
-modified: '2026-06-23'
+modified: '2026-06-24'
 tier: L2
 related:
   - '[[2026-06-22-eoy-final-calculation-adr]]'
@@ -18,8 +18,8 @@ related:
 Convert casilla DP200014B:00592 (cuota liquida) from a bare manual input into a computed casilla derived from cuota integra so the IS annual result stops silently reading zero.
 
 - [x] `P01.S01` - Ground the LIS deduccion/bonificacion casilla set that reduces cuota integra (00562) to cuota liquida (00592) against the AEAT Modelo 200 Diseno de Registros / Manual practico; `src/aeat/_data/registry/aeat/modelos/200`.
-- [ ] `P01.S02` - Convert casilla DP200014B:00592 to a computed casilla deriving cuota liquida from 00562 minus the grounded deduction/bonificacion casillas (each defaulting to 0); `wire the owning construct and legal_refs (coordinate with the task-5 M200 owner; re-read HEAD before editing); `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes`.
-- [ ] `P01.S03` - Add real end-to-end regression asserting M200 cuota del ejercicio a ingresar (00599) derives from cuota integra minus pagos (no manual 00592), grounded not tautological; `src/aeat/application/modelo/tests`.
+- [x] `P01.S02` - Convert casilla DP200014B:00592 to a computed casilla deriving cuota liquida from 00562 minus the grounded deduction/bonificacion casillas (each defaulting to 0); `wire the owning construct and legal_refs (coordinate with the task-5 M200 owner; re-read HEAD before editing); `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes`.
+- [x] `P01.S03` - Add real end-to-end regression asserting M200 cuota del ejercicio a ingresar (00599) derives from cuota integra minus pagos (no manual 00592), grounded not tautological; `src/aeat/application/modelo/tests`.
 
 ### Phase `P02` - Confirm F1 residual, extend M303 base (F3), annual regression coverage
 
