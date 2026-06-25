@@ -73,6 +73,7 @@ You MUST respect these rules at all times:
 @.claude/rules/terminology-scaffold-preserve-contract.md
 @.claude/rules/terminology-single-declaration.md
 @.claude/rules/tests-live-under-domain-tests-folders.md
+@.claude/rules/uncommitted-wip-is-not-orphaned.md
 @.claude/rules/vaultspec-archive-discipline.builtin.md
 @.claude/rules/vaultspec-cli.builtin.md
 @.claude/rules/vaultspec-codify.builtin.md
