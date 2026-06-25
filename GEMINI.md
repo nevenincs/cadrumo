@@ -38,6 +38,7 @@ You MUST respect these rules at all times:
 @.agents/rules/cli-single-subject-id-is-positional.md
 @.agents/rules/composition-service-no-parallel-write-path.md
 @.agents/rules/core-struct-docstring-links.md
+@.agents/rules/cross-period-suppression-grounded-in-registry-classification.md
 @.agents/rules/firmware-reference-parity.builtin.md
 @.agents/rules/fixture-provenance-declared-in-sidecar.md
 @.agents/rules/full-tree-gate-must-distinguish-owner.md
