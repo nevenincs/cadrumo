@@ -186,6 +186,32 @@ def test_validator_rejects_verification_predicate_with_unknown_operator() -> Non
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_rejects_roll_forward_balances_with_wrong_arity() -> None:
+    """A roll_forward_balances predicate must name exactly four casilla ids.
+
+    The runtime evaluator's bad-arity branch returns None → treated as holding
+    (BLOCKING) / never firing (ADVISORY), so a malformed continuity predicate
+    would silently do nothing. The authoring-time validator rejects it at
+    registry load. Uses existing M130 casillas (01/02/03) so the failure is the
+    arity, not an unknown-casilla reference.
+    """
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    bad_arity = VerificationPredicateDefinition(
+        predicate_id="modelo-130-bad-roll-forward",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='roll_forward_balances(["01", "02", "03"])',  # three ids; needs four
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, bad_arity)},
+    )
+
+    with pytest.raises(RegistryValidationError, match="must name exactly four casilla ids"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
 def test_validator_rejects_verification_predicate_with_malformed_expression() -> None:
     """Predicate whose expression is not a parseable DSL call fails."""
 

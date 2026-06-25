@@ -38,6 +38,7 @@ You MUST respect these rules at all times:
 @.codex/rules/cli-single-subject-id-is-positional.md
 @.codex/rules/composition-service-no-parallel-write-path.md
 @.codex/rules/core-struct-docstring-links.md
+@.codex/rules/cross-period-suppression-grounded-in-registry-classification.md
 @.codex/rules/firmware-reference-parity.builtin.md
 @.codex/rules/fixture-provenance-declared-in-sidecar.md
 @.codex/rules/full-tree-gate-must-distinguish-owner.md
@@ -72,6 +73,7 @@ You MUST respect these rules at all times:
 @.codex/rules/terminology-scaffold-preserve-contract.md
 @.codex/rules/terminology-single-declaration.md
 @.codex/rules/tests-live-under-domain-tests-folders.md
+@.codex/rules/uncommitted-wip-is-not-orphaned.md
 @.codex/rules/vaultspec-archive-discipline.builtin.md
 @.codex/rules/vaultspec-cli.builtin.md
 @.codex/rules/vaultspec-codify.builtin.md

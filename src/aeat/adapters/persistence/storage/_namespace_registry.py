@@ -316,6 +316,26 @@ CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="{modelo}:{filing_year}:{period}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
 )
+# Per-perceptor retención records (perceptor NIF + scheme + taxable base +
+# retención) for the retenciones-summary family (Modelo 180/190/193). The
+# DEDICATED store the calc-mesh perceptor-count resolver reads so the distinct-NIF
+# count (aggregate_retenciones_180.total_perceptors) is computed from one persisted
+# source shared by the pull and calculate surfaces — never the wrong sum of
+# quarterly aggregate counts (retenciones-perceptor-count ADR 2026-06-24).
+# FINANCIAL sensitivity: perceptor NIFs are identity-bearing financial data and
+# live encrypted at rest, never plaintext (sensitive-financial-data-secure-storage-only).
+RETENCION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="retencion_observations",
+    namespace="aeat.retenciones.observations",
+    owner="aeat.application.aggregation",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    # The perceptor NIF is sha256-hashed in the object key (mirroring the
+    # iva-wallet-decision key convention) so the plaintext NIF lives ONLY inside
+    # the encrypted payload, never in a repository identifier.
+    object_key_grammar="{modelo}:{filing_year}:{period}:{sha256(perceptor_nif)}:{scheme}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+)
 IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="iva_wallet_reconciliation_decisions",
     namespace="aeat.calculations.iva_wallet.reconciliation_decisions",
@@ -843,6 +863,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         APPLICATION_FILING_HISTORY_NAMESPACE,
         AUTH_APODERADO_CONFIGURATION_NAMESPACE,
         CALCULATION_OBSERVATIONS_NAMESPACE,
+        RETENCION_OBSERVATIONS_NAMESPACE,
         IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
         IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
         IVA_COMPENSATION_HISTORY_NAMESPACE,

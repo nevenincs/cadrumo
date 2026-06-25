@@ -75,6 +75,7 @@ from ._bindings import (
     resolve_previous_filing_binding_values,
     resolve_refund_binding_row_values,
     resolve_related_party_binding_row_values,
+    resolve_retenciones_aggregation_binding_values,
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
     unsupported_ledger_iva_observations,
@@ -88,6 +89,7 @@ from ._bindings import (
     validate_ledger_renta_expense_aggregation_binding_definition,
     validate_ledger_renta_gasto_aggregation_binding_definition,
     validate_ledger_renta_income_aggregation_binding_definition,
+    validate_retenciones_aggregation_binding,
     withholding_binding_requirements,
 )
 from ._censo_modelos import (
@@ -657,6 +659,7 @@ __all__ = [
     "resolve_previous_filing_binding_values",
     "resolve_refund_binding_row_values",
     "resolve_related_party_binding_row_values",
+    "resolve_retenciones_aggregation_binding_values",
     "resolve_relation_values",
     "resolve_relation_values_from_observations",
     "resolve_revision_constructs",
@@ -683,6 +686,7 @@ __all__ = [
     "validate_ledger_renta_expense_aggregation_binding_definition",
     "validate_ledger_renta_gasto_aggregation_binding_definition",
     "validate_ledger_renta_income_aggregation_binding_definition",
+    "validate_retenciones_aggregation_binding",
     "verify_legal_catalogue",
     "verify_legal_reference",
     "verify_source_catalogue",

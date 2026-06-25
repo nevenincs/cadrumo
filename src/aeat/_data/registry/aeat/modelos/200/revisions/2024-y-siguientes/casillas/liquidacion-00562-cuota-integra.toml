@@ -11,6 +11,6 @@ semantic_role_cardinality_reason = "Liquidación III cuota íntegra is the singl
 required = false
 input_kind = "computed"
 formula = "modelo-200-cuota-integra"
-export_refs = ["modelo-200-page-014-casilla-00562"]
+export_refs = ["modelo-200-did-casilla-00562", "modelo-200-page-014-casilla-00562"]
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-29", "ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

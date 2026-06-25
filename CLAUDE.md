@@ -38,6 +38,7 @@ You MUST respect these rules at all times:
 @.claude/rules/cli-single-subject-id-is-positional.md
 @.claude/rules/composition-service-no-parallel-write-path.md
 @.claude/rules/core-struct-docstring-links.md
+@.claude/rules/cross-period-suppression-grounded-in-registry-classification.md
 @.claude/rules/firmware-reference-parity.builtin.md
 @.claude/rules/fixture-provenance-declared-in-sidecar.md
 @.claude/rules/full-tree-gate-must-distinguish-owner.md
@@ -72,6 +73,7 @@ You MUST respect these rules at all times:
 @.claude/rules/terminology-scaffold-preserve-contract.md
 @.claude/rules/terminology-single-declaration.md
 @.claude/rules/tests-live-under-domain-tests-folders.md
+@.claude/rules/uncommitted-wip-is-not-orphaned.md
 @.claude/rules/vaultspec-archive-discipline.builtin.md
 @.claude/rules/vaultspec-cli.builtin.md
 @.claude/rules/vaultspec-codify.builtin.md

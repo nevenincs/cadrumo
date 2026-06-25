@@ -109,3 +109,121 @@ number = "01498"
 [[revisions."2024-y-siguientes".completeness_manifest.casillas]]
 segmento = "DP200020D"
 number = "01499"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "00573"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "00815"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "01038"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "01039"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "01040"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "01041"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "01280"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "01344"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "02314"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+number = "02315"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00563"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00566"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00567"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00568"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00569"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00570"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00571"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00572"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00575"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00576"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00577"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00581"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014"
+number = "00582"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014B"
+number = "00082"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014B"
+number = "00399"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014B"
+number = "00565"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014B"
+number = "00583"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014B"
+number = "00584"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014B"
+number = "00585"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014B"
+number = "00588"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014B"
+number = "00590"
+
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
+segmento = "DP200014B"
+number = "00619"

@@ -24,5 +24,6 @@ semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Liquidación III compensación de bases imponibles negativas aplicada en el período is the single cuota-chain applied-BIN subtrahend in the DP200014 segment; the BIN stock totals (is_bin_total_pendiente) are a distinct carryforward role."
 required = false
 input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00547", "modelo-200-page-015-casilla-00547"]
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

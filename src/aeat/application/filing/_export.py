@@ -32,7 +32,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core import Period, ResultDisposition, result_disposition_is_refund
 from ...core.decimal import coerce_decimal
 from ...core.hashing import sha256_file, sha256_hex
 from ...core.logging import get_logger
@@ -332,6 +332,32 @@ def verify_export(
 _MONEY_QUANT = Decimal("0.01")
 
 
+#: ``record_type`` of the cuenta-devolución (DID) page in the DR303 export
+#: layout. The DID page carries the refund-account block (IBAN / SWIFT-BIC /
+#: bank block) AEAT pays into and is emitted ONLY for a refund disposition — a
+#: non-refund filing has no refund account to declare, so emitting the page
+#: would write an empty 823-byte record the Diseño intends only for a refund.
+_DID_PAGE_RECORD_TYPE = "page_did"
+
+
+def _did_page_suppressed(record: ExportRecordDefinition, *, headers: dict[str, str]) -> bool:
+    """Return whether a DID (cuenta-devolución) page record must be suppressed.
+
+    The DID page is emitted only when the determined disposition (carried on the
+    ``declaration_type`` header) is a refund (``D`` / ``V`` / ``X``). A
+    non-refund filing suppresses the page rather than emitting an empty refund
+    block. Non-DID records are never suppressed by this guard.
+    """
+    if record.record_type != _DID_PAGE_RECORD_TYPE:
+        return False
+    declaration_type = headers.get("declaration_type", "")
+    try:
+        disposition = ResultDisposition(declaration_type)
+    except ValueError:
+        return True
+    return not result_disposition_is_refund(disposition)
+
+
 def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, headers: dict[str, str]) -> bytes:
     chunks: list[bytes] = []
     normalized_headers = {key.lower(): value for key, value in headers.items()}
@@ -340,6 +366,8 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
         (value.binding_id, value.row_index): value.value for value in draft.binding_values
     }
     for record in sorted(layout.records, key=lambda item: item.order):
+        if _did_page_suppressed(record, headers=normalized_headers):
+            continue
         for row_index in _record_row_indexes(record, binding_values):
             _guard_record_export(record, casilla_values=casilla_values)
             text = _render_record(

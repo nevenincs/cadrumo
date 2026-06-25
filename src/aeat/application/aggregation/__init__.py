@@ -79,6 +79,7 @@ from ._modelo_bindings import (
     LedgerRentaGastoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
     ModeloLedgerBindingAggregation,
+    RetencionesAggregationSourceResolver,
     aggregation_period_for_modelo,
 )
 from ._models import CasillaAggregation, CasillaProvenance
@@ -109,6 +110,11 @@ from ._renta_ledger import (
     RentaLedgerExpenseAggregation,
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
+)
+from ._retencion_observations_repository import (
+    RetencionObservationRepository,
+    persist_retencion_observations,
+    retencion_observation_key,
 )
 from ._retenciones import (
     RetencionesAggregation,
@@ -203,9 +209,11 @@ __all__ = [
     "RentaLedgerAggregationIssueReason",
     "RentaLedgerExpenseAggregation",
     "RetencionObservation",
+    "RetencionObservationRepository",
     "RetencionPerceptorRollup",
     "RetencionScheme",
     "RetencionesAggregation",
+    "RetencionesAggregationSourceResolver",
     "aggregate_counterpart_347",
     "aggregate_counterpart_349",
     "aggregate_definitiva_prorrata",
@@ -238,7 +246,9 @@ __all__ = [
     "merge_source_resolutions",
     "missing_evidence_advisory_observations",
     "oss_ioss_candidates_from_repositories",
+    "persist_retencion_observations",
     "resolve_per_modelo_registry_binding_values",
+    "retencion_observation_key",
     "stale_filed_revisions",
     "storage_degradation_resolution",
     "validate_iva_ledger_observation",

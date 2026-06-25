@@ -23,15 +23,16 @@ export_refs = ["modelo-200-page-010-casilla-00549", "modelo-200-page-032-casilla
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
-id = "00550"
+id = "DP200010:00550"
 number = "00550"
+segmento = "DP200010"
 label = "Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Conversión de pasivos en patrim. neto - Prima de emisión [00550]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 data_type = "money"
 semantic_role = "is_ecpn_operaciones_socios_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-010-casilla-00550", "modelo-200-page-014-casilla-00550", "modelo-200-page-043-casilla-00550"]
+export_refs = ["modelo-200-page-010-casilla-00550", "modelo-200-page-043-casilla-00550"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -47,15 +48,16 @@ export_refs = ["modelo-200-page-010-casilla-00551", "modelo-200-page-012-casilla
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
-id = "00552"
+id = "DP200010:00552"
 number = "00552"
+segmento = "DP200010"
 label = "Estado de cambios patrimonio neto (II) - Operaciones con socios o propietarios - Conversión de pasivos en patrim. neto - Acciones y participaciones en patrimonio propias [00552]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "operaciones_con_socios_o_propietarios"]
 data_type = "money"
 semantic_role = "is_ecpn_operaciones_socios_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-010-casilla-00552", "modelo-200-page-043-casilla-00552", "modelo-200-did-casilla-00552"]
+export_refs = ["modelo-200-page-010-casilla-00552", "modelo-200-page-043-casilla-00552"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]

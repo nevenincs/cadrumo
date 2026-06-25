@@ -11,7 +11,7 @@ import pytest
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-from ....domain.deadlines import CrossPeriodGroupMemberRoster, IVARegime, TaxpayerProfile
+from ....domain.deadlines import CrossPeriodGroupMemberRoster, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.filing import ModeloDraftError
 from ....domain.modelos import (
     CalculationRevision,
@@ -255,6 +255,43 @@ def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_depende
         and "modelo=303" in finding.message
         for finding in report.findings
     )
+
+
+def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp_path: Path) -> None:
+    """C3 end-to-end: a declared employee's Modelo 100 verify reports NO cross-period dependency block.
+
+    The empty-profile [100, 2025, 0A] file case above raises ModeloCrossPeriodCleanStateError
+    (130/131 fail-closed enforced). A profile declaring TRABAJO income (no actividad económica)
+    scopes every withholding/pagos dependency (111/115/123/130/131/180/184/190/193) out as
+    not-applicable, so the salaried filer's M100 carries no CROSS_PERIOD_DEPENDENCY_UNCLEAN finding.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="c3-salaried-m100") as profile:
+        revision_id = _seed_draft_revision(
+            bucket_id=profile.bucket_id,
+            modelo="100",
+            filing_year=2025,
+            period="0A",
+        )
+        salaried = _workflow_profile().model_copy(
+            update={"irpf_income_categories": frozenset({IrpfIncomeCategory.TRABAJO})},
+        )
+        report = verify_modelo_revision(
+            revision_id,
+            actor="operator-test",
+            workflow_profile=salaried,
+            clock=_CLOCK,
+        )
+
+    withholding_pagos = {"111", "115", "123", "130", "131", "180", "184", "190", "193"}
+    blocked = {
+        modelo
+        for finding in report.findings
+        if finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
+        for modelo in withholding_pagos
+        if f"modelo={modelo}" in finding.message
+    }
+    # The M100->M100 prior-year self-carry is a separate first-filer concern, not a withholding dep.
+    assert not blocked, f"salaried M100 must not be cross-period-blocked on withholding/pagos deps, got {blocked}"
 
 
 def test_export_modelo_390_passes_clean_state_with_imported_bound_justificantes(tmp_path: Path) -> None:

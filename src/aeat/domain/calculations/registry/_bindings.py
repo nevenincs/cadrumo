@@ -93,6 +93,10 @@ from ._ledger_bindings import (
     validate_ledger_renta_income_aggregation_binding,
     validate_ledger_renta_income_aggregation_binding_definition,
 )
+from ._retenciones_bindings import (
+    resolve_retenciones_aggregation_binding_values,
+    validate_retenciones_aggregation_binding,
+)
 from ._schema import DataBindingDefinition, InputKind, ModeloRevision
 from ._withholding_bindings import (
     WithholdingObservation,
@@ -150,6 +154,7 @@ __all__ = [
     "resolve_previous_filing_binding_values",
     "resolve_refund_binding_row_values",
     "resolve_related_party_binding_row_values",
+    "resolve_retenciones_aggregation_binding_values",
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
     "unsupported_ledger_iva_observations",
@@ -163,6 +168,7 @@ __all__ = [
     "validate_ledger_renta_expense_aggregation_binding_definition",
     "validate_ledger_renta_gasto_aggregation_binding_definition",
     "validate_ledger_renta_income_aggregation_binding_definition",
+    "validate_retenciones_aggregation_binding",
     "withholding_binding_requirements",
 ]
 
@@ -640,6 +646,7 @@ _BINDING_VALIDATOR_REGISTRY: dict[str, _BindingFamilyValidator] = {
     "ledger_renta_expense_aggregation": validate_ledger_renta_expense_aggregation_binding,
     "ledger_renta_income_aggregation": validate_ledger_renta_income_aggregation_binding,
     "ledger_renta_gasto_aggregation": validate_ledger_renta_gasto_aggregation_binding,
+    "retenciones_aggregation": validate_retenciones_aggregation_binding,
     "related_party_operation": validate_related_party_binding,
     RowSetGroupingKind.FOREIGN_ASSET: validate_foreign_asset_binding,
     "atribucion_member": validate_atribucion_binding,

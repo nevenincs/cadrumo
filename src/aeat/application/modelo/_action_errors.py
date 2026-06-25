@@ -111,6 +111,36 @@ class ModeloApplicabilityFilterError(ModeloError):
     """Raised when an unknown applicability filter name is encountered."""
 
 
+class ModeloRefundElectionNotEligibleError(ModeloError):
+    """Raised when an operator elects a Modelo 303 refund for an ineligible period.
+
+    A non-REDEME taxpayer may request a negative Modelo 303 result back as a refund
+    (devolución, Tipo de declaración ``D``) only in the last filing period of the
+    year (the annual liquidación, Ley 37/1992 art. 116). Electing ``devolver`` for
+    any earlier period is refused rather than silently downgraded to compensación —
+    a silent downgrade would hide that the operator's refund request was discarded,
+    and a silent upgrade would file a refund the law does not permit for the period.
+    The fix is operator-driven: carry the credit forward (``compensar``), or make
+    the election in the year's last period.
+    """
+
+
+class ModeloRefundAccountMissingError(ModeloError):
+    """Raised when a refund-disposition export has no refund account on file.
+
+    When the determined disposition is a refund (devolución, ``D`` / ``V`` /
+    ``X``) the fichero must carry the cuenta-devolución block AEAT pays into —
+    the IBAN, or the SWIFT-BIC plus foreign-bank block for a non-SEPA account.
+    If the operator's profile carries no refund account (no ``iban``), the
+    export REFUSES rather than emitting an empty or partial DID block: an empty
+    refund block produces a devolución fichero AEAT cannot pay — a silent,
+    defective filing. The fix is operator-driven: configure a refund account on
+    the profile, or carry the credit forward (``compensar``) instead of
+    requesting a refund. This is the no-silent-under-declaration sibling of the
+    election's eligibility refusal.
+    """
+
+
 class WorkUnitRevisionDivergenceError(ModeloError):
     """Raised when the registry's law-determined revision diverges from the work unit's pinned revision.
 
@@ -137,6 +167,8 @@ __all__ = [
     "ModeloApplicabilityFilterError",
     "ModeloCrossPeriodCleanStateError",
     "ModeloRecordNotFoundError",
+    "ModeloRefundAccountMissingError",
+    "ModeloRefundElectionNotEligibleError",
     "ModeloWorkflowGateError",
     "StoredCalculationDriftError",
     "VerificationReportNotFoundError",

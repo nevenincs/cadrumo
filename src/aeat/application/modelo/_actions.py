@@ -138,6 +138,9 @@ from ._verification_actions import (
     _PREDICATE_PROFILE_FIELD_REQUIRED as _PREDICATE_PROFILE_FIELD_REQUIRED,
 )
 from ._verification_actions import (
+    _PREDICATE_ROLL_FORWARD_BALANCES as _PREDICATE_ROLL_FORWARD_BALANCES,
+)
+from ._verification_actions import (
     _art20_reduccion_advisory_finding as _art20_reduccion_advisory_finding,
 )
 from ._verification_actions import (

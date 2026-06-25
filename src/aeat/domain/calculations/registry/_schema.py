@@ -1068,6 +1068,19 @@ KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
         "implies_any_nonzero",
         "implies_nonzero",
         "profile_field_required",
+        # roll_forward_balances(["closing_id", "opening_id", "applied_id",
+        # "base_id"]) — carry-forward stock continuity: the closing balance must
+        # reconcile to opening − applied + max(0, −base) within a one-cent
+        # tolerance. The arithmetic continuity primitive the predicate language
+        # lacked; authored for the Modelo 200 BIN total-pendiente roll-forward
+        # (00671 = 00670 − DP200014:00547 + max(0, −DP200014:00552)) and general
+        # to any "stock = prior stock − consumed + newly-generated-from-a-signed-
+        # base" carry (BIN, pending credits, recargo carryforward). As a
+        # BLOCKING_RULE it holds when the balance reconciles; as an ADVISORY it
+        # fires when it does not. See the roll_forward_balances branch in
+        # _evaluate_predicate_expression / _evaluate_advisory_predicate_fires and
+        # the modelo-200-bin-continuity ADR.
+        "roll_forward_balances",
     },
 )
 

@@ -273,6 +273,87 @@ required_text = [
 ]
 
 [[revisions."2024-y-siguientes".formulas]]
+id = "modelo-200-cuota-integra-ajustada-positiva"
+target = "DP200014:00582"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { op = "add", args = [
+            { casilla = "DP200014:00562" },
+            { casilla = "01038" },
+        ] },
+        { op = "add", args = [
+            { casilla = "DP200014:00567" },
+            { casilla = "DP200014:00568" },
+            { casilla = "DP200014:00563" },
+            { casilla = "00815" },
+            { casilla = "DP200014:00566" },
+            { casilla = "DP200014:00576" },
+            { casilla = "DP200014:00569" },
+            { casilla = "DP200014:00570" },
+            { casilla = "01344" },
+            { casilla = "01280" },
+            { casilla = "DP200014:00572" },
+            { casilla = "DP200014:00571" },
+            { casilla = "00573" },
+            { casilla = "DP200014:00575" },
+            { casilla = "DP200014:00577" },
+            { casilla = "DP200014:00581" },
+        ] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-39"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = [
+    "Cuota íntegra ajustada positiva se obtiene",
+    "[00582] = ([00562] + [01038]) -",
+    "Si al efectuar esta operación se obtiene una cantidad negativa o cero",
+]
+
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-200-cuota-liquida"
+target = "DP200014B:00592"
+expression = { op = "max", args = [
+    { casilla = "DP200014B:00619" },
+    { op = "max", args = [
+        { op = "subtract", args = [
+            { casilla = "DP200014:00582" },
+            { op = "add", args = [
+                { casilla = "DP200014B:00583" },
+                { casilla = "DP200014B:00585" },
+                { casilla = "DP200014B:00584" },
+                { casilla = "DP200014B:00588" },
+                { casilla = "01039" },
+                { casilla = "02314" },
+                { casilla = "02315" },
+                { casilla = "DP200014B:00565" },
+                { casilla = "DP200014B:00590" },
+                { casilla = "DP200014B:00399" },
+                { casilla = "DP200014B:00082" },
+                { casilla = "01040" },
+                { casilla = "01041" },
+            ] },
+        ] },
+        { literal = "0" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-36", "ley-27-2014:art-39"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = [
+    "La cuota líquida se obtiene aplicando sobre la cuota íntegra ajustada positiva",
+    "[00592] = [00582] - ([00583] + [00585]",
+    "El resultado de esta operación siempre tendrá que ser una cantidad positiva o cero",
+]
+
+[[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-cuota-ejercicio-a-ingresar-devolver"
 target = "DP200014B:00599"
 # Binding reference for DP200026:00625: the casilla stays manual (export

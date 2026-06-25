@@ -25,6 +25,7 @@ from ...application.aggregation import (
     PerModeloAggregationCommand,
     RetencionObservation,
     aggregate_per_modelo,
+    persist_retencion_observations,
 )
 from ...application.modelo import (
     AmendmentEvidenceMissingError,
@@ -59,10 +60,10 @@ from ...application.modelo import (
 from ...core import Period, PeriodError
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
 from ...core.errors import AeatError
-from ...core.external_constants import OutputLanguage
+from ...core.external_constants import RETENCIONES_MODELOS, OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
-from ...domain.calculations.registry import RegistryValidationError
+from ...domain.calculations.registry import CasillaId, RegistryValidationError
 from ._common import activate_subcommand_output_language
 from ._modelo_audit_cli import audit_app as audit_app
 from ._modelo_audit_cli import register_audit_commands
@@ -509,6 +510,18 @@ def aggregate_modelo(
             flag="--foreign-asset-observation",
         ),
     )
+    if command.modelo in RETENCIONES_MODELOS:
+        # Persist the per-perceptor set to the dedicated encrypted store so the
+        # calculate path counts perceptors from the SAME observations this pull
+        # aggregates (RET-1, one source for both surfaces). Set-replace semantics:
+        # a re-pull that drops a perceptor clears the stale row. aggregate_per_modelo
+        # stays pure — the entrypoint owns the write.
+        persist_retencion_observations(
+            modelo=command.modelo,
+            filing_year=command.period.filing_year,
+            period=command.period,
+            observations=command.retencion_observations,
+        )
     result = aggregate_per_modelo(command)
     from ._common import _emit_envelope
     from ._modelo_payloads import ModeloAggregateResult
@@ -969,7 +982,7 @@ register_work_run_commands(
 )
 
 
-def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
+def _parse_amendment_casilla(spec: str) -> tuple[CasillaId, Decimal]:
     def _to_decimal(value: str) -> Decimal:
         try:
             return Decimal(value.strip())
@@ -1028,8 +1041,8 @@ def _parse_amendment_kind(kind: str) -> CalculationRevisionAmendmentKind:
         ) from exc
 
 
-def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[str, Decimal]:
-    overrides: dict[str, Decimal] = {}
+def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[CasillaId, Decimal]:
+    overrides: dict[CasillaId, Decimal] = {}
     for spec in set_overrides:
         key, value = _parse_amendment_casilla(spec)
         overrides[key] = value

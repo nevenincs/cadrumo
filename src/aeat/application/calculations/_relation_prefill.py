@@ -29,7 +29,7 @@ on the operator's preferences and the local store's coverage.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Final
 
@@ -71,13 +71,10 @@ _log = get_logger(__name__)
 #: per-period sum, so the relation path is OVERRIDDEN by the FIFO projection for
 #: these two bindings (ADR 2026-06-21-m390-iva-carry-boxes).
 _M303_COMPENSACION_GENERADA_SOURCE: Final = "iva.compensacion-generada-periodo"
-#: Modelo 303 compensation casilla semantic ids (and their official box-number
-#: aliases) read from the filed 303 observation to reconstruct each period's
-#: FIFO state. A justificante may key a value by either form.
-_303_GENERADA_IDS: Final = ("iva.compensacion-generada-periodo", "compensacion-generada-periodo")
-_303_APLICADA_IDS: Final = ("iva.compensacion-aplicada-periodo", "78")
-_303_DISPONIBLE_IDS: Final = ("iva.compensacion-disponible-fin-periodo", "compensacion-disponible-fin-periodo")
-_303_POSTERIOR_IDS: Final = ("iva.compensacion-pendiente-periodos-posteriores", "87")
+_303_GENERADA_ID: Final = "iva.compensacion-generada-periodo"
+_303_APLICADA_ID: Final = "iva.compensacion-aplicada-periodo"
+_303_DISPONIBLE_ID: Final = "iva.compensacion-disponible-fin-periodo"
+_303_POSTERIOR_ID: Final = "iva.compensacion-pendiente-periodos-posteriores"
 _ZERO: Final = Decimal("0")
 
 
@@ -85,6 +82,7 @@ def _gather_observations_for_snapshot(
     snapshot: RegistrySnapshot,
     *,
     repository: CalculationObservationRepository,
+    activity_start_date: date | None = None,
 ) -> tuple[RegistryModeloObservation, ...]:
     """Collect every observation a relation in `snapshot.revision` could need.
 
@@ -92,14 +90,13 @@ def _gather_observations_for_snapshot(
     `(source_modelo, filing_year, period)` requirements, and pulls matching observations
     from the local store. Returns the union (deduplicated) so the
     runtime resolver can fold them through the declared aggregation
-    in one pass.
+    in one pass. ``activity_start_date`` scopes out source periods strictly
+    before the operator's activity start (a mid-year-start filer has no
+    obligation for the pre-start quarters), so the gather set matches the scoped
+    requirement set the resolver folds.
     """
     needed: dict[tuple[str, int, str], RegistryModeloObservation] = {}
-    requirements = relation_source_requirements(
-        snapshot.revision,
-        filing_year=snapshot.filing_year,
-        period=snapshot.period,
-    )
+    requirements = _scoped_relation_source_requirements(snapshot, activity_start_date)
     for requirement in requirements:
         for period in requirement.periods:
             payload = repository.load_observation(
@@ -182,12 +179,97 @@ def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> 
     return profile.activity_start_date.year >= filing_year
 
 
+def _activity_start_date_for_bucket(bucket_id: str) -> date | None:
+    """Load the operator-declared activity-start date for ``bucket_id``, or ``None``.
+
+    Mirrors the profile load in :func:`_first_year_modalidad_cuota_no_m202` (the
+    SINGLE profile builder) so the relation fold-in scopes its source periods on
+    the SAME operator-declared ``activity_start_date`` the cross-period
+    clean-state gate partitions against. Fail-closed: a missing / unprojectable
+    profile, an unregistered wizard catalogue (non-operator contexts), or an
+    absent activity-start date returns ``None`` — no period is scoped and the
+    resolver keeps its full all-quarters behaviour (never a silent drop).
+    """
+    from pydantic import ValidationError
+
+    from ...core.wizard_catalogue import WizardCatalogueNotRegisteredError
+    from ...domain.deadlines import ProfileError, taxpayer_profile_from_mapping
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile._profile_repository import ProfileRepository
+    from ..user_profile._projections import record_to_path_values
+
+    try:
+        aggregate = ProfileRepository().load(bucket_id)
+        profile = taxpayer_profile_from_mapping(
+            record_to_path_values(aggregate.record),
+            tax_id_default="",
+        )
+    except (ProfileNotFoundError, ProfileError, WizardCatalogueNotRegisteredError, ValidationError):
+        return None
+    return profile.activity_start_date
+
+
+def _scoped_relation_source_requirements(
+    snapshot: RegistrySnapshot,
+    activity_start_date: date | None,
+) -> tuple[RegistryRelationSourceRequirement, ...]:
+    """``relation_source_requirements`` with pre-activity-start source periods scoped out.
+
+    A quarterly source period STRICTLY before the operator-declared activity
+    start is a period in which the taxpayer had no filing obligation, so its
+    absence must NOT unresolve the whole fold (the partial-year-start
+    enhancement for a mid-year-start filer). Reuses the cross-period clean-state
+    gate's :func:`_period_strictly_before_activity_start` predicate — one shared
+    partition governs both the gate and the relation fold-in (one-aggregation-
+    path; no parallel scoping math). Non-calendar instalment claves (1P/2P/3P)
+    have no date span and are never scoped, so sociedad Modelo 202 cumulation is
+    unaffected. A genuinely-absent IN-SCOPE quarter still unresolves the
+    requirement downstream, preserving ``no-silent-under-declaration``. Returns
+    the requirements unchanged when ``activity_start_date`` is ``None`` (the
+    common full-year / fail-closed case).
+    """
+    requirements = relation_source_requirements(
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
+    if activity_start_date is None:
+        return requirements
+
+    from ._cross_period_clean_state import _period_strictly_before_activity_start
+
+    scoped: list[RegistryRelationSourceRequirement] = []
+    for requirement in requirements:
+        kept = tuple(
+            token
+            for token in requirement.periods
+            if not _period_strictly_before_activity_start(
+                Period.from_year_and_code(requirement.filing_year, token),
+                activity_start_date,
+            )
+        )
+        if len(kept) == len(requirement.periods):
+            scoped.append(requirement)
+        elif kept:
+            kept_filing = tuple(
+                period
+                for period in requirement.filing_periods
+                if not _period_strictly_before_activity_start(period, activity_start_date)
+            )
+            scoped.append(requirement.model_copy(update={"periods": kept, "filing_periods": kept_filing}))
+        # else: EVERY source period is strictly pre-activity → no obligation at
+        # all; drop the requirement (its ``periods`` field is min_length=1 and
+        # cannot be emptied). The relation then resolves to None as before.
+    return tuple(scoped)
+
+
 def resolve_relations_from_local_store(
     snapshot: RegistrySnapshot,
     *,
     repository: CalculationObservationRepository | None = None,
     captured_at: datetime | None = None,
     modelo_202_first_year_cuota: bool = False,
+    activity_start_date: date | None = None,
 ) -> RelationValues:
     """Build a :class:`RelationValues` record from the local observation store.
 
@@ -204,6 +286,11 @@ def resolve_relations_from_local_store(
             (LIS art. 40.2) has no pago-fraccionado obligation. The caller derives
             this fail-closed (only for a Modelo 200 target); a resolved M202 value
             is never overridden.
+        activity_start_date: When set (IRPF-1), source periods strictly before the
+            operator's activity start are scoped out of every relation requirement,
+            so a mid-year-start filer folds only the quarters it actually had an
+            obligation for instead of leaving the annual fold unresolved. ``None``
+            (the default / fail-closed case) keeps the full all-quarters behaviour.
 
     Returns a :class:`RelationValues` whose ``values`` tuple has one
     ``RelationValue`` per relation declared in the snapshot's
@@ -214,14 +301,25 @@ def resolve_relations_from_local_store(
     """
     repo = repository if repository is not None else CalculationObservationRepository()
     when = captured_at if captured_at is not None else now()
-    observations = _gather_observations_for_snapshot(snapshot, repository=repo)
+    if activity_start_date is None:
+        # Default to the active bucket's activity start so BOTH live surfaces scope
+        # identically (one-aggregation-path: the mesh/calculate path passes an
+        # explicit value from its context bucket; the Sheets-pull path calls this
+        # bare). An explicit caller value (e.g. a deterministic test) is never
+        # overridden; absent an active bucket, derivation returns None (no scoping).
+        from ...core import resolve_active_bucket_id
+
+        active_bucket_id = resolve_active_bucket_id()
+        if active_bucket_id is not None:
+            activity_start_date = _activity_start_date_for_bucket(active_bucket_id)
+    observations = _gather_observations_for_snapshot(
+        snapshot,
+        repository=repo,
+        activity_start_date=activity_start_date,
+    )
     requirements_by_relation = {
         relation_id: requirement
-        for requirement in relation_source_requirements(
-            snapshot.revision,
-            filing_year=snapshot.filing_year,
-            period=snapshot.period,
-        )
+        for requirement in _scoped_relation_source_requirements(snapshot, activity_start_date)
         for relation_id in requirement.relation_ids
     }
 
@@ -419,12 +517,25 @@ def _unresolved_relation_diagnostics(
     return tuple(diagnostics)
 
 
-def _observed_value(values: Mapping[str, Decimal], *candidate_ids: str) -> Decimal | None:
-    for candidate in candidate_ids:
-        value = values.get(candidate)
-        if value is not None:
-            return value
-    return None
+def _observed_value(values: Mapping[str, Decimal], casilla_id: str) -> Decimal | None:
+    return values.get(casilla_id)
+
+
+def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
+    from ...core.resources import resources
+
+    snapshot = resources().modelos.authority.snapshot(
+        observation.modelo,
+        filing_year=observation.filing_year,
+        period=observation.period,
+    )
+    canonical_ids = frozenset(casilla.id for casilla in snapshot.revision.casillas)
+    invalid = tuple(sorted(set(observation.casilla_values) - canonical_ids))
+    if invalid:
+        raise RegistryValidationError(
+            "Modelo 303 compensation observations must use canonical casilla.id values declared by "
+            f"revision {snapshot.revision.id}; got noncanonical references {invalid!r}",
+        )
 
 
 def _period_state_from_303_observation(observation: RegistryModeloObservation) -> IvaCompensationPeriodState:
@@ -437,11 +548,12 @@ def _period_state_from_303_observation(observation: RegistryModeloObservation) -
     with no carry chain) it falls back to ``posterior + generated``, which for a
     stand-alone period equals its own generated credit.
     """
+    _validate_303_observation_casilla_ids(observation)
     values = observation.casilla_values
-    generated = _observed_value(values, *_303_GENERADA_IDS) or _ZERO
-    applied = _observed_value(values, *_303_APLICADA_IDS) or _ZERO
-    posterior = _observed_value(values, *_303_POSTERIOR_IDS)
-    available = _observed_value(values, *_303_DISPONIBLE_IDS)
+    generated = _observed_value(values, _303_GENERADA_ID) or _ZERO
+    applied = _observed_value(values, _303_APLICADA_ID) or _ZERO
+    posterior = _observed_value(values, _303_POSTERIOR_ID)
+    available = _observed_value(values, _303_DISPONIBLE_ID)
     if available is None:
         available = (posterior or _ZERO) + generated
     period = Period.from_year_and_code(observation.filing_year, observation.period)
@@ -464,33 +576,34 @@ def _period_state_from_303_observation(observation: RegistryModeloObservation) -
 
 
 def _compensation_carry_binding_ids(snapshot: RegistrySnapshot) -> tuple[str | None, str | None]:
-    """Identify the box-97 (ultimo-periodo) and box-662 (generada-no-97) binding ids.
+    """Identify the annual carry binding ids for the FIFO partition.
 
     Resolved structurally from the revision's relations: both fold the shared
-    303 ``iva.compensacion-generada-periodo`` source-output; box 97 is the
-    ``copy`` of the last period (its ``source_periods`` does not span the early
-    quarters) and box 662 is the ``sum`` of the non-last periods. Returns
-    ``(box_97_binding_id, box_662_binding_id)``; either is ``None`` when the
-    revision declares no such relation (every non-390 revision).
+    303 ``iva.compensacion-generada-periodo`` source-output;
+    ``iva.anual.compensacion-ultimo-periodo-97`` is the ``copy`` of the last
+    period (its ``source_periods`` does not span the early quarters), and
+    ``iva.anual.compensacion-generada-ejercicio-no-97`` is the ``sum`` of the
+    non-last periods. Either binding id is ``None`` when the revision declares
+    no such relation (every non-390 revision).
     """
-    box_97: str | None = None
-    box_662: str | None = None
+    last_period_binding_id: str | None = None
+    generated_not_in_last_binding_id: str | None = None
     for relation in snapshot.revision.relations:
         if relation.source_output != _M303_COMPENSACION_GENERADA_SOURCE:
             continue
         op = str((relation.aggregation or {}).get("op", ""))
         if op == "copy":
-            box_97 = str(relation.target_binding)
+            last_period_binding_id = str(relation.target_binding)
         elif op == "sum":
-            box_662 = str(relation.target_binding)
-    return box_97, box_662
+            generated_not_in_last_binding_id = str(relation.target_binding)
+    return last_period_binding_id, generated_not_in_last_binding_id
 
 
 def _fifo_compensation_carry_binding_values(
     snapshot: RegistrySnapshot,
     observations: tuple[RegistryModeloObservation, ...],
 ) -> dict[str, Decimal]:
-    """Derive the box-97 / box-662 binding values from the FIFO carry partition.
+    """Derive Modelo 390 annual carry binding values from the FIFO partition.
 
     The two Modelo 390 year-end carry boxes are ONE FIFO partition of the year's
     pending compensation credit (no double-count, no drop, the AEAT identity
@@ -500,13 +613,13 @@ def _fifo_compensation_carry_binding_values(
     303-casilla sums. Returns the slot values for whichever of the two bindings
     the revision declares; empty when the revision has no carry boxes.
     """
-    box_97_binding, box_662_binding = _compensation_carry_binding_ids(snapshot)
-    if box_97_binding is None and box_662_binding is None:
+    last_period_binding_id, generated_not_in_last_binding_id = _compensation_carry_binding_ids(snapshot)
+    if last_period_binding_id is None and generated_not_in_last_binding_id is None:
         return {}
     states = tuple(
         _period_state_from_303_observation(observation)
         for observation in observations
-        if observation.modelo == "303" and observation.filing_year == snapshot.filing_year
+        if observation.modelo == Modelo.M303.value and observation.filing_year == snapshot.filing_year
     )
     if not states:
         return {}
@@ -517,10 +630,10 @@ def _fifo_compensation_carry_binding_values(
         filing_year=snapshot.filing_year,
     )
     overrides: dict[str, Decimal] = {}
-    if box_97_binding is not None:
-        overrides[box_97_binding] = partition.last_period_amount
-    if box_662_binding is not None:
-        overrides[box_662_binding] = partition.generated_not_in_last_amount
+    if last_period_binding_id is not None:
+        overrides[last_period_binding_id] = partition.last_period_amount
+    if generated_not_in_last_binding_id is not None:
+        overrides[generated_not_in_last_binding_id] = partition.generated_not_in_last_amount
     return overrides
 
 
@@ -551,6 +664,12 @@ class RelationPrefillSourceResolver:
                 filing_year=context.filing_year,
                 period=context.period.registry_token,
             )
+        # Activity-start scoping (IRPF-1): a mid-year-start filer has no obligation
+        # for source quarters strictly before the activity start, so those quarters
+        # are scoped out of the relation fold so their absence does not unresolve
+        # the whole fold. Derived once from the bucket profile and shared by the
+        # resolution and the diagnostic so both see the same scoped requirement set.
+        activity_start_date = _activity_start_date_for_bucket(str(context.bucket_id))
         try:
             relation_values = resolve_relations_from_local_store(
                 snapshot,
@@ -567,6 +686,7 @@ class RelationPrefillSourceResolver:
                         filing_year=context.filing_year,
                     )
                 ),
+                activity_start_date=activity_start_date,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
@@ -577,11 +697,7 @@ class RelationPrefillSourceResolver:
             )
         requirements_by_relation = {
             relation_id: requirement
-            for requirement in relation_source_requirements(
-                snapshot.revision,
-                filing_year=snapshot.filing_year,
-                period=snapshot.period,
-            )
+            for requirement in _scoped_relation_source_requirements(snapshot, activity_start_date)
             for relation_id in requirement.relation_ids
         }
         resolved = tuple(item for item in relation_values.values if item.value is not None)

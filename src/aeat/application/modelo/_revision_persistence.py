@@ -246,6 +246,7 @@ def persist_filed_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
     calculation_observation_repository: CalculationObservationRepository | None = None,
     participation_index_repository: TransactionParticipationIndexRepository | None = None,
+    refunded: bool = False,
 ) -> ModeloRecord:
     """Persist the filing transition for a verified-complete calculation revision and return a :class:`ModeloRecord`.
 
@@ -260,6 +261,14 @@ def persist_filed_revision(
     ``app_filing`` source_kind and therefore never satisfies the cross-period
     clean-state filing gate. This is a second projection of the single-writer
     filing transition, not a parallel write path.
+
+    ``refunded`` is the disposition-determined fact (resolved once at the
+    calculate/file boundary by ``resolve_modelo_result_disposition``): when the
+    Modelo 303 period is filed as a refund (devolución, Tipo de declaración
+    ``D``) the credit is returned by AEAT, so the persisted cross-period carry
+    generates ZERO compensación. It is forwarded verbatim to
+    :func:`persist_filed_revision_observation`; the default ``False`` preserves
+    the standard compensación carry (RD 1624/1992 art. 30 / Ley 37/1992 art. 116).
     """
     calculation_revision_id = target.calculation_revision_id
     new_filing_id = derive_filing_record_id(
@@ -405,6 +414,7 @@ def persist_filed_revision(
             work_unit=work_unit,
             repository=calculation_observation_repository,
             captured_at=now,
+            refunded=refunded,
         )
 
     return new_filing

@@ -327,7 +327,8 @@ class TestValidateM347Threshold:
         )
         with pytest.raises(Modelo347ThresholdError) as exc:
             validate_m347_threshold(rows)
-        assert exc.value.total == Decimal("2500")
+        # The error reports the AGGREGATED per-NIF total = the sum of the two rows' totals.
+        assert exc.value.total == rows[0].importe_total + rows[1].importe_total
         assert exc.value.nif == "12345678A"
 
     def test_distinct_nifs_thresholded_independently(self) -> None:

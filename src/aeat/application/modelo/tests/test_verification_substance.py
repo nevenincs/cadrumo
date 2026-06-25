@@ -177,6 +177,131 @@ def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
     )
 
 
+# ---------------------------------------------------------------------------
+# contract: roll_forward_balances carry-forward continuity predicate (IS-2)
+#
+# The Modelo 200 BIN closing-stock roll-forward (modelo-200-bin-continuity ADR):
+#   00671 (closing total pendiente) == 00670 (opening, bound)
+#                                       − DP200014:00547 (applied)
+#                                       + max(0, −DP200014:00552) (BIN generated)
+# Expected values are derived from that AEAT roll-forward rule, NOT from the
+# predicate formula under test.
+# ---------------------------------------------------------------------------
+
+_BIN_ROLL_FORWARD = 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])'
+
+
+def test_roll_forward_balances_holds_when_closing_reconciles() -> None:
+    """A continuous filing (closing == opening − applied + generated) holds and fires no advisory."""
+    # opening 10000 − applied 3000 + generated max(0, −5000)=0 ⇒ closing 7000
+    values: dict[str, Decimal] = {
+        "00670": Decimal("10000"),
+        "DP200014:00547": Decimal("3000"),
+        "DP200014:00552": Decimal("5000"),
+        "00671": Decimal("7000"),
+    }
+    assert _evaluate_predicate_expression(_BIN_ROLL_FORWARD, values, _workflow_profile()) is True
+    assert _evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, values) is False
+
+
+def test_roll_forward_balances_fires_when_carryforward_silently_dropped() -> None:
+    """An operator who zeroes the closing while stock remains triggers the advisory."""
+    # roll-forward = 10000 − 3000 + 0 = 7000, but operator entered closing 0
+    values: dict[str, Decimal] = {
+        "00670": Decimal("10000"),
+        "DP200014:00547": Decimal("3000"),
+        "DP200014:00552": Decimal("5000"),
+        "00671": Decimal("0"),
+    }
+    assert _evaluate_predicate_expression(_BIN_ROLL_FORWARD, values, _workflow_profile()) is False
+    assert _evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, values) is True
+
+
+def test_roll_forward_balances_holds_for_legitimate_zero_closing() -> None:
+    """All stock applied, none generated ⇒ closing legitimately zero ⇒ no false fire."""
+    # 3000 − 3000 + 0 = 0
+    values: dict[str, Decimal] = {
+        "00670": Decimal("3000"),
+        "DP200014:00547": Decimal("3000"),
+        "DP200014:00552": Decimal("8000"),
+        "00671": Decimal("0"),
+    }
+    assert _evaluate_predicate_expression(_BIN_ROLL_FORWARD, values, _workflow_profile()) is True
+    assert _evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, values) is False
+
+
+def test_roll_forward_balances_includes_bin_generated_this_period() -> None:
+    """A loss year (negative base) adds the generated BIN to the closing stock."""
+    # base −4000 ⇒ generated max(0, 4000) = 4000; 5000 − 2000 + 4000 = 7000
+    values: dict[str, Decimal] = {
+        "00670": Decimal("5000"),
+        "DP200014:00547": Decimal("2000"),
+        "DP200014:00552": Decimal("-4000"),
+        "00671": Decimal("7000"),
+    }
+    assert _evaluate_predicate_expression(_BIN_ROLL_FORWARD, values, _workflow_profile()) is True
+    assert _evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, values) is False
+
+
+def test_roll_forward_balances_tolerates_one_cent_but_not_euros() -> None:
+    """Sub-cent drift reconciles; a euro-scale discontinuity fires."""
+    base: dict[str, Decimal] = {
+        "00670": Decimal("10000"),
+        "DP200014:00547": Decimal("3000"),
+        "DP200014:00552": Decimal("5000"),
+    }
+    within = {**base, "00671": Decimal("7000.01")}
+    assert _evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, within) is False
+    beyond = {**base, "00671": Decimal("7001")}
+    assert _evaluate_advisory_predicate_fires(_BIN_ROLL_FORWARD, beyond) is True
+
+
+def test_roll_forward_balances_bad_arity_holds_and_does_not_fire() -> None:
+    """A malformed arity reads as holding (BLOCKING) and never fires (ADVISORY)."""
+    expr = 'roll_forward_balances(["00671", "00670", "DP200014:00547"])'
+    values: dict[str, Decimal] = {"00671": Decimal("0"), "00670": Decimal("9999")}
+    assert _evaluate_predicate_expression(expr, values, _workflow_profile()) is True
+    assert _evaluate_advisory_predicate_fires(expr, values) is False
+
+
+def test_roll_forward_balances_emits_advisory_finding_on_discontinuity() -> None:
+    """The ADVISORY M200 BIN predicate fires a WARNING finding on a dropped carryforward."""
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-200-bin-stock-cierre-reconcilia-roll-forward",
+        legal_refs=("ley-27-2014:art-26",),
+        expression=_BIN_ROLL_FORWARD,
+        finding_kind="ADVISORY",
+    )
+    # roll-forward = 10000 − 3000 + 0 = 7000; operator dropped closing to 0
+    values: dict[str, Decimal] = {
+        "00670": Decimal("10000"),
+        "DP200014:00547": Decimal("3000"),
+        "DP200014:00552": Decimal("5000"),
+        "00671": Decimal("0"),
+    }
+    findings = _evaluate_verification_predicates((predicate,), values, _workflow_profile())
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
+    assert "ley-27-2014:art-26" in findings[0].legal_refs
+
+
+def test_roll_forward_balances_emits_no_finding_when_continuous() -> None:
+    """The ADVISORY M200 BIN predicate stays silent for a reconciling closing."""
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-200-bin-stock-cierre-reconcilia-roll-forward",
+        legal_refs=("ley-27-2014:art-26",),
+        expression=_BIN_ROLL_FORWARD,
+        finding_kind="ADVISORY",
+    )
+    values: dict[str, Decimal] = {
+        "00670": Decimal("10000"),
+        "DP200014:00547": Decimal("3000"),
+        "DP200014:00552": Decimal("5000"),
+        "00671": Decimal("7000"),
+    }
+    assert _evaluate_verification_predicates((predicate,), values, _workflow_profile()) == []
+
+
 def test_unknown_expression_does_not_block() -> None:
     """An unrecognised expression pattern does not produce a blocking finding."""
     values: dict[str, Decimal] = {}
@@ -522,6 +647,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "implies_nonzero": 'implies_nonzero(["01", "07"])',
         "implies_any_nonzero": 'implies_any_nonzero(["iva.cuota-devengada-total", "03", "06", "09"])',
         "profile_field_required": ('profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'),
+        "roll_forward_balances": 'roll_forward_balances(["00671", "00670", "DP200014:00547", "DP200014:00552"])',
     }
     regex_attr_names: dict[str, str] = {
         "all_nonzero": "_PREDICATE_ALL_NONZERO",
@@ -532,6 +658,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "implies_nonzero": "_PREDICATE_IMPLIES_NONZERO",
         "implies_any_nonzero": "_PREDICATE_IMPLIES_ANY_NONZERO",
         "profile_field_required": "_PREDICATE_PROFILE_FIELD_REQUIRED",
+        "roll_forward_balances": "_PREDICATE_ROLL_FORWARD_BALANCES",
     }
 
     missing_probes = KNOWN_VERIFICATION_PREDICATE_OPERATORS.difference(probe_expressions)

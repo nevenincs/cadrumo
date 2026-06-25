@@ -118,15 +118,30 @@ class _WorkingCarryForwardLot:
     source_observation_key: str
 
 
-def derive_303_compensation_available(*, posterior: Decimal, resultado: Decimal) -> Decimal:
+def derive_303_compensation_available(
+    *,
+    posterior: Decimal,
+    resultado: Decimal,
+    refunded: bool = False,
+) -> Decimal:
     """Modelo 303 end-of-period available compensation carry-forward.
 
     available = casilla 87 (compensación pendiente de periodos posteriores)
     plus generated, where generated = max(0, -casilla 69 (resultado)). A
     negative result (a quota a compensar) generates new carry-forward; a
     positive result generates none.
+
+    When ``refunded`` is ``True`` the period's negative result is filed as a
+    refund (devolución, fichero "Tipo de declaración" ``D``) rather than carried
+    forward: the credit is returned by AEAT, not rolled into the next period, so
+    the GENERATED component is zero and ``available = posterior`` only (for a full
+    monthly/annual refund the posterior is also zero, so the refunded period
+    carries nothing). The default ``False`` keeps the standard compensación
+    (``C``) behaviour, where the negative result generates the carry. Legal basis:
+    RD 1624/1992 art. 30 / Ley 37/1992 art. 116 — a refunded credit is returned,
+    not carried.
     """
-    generated = max(Decimal("0"), -resultado)
+    generated = _ZERO if refunded else max(_ZERO, -resultado)
     return posterior + generated
 
 

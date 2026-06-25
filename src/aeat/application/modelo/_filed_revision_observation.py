@@ -33,14 +33,29 @@ Uses :class:`CalculationRevision` for the source revision and
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import Decimal
 from typing import Final
 
-from ...domain.calculations.registry import RegistryModeloObservation
+from ...core import Modelo
+from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._work_unit import WorkUnit
 from ..calculations import CalculationObservationRepository, observation_key
 
 APP_FILING_SOURCE_KIND: Final = "app_filing"
+
+#: The Modelo 303 end-of-period available compensation carry-forward casilla. A
+#: refunded (devolución) period must carry ZERO generated credit forward, so when
+#: the filed revision is refunded this casilla is re-stamped to its posterior-only
+#: value before the cross-period observation is persisted (RD 1624/1992 art. 30 /
+#: Ley 37/1992 art. 116).
+_M303_DISPONIBLE_CASILLA: Final = "iva.compensacion-disponible-fin-periodo"
+#: The Modelo 303 compensación pendiente de periodos posteriores casilla (box 87):
+#: the posterior-only component that survives a refund.
+_M303_POSTERIOR_CASILLA: Final = "iva.compensacion-pendiente-periodos-posteriores"
+#: The per-period generated-credit casilla, zeroed on a refunded period.
+_M303_GENERADA_CASILLA: Final = "iva.compensacion-generada-periodo"
+_ZERO: Final = Decimal("0")
 """Non-official ``source_kind`` stamped on locally-filed observations.
 
 Deliberately NOT a member of
@@ -51,12 +66,40 @@ cross-period clean-state filing gate. See ADR
 """
 
 
+def _refunded_303_observations(
+    observations: tuple[CasillaObservation, ...],
+) -> tuple[CasillaObservation, ...]:
+    """Zero the generated-credit components of a refunded Modelo 303 observation.
+
+    A refunded (devolución) period returns its credit rather than carrying it
+    forward, so the persisted cross-period carry must drop the generated credit:
+    ``iva.compensacion-disponible-fin-periodo`` is re-stamped to its
+    posterior-only value (box 87) and ``iva.compensacion-generada-periodo`` to
+    zero. Every other casilla is preserved verbatim — including its provenance —
+    so the carried observation stays a faithful projection of the filed revision
+    except for the one disposition-determined correction.
+    """
+    by_id = {item.casilla_id: item for item in observations}
+    posterior = by_id.get(_M303_POSTERIOR_CASILLA)
+    posterior_value = posterior.value if posterior is not None else _ZERO
+    rewritten: list[CasillaObservation] = []
+    for item in observations:
+        if item.casilla_id == _M303_DISPONIBLE_CASILLA:
+            rewritten.append(item.model_copy(update={"value": posterior_value}))
+        elif item.casilla_id == _M303_GENERADA_CASILLA:
+            rewritten.append(item.model_copy(update={"value": _ZERO}))
+        else:
+            rewritten.append(item)
+    return tuple(rewritten)
+
+
 def persist_filed_revision_observation(
     *,
     revision: CalculationRevision,
     work_unit: WorkUnit,
     repository: CalculationObservationRepository,
     captured_at: datetime,
+    refunded: bool = False,
 ) -> str:
     """Persist a filed revision's casilla observations as a cross-period record.
 
@@ -78,16 +121,27 @@ def persist_filed_revision_observation(
             the filing transition threads through, so the write lands in the
             active bucket's encrypted store).
         captured_at: The filing timestamp, stamped on the stored record.
+        refunded: When ``True`` and the work unit is Modelo 303, the filed period
+            was disposed as a refund (devolución, Tipo de declaración ``D``): the
+            generated compensación credit is returned by AEAT, not carried, so the
+            persisted ``iva.compensacion-disponible-fin-periodo`` (and the
+            per-period generada casilla) are zeroed for the generated component
+            before the carry row is written. The default ``False`` preserves the
+            standard compensación carry. Legal basis: RD 1624/1992 art. 30 / Ley
+            37/1992 art. 116.
 
     Returns:
         The ``(modelo, filing_year, period)`` observation key string the record
         was stored under.
     """
+    observations = revision.observations
+    if refunded and work_unit.modelo == Modelo.M303.value:
+        observations = _refunded_303_observations(observations)
     observation = RegistryModeloObservation(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
-        observations=revision.observations,
+        observations=observations,
     )
     repository.save_observation(
         observation,

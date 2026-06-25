@@ -225,6 +225,15 @@ class BindingSourceKind(StrEnum):
     # mechanism (invoice-evidence + category-profile + annual-window) and is
     # deliberately not reused for the M130 quarterly cumulative gasto sum.
     LEDGER_RENTA_GASTO_AGGREGATION = "ledger_renta_gasto_aggregation"
+    # Per-perceptor retención aggregation: the calc-mesh source that reads the
+    # dedicated per-perceptor retención store (RETENCION_OBSERVATIONS_NAMESPACE,
+    # operator-supplied — NOT the bucket ledger, so deliberately NOT in
+    # LEDGER_BINDING_SOURCE_KINDS and NOT carrying the ``ledger_`` prefix) and
+    # materialises the Modelo 180/190/193 "número total de perceptores" count via
+    # the validated distinct-NIF primitive (aggregate_retenciones_180.
+    # total_perceptors) — replacing the wrong sum-of-quarterly-M115-counts relation
+    # (RET-1, ADR 2026-06-24-retenciones-perceptor-count-adr).
+    RETENCIONES_AGGREGATION = "retenciones_aggregation"
     # Invoice / counterpart aggregation sources (value-aligned with
     # AggregationSourceKind).
     PAYABLE_INVOICE = AggregationSourceKind.PAYABLE_INVOICE.value
