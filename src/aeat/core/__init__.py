@@ -31,6 +31,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ._capabilities import ServiceCapability
+from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._modelo import NON_REGISTRY_MODELOS, Modelo
 from ._models import STRICT_FROZEN_CONFIG
@@ -82,6 +83,7 @@ __all__: list[str] = [
     "ANTHROPIC_EXTRA",
     "BROWSER_EXTRA",
     "GOOGLE_EXTRA",
+    "IBAN_SHAPE_RE",
     "NON_REGISTRY_MODELOS",
     "OPTIONAL_EXTRAS",
     "STRICT_FROZEN_CONFIG",
@@ -107,6 +109,7 @@ __all__: list[str] = [
     "derive_result_disposition",
     "freeze_toml",
     "freeze_toml_value",
+    "iban_mod_97",
     "modelo_has_codified_disposition",
     "optional_extra_available",
     "parse_toml_text",

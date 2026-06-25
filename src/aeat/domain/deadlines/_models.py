@@ -10,7 +10,6 @@ from :mod:`aeat.domain.deadlines`.
 
 from __future__ import annotations
 
-import re
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -18,8 +17,8 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
+from ...core import IBAN_SHAPE_RE, Modelo, Period, iban_mod_97
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period
 from ...core.external_constants import MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
 from ..contribuyente._renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
 from ._errors import DeadlineValidationError
@@ -225,23 +224,6 @@ class ModeloEnrollment(BaseModel):
     public_administration_budget_gt_6000000: bool = False
 
 
-_IBAN_SHAPE_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$")
-
-
-def _iban_mod_97(canonical: str) -> int:
-    """Compute the IBAN mod-97 check residue for an already-canonical IBAN.
-
-    Grounded on ISO 13616: move the leading four characters to the
-    tail, replace each letter with its ``A=10 … Z=35`` numeric form, and
-    take the resulting integer modulo 97. A valid IBAN yields a residue
-    of 1. Mirrors the canonical registry-boundary check in
-    :func:`aeat.domain.calculations.registry._schema_scalars._validate_iban_string`.
-    """
-    rearranged = canonical[4:] + canonical[:4]
-    numeric = "".join(ch if ch.isdigit() else str(ord(ch) - ord("A") + 10) for ch in rearranged)
-    return int(numeric) % 97
-
-
 class RefundAccount(BaseModel):
     """The cuenta-devolución refund account AEAT pays a Modelo 303 refund into.
 
@@ -299,11 +281,11 @@ class RefundAccount(BaseModel):
         canonical = value.replace(" ", "").replace("-", "").upper()
         if not canonical:
             return None
-        if not _IBAN_SHAPE_RE.match(canonical):
+        if not IBAN_SHAPE_RE.match(canonical):
             raise DeadlineValidationError(
                 f"refund-account iban {value!r} does not match the ISO 13616 shape",
             )
-        if _iban_mod_97(canonical) != 1:
+        if iban_mod_97(canonical) != 1:
             raise DeadlineValidationError(
                 f"refund-account iban {value!r} fails the mod-97 check",
             )
