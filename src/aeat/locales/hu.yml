@@ -833,6 +833,9 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      cross_period_non_official_local_chain:
+        message: 'az idoszakok kozotti atvitel egy ugyanabban az adoevben helyileg benyujtott korabbi idoszakot hasznalt kulso AEAT-bizonyitek nelkul: modelo=%{source_modelo} ev=%{filing_year} idoszak=%{period} forras=%{origin}. Az adoeven beluli lanc helyi exportalasra elfogadott, de az atvitt ertek helyileg igazolt (app_filing), nem az AEAT altal igazolt; nyujtsa be minden idoszakot az AEAT-nal kulsoleg.'
+        next_action: 'Exportalja es nyujtsa be minden idoszakot az AEAT-nal kulsoleg, majd importalja a hivatalos justificante/CSV/elo bizonyitekot a helyi lanc frissitesehez, amint elerheto.'
       dt12a_reduccion_next_action: Adja meg a --rescate-plan-pensiones-capital ÖSSZEG
         --rescate-plan-pensiones-aportaciones-pre-2007 ÖSSZEG --rescate-plan-pensiones-aportaciones-totales
         ÖSSZEG paramétereket a számításhoz a DT 12a csökkentés automatikus beillesztéséhez
