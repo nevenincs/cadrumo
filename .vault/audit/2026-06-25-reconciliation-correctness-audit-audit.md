@@ -164,11 +164,15 @@ No tautological calc tests found among the fixed set.
 - **GAP-2 (reference, not a defect — the canonical fix shape):** M130 prior-pagos casilla uses a
   TYPED cumulative op `aggregation op="prior_pagos_fraccionados"` (`130/.../bindings/0001-bindings.toml:39-41`),
   not raw sum. The RET-1 count bindings should mirror this typed/distinct-op pattern.
-- **GAP-3 (NEW — likely live under-declaration):** M131 estimación objetiva is under-modeled
-  (2019-2023: 1 binding; 2024-2026: 2 each, vs M130's 4). The módulos rendimiento chain looks like
-  a computed-casilla hole (rendimiento de módulos manual rather than engine-derived), consistent
-  with the no-silent-under-declaration rule's M131 note — a positive-módulos filer could silently
-  file a low/zero base. Confirm whether módulos rendimiento should be engine-computed.
+- **GAP-3 — RESOLVED, NOT-A-DEFECT (grounded, closed).** M131 estimación objetiva casilla 01 is
+  módulos rendimiento: a signos-based figure (physical business characteristics x published Orden
+  coefficients, RD 439/2007 art.110), NOT ledger-derivable (unlike M130 estimación directa), so
+  `input_kind=manual` is correct — the app models no módulos surface and cannot compute it. The
+  no-silent failure mode is ALREADY guarded on both revisions (`implies_nonzero(["01","02"])`
+  ADVISORY). The "fewer bindings than M130" was a structural proxy (fichero export-field mappings,
+  not a calc hole); grounding the regime overturned the flag. Secondary (minor, not a gap): casillas
+  03/05 volumen are ledger-derivable in principle but manual is defensible + guarded — future
+  convenience only. A módulos engine is a large NEW feature, not a fix.
 
 CLEAN (verified): cross-period carry engine sound (M130 cumulative uses typed previous_filing ops;
 REGISTRY_REVISION_DIVERGENCE blocks, unstamped advises); no dormant/unrouted binding source (all 14
