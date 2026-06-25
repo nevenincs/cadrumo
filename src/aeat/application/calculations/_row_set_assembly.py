@@ -261,6 +261,18 @@ def assemble_withholding_observations(
                 continue
             fields[field] = value if value is not None else ""
 
+        # A percepción is keyed by its AEAT clave/subclave ("número de registros de
+        # tipo 2" per perceptor + clave, Modelo 190/193 Diseño de Registros). Refuse
+        # a row that carries no clave rather than silently defaulting it to "A": a
+        # defaulted clave mis-buckets the percepción and corrupts the
+        # distinct-(perceptor, clave) count. The source must supply the real clave.
+        clave_value = _coerce_text(fields.get("clave"))
+        if not clave_value:
+            raise RegistryValidationError(
+                f"row-set assembly: row {row_index} has no clave; a percepción must declare its "
+                "AEAT clave (Modelo 190/193 Diseño de Registros, registro de tipo 2), not a default",
+            )
+
         try:
             observations.append(
                 WithholdingObservation(
@@ -269,7 +281,7 @@ def assemble_withholding_observations(
                     perceptor_legal_name=_coerce_text(fields.get("perceptor_legal_name")),
                     country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
                     transaction_date=default_date,
-                    clave=_coerce_text(fields.get("clave"), default="A") or "A",
+                    clave=clave_value,
                     subclave=_coerce_text(fields.get("subclave")),
                     percibido_dinerario=coerce_decimal(fields.get("percibido_dinerario"), default=Decimal("0")),
                     percibido_especie=coerce_decimal(fields.get("percibido_especie"), default=Decimal("0")),
