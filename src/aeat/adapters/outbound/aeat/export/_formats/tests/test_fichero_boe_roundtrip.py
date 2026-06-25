@@ -636,6 +636,10 @@ _M303_GOLDEN_SHA256 = "e9dfc7d11988d4bd0aa0ea4f540440c28da287ee3f832a2baec218374
 #: Refund ("D") disposition with a Spanish IBAN: the DID page is emitted, so the
 #: fichero is the full 7994 bytes.
 _M303_REFUND_GOLDEN_SHA256 = "a95880caf0dd5b43e787b907d9e1ec20ea829aca1a1aaca12876490db11a730f"
+#: Refund ("D") disposition with a non-SEPA (Resto Países, Marca SEPA "3") SWIFT
+#: account: the DID page carries the SWIFT-BIC plus the foreign-bank block (no
+#: IBAN), so the fichero is the full 7994 bytes.
+_M303_REFUND_NON_SEPA_GOLDEN_SHA256 = "07a61b926dc03ac79d71cd565536048f562fef71528ed765e7a70d1aac1994a1"
 
 # Cumulative record-start offsets (0-based byte index):
 #   DP30300 starts at 0
@@ -656,14 +660,29 @@ _M303_DID_START = 7153
 # DR DP30301 REDEME indicator: offset 110 (1-based), length 1.
 _M303_REDEME_OFFSET = 110
 # DR DP303DID refund-account offsets (1-based within the DID record):
-#   SWIFT-BIC at 12, IBAN at 23, Marca SEPA at 194.
+#   SWIFT-BIC at 12, IBAN at 23, Marca SEPA at 194. The non-SEPA (Resto Países)
+#   foreign-bank block additionally occupies: bank name at 57, bank address at
+#   127, bank city at 162, bank country at 192.
 _M303_DID_SWIFT_OFFSET = 12
 _M303_DID_IBAN_OFFSET = 23
+_M303_DID_BANK_NAME_OFFSET = 57
+_M303_DID_BANK_ADDRESS_OFFSET = 127
+_M303_DID_BANK_CITY_OFFSET = 162
+_M303_DID_BANK_COUNTRY_OFFSET = 192
 _M303_DID_SEPA_OFFSET = 194
 
 # Synthetic but structurally valid Spanish IBAN (passes the ISO 13616 mod-97
 # RefundAccount boundary validator); the refund golden case pays into it.
 _M303_REFUND_IBAN = "ES9121000418450200051332"
+
+# A non-SEPA (Resto Países) refund account: a US SWIFT-BIC plus foreign-bank
+# block, no IBAN — so derive_sepa_marca yields "3". The same synthetic account
+# the P02 unit coverage uses; the golden case byte-locks its DID render.
+_M303_NON_SEPA_SWIFT = "CHASUS33XXX"
+_M303_NON_SEPA_BANK_NAME = "Synthetic US Bank"
+_M303_NON_SEPA_BANK_ADDRESS = "1 Synthetic Plaza"
+_M303_NON_SEPA_BANK_CITY = "New York"
+_M303_NON_SEPA_BANK_COUNTRY = "US"
 
 
 def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
@@ -1013,3 +1032,171 @@ def test_modelo_303_refund_golden_sha_fichero_boe(tmp_path: Path) -> None:
     # Receipt metadata sanity
     assert receipt.byte_size == 7994
     assert receipt.file_sha256 == _M303_REFUND_GOLDEN_SHA256
+
+
+def test_modelo_303_refund_non_sepa_golden_sha_fichero_boe(tmp_path: Path) -> None:
+    """Refund Modelo 303 ("D") with a non-SEPA (Resto Países) SWIFT account
+    serialises to a byte-exact 7994-byte fichero-BOE carrying the SWIFT-BIC plus
+    the foreign-bank DID block.
+
+    Companion to the SEPA refund golden case, locking the Marca SEPA "3" branch:
+    a non-SEPA account is identified by its SWIFT-BIC and foreign-bank block, not
+    an IBAN. The per-offset assertions name the DR-EXPECTED refund-block values —
+    not values copied back from the serialiser output:
+
+    * the REDEME indicator at DR DP30301 offset 110 is "1" (SI) for this
+      REDEME-enrolled refund filer;
+    * the SWIFT-BIC sits at DR DP303DID offset 12 (length 11), PRESENT (non-blank)
+      — the non-SEPA account is identified by it;
+    * the foreign-bank block is populated: bank name at offset 57, bank address at
+      127, bank city at 162, bank country at 192;
+    * the IBAN slot at DR DP303DID offset 23 stays blank — a non-SEPA account
+      carries no IBAN;
+    * the derived Marca SEPA at DR DP303DID offset 194 is "3" (Resto Países) for
+      the US bank country.
+
+    These value assertions are the anti-tautology anchor: each asserts the byte
+    the DR Diseño prescribes for the supplied non-SEPA account, so a wrong offset
+    or a dropped field fails before the SHA changes. The SHA was regenerated from
+    the real serialiser, never hand-tuned.
+    """
+    from .......application.filing import (
+        ModeloDraftStatus,
+        ModeloOperatorProfile,
+        build_draft,
+        build_runtime_schema_provider,
+        export_draft,
+    )
+
+    provider = build_runtime_schema_provider(modelos=("303",))
+    draft = build_draft(
+        modelo="303",
+        period=Period.from_year_and_code(2025, "1T"),
+        profile=ModeloOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Golden test IVA",
+        ),
+        inputs={
+            "07": Decimal("10000.00"),
+            "iva.repercutido.general": Decimal("2100.00"),
+            "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        },
+        schema_provider=provider,
+    )
+    draft = draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
+
+    output = tmp_path / "modelo-303-refund-non-sepa.txt"
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers={
+            # Refund disposition: AEAT pays the devolución into the DID account.
+            "declaration_type": "D",
+            "surnames": "GARCIA LOPEZ",
+            "program_version": "A001",
+            "presenter_nif": "12345678Z",
+            # REDEME indicator "1" (SI) for the enrolled refund filer.
+            "redeme": "1",
+            # The cuenta-devolución refund block for a non-SEPA account: a SWIFT-BIC
+            # plus foreign-bank block and Marca SEPA "3" (Resto Países), no IBAN.
+            # These are the header fields the M303 refund composer builds from the
+            # encrypted RefundAccount RESTO_PAISES branch; supplied directly here
+            # to lock the serialiser bytes.
+            "sepa_marca": "3",
+            "swift_bic": _M303_NON_SEPA_SWIFT,
+            "bank_name": _M303_NON_SEPA_BANK_NAME,
+            "bank_address": _M303_NON_SEPA_BANK_ADDRESS,
+            "bank_city": _M303_NON_SEPA_BANK_CITY,
+            "bank_country_code": _M303_NON_SEPA_BANK_COUNTRY,
+        },
+        schema_provider=provider,
+    )
+    payload = output.read_bytes()
+
+    # --- DR-grounded structural assertions (non-tautological) -----------------
+
+    def _p1(offset: int, length: int) -> bytes:
+        """Read bytes from DR DP30301 page-01 record (1-based field offset)."""
+        s = _M303_P01_START + offset - 1
+        return payload[s : s + length]
+
+    def _did(offset: int, length: int) -> bytes:
+        """Read bytes from DR DP303DID identification record (1-based offset)."""
+        s = _M303_DID_START + offset - 1
+        return payload[s : s + length]
+
+    # A refund filing emits the DID page, so the fichero is the full 7994 bytes.
+    assert len(payload) == 7994, f"expected 7994-byte non-SEPA refund fichero-BOE; got {len(payload)}"
+
+    # DR DP30301 REDEME indicator (offset 110, 1 byte): "1" (SI) for the
+    # REDEME-enrolled refund filer — the DR-expected value, asserted before the SHA.
+    assert _p1(_M303_REDEME_OFFSET, 1) == b"1", (
+        "DR DP30301 offset 110: REDEME indicator must be '1' (SI) for a REDEME refund filer"
+    )
+
+    # DR DP303DID rows 1-4: the DID page IS present on a refund.
+    assert _did(1, 2) == b"<T", "DR DP303DID row 1: DID open tag present on a refund"
+    assert _did(3, 3) == b"303", "DR DP303DID row 2: modelo in DID tag"
+    assert _did(6, 5) == b"DID00", "DR DP303DID row 3: page identifier literal 'DID00' (type An)"
+    assert _did(11, 1) == b">", "DR DP303DID row 4: close of DID tag"
+
+    # DR DP303DID SWIFT-BIC (offset 12, 11 bytes): PRESENT for a non-SEPA account —
+    # the Resto Países refund is identified by its SWIFT-BIC, not an IBAN.
+    assert _did(_M303_DID_SWIFT_OFFSET, 11).rstrip(b" ") == _M303_NON_SEPA_SWIFT.encode("latin-1"), (
+        "DR DP303DID offset 12: SWIFT-BIC must be present for a non-SEPA account"
+    )
+
+    # DR DP303DID IBAN (offset 23, 34 bytes): blank — a non-SEPA account has no IBAN.
+    assert _did(_M303_DID_IBAN_OFFSET, 34).strip(b" ") == b"", (
+        "DR DP303DID offset 23: IBAN slot must be blank for a non-SEPA SWIFT account"
+    )
+
+    # DR DP303DID foreign-bank block: name (57), address (127), city (162),
+    # country (192) — populated from the supplied non-SEPA account.
+    assert _did(_M303_DID_BANK_NAME_OFFSET, 70).rstrip(b" ") == _M303_NON_SEPA_BANK_NAME.encode("latin-1"), (
+        "DR DP303DID offset 57: bank name must be the supplied foreign-bank name"
+    )
+    assert _did(_M303_DID_BANK_ADDRESS_OFFSET, 35).rstrip(b" ") == _M303_NON_SEPA_BANK_ADDRESS.encode("latin-1"), (
+        "DR DP303DID offset 127: bank address must be the supplied foreign-bank address"
+    )
+    assert _did(_M303_DID_BANK_CITY_OFFSET, 30).rstrip(b" ") == _M303_NON_SEPA_BANK_CITY.encode("latin-1"), (
+        "DR DP303DID offset 162: bank city must be the supplied foreign-bank city"
+    )
+    assert _did(_M303_DID_BANK_COUNTRY_OFFSET, 2) == _M303_NON_SEPA_BANK_COUNTRY.encode("latin-1"), (
+        "DR DP303DID offset 192: bank country must be the supplied 'US' code"
+    )
+
+    # DR DP303DID Marca SEPA (offset 194, 1 byte): "3" (Resto Países) derived from
+    # the US bank country — the anti-tautology value assertion.
+    assert _did(_M303_DID_SEPA_OFFSET, 1) == b"3", (
+        "DR DP303DID offset 194: Marca SEPA must be '3' (Resto Países) for a US SWIFT account"
+    )
+
+    # DR DP303DID row 13 (offset 812-823): closing tag </T303DID00> (12 bytes).
+    assert _did(812, 12) == b"</T303DID00>", "DR DP303DID row 13: DID close tag"
+
+    # The SWIFT-BIC reaches the fichero exactly once and only inside the DID page.
+    assert payload.count(_M303_NON_SEPA_SWIFT.encode("latin-1")) == 1, (
+        "the SWIFT-BIC must appear exactly once, inside the DID page"
+    )
+
+    # Envelope footer: computed dynamic closing tag (last 18 bytes).
+    assert payload[-18:] == b"</T303020251T0000>", (
+        "Envelope footer must match </T303020251T0000> for modelo=303 year=2025 period=1T"
+    )
+
+    # --- Golden SHA (byte-identity lock) ------------------------------------
+    digest = hashlib.sha256(payload).hexdigest()
+    assert digest == _M303_REFUND_NON_SEPA_GOLDEN_SHA256, (
+        f"Modelo 303 non-SEPA refund fichero-BOE SHA mismatch.\n"
+        f"  Expected: {_M303_REFUND_NON_SEPA_GOLDEN_SHA256}\n"
+        f"  Got:      {digest}\n"
+        "Any change to the 303.toml export layout or the non-SEPA DID block that\n"
+        "alters byte output must be re-grounded against the AEAT Diseño de\n"
+        "Registros DR303 (Orden EHA/3786/2008, 2024 revision) before updating\n"
+        "this constant."
+    )
+
+    # Receipt metadata sanity
+    assert receipt.byte_size == 7994
+    assert receipt.file_sha256 == _M303_REFUND_NON_SEPA_GOLDEN_SHA256
