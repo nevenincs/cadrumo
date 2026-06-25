@@ -73,6 +73,7 @@ You MUST respect these rules at all times:
 @.agents/rules/terminology-scaffold-preserve-contract.md
 @.agents/rules/terminology-single-declaration.md
 @.agents/rules/tests-live-under-domain-tests-folders.md
+@.agents/rules/uncommitted-wip-is-not-orphaned.md
 @.agents/rules/vaultspec-archive-discipline.builtin.md
 @.agents/rules/vaultspec-cli.builtin.md
 @.agents/rules/vaultspec-codify.builtin.md
