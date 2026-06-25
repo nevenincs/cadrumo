@@ -297,3 +297,23 @@ def test_assemble_withholding_missing_nif_raises_not_fabricates() -> None:
 
     with pytest.raises(RegistryValidationError, match="perceptor_tax_id"):
         assemble_withholding_observations(cells, revision, filing_year=2025)
+
+
+def test_assemble_withholding_refuses_a_row_without_clave() -> None:
+    """A percepcion row carrying no clave is refused, not defaulted to "A" (RET-1 #28).
+
+    A defaulted clave silently mis-buckets the percepcion and corrupts the
+    distinct-(perceptor, clave) count ("numero de registros de tipo 2", Modelo
+    190/193 Diseno de Registros). The source must supply the real clave; a missing
+    one is a data error, not a silent default.
+    """
+    revision = _modelo("190", "2024-y-siguientes")
+    cells = (
+        _Cell("modelo-190-perceptor-row-nif", 1, "12345678A"),
+        _Cell("modelo-190-perceptor-row-name", 1, "Perceptor Sin Clave"),
+        # No clave cell for row 1 - previously silently defaulted to "A".
+        _Cell("modelo-190-perceptor-row-percibido-dinerario", 1, Decimal("10000")),
+        _Cell("modelo-190-perceptor-row-retencion-practicada", 1, Decimal("1500")),
+    )
+    with pytest.raises(RegistryValidationError, match="no clave"):
+        assemble_withholding_observations(cells, revision, filing_year=2025)
