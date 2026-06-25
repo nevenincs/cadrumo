@@ -23,7 +23,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period, RefundElection
+from ...core import Period, RefundElection, ResultDisposition, result_disposition_is_refund
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...core.logging import get_logger
@@ -36,7 +36,8 @@ from ...domain.buckets import (
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import derive_modelo_202_modality
-from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines import RefundAccount, TaxpayerProfile
+from ...domain.iva import SepaMarca, derive_sepa_marca
 from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos import (
     ModeloRecordCatalogueRepository,
@@ -77,6 +78,7 @@ from . import _iva_wallet_gate
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
+    ModeloRefundAccountMissingError,
     WorkUnitNotFoundError,
 )
 from ._result_disposition_resolution import resolve_modelo_result_disposition
@@ -393,6 +395,67 @@ def _ddmmaaaa(value: date) -> str:
     return f"{value.day:02d}{value.month:02d}{value.year:04d}"
 
 
+def _compose_refund_account_block(refund_account: RefundAccount | None) -> dict[str, str]:
+    """Build the DR303 cuenta-devolución (DID) header fields for a refund.
+
+    Called only when the determined disposition is a refund (devolución). Reads
+    the transiently-loaded encrypted refund account, derives the ``Marca SEPA``
+    from the account country, and emits exactly the Diseño-declared DID
+    sub-fields for that marca:
+
+    * a SEPA account (marca ``1`` Cuenta España / ``2`` UE SEPA) emits the IBAN
+      and the marca only;
+    * a non-SEPA account (marca ``3`` Resto Países) additionally emits the
+      SWIFT-BIC and the foreign-bank block (name / address / city / country).
+
+    The IBAN and bank fields are sensitive financial identity data held in
+    memory only — they reach the header dict the serializer consumes and are
+    never logged or written to a plaintext side store.
+
+    Raises:
+        ModeloRefundAccountMissingError: When the disposition is a refund but
+            no payable refund account is on file — no account at all, or an
+            account carrying neither an IBAN (SEPA) nor a SWIFT-BIC (non-SEPA).
+            The export refuses rather than emitting an empty or partial DID
+            block — an empty refund block files a devolución AEAT cannot pay.
+    """
+    if refund_account is None or not (refund_account.iban or refund_account.swift_bic):
+        raise ModeloRefundAccountMissingError(
+            "a refund disposition requires a refund account on file, but none is configured",
+        )
+    marca = derive_sepa_marca(
+        iban=refund_account.iban,
+        bank_country_code=refund_account.bank_country_code,
+    )
+    # A SEPA marca (Cuenta España / UE SEPA) is identified by its IBAN; absent an
+    # IBAN the account is necessarily a non-SEPA SWIFT account (Resto Países), so
+    # the marca falls to 3 regardless of any bank-country hint. This keeps the DID
+    # block self-consistent: marca 1/2 always carries an IBAN, marca 3 the SWIFT
+    # plus foreign-bank block.
+    iban = refund_account.iban
+    if iban is None:
+        marca = SepaMarca.RESTO_PAISES
+    block: dict[str, str] = {"sepa_marca": marca.value}
+    if marca is SepaMarca.RESTO_PAISES:
+        # Non-SEPA (Resto Países): the account is identified by SWIFT-BIC plus
+        # the foreign-bank block; a non-SEPA account may carry no IBAN.
+        block.update(
+            {
+                "swift_bic": refund_account.swift_bic,
+                "bank_name": refund_account.bank_name,
+                "bank_address": refund_account.bank_address,
+                "bank_city": refund_account.bank_city,
+                "bank_country_code": refund_account.bank_country_code,
+            },
+        )
+        if iban is not None:
+            block["iban"] = iban
+    elif iban is not None:
+        # SEPA (Cuenta España / UE SEPA): identified by IBAN only.
+        block["iban"] = iban
+    return block
+
+
 def _compose_export_headers(
     *,
     work_unit: WorkUnit,
@@ -470,6 +533,22 @@ def _compose_export_headers(
         "presenter_nif": tax_id,
         "program_version": _PROGRAM_VERSION_CODE,
     }
+
+    # REDEME indicator (DR303 page-1 position 110): "1" SI / "2" NO, written on
+    # EVERY filing (the Diseño asks for the indicator unconditionally, not only
+    # on refunds). Maps the standing ``redeme_enrolled`` profile fact — the same
+    # fact the disposition resolver reads to upgrade a monthly negative period to
+    # a refund.
+    headers["redeme"] = "1" if workflow_profile.iva.redeme_enrolled else "2"
+
+    # Cuenta-devolución (DID) block — ONLY for a refund disposition (D / V / X).
+    # The refund-account financial fields (IBAN / SWIFT-BIC / bank block) live in
+    # the encrypted secure-object store on the transiently-loaded profile; they
+    # are read into memory here and emitted into the header dict, never logged or
+    # written to a plaintext side store. A non-refund filing emits no DID fields
+    # (the DID page itself is suppressed downstream by the render-layer guard).
+    if result_disposition_is_refund(ResultDisposition(declaration_type)):
+        headers.update(_compose_refund_account_block(workflow_profile.iva.refund_account))
 
     if revision.amendment_kind is not None:
         headers["complementaria"] = (
