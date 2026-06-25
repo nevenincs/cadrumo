@@ -605,16 +605,37 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
 #   DP30305  page-05 prorrata:  1523 bytes  (DR sheet DP30305 rows 1-72)
 #   DP303DID identification:     823 bytes  (DR sheet DP303DID rows 1-13)
 #   Envelope footer (computed):   18 bytes  (DR DP30300 row 15)
-#   Total:                       7994 bytes  (no inter-record delimiter)
+#
+# Two dispositions exercise the conditional DID (cuenta-devolución) page:
+#   * Non-refund ("I"/"C"): the DID page is SUPPRESSED — emitting an empty
+#     823-byte refund block files a devolución AEAT cannot pay — so the
+#     fichero is 7994 - 823 = 7171 bytes and carries no DID record.
+#   * Refund ("D"): the DID page is emitted with the refund account AEAT pays
+#     into, so the fichero is the full 7994 bytes.
+#
+# The REDEME indicator (DR DP30301 offset 110, 1 byte) is written on EVERY
+# filing: "1" SI (REDEME-enrolled) / "2" NO (ordinary). It is the same standing
+# fact the disposition resolver reads to upgrade a monthly negative period to a
+# refund.
 #
 # DP303DID note: the page identifier "DID00" is type An in the DR (not Num),
 # so it serialises as the literal string "DID00", NOT as a zero-padded number.
 #
 # Per-offset assertions are non-tautological: each names the DR sheet/row it
-# corresponds to.  The golden SHA is a byte-identity lock; any change to the
-# 303.toml export layout that alters offset, length, encoding, or sign flag
-# will alter the SHA and fail this test.
-_M303_GOLDEN_SHA256 = "68a507454ec1cdfcc9ee0c328a2eaf3b8f62353d77cce4fe4de0f04ace2c9ee8"
+# corresponds to and asserts the DR-EXPECTED value (e.g. the REDEME indicator
+# byte, the IBAN at the DID slot, the derived Marca SEPA), not that the fichero
+# round-trips its own output. The golden SHA is a byte-identity lock; any change
+# to the 303.toml export layout that alters offset, length, encoding, or sign
+# flag will alter the SHA and fail this test.
+#
+# Both golden SHAs were obtained by running export_draft against the fixed
+# inputs/headers below, then verifying every asserted byte position against the
+# DR offset table before recording the hash — never hand-tuned to make the test
+# pass.
+_M303_GOLDEN_SHA256 = "e9dfc7d11988d4bd0aa0ea4f540440c28da287ee3f832a2baec2183740a48113"
+#: Refund ("D") disposition with a Spanish IBAN: the DID page is emitted, so the
+#: fichero is the full 7994 bytes.
+_M303_REFUND_GOLDEN_SHA256 = "a95880caf0dd5b43e787b907d9e1ec20ea829aca1a1aaca12876490db11a730f"
 
 # Cumulative record-start offsets (0-based byte index):
 #   DP30300 starts at 0
@@ -623,21 +644,44 @@ _M303_GOLDEN_SHA256 = "68a507454ec1cdfcc9ee0c328a2eaf3b8f62353d77cce4fe4de0f04ac
 #   DP30303 starts at 1909+1706 = 3615
 #   DP30304 starts at 3615+1017 = 4632
 #   DP30305 starts at 4632+998  = 5630
+# On a REFUND filing the DID page follows page-05:
 #   DP303DID starts at 5630+1523 = 7153
 #   Envelope footer starts at 7153+823 = 7976
+# On a NON-refund filing the DID page is suppressed, so the envelope footer
+# follows page-05 directly at 7153 and the fichero ends at 7171.
 _M303_P01_START = 328
 _M303_P03_START = 3615
 _M303_DID_START = 7153
 
+# DR DP30301 REDEME indicator: offset 110 (1-based), length 1.
+_M303_REDEME_OFFSET = 110
+# DR DP303DID refund-account offsets (1-based within the DID record):
+#   SWIFT-BIC at 12, IBAN at 23, Marca SEPA at 194.
+_M303_DID_SWIFT_OFFSET = 12
+_M303_DID_IBAN_OFFSET = 23
+_M303_DID_SEPA_OFFSET = 194
+
+# Synthetic but structurally valid Spanish IBAN (passes the ISO 13616 mod-97
+# RefundAccount boundary validator); the refund golden case pays into it.
+_M303_REFUND_IBAN = "ES9121000418450200051332"
+
 
 def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
-    """Modelo 303 serialises to a byte-exact 7994-byte fichero-BOE.
+    """Non-refund Modelo 303 ("I") serialises to a byte-exact 7171-byte fichero-BOE.
 
     Inputs are fixed (IVA devengado tipo general 21% only).  Expected byte
     values at each asserted position are derived from DR303 (2024 edition).
     The test is non-tautological: a change to any 303.toml export field
     (offset, length, sign flag, record type, DID00 literal) breaks the
     per-offset assertion that names its DR row, before the SHA changes.
+
+    Two disposition-keyed invariants this case locks (P02/P03):
+
+    * the REDEME indicator at DR DP30301 offset 110 is "2" (NO) for this
+      ordinary, non-REDEME filer, written on every filing; and
+    * the cuenta-devolución (DID) page is SUPPRESSED on a non-refund
+      disposition — an empty 823-byte refund block files a devolución AEAT
+      cannot pay — so the fichero is 7994 - 823 = 7171 bytes with no DID record.
     """
     from .......application.filing import (
         ModeloDraftStatus,
@@ -678,6 +722,10 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
             "surnames": "GARCIA LOPEZ",
             "program_version": "A001",
             "presenter_nif": "12345678Z",
+            # REDEME indicator: "2" (NO) for an ordinary non-REDEME filer —
+            # the value the M303 header composer emits for a non-enrolled
+            # profile. Written on every filing, not only refunds.
+            "redeme": "2",
         },
         schema_provider=provider,
     )
@@ -699,13 +747,9 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
         s = _M303_P03_START + offset - 1
         return payload[s : s + length]
 
-    def _did(offset: int, length: int) -> bytes:
-        """Read bytes from DR DP303DID identification record (1-based offset)."""
-        s = _M303_DID_START + offset - 1
-        return payload[s : s + length]
-
-    # Total length per DR: 328+1581+1706+1017+998+1523+823+18 = 7994.
-    assert len(payload) == 7994, f"expected 7994-byte fichero-BOE; got {len(payload)}"
+    # Total length on a non-refund filing: the DID page (823 bytes) is
+    # suppressed, so 328+1581+1706+1017+998+1523+18 = 7171.
+    assert len(payload) == 7171, f"expected 7171-byte non-refund fichero-BOE; got {len(payload)}"
 
     # DR DP30300 rows 1-7: envelope tag bytes
     # Row 1 (offset 1-2): "<T"
@@ -760,6 +804,13 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
         "DR DP30301 row 39: casilla 09 cuota 21% must be 2100.00"
     )
 
+    # DR DP30301 REDEME indicator (offset 110, 1 byte): "2" (NO) for this
+    # ordinary non-REDEME filer. Written on every filing; the DR-expected value
+    # for a non-enrolled profile is "2", asserted independently of the SHA.
+    assert _p1(_M303_REDEME_OFFSET, 1) == b"2", (
+        "DR DP30301 offset 110: REDEME indicator must be '2' (NO) for a non-REDEME filer"
+    )
+
     # DR DP30301 row 88 (offset 1570-1581): closing tag </T30301000> (12 bytes)
     assert _p1(1570, 12) == b"</T30301000>", "DR DP30301 row 88: page-01 close tag"
 
@@ -787,19 +838,13 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
         "DR DP30303 row 27: casilla 87 posterior compensation must serialize as explicit zero"
     )
 
-    # DR DP303DID rows 1-4: identification record tag
-    # Row 1-2 (offset 1-2): "<T"
-    assert _did(1, 2) == b"<T", "DR DP303DID row 1: DID open tag"
-    # Row 2 (offset 3-5): "303"
-    assert _did(3, 3) == b"303", "DR DP303DID row 2: modelo in DID tag"
-    # Row 3 (offset 6-10): "DID00" — type An in DR (not Num)
-    # This field must be the literal string "DID00", NOT a zero-padded number.
-    assert _did(6, 5) == b"DID00", "DR DP303DID row 3: page identifier must be literal 'DID00' (type An, not Num)"
-    # Row 4 (offset 11): ">"
-    assert _did(11, 1) == b">", "DR DP303DID row 4: close of DID tag"
-
-    # DR DP303DID row 13 (offset 812-823): closing tag </T303DID00> (12 bytes)
-    assert _did(812, 12) == b"</T303DID00>", "DR DP303DID row 13: DID close tag"
+    # Cuenta-devolución (DID) page SUPPRESSED on a non-refund disposition:
+    # the DID open tag and the "DID00" page identifier must be ABSENT from the
+    # whole payload — a non-refund filing has no refund account to declare, so
+    # emitting an empty 823-byte DID record would file a devolución AEAT cannot
+    # pay. This is the disposition-keyed guard (P02 S09) asserted at byte level.
+    assert b"<T303DID00>" not in payload, "DID page must be suppressed on a non-refund filing"
+    assert b"DID00" not in payload, "the DID00 page identifier must not appear on a non-refund filing"
 
     # Envelope footer: computed dynamic closing tag (last 18 bytes).
     # Format: </T{modelo}0{AAAA}{PP}0000> = </T303020251T0000>
@@ -810,7 +855,7 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
     # --- Golden SHA (byte-identity lock) ------------------------------------
     digest = hashlib.sha256(payload).hexdigest()
     assert digest == _M303_GOLDEN_SHA256, (
-        f"Modelo 303 fichero-BOE SHA mismatch.\n"
+        f"Modelo 303 non-refund fichero-BOE SHA mismatch.\n"
         f"  Expected: {_M303_GOLDEN_SHA256}\n"
         f"  Got:      {digest}\n"
         "Any change to the 303.toml export layout that alters byte output\n"
@@ -820,5 +865,151 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
     )
 
     # Receipt metadata sanity
-    assert receipt.byte_size == 7994
+    assert receipt.byte_size == 7171
     assert receipt.file_sha256 == _M303_GOLDEN_SHA256
+
+
+def test_modelo_303_refund_golden_sha_fichero_boe(tmp_path: Path) -> None:
+    """Refund Modelo 303 ("D") with a Spanish IBAN serialises to a byte-exact
+    7994-byte fichero-BOE carrying the cuenta-devolución (DID) page.
+
+    Companion to the non-refund golden case. The refund disposition emits the
+    DID page AEAT pays into, so the per-offset assertions name the DR-EXPECTED
+    refund-block values — not values copied back from the serialiser output:
+
+    * the REDEME indicator at DR DP30301 offset 110 is "1" (SI) for this
+      REDEME-enrolled refund filer;
+    * the refund IBAN sits at DR DP303DID offset 23, left-justified and
+      space-padded to 34 bytes;
+    * the derived Marca SEPA at DR DP303DID offset 194 is "1" (Cuenta España)
+      for a Spanish (ES) IBAN — derived from the account country, not an input;
+    * the SWIFT-BIC slot at DR DP303DID offset 12 stays blank for a SEPA
+      account (no foreign-bank block).
+
+    These value assertions are the anti-tautology anchor: each asserts the byte
+    the DR Diseño prescribes for the supplied refund account, so a wrong offset
+    or a dropped field fails before the SHA changes. The SHA was regenerated
+    from the real serialiser, never hand-tuned.
+    """
+    from .......application.filing import (
+        ModeloDraftStatus,
+        ModeloOperatorProfile,
+        build_draft,
+        build_runtime_schema_provider,
+        export_draft,
+    )
+
+    provider = build_runtime_schema_provider(modelos=("303",))
+    draft = build_draft(
+        modelo="303",
+        period=Period.from_year_and_code(2025, "1T"),
+        profile=ModeloOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Golden test IVA",
+        ),
+        inputs={
+            "07": Decimal("10000.00"),
+            "iva.repercutido.general": Decimal("2100.00"),
+            "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        },
+        schema_provider=provider,
+    )
+    draft = draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
+
+    output = tmp_path / "modelo-303-refund.txt"
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers={
+            # Refund disposition: AEAT pays the devolución into the DID account.
+            "declaration_type": "D",
+            "surnames": "GARCIA LOPEZ",
+            "program_version": "A001",
+            "presenter_nif": "12345678Z",
+            # REDEME indicator "1" (SI) for the enrolled refund filer.
+            "redeme": "1",
+            # The cuenta-devolución refund block: a Spanish (SEPA) IBAN with the
+            # derived Marca SEPA "1" (Cuenta España). These are the header
+            # fields the M303 refund composer builds from the encrypted
+            # RefundAccount; supplied directly here to lock the serialiser bytes.
+            "iban": _M303_REFUND_IBAN,
+            "sepa_marca": "1",
+        },
+        schema_provider=provider,
+    )
+    payload = output.read_bytes()
+
+    # --- DR-grounded structural assertions (non-tautological) -----------------
+
+    def _p1(offset: int, length: int) -> bytes:
+        """Read bytes from DR DP30301 page-01 record (1-based field offset)."""
+        s = _M303_P01_START + offset - 1
+        return payload[s : s + length]
+
+    def _did(offset: int, length: int) -> bytes:
+        """Read bytes from DR DP303DID identification record (1-based offset)."""
+        s = _M303_DID_START + offset - 1
+        return payload[s : s + length]
+
+    # A refund filing emits the DID page, so the fichero is the full 7994 bytes.
+    assert len(payload) == 7994, f"expected 7994-byte refund fichero-BOE; got {len(payload)}"
+
+    # DR DP30301 REDEME indicator (offset 110, 1 byte): "1" (SI) for the
+    # REDEME-enrolled refund filer — the DR-expected value, asserted before the SHA.
+    assert _p1(_M303_REDEME_OFFSET, 1) == b"1", (
+        "DR DP30301 offset 110: REDEME indicator must be '1' (SI) for a REDEME refund filer"
+    )
+
+    # DR DP303DID rows 1-4: the DID page IS present on a refund.
+    assert _did(1, 2) == b"<T", "DR DP303DID row 1: DID open tag present on a refund"
+    assert _did(3, 3) == b"303", "DR DP303DID row 2: modelo in DID tag"
+    assert _did(6, 5) == b"DID00", "DR DP303DID row 3: page identifier literal 'DID00' (type An)"
+    assert _did(11, 1) == b">", "DR DP303DID row 4: close of DID tag"
+
+    # DR DP303DID SWIFT-BIC (offset 12, 11 bytes): blank for a SEPA account —
+    # a Cuenta España / UE SEPA refund is identified by its IBAN, not a SWIFT.
+    assert _did(_M303_DID_SWIFT_OFFSET, 11) == b" " * 11, (
+        "DR DP303DID offset 12: SWIFT-BIC must be blank for a SEPA (Spanish IBAN) account"
+    )
+
+    # DR DP303DID IBAN (offset 23, 34 bytes): the refund IBAN, left-justified,
+    # space-padded. The DR-expected value is the supplied Spanish IBAN.
+    iban_field = _did(_M303_DID_IBAN_OFFSET, 34)
+    assert iban_field.rstrip(b" ") == _M303_REFUND_IBAN.encode("latin-1"), (
+        "DR DP303DID offset 23: IBAN must be the supplied Spanish refund IBAN"
+    )
+
+    # DR DP303DID Marca SEPA (offset 194, 1 byte): "1" (Cuenta España) derived
+    # from the ES country of the IBAN — the anti-tautology value assertion.
+    assert _did(_M303_DID_SEPA_OFFSET, 1) == b"1", (
+        "DR DP303DID offset 194: Marca SEPA must be '1' (Cuenta España) for an ES IBAN"
+    )
+
+    # DR DP303DID row 13 (offset 812-823): closing tag </T303DID00> (12 bytes).
+    assert _did(812, 12) == b"</T303DID00>", "DR DP303DID row 13: DID close tag"
+
+    # The IBAN reaches the fichero exactly once and only inside the DID page.
+    assert payload.count(_M303_REFUND_IBAN.encode("latin-1")) == 1, (
+        "the refund IBAN must appear exactly once, inside the DID page"
+    )
+
+    # Envelope footer: computed dynamic closing tag (last 18 bytes).
+    assert payload[-18:] == b"</T303020251T0000>", (
+        "Envelope footer must match </T303020251T0000> for modelo=303 year=2025 period=1T"
+    )
+
+    # --- Golden SHA (byte-identity lock) ------------------------------------
+    digest = hashlib.sha256(payload).hexdigest()
+    assert digest == _M303_REFUND_GOLDEN_SHA256, (
+        f"Modelo 303 refund fichero-BOE SHA mismatch.\n"
+        f"  Expected: {_M303_REFUND_GOLDEN_SHA256}\n"
+        f"  Got:      {digest}\n"
+        "Any change to the 303.toml export layout or the refund DID block that\n"
+        "alters byte output must be re-grounded against the AEAT Diseño de\n"
+        "Registros DR303 (Orden EHA/3786/2008, 2024 revision) before updating\n"
+        "this constant."
+    )
+
+    # Receipt metadata sanity
+    assert receipt.byte_size == 7994
+    assert receipt.file_sha256 == _M303_REFUND_GOLDEN_SHA256
