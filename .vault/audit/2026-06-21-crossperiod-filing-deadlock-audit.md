@@ -9,24 +9,7 @@ related:
   - "[[2026-06-21-crossperiod-filing-deadlock-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace crossperiod-filing-deadlock with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `crossperiod-filing-deadlock` audit: `Cross-period filing deadlock remediation - code review`
 
@@ -57,8 +40,8 @@ The relaxation never inspects or asserts `aeat_accepted=True`; `file_modelo_revi
 
 ### LOW / NIT
 
-- **A1 (NIT) — advisory finding omits `legal_refs`.** `_cross_period_non_official_local_chain_advisory_finding` (`src/aeat/application/modelo/_verification_actions.py:843-869`) does not set `legal_refs`, while every sibling cross-period finding gained them in the same commit. The disclosing advisory is the operator's primary signal that they rest on a non-official local chain; omitting its legal basis (`ley-58-2003:art-119/120`) is a minor inconsistency with `aeat-calculation-grounding`. Remediation: add `legal_refs=_cross_period_dependency_legal_refs(requirement.origin_ids)`.
-- **A2 (LOW) — advisory prose is an English literal, not a locale key.** The advisory `message` / `next_action` are hardcoded English, not `tr(...)` keys. This matches the local precedent of the sibling suppression advisories (which are also literals) rather than introducing new drift, but per `aeat-locales-cli` operator prose should route through the locale catalogue. Remediation: author the strings via `python -m aeat.locales set ...` if the surrounding findings are migrated.
+- **A1 (NIT) — advisory finding omits `legal_refs`. [ACTIONED 2026-06-25.]** `_cross_period_non_official_local_chain_advisory_finding` did not set `legal_refs`, while every sibling cross-period finding gained them in the same commit. Fixed: added `legal_refs=_cross_period_dependency_legal_refs(requirement.origin_ids)` to the advisory finding so it discloses its legal basis (`ley-58-2003:art-119/120`, plus `ley-37-1992:art-99` for a compensacion origin) at parity with its siblings. Verified: module imports, the helper resolves (`('modelo-303-compensacion-x',) -> art-119/120 + art-99`), `test_local_cross_period_carry.py` 6/6 green, ruff clean. The one-line change sits in the working tree alongside an active peer `str -> CasillaId` migration in the same file; it will land when that file is next committed (committing it in isolation would sweep the peer WIP, so it is intentionally not committed solo).
+- **A2 (LOW) — advisory prose is an English literal, not a locale key. [BLOCKED on peer WIP — deferred to a dedicated locale pass.]** The advisory `message` / `next_action` are hardcoded English, matching the local precedent of the sibling suppression advisories (which are also literals). Attempted remediation: route both strings through `tr(...)` and add the keys via the sanctioned locale CLI. BLOCKED: the four locale catalogues are under active uncommitted peer WIP (the casilla-id-canonicalization rename, which leaves `application.filing.runtime.errors.ambiguous_casilla_schema` missing and `application.modelo.errors.calculate_casilla_ambiguous` extra in all four locales). The only sanctioned way to add new keys is the GLOBAL `python -m aeat.locales scaffold` (hand-editing `.yml` is forbidden by `aeat-locales-cli`), and running it now would entangle / clobber the peer's in-flight rename and trip the translation-honesty ratchet. Keeping `tr(...)` calls against unscaffolded keys would red the parity gate, so the `tr(...)` edit was reverted to preserve a clean, shippable state. Action when unblocked: once the peer locale WIP (task WATCH casilla-id-canonicalization) commits, run `scaffold` and `set` the en/es/ca/hu translations (drafted and ready). Best done as a family-wide pass migrating all the cross-period finding literals together, to avoid the partial-locale drift this finding warns against.
 
 ### Confirmed SOUND
 
@@ -75,8 +58,8 @@ At audit time the working tree carries an UNRELATED peer campaign's in-flight M1
 
 ## Recommendations
 
-- Action A1 (NIT) in a follow-up: attach `legal_refs` to the non-official-local-chain advisory finding so its legal basis is disclosed at parity with its sibling findings. Low effort, isolated to `_verification_actions.py`.
-- Treat A2 (LOW) as deferred: migrate the advisory prose to the locale catalogue only when the sibling suppression advisories are migrated, to avoid partial locale drift.
+- A1 (NIT) — DONE (2026-06-25): `legal_refs` attached to the non-official-local-chain advisory finding; verified green (test 6/6, imports, ruff). The one-line change rides in the working tree with active peer CasillaId-migration WIP in the same file and lands when that file commits.
+- A2 (LOW) — BLOCKED, deferred to a dedicated locale pass: the locale catalogue is under active uncommitted peer WIP (casilla-id-canonicalization), so the sanctioned global `scaffold` cannot run without clobbering peer translations and tripping the honesty gate. Translations are drafted; run `scaffold` + `set` for en/es/ca/hu once the peer locale WIP commits, ideally migrating the whole cross-period finding-literal family together.
 - No change required for the safety boundary, Decision A, or the tests — confirmed sound.
 - Peer churn: leave the M100/2024 registry reds to the mixed-income campaign owner; re-run the C0 surface once that campaign's construct legal-grounding sweep lands to confirm 88/88 green on a clean registry (it was green at the two commits' authoring time).
 
