@@ -137,17 +137,22 @@ No tautological calc tests found among the fixed set.
 
 ### Deeper-pass corrections (non-IVA auditor, round 2 — grounded)
 
-- **GAP-A REVERSED — M190 IS defective (now confirmed, grounded).** The softer round-1 call
-  ("M190 counts percepciones=records, maybe fine") was DISPROVEN by grounding the source: M190
-  `decl.total-percepciones` = op=add of 9 relations, each op=sum over 4 quarters of M111
-  source_output "01", and M111 box "01" is `semantic_role="perceptor_count"` / label "...número
-  de PERCEPTORES" (`111/.../casillas/0001-01-03-trabajo_dinerario.toml:4,7`). So M190 sums
-  quarterly PERCEPTOR counts — a worker present all 4 quarters counts 4x while the annual file
-  holds 1 type-2 record. **#6 RET-1 therefore spans M180 (x2 revs) + M193 + M190 (9 count
-  bindings)** — one canonical fix (route the count bindings to the already-enrolled distinct-count
-  resolver, which already supports all three via `_RETENCIONES_PERCEPTOR_COUNT_AGGREGATORS`) closes
-  the whole family. r2 should still confirm against the M190 Diseño "número de registros tipo 2" at
-  re-stamp, but the M111 grounding makes M190 a confirmed over-declaration, not a maybe.
+- **GAP-A — ADJUDICATED FINAL: M190 is OUT of P03 (distinct-NIF would regress it).** Two auditor
+  passes conflicted; the deciding evidence is the TARGET box semantics. M180 (x2 revs) + M193 boxes
+  are `total_perceptores_count` ("NÚMERO TOTAL DE PERCEPTORES" = distinct perceptor NIF) → the
+  distinct-NIF `retenciones_aggregation` resolver FITS → confirmed defect → re-stamp. M190's box is
+  `total_percepciones_count` ("Número total de PERCEPCIONES"); a percepción is a (perceptor, clave)
+  record and M190 `decl.total-percepciones` = add() of 9 per-clave relations. The distinct-NIF
+  resolver (`aggregate_retenciones_190.total_perceptors` = distinct NIF) does NOT match: a perceptor
+  under 2 claves = 2 percepciones but 1 NIF, so re-stamping M190 with distinct-NIF would UNDER-COUNT
+  — a correctness REGRESSION, not a fix. **#6 RET-1 scope is M180 (x2) + M193 ONLY; M190 EXCLUDED.**
+  (The round-2 "M190 over-declares perceptores" call conflated M111's per-clave perceptor source with
+  M190's percepciones target box; the target-box grounding corrects it.)
+- **GAP-A-FOLLOW-UP (separate potential defect, NOT P03):** M190's percepciones box is op=sum over
+  quarters, so a (perceptor, clave) present in >1 quarter MAY over-count IF the annual should hold one
+  type-2 record per (perceptor, clave). If real, the fix is a distinct-(perceptor, clave) primitive —
+  NOT the distinct-NIF source. Needs M190 Diseño grounding on whether the annual dedups per
+  perceptor-clave; tracked separately.
 - **GAP-2 (reference, not a defect — the canonical fix shape):** M130 prior-pagos casilla uses a
   TYPED cumulative op `aggregation op="prior_pagos_fraccionados"` (`130/.../bindings/0001-bindings.toml:39-41`),
   not raw sum. The RET-1 count bindings should mirror this typed/distinct-op pattern.
