@@ -148,11 +148,19 @@ No tautological calc tests found among the fixed set.
   — a correctness REGRESSION, not a fix. **#6 RET-1 scope is M180 (x2) + M193 ONLY; M190 EXCLUDED.**
   (The round-2 "M190 over-declares perceptores" call conflated M111's per-clave perceptor source with
   M190's percepciones target box; the target-box grounding corrects it.)
-- **GAP-A-FOLLOW-UP (separate potential defect, NOT P03):** M190's percepciones box is op=sum over
-  quarters, so a (perceptor, clave) present in >1 quarter MAY over-count IF the annual should hold one
-  type-2 record per (perceptor, clave). If real, the fix is a distinct-(perceptor, clave) primitive —
-  NOT the distinct-NIF source. Needs M190 Diseño grounding on whether the annual dedups per
-  perceptor-clave; tracked separately.
+- **GAP-A-FOLLOW-UP — CONFIRMED M190 over-declaration, needs a NEW primitive (NOT P03), tracked
+  as #28.** Both auditors + r2's Diseño confirm converged: M190's `decl.total-percepciones` sums
+  quarterly M111 perceptor counts across 4 quarters x 9 claves, so a (perceptor, clave) present in
+  >1 quarter over-counts — a real filed-figure over-declaration. BUT the #6 fix (`total_perceptors`
+  = distinct-NIF) is WRONG for it: M190's box is "número de PERCEPCIONES" = registros tipo 2 = one
+  per (perceptor, clave/subclave); distinct-NIF collapses claves (perceptor under 2 claves = 2
+  percepciones, 1 NIF) so it would UNDER-count — swapping over-declaration for under-declaration.
+  The data model can't express M190's count today: `RetencionesAggregation` has only
+  `total_perceptors` (no percepciones field), and rollups are per (NIF, RetencionScheme) with an
+  8-member scheme enum that does not map to M190's 9 claves. Fix = a NEW distinct-(perceptor, clave)
+  primitive: a `percepcion_count_distinct` fact + a clave-granular rollup + a RetencionesAggregation
+  extension + resolver materialisation — likely its own ADR (data-model change). Do NOT route M190
+  through the #6 distinct-NIF resolver. r2 is speccing the design.
 - **GAP-2 (reference, not a defect — the canonical fix shape):** M130 prior-pagos casilla uses a
   TYPED cumulative op `aggregation op="prior_pagos_fraccionados"` (`130/.../bindings/0001-bindings.toml:39-41`),
   not raw sum. The RET-1 count bindings should mirror this typed/distinct-op pattern.
