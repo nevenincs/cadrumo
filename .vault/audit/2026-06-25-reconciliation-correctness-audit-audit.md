@@ -135,9 +135,33 @@ No tautological calc tests found among the fixed set.
 - **GAP-E (minor coverage):** IS-3 has no full-stack calculate->verify E2E (only the resolver
   unit) despite the commit's E2E claim; #11 cross-cohort same-NIF merge isn't pinned by a test.
 
-CLEAN (verified): no dormant/unrouted binding source (all 14 source kinds enrolled or in
-DEFERRED_SOURCE_KINDS); no computed cuota/base casilla without a formula (M303/M390/M200/M130);
-M303 resultado uses op=subtract; M347 threshold registry-grounded.
+### Deeper-pass corrections (non-IVA auditor, round 2 — grounded)
+
+- **GAP-A REVERSED — M190 IS defective (now confirmed, grounded).** The softer round-1 call
+  ("M190 counts percepciones=records, maybe fine") was DISPROVEN by grounding the source: M190
+  `decl.total-percepciones` = op=add of 9 relations, each op=sum over 4 quarters of M111
+  source_output "01", and M111 box "01" is `semantic_role="perceptor_count"` / label "...número
+  de PERCEPTORES" (`111/.../casillas/0001-01-03-trabajo_dinerario.toml:4,7`). So M190 sums
+  quarterly PERCEPTOR counts — a worker present all 4 quarters counts 4x while the annual file
+  holds 1 type-2 record. **#6 RET-1 therefore spans M180 (x2 revs) + M193 + M190 (9 count
+  bindings)** — one canonical fix (route the count bindings to the already-enrolled distinct-count
+  resolver, which already supports all three via `_RETENCIONES_PERCEPTOR_COUNT_AGGREGATORS`) closes
+  the whole family. r2 should still confirm against the M190 Diseño "número de registros tipo 2" at
+  re-stamp, but the M111 grounding makes M190 a confirmed over-declaration, not a maybe.
+- **GAP-2 (reference, not a defect — the canonical fix shape):** M130 prior-pagos casilla uses a
+  TYPED cumulative op `aggregation op="prior_pagos_fraccionados"` (`130/.../bindings/0001-bindings.toml:39-41`),
+  not raw sum. The RET-1 count bindings should mirror this typed/distinct-op pattern.
+- **GAP-3 (NEW — likely live under-declaration):** M131 estimación objetiva is under-modeled
+  (2019-2023: 1 binding; 2024-2026: 2 each, vs M130's 4). The módulos rendimiento chain looks like
+  a computed-casilla hole (rendimiento de módulos manual rather than engine-derived), consistent
+  with the no-silent-under-declaration rule's M131 note — a positive-módulos filer could silently
+  file a low/zero base. Confirm whether módulos rendimiento should be engine-computed.
+
+CLEAN (verified): cross-period carry engine sound (M130 cumulative uses typed previous_filing ops;
+REGISTRY_REVISION_DIVERGENCE blocks, unstamped advises); no dormant/unrouted binding source (all 14
+source kinds enrolled or in DEFERRED_SOURCE_KINDS); no computed cuota/base casilla without a formula
+(M303/M390/M200/M130/M200 cuota chain 00562->00582/00592->00599); M303 resultado uses op=subtract;
+M347 threshold registry-grounded.
 
 Headline: 12 of 14 checked findings GENUINELY-FIXED; #6 RET-1 NOT-FIXED (registry half never
 landed, resolver inert); #15 NOT-FIXED on the 2009-2022 historical revision. Biggest new
