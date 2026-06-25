@@ -9,7 +9,7 @@ from typing import Annotated
 
 from pydantic import BeforeValidator, Field
 
-from ....core import StandardPeriodCode
+from ....core import IBAN_SHAPE_RE, StandardPeriodCode, iban_mod_97
 from ....core.decimal import coerce_decimal
 from ....core.identity import IdentityError, validate_spanish_tax_id
 from ._errors import RegistryValidationError
@@ -183,16 +183,6 @@ alias enforces only the alpha-2 shape.
 """
 
 
-_IBAN_SHAPE_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$")
-
-
-def _iban_mod_97(canonical: str) -> int:
-    """Compute the IBAN mod-97 check residue for an already-canonical IBAN."""
-    rearranged = canonical[4:] + canonical[:4]
-    numeric = "".join(ch if ch.isdigit() else str(ord(ch) - ord("A") + 10) for ch in rearranged)
-    return int(numeric) % 97
-
-
 def _validate_iban_string(value: object) -> object:
     """Validate an IBAN: country code, check digits, BBAN, and mod-97 residue.
 
@@ -207,9 +197,9 @@ def _validate_iban_string(value: object) -> object:
     canonical = value.replace(" ", "").replace("-", "").upper()
     if not canonical:
         raise RegistryValidationError("iban value must not be blank")
-    if not _IBAN_SHAPE_RE.match(canonical):
+    if not IBAN_SHAPE_RE.match(canonical):
         raise RegistryValidationError(f"iban value {value!r} does not match the ISO 13616 shape")
-    if _iban_mod_97(canonical) != 1:
+    if iban_mod_97(canonical) != 1:
         raise RegistryValidationError(f"iban value {value!r} fails the mod-97 check")
     return canonical
 
