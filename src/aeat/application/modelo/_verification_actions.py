@@ -1020,17 +1020,15 @@ def _cross_period_non_official_local_chain_advisory_finding(
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
-        message=(
-            "cross-period carry used a same-year locally-filed prior period with no external "
-            f"AEAT evidence: modelo={requirement.source_modelo} year={requirement.filing_year} "
-            f"period={requirement_period} origin={requirement.origin.value}. The within-year chain "
-            "is admitted for local export, but the carried value is locally evidenced (app_filing), "
-            "not AEAT-evidenced; file every period with AEAT externally."
+        message=tr(
+            "application.modelo.findings.cross_period_non_official_local_chain.message",
+            source_modelo=requirement.source_modelo,
+            filing_year=requirement.filing_year,
+            period=requirement_period,
+            origin=requirement.origin.value,
         ),
-        next_action=(
-            "Export and file each period with AEAT externally, then import the official "
-            "justificante/CSV/live evidence to upgrade the local chain when available."
-        ),
+        next_action=tr("application.modelo.findings.cross_period_non_official_local_chain.next_action"),
+        legal_refs=_cross_period_dependency_legal_refs(requirement.origin_ids),
     )
 
 

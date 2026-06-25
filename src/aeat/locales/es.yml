@@ -897,6 +897,9 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      cross_period_non_official_local_chain:
+        message: 'el arrastre entre periodos uso un periodo anterior presentado localmente en el mismo ejercicio sin evidencia externa de la AEAT: modelo=%{source_modelo} ejercicio=%{filing_year} periodo=%{period} origen=%{origin}. La cadena dentro del mismo ejercicio se admite para la exportacion local, pero el valor arrastrado esta evidenciado localmente (app_filing), no por la AEAT; presente cada periodo ante la AEAT de forma externa.'
+        next_action: 'Exporte y presente cada periodo ante la AEAT de forma externa, despues importe el justificante/CSV/evidencia en vivo oficial para actualizar la cadena local cuando este disponible.'
       dt12a_reduccion_next_action: Proporcione --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE al calcular para inyectar automáticamente la reducción DT 12ª en la

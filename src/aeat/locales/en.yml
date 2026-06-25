@@ -814,6 +814,9 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      cross_period_non_official_local_chain:
+        message: 'cross-period carry used a same-year locally-filed prior period with no external AEAT evidence: modelo=%{source_modelo} year=%{filing_year} period=%{period} origin=%{origin}. The within-year chain is admitted for local export, but the carried value is locally evidenced (app_filing), not AEAT-evidenced; file every period with AEAT externally.'
+        next_action: 'Export and file each period with AEAT externally, then import the official justificante/CSV/live evidence to upgrade the local chain when available.'
       dt12a_reduccion_next_action: Supply --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE to aeat app modelo work calculate to auto-inject the DT 12a reduccion
