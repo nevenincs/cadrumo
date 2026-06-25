@@ -28,6 +28,7 @@ from ...domain.calculations.registry import (
     resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_ledger_renta_gasto_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
+    resolve_retenciones_aggregation_binding_values,
     unsupported_ledger_iva_observations,
     unsupported_ledger_renta_expense_observations,
     unsupported_ledger_renta_gasto_observations,
@@ -50,6 +51,12 @@ from ._renta_income_ledger import (
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
     aggregate_renta_ledger_expenses_from_repositories,
+)
+from ._retencion_observations_repository import RetencionObservationRepository
+from ._retenciones import (
+    aggregate_retenciones_180,
+    aggregate_retenciones_190,
+    aggregate_retenciones_193,
 )
 from ._source_mesh import (
     CalculationSourceContext,
@@ -523,6 +530,91 @@ def _revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:
 
 def _empty_source_resolution(resolver_id: str, owned_sources: tuple[str, ...]) -> CalculationSourceResolution:
     return CalculationSourceResolution(resolver_id=resolver_id, owned_sources=owned_sources)
+
+
+#: The annual retenciones-summary modelos whose "número total de perceptores" box
+#: this source materialises, mapped to their validated distinct-NIF aggregator. The
+#: quarterly retenciones modelos (111/115/123) carry no perceptor-count box and are
+#: deliberately absent.
+_RETENCIONES_PERCEPTOR_COUNT_AGGREGATORS = {
+    Modelo.M180.value: aggregate_retenciones_180,
+    Modelo.M190.value: aggregate_retenciones_190,
+    Modelo.M193.value: aggregate_retenciones_193,
+}
+
+
+class RetencionesAggregationSourceResolver:
+    """Source mesh resolver for the dedicated per-perceptor retención store (RET-1).
+
+    Reads the bucket-scoped per-perceptor retención observations
+    (:class:`RetencionObservationRepository`) for the modelo's annual window and
+    materialises the Modelo 180/190/193 "número total de perceptores" box with the
+    validated DISTINCT-NIF count (``aggregate_retenciones_{180,190,193}``'s
+    ``total_perceptors``) — replacing the wrong sum-of-quarterly-M115-counts
+    relation. The pull and calculate surfaces read this one store
+    (one-aggregation-path).
+    """
+
+    resolver_id = "retenciones_aggregation"
+    owned_sources = ("retenciones_aggregation",)
+
+    def __init__(self, *, retencion_repository: RetencionObservationRepository | None = None) -> None:
+        self._retencion_repository = retencion_repository
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        if not _revision_has_binding_source(context.revision, "retenciones_aggregation"):
+            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+        aggregator = _RETENCIONES_PERCEPTOR_COUNT_AGGREGATORS.get(str(context.modelo))
+        if aggregator is None:
+            # Defensive: a revision declares the source for a modelo with no
+            # perceptor-count aggregator. Resolve empty rather than guess a count.
+            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+        repository = self._retencion_repository or RetencionObservationRepository()
+        try:
+            observations = repository.load_observations(str(context.modelo), context.period)
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
+        if not observations:
+            # No-silent-under-declaration: the revision declares the perceptor-count
+            # binding but no per-perceptor observations are persisted. NEVER silently
+            # materialise a zero count — surface an advisory naming the gap + remedy
+            # so the operator supplies the type-2 perceptor records before filing.
+            return CalculationSourceResolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                diagnostics=(
+                    CalculationSourceDiagnostic(
+                        reason="source_issue",
+                        source_kind="retenciones_aggregation",
+                        resolver_id=self.resolver_id,
+                        message=(
+                            f"Modelo {context.modelo} declares a perceptor-count binding but no "
+                            f"per-perceptor retención observations are persisted for "
+                            f"{context.period.registry_token} {context.filing_year}; the distinct "
+                            "perceptor count is not materialised. Supply the per-perceptor records "
+                            "(`aeat app modelo aggregate --retencion-observation`) before filing."
+                        ),
+                    ),
+                ),
+            )
+        aggregation = aggregator(tuple(observations), period=context.period)
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=resolve_retenciones_aggregation_binding_values(context.revision, aggregation),
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    source_kind="retenciones_aggregation",
+                    source_ref=f"perceptor:{rollup.perceptor_nif}",
+                )
+                for rollup in aggregation.rollups
+            ),
+        )
 
 
 def _renta_observation_provenance(

@@ -79,6 +79,7 @@ from ._modelo_bindings import (
     LedgerRentaGastoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
     ModeloLedgerBindingAggregation,
+    RetencionesAggregationSourceResolver,
     aggregation_period_for_modelo,
 )
 from ._models import CasillaAggregation, CasillaProvenance
@@ -212,6 +213,7 @@ __all__ = [
     "RetencionPerceptorRollup",
     "RetencionScheme",
     "RetencionesAggregation",
+    "RetencionesAggregationSourceResolver",
     "aggregate_counterpart_347",
     "aggregate_counterpart_349",
     "aggregate_definitiva_prorrata",

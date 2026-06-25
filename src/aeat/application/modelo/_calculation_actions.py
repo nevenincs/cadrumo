@@ -115,6 +115,10 @@ resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva
 #                                      (M130 casilla 02 deductible expenses; OUTGOING
 #                                      sibling of the income resolver)
 #   ledger_oss_aggregation           — OssIossLedgerSourceResolver (S09)
+#   retenciones_aggregation          — RetencionesAggregationSourceResolver (RET-1):
+#                                      materialises the M180/190/193 distinct
+#                                      perceptor-NIF count from the dedicated
+#                                      per-perceptor retención store
 #   collectible_invoice              — InvoiceCatalogueSourceResolver (S09)
 #   payable_invoice                  — InvoiceCatalogueSourceResolver (S09, declared no
 #                                      registry binding yet — live capacity headroom)
@@ -136,6 +140,7 @@ _BUCKET_AGGREGATION_OWNED_SOURCES = frozenset(
         "ledger_renta_income_aggregation",
         "ledger_renta_gasto_aggregation",
         "ledger_oss_aggregation",
+        "retenciones_aggregation",
         "collectible_invoice",
         "payable_invoice",
         "previous_filing",
@@ -524,6 +529,7 @@ def _resolve_bucket_source_mesh(
         LedgerRentaGastoAggregationSourceResolver,
         LedgerRentaIncomeAggregationSourceResolver,
         OssIossLedgerSourceResolver,
+        RetencionesAggregationSourceResolver,
         collect_unhandled_source_diagnostics,
         merge_source_resolutions,
     )
@@ -559,6 +565,12 @@ def _resolve_bucket_source_mesh(
             # pre-classified callers can still pass candidates directly through
             # the resolver constructor.
             OssIossLedgerSourceResolver(invoice_repository=invoice_repository).resolve(context),
+            # M180/190/193 distinct perceptor-NIF count (retenciones_aggregation):
+            # reads the dedicated per-perceptor retención store and materialises the
+            # "número total de perceptores" box via the validated distinct-count
+            # primitive — replacing the wrong sum-of-quarterly-M115-counts relation
+            # (RET-1). Empty store on a declaring revision surfaces a no-silent advisory.
+            RetencionesAggregationSourceResolver().resolve(context),
             # M349 collectible / payable invoices (collectible_invoice,
             # payable_invoice).  Loads the encrypted invoice catalogue and resolves
             # binding values for intra-community transactions in scope.
