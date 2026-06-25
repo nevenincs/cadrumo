@@ -121,6 +121,11 @@ from ._schema import (
     IvaVerificationIssue,
     IvaVerificationReport,
 )
+from ._sepa_marca import (
+    SEPA_ZONE_COUNTRY_CODES,
+    SepaMarca,
+    derive_sepa_marca,
+)
 from ._verify import verify_catalogue
 
 __all__ = [
@@ -129,6 +134,7 @@ __all__ = [
     "DEVENGADA_FLOW_DIRECTIONS",
     "LAST_FILING_PERIOD_TOKENS",
     "REGIME_PERIODICITY",
+    "SEPA_ZONE_COUNTRY_CODES",
     "CustomerTaxStatus",
     "DeductionScope",
     "EUMemberState",
@@ -174,6 +180,7 @@ __all__ = [
     "RefundElection",
     "RefundEligibilityReason",
     "RegimePeriodicity",
+    "SepaMarca",
     "TransactionKind",
     "cite",
     "classify_input_deduction",
@@ -182,6 +189,7 @@ __all__ = [
     "compute_prorrata_general",
     "compute_sectoral_prorrata",
     "derive_flow_for_classification",
+    "derive_sepa_marca",
     "invoice_line_to_iva_observation",
     "is_deducible_flow",
     "is_devengada_flow",

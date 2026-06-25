@@ -312,6 +312,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._action_errors.ModeloRefundAccountMissingError",
+        ErrorCode(
+            code="REFUSED_MODELO_REFUND_ACCOUNT_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_refund_account_missing",
+            default_suggestion="configure a refund account",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._action_errors.WorkUnitNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_WORK_UNIT_NOT_FOUND",

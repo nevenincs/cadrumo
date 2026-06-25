@@ -125,6 +125,22 @@ class ModeloRefundElectionNotEligibleError(ModeloError):
     """
 
 
+class ModeloRefundAccountMissingError(ModeloError):
+    """Raised when a refund-disposition export has no refund account on file.
+
+    When the determined disposition is a refund (devolución, ``D`` / ``V`` /
+    ``X``) the fichero must carry the cuenta-devolución block AEAT pays into —
+    the IBAN, or the SWIFT-BIC plus foreign-bank block for a non-SEPA account.
+    If the operator's profile carries no refund account (no ``iban``), the
+    export REFUSES rather than emitting an empty or partial DID block: an empty
+    refund block produces a devolución fichero AEAT cannot pay — a silent,
+    defective filing. The fix is operator-driven: configure a refund account on
+    the profile, or carry the credit forward (``compensar``) instead of
+    requesting a refund. This is the no-silent-under-declaration sibling of the
+    election's eligibility refusal.
+    """
+
+
 class WorkUnitRevisionDivergenceError(ModeloError):
     """Raised when the registry's law-determined revision diverges from the work unit's pinned revision.
 
@@ -151,6 +167,7 @@ __all__ = [
     "ModeloApplicabilityFilterError",
     "ModeloCrossPeriodCleanStateError",
     "ModeloRecordNotFoundError",
+    "ModeloRefundAccountMissingError",
     "ModeloRefundElectionNotEligibleError",
     "ModeloWorkflowGateError",
     "StoredCalculationDriftError",
