@@ -4,9 +4,9 @@ tags:
   - '#m100-dependent-modelo-applicability'
 date: '2026-06-19'
 modified: '2026-06-19'
-related: []
+related:
+  - '[[2026-06-19-m100-dependent-modelo-applicability-research]]'
 ---
-
 # `m100-dependent-modelo-applicability` adr: `Suppress cross-period dependencies on modelos the taxpayer does not file (C3)` | (**status:** `accepted` — implemented via the grounded `taxpayer_files_source` classification distinction, commit `fd14bdf01`; Option 1's schedule heuristic was reverted)
 
 ## Problem Statement
@@ -96,3 +96,12 @@ The correct fix landed in commit `fd14bdf01`. Rather than the schedule heuristic
 Why this succeeds where Option 1 failed: the classification is per-modelo registry authority, so suppression is scoped to exactly the suffered set — self-filed 130/131 stay enforced, and the different-target enforcement contract (180/190/193/200/202) is untouched. Proven: enforcement suite 50 green (Option 1 regressed 5), retenciones-fold/e2e/carry/contract/registry 53 green, and `test_m100_suffered_retencion_deps_scoped_out_self_filed_enforced` asserts the suffered set scopes out while 130/131 do not.
 
 The `cross-period-suppression-must-be-grounded-in-registry-classification-not-schedule` codification candidate is now demonstrated across a full execution cycle (Option 1 reverted, classification fix proven) and is ready to promote.
+
+## Related follow-up (out of C3 scope) — first-filer M100 self-carry for salaried taxpayers
+
+The end-to-end verification (`test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block`) confirmed C3 scopes out every withholding/pagos dependency for a declared employee, but surfaced a DISTINCT, separate concern: the M100→M100 prior-year **self-carry** (`previous_filing_binding`, e.g. base liquidable negativa) still blocks a *first-time* salaried filer. The existing first-filer suppression (`partition_cross_period_requirements_by_activity_start` + `NoPriorObligationProvenance`) keys on `TaxpayerProfile.activity_start_date`, which is an economic-activity (autónomo) signal a salaried employee does not carry. So:
+
+- A **continuing** salaried filer is unaffected — they filed the prior M100, the self-carry evidence exists.
+- A **first-time** salaried filer (no prior M100, nothing to carry) is still blocked by the self-carry, because no "first IRPF/M100 filing year" signal exists for non-activity taxpayers to drive the first-filer suppression.
+
+This is the first-filer *mechanism* (NoPriorObligationProvenance), not C3's registry-classification withholding-dep mechanism, and needs its own grounding (when is a prior-year M100 self-carry genuinely not-applicable, and what profile signal proves "first M100 year" for a salaried taxpayer). Recorded here so it routes to an owner rather than scope-creeping into C3; the C3 withholding/pagos fix is complete and verified independently of it.
