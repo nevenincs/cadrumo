@@ -81,7 +81,7 @@ _RE_LEDGER_TRANSACTION = re.compile(r'"ledger_transaction"')
 
 
 def test_no_bare_ledger_transaction_literals() -> None:
-    """Runtime sites must use AggregationSourceKind.LEDGER_TRANSACTION, not the bare string."""
+    """Runtime sites must use BindingSourceKind.LEDGER_TRANSACTION, not the bare string."""
     files = _production_py_files()
     hits = _scan(files, _RE_LEDGER_TRANSACTION)
     assert not hits, (

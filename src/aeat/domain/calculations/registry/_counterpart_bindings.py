@@ -9,7 +9,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.aggregation import COUNTERPART_SOURCE_KINDS, AggregationSourceKind, CounterpartSourceKind
+from ....core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind, CounterpartSourceKind
 from ._binding_selector_utils import (
     intracommunity_clave_validator,
     invariant_diagnostics,
@@ -54,7 +54,7 @@ class CounterpartAggregationObservation(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_kind: CounterpartSourceKind = Field(
-        default=AggregationSourceKind.LEDGER_TRANSACTION,
+        default=BindingSourceKind.LEDGER_TRANSACTION,
     )
     source_id: str = Field(min_length=1, max_length=128)
     party_tax_id: str = Field(min_length=1, max_length=64)

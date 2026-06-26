@@ -130,7 +130,6 @@ from ._retenciones import (
 from ._service import (
     ACCEPTED_SOURCE_KINDS,
     AggregationErrorCodes,
-    AggregationSourceKind,
     PerModeloAggregationCommand,
     PerModeloAggregationLogFields,
     PerModeloAggregationProvider,
@@ -162,7 +161,6 @@ __all__ = [
     "AggregationErrorCodes",
     "AggregationMissingClassificationError",
     "AggregationPeriodError",
-    "AggregationSourceKind",
     "AggregationUnsupportedModeloError",
     "AggregationValidationError",
     "CalculationSourceContext",

@@ -8,13 +8,12 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.errors import get_registered_error_code
 from ... import aggregation
 from .. import (
     ACCEPTED_SOURCE_KINDS,
     AggregationErrorCodes,
-    AggregationSourceKind,
     AggregationUnsupportedModeloError,
     CounterpartAggregation,
     CounterpartObservation,
@@ -57,7 +56,7 @@ def _retencion_obs(*, source_kind: str = "ledger_transaction") -> RetencionObser
 def _counterpart_obs(
     *,
     nif: str = "B00000001",
-    source_kind: CounterpartSourceKind = AggregationSourceKind.LEDGER_TRANSACTION,
+    source_kind: CounterpartSourceKind = BindingSourceKind.LEDGER_TRANSACTION,
     operation_kind: str = "entregas_y_prestaciones",
     country: str = "ES",
     invoice_total: str = "2000.00",
@@ -178,7 +177,7 @@ def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None
     assert result.provider is PerModeloAggregationProvider.RETENCIONES
     assert isinstance(result.aggregation, RetencionesAggregation)
     assert result.aggregation.total_retencion == Decimal("150.00")
-    assert result.source_kinds == (AggregationSourceKind.LEDGER_TRANSACTION,)
+    assert result.source_kinds == (BindingSourceKind.LEDGER_TRANSACTION,)
     assert result.log_fields.as_extra() == {
         "service_name": "per_modelo_aggregation",
         "modelo": "111",
@@ -192,8 +191,8 @@ def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None
 
 def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() -> None:
     observations = (
-        _counterpart_obs(source_kind=AggregationSourceKind.LEDGER_TRANSACTION, invoice_total="1500.00"),
-        _counterpart_obs(source_kind=AggregationSourceKind.PAYABLE_INVOICE, invoice_total="1505.07"),
+        _counterpart_obs(source_kind=BindingSourceKind.LEDGER_TRANSACTION, invoice_total="1500.00"),
+        _counterpart_obs(source_kind=BindingSourceKind.PAYABLE_INVOICE, invoice_total="1505.07"),
     )
     command = PerModeloAggregationCommand(
         modelo="347",
@@ -206,8 +205,8 @@ def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() 
     assert result.provider is PerModeloAggregationProvider.COUNTERPART
     assert isinstance(result.aggregation, CounterpartAggregation)
     assert result.source_kinds == (
-        AggregationSourceKind.LEDGER_TRANSACTION,
-        AggregationSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.LEDGER_TRANSACTION,
+        BindingSourceKind.PAYABLE_INVOICE,
     )
     assert declarable_counterparty_nifs_347(result.aggregation) == frozenset({"B00000001"})
 
@@ -228,8 +227,8 @@ def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics(
     assert result.provider is PerModeloAggregationProvider.FOREIGN_ASSETS
     assert isinstance(result.aggregation, ForeignAssetsAggregation)
     assert result.source_kinds == (
-        AggregationSourceKind.PAYABLE_INVOICE,
-        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
     )
     assert declarable_asset_classes_720(result.aggregation) == frozenset({ForeignAssetClass.ACCOUNT})
 
@@ -278,7 +277,7 @@ def test_result_contract_rejects_incoherent_envelope_payload() -> None:
             period=_P_2025_ANNUAL,
             provider=PerModeloAggregationProvider.COUNTERPART,
             aggregation=aggregation_payload,
-            source_kinds=(AggregationSourceKind.LEDGER_TRANSACTION,),
+            source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
             log_fields=PerModeloAggregationLogFields(
                 modelo="349",
                 period=_P_2025_ANNUAL,
@@ -305,7 +304,7 @@ def test_result_contract_rejects_provider_payload_mismatch() -> None:
             period=_P_2025_Q1,
             provider=PerModeloAggregationProvider.COUNTERPART,
             aggregation=aggregation_payload,
-            source_kinds=(AggregationSourceKind.LEDGER_TRANSACTION,),
+            source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
             log_fields=PerModeloAggregationLogFields(
                 modelo="111",
                 period=_P_2025_Q1,

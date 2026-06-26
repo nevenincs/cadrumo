@@ -82,58 +82,6 @@ class BindingAggregation(BaseModel):
         return value
 
 
-class AggregationSourceKind(StrEnum):
-    """Accepted source-kind taxonomy for per-modelo aggregation providers.
-
-    The retired bare invoice alias was removed during C4 invoice unification.
-    Registry bindings and aggregation observations must use one of the
-    load-bearing source kinds below; invoice-shaped validators route through the
-    canonical payable / collectible / purchase-evidence taxonomy rather than a
-    standalone alias.
-
-    Consumer search across ``src/aeat`` on 2026-06-11 found no remaining
-    ``AggregationSourceKind.INVOICE`` references after the migration; residual
-    ``source="invoice"`` literals are rejection tests only.
-    """
-
-    LEDGER_TRANSACTION = "ledger_transaction"
-    PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
-    PAYABLE_INVOICE = "payable_invoice"
-    COLLECTIBLE_INVOICE = "collectible_invoice"
-
-
-type CounterpartSourceKind = Literal[
-    AggregationSourceKind.LEDGER_TRANSACTION,
-    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-    AggregationSourceKind.PAYABLE_INVOICE,
-    AggregationSourceKind.COLLECTIBLE_INVOICE,
-]
-"""Canonical source-kind subset accepted by counterpart aggregation."""
-
-COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(
-    {
-        AggregationSourceKind.LEDGER_TRANSACTION,
-        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        AggregationSourceKind.PAYABLE_INVOICE,
-        AggregationSourceKind.COLLECTIBLE_INVOICE,
-    },
-)
-
-
-def counterpart_source_kind(value: object) -> CounterpartSourceKind:
-    """Return ``value`` narrowed to the counterpart source-kind subset."""
-    try:
-        source_kind = value if isinstance(value, AggregationSourceKind) else AggregationSourceKind(value)
-    except ValueError as exc:
-        raise ValueError(f"unsupported source_kind {value!r}") from exc
-    if source_kind in COUNTERPART_SOURCE_KINDS:
-        return source_kind
-    raise ValueError(
-        "unsupported source_kind; use one of ledger_transaction, "
-        "purchase_invoice_evidence, payable_invoice, collectible_invoice",
-    )
-
-
 class PeriodKind(StrEnum):
     """Authoritative period cadences shared across aggregation and deadline layers.
 
@@ -190,17 +138,18 @@ class BindingSourceKind(StrEnum):
     token is added in exactly one place.
 
     BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the source
-    token that was previously a bare string (or an
-    :class:`AggregationSourceKind` / :class:`RowSetGroupingKind` member) in the
-    ``DataBindingDefinition.source`` Literal. Those tokens live in registry TOML
-    and may be persisted; a :class:`~enum.StrEnum` serialises to its value, so
-    folding the mixed Literal onto this enum changes the static type without
-    changing any stored or compared string (the modelo-enum-hardening
+    token that was previously a bare string (or a :class:`RowSetGroupingKind`
+    member) in the ``DataBindingDefinition.source`` Literal. Those tokens live in
+    registry TOML and may be persisted; a :class:`~enum.StrEnum` serialises to its
+    value, so folding the mixed Literal onto this enum changes the static type
+    without changing any stored or compared string (the modelo-enum-hardening
     precedent). Do NOT rename a stored token.
 
-    The four invoice/counterpart members reuse the :class:`AggregationSourceKind`
-    values and the two grouping members reuse :class:`RowSetGroupingKind` values
-    so the cross-layer aggregation taxonomy stays consistent; see
+    This enum is the single canonical source-kind authority across BOTH the
+    registry binding definitions AND the application resolver mesh (phase-2.1
+    taxonomy unification): the counterpart subset (:data:`COUNTERPART_SOURCE_KINDS`)
+    is derived from it, and the two grouping members reuse :class:`RowSetGroupingKind`
+    values so the cross-layer aggregation taxonomy stays consistent; see
     :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE` for the detail-record
     source-token ↔ grouping-axis mapping.
     """
@@ -245,12 +194,11 @@ class BindingSourceKind(StrEnum):
     # mesh-only in the enum↔registry parity gate, not as reserved-undeclared.
     BORRADOR = "borrador"
     IVA_WALLET_DECISION = "iva_wallet_decision"
-    # Invoice / counterpart aggregation sources (value-aligned with
-    # AggregationSourceKind).
-    PAYABLE_INVOICE = AggregationSourceKind.PAYABLE_INVOICE.value
-    COLLECTIBLE_INVOICE = AggregationSourceKind.COLLECTIBLE_INVOICE.value
-    LEDGER_TRANSACTION = AggregationSourceKind.LEDGER_TRANSACTION.value
-    PURCHASE_INVOICE_EVIDENCE = AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE.value
+    # Invoice / counterpart aggregation sources.
+    PAYABLE_INVOICE = "payable_invoice"
+    COLLECTIBLE_INVOICE = "collectible_invoice"
+    LEDGER_TRANSACTION = "ledger_transaction"
+    PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
     # Detail-record families. WITHHOLDING / FOREIGN_ASSET reuse the
     # RowSetGroupingKind value; the other three carry their distinct
     # source-token value (see ROW_SET_GROUPING_FOR_BINDING_SOURCE).
@@ -288,6 +236,44 @@ INVOICE_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
     },
 )
 """Invoice-shaped binding source kinds, derived from :class:`BindingSourceKind`."""
+
+
+type CounterpartSourceKind = Literal[
+    BindingSourceKind.LEDGER_TRANSACTION,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.COLLECTIBLE_INVOICE,
+]
+"""Canonical source-kind subset accepted by counterpart aggregation.
+
+A derived subset of :class:`BindingSourceKind` (phase-2.1 taxonomy unification):
+the counterpart families settle against a transaction, a purchase-invoice
+evidence row, or a payable/collectible invoice. Replaces the former
+``AggregationSourceKind``-derived subset, which was deleted in the same change.
+"""
+
+COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(
+    {
+        BindingSourceKind.LEDGER_TRANSACTION,
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+    },
+)
+
+
+def counterpart_source_kind(value: object) -> CounterpartSourceKind:
+    """Return ``value`` narrowed to the counterpart source-kind subset."""
+    try:
+        source_kind = value if isinstance(value, BindingSourceKind) else BindingSourceKind(value)
+    except ValueError as exc:
+        raise ValueError(f"unsupported source_kind {value!r}") from exc
+    if source_kind in COUNTERPART_SOURCE_KINDS:
+        return source_kind
+    raise ValueError(
+        "unsupported source_kind; use one of ledger_transaction, "
+        "purchase_invoice_evidence, payable_invoice, collectible_invoice",
+    )
 
 
 LEDGER_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(

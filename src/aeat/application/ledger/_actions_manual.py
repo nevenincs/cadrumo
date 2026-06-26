@@ -20,8 +20,7 @@ from ...core.hashing import content_hash_hex
 if TYPE_CHECKING:
     pass
 
-from ...core import Period
-from ...core.aggregation import AggregationSourceKind
+from ...core import BindingSourceKind, Period
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.attachments._protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
@@ -1034,7 +1033,7 @@ def _source_sha256(command: ManualLedgerTransactionCommand, *, occurred_at: date
 
 def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
     values = {
-        "source_kind": AggregationSourceKind.LEDGER_TRANSACTION,
+        "source_kind": BindingSourceKind.LEDGER_TRANSACTION,
         "source_command": command.source_command,
         "actor": command.actor,
         "business_classification": command.business_classification.value,

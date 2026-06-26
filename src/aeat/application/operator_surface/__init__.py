@@ -66,7 +66,6 @@ from ._models import (
     RootSurface,
     RootSurfaceName,
     ServiceOwner,
-    SourceKind,
     SourceKindAlias,
 )
 
@@ -101,7 +100,6 @@ __all__ = [
     "RootSurface",
     "RootSurfaceName",
     "ServiceOwner",
-    "SourceKind",
     "SourceKindAlias",
     "build_help_document",
     "build_operator_surface_contract",

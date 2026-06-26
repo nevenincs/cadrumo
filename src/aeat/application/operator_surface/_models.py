@@ -18,6 +18,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ...core import BindingSourceKind
+
 
 class RootSurfaceName(StrEnum):
     """Accepted root command surfaces."""
@@ -38,15 +40,6 @@ class FilingStatus(StrEnum):
     """Canonical filing-status token taxonomy for operator-facing live reads."""
 
     FILED = "filed"
-
-
-class SourceKind(StrEnum):
-    """Canonical source-kind taxonomy from the CLI workflow redesign ADRs."""
-
-    LEDGER_TRANSACTION = "ledger_transaction"
-    PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
-    PAYABLE_INVOICE = "payable_invoice"
-    COLLECTIBLE_INVOICE = "collectible_invoice"
 
 
 class OperatorMutability(StrEnum):
@@ -177,7 +170,7 @@ class SourceKindAlias(BaseModel):
     model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
     alias: str = Field(min_length=1)
-    canonical: SourceKind
+    canonical: BindingSourceKind
 
 
 class MountedCommandFamily(BaseModel):
@@ -248,7 +241,7 @@ class OperatorSurfaceContract(BaseModel):
     schema_version: str = "1"
     roots: tuple[RootSurface, ...]
     lifecycle: LifecycleContract
-    source_kinds: tuple[SourceKind, ...]
+    source_kinds: tuple[BindingSourceKind, ...]
     source_kind_aliases: tuple[SourceKindAlias, ...]
     command_families: tuple[MountedCommandFamily, ...]
     service_owners: tuple[ServiceOwner, ...]
@@ -266,12 +259,12 @@ class OperatorSurfaceContract(BaseModel):
 
     @field_validator("source_kinds")
     @classmethod
-    def _source_kinds_are_exact(cls, value: tuple[SourceKind, ...]) -> tuple[SourceKind, ...]:
+    def _source_kinds_are_exact(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
         expected = (
-            SourceKind.LEDGER_TRANSACTION,
-            SourceKind.PURCHASE_INVOICE_EVIDENCE,
-            SourceKind.PAYABLE_INVOICE,
-            SourceKind.COLLECTIBLE_INVOICE,
+            BindingSourceKind.LEDGER_TRANSACTION,
+            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+            BindingSourceKind.PAYABLE_INVOICE,
+            BindingSourceKind.COLLECTIBLE_INVOICE,
         )
         if value != expected:
             raise ValueError("source kinds must match the accepted four-kind taxonomy")

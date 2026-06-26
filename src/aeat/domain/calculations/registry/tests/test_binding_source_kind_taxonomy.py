@@ -160,12 +160,12 @@ def test_ledger_frozenset_covers_all_five_ledger_members() -> None:
 
 
 def test_counterpart_frozenset_is_a_subset_of_the_enum() -> None:
-    """The counterpart source kinds all map onto :class:`BindingSourceKind` values.
+    """The counterpart source kinds are a derived subset of :class:`BindingSourceKind`.
 
-    ``COUNTERPART_SOURCE_KINDS`` is declared over :class:`AggregationSourceKind`
-    members (the cross-layer aggregation taxonomy), whose values are aligned with
-    the corresponding :class:`BindingSourceKind` members; the assertion confirms
-    every counterpart value resolves to a binding-source member.
+    ``COUNTERPART_SOURCE_KINDS`` is declared directly over :class:`BindingSourceKind`
+    members (phase-2.1 taxonomy unification, replacing the former
+    ``AggregationSourceKind``-derived subset); the assertion confirms every
+    counterpart value is a binding-source member.
     """
     counterpart_as_binding = {BindingSourceKind(kind.value) for kind in COUNTERPART_SOURCE_KINDS}
     assert counterpart_as_binding <= set(BindingSourceKind)
