@@ -13,6 +13,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...core import BindingSourceKind
 from ...core.time import now as _utc_now
 from ...domain._identifiers import canonical_decimal_string as _canonical_decimal_str
 from ...domain.buckets import BucketEventHistoryRepository
@@ -143,22 +144,22 @@ resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva
 #
 # DEFERRED — no resolver yet; emit advisory instead of silently blanking (S10):
 #   withholding, atribucion_member, related_party_operation, foreign_asset, refund_operation
-_BUCKET_AGGREGATION_OWNED_SOURCES = frozenset(
+_BUCKET_AGGREGATION_OWNED_SOURCES: frozenset[BindingSourceKind] = frozenset(
     {
-        "ledger_iva_aggregation",
-        "ledger_renta_expense_aggregation",
-        "ledger_renta_income_aggregation",
-        "ledger_renta_gasto_aggregation",
-        "ledger_oss_aggregation",
-        "retenciones_aggregation",
-        "collectible_invoice",
-        "payable_invoice",
-        "previous_filing",
-        "relation_prefill",
-        "profile",
-        "borrador",
-        "iva_wallet_decision",
-        "manual_input",
+        BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+        BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        BindingSourceKind.RETENCIONES_AGGREGATION,
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.PREVIOUS_FILING,
+        BindingSourceKind.RELATION_PREFILL,
+        BindingSourceKind.PROFILE,
+        BindingSourceKind.BORRADOR,
+        BindingSourceKind.IVA_WALLET_DECISION,
+        BindingSourceKind.MANUAL_INPUT,
     },
 )
 
@@ -168,15 +169,15 @@ _BUCKET_AGGREGATION_OWNED_SOURCES = frozenset(
 # subset of _BUCKET_AGGREGATION_OWNED_SOURCES; optional-return resolvers like
 # previous_filing, profile, and the OSS/invoice resolvers are intentionally absent
 # so test fixtures and carry-forward overrides remain valid.
-_BUCKET_AGGREGATION_LOCK_SOURCES = frozenset(
+_BUCKET_AGGREGATION_LOCK_SOURCES: frozenset[BindingSourceKind] = frozenset(
     {
-        "ledger_iva_aggregation",
-        "ledger_renta_expense_aggregation",
-        "ledger_renta_income_aggregation",
-        "ledger_renta_gasto_aggregation",
-        "ledger_oss_aggregation",
-        "collectible_invoice",
-        "payable_invoice",
+        BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+        BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.PAYABLE_INVOICE,
     },
 )
 
@@ -212,7 +213,9 @@ _BUCKET_AGGREGATION_LOCK_SOURCES = frozenset(
 # is legitimate — the engine's consistency check adjudicates divergence. A caller
 # --binding for one of these reaches the engine; for every other mesh-owned
 # (ledger) source it is refused.
-_CALLER_OVERRIDABLE_CARRY_SOURCES = frozenset({"previous_filing", "relation_prefill"})
+_CALLER_OVERRIDABLE_CARRY_SOURCES: frozenset[BindingSourceKind] = frozenset(
+    {BindingSourceKind.PREVIOUS_FILING, BindingSourceKind.RELATION_PREFILL},
+)
 
 
 def calculate_modelo_revision(
@@ -941,11 +944,15 @@ def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
         )
 
 
-def _source_owned_binding_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[BindingId]:
+def _source_owned_binding_ids(
+    revision: ModeloRevision, owned_sources: frozenset[BindingSourceKind]
+) -> frozenset[BindingId]:
     return frozenset(binding.id for binding in revision.bindings if binding.source in owned_sources)
 
 
-def _source_owned_bound_casilla_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[CasillaId]:
+def _source_owned_bound_casilla_ids(
+    revision: ModeloRevision, owned_sources: frozenset[BindingSourceKind]
+) -> frozenset[CasillaId]:
     source_owned_binding_ids = _source_owned_binding_ids(revision, owned_sources)
     return frozenset(
         casilla.id
@@ -957,7 +964,7 @@ def _source_owned_bound_casilla_ids(revision: ModeloRevision, owned_sources: fro
 def _reject_caller_overrides_of_source_bindings(
     *,
     revision: ModeloRevision,
-    owned_sources: frozenset[str],
+    owned_sources: frozenset[BindingSourceKind],
     caller_binding_values: Mapping[BindingId, Decimal],
     caller_casilla_inputs: Mapping[CasillaId, Decimal],
 ) -> None:
