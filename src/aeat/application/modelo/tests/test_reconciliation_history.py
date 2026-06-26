@@ -31,8 +31,8 @@ from ...user_profile._testing import register_minimal_profile
 from ...workflow._persistence import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
+    ModeloReconciliationEvidenceKind,
     ModeloReconciliationHistoryEntry,
-    ModeloReconciliationSourceKind,
     ModeloReconciliationVerdict,
     list_modelo_reconciliations,
     modelo_reconcile,
@@ -96,7 +96,7 @@ def _reconcile(work_unit_id: str) -> None:
     modelo_reconcile(
         ModeloReconciliationCommand(
             work_unit_id=work_unit_id,
-            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
             source_path=MODELO_130_FIXTURE,
             actor="tester",
         ),
@@ -125,7 +125,7 @@ def test_history_lists_recorded_reconciliations_with_typed_fields() -> None:
     matched = by_unit[matching_unit]
     assert matched.verdict is ModeloReconciliationVerdict.MATCHES
     assert matched.diff_count == 0
-    assert matched.source_kind is ModeloReconciliationSourceKind.JUSTIFICANTE
+    assert matched.source_kind is ModeloReconciliationEvidenceKind.JUSTIFICANTE
     assert matched.actor == "tester"
     assert matched.source_path.endswith("modelo_130_2026Q1.pdf")
 

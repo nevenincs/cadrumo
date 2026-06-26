@@ -232,7 +232,7 @@ def reconcile_file_verb(
     """Reconcile a work unit against a local justificante PDF file."""
     from ...application.modelo import (
         ModeloReconciliationCommand,
-        ModeloReconciliationSourceKind,
+        ModeloReconciliationEvidenceKind,
         modelo_reconcile,
     )
 
@@ -249,7 +249,7 @@ def reconcile_file_verb(
     report = modelo_reconcile(
         ModeloReconciliationCommand(
             work_unit_id=unit.work_unit_id,
-            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
             source_path=file,
             actor=resolved_actor,
         ),

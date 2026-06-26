@@ -21,7 +21,7 @@ from ...user_profile._testing import register_minimal_profile
 from ...workflow._persistence import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationCommand,
-    ModeloReconciliationSourceKind,
+    ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
     ReconciliationCrossBucketRefusedError,
     ReconciliationDeclaracionSourceUnsupportedError,
@@ -91,7 +91,7 @@ def test_modelo_reconcile_matches_when_modelo_and_year_align() -> None:
     report = modelo_reconcile(
         ModeloReconciliationCommand(
             work_unit_id=work_unit_id,
-            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
             source_path=MODELO_130_FIXTURE,
         ),
     )
@@ -110,7 +110,7 @@ def test_modelo_reconcile_mismatches_when_modelo_differs() -> None:
     report = modelo_reconcile(
         ModeloReconciliationCommand(
             work_unit_id=work_unit_id,
-            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
             source_path=MODELO_130_FIXTURE,
         ),
     )
@@ -128,7 +128,7 @@ def test_modelo_reconcile_mismatches_when_period_differs() -> None:
     report = modelo_reconcile(
         ModeloReconciliationCommand(
             work_unit_id=work_unit_id,
-            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
             source_path=MODELO_130_FIXTURE,
         ),
     )
@@ -146,7 +146,7 @@ def test_modelo_reconcile_mismatches_when_profile_tax_id_differs() -> None:
 
     report = _reconcile_parsed_justificante(
         work_unit_id=work_unit_id,
-        source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+        source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
         source_ref=str(MODELO_130_FIXTURE),
         actor="operator",
         justificante=parsed.model_copy(update={"tax_id": "12345678Z"}),
@@ -170,7 +170,7 @@ def test_modelo_reconcile_emits_modelo_reconciled_event() -> None:
     modelo_reconcile(
         ModeloReconciliationCommand(
             work_unit_id=work_unit_id,
-            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
             source_path=MODELO_130_FIXTURE,
         ),
     )
@@ -197,7 +197,7 @@ def test_modelo_reconcile_refuses_declaration_source_until_parser_lands() -> Non
         modelo_reconcile(
             ModeloReconciliationCommand(
                 work_unit_id=work_unit_id,
-                source_kind=ModeloReconciliationSourceKind.DECLARATION,
+                source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
                 source_path=MODELO_130_FIXTURE,
             ),
         )
@@ -212,7 +212,7 @@ def test_modelo_reconcile_refuses_unknown_work_unit() -> None:
         modelo_reconcile(
             ModeloReconciliationCommand(
                 work_unit_id="0" * 64,
-                source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+                source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
                 source_path=MODELO_130_FIXTURE,
             ),
         )
@@ -253,7 +253,7 @@ def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None
         modelo_reconcile(
             ModeloReconciliationCommand(
                 work_unit_id=foreign_unit_id,
-                source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+                source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
                 source_path=MODELO_130_FIXTURE,
             ),
         )
@@ -272,7 +272,7 @@ def test_modelo_reconcile_refuses_malformed_evidence(tmp_path: Path) -> None:
         modelo_reconcile(
             ModeloReconciliationCommand(
                 work_unit_id=work_unit_id,
-                source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+                source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
                 source_path=not_a_justificante,
             ),
         )
@@ -303,7 +303,7 @@ def test_modelo_reconcile_malformed_evidence_refusal_is_clean_and_instructive(
         modelo_reconcile(
             ModeloReconciliationCommand(
                 work_unit_id=work_unit_id,
-                source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+                source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
                 source_path=not_a_justificante,
             ),
         )

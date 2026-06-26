@@ -516,14 +516,14 @@ def reconcile_capture(
     """
     from ..modelo import (
         ModeloReconciliationBytesCommand,
-        ModeloReconciliationSourceKind,
+        ModeloReconciliationEvidenceKind,
         modelo_reconcile_bytes,
     )
 
     return modelo_reconcile_bytes(
         ModeloReconciliationBytesCommand(
             work_unit_id=work_unit_id,
-            source_kind=ModeloReconciliationSourceKind.JUSTIFICANTE,
+            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
             source_bytes=snapshot.decoded_pdf_bytes(),
             source_ref=_capture_secure_reference(snapshot),
             actor=actor,
