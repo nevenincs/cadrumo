@@ -879,7 +879,7 @@ def test_bindings_list_modelo_choice_help_renders_accepted_codes() -> None:
 
 
 def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
-    """The `bindings list` JSON payload is the typed `BindingRowPayload` shape.
+    """The `bindings list` JSON payload is the typed `BindingListRowPayload` shape.
 
     Each binding row carries the typed fields plus the regulatory grounding
     (`legal_refs` / `source_refs`) sourced from the registry binding
