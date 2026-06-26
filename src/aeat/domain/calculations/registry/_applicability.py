@@ -99,7 +99,12 @@ from ...deadlines.taxpayer_model import (
     IrpfIncomeCategory,
     TaxpayerProfile,
 )
-from ._applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict, derive_modelo_202_modality
+from ._applicability_modelo202 import (
+    Modelo202Modality,
+    Modelo202ModalityVerdict,
+    derive_modelo_202_modality,
+    modelo_202_modality_from_inputs,
+)
 from ._applicability_payer_facts import PayerFact, payer_fact_holds
 
 _SEED_COVERAGE_NOTICE = (
@@ -1248,5 +1253,6 @@ __all__ = [
     "derive_tax_route",
     "has_applicability_rule",
     "iter_modelo_applicability_rules",
+    "modelo_202_modality_from_inputs",
     "taxpayer_model_is_declared",
 ]
