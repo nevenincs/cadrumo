@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, load_registry_tree
+from .. import CasillaId, ModeloDefinition, load_registry_tree, validated_casilla_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -26,43 +26,47 @@ _REQUIRED_CUOTA_CHAIN_ARTICLES: frozenset[str] = frozenset(
     },
 )
 
-_MINIMO_PERSONAL_Y_FAMILIAR_TARGETS: frozenset[str] = frozenset(
-    {
+_MINIMO_PERSONAL_Y_FAMILIAR_TARGETS: frozenset[CasillaId] = frozenset(
+    validated_casilla_id(casilla_id, surface="_MINIMO_PERSONAL_Y_FAMILIAR_TARGETS")
+    for casilla_id in (
         "0519",  # Parte estatal: Mínimo personal y familiar
         "0520",  # Importe total incrementado o disminuido del mínimo (autonómica)
-        "0521",  # Mínimo en base liquidable general — gravamen estatal
-        "0522",  # Mínimo en base liquidable del ahorro — gravamen estatal
-        "0523",  # Mínimo en base liquidable general — gravamen autonómica
-        "0524",  # Mínimo en base liquidable del ahorro — gravamen autonómica
-    },
+        "0521",  # Mínimo en base liquidable general - gravamen estatal
+        "0522",  # Mínimo en base liquidable del ahorro - gravamen estatal
+        "0523",  # Mínimo en base liquidable general - gravamen autonómica
+        "0524",  # Mínimo en base liquidable del ahorro - gravamen autonómica
+    )
 )
 
-_BASE_IMPONIBLE_LIQUIDABLE_TARGETS: frozenset[str] = frozenset(
-    {
+_BASE_IMPONIBLE_LIQUIDABLE_TARGETS: frozenset[CasillaId] = frozenset(
+    validated_casilla_id(casilla_id, surface="_BASE_IMPONIBLE_LIQUIDABLE_TARGETS")
+    for casilla_id in (
         "0432",  # Saldo neto rendimientos integrar base imponible general
         "0435",  # Base imponible general
         "0460",  # Base imponible del ahorro
         "0500",  # Base liquidable general
         "0510",  # Base liquidable del ahorro
-    },
+    )
 )
 
-_CUOTA_INTEGRA_TARGETS: frozenset[str] = frozenset(
-    {
-        "0532",  # Cuota base liquidable general — parte estatal
-        "0533",  # Cuota base liquidable general — parte autonómica
+_CUOTA_INTEGRA_TARGETS: frozenset[CasillaId] = frozenset(
+    validated_casilla_id(casilla_id, surface="_CUOTA_INTEGRA_TARGETS")
+    for casilla_id in (
+        "0532",  # Cuota base liquidable general - parte estatal
+        "0533",  # Cuota base liquidable general - parte autonómica
         "0545",  # Cuota íntegra estatal
         "0546",  # Cuota íntegra autonómica
-    },
+    )
 )
 
-_CUOTA_LIQUIDA_TARGETS: frozenset[str] = frozenset(
-    {
+_CUOTA_LIQUIDA_TARGETS: frozenset[CasillaId] = frozenset(
+    validated_casilla_id(casilla_id, surface="_CUOTA_LIQUIDA_TARGETS")
+    for casilla_id in (
         "0570",  # Cuota líquida estatal
         "0571",  # Cuota líquida autonómica
         "0585",  # Cuota líquida estatal incrementada
         "0586",  # Cuota líquida autonómica incrementada
-    },
+    )
 )
 
 _MULTI_YEAR_CUOTA_CHAIN_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024")
@@ -88,11 +92,11 @@ def _modelo_100():
     return next(m for m in modelos if m.id == "100"), _catalogues
 
 
-def _formula_target_casillas_for_revision(modelo: ModeloDefinition, revision_id: str) -> frozenset[str]:
+def _formula_target_casillas_for_revision(modelo: ModeloDefinition, revision_id: str) -> frozenset[CasillaId]:
     revision = modelo.revisions.get(revision_id)
     if revision is None:
         return frozenset()
-    return frozenset(formula.target for formula in revision.formulas)
+    return frozenset(formula.target_casilla_id for formula in revision.formulas)
 
 
 def test_renta_cuota_chain_articles_are_catalogued() -> None:

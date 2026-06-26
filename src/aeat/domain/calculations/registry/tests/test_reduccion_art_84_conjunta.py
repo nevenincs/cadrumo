@@ -25,6 +25,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
+from .. import CasillaId, validated_casilla_id
 
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via _scenarios.
@@ -39,6 +40,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _SOURCE_ROOT = bundled_path()
+_REDUCCION_ART_84_CASILLA: CasillaId = validated_casilla_id("0461", surface="_REDUCCION_ART_84_CASILLA")
 
 _REL_2024 = {
     "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
@@ -115,7 +117,7 @@ def _scenario_2024(
         date_binding_values={"renta-2024-profile-taxpayer-birth-date": date(1980, 6, 15)},
         expected_outputs=(
             RegistryScenarioExpectedOutput(
-                target="0461",
+                target_casilla_id=_REDUCCION_ART_84_CASILLA,
                 value=expected_0461,
                 legal_refs=("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84"),
             ),
@@ -147,7 +149,7 @@ def _scenario_2025(
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 6, 15)},
         expected_outputs=(
             RegistryScenarioExpectedOutput(
-                target="0461",
+                target_casilla_id=_REDUCCION_ART_84_CASILLA,
                 value=expected_0461,
                 legal_refs=("ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84"),
             ),
@@ -243,9 +245,10 @@ def test_0461_anti_tautology_declaration_type_change_2024() -> None:
         registry_root=_REGISTRY_ROOT,
         source_root=_SOURCE_ROOT,
     )
-    assert conjunta_report.calculation.values["0461"] != individual_report.calculation.values["0461"], (
-        "0461 must differ between declaration_type=2 and declaration_type=1"
-    )
+    assert (
+        conjunta_report.calculation.values[_REDUCCION_ART_84_CASILLA]
+        != individual_report.calculation.values[_REDUCCION_ART_84_CASILLA]
+    ), "0461 must differ between declaration_type=2 and declaration_type=1"
 
 
 # ---------------------------------------------------------------------------
@@ -325,6 +328,7 @@ def test_0461_anti_tautology_declaration_type_change_2025() -> None:
         registry_root=_REGISTRY_ROOT,
         source_root=_SOURCE_ROOT,
     )
-    assert conjunta_report.calculation.values["0461"] != individual_report.calculation.values["0461"], (
-        "0461 must differ between declaration_type=2 and declaration_type=1"
-    )
+    assert (
+        conjunta_report.calculation.values[_REDUCCION_ART_84_CASILLA]
+        != individual_report.calculation.values[_REDUCCION_ART_84_CASILLA]
+    ), "0461 must differ between declaration_type=2 and declaration_type=1"

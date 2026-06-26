@@ -6,11 +6,9 @@ loaded through :class:`RentaWebOpenReplayDriver`, fed to
 computed casilla values for the corresponding synthetic scenario.
 
 The test parametrizes over discovered payload files. When the
-directory is empty the test collection is empty too; the
-companion hygiene gate
-``test_every_renta_chain_scenario_has_renta_web_open_replay_payload``
-in :mod:`test_schema_hygiene` warns when scenarios lack payloads
-that should exist.
+directory is empty the test collection is empty too; the formula-target
+coverage gate in :mod:`test_schema_hygiene` validates canonical
+``expected_by_casilla_id`` / ``observed_by_casilla_id`` replay keys.
 """
 
 from __future__ import annotations
@@ -24,6 +22,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
+from .._ids import CasillaId, validated_casilla_id
 from .._remote_state_guard import RemoteStateGuardPolicy, remote_state_policy_from_cross_reference
 from .._renta_web_open_oracle import (
     RentaWebOpenOracle,
@@ -75,18 +74,30 @@ def _open_simulator_policy() -> RemoteStateGuardPolicy:
     return remote_state_policy_from_cross_reference(decision)
 
 
-def _load_expected(payload_path: Path) -> Mapping[str, Decimal]:
-    document = json.loads(payload_path.read_text(encoding="utf-8"))
-    if "expected" not in document or not isinstance(document["expected"], dict):
+def _casilla_id_from_replay_key(value: object, *, payload_path: Path) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
         raise AssertionError(
-            f"replay payload {payload_path.name!r} must declare an 'expected' object "
-            f"that names the casilla values the registry must produce",
+            f"replay payload {payload_path.name!r} expected_by_casilla_id key {value!r} "
+            f"is not a canonical casilla.id",
+        ) from exc
+
+
+def _load_expected(payload_path: Path) -> Mapping[CasillaId, Decimal]:
+    document = json.loads(payload_path.read_text(encoding="utf-8"))
+    if "expected_by_casilla_id" not in document or not isinstance(document["expected_by_casilla_id"], dict):
+        raise AssertionError(
+            f"replay payload {payload_path.name!r} must declare an 'expected_by_casilla_id' object "
+            f"keyed by canonical casilla.id values",
         )
-    expected: dict[str, Decimal] = {}
-    for casilla_id, value in document["expected"].items():
-        if not isinstance(casilla_id, str) or not isinstance(value, str):
-            raise AssertionError(f"replay payload {payload_path.name!r} expected entries must be string keyed strings")
-        expected[casilla_id] = Decimal(value)
+    expected: dict[CasillaId, Decimal] = {}
+    for casilla_id, value in document["expected_by_casilla_id"].items():
+        if not isinstance(value, str):
+            raise AssertionError(
+                f"replay payload {payload_path.name!r} expected_by_casilla_id entries must be string values",
+            )
+        expected[_casilla_id_from_replay_key(casilla_id, payload_path=payload_path)] = Decimal(value)
     return expected
 
 

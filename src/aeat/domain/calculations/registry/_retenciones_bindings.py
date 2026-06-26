@@ -22,7 +22,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ....core import BindingSourceKind
 from ._binding_selector_utils import selector_against_model
-from ._ids import CasillaId
+from ._ids import BindingId, CasillaId
 from ._schema import DataBindingDefinition, ModeloRevision
 
 
@@ -36,7 +36,7 @@ class _RetencionesPerceptorCountProtocol(Protocol):
 class _RetencionesAggregationSelector(BaseModel):
     """Validated form of a ``retenciones_aggregation`` binding selector.
 
-    Carries the target casilla (the annual "número total de perceptores" box) and
+    Carries the target casilla id (the annual "número total de perceptores" box) and
     the single fact this source serves: the distinct perceptor-NIF count. The
     monetary base/retenciones annual totals stay additive ``sum`` relations
     (``calculation-source-canonical-mechanism``); this source serves only the
@@ -45,7 +45,7 @@ class _RetencionesAggregationSelector(BaseModel):
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
-    target_casilla: CasillaId
+    target_casilla_id: CasillaId
     fact: Literal["perceptor_count_distinct"] = "perceptor_count_distinct"
 
 
@@ -62,7 +62,7 @@ def validate_retenciones_aggregation_binding(binding: DataBindingDefinition) -> 
 def resolve_retenciones_aggregation_binding_values(
     revision: ModeloRevision,
     aggregation: _RetencionesPerceptorCountProtocol,
-) -> dict[str, Decimal]:
+) -> dict[BindingId, Decimal]:
     """Materialise every ``retenciones_aggregation`` binding on ``revision``.
 
     Each such binding is the annual perceptor-count box; it materialises the
@@ -72,7 +72,7 @@ def resolve_retenciones_aggregation_binding_values(
     """
     count = Decimal(aggregation.total_perceptors)
     return {
-        str(binding.id): count
+        binding.id: count
         for binding in revision.bindings
         if binding.source == BindingSourceKind.RETENCIONES_AGGREGATION
     }

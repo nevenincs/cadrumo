@@ -20,7 +20,9 @@ from typing import TYPE_CHECKING
 
 from ...modelos._row_models import Modelo232VinculadaRow
 from ._bindings import CasillaObservation
+from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
+from ._ids import CasillaId
 
 if TYPE_CHECKING:
     from ._schema import ModeloRevision
@@ -54,7 +56,7 @@ def materialize_m232_related_party_rows(
     if len(rows) > 5:
         raise RegistryValidationError(f"M232 form supports maximum 5 related-party rows; got {len(rows)}")
 
-    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    revision_casillas_by_id = casillas_by_id(revision)
     observations: list[CasillaObservation] = []
 
     for row_index, row in enumerate(rows, start=1):
@@ -62,7 +64,7 @@ def materialize_m232_related_party_rows(
         row_fields = _extract_row_fields(row, row_slot)
         for field_name, field_value in row_fields.items():
             casilla_id = _resolve_casilla_id_for_field(row_slot, field_name)
-            registry_casilla = casillas_by_id.get(casilla_id)
+            registry_casilla = revision_casillas_by_id.get(casilla_id)
             if registry_casilla is None:
                 raise RegistryValidationError(
                     f"M232 casilla {casilla_id!r} ({row_slot}.{field_name}) not found in revision casillas",
@@ -73,6 +75,7 @@ def materialize_m232_related_party_rows(
                     value=field_value if isinstance(field_value, Decimal) else Decimal(field_value or "0"),
                     formula_id=None,
                     operand_refs=(),
+                    operand_casilla_refs=(),
                     operand_values=(),
                     legal_refs=registry_casilla.legal_refs,
                     source_refs=registry_casilla.source_refs,
@@ -97,7 +100,7 @@ def _extract_row_fields(row: Modelo232VinculadaRow, row_slot: str) -> dict[str, 
     }
 
 
-def _resolve_casilla_id_for_field(row_slot: str, field_name: str) -> str:
+def _resolve_casilla_id_for_field(row_slot: str, field_name: str) -> CasillaId:
     """Map (row_slot, field_name) to the registry casilla ID.
 
     Casilla IDs follow the pattern: {row_slot}-{field_name}

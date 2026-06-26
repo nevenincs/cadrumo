@@ -107,8 +107,8 @@ def test_registry_preserves_conservative_semantics_for_special_categories() -> N
 def test_load_category_profiles_from_manual_rejects_unknown_year() -> None:
     """Unsupported handbook years must fail loud."""
 
-    with pytest.raises(ValueError, match=r"2024|year|unsupported|unknown"):
-        load_category_profiles_from_manual(2024)
+    with pytest.raises(ValueError, match=r"2099|year|unsupported|unknown"):
+        load_category_profiles_from_manual(2099)
 
 
 def test_load_category_profile_file_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:

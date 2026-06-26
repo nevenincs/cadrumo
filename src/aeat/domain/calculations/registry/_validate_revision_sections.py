@@ -34,10 +34,8 @@ from ._validate_record_sections import (
 )
 from ._validate_revision_context import RevisionValidationContext, build_revision_validation_context
 from ._validate_revision_identity import (
-    _emit_casilla_identity_failures,
-    _emit_combined_primary_id_failures,
-    _emit_per_kind_duplicate_failures,
     _emit_revision_payload_failures,
+    revision_reference_identity_failures,
 )
 from ._validate_revision_rules import (
     validate_bracket_table_temporal_coverage,
@@ -111,7 +109,6 @@ def _validate_revision_surface_sections(
         legal_refs=legal_refs,
         source_refs=source_refs,
     )
-
     validate_dependency_classification_section(
         failures,
         prefix=prefix,
@@ -146,7 +143,6 @@ def _validate_revision_surface_sections(
         legal_refs=legal_refs,
         source_refs=source_refs,
     )
-
     validate_export_layout_section(
         failures,
         prefix=prefix,
@@ -264,16 +260,12 @@ def validate_revision_definition(
     prefix = f"modelo {modelo.id} revision {revision.id}"
     failures.extend(_missing_refs(prefix, "revision", revision.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, "revision", revision.source_refs, source_refs, "source"))
-
     context = build_revision_validation_context(revision)
     if not context.ids_by_kind["workbook parity reference"]:
         failures.append(f"{prefix}: revision must declare official workbook parity coverage")
-    _emit_per_kind_duplicate_failures(failures, prefix, context.ids_by_kind)
-    _emit_combined_primary_id_failures(failures, prefix, context.ids_by_kind)
+    failures.extend(revision_reference_identity_failures(prefix, revision))
     _emit_revision_payload_failures(failures, prefix, revision)
-    _emit_casilla_identity_failures(failures, prefix, revision)
     _emit_completeness_gate_failures(failures, prefix, revision)
-
     _validate_revision_surface_sections(
         failures,
         prefix=prefix,

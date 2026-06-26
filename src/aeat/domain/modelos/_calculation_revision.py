@@ -45,12 +45,12 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, override
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
 from .._identifiers import canonical_decimal_string as _canonical_decimal
-from ..calculations.registry import CasillaObservation
+from ..calculations.registry import BindingId, CasillaId, CasillaObservation, RelationId, validated_casilla_id
 from ._errors import ModeloError, ModeloValidationError
 from ._ids import CalculationRevisionId, WorkUnitId
 from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
@@ -91,10 +91,29 @@ _DiscardReason = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
 ]
-_CasillaKey = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
-]
+_BINDING_ID_ADAPTER = TypeAdapter(BindingId)
+_RELATION_ID_ADAPTER = TypeAdapter(RelationId)
+
+
+def _validated_casilla_id(value: object, *, surface: str) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface=surface)
+    except ValueError as exc:
+        raise ModeloValidationError(f"{surface} contains non-canonical casilla.id {value!r}") from exc
+
+
+def _validated_binding_id(value: object, *, surface: str) -> BindingId:
+    try:
+        return _BINDING_ID_ADAPTER.validate_python(value)
+    except ValidationError as exc:
+        raise ModeloValidationError(f"{surface} contains non-canonical binding id {value!r}") from exc
+
+
+def _validated_relation_id(value: object, *, surface: str) -> RelationId:
+    try:
+        return _RELATION_ID_ADAPTER.validate_python(value)
+    except ValidationError as exc:
+        raise ModeloValidationError(f"{surface} contains non-canonical relation id {value!r}") from exc
 
 
 def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, object]]:
@@ -124,12 +143,13 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
 def derive_calculation_revision_id(
     *,
     work_unit_id: str,
-    inputs_snapshot: Mapping[str, str],
-    binding_overrides: Mapping[str, str],
-    casilla_values: Mapping[str, Decimal],
+    input_values_by_casilla_id: Mapping[CasillaId, str],
+    binding_overrides: Mapping[BindingId, str],
+    casilla_values: Mapping[CasillaId, Decimal],
+    relation_overrides: Mapping[RelationId, str] | None = None,
     source_transaction_ids: Sequence[str] = (),
     borrador_snapshot_id: str | None = None,
-    bindings_sourced_from_borrador: Sequence[str] = (),
+    bindings_sourced_from_borrador: Sequence[BindingId] = (),
     detail_rows: Sequence[ModeloDetailRow] = (),
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt.
@@ -149,13 +169,35 @@ def derive_calculation_revision_id(
     """
     payload: dict[str, object] = {
         "work_unit_id": work_unit_id.strip(),
-        "inputs": dict(sorted((k.strip(), v.strip()) for k, v in inputs_snapshot.items())),
-        "overrides": dict(sorted((k.strip(), v.strip()) for k, v in binding_overrides.items())),
+        "inputs": dict(
+            sorted(
+                (_validated_casilla_id(k, surface="input_values_by_casilla_id"), v.strip())
+                for k, v in input_values_by_casilla_id.items()
+            ),
+        ),
+        "overrides": dict(
+            sorted(
+                (_validated_binding_id(k, surface="binding_overrides"), v.strip())
+                for k, v in binding_overrides.items()
+            ),
+        ),
         "outputs": _outputs_for_hash_from_mapping(casilla_values),
         "source_transaction_ids": tuple(sorted(item.strip() for item in source_transaction_ids)),
     }
+    if relation_overrides:
+        payload["relation_overrides"] = dict(
+            sorted(
+                (_validated_relation_id(k, surface="relation_overrides"), v.strip())
+                for k, v in relation_overrides.items()
+            ),
+        )
     normalized_borrador_snapshot_id = borrador_snapshot_id.strip() if borrador_snapshot_id else None
-    normalized_borrador_bindings = tuple(sorted(item.strip() for item in bindings_sourced_from_borrador))
+    normalized_borrador_bindings = tuple(
+        sorted(
+            _validated_binding_id(item, surface="bindings_sourced_from_borrador")
+            for item in bindings_sourced_from_borrador
+        ),
+    )
     if normalized_borrador_snapshot_id is not None:
         payload["borrador_snapshot_id"] = normalized_borrador_snapshot_id
     if normalized_borrador_bindings:
@@ -166,7 +208,7 @@ def derive_calculation_revision_id(
     return content_hash_hex(payload)
 
 
-def _outputs_for_hash_from_mapping(casilla_values: Mapping[str, Decimal]) -> dict[str, str]:
+def _outputs_for_hash_from_mapping(casilla_values: Mapping[CasillaId, Decimal]) -> dict[CasillaId, str]:
     """Canonical ``{casilla_id: canonical_decimal_str}`` projection from the flat mapping.
 
     Pure function — same input → same output, no side effects, no
@@ -177,17 +219,22 @@ def _outputs_for_hash_from_mapping(casilla_values: Mapping[str, Decimal]) -> dic
     envelope into the same canonical form so the validator's
     consistency check is byte-exact.
 
-    Trimmed casilla_id keys, ``_canonical_decimal`` values, sorted by
+    Validated ``casilla_id`` keys, ``_canonical_decimal`` values, sorted by
     casilla_id — matches the original inline projection in
     :func:`derive_calculation_revision_id` byte-for-byte. The
     A hash-stability contract guards this projection.
     """
-    return dict(sorted((k.strip(), _canonical_decimal(v)) for k, v in casilla_values.items()))
+    return dict(
+        sorted(
+            (_validated_casilla_id(k, surface="casilla_values"), _canonical_decimal(v))
+            for k, v in casilla_values.items()
+        ),
+    )
 
 
 def _outputs_for_hash_from_observations(
     observations: Sequence[CasillaObservation],
-) -> dict[str, str]:
+) -> dict[CasillaId, str]:
     """Same canonical projection as :func:`_outputs_for_hash_from_mapping`, sourced from observations.
 
     The typed ``observations`` envelope is the logical source of truth for
@@ -215,13 +262,16 @@ class CalculationRevision(BaseModel):
         work_unit_id: Parent work unit id (also content-addressed).
         state: Lifecycle state from
             :class:`CalculationRevisionState`.
-        inputs_snapshot: Mapping of canonical input casilla values
+        input_values_by_casilla_id: Mapping of canonical input casilla values
             captured at calculation time. The string values are
             decimal strings or short literals from the registry
             input contract.
         binding_overrides: Mapping of operator-supplied binding
             overrides applied during this calculation. Empty when
-            no overrides were used.
+            no binding overrides were used.
+        relation_overrides: Mapping of relation values applied during
+            this calculation. Kept separate from ``binding_overrides`` so
+            BindingId-keyed snapshots never carry RelationId keys.
         source_transaction_ids: Stable ledger transaction ids that
             contributed to this revision through bucket-local
             aggregation. Empty for calculations that did not consume
@@ -257,18 +307,17 @@ class CalculationRevision(BaseModel):
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
     state: CalculationRevisionState
-    inputs_snapshot: Mapping[str, str] = Field(default_factory=dict)
-    binding_overrides: Mapping[str, str] = Field(default_factory=dict)
+    input_values_by_casilla_id: Mapping[CasillaId, str] = Field(default_factory=dict)
+    binding_overrides: Mapping[BindingId, str] = Field(default_factory=dict)
+    relation_overrides: Mapping[RelationId, str] = Field(default_factory=dict)
     source_transaction_ids: tuple[CalculationRevisionId, ...] = Field(default_factory=tuple)
     borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
-    bindings_sourced_from_borrador: tuple[str, ...] = Field(default_factory=tuple)
-    casilla_values: Mapping[str, Decimal] = Field(default_factory=dict)
+    bindings_sourced_from_borrador: tuple[BindingId, ...] = Field(default_factory=tuple)
+    casilla_values: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     # Typed envelope carrying formula provenance for every computed
-    # casilla. Defaults to () so already-persisted revisions remain
-    # loadable. New revisions populate this from the engine's typed
-    # entries so the operand_refs / operand_values / legal_refs /
-    # source_refs trace survives the domain boundary that previously
-    # dropped them when only ``casilla_values`` was persisted.
+    # casilla. Revisions with output values must populate this from the
+    # engine's typed entries so operand_refs, operand_values, legal_refs,
+    # and source_refs survive the domain boundary.
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
     # Immutable content-addressed snapshot of the ledger state this revision was
     # computed from (per the modelo-filing-ledger-snapshot ADR). Captured at
@@ -312,8 +361,9 @@ class CalculationRevision(BaseModel):
     def _enforce_invariants(self) -> CalculationRevision:
         derived = derive_calculation_revision_id(
             work_unit_id=self.work_unit_id,
-            inputs_snapshot=self.inputs_snapshot,
+            input_values_by_casilla_id=self.input_values_by_casilla_id,
             binding_overrides=self.binding_overrides,
+            relation_overrides=self.relation_overrides,
             casilla_values=self.casilla_values,
             source_transaction_ids=self.source_transaction_ids,
             borrador_snapshot_id=self.borrador_snapshot_id,
@@ -325,13 +375,23 @@ class CalculationRevision(BaseModel):
                 f"calculation_revision_id {self.calculation_revision_id!r} does not match "
                 f"the derived id {derived!r} for work_unit_id={self.work_unit_id!r}",
             )
+        overlapping_replay_ids = sorted(set(self.binding_overrides).intersection(self.relation_overrides))
+        if overlapping_replay_ids:
+            raise ModeloValidationError(
+                "calculation revision replay ids must be channel-unique; "
+                f"ids appear in both binding_overrides and relation_overrides: {overlapping_replay_ids!r}",
+            )
         # The typed `observations` envelope is the logical source of truth;
         # the flat `casilla_values` field is a denormalised cache enforced
-        # equal to the projection of observations. When observations is
-        # populated, the two MUST agree byte-for-byte (same canonical
-        # projection used by the hash). A mismatch means save/load drift or
-        # a caller passed inconsistent payload — fail at construction time
-        # rather than at the next hash mismatch downstream.
+        # equal to the projection of observations. A non-empty flat map
+        # without observations is an incomplete revision, not a legacy shape
+        # to tolerate in this unreleased project.
+        if self.casilla_values and not self.observations:
+            raise ModeloValidationError(
+                "calculation revision with casilla_values must carry typed observations; "
+                "pass CasillaObservation rows as the canonical source so legal_refs, "
+                "source_refs, and formula provenance survive the domain boundary.",
+            )
         if self.observations:
             projected = _outputs_for_hash_from_observations(self.observations)
             persisted = _outputs_for_hash_from_mapping(self.casilla_values)

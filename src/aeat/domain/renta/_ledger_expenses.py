@@ -11,6 +11,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo
+from ..calculations.registry import CasillaId
 from ..categories import (
     CategoryCitation,
     CategoryProfile,
@@ -31,7 +32,7 @@ EUR_CURRENCY: Literal["EUR"] = "EUR"
 # of truth lives in ``_first_slice_routing.py`` so the validator path
 # (this module) and any future snapshot-time integrity gate consult
 # the same Mapping without risk of divergence.
-RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, str] = FIRST_SLICE_EXPENSE_CASILLAS
+RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, CasillaId] = FIRST_SLICE_EXPENSE_CASILLAS
 
 
 class RentaExpenseDirection(StrEnum):
@@ -190,7 +191,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     period: Literal["0A"] = "0A"
     tax_year: int = Field(ge=2000, le=2099)
     activity_key: str = Field(min_length=1, max_length=128)
-    target_casilla: str = Field(min_length=4, max_length=4)
+    target_casilla_id: CasillaId
     transaction_id: str = Field(min_length=1, max_length=128)
     invoice_id: str | None = Field(default=None, min_length=1, max_length=128)
     catalogue_id: str = Field(min_length=1, max_length=128)
@@ -227,8 +228,8 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     def _validate_period_and_invoice_state(self) -> RentaDeductibleExpenseObservation:
         if self.category_family is not family_for(self.category):
             raise RentaValidationError("category_family must match category")
-        if self.target_casilla != RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.get(self.category):
-            raise RentaValidationError("target_casilla must match the first-slice category mapping")
+        if self.target_casilla_id != RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.get(self.category):
+            raise RentaValidationError("target_casilla_id must match the first-slice category mapping")
         if not (date(self.tax_year, 1, 1) <= self.filing_date < date(self.tax_year + 1, 1, 1)):
             raise RentaValidationError("filing_date must fall inside the observation tax year")
         if self.invoice_id is None and self.invoice_issue_date is not None:
@@ -347,8 +348,8 @@ def build_renta_deductible_expense_observation(
         raise RentaValidationError(f"ineligible deductibility result cannot become an observation: {result.reason}")
     if fact.category is not result.category:
         raise RentaValidationError("fact and result categories must match")
-    target_casilla = RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.get(fact.category)
-    if target_casilla is None:
+    target_casilla_id = RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.get(fact.category)
+    if target_casilla_id is None:
         raise RentaValidationError(f"category {fact.category.value!r} is outside the first Renta expense slice")
     if not (date(tax_year, 1, 1) <= fact.filing_date < date(tax_year + 1, 1, 1)):
         raise RentaValidationError("fact filing date falls outside the requested tax year")
@@ -364,7 +365,7 @@ def build_renta_deductible_expense_observation(
         observation_id=_observation_id(fact),
         tax_year=tax_year,
         activity_key=fact.activity_key,
-        target_casilla=target_casilla,
+        target_casilla_id=target_casilla_id,
         transaction_id=fact.transaction_id,
         invoice_id=fact.invoice_id,
         catalogue_id=fact.catalogue_id,

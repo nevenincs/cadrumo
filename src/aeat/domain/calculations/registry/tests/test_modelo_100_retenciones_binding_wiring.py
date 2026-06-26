@@ -2,7 +2,7 @@
 
 Before this fix, casillas 0596 and 0597 in the 2024 revision had no
 ``input_kind = "bound"`` and no ``binding`` field, so
-``_resolve_bound_casilla_inputs_for_available_bindings`` silently skipped them.
+``resolve_available_bound_inputs_by_casilla_id`` silently skipped them.
 The binding value was accepted without error but never reached the formula engine,
 so 0609 (total pagos a cuenta) and 0610 (cuota diferencial) were computed wrong.
 
@@ -28,15 +28,24 @@ from decimal import Decimal
 
 import pytest
 
-from .. import RegistrySnapshot, calculate_registry_snapshot
+from .. import BindingId, CasillaId, RegistrySnapshot, RelationId, calculate_registry_snapshot, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_DATE_CONTEXT_2024 = {"filing_period": date(2024, 12, 31)}
-_DATE_BINDINGS_2024 = {"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)}
+_M100_MINIMO_PERSONAL_CASILLA: CasillaId = validated_casilla_id("0003", surface="_M100_MINIMO_PERSONAL_CASILLA")
+_M100_RETENCIONES_M111_CASILLA: CasillaId = validated_casilla_id("0596", surface="_M100_RETENCIONES_M111_CASILLA")
+_M100_RETENCIONES_M123_CASILLA: CasillaId = validated_casilla_id("0597", surface="_M100_RETENCIONES_M123_CASILLA")
+_M100_TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = validated_casilla_id(
+    "0609",
+    surface="_M100_TOTAL_PAGOS_A_CUENTA_CASILLA",
+)
+_M100_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id("0610", surface="_M100_CUOTA_DIFERENCIAL_CASILLA")
 
-_RELATION_VALUES_2024 = {
+_DATE_CONTEXT_2024 = {"filing_period": date(2024, 12, 31)}
+_DATE_BINDINGS_2024: dict[BindingId, date] = {"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)}
+
+_RELATION_VALUES_2024: dict[RelationId, Decimal] = {
     "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
     "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
@@ -47,7 +56,7 @@ _RELATION_VALUES_2024 = {
 }
 
 
-def _base_binding_values(*, m111: Decimal = Decimal("0"), m123: Decimal = Decimal("0")) -> dict[str, Decimal]:
+def _base_binding_values(*, m111: Decimal = Decimal("0"), m123: Decimal = Decimal("0")) -> dict[BindingId, Decimal]:
     return {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2024-modelo-111-retenciones-periodicas": m111,
@@ -86,7 +95,7 @@ def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot: Reg
     m123_retenciones = Decimal("3800.00")
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
-        inputs={"0003": Decimal("0")},
+        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m123=m123_retenciones),
@@ -94,8 +103,8 @@ def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot: Reg
         date_binding_values=_DATE_BINDINGS_2024,
     )
 
-    assert result.values["0597"] == m123_retenciones, (
-        f"casilla 0597 = {result.values['0597']!r}; expected {m123_retenciones!r} "
+    assert result.values[_M100_RETENCIONES_M123_CASILLA] == m123_retenciones, (
+        f"casilla 0597 = {result.values[_M100_RETENCIONES_M123_CASILLA]!r}; expected {m123_retenciones!r} "
         f"from binding renta-2024-modelo-123-retenciones-periodicas. "
         "Check 2024/casillas/0579-0597.toml: must have "
         'input_kind = "bound" and binding = "renta-2024-modelo-123-retenciones-periodicas".'
@@ -112,7 +121,7 @@ def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot: Reg
     m111_retenciones = Decimal("6000.00")
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
-        inputs={"0003": Decimal("0")},
+        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m111=m111_retenciones),
@@ -120,8 +129,8 @@ def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot: Reg
         date_binding_values=_DATE_BINDINGS_2024,
     )
 
-    assert result.values["0596"] == m111_retenciones, (
-        f"casilla 0596 = {result.values['0596']!r}; expected {m111_retenciones!r} "
+    assert result.values[_M100_RETENCIONES_M111_CASILLA] == m111_retenciones, (
+        f"casilla 0596 = {result.values[_M100_RETENCIONES_M111_CASILLA]!r}; expected {m111_retenciones!r} "
         f"from binding renta-2024-modelo-111-retenciones-periodicas. "
         "Check 2024/casillas/0578-0596.toml: must have "
         'input_kind = "bound" and binding = "renta-2024-modelo-111-retenciones-periodicas".'
@@ -139,7 +148,7 @@ def test_m123_retenciones_flows_into_0609_total_pagos_a_cuenta(m100_2024_snapsho
     m123_retenciones = Decimal("3800.00")
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
-        inputs={"0003": Decimal("0")},
+        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m123=m123_retenciones),
@@ -148,8 +157,8 @@ def test_m123_retenciones_flows_into_0609_total_pagos_a_cuenta(m100_2024_snapsho
     )
 
     # 0609 = sum of all retenciones operands; only 0597 is non-zero here.
-    assert result.values["0609"] == m123_retenciones, (
-        f"casilla 0609 = {result.values['0609']!r}; expected {m123_retenciones!r}. "
+    assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == m123_retenciones, (
+        f"casilla 0609 = {result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]!r}; expected {m123_retenciones!r}. "
         "With only renta-2024-modelo-123-retenciones-periodicas supplied "
         "and all other retenciones operands zero, "
         "0609 (total pagos a cuenta) must equal the M123 binding value."
@@ -165,7 +174,7 @@ def test_zero_m123_retenciones_gives_zero_0597(m100_2024_snapshot: RegistrySnaps
     """
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
-        inputs={"0003": Decimal("0")},
+        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m123=Decimal("0")),
@@ -173,8 +182,8 @@ def test_zero_m123_retenciones_gives_zero_0597(m100_2024_snapshot: RegistrySnaps
         date_binding_values=_DATE_BINDINGS_2024,
     )
 
-    assert result.values["0597"] == Decimal("0"), (
-        f"casilla 0597 = {result.values['0597']!r}; expected 0.00 when M123 binding is zero."
+    assert result.values[_M100_RETENCIONES_M123_CASILLA] == Decimal("0"), (
+        f"casilla 0597 = {result.values[_M100_RETENCIONES_M123_CASILLA]!r}; expected 0.00 when M123 binding is zero."
     )
 
 
@@ -187,7 +196,7 @@ def test_m123_retenciones_change_reflects_proportionally_in_0610(m100_2024_snaps
     """
     result_low = calculate_registry_snapshot(
         m100_2024_snapshot,
-        inputs={"0003": Decimal("0")},
+        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m123=Decimal("1000.00")),
@@ -196,7 +205,7 @@ def test_m123_retenciones_change_reflects_proportionally_in_0610(m100_2024_snaps
     )
     result_high = calculate_registry_snapshot(
         m100_2024_snapshot,
-        inputs={"0003": Decimal("0")},
+        inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m123=Decimal("2000.00")),
@@ -204,9 +213,16 @@ def test_m123_retenciones_change_reflects_proportionally_in_0610(m100_2024_snaps
         date_binding_values=_DATE_BINDINGS_2024,
     )
 
-    delta_0597 = result_high.values["0597"] - result_low.values["0597"]
-    delta_0609 = result_high.values["0609"] - result_low.values["0609"]
-    delta_0610 = result_low.values["0610"] - result_high.values["0610"]
+    delta_0597 = (
+        result_high.values[_M100_RETENCIONES_M123_CASILLA] - result_low.values[_M100_RETENCIONES_M123_CASILLA]
+    )
+    delta_0609 = (
+        result_high.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]
+        - result_low.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]
+    )
+    delta_0610 = (
+        result_low.values[_M100_CUOTA_DIFERENCIAL_CASILLA] - result_high.values[_M100_CUOTA_DIFERENCIAL_CASILLA]
+    )
 
     assert delta_0597 == Decimal("1000.00"), (
         f"expected 0597 to increase by 1000 when M123 binding increases by 1000, got delta={delta_0597!r}"

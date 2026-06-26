@@ -7,7 +7,9 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .._bindings import CasillaObservation, RegistryModeloObservation
+from .....tests.registry_observations import registry_grounded_modelo_observation
+from .. import CasillaId, validated_casilla_id
+from .._bindings import RegistryModeloObservation
 from .._loader import load_registry_tree
 from .._relations import resolve_relation_values_from_observations
 from .._schema import ModeloDefinition, ModeloRevision
@@ -15,6 +17,10 @@ from .._schema import ModeloDefinition, ModeloRevision
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
+_M111_RETENCIONES_PERIODO_CASILLA: CasillaId = validated_casilla_id(
+    "01",
+    surface="test_modelo_chain_resolution M111 retenciones periodo casilla",
+)
 
 
 def _modelo(modelo_id: str) -> ModeloDefinition:
@@ -29,21 +35,21 @@ def _revision(modelo_id: str, revision_id: str) -> ModeloRevision:
 def _quarterly_filings(
     modelo_id: str,
     filing_year: int,
-    casilla_quarters: dict[str, dict[str, Decimal]],
+    casilla_quarters: dict[CasillaId, dict[str, Decimal]],
 ) -> tuple[RegistryModeloObservation, ...]:
     """Build one ``RegistryModeloObservation`` per quarter from a per-quarter casilla map."""
 
     periods = {"1T", "2T", "3T", "4T"}
-    by_period: dict[str, dict[str, Decimal]] = {p: {} for p in periods}
+    by_period: dict[str, dict[CasillaId, Decimal]] = {p: {} for p in periods}
     for casilla_id, quarter_values in casilla_quarters.items():
         for period, value in quarter_values.items():
             by_period[period][casilla_id] = value
     return tuple(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo=modelo_id,
             filing_year=filing_year,
             period=period,
-            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in values.items()),
+            casilla_values=values,
         )
         for period, values in by_period.items()
     )
@@ -69,7 +75,12 @@ def test_chain_resolution_obeys_target_period_under_non_annual_call() -> None:
     # Even with full quarterly observations, asking for period "1T" must
     # return nothing — the receiver's relations all target "0A".
     casilla_quarters = {
-        "01": {"1T": Decimal("1"), "2T": Decimal("1"), "3T": Decimal("1"), "4T": Decimal("1")},
+        _M111_RETENCIONES_PERIODO_CASILLA: {
+            "1T": Decimal("1"),
+            "2T": Decimal("1"),
+            "3T": Decimal("1"),
+            "4T": Decimal("1"),
+        },
     }
     observations = _quarterly_filings("111", 2026, casilla_quarters)
 

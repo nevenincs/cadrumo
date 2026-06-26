@@ -37,6 +37,7 @@ from ....adapters.persistence.storage.crypto._encrypted_columns import (
 from ....adapters.persistence.storage.sql._orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import BindingSourceKind, Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry._schema import RegistrySnapshotRef
 from .._repository import ModeloDraftRepository
@@ -51,6 +52,10 @@ from .._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "filing-binding-provenance"
+_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
+    "03",
+    surface="_M130_RENDIMIENTO_NETO_CASILLA",
+)
 
 
 def _populated_draft() -> ModeloDraft:
@@ -77,7 +82,7 @@ def _populated_draft() -> ModeloDraft:
         status=ModeloDraftStatus.BORRADOR,
         values=(
             ModeloValue(
-                casilla_id="03",
+                casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
                 value=Decimal("8400.00"),
                 kind=ModeloValueKind.LITERAL,
                 source="user-supplied",
@@ -90,7 +95,7 @@ def _populated_draft() -> ModeloDraft:
                 kind=ModeloValueKind.LITERAL,
                 source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
                 legal_refs=("ley-35-2006:art-27", "ley-35-2006:art-28"),
-                source_refs=("AEAT.M130.2025.ingresos", "AEAT.M130.instrucciones"),
+                source_refs=("aeat-m130-2025-ingresos", "aeat-m130-instrucciones"),
                 row_index=1,
             ),
             ModeloBindingValue(
@@ -99,7 +104,7 @@ def _populated_draft() -> ModeloDraft:
                 kind=ModeloValueKind.LITERAL,
                 source=BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
                 legal_refs=("ley-35-2006:art-30",),
-                source_refs=("AEAT.M130.2025.gastos",),
+                source_refs=("aeat-m130-2025-gastos",),
             ),
         ),
         casilla_provenance=(),
@@ -130,7 +135,7 @@ def test_binding_value_provenance_roundtrips_through_encrypted_boundary(
             income = by_id["modelo-130-ingresos-ledger"]
             assert income.source is BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
             assert income.legal_refs == ("ley-35-2006:art-27", "ley-35-2006:art-28")
-            assert income.source_refs == ("AEAT.M130.2025.ingresos", "AEAT.M130.instrucciones")
+            assert income.source_refs == ("aeat-m130-2025-ingresos", "aeat-m130-instrucciones")
         finally:
             profile.repository._engine.dispose()
 

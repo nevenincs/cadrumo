@@ -183,7 +183,7 @@ def validate_reconciliation_total_closure(scope: str, revision: ModeloRevision) 
     failures: list[str] = []
     declared: dict[str, str] = {}
     for expectation in revision.verification_expectations:
-        for total_kind, casilla_id in expectation.reconciliation_totals.items():
+        for total_kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
             previous = declared.get(total_kind)
             if previous is not None and previous != casilla_id:
                 failures.append(

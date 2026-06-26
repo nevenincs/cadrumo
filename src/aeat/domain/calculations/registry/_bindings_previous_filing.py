@@ -6,6 +6,7 @@ Use of :class:`ModeloRevision` for compliance.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal, Protocol
 
@@ -17,6 +18,7 @@ from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model, unique_tuple
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
+from ._ids import BindingId, CasillaId
 from ._period_offset_math import apply_period_offset
 from ._schema import DataBindingDefinition, ModeloRevision, filing_period_from_scope
 
@@ -27,7 +29,7 @@ class _RegistryModeloObservationLike(Protocol):
     period: str
 
     @property
-    def casilla_values(self) -> Mapping[str, Decimal]: ...
+    def casilla_values(self) -> Mapping[CasillaId, Decimal]: ...
 
 
 class RegistryModeloObservationRequirement(BaseModel):
@@ -39,10 +41,29 @@ class RegistryModeloObservationRequirement(BaseModel):
     filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=8)
-    binding_ids: tuple[str, ...] = Field(min_length=1)
-    source_casillas: tuple[str, ...] = Field(min_length=1)
+    binding_ids: tuple[BindingId, ...] = Field(min_length=1)
+    source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
 
-    _values_unique = field_validator("binding_ids", "source_casillas")(unique_tuple("observation requirement tuple"))
+    _values_unique = field_validator("binding_ids", "source_casilla_ids")(unique_tuple("observation requirement tuple"))
+
+
+@dataclass(frozen=True, slots=True)
+class PreviousFilingSourceReference:
+    """Canonical source reference extracted from a typed previous-filing selector."""
+
+    source_modelo: str
+    required_periods: tuple[str, ...]
+    source_casilla_ids: tuple[CasillaId, ...]
+
+
+def previous_filing_source_reference(binding: DataBindingDefinition) -> PreviousFilingSourceReference:
+    """Return the typed source reference for a ``previous_filing`` binding."""
+    selector = _previous_filing_selector(binding)
+    return PreviousFilingSourceReference(
+        source_modelo=selector.source_modelo,
+        required_periods=selector.required_periods,
+        source_casilla_ids=_previous_filing_source_ids(selector),
+    )
 
 
 def previous_filing_observation_requirements(
@@ -55,7 +76,8 @@ def previous_filing_observation_requirements(
 
     Use of :class:`ModeloRevision` for compliance.
     """
-    grouped: dict[tuple[str, int, str], dict[str, set[str]]] = {}
+    binding_ids_by_key: dict[tuple[str, int, str], set[BindingId]] = {}
+    source_casilla_ids_by_key: dict[tuple[str, int, str], set[CasillaId]] = {}
     for binding in revision.bindings:
         if binding.source != "previous_filing":
             continue
@@ -65,23 +87,25 @@ def previous_filing_observation_requirements(
         for period_year_delta, required_period in selector.required_period_anchors_for_target(period):
             expected_year = filing_year + selector.filing_year_delta + period_year_delta
             key = (selector.source_modelo, expected_year, required_period)
-            bucket = grouped.setdefault(key, {"binding_ids": set(), "source_casillas": set()})
-            bucket["binding_ids"].add(binding.id)
-            bucket["source_casillas"].update(_previous_filing_source_ids(selector))
+            binding_ids_by_key.setdefault(key, set()).add(binding.id)
+            source_casilla_ids_by_key.setdefault(key, set()).update(_previous_filing_source_ids(selector))
     return tuple(
         RegistryModeloObservationRequirement(
             modelo=modelo,
             filing_period=filing_period_from_scope(expected_year, required_period),
             filing_year=expected_year,
             period=required_period,
-            binding_ids=tuple(sorted(values["binding_ids"])),
-            source_casillas=tuple(sorted(values["source_casillas"])),
+            binding_ids=tuple(sorted(binding_ids_by_key[(modelo, expected_year, required_period)])),
+            source_casilla_ids=tuple(sorted(source_casilla_ids_by_key[(modelo, expected_year, required_period)])),
         )
-        for (modelo, expected_year, required_period), values in sorted(grouped.items())
+        for modelo, expected_year, required_period in sorted(binding_ids_by_key)
     )
 
 
-def _optional_source_casilla_ids(binding: DataBindingDefinition, selector: _PreviousModeloSelector) -> frozenset[str]:
+def _optional_source_casilla_ids(
+    binding: DataBindingDefinition,
+    selector: _PreviousModeloSelector,
+) -> frozenset[CasillaId]:
     """Return the source casillas a prior observation may legitimately omit.
 
     For the ``prior_pagos_fraccionados`` op (AEAT Modelo 130 casilla 05) the
@@ -196,13 +220,13 @@ def resolve_previous_filing_binding_values(
     *,
     filing_year: int,
     period: str,
-) -> dict[str, Decimal]:
+) -> dict[BindingId, Decimal]:
     """Resolve direct previous-filing bindings from observed filed declarations.
 
     Use of :class:`ModeloRevision` for compliance.
     """
     available = tuple(observations)
-    resolved: dict[str, Decimal] = {}
+    resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
         if binding.source != "previous_filing":
             continue
@@ -214,7 +238,7 @@ def resolve_previous_filing_binding_values(
         resolved[binding.id] = _aggregate_previous_filing_binding(
             binding,
             values,
-            source_casillas=_previous_filing_source_ids(_previous_filing_selector(binding)),
+            source_casilla_ids=_previous_filing_source_ids(_previous_filing_selector(binding)),
         )
     return resolved
 
@@ -228,8 +252,8 @@ class _PreviousModeloSelector(BaseModel):
     source_periods: tuple[str, ...] = ()
     source_period_offset_from_target: int | None = None
     prior_quarter_expanding_span: bool = False
-    source_casillas: tuple[str, ...] = ()
-    source_output: str | None = Field(default=None, min_length=1)
+    source_casilla_ids: tuple[CasillaId, ...] = ()
+    source_casilla_id: CasillaId | None = None
     max_year_delta: int | None = None
     grouping: Literal["per_grupo_member"] | None = None
 
@@ -273,11 +297,11 @@ class _PreviousModeloSelector(BaseModel):
             raise RegistryValidationError("previous-filing period must be non-empty")
         return value
 
-    @field_validator("source_casillas")
+    @field_validator("source_casilla_ids")
     @classmethod
-    def _source_casillas_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+    def _source_casilla_ids_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         if len(set(value)) != len(value):
-            raise RegistryValidationError("previous-filing source_casillas entries must be unique")
+            raise RegistryValidationError("previous-filing source_casilla_ids entries must be unique")
         return value
 
     @model_validator(mode="after")
@@ -304,7 +328,7 @@ class _PreviousModeloSelector(BaseModel):
             and not self.source_periods
             and self.source_period_offset_from_target is None
             and not self.prior_quarter_expanding_span
-            and self.source_casillas
+            and self.source_casilla_ids
         ):
             raise RegistryValidationError(
                 "previous-filing selector must declare period, source_periods, "
@@ -314,18 +338,26 @@ class _PreviousModeloSelector(BaseModel):
 
     @model_validator(mode="after")
     def _validate_source_spec(self) -> _PreviousModeloSelector:
-        if self.source_casillas and self.source_output is not None:
+        if self.source_casilla_ids and self.source_casilla_id is not None:
             raise RegistryValidationError(
-                "previous-filing selector cannot declare both source_casillas and source_output",
+                "previous-filing selector cannot declare both source_casilla_ids and source_casilla_id",
             )
         return self
 
 
 def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousModeloSelector:
+    selector = _selector_as_dict(binding)
     try:
-        return _PreviousModeloSelector.model_validate(_selector_as_dict(binding))
+        return _PreviousModeloSelector.model_validate(selector)
     except ValueError as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed previous-filing selector") from exc
+        hint = ""
+        if "source_casillas" in selector:
+            hint = "; use source_casilla_ids, not source_casillas"
+        elif "source_output" in selector:
+            hint = "; use source_casilla_id, not source_output"
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed previous-filing selector: {exc}{hint}",
+        ) from exc
 
 
 _PREVIOUS_FILING_OPS: frozenset[BindingAggregationOp] = frozenset(
@@ -388,18 +420,18 @@ def validate_previous_filing_binding(binding: DataBindingDefinition) -> list[str
 
 def _is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
     selector = _selector_as_dict(binding)
-    if selector.get("source_casillas"):
+    if selector.get("source_casilla_ids"):
         return True
-    if selector.get("source_output") is None:
+    if selector.get("source_casilla_id") is None:
         return False
     return any(key in selector for key in ("period", "source_periods", "source_period_offset_from_target"))
 
 
-def _previous_filing_source_ids(selector: _PreviousModeloSelector) -> tuple[str, ...]:
-    if selector.source_casillas:
-        return selector.source_casillas
-    if selector.source_output is not None:
-        return (selector.source_output,)
+def _previous_filing_source_ids(selector: _PreviousModeloSelector) -> tuple[CasillaId, ...]:
+    if selector.source_casilla_ids:
+        return selector.source_casilla_ids
+    if selector.source_casilla_id is not None:
+        return (selector.source_casilla_id,)
     return ()
 
 
@@ -439,7 +471,7 @@ def _aggregate_previous_filing_binding(
     binding: DataBindingDefinition,
     values: list[Decimal],
     *,
-    source_casillas: tuple[str, ...] = (),
+    source_casilla_ids: tuple[CasillaId, ...] = (),
 ) -> Decimal:
     op = binding_aggregation_op(binding)
     if op == BindingAggregationOp.SUM:
@@ -449,7 +481,7 @@ def _aggregate_previous_filing_binding(
             raise RegistryValidationError(f"binding {binding.id!r} copy aggregation requires one source casilla")
         return values[0]
     if op == BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS:
-        return _aggregate_prior_pagos_fraccionados(binding, values, source_casillas=source_casillas)
+        return _aggregate_prior_pagos_fraccionados(binding, values, source_casilla_ids=source_casilla_ids)
     raise RegistryValidationError(f"binding {binding.id!r} uses unsupported previous-filing aggregation {op.value!r}")
 
 
@@ -457,14 +489,14 @@ def _aggregate_prior_pagos_fraccionados(
     binding: DataBindingDefinition,
     values: list[Decimal],
     *,
-    source_casillas: tuple[str, ...],
+    source_casilla_ids: tuple[CasillaId, ...],
 ) -> Decimal:
     """Compute the AEAT Modelo 130 casilla-05 identity from per-anchor pairs.
 
     casilla 05 = SUM over prior quarters q of max(0, casilla 07_q)
                  minus SUM over the same q of casilla 16_q
 
-    The flat ``values`` list carries per-anchor groups in ``source_casillas``
+    The flat ``values`` list carries per-anchor groups in ``source_casilla_ids``
     order (``[07_q1, 16_q1, 07_q2, 16_q2, ...]``); the op slices that grouping,
     applies the positive-part to the first casilla (07) PER QUARTER before
     summing, and subtracts the sum of the second casilla (16). Both terms are
@@ -472,12 +504,12 @@ def _aggregate_prior_pagos_fraccionados(
     and the prior casilla-16 minoración is never dropped (per the
     aeat-modelo-130-instructions verbatim rule).
     """
-    if len(source_casillas) != 2:
+    if len(source_casilla_ids) != 2:
         raise RegistryValidationError(
             f"binding {binding.id!r} prior_pagos_fraccionados aggregation requires exactly two "
-            f"source casillas (positive-part casilla then minoracion casilla); got {source_casillas!r}",
+            f"source casillas (positive-part casilla then minoracion casilla); got {source_casilla_ids!r}",
         )
-    group_size = len(source_casillas)
+    group_size = len(source_casilla_ids)
     if len(values) % group_size != 0:
         raise RegistryValidationError(
             f"binding {binding.id!r} prior_pagos_fraccionados aggregation expected per-quarter pairs; "

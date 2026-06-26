@@ -52,7 +52,7 @@ def test_modelo_193_copies_three_relations_into_three_output_casillas() -> None:
     # Graph-wiring assertions — each output casilla must declare an
     # op=copy formula sourcing the matching 123 relation. A swapped
     # source or flipped operator fails here before threading.
-    formulas_by_target = {f.target: f for f in revision.formulas}
+    formulas_by_target = {f.target_casilla_id: f for f in revision.formulas}
     expected_wiring = {
         "decl.total-perceptores": "modelo-193-rel-123-perceptores-anual",
         "decl.base-total": "modelo-193-rel-123-base-anual",

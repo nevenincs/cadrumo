@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 from ....core import Modelo
+from ._ids import CasillaId
 
 if TYPE_CHECKING:
     from ._snapshot import RegistrySnapshot
@@ -31,7 +32,7 @@ class CrossDomainSnapshotCheck(Protocol):
     and returns a list of failure strings (empty when consistent).
     """
 
-    def __call__(self, modelo_id: str, casilla_ids: frozenset[str]) -> list[str]: ...
+    def __call__(self, modelo_id: str, casilla_ids: frozenset[CasillaId]) -> list[str]: ...
 
 
 _CROSS_DOMAIN_SNAPSHOT_CHECKS: list[CrossDomainSnapshotCheck] = []
@@ -51,7 +52,7 @@ def register_cross_domain_snapshot_check(check: CrossDomainSnapshotCheck) -> Non
 class _SnapshotReferenceChecker(Protocol):
     prefix: str
     failures: list[str]
-    casilla_ids: set[str]
+    casilla_ids: set[CasillaId]
 
 
 def check_cross_domain_snapshot_routing(

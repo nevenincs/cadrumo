@@ -19,6 +19,7 @@ from ._cross_revision_divergence import (
     _revisions_overlap,
 )
 from ._errors import RegistryValidationError
+from ._ids import CasillaId
 from ._schema import (
     CasillaContinuidadEvolutionDefinition,
     ModeloDefinition,
@@ -67,7 +68,7 @@ def _validate_cross_revision_casilla_consistency(
     that needs explicit handling (either deprecate-and-rename or
     reconcile-to-canonical-form), never silent acceptance.
     """
-    failures: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
+    failures: dict[tuple[str, CasillaId, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
     for divergence in _iter_cross_revision_casilla_divergences(modelos):
         if not divergence.revisions_overlap:
             continue
@@ -93,7 +94,7 @@ def _validate_strict_cross_revision_casilla_continuity(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[str, ...]:
     """Enforce explicit continuity decisions for opted-in declared surfaces."""
-    failures: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
+    failures: dict[tuple[str, CasillaId, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
     semantic_failures: list[str] = []
     for modelo in modelos:
         semantic_failures.extend(_validate_strict_continuity_evolution_references(modelo))
@@ -286,7 +287,7 @@ def _has_declared_continuity_surface(divergence: CrossRevisionCasillaDivergence)
 
 def _format_strict_continuity_failure(
     modelo_id: str,
-    casilla_id: str,
+    casilla_id: CasillaId,
     left_revision_id: str,
     right_revision_id: str,
     divergences: Iterable[CrossRevisionCasillaDivergence],
@@ -309,7 +310,7 @@ def _format_strict_continuity_failure(
 
 def _format_cross_revision_failure(
     modelo_id: str,
-    casilla_id: str,
+    casilla_id: CasillaId,
     left_revision_id: str,
     divergences: Iterable[CrossRevisionCasillaDivergence],
 ) -> str:

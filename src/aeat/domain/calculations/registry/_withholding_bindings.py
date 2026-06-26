@@ -18,6 +18,7 @@ from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
 from ._errors import RegistryValidationError
+from ._ids import BindingId
 from ._schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
@@ -86,7 +87,7 @@ class WithholdingObservationRequirement(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    binding_ids: tuple[str, ...] = Field(min_length=1)
+    binding_ids: tuple[BindingId, ...] = Field(min_length=1)
     claves: tuple[str, ...] = ()
 
     _values_unique = field_validator("binding_ids", "claves")(unique_tuple("withholding requirement tuple"))
@@ -159,7 +160,7 @@ def withholding_binding_requirements(
 
     Uses :class:`ModeloRevision` for binding introspection.
     """
-    grouped: dict[tuple[str, ...], set[str]] = {}
+    grouped: dict[tuple[str, ...], set[BindingId]] = {}
     for binding in revision.bindings:
         if binding.source != RowSetGroupingKind.WITHHOLDING:
             continue
@@ -189,13 +190,13 @@ def _filter_withholding_observations(
 def resolve_withholding_binding_values(
     revision: ModeloRevision,
     observations: Iterable[WithholdingObservation],
-) -> dict[str, Decimal]:
+) -> dict[BindingId, Decimal]:
     """Resolve scalar withholding-source bindings into Decimal aggregates.
 
     Use of :class:`ModeloRevision` for compliance.
     """
     available = tuple(observations)
-    resolved: dict[str, Decimal] = {}
+    resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
         if binding.source != RowSetGroupingKind.WITHHOLDING:
             continue
@@ -223,13 +224,13 @@ def resolve_withholding_binding_values(
 def resolve_withholding_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[WithholdingObservation],
-) -> dict[tuple[str, int], Decimal | str]:
+) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer withholding bindings into per-row indexed values.
 
     Use of :class:`ModeloRevision` for compliance.
     """
     available = tuple(observations)
-    resolved: dict[tuple[str, int], Decimal | str] = {}
+    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     cohorts: dict[
         tuple[_WithholdingGrouping, tuple[str, ...]],
         list[tuple[DataBindingDefinition, _WithholdingSelector]],

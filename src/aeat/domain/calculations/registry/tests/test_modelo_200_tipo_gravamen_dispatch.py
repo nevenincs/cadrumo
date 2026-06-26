@@ -37,7 +37,7 @@ from functools import lru_cache
 import pytest
 
 from .....core.resources import bundled_path
-from .. import build_snapshot, load_registry_tree
+from .. import CasillaId, build_snapshot, load_registry_tree, validated_casilla_id
 from .._errors import RegistryValidationError
 from .._formula_runtime import calculate_registry_snapshot
 from .._schema import ParameterDefinition
@@ -46,6 +46,35 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _DISPATCH_BINDING = "modelo-200-2024-profile-legal-entity-form"
+_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
+_M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
+    "DP200013:00417",
+    surface="_M200_CORRECCIONES_AUMENTO_CASILLA",
+)
+_M200_CORRECCIONES_DISMINUCION_CASILLA: CasillaId = validated_casilla_id(
+    "DP200013:00418",
+    surface="_M200_CORRECCIONES_DISMINUCION_CASILLA",
+)
+_M200_RESERVA_CAPITALIZACION_CASILLA: CasillaId = validated_casilla_id(
+    "01032",
+    surface="_M200_RESERVA_CAPITALIZACION_CASILLA",
+)
+_M200_BIN_APLICADA_CASILLA: CasillaId = validated_casilla_id("DP200014:00547", surface="_M200_BIN_APLICADA_CASILLA")
+_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:01033",
+    surface="_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA",
+)
+_M200_BONIFICACIONES_CASILLA: CasillaId = validated_casilla_id("DP200014:01034", surface="_M200_BONIFICACIONES_CASILLA")
+_M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:01766",
+    surface="_M200_CUOTA_LIQUIDA_POSITIVA_CASILLA",
+)
+_M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:01784",
+    surface="_M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA",
+)
+_M200_TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("DP200014:00558", surface="_M200_TIPO_GRAVAMEN_CASILLA")
+_M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", surface="_M200_CUOTA_INTEGRA_CASILLA")
 
 
 # Both M202 pagos-fraccionados fold relations (modalidad 40.2 casilla 03 + 40.3 casilla 34)
@@ -54,6 +83,21 @@ _M200_PAGOS_RELATIONS_ZERO = {
     "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
     "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
 }
+
+
+def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
+    return {
+        _M200_RESULTADO_CONTABLE_CASILLA: base,
+        _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
+        _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
+        _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
+        _M200_BIN_APLICADA_CASILLA: Decimal("0"),
+        _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
+        _M200_BONIFICACIONES_CASILLA: Decimal("0"),
+        _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
+        _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
+    }
+
 
 @lru_cache(maxsize=1)
 def _load_modelo_200():
@@ -189,13 +233,7 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
     scalar parameter, so 00558 — and the cuota íntegra 00562 derived
     from it — changes accordingly.
     """
-    base_inputs = {
-        "00501": Decimal("1000000"),
-        "DP200014:01033": Decimal("0"),
-        "DP200014:01034": Decimal("0"),
-        "DP200014B:01766": Decimal("0"),
-        "DP200014B:01784": Decimal("0"),
-    }
+    base_inputs = _base_inputs(Decimal("1000000"))
 
     def _cuota_for(form: str) -> tuple[Decimal, Decimal]:
         result = calculate_registry_snapshot(
@@ -213,7 +251,7 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
             relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
             date_context={"filing_period": date(2024, 12, 31)},
         )
-        return result.values["DP200014:00558"], result.values["DP200014:00562"]
+        return result.values[_M200_TIPO_GRAVAMEN_CASILLA], result.values[_M200_CUOTA_INTEGRA_CASILLA]
 
     sl_rate, sl_cuota = _cuota_for("sl")
     sa_rate, _ = _cuota_for("sa")
@@ -246,13 +284,7 @@ def test_tipo_gravamen_dispatch_raises_when_legal_entity_form_is_unsupplied() ->
     with pytest.raises(RegistryValidationError, match="has no supplied value"):
         calculate_registry_snapshot(
             _snapshot(),
-            inputs={
-                "00501": Decimal("1000000"),
-                "DP200014:01033": Decimal("0"),
-                "DP200014:01034": Decimal("0"),
-                "DP200014B:01766": Decimal("0"),
-                "DP200014B:01784": Decimal("0"),
-            },
+            inputs=_base_inputs(Decimal("1000000")),
             binding_values={
                 "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
                 "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
@@ -277,13 +309,7 @@ def test_tipo_gravamen_dispatch_raises_on_unrecognised_legal_entity_form() -> No
     with pytest.raises(RegistryValidationError, match="missing key"):
         calculate_registry_snapshot(
             _snapshot(),
-            inputs={
-                "00501": Decimal("1000000"),
-                "DP200014:01033": Decimal("0"),
-                "DP200014:01034": Decimal("0"),
-                "DP200014B:01766": Decimal("0"),
-                "DP200014B:01784": Decimal("0"),
-            },
+            inputs=_base_inputs(Decimal("1000000")),
             enum_binding_values={_DISPATCH_BINDING: "unknown_form"},
             binding_values={
                 "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
@@ -343,13 +369,7 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
     tipo formula must detect the INCN threshold and select the ERD
     parameter. Aitor Etxegarai oracle: SAL INCN 850.000 → 23 %.
     """
-    base_inputs = {
-        "00501": Decimal("1000000"),
-        "DP200014:01033": Decimal("0"),
-        "DP200014:01034": Decimal("0"),
-        "DP200014B:01766": Decimal("0"),
-        "DP200014B:01784": Decimal("0"),
-    }
+    base_inputs = _base_inputs(Decimal("1000000"))
     common_bindings = {
         "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
         "modelo-200-2024-profile-incn-prior-12-months": Decimal("850000"),
@@ -376,14 +396,14 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
         date_context={"filing_period": date(2024, 12, 31)},
     )
 
-    assert result_sal.values["DP200014:00558"] == Decimal("23"), (
+    assert result_sal.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("23"), (
         "SAL with INCN 850k must display tipo 23 % (Ley 31/2022 ERD)"
     )
-    assert result_sl.values["DP200014:00558"] == Decimal("23"), (
+    assert result_sl.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("23"), (
         "SL with INCN 850k must display tipo 23 % (Ley 31/2022 ERD)"
     )
     # Cuota integra: 1.000.000 base x 23 % = 230.000.
-    assert result_sal.values["DP200014:00562"] == Decimal("230000.00"), (
+    assert result_sal.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("230000.00"), (
         "SAL cuota integra at ERD 23 % on 1M base = 230.000"
     )
 
@@ -396,13 +416,7 @@ def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> 
     anti-tautology companion to the ERD test: crossing the 1M boundary
     changes the dispatched rate.
     """
-    base_inputs = {
-        "00501": Decimal("1000000"),
-        "DP200014:01033": Decimal("0"),
-        "DP200014:01034": Decimal("0"),
-        "DP200014B:01766": Decimal("0"),
-        "DP200014B:01784": Decimal("0"),
-    }
+    base_inputs = _base_inputs(Decimal("1000000"))
 
     result = calculate_registry_snapshot(
         _snapshot(),
@@ -419,10 +433,10 @@ def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> 
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2024, 12, 31)},
     )
-    assert result.values["DP200014:00558"] == Decimal("25"), (
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25"), (
         "SA with INCN 1.5M must display tipo 25 % (above ERD threshold)"
     )
-    assert result.values["DP200014:00562"] == Decimal("250000.00")
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00")
 
 
 def test_new_entity_flag_overrides_erd_threshold() -> None:
@@ -432,13 +446,7 @@ def test_new_entity_flag_overrides_erd_threshold() -> None:
     applies the 15 % new-entity rate, not the 23 % ERD rate. The
     new-entity lane is the outermost predicate in the tipo formula.
     """
-    base_inputs = {
-        "00501": Decimal("500000"),
-        "DP200014:01033": Decimal("0"),
-        "DP200014:01034": Decimal("0"),
-        "DP200014B:01766": Decimal("0"),
-        "DP200014B:01784": Decimal("0"),
-    }
+    base_inputs = _base_inputs(Decimal("500000"))
 
     result = calculate_registry_snapshot(
         _snapshot(),
@@ -455,10 +463,12 @@ def test_new_entity_flag_overrides_erd_threshold() -> None:
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2024, 12, 31)},
     )
-    assert result.values["DP200014:00558"] == Decimal("15"), (
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("15"), (
         "new-entity flag must override ERD lane: tipo = 15 %, not 23 %"
     )
-    assert result.values["DP200014:00562"] == Decimal("75000.00"), "cuota integra at 15 % on 500k base = 75.000"
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("75000.00"), (
+        "cuota integra at 15 % on 500k base = 75.000"
+    )
 
 
 def test_cooperativa_retains_20_percent_even_when_incn_below_1m() -> None:
@@ -468,13 +478,7 @@ def test_cooperativa_retains_20_percent_even_when_incn_below_1m() -> None:
     regime. A cooperativa fiscalmente protegida with INCN 500k must still
     pay 20 %, not 23 %.
     """
-    base_inputs = {
-        "00501": Decimal("1000000"),
-        "DP200014:01033": Decimal("0"),
-        "DP200014:01034": Decimal("0"),
-        "DP200014B:01766": Decimal("0"),
-        "DP200014B:01784": Decimal("0"),
-    }
+    base_inputs = _base_inputs(Decimal("1000000"))
 
     result = calculate_registry_snapshot(
         _snapshot(),
@@ -491,4 +495,6 @@ def test_cooperativa_retains_20_percent_even_when_incn_below_1m() -> None:
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2024, 12, 31)},
     )
-    assert result.values["DP200014:00558"] == Decimal("20"), "cooperativa with INCN 500k must retain 20 %, not ERD 23 %"
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("20"), (
+        "cooperativa with INCN 500k must retain 20 %, not ERD 23 %"
+    )

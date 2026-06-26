@@ -10,6 +10,7 @@ from __future__ import annotations
 import re as _re
 from collections.abc import Mapping
 
+from ._ids import CasillaId
 from ._schema import (
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     LegalReference,
@@ -136,7 +137,7 @@ def _roll_forward_balances_predicate_arity_failures(
     prefix: str,
     owner: str,
     expression: str,
-    casillas: set[str],
+    casillas: set[CasillaId],
 ) -> list[str]:
     """Return failures for a malformed ``roll_forward_balances`` predicate."""
     match = _ROLL_FORWARD_BALANCES_PREDICATE.match(expression.strip())
@@ -163,7 +164,7 @@ def validate_verification_expectation_section(
     *,
     prefix: str,
     revision: ModeloRevision,
-    casillas: set[str],
+    casillas: set[CasillaId],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
 ) -> None:
@@ -171,17 +172,17 @@ def validate_verification_expectation_section(
         owner = f"verification expectation {expectation.id}"
         failures.extend(_missing_refs(prefix, owner, expectation.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, expectation.source_refs, source_refs, "source"))
-        for casilla_id in expectation.computed_casillas:
+        for casilla_id in expectation.computed_casilla_ids:
             if casilla_id not in casillas:
                 failures.append(f"{prefix}: {owner} references unknown casilla {casilla_id!r}")
-        for total_kind, casilla_id in expectation.reconciliation_totals.items():
+        for total_kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
             if casilla_id not in casillas:
                 failures.append(
                     f"{prefix}: {owner} reconciliation total {total_kind!r} references unknown casilla {casilla_id!r}",
                 )
-            if casilla_id not in expectation.computed_casillas:
+            if casilla_id not in expectation.computed_casilla_ids:
                 failures.append(
-                    f"{prefix}: {owner} reconciliation total {total_kind!r} must be one of computed_casillas",
+                    f"{prefix}: {owner} reconciliation total {total_kind!r} must be one of computed_casilla_ids",
                 )
 
     for predicate in revision.verification_predicates:

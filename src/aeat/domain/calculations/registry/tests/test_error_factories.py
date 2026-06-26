@@ -17,8 +17,13 @@ from __future__ import annotations
 import pytest
 
 from .._errors import RegistrySnapshotError, RegistryValidationError
+from .._ids import CasillaId, validated_casilla_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+_REFERENCED_BEFORE_EVALUATION_CASILLA: CasillaId = validated_casilla_id(
+    "0719",
+    surface="_REFERENCED_BEFORE_EVALUATION_CASILLA",
+)
 
 
 def test_for_unsupported_op_pins_op_key() -> None:
@@ -103,12 +108,14 @@ def test_for_relation_value_missing_pins_relation_id() -> None:
 
 
 def test_for_casilla_referenced_before_evaluation_pins_casilla_id() -> None:
-    err = RegistryValidationError.for_casilla_referenced_before_evaluation(casilla_id="0719")
-    assert err.context == {"casilla_id": "0719"}
+    err = RegistryValidationError.for_casilla_referenced_before_evaluation(
+        casilla_id=_REFERENCED_BEFORE_EVALUATION_CASILLA,
+    )
+    assert err.context == {"casilla_id": _REFERENCED_BEFORE_EVALUATION_CASILLA}
 
 
-def test_for_unknown_input_casillas_sorts_and_joins() -> None:
-    err = RegistryValidationError.for_unknown_input_casillas(casilla_ids=("9999999", "0001", "0002"))
+def test_for_unknown_input_casilla_ids_sorts_and_joins() -> None:
+    err = RegistryValidationError.for_unknown_input_casilla_ids(casilla_ids=("9999999", "0001", "0002"))
     assert err.context == {"casilla_ids": "0001,0002,9999999"}
     assert err.translated_message == "errors.calc.unknown_input_casillas"
 

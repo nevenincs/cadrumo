@@ -9,18 +9,19 @@ from __future__ import annotations
 
 from graphlib import CycleError, TopologicalSorter
 
+from ._ids import BindingId, CasillaId, RelationId
 from ._runtime_graph import expression_casilla_refs
 from ._schema import FormulaExpression, ModeloRevision
 
 
 def validate_formula_dag(scope: str, revision: ModeloRevision) -> list[str]:
-    formula_targets = {formula.target for formula in revision.formulas}
+    formula_targets = {formula.target_casilla_id for formula in revision.formulas}
     sorter: TopologicalSorter[str] = TopologicalSorter()
     for formula in revision.formulas:
         dependencies = [
             casilla for casilla in expression_casilla_refs(formula.expression) if casilla in formula_targets
         ]
-        sorter.add(formula.target, *dependencies)
+        sorter.add(formula.target_casilla_id, *dependencies)
     try:
         tuple(sorter.static_order())
     except CycleError as exc:
@@ -33,14 +34,14 @@ def validate_formula_expression(
     formula_id: str,
     expression: FormulaExpression,
     *,
-    casillas: set[str],
-    bindings: set[str],
+    casillas: set[CasillaId],
+    bindings: set[BindingId],
     parameters: set[str],
-    relations: set[str],
+    relations: set[RelationId],
 ) -> list[str]:
     failures: list[str] = []
-    if expression.casilla is not None and expression.casilla not in casillas:
-        failures.append(f"{scope}: formula {formula_id!r} references unknown casilla {expression.casilla!r}")
+    if expression.casilla_id is not None and expression.casilla_id not in casillas:
+        failures.append(f"{scope}: formula {formula_id!r} references unknown casilla {expression.casilla_id!r}")
     if expression.binding is not None and expression.binding not in bindings:
         failures.append(f"{scope}: formula {formula_id!r} references unknown binding {expression.binding!r}")
     if expression.parameter is not None and expression.parameter not in parameters:

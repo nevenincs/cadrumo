@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
+from ._bindings import binding_source_casilla_ids
+from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
+from ._ids import CasillaId
 from ._record_design_schema import RecordDesignSheet
 from ._runtime_graph import expression_casilla_refs
-from ._schema import CasillaDefinition, DataBindingDefinition, ModeloRevision
+from ._schema import CasillaDefinition, ModeloRevision
 
 
 def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
@@ -28,17 +31,21 @@ def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
 # called only by manifest-authoring scripts, the off-load-path coverage
 # report, and the drift re-verification test.
 #
-# - ``calculation_closure_identities`` enumerates a revision's
-#   calculation closure keyed on each closure casilla's own registry
-#   ``(segmento, number)`` identity. It is vocabulary-agnostic: it works
-#   for Modelo 200's five-digit AEAT Diseño tags and equally for the
-#   semantic-slug and short-ordinal casilla numbers the other
-#   calculation-bearing modelos use.
+# - ``calculation_closure_casilla_ids`` enumerates a revision's calculation
+#   closure as canonical ``casilla.id`` values only. Reference tokens that do
+#   not name a declared casilla id remain unresolved and fail the manifest
+#   derivation instead of being reinterpreted as display metadata.
+#
+# - ``calculation_closure_record_design_metadata`` projects that canonical
+#   closure through each closure casilla's own registry ``(segmento, number)``
+#   metadata. This metadata is reviewed against Diseño where needed, while
+#   the manifest row also carries the canonical ``casilla.id`` that consumers
+#   resolve.
 #
 # - ``derive_calculation_completeness_casillas`` derives the
 #   *calculation-completeness manifest* casilla set from that closure:
-#   the modelo's calculation surface keyed on the registry identity each
-#   closure casilla declares. For a multi-segment modelo it optionally
+#   the modelo's calculation surface keyed on canonical ``casilla.id`` and
+#   carrying the registry metadata each closure casilla declares. For a multi-segment modelo it optionally
 #   verifies the derived record segments against the AEAT Diseño de
 #   Registros. This is the set the load-blocking completeness gate
 #   enforces.
@@ -63,15 +70,19 @@ the ``(segmento, number)`` casilla set.
 
 @dataclass(frozen=True)
 class DerivedDisenoCasilla:
-    """One ``(segmento, number)`` casilla derived from an AEAT Diseño workbook.
+    """One casilla derived from a registry closure or AEAT Diseño workbook.
 
     ``segmento`` carries the AEAT record-segment code (the workbook sheet
     name) for multi-segment modelos and is ``None`` for single-segment
-    modelos. ``number`` is the bare five-digit AEAT casilla number.
+    modelos. ``number`` is the registry/display metadata under review.
+    ``casilla_id`` is present only when the row came from a registry
+    calculation closure; full-Diseño coverage rows may have no registry
+    casilla yet and therefore leave it unset.
     """
 
     segmento: str | None
     number: str
+    casilla_id: CasillaId | None = None
 
 
 def _selector_is_cross_modelo(selector: Mapping[str, object], modelo_id: str) -> bool:
@@ -81,7 +92,7 @@ def _selector_is_cross_modelo(selector: Mapping[str, object], modelo_id: str) ->
     *cross-modelo* when it explicitly names a ``source_modelo`` that is
     not the modelo whose closure is being derived. A selector that omits
     ``source_modelo``, or sets it equal to ``modelo_id``, is a
-    *within-modelo* selector: its ``source_casillas`` / ``source_output``
+    *within-modelo* selector: its ``source_casilla_ids`` / ``source_casilla_id``
     name casillas on the modelo being derived (a ``previous_filing``
     self-binding or a ``previous_period`` self-relation), and those
     casillas belong in the modelo's own calculation closure.
@@ -92,28 +103,17 @@ def _selector_is_cross_modelo(selector: Mapping[str, object], modelo_id: str) ->
     return str(source_modelo) != modelo_id
 
 
-def _binding_selector_tokens(binding: DataBindingDefinition) -> Iterator[str]:
-    source_casillas = binding.selector.get("source_casillas")
-    if isinstance(source_casillas, tuple):
-        for token in source_casillas:
-            if isinstance(token, str):
-                yield token
-    source_output = binding.selector.get("source_output")
-    if isinstance(source_output, str):
-        yield source_output
-
-
 def _walk_calculation_closure(
     revision: ModeloRevision,
     modelo_id: str,
     *,
-    visit_token: Callable[[str], None],
+    visit_token: Callable[[CasillaId], None],
     visit_endpoint: Callable[[CasillaDefinition], None],
 ) -> None:
     """Walk the within-modelo calculation closure, dispatching each member.
 
-    Shared by :func:`calculation_closure_numbers` and
-    :func:`calculation_closure_identities`; ``visit_endpoint`` receives every
+    Shared by :func:`calculation_closure_casilla_ids` and
+    :func:`calculation_closure_record_design_metadata`; ``visit_endpoint`` receives every
     formula/binding endpoint casilla and ``visit_token`` every referenced
     casilla token (formula targets, transitive expression refs,
     verification-expectation operands, and within-modelo binding/relation
@@ -123,53 +123,53 @@ def _walk_calculation_closure(
         if casilla.formula is not None or casilla.binding is not None:
             visit_endpoint(casilla)
     for formula in revision.formulas:
-        visit_token(formula.target)
+        visit_token(formula.target_casilla_id)
         for ref in expression_casilla_refs(formula.expression):
             visit_token(ref)
     for expectation in revision.verification_expectations:
-        for ref in expectation.computed_casillas:
+        for ref in expectation.computed_casilla_ids:
             visit_token(ref)
-        for ref in expectation.reconciliation_totals.values():
+        for ref in expectation.reconciliation_total_casilla_ids.values():
             visit_token(ref)
     for binding in revision.bindings:
         if _selector_is_cross_modelo(binding.selector, modelo_id):
             continue
-        for token in _binding_selector_tokens(binding):
+        for token in binding_source_casilla_ids(binding):
             visit_token(token)
     for relation in revision.relations:
         if relation.source_modelo == modelo_id:
-            visit_token(relation.source_output)
+            visit_token(relation.source_casilla_id)
 
 
-def calculation_closure_numbers(revision: ModeloRevision, modelo_id: str) -> frozenset[str]:
-    """Return the bare casilla numbers in a revision's calculation closure.
+def calculation_closure_casilla_ids(revision: ModeloRevision, modelo_id: str) -> frozenset[CasillaId]:
+    """Return canonical casilla ids in a revision's calculation closure.
 
     The *calculation closure* is the set of casillas the cross-connecting
     calculation engine traverses **within this modelo revision**:
 
-    - every ``formula.target`` casilla;
+    - every ``formula.target_casilla_id`` casilla;
     - every casilla referenced inside any ``formula.expression``, walked
       transitively via the runtime-graph ``expression_casilla_refs``
       walker;
     - every casilla that declares a ``formula`` (a computed endpoint) or
       a ``binding`` (a bound endpoint) — the engine-visible casillas;
     - every verification-expectation operand casilla
-      (``computed_casillas`` and the ``reconciliation_totals`` targets);
-    - every *within-modelo* binding ``source_casillas`` / ``source_output``
+      (``computed_casilla_ids`` and the ``reconciliation_total_casilla_ids`` targets);
+    - every *within-modelo* binding ``source_casilla_ids`` / ``source_casilla_id``
       selector casilla, and every *within-modelo*
-      ``RelationDefinition.source_output``.
+      ``RelationDefinition.source_casilla_id``.
 
-    A binding ``source_casillas`` / ``source_output`` selector — and a
-    ``RelationDefinition.source_output`` — is excluded from this closure
+    A binding ``source_casilla_ids`` / ``source_casilla_id`` selector — and a
+    ``RelationDefinition.source_casilla_id`` — is excluded from this closure
     **only when it is genuinely cross-modelo**: when the selector
     explicitly names a ``source_modelo`` that differs from ``modelo_id``.
-    A cross-modelo selector's ``source_casillas`` / ``source_output``
+    A cross-modelo selector's ``source_casilla_ids`` / ``source_casilla_id``
     name casillas on that *foreign* modelo, not on the modelo whose
     closure is being derived; the cross-modelo edge enters the current
     modelo through the *bound* casilla — the current-modelo casilla that
     declares the binding (or, for a relation, ``relation.target_binding``)
     — which is already counted above as a binding endpoint. Folding a
-    foreign-modelo casilla number into this closure would make the
+    foreign-modelo casilla id into this closure would make the
     completeness gate demand it from the wrong modelo's registry.
 
     A selector that omits ``source_modelo`` or sets it equal to
@@ -178,13 +178,11 @@ def calculation_closure_numbers(revision: ModeloRevision, modelo_id: str) -> fro
     on the modelo being derived, so that casilla is a genuine closure
     member and is kept.
 
-    References are reduced to bare casilla numbers: a reference token may
-    be either a casilla ``id`` or a bare ``number``, and a declared
-    casilla's ``id`` is mapped back to its ``number`` so the closure is
-    expressed in the AEAT bare-number vocabulary the Diseño uses. A
-    reference token that matches no declared casilla is kept verbatim so
-    a calculation that names a casilla the registry never declared — the
-    Modelo 200 defect class — still surfaces in the closure.
+    References are not normalised through record-design metadata. A formula,
+    binding, relation, or verification token must already be the canonical
+    ``casilla.id`` for this revision. A reference token that matches no
+    declared casilla id is kept verbatim so the manifest derivation and
+    registry validation fail loudly on the unresolved canonical reference.
 
     Args:
         revision: The :class:`ModeloRevision` whose formula and binding graph
@@ -192,26 +190,26 @@ def calculation_closure_numbers(revision: ModeloRevision, modelo_id: str) -> fro
         modelo_id: The AEAT modelo identifier used to exclude cross-modelo
             selector casillas from the closure.
     """
-    id_to_number = {casilla.id: casilla.number for casilla in revision.casillas}
-    closure: set[str] = set()
+    closure: set[CasillaId] = set()
     _walk_calculation_closure(
         revision,
         modelo_id,
-        visit_token=lambda token: closure.add(id_to_number.get(token, token)),
-        visit_endpoint=lambda casilla: closure.add(casilla.number),
+        visit_token=closure.add,
+        visit_endpoint=lambda casilla: closure.add(casilla.id),
     )
     return frozenset(closure)
 
 
-def calculation_closure_identities(revision: ModeloRevision, modelo_id: str) -> frozenset[tuple[str | None, str]]:
-    """Return the ``(segmento, number)`` identities in a revision's calculation closure.
+def calculation_closure_record_design_metadata(
+    revision: ModeloRevision,
+    modelo_id: str,
+) -> frozenset[tuple[str | None, str]]:
+    """Return the ``(segmento, number)`` metadata in a revision's calculation closure.
 
-    Identity-preserving counterpart of :func:`calculation_closure_numbers`.
-    Where the bare-number closure reduces every reference to its casilla
-    ``number`` — which discards the record segment a multi-segment modelo
-    needs — this function resolves each reference token to the *declared
-    casilla* it names and keeps that casilla's full
-    ``(segmento, number)`` identity.
+    Metadata projection of :func:`calculation_closure_casilla_ids`. The
+    canonical closure never resolves through ``casilla.number``; this function
+    resolves each canonical id token to the declared casilla it names and keeps
+    that casilla's ``(segmento, number)`` record-design metadata.
 
     Args:
         revision: The :class:`ModeloRevision` whose calculation closure to derive.
@@ -224,55 +222,39 @@ def calculation_closure_identities(revision: ModeloRevision, modelo_id: str) -> 
     verification-expectation operands, and within-modelo binding /
     relation source casillas; only genuinely cross-modelo selectors —
     those whose ``source_modelo`` differs from ``modelo_id`` — are
-    excluded, see :func:`calculation_closure_numbers`). A reference token
-    is resolved against both the casilla ``id`` index and the casilla
-    ``number`` index:
+    excluded, see :func:`calculation_closure_casilla_ids`). A reference token
+    is resolved against the casilla ``id`` index only:
 
     - a token that matches a casilla ``id`` resolves to that exact
-      casilla's identity — this is how a multi-segment modelo's formulas,
+      casilla's metadata — this is how a multi-segment modelo's formulas,
       which reference casillas by the segment-carrying composite ``id``
       (e.g. ``DP200014:00562``), pin the closure to the correct record
       segment;
-    - a token that matches a casilla ``number`` resolves to every
-      casilla declared under that number (one for a single-segment
-      modelo; possibly several for a multi-segment modelo that reuses the
-      number across segments);
     - a token that resolves to no declared casilla is kept as a bare
-      ``(None, token)`` identity so a calculation that names a casilla
-      the registry never declared still surfaces in the closure.
+      ``(None, token)`` metadata placeholder so a calculation that names a
+      casilla the registry never declared still surfaces in the closure.
 
-    This is the identity vocabulary the calculation-completeness manifest
-    is keyed on, and it is vocabulary-agnostic: it works for the
-    five-digit AEAT Diseño tags of Modelo 200 and equally for the
-    semantic-slug and short-ordinal casilla numbers the other
-    calculation-bearing modelos use.
+    The calculation-completeness manifest is keyed on canonical
+    ``casilla.id`` and carries this metadata only for review and Diseño
+    drift checks.
     """
-    by_id = {casilla.id: casilla for casilla in revision.casillas}
-    by_number: dict[str, list[CasillaDefinition]] = {}
-    for casilla in revision.casillas:
-        by_number.setdefault(casilla.number, []).append(casilla)
+    by_id = casillas_by_id(revision)
+    metadata: set[tuple[str | None, str]] = set()
 
-    identities: set[tuple[str | None, str]] = set()
-
-    def _resolve(token: str) -> None:
+    def _resolve(token: CasillaId) -> None:
         casilla = by_id.get(token)
         if casilla is not None:
-            identities.add((casilla.segmento, casilla.number))
+            metadata.add((casilla.segmento, casilla.number))
             return
-        declared = by_number.get(token)
-        if declared:
-            for occurrence in declared:
-                identities.add((occurrence.segmento, occurrence.number))
-            return
-        identities.add((None, token))
+        metadata.add((None, token))
 
     _walk_calculation_closure(
         revision,
         modelo_id,
         visit_token=_resolve,
-        visit_endpoint=lambda casilla: identities.add((casilla.segmento, casilla.number)),
+        visit_endpoint=lambda casilla: metadata.add((casilla.segmento, casilla.number)),
     )
-    return frozenset(identities)
+    return frozenset(metadata)
 
 
 def derive_calculation_completeness_casillas(
@@ -285,36 +267,36 @@ def derive_calculation_completeness_casillas(
     r"""Return the calculation-completeness manifest casilla set for a revision.
 
     Derives the modelo's *calculation closure*
-    (:func:`calculation_closure_numbers`) and keys each closure casilla
-    on its **own registry ``(segmento, number)`` identity**. The closure
+    (:func:`calculation_closure_casilla_ids`) and carries each closure casilla's
+    own registry ``(segmento, number)`` metadata. The closure
     bounds the manifest to exactly the casillas the cross-connecting
-    calculation engine traverses; the registry's own declared identity —
-    not a five-digit AEAT Diseño tag — names each casilla.
+    calculation engine traverses; the registry's canonical ``casilla.id`` —
+    not a five-digit AEAT Diseño tag — names each manifest entry.
 
     This derivation is *vocabulary-agnostic*. Only Modelo 200's registry
     casilla ``number``\\ s are genuine five-digit AEAT Diseño tags; the
     other calculation-bearing modelos identify casillas by semantic slug
     (``iva.cuota-devengada-total``) or short ordinal (``01``-``19``). The
     manifest is therefore derived from the modelo's calculation surface
-    keyed on the registry identity each closure casilla declares, so a
-    manifest can be authored for any calculation-bearing modelo
-    regardless of its casilla vocabulary.
+    keyed on canonical ``casilla.id`` and carrying the registry metadata
+    each closure casilla declares, so it can be authored for any
+    calculation-bearing modelo regardless of its casilla vocabulary.
 
     For a ``multi_segment`` modelo the result is *segment-aware*. A
     multi-segment modelo reuses the same casilla number across distinct
     record segments and its formulas reference casillas by the
-    segment-carrying composite ``id``, so the identity-preserving closure
-    (:func:`calculation_closure_identities`) already pins each closure
+    segment-carrying composite ``id``, so the metadata-preserving closure
+    (:func:`calculation_closure_record_design_metadata`) already pins each closure
     casilla to the exact record segment the calculation surface uses.
-    When ``diseno_path`` is supplied each segment-scoped identity is
+    When ``diseno_path`` is supplied each segment-scoped metadata pair is
     additionally **verified against the AEAT Diseño de Registros**: the
     Diseño remains authoritative on which record segment carries a
     number, and a pinned ``(segmento, number)`` absent from the Diseño is
     a derivation error.
 
     For a single-segment modelo ``segmento`` is left unset and the
-    closure casilla's registry ``number`` alone identifies it; no Diseño
-    is required because a single-segment modelo's identity is unambiguous
+    closure casilla's registry ``number`` alone carries the reviewed metadata; no Diseño
+    is required because a single-segment modelo's metadata is unambiguous
     without one.
 
     A closure reference that resolves to no declared casilla is omitted
@@ -342,31 +324,28 @@ def derive_calculation_completeness_casillas(
     Returns:
         Tuple of :class:`DerivedDisenoCasilla` representing the calculation-completeness manifest.
     """
-    declared_identities = {(casilla.segmento, casilla.number) for casilla in revision.casillas}
-    internal_only_identities = frozenset(
-        (casilla.segmento, casilla.number) for casilla in revision.casillas if casilla.internal_only
-    )
+    declared_by_id = casillas_by_id(revision)
 
     diseno_pairs: frozenset[tuple[str, str]] | None = None
     if diseno_path is not None:
         diseno_pairs = frozenset(
             (sheet.name, number)
             for sheet in _extract_record_design(diseno_path)
-            for number in _sheet_casilla_numbers(sheet)
+            for number in _sheet_record_numbers(sheet)
         )
 
     ordered: list[DerivedDisenoCasilla] = []
-    for segmento, number in sorted(
-        calculation_closure_identities(revision, modelo_id),
-        key=lambda item: (item[0] or "", item[1]),
-    ):
-        if (segmento, number) not in declared_identities:
-            # The closure references a casilla the registry never
-            # declares at this identity. It is omitted here; the
-            # completeness gate fires on the omission instead.
-            continue
+    for casilla_id in sorted(calculation_closure_casilla_ids(revision, modelo_id)):
+        casilla = declared_by_id.get(casilla_id)
+        if casilla is None:
+            raise RegistryValidationError(
+                f"calculation-completeness derivation: closure reference {casilla_id!r} "
+                "is not a declared canonical casilla.id",
+            )
+        segmento = casilla.segmento
+        number = casilla.number
         if not multi_segment:
-            if (segmento, number) in internal_only_identities:
+            if casilla.internal_only:
                 # App-internal computed casilla intentionally absent from the
                 # AEAT-published structure (e.g. a regulatory ceiling materialised
                 # so verification predicates can bound an operator-elective
@@ -374,18 +353,18 @@ def derive_calculation_completeness_casillas(
                 # export_refs and is formula-derived; it is not an AEAT box, so it
                 # never appears in the completeness manifest.
                 continue
-            ordered.append(DerivedDisenoCasilla(segmento=None, number=number))
+            ordered.append(DerivedDisenoCasilla(segmento=None, number=number, casilla_id=casilla.id))
             continue
-        if (segmento, number) in internal_only_identities:
+        if casilla.internal_only:
             # App-internal computed casilla intentionally absent from the
             # AEAT-published Diseño de Registros (e.g. a regulatory
             # ceiling materialised so verification predicates can bound
             # an operator-elective amount). The schema validator
             # guarantees such a casilla carries no export_refs and is
             # formula-derived; the Diseño-presence check is skipped while
-            # the segment-carrying identity is preserved for downstream
+            # the segment-carrying metadata is preserved for downstream
             # manifest consumers.
-            ordered.append(DerivedDisenoCasilla(segmento=segmento, number=number))
+            ordered.append(DerivedDisenoCasilla(segmento=segmento, number=number, casilla_id=casilla.id))
             continue
         if diseno_pairs is not None and segmento is not None and (segmento, number) not in diseno_pairs:
             raise RegistryValidationError(
@@ -393,7 +372,7 @@ def derive_calculation_completeness_casillas(
                 f"declared under segmento {segmento!r} but the AEAT Diseño de "
                 "Registros does not carry it under that segment",
             )
-        ordered.append(DerivedDisenoCasilla(segmento=segmento, number=number))
+        ordered.append(DerivedDisenoCasilla(segmento=segmento, number=number, casilla_id=casilla.id))
     return tuple(ordered)
 
 
@@ -420,10 +399,10 @@ def derive_diseno_coverage_casillas(
     For a ``multi_segment`` modelo (e.g. Modelo 200, which reuses the
     same casilla number across distinct record segments) every casilla
     carries the workbook sheet name as its ``segmento``, so the same
-    number under two segments yields two distinct identity pairs. For a
+    number under two segments yields two distinct metadata pairs. For a
     single-segment modelo ``segmento`` is left unset and the bare number
     alone identifies the casilla; a number that recurs across sheets of a
-    single-segment Diseño collapses to one identity, matching the
+    single-segment Diseño collapses to one metadata pair, matching the
     bare-number registry behaviour.
 
     This is an off-load-path tool: it parses the multi-megabyte Diseño
@@ -434,17 +413,17 @@ def derive_diseno_coverage_casillas(
         seen: set[tuple[str | None, str]] = set()
         ordered: list[DerivedDisenoCasilla] = []
         for sheet in sheets:
-            for number in _sheet_casilla_numbers(sheet):
-                identity = (sheet.name, number)
-                if identity in seen:
+            for number in _sheet_record_numbers(sheet):
+                metadata_pair = (sheet.name, number)
+                if metadata_pair in seen:
                     continue
-                seen.add(identity)
+                seen.add(metadata_pair)
                 ordered.append(DerivedDisenoCasilla(segmento=sheet.name, number=number))
         return tuple(ordered)
     seen_numbers: set[str] = set()
     bare: list[DerivedDisenoCasilla] = []
     for sheet in sheets:
-        for number in _sheet_casilla_numbers(sheet):
+        for number in _sheet_record_numbers(sheet):
             if number in seen_numbers:
                 continue
             seen_numbers.add(number)
@@ -515,7 +494,7 @@ def build_diseno_coverage_report(
     Extracts the full AEAT Diseño de Registros casilla set
     (:func:`derive_diseno_coverage_casillas`) and compares it against the
     revision's declared casillas, keyed on the ``(segmento, number)``
-    identity. The result is a :class:`DisenoCoverageReport` that
+    metadata. The result is a :class:`DisenoCoverageReport` that
     inventories how much of the form's data surface the registry covers
     and which Diseño casillas remain to be authored.
 
@@ -529,7 +508,7 @@ def build_diseno_coverage_report(
 
     For a ``multi_segment`` modelo the comparison is segment-aware: a
     Diseño casilla under segment ``S`` is "covered" only when the
-    registry declares a casilla at the same ``(S, number)`` identity. For
+    registry declares a casilla with the same ``(S, number)`` metadata. For
     a single-segment modelo ``segmento`` is unset on both sides and the
     bare number alone identifies the casilla.
 
@@ -541,11 +520,11 @@ def build_diseno_coverage_report(
         multi_segment: Whether the modelo uses segment-qualified casilla ids.
     """
     diseno = derive_diseno_coverage_casillas(path, multi_segment=multi_segment)
-    declared_identities = {(casilla.segmento, casilla.number) for casilla in revision.casillas}
+    declared_metadata = {(casilla.segmento, casilla.number) for casilla in revision.casillas}
     covered: list[DerivedDisenoCasilla] = []
     gap: list[DerivedDisenoCasilla] = []
     for casilla in diseno:
-        if (casilla.segmento, casilla.number) in declared_identities:
+        if (casilla.segmento, casilla.number) in declared_metadata:
             covered.append(casilla)
         else:
             gap.append(casilla)
@@ -558,8 +537,8 @@ def build_diseno_coverage_report(
     )
 
 
-def _sheet_casilla_numbers(sheet: RecordDesignSheet) -> tuple[str, ...]:
-    """Return the casilla tags declared in one record-design sheet, in field order."""
+def _sheet_record_numbers(sheet: RecordDesignSheet) -> tuple[str, ...]:
+    """Return the official record-design numeric tags declared in one sheet, in field order."""
     numbers: list[str] = []
     seen: set[str] = set()
     for design_field in sheet.fields:
@@ -579,8 +558,8 @@ __all__ = [
     "DerivedDisenoCasilla",
     "DisenoCoverageReport",
     "build_diseno_coverage_report",
-    "calculation_closure_identities",
-    "calculation_closure_numbers",
+    "calculation_closure_casilla_ids",
+    "calculation_closure_record_design_metadata",
     "derive_calculation_completeness_casillas",
     "derive_diseno_coverage_casillas",
 ]

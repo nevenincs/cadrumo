@@ -23,14 +23,15 @@ import pytest
 
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
-from .. import load_registry_tree
+from .. import CasillaId, load_registry_tree, validated_casilla_id
 from .._runtime_graph import expression_binding_refs, expression_parameter_refs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_TOP_LEVEL_CHAIN_TARGETS: frozenset[str] = frozenset(
-    {
+_TOP_LEVEL_CHAIN_TARGETS: frozenset[CasillaId] = frozenset(
+    validated_casilla_id(casilla_id, surface="_TOP_LEVEL_CHAIN_TARGETS")
+    for casilla_id in (
         # Mínimo personal y familiar
         "0519",
         "0520",
@@ -54,7 +55,7 @@ _TOP_LEVEL_CHAIN_TARGETS: frozenset[str] = frozenset(
         "0571",
         "0585",
         "0586",
-    },
+    )
 )
 
 _SUPPORTED_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024", "2025")
@@ -68,13 +69,13 @@ def _modelo_100():
 def test_top_level_cuota_chain_targets_present_in_every_supported_revision() -> None:
     """Every supported ejercicio carries the top-level cuota-chain formula targets."""
     modelo, _ = _modelo_100()
-    gaps: dict[str, list[str]] = {}
+    gaps: dict[str, list[CasillaId]] = {}
     for revision_id in _SUPPORTED_REVISIONS:
         revision = modelo.revisions.get(revision_id)
         if revision is None:
             gaps[revision_id] = sorted(_TOP_LEVEL_CHAIN_TARGETS)
             continue
-        targets = {f.target for f in revision.formulas}
+        targets = {f.target_casilla_id for f in revision.formulas}
         missing = _TOP_LEVEL_CHAIN_TARGETS - targets
         if missing:
             gaps[revision_id] = sorted(missing)

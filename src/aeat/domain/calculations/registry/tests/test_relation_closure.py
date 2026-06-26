@@ -10,8 +10,9 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .. import RegistryCatalogues, RegistryLoadError, RegistryValidationError
-from .._bindings import CasillaObservation, RegistryModeloObservation
+from .....tests.registry_observations import registry_grounded_modelo_observation
+from .. import CasillaId, RegistryCatalogues, RegistryLoadError, RegistryValidationError, validated_casilla_id
+from .._bindings import RegistryModeloObservation
 from .._loader import load_modelo_directory, load_registry_tree
 from .._relations import relation_source_requirements, resolve_relation_values_from_observations
 from .._schema import ModeloDefinition, ModeloRevision
@@ -24,6 +25,9 @@ _MODELO_180_DIR = _REGISTRY_ROOT / "modelos" / "180"
 _MODELO_180_FIRST_RELATION_FRAGMENT = (
     Path("revisions") / "2023-y-siguientes" / "relations" / "0001-modelo-180-rel-115-perceptores-anual.toml"
 )
+_M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01", surface="_M115_PERCEPTORES_CASILLA")
+_M115_BASE_CASILLA: CasillaId = validated_casilla_id("02", surface="_M115_BASE_CASILLA")
+_M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03", surface="_M115_RETENCIONES_CASILLA")
 
 
 @cache
@@ -53,17 +57,33 @@ def _copy_committed_modelo_180(target: Path) -> Path:
 
 def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
     values_by_period = {
-        "1T": {"01": Decimal("1"), "02": Decimal("250.10"), "03": Decimal("47.52")},
-        "2T": {"01": Decimal("1"), "02": Decimal("749.90"), "03": Decimal("142.48")},
-        "3T": {"01": Decimal("2"), "02": Decimal("1200.00"), "03": Decimal("228.00")},
-        "4T": {"01": Decimal("1"), "02": Decimal("-50.25"), "03": Decimal("0.00")},
+        "1T": {
+            _M115_PERCEPTORES_CASILLA: Decimal("1"),
+            _M115_BASE_CASILLA: Decimal("250.10"),
+            _M115_RETENCIONES_CASILLA: Decimal("47.52"),
+        },
+        "2T": {
+            _M115_PERCEPTORES_CASILLA: Decimal("1"),
+            _M115_BASE_CASILLA: Decimal("749.90"),
+            _M115_RETENCIONES_CASILLA: Decimal("142.48"),
+        },
+        "3T": {
+            _M115_PERCEPTORES_CASILLA: Decimal("2"),
+            _M115_BASE_CASILLA: Decimal("1200.00"),
+            _M115_RETENCIONES_CASILLA: Decimal("228.00"),
+        },
+        "4T": {
+            _M115_PERCEPTORES_CASILLA: Decimal("1"),
+            _M115_BASE_CASILLA: Decimal("-50.25"),
+            _M115_RETENCIONES_CASILLA: Decimal("0.00"),
+        },
     }
     return tuple(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="115",
             filing_year=2026,
             period=period,
-            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
+            casilla_values=casilla_values,
         )
         for period, casilla_values in values_by_period.items()
     )
@@ -89,17 +109,21 @@ def test_modelo_180_relation_source_requirements_identify_source_filings() -> No
     requirements = relation_source_requirements(revision, filing_year=2026, period="0A")
 
     assert len(requirements) == 3
-    by_output = {requirement.source_output: requirement for requirement in requirements}
-    assert set(by_output) == {"01", "02", "03"}
+    by_output = {requirement.source_casilla_id: requirement for requirement in requirements}
+    assert set(by_output) == {
+        _M115_PERCEPTORES_CASILLA,
+        _M115_BASE_CASILLA,
+        _M115_RETENCIONES_CASILLA,
+    }
     for requirement in by_output.values():
         assert requirement.source_modelo == "115"
         assert requirement.filing_year == 2026
         assert requirement.periods == ("1T", "2T", "3T", "4T")
         assert requirement.dependency_role == "periodic_to_annual_summary"
         assert requirement.aggregation_op == "sum"
-    assert by_output["01"].target_bindings == ("modelo-180-115-perceptores-anual",)
-    assert by_output["02"].target_bindings == ("modelo-180-115-base-anual",)
-    assert by_output["03"].target_bindings == ("modelo-180-115-retenciones-anual",)
+    assert by_output[_M115_PERCEPTORES_CASILLA].target_bindings == ("modelo-180-115-perceptores-anual",)
+    assert by_output[_M115_BASE_CASILLA].target_bindings == ("modelo-180-115-base-anual",)
+    assert by_output[_M115_RETENCIONES_CASILLA].target_bindings == ("modelo-180-115-retenciones-anual",)
 
 
 def test_relation_source_requirements_obey_target_periods() -> None:
@@ -153,16 +177,16 @@ def test_modelo_180_relations_resolve_from_observed_source_filings() -> None:
 
     # Derive expected sums programmatically from the observation fixtures, keyed
     # by the casilla_id each binding sources from (01=perceptores, 02=base, 03=retenciones).
-    casilla_sums: dict[str, Decimal] = {}
+    casilla_sums: dict[CasillaId, Decimal] = {}
     for obs in observations:
         for casilla_obs in obs.observations:
             casilla_sums[casilla_obs.casilla_id] = (
                 casilla_sums.get(casilla_obs.casilla_id, Decimal("0")) + casilla_obs.value
             )
 
-    assert values["modelo-180-rel-115-perceptores-anual"] == casilla_sums["01"]
-    assert values["modelo-180-rel-115-base-anual"] == casilla_sums["02"]
-    assert values["modelo-180-rel-115-retenciones-anual"] == casilla_sums["03"]
+    assert values["modelo-180-rel-115-perceptores-anual"] == casilla_sums[_M115_PERCEPTORES_CASILLA]
+    assert values["modelo-180-rel-115-base-anual"] == casilla_sums[_M115_BASE_CASILLA]
+    assert values["modelo-180-rel-115-retenciones-anual"] == casilla_sums[_M115_RETENCIONES_CASILLA]
 
 
 def test_relation_observation_resolution_fails_when_required_source_period_is_missing() -> None:
@@ -223,15 +247,53 @@ def test_registry_validator_rejects_cross_model_relation_years_without_source_re
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry((source_modelo, mutated_target))
 
 
-def test_registry_validator_rejects_relation_to_unknown_source_output() -> None:
+def test_registry_validator_rejects_relation_to_unknown_source_casilla_id() -> None:
     modelos, catalogues = _committed_tree()
     modelo = _modelo(modelos, "180")
     revision = modelo.revisions["2023-y-siguientes"]
-    relation = revision.relations[0].model_copy(update={"source_output": "missing-output"})
+    relation = revision.relations[0].model_copy(update={"source_casilla_id": "missing-output"})
     mutated_revision = revision.model_copy(update={"relations": (relation, *revision.relations[1:])})
     mutated_modelo = _with_revision(modelo, mutated_revision)
 
-    with pytest.raises(RegistryValidationError, match="has no source output"):
+    with pytest.raises(RegistryValidationError, match="has no source casilla id"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
+            _replace_modelo(modelos, mutated_modelo),
+        )
+
+
+def test_registry_validator_rejects_relation_source_casilla_id_that_is_only_a_binding_id() -> None:
+    modelos, catalogues = _committed_tree()
+    target_modelo = _modelo(modelos, "390")
+    source_modelo = _modelo(modelos, "303")
+    revision = target_modelo.revisions["2010-y-siguientes"]
+    source_revision = source_modelo.revisions["2009-y-siguientes"]
+    binding_id = source_revision.bindings[0].id
+    assert binding_id not in {casilla.id for casilla in source_revision.casillas}
+
+    relation = revision.relations[0].model_copy(update={"source_casilla_id": binding_id})
+    mutated_revision = revision.model_copy(update={"relations": (relation, *revision.relations[1:])})
+    mutated_modelo = _with_revision(target_modelo, mutated_revision)
+
+    with pytest.raises(RegistryValidationError, match="has no source casilla id"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
+            _replace_modelo(modelos, mutated_modelo),
+        )
+
+
+def test_registry_validator_rejects_previous_filing_source_casilla_id_missing_from_matching_revision() -> None:
+    modelos, catalogues = _committed_tree()
+    modelo = _modelo(modelos, "130")
+    revision = modelo.revisions["2019-y-siguientes"]
+    revision_scoped_only = validated_casilla_id("0059", surface="M100 revision-scoped test casilla")
+    binding = next(item for item in revision.bindings if item.id == "irpf.previous_year_economic_activity_net_income")
+    mutated_selector = {**binding.selector, "source_casilla_ids": (revision_scoped_only,)}
+    mutated_binding = binding.model_copy(update={"selector": mutated_selector})
+    mutated_revision = revision.model_copy(
+        update={"bindings": tuple(mutated_binding if item.id == binding.id else item for item in revision.bindings)},
+    )
+    mutated_modelo = _with_revision(modelo, mutated_revision)
+
+    with pytest.raises(RegistryValidationError, match="period-compatible 100 revision"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
             _replace_modelo(modelos, mutated_modelo),
         )
@@ -241,7 +303,7 @@ def test_registry_validator_rejects_nondirect_previous_filing_binding() -> None:
     """A previous_filing binding with a non-direct selector is rejected.
 
     The M100 cross-modelo slot bindings carry a non-direct selector
-    ({source_modelo, source_output}, no period anchor). They are canonically
+    ({source_modelo, source_casilla_id}, no period anchor). They are canonically
     ``relation_prefill``; re-stamping one back to ``previous_filing`` must trip
     the slot-source hygiene gate (aggregation-taxonomy ruling 3).
     """

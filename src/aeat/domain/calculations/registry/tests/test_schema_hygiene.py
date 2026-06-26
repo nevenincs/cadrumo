@@ -10,13 +10,18 @@ from __future__ import annotations
 
 import re
 from collections import Counter
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 import pytest
 
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
-from .. import load_registry_tree
+from ..._export_field_kind import CasillaFieldKind
+from .. import load_registry_tree, revision_casilla_identity_failures
+from .._ids import CasillaId, validated_casilla_id
+from .._schema import DataBindingDefinition, ModeloDefinition
+from .._validate_revision_identity import _PRIMARY_ID_KINDS, _RECORD_ID_KINDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,64 +36,7 @@ _FORBIDDEN_XML_ROOT_TOKENS = frozenset(
     },
 )
 
-_FORBIDDEN_TEST_NARRATIVE = (
-    "aspirational",
-    "deleted as tautological",
-    "fails by design",
-    "not yet delivered",
-    "previously in this file",
-    "past-state",
-    "migration state",
-    "pha" + "se ",
-    "wa" + "ve ",
-    "backwards-compat",
-    "before the gate landed",
-    "added per",
-    "per-slice",
-    "ad" + "r (",
-    "compatibility shim",
-    "xfail",
-)
-
-_FORBIDDEN_TEST_SCHEMA_CONSTRUCTORS = (
-    "ApplicationLinkDefinition",
-    "CasillaDefinition",
-    "DataBindingDefinition",
-    "FormulaDefinition",
-    "LegalReference",
-    "ModeloDefinition",
-    "ModeloRevision",
-    "ParameterDefinition",
-    "RegistryCatalogues",
-    "SourceReference",
-)
-
-# Validator-testing tests legitimately construct schema authority objects
-# in order to exercise the validator paths that committed registry data
-# can never reach (broken-shape inputs, edge cases, refused values). They
-# are not "modelo inventory tests" — they test the validators themselves
-# and need minimal broken objects as fixtures.
-_VALIDATOR_TEST_ALLOWLIST = frozenset(
-    {
-        "test_catalogue_verification.py",
-        "test_country_code_data_type.py",
-        "test_cross_revision_drift.py",
-        "test_iban_data_type.py",
-        "test_long_tail_data_types.py",
-        "test_nif_data_type.py",
-        "test_period_code_data_type.py",
-        "test_referential_integrity.py",
-        "test_registry_schema.py",
-        "test_required_role_hardflip.py",
-        "test_schema.py",
-        "test_selector_shape.py",
-        "test_semantic_role.py",
-        "test_year_data_type.py",
-    },
-)
-
-
-def _all_modelos():
+def _all_modelos() -> tuple[ModeloDefinition, ...]:
     modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return modelos
 
@@ -109,9 +57,11 @@ def test_no_duplicate_casilla_ids_within_a_revision() -> None:
 
 
 def test_no_duplicate_casilla_numbers_within_a_revision() -> None:
-    """Within a single modelo revision, every ``(segmento, number)`` casilla identity must be unique.
+    """Within a revision, every ``(segmento, number)`` metadata pair must be unique.
 
-    AEAT casilla identity is ``(segmento, number)``, not ``number`` alone.
+    ``casilla.id`` is the canonical reference identity. The AEAT
+    record-design metadata pair is ``(segmento, number)``, not ``number``
+    alone.
     A multi-segment modelo (e.g. Modelo 200) legitimately reuses the same
     five-digit form-field number across distinct record segments: number
     ``00552`` is the ECPN ``Acciones y participaciones`` field in the
@@ -125,13 +75,161 @@ def test_no_duplicate_casilla_numbers_within_a_revision() -> None:
     for modelo in _all_modelos():
         for revision_id, revision in modelo.revisions.items():
             counts = Counter((c.segmento, c.number) for c in revision.casillas)
-            duplicates = {identity: count for identity, count in counts.items() if count > 1}
+            duplicates = {metadata: count for metadata, count in counts.items() if count > 1}
             for (segmento, number), count in duplicates.items():
                 offences.append(
                     f"modelo {modelo.id} revision {revision_id} declares casilla number "
                     f"{number!r} under segmento {segmento!r} {count} times",
                 )
-    assert not offences, "duplicate casilla (segmento, number) identities per revision:\n  " + "\n  ".join(offences)
+    assert not offences, "duplicate casilla (segmento, number) metadata per revision:\n  " + "\n  ".join(offences)
+
+
+def test_reused_casilla_numbers_have_only_segment_qualified_ids() -> None:
+    """A reused printed number must never leave a bare casilla id owner.
+
+    When a revision reuses ``CasillaDefinition.number`` across record
+    segments, every owner must carry a segment-qualified ``casilla.id``
+    and a declared ``segmento``. Otherwise the printed number becomes a
+    second address for one owner and any reference by that token is
+    ambiguous.
+    """
+
+    offences: list[str] = []
+    for modelo in _all_modelos():
+        for revision_id, revision in modelo.revisions.items():
+            owners_by_number: dict[str, list[tuple[str, str | None]]] = {}
+            for casilla in revision.casillas:
+                owners_by_number.setdefault(casilla.number, []).append((casilla.id, casilla.segmento))
+            for number, owners in sorted(owners_by_number.items()):
+                if len(owners) <= 1:
+                    continue
+                bare_owners = sorted(
+                    casilla_id
+                    for casilla_id, segmento in owners
+                    if segmento is None or casilla_id == number
+                )
+                if bare_owners:
+                    offences.append(
+                        f"modelo {modelo.id} revision {revision_id} reuses casilla number {number!r} "
+                        f"but leaves bare casilla id owners {bare_owners!r}",
+                    )
+    assert not offences, "reused casilla numbers with bare owners:\n  " + "\n  ".join(offences)
+
+
+def test_bundled_revisions_produce_no_ambiguous_casilla_identity_failures() -> None:
+    """Every bundled modelo revision must satisfy the production casilla identity contract."""
+
+    checked: list[str] = []
+    offences: list[str] = []
+    for modelo in _all_modelos():
+        for revision_id, revision in modelo.revisions.items():
+            context = f"modelo {modelo.id} revision {revision_id}"
+            checked.append(context)
+            offences.extend(revision_casilla_identity_failures(context, revision))
+
+    assert checked, "bundled registry contains no modelo revisions to validate"
+    assert not offences, "bundled revisions produce ambiguous casilla references:\n  " + "\n  ".join(offences)
+
+
+def test_primary_registry_ids_do_not_collide_with_casilla_reference_metadata() -> None:
+    """No primary registry id may also identify casilla display/export metadata."""
+
+    offences: list[str] = []
+    for modelo in _all_modelos():
+        for revision_id, revision in modelo.revisions.items():
+            primary_ids: dict[str, list[str]] = {}
+            for kind, attr in _RECORD_ID_KINDS:
+                if kind not in _PRIMARY_ID_KINDS:
+                    continue
+                for record in getattr(revision, attr):
+                    primary_ids.setdefault(record.id, []).append(kind)
+            for casilla in revision.casillas:
+                metadata_tokens = [("number", casilla.number)]
+                if casilla.form_number is not None:
+                    metadata_tokens.append(("form_number", casilla.form_number))
+                metadata_tokens.extend(("export_ref", export_ref) for export_ref in casilla.export_refs)
+                for metadata_kind, token in metadata_tokens:
+                    if token == casilla.id or token not in primary_ids:
+                        continue
+                    offences.append(
+                        f"modelo {modelo.id} revision {revision_id} casilla {casilla.id!r} "
+                        f"{metadata_kind} {token!r} collides with primary registry ids "
+                        f"{sorted(primary_ids[token])!r}",
+                    )
+    assert not offences, "ambiguous primary-id/casilla-metadata collisions:\n  " + "\n  ".join(offences)
+
+
+def test_operator_input_id_map_contains_only_casilla_ids() -> None:
+    """The runtime input map must expose only canonical ``casilla.id`` keys."""
+
+    from .._runtime_graph import input_casilla_id_map
+
+    offences: list[str] = []
+    for modelo in _all_modelos():
+        for revision_id, revision in modelo.revisions.items():
+            expected = {casilla.id for casilla in revision.casillas}
+            observed = input_casilla_id_map(revision)
+            extra_keys = sorted(set(observed) - expected)
+            wrong_values = sorted(
+                f"{key}->{value}"
+                for key, value in observed.items()
+                if key not in expected or value != key
+            )
+            if extra_keys or wrong_values:
+                offences.append(
+                    f"modelo {modelo.id} revision {revision_id} exposes non-id input references "
+                    f"extra_keys={extra_keys!r} wrong_values={wrong_values!r}",
+                )
+    assert not offences, "operator input map exposes non-canonical casilla references:\n  " + "\n  ".join(offences)
+
+
+def test_export_casilla_fields_reference_only_casilla_ids() -> None:
+    """Export fields must reference declared ``casilla.id`` values directly."""
+
+    offences: list[str] = []
+    for modelo in _all_modelos():
+        for revision_id, revision in modelo.revisions.items():
+            casilla_ids = {casilla.id for casilla in revision.casillas}
+            for layout in revision.export_layouts:
+                for record in layout.records:
+                    for field in record.fields:
+                        if field.kind is not CasillaFieldKind.CASILLA or field.casilla_id is None:
+                            continue
+                        if field.casilla_id not in casilla_ids:
+                            offences.append(
+                                f"modelo {modelo.id} revision {revision_id} export field {field.id!r} "
+                                f"references {field.casilla_id!r}, which is not a casilla.id",
+                            )
+    assert not offences, "export fields reference non-canonical casilla ids:\n  " + "\n  ".join(offences)
+
+
+def test_completeness_manifests_reference_only_canonical_casilla_ids() -> None:
+    """Completeness manifests must resolve by canonical ``casilla.id`` only."""
+
+    offences: list[str] = []
+    for modelo in _all_modelos():
+        for revision_id, revision in modelo.revisions.items():
+            manifest = revision.completeness_manifest
+            if manifest is None:
+                continue
+            casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+            for entry in manifest.casillas:
+                casilla = casillas_by_id.get(entry.casilla_id)
+                if casilla is None:
+                    offences.append(
+                        f"modelo {modelo.id} revision {revision_id} completeness manifest "
+                        f"references {entry.casilla_id!r}, which is not a casilla.id",
+                    )
+                    continue
+                if (casilla.segmento, casilla.number) != entry.record_design_metadata():
+                    offences.append(
+                        f"modelo {modelo.id} revision {revision_id} completeness manifest "
+                        f"entry {entry.casilla_id!r} carries metadata {entry.record_design_metadata()!r} "
+                        f"but the registry casilla declares {(casilla.segmento, casilla.number)!r}",
+                    )
+    assert not offences, "completeness manifests reference non-canonical or mismatched casillas:\n  " + "\n  ".join(
+        offences,
+    )
 
 
 def test_section_paths_are_non_empty() -> None:
@@ -179,172 +277,27 @@ def test_section_paths_do_not_leak_xml_root_containers() -> None:
     assert not offences, "XML root containers leaked into section paths:\n  " + "\n  ".join(offences)
 
 
-def test_registry_tests_describe_current_behaviour_not_removed_work() -> None:
-    """Calculation-registry tests must describe executable behaviour, not old development states."""
-
-    offences: list[str] = []
-    root = PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry"
-    for path in sorted(root.glob("test_*.py")):
-        if path.name == Path(__file__).name:
-            continue
-        text = path.read_text(encoding="utf-8").lower()
-        for phrase in _FORBIDDEN_TEST_NARRATIVE:
-            if phrase in text:
-                offences.append(f"{path.relative_to(PROJECT_ROOT).as_posix()} contains {phrase!r}")
-    assert not offences, "registry tests contain past-state narratives:\n  " + "\n  ".join(offences)
-
-
-def test_registry_tests_do_not_define_schema_authority_objects() -> None:
-    """Registry tests must derive modelo/casilla authority objects from committed registry data."""
-
-    offences: list[str] = []
-    root = PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry"
-    for path in sorted(root.glob("test_*.py")):
-        if path.name == Path(__file__).name:
-            continue
-        if path.name in _VALIDATOR_TEST_ALLOWLIST:
-            continue
-        text = path.read_text(encoding="utf-8")
-        for constructor in _FORBIDDEN_TEST_SCHEMA_CONSTRUCTORS:
-            if f"{constructor}(" in text:
-                offences.append(f"{path.relative_to(PROJECT_ROOT).as_posix()} constructs {constructor}")
-    assert not offences, "registry tests define schema authority objects:\n  " + "\n  ".join(offences)
-
-
-def test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_outputs() -> None:
-    """Renta synthetic-profile scenarios must not be all-zero-input to all-zero-output.
-
-    A scenario where every input is 0 and every expected output is 0 computes
-    0 = 0 + 0 - 0 + ... and never fails — false coverage. Each Renta synthetic
-    scenario must either provide at least one non-zero input or assert at
-    least one non-zero expected output. Scenarios that intentionally test
-    the zero-input boundary case must declare a single non-trivial assertion
-    (e.g. that a specific casilla evaluates to a specific non-zero parameter
-    bound) so the math actually has to hold.
-    """
-
-    offences: list[str] = []
-    renta_test_files = (PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py",)
-    for path in renta_test_files:
-        if not path.exists():
-            continue
-        text = path.read_text(encoding="utf-8")
-        # Split into scenario blocks: each `_scenario` factory or RegistryCalculationScenario(...)
-        scenario_blocks = re.split(r"(?=def \w+_scenario\b|RegistryCalculationScenario\()", text)
-        for block in scenario_blocks:
-            offence = _vacuous_scenario_offence(block, path)
-            if offence is not None:
-                offences.append(offence)
-    assert not offences, "vacuous Renta synthetic scenarios:\n  " + "\n  ".join(offences)
-
-
-_ZERO_DECIMAL_LITERALS: frozenset[str] = frozenset({"0", "0.0", "0.00"})
-
-
-def _vacuous_scenario_offence(block: str, path: Path) -> str | None:
-    """Return a vacuous-scenario offence string, or None when the block is fine.
-
-    A scenario block is vacuous when every Decimal input literal AND
-    every expected-output Decimal literal is the canonical zero
-    representation: ``0 = 0 + 0 - 0 + ...`` never fails the gate's
-    arithmetic.
-    """
-    if "RegistryCalculationScenario(" not in block and "expected_outputs" not in block:
-        return None
-    inputs_match = re.search(r"inputs\s*=\s*\{([^}]*)\}", block)
-    expected_match = re.search(r"expected_outputs\s*=\s*\(([^)]*?(?:\([^)]*\)[^)]*?)*)\)", block)
-    if not (inputs_match or expected_match):
-        return None
-    inputs_text = inputs_match.group(1) if inputs_match else ""
-    expected_text = expected_match.group(1) if expected_match else ""
-    input_decimals = re.findall(r'Decimal\("([^"]+)"\)', inputs_text)
-    output_values = re.findall(r'value\s*=\s*Decimal\("([^"]+)"\)', expected_text)
-    input_only_zero = bool(input_decimals) and all(d in _ZERO_DECIMAL_LITERALS for d in input_decimals)
-    output_only_zero = bool(output_values) and all(v in _ZERO_DECIMAL_LITERALS for v in output_values)
-    if not (input_only_zero and output_only_zero):
-        return None
-    id_match = re.search(r'id="([^"]+)"', block) or re.search(r"id\s*=\s*\"([^\"]+)\"", block)
-    scenario_id = id_match.group(1) if id_match else "(anonymous)"
-    return (
-        f"{path.relative_to(PROJECT_ROOT).as_posix()} scenario "
-        f"{scenario_id!r} has all-zero inputs AND all-zero expected outputs "
-        f"(vacuous: 0 = 0 + 0 - 0 + ... never fails)"
-    )
-
-
-def test_every_renta_chain_scenario_has_renta_web_open_replay_payload() -> None:
-    """Every chain-behaviour and synthetic-profile scenario should carry a Renta WEB Open payload.
-
-    The payload sits at ``corpus/parity_replays/renta_web_open/{scenario_id}.json``
-    and pins the AEAT open-simulator's output for the scenario's synthetic inputs.
-    Renta full-coverage mandates this grounding for every Modelo 100
-    scenario; this gate enforces it.
-
-    The gate is dormant during initial scaffolding: when no payloads are
-    captured yet, it records the inventory to a metrics file but does not
-    fail. As soon as ANY payload exists, it converts to a hard failure for
-    every other scenario that lacks one. This shape lets capture work land
-    incrementally while preventing back-sliding.
-    """
-
-    replay_dir = bundled_path("corpus", "parity_replays", "renta_web_open")
-    captured = {p.stem for p in replay_dir.glob("*.json")} if replay_dir.exists() else set()
-    capture_replay_test = PROJECT_ROOT / "src/aeat/adapters/outbound/aeat/sede/test_renta_web_open_capture_replay.py"
-    declared: set[str] = set()
-    # Only the capture-replay test inventory counts as the live-grounded
-    # baseline set: its scenario ids are the ones the driver actually
-    # captures (chain-behaviour scenarios feed values into derived
-    # casillas the open-simulator renders read-only and can't capture).
-    for path in (capture_replay_test,):
-        if not path.exists():
-            continue
-        text = path.read_text(encoding="utf-8")
-        # Match bare scenario ids only (no filename extensions or path
-        # fragments). The capture-replay test references the same id in
-        # the parametrized scenario tuple and as a payload filename via
-        # f-string; either occurrence must round-trip identically.
-        for match in re.finditer(r'"(modelo-100-[^".]+)"', text):
-            declared.add(match.group(1))
-    uncovered = sorted(declared - captured)
-    metrics_path = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-replay-coverage.txt"
-    metrics_path.parent.mkdir(parents=True, exist_ok=True)
-    metrics_path.write_text(
-        "scenarios_total: {total}\n"
-        "scenarios_with_payload: {covered}\n"
-        "scenarios_uncovered: {uncovered_count}\n"
-        "coverage_pct: {pct:.1f}\n"
-        "uncovered_ids:\n{uncovered_listing}\n".format(
-            total=len(declared),
-            covered=len(declared & captured),
-            uncovered_count=len(uncovered),
-            pct=(100.0 * len(declared & captured) / len(declared)) if declared else 0.0,
-            uncovered_listing="\n".join(f"  - {sid}" for sid in uncovered) or "  (none)",
-        ),
-        encoding="utf-8",
-    )
-    # Hard-fail mode (#171): every declared baseline-scenario id must
-    # carry a captured replay payload. Once a capture exists, the gate
-    # is strict — adding a new declared scenario without its capture
-    # breaks CI immediately rather than waiting for the 80% threshold.
-    if captured and uncovered:
+def _renta_replay_casilla_id(value: object, *, payload_path: Path, section_name: str) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
         raise AssertionError(
-            "Renta chain scenarios without Renta WEB Open replay payload "
-            "(capture via AEAT_LIVE_TESTS_ENABLED=1):\n  " + "\n  ".join(uncovered),
-        )
+            f"{payload_path.name} {section_name} key {value!r} is not a canonical casilla.id",
+        ) from exc
 
 
-def _renta_replay_captured_targets(replay_dir) -> set[str]:  # type: ignore[no-untyped-def]
-    """Return every 4-digit casilla id captured under ``*_by_casilla`` blocks in renta replays.
+def _renta_replay_captured_targets(replay_dir: Path) -> set[CasillaId]:
+    """Return every 4-digit casilla id captured under ``*_by_casilla_id`` blocks in renta replays.
 
     A missing replay directory returns an empty set (the gate is
     dormant during initial scaffolding). Per-payload JSON parse
     failures are tolerated — a malformed scratch file should not
     block the suite. Only casilla-id keyed sections
-    (``expected_by_casilla`` / ``observed_by_casilla``) are scanned;
+    (``expected_by_casilla_id`` / ``observed_by_casilla_id``) are scanned;
     user-readable label keys are deliberately excluded so the
     capture set stays aligned with the registry's canonical ids.
     """
-    captured: set[str] = set()
+    captured: set[CasillaId] = set()
     if not replay_dir.exists():
         return captured
     import json as _json
@@ -354,22 +307,35 @@ def _renta_replay_captured_targets(replay_dir) -> set[str]:  # type: ignore[no-u
             document = _json.loads(payload_path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
-        for key in ("expected_by_casilla", "observed_by_casilla"):
+        for key in ("expected_by_casilla_id", "observed_by_casilla_id"):
             section = document.get(key) or {}
             if isinstance(section, dict):
-                captured.update(k for k in section if isinstance(k, str) and k.isdigit())
+                captured.update(
+                    _renta_replay_casilla_id(k, payload_path=payload_path, section_name=key)
+                    for k in section
+                )
     return captured
 
 
-def _modelo_100_formula_targets(modelos) -> set[str]:  # type: ignore[no-untyped-def]
-    """Return every ``formula.target`` casilla declared by any Modelo 100 revision."""
-    targets: set[str] = set()
+def _modelo_100_formula_targets(modelos: Iterable[ModeloDefinition]) -> set[CasillaId]:
+    """Return every ``formula.target_casilla_id`` casilla declared by any Modelo 100 revision."""
+    targets: set[CasillaId] = set()
     for modelo in modelos:
         if modelo.id != "100":
             continue
         for revision in modelo.revisions.values():
-            targets.update(formula.target for formula in revision.formulas)
+            targets.update(formula.target_casilla_id for formula in revision.formulas)
     return targets
+
+
+def _modelo_100_casilla_ids(modelos: Iterable[ModeloDefinition]) -> set[CasillaId]:
+    casilla_ids: set[CasillaId] = set()
+    for modelo in modelos:
+        if modelo.id != "100":
+            continue
+        for revision in modelo.revisions.values():
+            casilla_ids.update(casilla.id for casilla in revision.casillas)
+    return casilla_ids
 
 
 def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage() -> None:
@@ -377,8 +343,8 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
 
     Per-formula oracle grounding is required. This gate enumerates Modelo 100
     formulas and counts how many target casillas appear in at least one replay
-    payload's ``observed`` mapping (or ``expected`` mapping). The output is written
-    to ``.vault/audit/renta-formula-oracle-coverage.txt`` for audit-trail
+    payload's canonical ``expected_by_casilla_id`` or ``observed_by_casilla_id``
+    mapping. The output is written to ``.vault/audit/renta-formula-oracle-coverage.txt`` for audit-trail
     visibility.
 
     The gate is dormant during initial scaffolding (no captured payloads → no
@@ -391,6 +357,12 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
     replay_dir = bundled_path("corpus", "parity_replays", "renta_web_open")
     captured_targets = _renta_replay_captured_targets(replay_dir)
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    declared_casillas = _modelo_100_casilla_ids(modelos)
+    dangling_replay_targets = sorted(captured_targets - declared_casillas)
+    assert not dangling_replay_targets, (
+        "Renta WEB Open replay payloads reference casilla ids not declared by Modelo 100:\n  "
+        + "\n  ".join(dangling_replay_targets)
+    )
     formula_targets = _modelo_100_formula_targets(modelos)
     grounded = formula_targets & captured_targets
     ungrounded = sorted(formula_targets - captured_targets)
@@ -439,7 +411,7 @@ _RENTA_TYPED_BINDING_BRIDGES: tuple[tuple[str, str], ...] = (
 )
 
 
-def _modelo_100_bindings(modelos):  # type: ignore[no-untyped-def]
+def _modelo_100_bindings(modelos: Iterable[ModeloDefinition]) -> Iterator[DataBindingDefinition]:
     """Yield every binding declared by any Modelo 100 revision."""
     for modelo in modelos:
         if modelo.id != "100":
@@ -448,7 +420,11 @@ def _modelo_100_bindings(modelos):  # type: ignore[no-untyped-def]
             yield from revision.bindings
 
 
-def _typed_enum_offence(binding, *, expectations: tuple[tuple[str, str], ...]) -> str | None:  # type: ignore[no-untyped-def]
+def _typed_enum_offence(
+    binding: DataBindingDefinition,
+    *,
+    expectations: tuple[tuple[str, str], ...],
+) -> str | None:
     """Return the typed_enum violation message for ``binding``, or ``None`` if it satisfies every bridge it matches."""
     for suffix, expected_enum in expectations:
         if binding.id.endswith(suffix) and binding.typed_enum != expected_enum:

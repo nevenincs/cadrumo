@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 if TYPE_CHECKING:  # pragma: no cover — type-only import
     from ...core import Period
     from ...core.identity import SubjectTaxId
+    from ..calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RelationId, SourceRefId
 
 
 @runtime_checkable
@@ -47,14 +48,14 @@ class CasillaSchema(Protocol):
     """The minimal casilla schema surface consumed by builders.
 
     Attributes:
-        id: Stable casilla ID (e.g. ``"01"``).
+        casilla_id: Stable canonical ``casilla.id`` (e.g. ``"01"``).
         value_type: One of ``"decimal"``, ``"int"``, ``"str"``,
             ``"bool"``, ``"date"``.
         required: Whether the casilla must be present in a valid
             draft.
         formula: ID of the formula declared on this casilla, or
             ``None`` for literal casillas.
-        formula_inputs: Tuple of casilla IDs this casilla depends
+        formula_input_casilla_ids: Tuple of casilla IDs this casilla depends
             on. Empty for literal casillas.
         legal_refs: Regulatory citations grounding this casilla's
             definition (BOE / AEAT permalinks).
@@ -66,8 +67,8 @@ class CasillaSchema(Protocol):
     """
 
     @property
-    def id(self) -> str:
-        """Return the casilla identifier."""
+    def casilla_id(self) -> CasillaId:
+        """Return the canonical ``casilla.id`` identifier."""
         ...
 
     @property
@@ -81,22 +82,22 @@ class CasillaSchema(Protocol):
         ...
 
     @property
-    def formula(self) -> str | None:
+    def formula(self) -> FormulaId | None:
         """Return the formula ID, or ``None`` if this is a literal casilla."""
         ...
 
     @property
-    def formula_inputs(self) -> tuple[str, ...]:
+    def formula_input_casilla_ids(self) -> tuple[CasillaId, ...]:
         """Return the casilla IDs this casilla's formula depends on."""
         ...
 
     @property
-    def legal_refs(self) -> tuple[str, ...]:
+    def legal_refs(self) -> tuple[LegalRefId, ...]:
         """Return the regulatory citation IDs grounding this casilla."""
         ...
 
     @property
-    def source_refs(self) -> tuple[str, ...]:
+    def source_refs(self) -> tuple[SourceRefId, ...]:
         """Return the source-material citation IDs for this casilla."""
         ...
 
@@ -129,7 +130,7 @@ class CasillaCollection(Protocol):
         """Iterate the collection."""
         ...
 
-    def get(self, casilla_id: str) -> CasillaSchema | None:
+    def get(self, casilla_id: CasillaId) -> CasillaSchema | None:
         """Return the :class:`CasillaSchema` for ``casilla_id``, or ``None``."""
         ...
 
@@ -199,15 +200,15 @@ class ModeloProfile(Protocol):
         ...
 
 
-# The canonical input contract for casilla and binding values handed
+# The canonical input contract for casilla, binding, and relation values handed
 # to a filing builder. Mapping not dict so callers may pass any
 # read-only mapping. This is the single definition of ``ModeloInputs``
 # in the codebase; the application/workflow layer re-exports it.
 type ModeloInputScalar = str | int | Decimal | bool | date
-"""A single casilla or binding-row value accepted by the filing builder.
+"""A single casilla, binding-row, or relation value accepted by the filing builder.
 
 Casilla inputs are canonical strings or decimals; year casillas (for
-example modelo 390 casilla ``01``) are plain integers, and registry
+example modelo 390 casilla ``decl.ejercicio``) are plain integers, and registry
 bindings additionally accept booleans (``boolean`` data type) and
 dates (``text`` data type). ``build_draft`` parses and range-checks
 every scalar against the registry casilla / binding schema.
@@ -222,11 +223,11 @@ activity rows) accept a ``Sequence`` of row scalars, or a ``Mapping``
 of explicit row key to scalar.
 """
 
-type ModeloInputs = Mapping[str, ModeloInputValue]
-"""Read-only input mapping for casilla and binding values handed to a
+type ModeloInputs = Mapping[CasillaId | BindingId | RelationId, ModeloInputValue]
+"""Read-only input mapping for casilla, binding, and relation values handed to a
 filing builder.
 
-Keys are casilla or binding IDs; values are :data:`ModeloInputValue`.
+Keys are casilla, binding, or relation IDs; values are :data:`ModeloInputValue`.
 A workflow inputs-provider that only ever yields flat scalars still
 satisfies this contract, so the workflow layer re-exports this symbol
 rather than defining a narrower divergent alias.

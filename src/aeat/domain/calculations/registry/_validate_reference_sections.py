@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 _CONSTRUCT_MEMBER_AXES: tuple[tuple[str, str], ...] = (
-    ("casillas", "casilla_ids"),
+    ("casilla_ids", "casilla_ids"),
     ("formulas", "formula_ids"),
     ("parameters", "parameter_ids"),
     ("bindings", "binding_ids"),
@@ -62,15 +62,14 @@ def check_algorithm_binding_refs(checker: IdReferenceChecker, revision: ModeloRe
         abp = f"algorithm_binding {alg_binding.id}"
         if alg_binding.provider not in provider_ids:
             checker.failures.append(f"{checker.prefix}: {abp}.provider references unknown id {alg_binding.provider!r}")
-        # target is CasillaId | str; treat as CasillaId candidate.
-        checker.chk(f"{abp}.target", alg_binding.target, checker.casilla_ids)
+        checker.chk(f"{abp}.target_casilla_id", alg_binding.target_casilla_id, checker.casilla_ids)
         for input_name, input_id in alg_binding.inputs.items():
             if input_id not in resolvable_ids:
                 checker.failures.append(
                     f"{checker.prefix}: {abp}.inputs.{input_name} references unknown id {input_id!r}",
                 )
-        for output_name, output_id in alg_binding.outputs.items():
-            checker.chk(f"{abp}.outputs.{output_name}", output_id, checker.casilla_ids)
+        for output_name, output_id in alg_binding.output_casilla_ids.items():
+            checker.chk(f"{abp}.output_casilla_ids.{output_name}", output_id, checker.casilla_ids)
         checker.chk_tuple(f"{abp}.constants", alg_binding.constants, checker.parameter_ids)
         checker.chk_legal_source_refs(abp, alg_binding.legal_refs, alg_binding.source_refs)
 
@@ -83,10 +82,14 @@ def check_export_layout_refs(checker: IdReferenceChecker, revision: ModeloRevisi
             checker.chk(f"{lyp}.dictionary_source_ref", layout.dictionary_source_ref, checker.source_ids)
         for record in layout.records:
             rcp = f"{lyp}.record {record.id}"
-            checker.chk_opt(f"{rcp}.requires_positive_casilla", record.requires_positive_casilla, checker.casilla_ids)
+            checker.chk_opt(
+                f"{rcp}.requires_positive_casilla_id",
+                record.requires_positive_casilla_id,
+                checker.casilla_ids,
+            )
             for field in record.fields:
                 efp = f"{rcp}.field {field.id}"
-                checker.chk_opt(f"{efp}.casilla", field.casilla, checker.casilla_ids)
+                checker.chk_opt(f"{efp}.casilla_id", field.casilla_id, checker.casilla_ids)
                 checker.chk_opt(f"{efp}.binding", field.binding, checker.binding_ids)
                 checker.chk_legal_source_refs(efp, field.legal_refs, field.source_refs)
 

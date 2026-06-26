@@ -27,6 +27,7 @@ from functools import cache
 import pytest
 
 from .....core.resources import bundled_path
+from .. import CasillaId, validated_casilla_id
 from .._formula_runtime import calculate_registry_snapshot
 from .._loader import load_registry_tree
 from .._snapshot import _build_validated_snapshot  # type: ignore[reportPrivateUsage]
@@ -35,6 +36,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _SOURCE_ROOT = bundled_path()
+_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
+    "0511",
+    surface="_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA",
+)
 
 
 @cache
@@ -80,7 +85,7 @@ _REL_2025 = {
 }
 
 
-def _calc_2024(birth_date: date) -> Mapping[str, Decimal]:
+def _calc_2024(birth_date: date) -> Mapping[CasillaId, Decimal]:
     """Run the 2024 snapshot calculation for a single-taxpayer scenario."""
     snap = _snapshot(2024)
     result = calculate_registry_snapshot(
@@ -113,7 +118,7 @@ def _calc_2024(birth_date: date) -> Mapping[str, Decimal]:
     return result.values
 
 
-def _calc_2025(birth_date: date) -> Mapping[str, Decimal]:
+def _calc_2025(birth_date: date) -> Mapping[CasillaId, Decimal]:
     """Run the 2025 snapshot calculation for a single-taxpayer scenario."""
     snap = _snapshot(2025)
     result = calculate_registry_snapshot(
@@ -165,8 +170,7 @@ def test_0511_age_bracket_2024(birth_date: date, expected: Decimal, label: str) 
     +1 400 EUR additional for age >= 75.
     """
     values = _calc_2024(birth_date)
-    actual = values.get("0511")
-    assert actual is not None, f"casilla 0511 missing from 2024 result ({label})"
+    actual = values[_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA]
     assert actual == expected, (
         f"0511 ({label}): got {actual!r}, expected {expected!r} (birth_date={birth_date}, filing_year=2024)"
     )
@@ -188,8 +192,7 @@ def test_0511_age_bracket_2024(birth_date: date, expected: Decimal, label: str) 
 def test_0511_age_bracket_2025(birth_date: date, expected: Decimal, label: str) -> None:
     """Casilla 0511 returns the correct age-derived amount for 2025 filing year."""
     values = _calc_2025(birth_date)
-    actual = values.get("0511")
-    assert actual is not None, f"casilla 0511 missing from 2025 result ({label})"
+    actual = values[_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA]
     assert actual == expected, (
         f"0511 ({label}): got {actual!r}, expected {expected!r} (birth_date={birth_date}, filing_year=2025)"
     )
@@ -209,9 +212,7 @@ def test_0511_birth_date_change_alters_value_2024() -> None:
     values_under_65 = _calc_2024(date(1965, 1, 1))  # 59 at year-end 2024
     values_over_65 = _calc_2024(date(1959, 3, 15))  # 65 at year-end 2024
 
-    v_under = values_under_65.get("0511")
-    v_over = values_over_65.get("0511")
+    v_under = values_under_65[_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA]
+    v_over = values_over_65[_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA]
 
-    assert v_under is not None, "0511 missing from result (under-65 scenario)"
-    assert v_over is not None, "0511 missing from result (over-65 scenario)"
     assert v_under != v_over, f"0511 must differ across the 65-year threshold: under-65={v_under}, over-65={v_over}"

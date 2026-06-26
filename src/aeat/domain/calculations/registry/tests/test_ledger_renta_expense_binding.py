@@ -19,6 +19,7 @@ from ....renta import (
     evaluate_renta_deductibility,
 )
 from .. import (
+    CasillaId,
     DataBindingDefinition,
     ModeloRevision,
     RegistrySnapshot,
@@ -29,9 +30,27 @@ from .. import (
     resolve_ledger_renta_expense_aggregation_binding_values,
     unsupported_ledger_renta_expense_observations,
     validate_ledger_renta_expense_aggregation_binding_definition,
+    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M100_GASTO_SS_CASILLA: CasillaId = validated_casilla_id(
+    "0186",
+    surface="_M100_GASTO_SS_CASILLA",
+)
+_M100_GASTO_ARRENDAMIENTOS_CASILLA: CasillaId = validated_casilla_id(
+    "0192",
+    surface="_M100_GASTO_ARRENDAMIENTOS_CASILLA",
+)
+_M100_GASTO_OTROS_CONCEPTOS_CASILLA: CasillaId = validated_casilla_id(
+    "0199",
+    surface="_M100_GASTO_OTROS_CONCEPTOS_CASILLA",
+)
+_M100_GASTO_AMORTIZACIONES_CASILLA: CasillaId = validated_casilla_id(
+    "0203",
+    surface="_M100_GASTO_AMORTIZACIONES_CASILLA",
+)
 
 
 def _modelo_100_2025_snapshot():
@@ -74,10 +93,16 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     revision = snapshot.revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
-    assert casillas_by_id["0186"].binding == "renta-2025-ledger-expense-0186-deductible"
-    assert casillas_by_id["0192"].binding == "renta-2025-ledger-expense-0192-deductible"
-    assert casillas_by_id["0199"].binding == "renta-2025-ledger-expense-0199-deductible"
-    assert casillas_by_id["0203"].binding == "renta-2025-ledger-expense-0203-deductible"
+    assert casillas_by_id[_M100_GASTO_SS_CASILLA].binding == "renta-2025-ledger-expense-0186-deductible"
+    assert casillas_by_id[_M100_GASTO_ARRENDAMIENTOS_CASILLA].binding == (
+        "renta-2025-ledger-expense-0192-deductible"
+    )
+    assert casillas_by_id[_M100_GASTO_OTROS_CONCEPTOS_CASILLA].binding == (
+        "renta-2025-ledger-expense-0199-deductible"
+    )
+    assert casillas_by_id[_M100_GASTO_AMORTIZACIONES_CASILLA].binding == (
+        "renta-2025-ledger-expense-0203-deductible"
+    )
 
     observations = (
         _expense_observation(
@@ -109,17 +134,25 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     # observations land in 0199 producing a non-zero aggregate;
     # untouched categories stay zero. Arithmetic correctness against
     # AEAT is verified by the Renta WEB Open replay-parity layer.
-    assert casilla_inputs["0186"] > Decimal("0"), "single CUOTAS_AUTONOMOS_SS observation must route to 0186"
-    assert casilla_inputs["0192"] == Decimal("0"), "no observation in 0192's category — must aggregate to zero"
-    assert casilla_inputs["0199"] > Decimal("0"), "ASESORIA_FISCAL + ASESORIA_CONTABLE must both route to 0199"
-    assert casilla_inputs["0203"] == Decimal("0"), "no observation in 0203's category — must aggregate to zero"
+    assert casilla_inputs[_M100_GASTO_SS_CASILLA] > Decimal("0"), (
+        "single CUOTAS_AUTONOMOS_SS observation must route to 0186"
+    )
+    assert casilla_inputs[_M100_GASTO_ARRENDAMIENTOS_CASILLA] == Decimal("0"), (
+        "no observation in 0192's category — must aggregate to zero"
+    )
+    assert casilla_inputs[_M100_GASTO_OTROS_CONCEPTOS_CASILLA] > Decimal("0"), (
+        "ASESORIA_FISCAL + ASESORIA_CONTABLE must both route to 0199"
+    )
+    assert casilla_inputs[_M100_GASTO_AMORTIZACIONES_CASILLA] == Decimal("0"), (
+        "no observation in 0203's category — must aggregate to zero"
+    )
 
     # Single-observation identity check: 0186 receives one observation
     # and the binding's aggregate must equal that observation's
     # deductible amount. The expected value comes from the deductibility
     # evaluator on the same observation, not from a fresh computation.
     ss_observation = observations[0]
-    assert casilla_inputs["0186"] == ss_observation.deductible_amount, (
+    assert casilla_inputs[_M100_GASTO_SS_CASILLA] == ss_observation.deductible_amount, (
         "0186 binding aggregate of one observation must equal that observation's deductible amount"
     )
 
@@ -154,8 +187,10 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     # Calculation threading: the snapshot calculator must thread
     # binding values into casilla.values rather than computing fresh
     # aggregates.
-    assert calculation.values["0186"] == binding_values["renta-2025-ledger-expense-0186-deductible"]
-    assert calculation.values["0199"] == binding_values["renta-2025-ledger-expense-0199-deductible"]
+    assert calculation.values[_M100_GASTO_SS_CASILLA] == binding_values["renta-2025-ledger-expense-0186-deductible"]
+    assert calculation.values[_M100_GASTO_OTROS_CONCEPTOS_CASILLA] == binding_values[
+        "renta-2025-ledger-expense-0199-deductible"
+    ]
 
 
 def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
@@ -163,13 +198,18 @@ def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
     # schema-hygiene gate (test_registry_tests_do_not_define_schema_authority_objects)
     # stays clean. The gate forbids the direct keyword-constructor syntax for
     # schema-authority types in test files; the validator under test still
-    # needs an invalid binding instance to exercise the target_casilla
+    # needs an invalid binding instance to exercise the target_casilla_id
     # allow-list error path.
     binding = DataBindingDefinition.model_validate(
         {
             "id": "bad-renta-binding",
             "source": "ledger_renta_expense_aggregation",
-            "selector": {"modelo": "100", "period": "0A", "target_casilla": "9999", "fact": "deductible_amount_sum"},
+            "selector": {
+                "modelo": "100",
+                "period": "0A",
+                "target_casilla_id": "9999",
+                "fact": "deductible_amount_sum",
+            },
             "aggregation": {"op": "sum"},
             "legal_refs": ("ley-35-2006:art-28",),
             "source_refs": ("aeat-renta-2025-manual-parte1",),
@@ -180,20 +220,45 @@ def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
         validate_ledger_renta_expense_aggregation_binding_definition(binding)
 
 
-def _single_expense_binding_revision(snapshot: RegistrySnapshot, target_casilla: str) -> ModeloRevision:
-    """A revision carrying only the one renta-expense binding for ``target_casilla``."""
+def test_renta_ledger_expense_binding_rejects_legacy_target_casilla_key() -> None:
+    binding = DataBindingDefinition.model_validate(
+        {
+            "id": "bad-renta-binding-legacy-target-key",
+            "source": "ledger_renta_expense_aggregation",
+            "selector": {
+                "modelo": "100",
+                "period": "0A",
+                "target_casilla": "0186",
+                "fact": "deductible_amount_sum",
+            },
+            "aggregation": {"op": "sum"},
+            "legal_refs": ("ley-35-2006:art-28",),
+            "source_refs": ("aeat-renta-2025-manual-parte1",),
+        },
+    )
+
+    with pytest.raises(RegistryValidationError) as exc_info:
+        validate_ledger_renta_expense_aggregation_binding_definition(binding)
+
+    detail = str(exc_info.value)
+    assert "target_casilla_id" in detail
+    assert "target_casilla" in detail
+
+
+def _single_expense_binding_revision(snapshot: RegistrySnapshot, target_casilla_id: CasillaId) -> ModeloRevision:
+    """A revision carrying only the one renta-expense binding for ``target_casilla_id``."""
     revision = snapshot.revision
     binding = next(
         item
         for item in revision.bindings
         if item.source == "ledger_renta_expense_aggregation"
-        and dict(item.selector).get("target_casilla") == target_casilla
+        and dict(item.selector).get("target_casilla_id") == target_casilla_id
     )
     return revision.model_copy(update={"bindings": (binding,)})
 
 
 def test_unsupported_renta_expense_flags_observation_routed_to_no_binding() -> None:
-    """A non-zero deductible whose target_casilla matches no binding is surfaced.
+    """A non-zero deductible whose target_casilla_id matches no binding is surfaced.
 
     The revision carries only the 0186 binding; a 0199-routed deductible
     observation reaches no binding and would silently vanish from the filing,
@@ -212,8 +277,8 @@ def test_unsupported_renta_expense_flags_observation_routed_to_no_binding() -> N
         category=SpendingCategory.ASESORIA_FISCAL,  # routes to 0199 — no binding on this revision
         gross_amount=Decimal("121.00"),
     )
-    assert routed.target_casilla == "0186"
-    assert unrouted.target_casilla == "0199"
+    assert routed.target_casilla_id == "0186"
+    assert unrouted.target_casilla_id == "0199"
     assert unrouted.deductible_amount > Decimal("0")
 
     result = unsupported_ledger_renta_expense_observations(revision, (routed, unrouted))
@@ -231,7 +296,7 @@ class _ExpenseObservation(BaseModel):
 
     modelo: Modelo
     period: str
-    target_casilla: str
+    target_casilla_id: CasillaId
     deductible_amount: Decimal
 
 
@@ -240,7 +305,7 @@ def test_unsupported_renta_expense_does_not_flag_zero_deductible() -> None:
 
     A zero deductible contributes nothing whether or not it is routed, so the
     false-fire guard (the ledger-iva-advisory cuota-bearing precedent) excludes
-    it even when its target_casilla matches no binding on the revision.
+    it even when its target_casilla_id matches no binding on the revision.
     """
     snapshot = _modelo_100_2025_snapshot()
     revision = _single_expense_binding_revision(snapshot, "0186")
@@ -248,7 +313,7 @@ def test_unsupported_renta_expense_does_not_flag_zero_deductible() -> None:
     zero_unrouted = _ExpenseObservation(
         modelo=Modelo.M100,
         period="0A",
-        target_casilla="0199",  # no binding on this single-binding revision
+        target_casilla_id=_M100_GASTO_OTROS_CONCEPTOS_CASILLA,
         deductible_amount=Decimal("0"),
     )
 

@@ -23,7 +23,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.resources import bundled_path
-from .. import load_modelo_path
+from .. import CasillaId, load_modelo_path, validated_casilla_id
 from .._schema import (
     CasillaAlias,
     CasillaConstraints,
@@ -47,10 +47,12 @@ from .._validate_semantic_roles import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_TEST_CASILLA_ID: CasillaId = validated_casilla_id("test_casilla", surface="_TEST_CASILLA_ID")
+
 
 def _casilla(
     *,
-    cid: str = "test_casilla",
+    cid: CasillaId = _TEST_CASILLA_ID,
     data_type: str = "money",
     semantic_role: str | None = None,
     semantic_role_cardinality: str = "shared",

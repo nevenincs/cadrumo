@@ -17,6 +17,7 @@ from typing import TypedDict
 import pytest
 from pydantic import ValidationError
 
+from ...calculations.registry import CasillaId
 from .._row_models import (
     M347_THRESHOLD_EUR,
     Modelo184MemberRow,
@@ -29,13 +30,16 @@ from .._row_models import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+type RevisionInputSnapshot = dict[str, str]
+
+
 class _BaseRevisionIdKwargs(TypedDict):
     """Typed base kwargs for derive_calculation_revision_id calls in tests."""
 
     work_unit_id: str
-    inputs_snapshot: dict[str, str]
+    input_values_by_casilla_id: RevisionInputSnapshot
     binding_overrides: dict[str, str]
-    casilla_values: dict[str, Decimal]
+    casilla_values: dict[CasillaId, Decimal]
 
 
 # ---------------------------------------------------------------------------
@@ -229,7 +233,7 @@ class TestRevisionIdWithDetailRows:
 
         base_kwargs: _BaseRevisionIdKwargs = {
             "work_unit_id": "a" * 64,
-            "inputs_snapshot": {},
+            "input_values_by_casilla_id": {},
             "binding_overrides": {},
             "casilla_values": {},
         }
@@ -260,14 +264,14 @@ class TestRevisionIdWithDetailRows:
         )
         first = derive_calculation_revision_id(
             work_unit_id="b" * 64,
-            inputs_snapshot={},
+            input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values={},
             detail_rows=rows,
         )
         second = derive_calculation_revision_id(
             work_unit_id="b" * 64,
-            inputs_snapshot={},
+            input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values={},
             detail_rows=rows,
@@ -282,14 +286,14 @@ class TestRevisionIdWithDetailRows:
         row_b = Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("60"), importe=Decimal("6000"))
         id_ab = derive_calculation_revision_id(
             work_unit_id="c" * 64,
-            inputs_snapshot={},
+            input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values={},
             detail_rows=(row_a, row_b),
         )
         id_ba = derive_calculation_revision_id(
             work_unit_id="c" * 64,
-            inputs_snapshot={},
+            input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values={},
             detail_rows=(row_b, row_a),
@@ -303,7 +307,7 @@ class TestRevisionIdWithDetailRows:
         def _id(importe_1: str, importe_2: str) -> str:
             return derive_calculation_revision_id(
                 work_unit_id="d" * 64,
-                inputs_snapshot={},
+                input_values_by_casilla_id={},
                 binding_overrides={},
                 casilla_values={},
                 detail_rows=(
@@ -635,7 +639,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
 
         base: _BaseRevisionIdKwargs = {
             "work_unit_id": "a" * 64,
-            "inputs_snapshot": {},
+            "input_values_by_casilla_id": {},
             "binding_overrides": {},
             "casilla_values": {},
         }
@@ -665,7 +669,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
         )
         rev_id = derive_calculation_revision_id(
             work_unit_id="b" * 64,
-            inputs_snapshot={},
+            input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values={},
             detail_rows=rows,
@@ -683,7 +687,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
 
         base: _BaseRevisionIdKwargs = {
             "work_unit_id": "c" * 64,
-            "inputs_snapshot": {},
+            "input_values_by_casilla_id": {},
             "binding_overrides": {},
             "casilla_values": {},
         }
@@ -721,7 +725,7 @@ class TestRevisionIdAcrossAllFourRowTypes:
 
         base: _BaseRevisionIdKwargs = {
             "work_unit_id": "d" * 64,
-            "inputs_snapshot": {},
+            "input_values_by_casilla_id": {},
             "binding_overrides": {},
             "casilla_values": {},
         }

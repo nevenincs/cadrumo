@@ -11,6 +11,7 @@ from ._cross_revision_divergence import (
     _iter_cross_revision_casilla_divergences,
 )
 from ._errors import RegistryValidationError
+from ._ids import CasillaId
 from ._schema import ModeloDefinition
 
 __all__ = (
@@ -28,7 +29,7 @@ class CrossRevisionCasillaDriftSummary:
     right_revision_id: str
     field: str
     drift_count: int
-    example_casilla_ids: tuple[str, ...]
+    example_casilla_ids: tuple[CasillaId, ...]
     continuidad_ids: tuple[str, ...] = ()
     evolution_kinds: tuple[str, ...] = ()
     covered_by_evolution_count: int = 0

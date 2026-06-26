@@ -18,7 +18,7 @@ from ...core.errors import BaseSeverity
 from ...core.hashing import content_hash_hex
 from ...core.i18n import Translatable as tr
 from ...core.identity import SubjectTaxId
-from ..calculations.registry import BindingId, CasillaId, RegistrySnapshotRef
+from ..calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RegistrySnapshotRef, SourceRefId
 from ..submission import ModeloDraftStatus
 
 APPROVAL_BASIS_VERSION = "review-basis-v1"
@@ -54,7 +54,7 @@ class ModeloValue(BaseModel):
         source: Free-text provenance string — e.g.
             ``"user-supplied"``, ``"computed from 01,02"``,
             ``"default per modelo schema"``.
-        formula_trace: For ``COMPUTED`` values, the casilla IDs
+        formula_trace_casilla_ids: For ``COMPUTED`` values, the casilla IDs
             that fed the computation. ``None`` for non-computed
             kinds.
     """
@@ -65,7 +65,7 @@ class ModeloValue(BaseModel):
     value: ModeloScalar
     kind: ModeloValueKind
     source: str
-    formula_trace: tuple[str, ...] | None = None
+    formula_trace_casilla_ids: tuple[CasillaId, ...] | None = None
 
 
 class ModeloBindingValue(BaseModel):
@@ -96,8 +96,8 @@ class ModeloBindingValue(BaseModel):
     value: ModeloScalar
     kind: ModeloValueKind
     source: BindingSourceKind
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     row_index: int | None = Field(default=None, ge=1)
 
 
@@ -114,9 +114,9 @@ class ModeloCasillaProvenance(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     casilla_id: CasillaId
-    formula_id: str | None = None
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    formula_id: FormulaId | None = None
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
 class ModeloValidationFinding(BaseModel):

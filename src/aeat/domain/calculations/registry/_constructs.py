@@ -76,7 +76,7 @@ def _index(values: tuple[Any, ...]) -> Mapping[str, object]:
 
 
 _CONSTRUCT_MEMBER_INDEXES: tuple[tuple[str, str, _RevisionIndex], ...] = (
-    ("casilla", "casillas", lambda revision: _index(revision.casillas)),
+    ("casilla", "casilla_ids", lambda revision: _index(revision.casillas)),
     ("formula", "formulas", lambda revision: _index(revision.formulas)),
     ("parameter", "parameters", lambda revision: _index(revision.parameters)),
     ("binding", "bindings", lambda revision: _index(revision.bindings)),

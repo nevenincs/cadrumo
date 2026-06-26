@@ -67,7 +67,7 @@ def _normalise_dispatch_table_entries(value: object) -> object:
 class FormulaExpression(RegistryModel):
     op: FormulaOperator | None = None
     args: tuple[FormulaExpression, ...] = ()
-    casilla: CasillaId | None = None
+    casilla_id: CasillaId | None = None
     binding: BindingId | None = None
     date_binding: BindingId | None = None
     parameter: ParameterId | None = None
@@ -83,7 +83,7 @@ class FormulaExpression(RegistryModel):
     @model_validator(mode="after")
     def _validate_expression(self) -> FormulaExpression:
         populated_leaves = [
-            self.casilla is not None,
+            self.casilla_id is not None,
             self.binding is not None,
             self.date_binding is not None,
             self.parameter is not None,
