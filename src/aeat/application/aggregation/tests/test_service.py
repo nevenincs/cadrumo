@@ -18,9 +18,9 @@ from .._errors import AggregationConfigError
 from .._service import (
     ACCEPTED_SOURCE_KINDS,
     PerModeloAggregationContract,
+    PerModeloAggregationContributor,
+    PerModeloAggregationContributorContract,
     PerModeloAggregationLogFields,
-    PerModeloAggregationProvider,
-    PerModeloAggregationProviderContract,
     PerModeloAggregationResult,
 )
 
@@ -63,27 +63,27 @@ def test_aggregation_config_error_round_trips_through_build_error_envelope() -> 
 # ---------------------------------------------------------------------------
 
 
-def _retenciones_contract() -> PerModeloAggregationProviderContract:
-    return PerModeloAggregationProviderContract(
-        provider=PerModeloAggregationProvider.RETENCIONES,
+def _retenciones_contract() -> PerModeloAggregationContributorContract:
+    return PerModeloAggregationContributorContract(
+        provider=PerModeloAggregationContributor.RETENCIONES,
         modelos=("111", "115", "123", "180", "190", "193"),
         service_owner="aeat.application.aggregation",
         accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
     )
 
 
-def _counterpart_contract() -> PerModeloAggregationProviderContract:
-    return PerModeloAggregationProviderContract(
-        provider=PerModeloAggregationProvider.COUNTERPART,
+def _counterpart_contract() -> PerModeloAggregationContributorContract:
+    return PerModeloAggregationContributorContract(
+        provider=PerModeloAggregationContributor.COUNTERPART,
         modelos=("347", "349"),
         service_owner="aeat.application.aggregation",
         accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
     )
 
 
-def _foreign_assets_contract() -> PerModeloAggregationProviderContract:
-    return PerModeloAggregationProviderContract(
-        provider=PerModeloAggregationProvider.FOREIGN_ASSETS,
+def _foreign_assets_contract() -> PerModeloAggregationContributorContract:
+    return PerModeloAggregationContributorContract(
+        provider=PerModeloAggregationContributor.FOREIGN_ASSETS,
         modelos=("720",),
         service_owner="aeat.application.aggregation",
         accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
@@ -91,10 +91,10 @@ def _foreign_assets_contract() -> PerModeloAggregationProviderContract:
 
 
 def test_site1_provider_contract_rejects_duplicate_modelos() -> None:
-    """PerModeloAggregationProviderContract._modelos_are_unique raises AggregationConfigError."""
+    """PerModeloAggregationContributorContract._modelos_are_unique raises AggregationConfigError."""
     with pytest.raises(ValidationError) as exc_info:
-        PerModeloAggregationProviderContract(
-            provider=PerModeloAggregationProvider.RETENCIONES,
+        PerModeloAggregationContributorContract(
+            provider=PerModeloAggregationContributor.RETENCIONES,
             modelos=("111", "111"),  # duplicate
             service_owner="aeat.application.aggregation",
             accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
@@ -107,8 +107,8 @@ def test_site1_provider_contract_rejects_duplicate_modelos() -> None:
 
 def test_site2_contract_rejects_duplicate_providers() -> None:
     """PerModeloAggregationContract._providers_are_unique raises AggregationConfigError."""
-    retenciones_dup = PerModeloAggregationProviderContract(
-        provider=PerModeloAggregationProvider.RETENCIONES,
+    retenciones_dup = PerModeloAggregationContributorContract(
+        provider=PerModeloAggregationContributor.RETENCIONES,
         modelos=("193",),
         service_owner="aeat.application.aggregation",
         accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
@@ -127,8 +127,8 @@ def test_site2_contract_rejects_duplicate_providers() -> None:
 def test_site3_contract_rejects_modelo_owned_by_multiple_providers() -> None:
     """PerModeloAggregationContract._providers_are_unique raises AggregationConfigError for modelo collision."""
     # Two distinct providers that claim the same modelo
-    counterpart_with_extra = PerModeloAggregationProviderContract(
-        provider=PerModeloAggregationProvider.COUNTERPART,
+    counterpart_with_extra = PerModeloAggregationContributorContract(
+        provider=PerModeloAggregationContributor.COUNTERPART,
         modelos=("347", "349", "111"),  # 111 also claimed by retenciones
         service_owner="aeat.application.aggregation",
         accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
@@ -200,7 +200,7 @@ def test_site6_result_rejects_duplicate_source_kinds() -> None:
     log = PerModeloAggregationLogFields(
         modelo="111",
         period=_P_2025_Q1,
-        provider=PerModeloAggregationProvider.RETENCIONES,
+        provider=PerModeloAggregationContributor.RETENCIONES,
         observation_count=1,
         source_kind_count=1,
         result_row_count=1,
@@ -209,7 +209,7 @@ def test_site6_result_rejects_duplicate_source_kinds() -> None:
         PerModeloAggregationResult(
             modelo="111",
             period=_P_2025_Q1,
-            provider=PerModeloAggregationProvider.RETENCIONES,
+            provider=PerModeloAggregationContributor.RETENCIONES,
             aggregation=agg,
             source_kinds=(
                 BindingSourceKind.LEDGER_TRANSACTION,
@@ -245,7 +245,7 @@ def test_site7_result_rejects_modelo_mismatch() -> None:
     log = PerModeloAggregationLogFields(
         modelo="349",
         period=_P_2025_ANNUAL,
-        provider=PerModeloAggregationProvider.COUNTERPART,
+        provider=PerModeloAggregationContributor.COUNTERPART,
         observation_count=1,
         source_kind_count=1,
         result_row_count=1,
@@ -254,7 +254,7 @@ def test_site7_result_rejects_modelo_mismatch() -> None:
         PerModeloAggregationResult(
             modelo="349",  # mismatch: aggregation says 347
             period=_P_2025_ANNUAL,
-            provider=PerModeloAggregationProvider.COUNTERPART,
+            provider=PerModeloAggregationContributor.COUNTERPART,
             aggregation=agg,
             source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
             log_fields=log,
@@ -287,7 +287,7 @@ def test_site8_result_rejects_period_mismatch() -> None:
     log = PerModeloAggregationLogFields(
         modelo="347",
         period=_P_2024_ANNUAL,
-        provider=PerModeloAggregationProvider.COUNTERPART,
+        provider=PerModeloAggregationContributor.COUNTERPART,
         observation_count=1,
         source_kind_count=1,
         result_row_count=1,
@@ -296,7 +296,7 @@ def test_site8_result_rejects_period_mismatch() -> None:
         PerModeloAggregationResult(
             modelo="347",
             period=_P_2024_ANNUAL,  # mismatch: aggregation says 2025
-            provider=PerModeloAggregationProvider.COUNTERPART,
+            provider=PerModeloAggregationContributor.COUNTERPART,
             aggregation=agg,
             source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
             log_fields=log,
@@ -328,7 +328,7 @@ def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
     log = PerModeloAggregationLogFields(
         modelo="111",
         period=_P_2025_Q1,
-        provider=PerModeloAggregationProvider.COUNTERPART,
+        provider=PerModeloAggregationContributor.COUNTERPART,
         observation_count=1,
         source_kind_count=1,
         result_row_count=1,
@@ -337,7 +337,7 @@ def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
         PerModeloAggregationResult(
             modelo="111",
             period=_P_2025_Q1,
-            provider=PerModeloAggregationProvider.COUNTERPART,  # wrong provider for RetencionesAggregation
+            provider=PerModeloAggregationContributor.COUNTERPART,  # wrong provider for RetencionesAggregation
             aggregation=agg,
             source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
             log_fields=log,
