@@ -58,12 +58,8 @@ from ._multi_year import (
     EnrollmentEvidenceError,
     EnrollmentRecorder,
     EnrollmentYearObservation,
-    MultiYearResolutionReport,
-    MultiYearResolutionRequest,
-    MultiYearResolver,
     PreviousFilingSourceResolver,
     assert_enrollment_matches_manifest,
-    resolve_prior_year_observations,
 )
 from ._observations_repository import (
     CalculationObservationRepository,
@@ -110,9 +106,6 @@ __all__ = [
     "IvaWalletDecisionRepository",
     "IvaWalletDecisionSourceResolver",
     "LocalIvaCompensationRecurrence",
-    "MultiYearResolutionReport",
-    "MultiYearResolutionRequest",
-    "MultiYearResolver",
     "NoPriorObligationProvenance",
     "NoPriorObligationProvenanceKind",
     "PrefilledBinding",
@@ -143,7 +136,6 @@ __all__ = [
     "reconcile_modelo_303_iva_compensation",
     "resolve_bindings_from_local_store",
     "resolve_maritime_exemption",
-    "resolve_prior_year_observations",
     "resolve_relations_from_local_store",
     "seed_iva_compensation_period",
 ]
