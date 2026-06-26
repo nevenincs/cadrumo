@@ -19,6 +19,7 @@ from ._binding_selector_utils import invariant_diagnostics, selector_against_mod
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId
+from ._observation_fold import fold_sum_or_copy
 from ._period_offset_math import apply_period_offset
 from ._relations import RegistryFoldRequirement
 from ._schema import DataBindingDefinition, ModeloRevision, filing_period_from_scope
@@ -465,12 +466,13 @@ def _aggregate_previous_filing_binding(
     source_casilla_ids: tuple[CasillaId, ...] = (),
 ) -> Decimal:
     op = binding_aggregation_op(binding)
-    if op == BindingAggregationOp.SUM:
-        return sum(values, Decimal("0"))
-    if op == BindingAggregationOp.COPY:
-        if len(values) != 1:
-            raise RegistryValidationError(f"binding {binding.id!r} copy aggregation requires one source casilla")
-        return values[0]
+    if op in (BindingAggregationOp.SUM, BindingAggregationOp.COPY):
+        return fold_sum_or_copy(
+            op.value,
+            values,
+            subject=f"binding {binding.id!r}",
+            copy_unit="source casilla",
+        )
     if op == BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS:
         return _aggregate_prior_pagos_fraccionados(binding, values, source_casilla_ids=source_casilla_ids)
     raise RegistryValidationError(f"binding {binding.id!r} uses unsupported previous-filing aggregation {op.value!r}")

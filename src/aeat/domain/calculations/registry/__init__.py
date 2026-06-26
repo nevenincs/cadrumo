@@ -221,6 +221,7 @@ from ._loader import (
 )
 from ._observation_fold import (
     fold_observed_requirement_values,
+    fold_sum_or_copy,
     gather_observed_requirement_values,
     resolve_observed_requirement_value,
 )
@@ -637,6 +638,7 @@ __all__ = [
     "extract_record_design_pdf_bytes",
     "extract_record_design_workbook",
     "fold_observed_requirement_values",
+    "fold_sum_or_copy",
     "gather_observed_requirement_values",
     "generate_parity_tape_path",
     "get_censo_modelo_foundation_contract",

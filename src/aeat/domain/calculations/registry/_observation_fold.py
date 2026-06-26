@@ -61,6 +61,31 @@ def gather_observed_requirement_values(
     return tuple(values)
 
 
+def fold_sum_or_copy(
+    op: str,
+    values: tuple[Decimal, ...] | list[Decimal],
+    *,
+    subject: str,
+    copy_unit: str,
+) -> Decimal:
+    """Fold a value sequence through the shared ``sum`` / ``copy`` arithmetic.
+
+    The one place ``sum`` (add every value) and ``copy`` (require exactly one
+    value and return it) are implemented. ``subject`` and ``copy_unit`` carry the
+    caller's diagnostic vocabulary so a refused copy names the right entity
+    (a relation requirement's observation, or a binding's source casilla). An op
+    that is neither ``sum`` nor ``copy`` is rejected; callers handle any other op
+    (e.g. the Modelo 130 ``prior_pagos_fraccionados`` identity) before delegating.
+    """
+    if op == "copy":
+        if len(values) != 1:
+            raise RegistryValidationError(f"{subject} copy aggregation requires one {copy_unit}")
+        return values[0]
+    if op == "sum":
+        return sum(values, Decimal("0"))
+    raise RegistryValidationError(f"{subject} uses unsupported aggregation op {op!r}")
+
+
 def fold_observed_requirement_values(
     requirement: RegistryFoldRequirement,
     values: tuple[Decimal, ...],
@@ -68,20 +93,14 @@ def fold_observed_requirement_values(
     """Fold per-period source values through a requirement's ``copy`` / ``sum`` op.
 
     ``copy`` requires exactly one gathered value and returns it; ``sum`` adds the
-    gathered values. Any other op is rejected. This is the one fold both relation
-    paths apply; the period match is :func:`gather_observed_requirement_values`.
+    gathered values. This is the one fold both relation paths apply; the period
+    match is :func:`gather_observed_requirement_values`.
     """
-    if requirement.aggregation_op == "copy":
-        if len(values) != 1:
-            raise RegistryValidationError(
-                f"relation requirement {requirement.relation_ids!r} copy aggregation requires one observation",
-            )
-        return values[0]
-    if requirement.aggregation_op == "sum":
-        return sum(values, Decimal("0"))
-    raise RegistryValidationError(
-        f"relation requirement {requirement.relation_ids!r} uses unsupported aggregation op "
-        f"{requirement.aggregation_op!r}",
+    return fold_sum_or_copy(
+        requirement.aggregation_op,
+        values,
+        subject=f"relation requirement {requirement.relation_ids!r}",
+        copy_unit="observation",
     )
 
 
