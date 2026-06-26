@@ -347,3 +347,16 @@ and no-parallel-write-path rules.
   slot declares `source = "relation_prefill"`, never `source = "previous_filing"`;
   a `previous_filing` binding MUST carry a direct selector, and registry validation
   refuses a binding that is both relation-targeted and previous-filing-resolvable.
+
+## Status
+
+Accepted and FOUNDATIONAL — not reopened. This ADR's mechanism-ownership table
+(relation = cross-modelo fold-in; `previous_filing` = same-modelo carry;
+`per_grupo_member` = fan-in; IVA wallet = compensación) is a foundation of the
+bindings-architecture-unification sweep. The sweep EXTENDS it in one respect, recorded
+in the canonical PHASE ADRs (not a central apex doc): the future phase-2.3
+(fold-in/relation) ADR completes this ADR's ownership decision by removing the
+duplicate value-layer IMPLEMENTATION it left standing (one requirement record, one
+observation-fold, one offset-math, typed relation aggregation). Those phase ADRs are
+the canonical direction for "how is a value sourced from another modelo or prior
+filing"; this ADR's decisions remain in force.
