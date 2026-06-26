@@ -70,7 +70,7 @@ class TestRunEventPayload:
         variants: list[RunEventPayload] = [
             RunEventPayload(navigation=NavigationPayload(url="https://example.test")),
             RunEventPayload(
-                form_fill=FormFillPayload(form_id="f1", casilla="03", value="1.50"),
+                form_fill=FormFillPayload(form_id="f1", display_number="03", value="1.50"),
             ),
             RunEventPayload(
                 assertion=AssertionPayload(expectation="open", passed=True),

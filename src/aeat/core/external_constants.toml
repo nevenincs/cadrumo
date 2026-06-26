@@ -173,9 +173,9 @@ renta_web_open_browser_action_patterns = [
   "start-open-simulator",
   "fill-synthetic-profile",
   "accept-identification",
-  "navigate-to-casilla:*",
+  "navigate-to-display-number:*",
   "navigate-to-resumen",
-  "apply-casilla-override:*",
+  "apply-display-override:*",
   "scrape-summary-field:*",
   "close-browser-context",
 ]

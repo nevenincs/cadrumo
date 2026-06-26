@@ -21,6 +21,7 @@ import json
 
 import pytest
 
+from .. import CasillaId, validated_casilla_id
 from ..json_contract import (
     ENVELOPE_SCHEMA_VERSION,
     EnvelopeStatus,
@@ -42,6 +43,24 @@ _OBJECT_KEY = "wallet:2026-secret"
 _OTHER_OBJECT_KEY = "wallet:2026-other"
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"JSON envelope fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.devengado")
+_IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
+_IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_RENDIMIENTO_NETO_CASILLA: CasillaId = _casilla_id("rendimiento_neto")
+_INGRESOS_CASILLA: CasillaId = _casilla_id("ingresos")
+_GASTOS_DEDUCIBLES_CASILLA: CasillaId = _casilla_id("gastos_deducibles")
+_SIMPLE_CASILLA: CasillaId = _casilla_id("01")
+_IVA_RESULTADO_OPERANDS = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
+_RENDIMIENTO_NETO_OPERANDS = (_INGRESOS_CASILLA, _GASTOS_DEDUCIBLES_CASILLA)
+
+
 class _ProvenancePayload(OutputSchema):
     """Inline OutputSchema with deep-data tuple fields.
 
@@ -51,10 +70,11 @@ class _ProvenancePayload(OutputSchema):
     str, and a non-empty default tuple field.
     """
 
-    casilla_id: str
+    casilla_id: CasillaId
     value: str
     formula_id: str | None = None
-    operand_refs: tuple[str, ...] = ()
+    operand_refs: tuple[CasillaId, ...] = ()
+    operand_casilla_refs: tuple[CasillaId, ...] = ()
     legal_refs: tuple[str, ...] = ()
 
 
@@ -77,10 +97,11 @@ def test_schema_envelope_full_roundtrip_via_json_dump_and_load() -> None:
     """
 
     result = _ProvenancePayload(
-        casilla_id="iva.resultado",
+        casilla_id=_IVA_RESULTADO_CASILLA,
         value="12345.67",
         formula_id="iva.formula.resultado",
-        operand_refs=("iva.devengado", "iva.deducible"),
+        operand_refs=_IVA_RESULTADO_OPERANDS,
+        operand_casilla_refs=_IVA_RESULTADO_OPERANDS,
         legal_refs=("LIVA.art-94",),
     )
     original = SchemaEnvelope[_ProvenancePayload](
@@ -104,7 +125,8 @@ def test_schema_envelope_full_roundtrip_via_json_dump_and_load() -> None:
     assert roundtripped.schema_version == ENVELOPE_SCHEMA_VERSION
     assert roundtripped.command == "app modelo formulas"
     assert roundtripped.status is EnvelopeStatus.WARNING
-    assert roundtripped.result.operand_refs == ("iva.devengado", "iva.deducible")
+    assert roundtripped.result.operand_refs == _IVA_RESULTADO_OPERANDS
+    assert roundtripped.result.operand_casilla_refs == _IVA_RESULTADO_OPERANDS
     assert roundtripped.result.legal_refs == ("LIVA.art-94",)
     assert roundtripped.notices[0].message == "deprecated: --format text"
 
@@ -123,9 +145,10 @@ def test_emit_json_success_emits_parseable_envelope_to_stream() -> None:
     """
 
     result = _ProvenancePayload(
-        casilla_id="rendimiento_neto",
+        casilla_id=_RENDIMIENTO_NETO_CASILLA,
         value="40000.00",
-        operand_refs=("ingresos", "gastos_deducibles"),
+        operand_refs=_RENDIMIENTO_NETO_OPERANDS,
+        operand_casilla_refs=_RENDIMIENTO_NETO_OPERANDS,
     )
     buffer = io.StringIO()
     emit_json_success(
@@ -151,7 +174,8 @@ def test_emit_json_success_emits_parseable_envelope_to_stream() -> None:
     # only knows to coerce list -> tuple when it owns the parse.
     roundtripped = SchemaEnvelope[_ProvenancePayload].model_validate_json(raw)
     assert roundtripped.result == result
-    assert roundtripped.result.operand_refs == ("ingresos", "gastos_deducibles")
+    assert roundtripped.result.operand_refs == _RENDIMIENTO_NETO_OPERANDS
+    assert roundtripped.result.operand_casilla_refs == _RENDIMIENTO_NETO_OPERANDS
 
 
 def test_emit_json_success_redacts_sensitive_values_without_breaking_envelope_shape() -> None:
@@ -229,7 +253,7 @@ def test_schema_envelope_rejects_unknown_outer_keys() -> None:
                 "command": "app modelo formulas",
                 "status": EnvelopeStatus.SUCCESS.value,
                 "result": {
-                    "casilla_id": "01",
+                    "casilla_id": _SIMPLE_CASILLA,
                     "value": "100.00",
                 },
                 "notices": [],
