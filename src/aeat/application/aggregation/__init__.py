@@ -18,9 +18,13 @@ Major declarations:
 * :func:`aggregate_counterpart_347`, :func:`aggregate_counterpart_349`, and
   :func:`aggregate_foreign_assets_720` — informativa rollups.
 * :class:`CasillaAggregation` and :class:`CasillaProvenance` — the typed
-  aggregated value plus the source provenance it carries.
+  per-modelo ledger-aggregation value plus its source provenance, produced by
+  the ``aggregate_*`` family. These are aggregation-family value records, NOT a
+  resolved-source envelope; the single resolved-source envelope across the
+  calculate mesh is :class:`CalculationSourceResolution` below.
 * :class:`ModeloSourceResolver` and :class:`CalculationSourceResolution` —
-  the source mesh that reconciles ledger, profile, and registry sources.
+  the source mesh that reconciles ledger, profile, and registry sources, and
+  the one canonical resolved-source envelope every mesh resolver returns.
 * :class:`AggregationError` and its subclasses — the failure taxonomy.
 """
 
