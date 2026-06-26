@@ -11,6 +11,7 @@ import pytest
 
 from ....core import Period
 from ....core.errors import resolve_error_message
+from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
 from ....domain.deadlines import ModeloDeadline, ObligationStatus
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
@@ -60,6 +61,16 @@ def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
 
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "test-runtime-profile"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_RESUME_CASILLA: CasillaId = _casilla_id("01")
 
 
 def _period(year: int, code: str) -> Period:
@@ -127,16 +138,24 @@ def _seed_current_revision(work_unit_id: str) -> str:
     repository = CalculationRevisionCatalogueRepository()
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={"01": "10"},
+        input_values_by_casilla_id={_RESUME_CASILLA: "10"},
         binding_overrides={},
-        casilla_values={"01": Decimal("10")},
+        casilla_values={_RESUME_CASILLA: Decimal("10")},
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.BORRADOR,
-        inputs_snapshot={"01": "10"},
-        casilla_values={"01": Decimal("10")},
+        input_values_by_casilla_id={_RESUME_CASILLA: "10"},
+        casilla_values={_RESUME_CASILLA: Decimal("10")},
+        observations=(
+            CasillaObservation(
+                casilla_id=_RESUME_CASILLA,
+                value=Decimal("10"),
+                legal_refs=("ley-58-2003:art-93",),
+                source_refs=("aeat-workflow-resume-test",),
+            ),
+        ),
         created_at=_T,
         updated_at=_T,
     )

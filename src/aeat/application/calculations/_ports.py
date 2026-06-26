@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Protocol, runtime_checkable
 
 from ...core import Period
+from ...domain.calculations.registry import CasillaId
 
 
 @runtime_checkable
@@ -39,7 +40,7 @@ class ObservedCasillaValueProtocol(Protocol):
         ...
 
     @property
-    def casilla_id(self) -> str:
+    def casilla_id(self) -> CasillaId:
         """Casilla identifier string."""
         ...
 

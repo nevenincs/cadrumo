@@ -3,9 +3,9 @@
 A computed casilla driven by an ``if_then_else`` formula short-circuits at
 evaluation time — only the predicate plus the branch actually taken are
 evaluated, so the runtime ``operand_refs`` are a *subset* of the casilla's
-statically declared ``formula_inputs``. The draft validator
-(``_validate_formula_traces``) checks the persisted ``formula_trace`` against the
-declared ``formula_inputs`` for set-equality, so a trace built from the runtime
+statically declared ``formula_input_casilla_ids``. The draft validator
+(``_validate_formula_traces``) checks the persisted ``formula_trace_casilla_ids`` against the
+declared ``formula_input_casilla_ids`` for set-equality, so a trace built from the runtime
 operand set raised a spurious ``formula-divergence`` ERROR and pinned the draft
 in ``BORRADOR``.
 
@@ -26,38 +26,74 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from pydantic import TypeAdapter, ValidationError
 
 from ....core import Period
+from ....domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
+from ....domain.filing import ModeloInputs
 from ....domain.submission import ModeloDraftStatus
 from .. import build_draft, build_runtime_schema_provider
 from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+def _binding_id(value: object) -> BindingId:
+    try:
+        return _BINDING_ID_ADAPTER.validate_python(value)
+    except ValidationError as exc:
+        raise AssertionError(f"test fixture binding key {value!r} is not a canonical binding.id") from exc
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _TAX_ID = "12345678Z"
+_M303_REPERCUTIDO_GENERAL_CUOTA_BINDING: BindingId = _binding_id("modelo-303-iva-repercutido-general-cuota")
+_M303_REPERCUTIDO_REDUCIDO_CUOTA_BINDING: BindingId = _binding_id("modelo-303-iva-repercutido-reducido-cuota")
+_M303_REPERCUTIDO_SUPER_REDUCIDO_CUOTA_BINDING: BindingId = _binding_id(
+    "modelo-303-iva-repercutido-super-reducido-cuota",
+)
+_M303_SOPORTADO_INTERIORES_CUOTA_BINDING: BindingId = _binding_id("modelo-303-iva-soportado-interiores-cuota")
+_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CUOTA_BINDING: BindingId = _binding_id(
+    "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
+)
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_BINDING: BindingId = _binding_id(
+    "modelo-303-compensacion-pendiente-anteriores",
+)
+_M303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: BindingId = _binding_id("modelo-303-autoconsumo-promotor-base")
+_M303_STATE_ATTRIBUTION_RATIO_BINDING: BindingId = _binding_id("modelo-303-profile-state-attribution-ratio")
+_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_DECL_PERIODO_CASILLA: CasillaId = _casilla_id("decl.periodo")
+_M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = _casilla_id("iva.prorrata-porcentaje")
+_M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = _casilla_id("iva.prorrata-volumen-con-derecho")
 
 
-def _modelo_303_1t_inputs() -> dict[str, Decimal]:
+def _modelo_303_1t_inputs() -> ModeloInputs:
     """Inputs a from-nothing Modelo 303 1T calculate persists for the draft.
 
     A sale of base 1000 / IVA 210 and a purchase of base 500 / IVA 105 reduce to
     the engine cuota bindings below. ``decl.ejercicio`` / ``decl.periodo`` are
     the informational casillas the calculate path projects from the work unit's
     ``(filing_year, period)`` axes; they ride into the draft via the persisted
-    ``inputs_snapshot``.
+    ``input_values_by_casilla_id``.
     """
     return {
-        "modelo-303-iva-repercutido-general-cuota": Decimal("210.00"),
-        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-soportado-interiores-cuota": Decimal("105.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
-        "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
-        "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
-        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
-        "decl.ejercicio": Decimal("2026"),
-        "decl.periodo": Decimal("1"),
+        _M303_REPERCUTIDO_GENERAL_CUOTA_BINDING: Decimal("210.00"),
+        _M303_REPERCUTIDO_REDUCIDO_CUOTA_BINDING: Decimal("0.00"),
+        _M303_REPERCUTIDO_SUPER_REDUCIDO_CUOTA_BINDING: Decimal("0.00"),
+        _M303_SOPORTADO_INTERIORES_CUOTA_BINDING: Decimal("105.00"),
+        _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CUOTA_BINDING: Decimal("0.00"),
+        _M303_COMPENSACION_PENDIENTE_ANTERIORES_BINDING: Decimal("0.00"),
+        _M303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0.00"),
+        _M303_STATE_ATTRIBUTION_RATIO_BINDING: Decimal("100"),
+        _DECL_EJERCICIO_CASILLA: Decimal("2026"),
+        _DECL_PERIODO_CASILLA: Decimal("1"),
     }
 
 
@@ -79,25 +115,25 @@ def _build_modelo_303_1t_draft():
 def test_conditional_computed_casilla_trace_equals_declared_formula_inputs() -> None:
     """The prorrata trace carries every declared input, not just the branch taken.
 
-    Structural assertion (not a numeric oracle): the persisted ``formula_trace``
+    Structural assertion (not a numeric oracle): the persisted ``formula_trace_casilla_ids``
     of the conditional computed casilla equals the schema's declared
-    ``formula_inputs``, which the validator's divergence rule checks. Before the
+    ``formula_input_casilla_ids``, which the validator's divergence rule checks. Before the
     fix the trace was the short-circuit runtime operand set
     (``iva.prorrata-volumen-total`` only), so this assertion failed.
     """
     draft, schema_provider = _build_modelo_303_1t_draft()
     collection = schema_provider.get_collection("303")
-    declared_inputs = collection.get("iva.prorrata-porcentaje").formula_inputs
+    declared_inputs = collection.get(_M303_PRORRATA_PORCENTAJE_CASILLA).formula_input_casilla_ids
 
     # The casilla genuinely has more than one declared input (both branches of
     # the conditional reference distinct casillas); otherwise the short-circuit
     # subset would coincide with the full set and the regression could not occur.
     assert len(declared_inputs) >= 2
-    assert "iva.prorrata-volumen-con-derecho" in declared_inputs
+    assert _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA in declared_inputs
 
-    value = next(v for v in draft.values if v.casilla_id == "iva.prorrata-porcentaje")
-    assert value.formula_trace is not None
-    assert set(value.formula_trace) == set(declared_inputs)
+    value = next(v for v in draft.values if v.casilla_id == _M303_PRORRATA_PORCENTAJE_CASILLA)
+    assert value.formula_trace_casilla_ids is not None
+    assert set(value.formula_trace_casilla_ids) == set(declared_inputs)
 
 
 def test_modelo_303_first_period_draft_reaches_listo_para_presentar() -> None:

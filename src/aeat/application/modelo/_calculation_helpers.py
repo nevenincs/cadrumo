@@ -10,10 +10,12 @@ from decimal import Decimal
 
 from ...domain.calculations.registry import (
     CasillaDefinition,
+    CasillaId,
     CasillaObservation,
     RegistryCalculationEntry,
     RegistryCalculationResult,
     RegistrySnapshot,
+    casillas_by_id,
 )
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
@@ -111,14 +113,14 @@ def build_typed_observations(
 
     Uses :class:`RegistrySnapshot` for provenance fields.
     """
-    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    entries_by_target = {entry.target: entry for entry in engine_result.entries}
+    revision_casillas_by_id = casillas_by_id(snapshot.revision)
+    entries_by_target = {entry.target_casilla_id: entry for entry in engine_result.entries}
     return tuple(
         casilla_observation_for(
             casilla_id=casilla_id,
             value=value,
             entry=entries_by_target.get(casilla_id),
-            registry_casilla=casillas_by_id.get(casilla_id),
+            registry_casilla=revision_casillas_by_id.get(casilla_id),
         )
         for casilla_id, value in engine_result.values.items()
     )
@@ -126,20 +128,20 @@ def build_typed_observations(
 
 def external_filing_observations(
     *,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
     """Build :class:`CasillaObservation` records for externally imported casilla values.
 
     Uses :class:`RegistrySnapshot` for provenance fields.
     """
-    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    revision_casillas_by_id = casillas_by_id(snapshot.revision)
     return tuple(
         casilla_observation_for(
             casilla_id=casilla_id,
             value=value,
             entry=None,
-            registry_casilla=casillas_by_id.get(casilla_id),
+            registry_casilla=revision_casillas_by_id.get(casilla_id),
         )
         for casilla_id, value in casilla_values.items()
     )
@@ -147,7 +149,7 @@ def external_filing_observations(
 
 def casilla_observation_for(
     *,
-    casilla_id: str,
+    casilla_id: CasillaId,
     value: Decimal,
     entry: RegistryCalculationEntry | None,
     registry_casilla: CasillaDefinition | None,
@@ -159,6 +161,7 @@ def casilla_observation_for(
             value=value,
             formula_id=entry.formula_id,
             operand_refs=entry.operand_refs,
+            operand_casilla_refs=entry.operand_casilla_refs,
             operand_values=entry.operand_values,
             legal_refs=entry.legal_refs,
             source_refs=entry.source_refs,
@@ -175,6 +178,7 @@ def casilla_observation_for(
         value=value,
         formula_id=None,
         operand_refs=(),
+        operand_casilla_refs=(),
         operand_values=(),
         legal_refs=registry_casilla.legal_refs,
         source_refs=registry_casilla.source_refs,
@@ -183,8 +187,8 @@ def casilla_observation_for(
 
 def amendment_observations(
     *,
-    corrected_values: Mapping[str, Decimal],
-    overrides: Mapping[str, Decimal],
+    corrected_values: Mapping[CasillaId, Decimal],
+    overrides: Mapping[CasillaId, Decimal],
     baseline_revision: CalculationRevision,
     snapshot: RegistrySnapshot,
 ) -> tuple[CasillaObservation, ...]:
@@ -192,7 +196,7 @@ def amendment_observations(
 
     Uses :class:`CalculationRevision` and :class:`RegistrySnapshot` for provenance.
     """
-    casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    revision_casillas_by_id = casillas_by_id(snapshot.revision)
     baseline_by_id = {obs.casilla_id: obs for obs in baseline_revision.observations}
     observations: list[CasillaObservation] = []
     for casilla_id, value in corrected_values.items():
@@ -201,7 +205,7 @@ def amendment_observations(
             if carried is not None:
                 observations.append(carried)
                 continue
-        registry_casilla = casillas_by_id.get(casilla_id)
+        registry_casilla = revision_casillas_by_id.get(casilla_id)
         if registry_casilla is None:
             raise CasillaProvenanceMissingError(
                 f"casilla {casilla_id!r} is present in the amendment's corrected "
@@ -215,6 +219,7 @@ def amendment_observations(
                 value=value,
                 formula_id=None,
                 operand_refs=(),
+                operand_casilla_refs=(),
                 operand_values=(),
                 legal_refs=registry_casilla.legal_refs,
                 source_refs=registry_casilla.source_refs,

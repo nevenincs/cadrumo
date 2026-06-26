@@ -34,6 +34,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...domain.calculations.registry import (
+    BindingId,
     ModeloRevision,
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
@@ -211,7 +212,7 @@ def validate_oss_ioss_observations(
 def aggregate_oss_ioss_bindings(
     revision: ModeloRevision,
     candidates: Sequence[OssIossLedgerCandidate],
-) -> dict[str, Decimal]:
+) -> dict[BindingId, Decimal]:
     """Validate candidates then resolve every ``ledger_oss_aggregation`` binding.
 
     Pipeline:
@@ -300,7 +301,7 @@ def aggregate_oss_ioss_from_repositories(
     bucket_id: str,
     period: Period,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-) -> dict[str, Decimal]:
+) -> dict[BindingId, Decimal]:
     """Resolve Modelo 369 OSS/IOSS bindings from the live invoice catalogue.
 
     Args:

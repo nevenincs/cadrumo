@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+from typing import Final
 
 from ...adapters.inbound.justificante import parse_justificante_bytes
 from ...adapters.outbound.aeat.sede import (
@@ -40,7 +41,14 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ...domain.calculations.registry import (
+    CasillaId,
+    CasillaObservation,
+    RegistryModeloObservation,
+    casillas_by_id,
+    expression_casilla_refs,
+    validated_casilla_id,
+)
 from ...domain.iva_compensation._carry_forward import derive_303_compensation_available
 from ...domain.justificante import Justificante, JustificanteRepository
 from ...domain.modelos import (
@@ -54,6 +62,18 @@ from ...domain.modelos._protocols import ModeloRecordCatalogueRepositoryProtocol
 from ._errors import LiveApplicationError, LiveApplicationInputError
 
 logger = get_logger(__name__)
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="live filed-observation casilla constant")
+    except ValueError as exc:
+        raise RuntimeError(f"live filed-observation casilla constant {value!r} is not a CasillaId") from exc
+
+
+_M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_RESULTADO_CASILLA: Final[CasillaId] = _casilla_id("iva.resultado")
+_M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
 
 
 @dataclass(frozen=True)
@@ -542,39 +562,62 @@ def _with_derived_303_compensation_available(
     """Add the internal Modelo 303 carry-forward value from official filed casillas."""
     if observation.modelo != Modelo.M303:
         return observation
-    target_id = "iva.compensacion-disponible-fin-periodo"
+    target_id = _M303_DISPONIBLE_CASILLA
     if target_id in observation.casilla_values:
         return observation
-    posterior = _casilla_decimal(
-        observation.casilla_values,
-        "87",
-        "iva.compensacion-pendiente-periodos-posteriores",
-    )
-    resultado = _casilla_decimal(observation.casilla_values, "69", "iva.resultado")
-    if posterior is None or resultado is None:
+    posterior = _casilla_decimal(observation.casilla_values, _M303_POSTERIOR_CASILLA)
+    generated = _casilla_decimal(observation.casilla_values, _M303_GENERADA_CASILLA)
+    resultado = _casilla_decimal(observation.casilla_values, _M303_RESULTADO_CASILLA)
+    if posterior is None:
         return observation
 
-    available = derive_303_compensation_available(posterior=posterior, resultado=resultado)
+    formula_id = None
+    operand_refs: tuple[CasillaId, ...] = ()
+    operand_values: tuple[Decimal, ...] = ()
+    if generated is not None:
+        operand_refs = (_M303_POSTERIOR_CASILLA, _M303_GENERADA_CASILLA)
+        operand_values = (posterior, generated)
+        available = posterior + generated
+    elif resultado is not None:
+        available = derive_303_compensation_available(posterior=posterior, resultado=resultado)
+    else:
+        return observation
     snapshot = resources().modelos.authority.snapshot(
         Modelo.M303.value,
         filing_year=observation.filing_year,
         period=observation.period,
     )
-    casilla = next(item for item in snapshot.revision.casillas if item.id == target_id)
-    formula = next(item for item in snapshot.revision.formulas if item.target == target_id)
+    casilla = casillas_by_id(snapshot.revision)[target_id]
+    formula = next(item for item in snapshot.revision.formulas if item.target_casilla_id == target_id)
+    if operand_refs:
+        expected_operand_refs = expression_casilla_refs(formula.expression)
+        if operand_refs != expected_operand_refs:
+            raise LiveApplicationError(
+                f"live Modelo 303 compensation carry observation supplied operand refs {operand_refs!r} "
+                f"but formula {formula.id!r} projects to {expected_operand_refs!r}",
+                context={
+                    "modelo": observation.modelo,
+                    "filing_year": observation.filing_year,
+                    "period": observation.period,
+                    "casilla_id": target_id,
+                    "formula_id": formula.id,
+                },
+            )
+        formula_id = formula.id
     derived = CasillaObservation(
         casilla_id=target_id,
         value=available,
-        formula_id=formula.id,
-        operand_refs=("87", "69"),
-        operand_values=(posterior, resultado),
+        formula_id=formula_id,
+        operand_refs=operand_refs,
+        operand_casilla_refs=operand_refs,
+        operand_values=operand_values,
         legal_refs=tuple(casilla.legal_refs),
         source_refs=tuple(casilla.source_refs),
     )
     return observation.model_copy(update={"observations": (*observation.observations, derived)})
 
 
-def _casilla_decimal(values: Mapping[str, Decimal], *casilla_ids: str) -> Decimal | None:
+def _casilla_decimal(values: Mapping[CasillaId, Decimal], *casilla_ids: CasillaId) -> Decimal | None:
     for casilla_id in casilla_ids:
         value = values.get(casilla_id)
         if value is not None:

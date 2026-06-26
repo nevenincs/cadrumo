@@ -40,7 +40,11 @@ from pathlib import Path
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
 from ....domain.calculations.registry._bindings_previous_filing import (
     resolve_previous_filing_binding_values,
 )
@@ -49,6 +53,7 @@ from ....domain.modelos import (
     ModeloRecordCatalogueRepository,
     VerificationReportCatalogueRepository,
 )
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._cross_period_clean_state import evaluate_cross_period_clean_state
 from .._observations_repository import CalculationObservationRepository
@@ -57,6 +62,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CARRY_BINDING_ID = "modelo-130-pagos-fraccionados-anteriores"
 _FILING_YEAR = 2026
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M130 casilla-05 carry fixture key {value!r} is not a CasillaId") from exc
+
+
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
+_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
+_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
+_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
+_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = _casilla_id("07")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
+_M130_SALDO_NEGATIVO_CASILLA: CasillaId = _casilla_id("saldo-negativo-fin-periodo")
 
 
 @pytest.fixture
@@ -70,16 +91,16 @@ def obs_repo(tmp_path: Path) -> Iterator[CalculationObservationRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
         repo = CalculationObservationRepository(objects=profile.repository)
         repo.save_observation(
-            RegistryModeloObservation(
+            registry_grounded_modelo_observation(
                 modelo="100",
                 filing_year=_FILING_YEAR - 1,
                 period="0A",
-                observations=(
-                    CasillaObservation(casilla_id="0224", value=Decimal("0")),
-                    CasillaObservation(casilla_id="1479", value=Decimal("0")),
-                    CasillaObservation(casilla_id="1553", value=Decimal("0")),
-                    CasillaObservation(casilla_id="1577", value=Decimal("0")),
-                ),
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                },
             ),
             source_kind="app_filing",
         )
@@ -94,17 +115,17 @@ def _prior_m130(period: str, *, casilla_07: Decimal, casilla_16: Decimal | None)
     prior result) to keep that sibling binding resolvable. ``casilla_16 = None``
     omits the casilla-16 entry entirely (the not-captured shape).
     """
-    casillas = [
-        CasillaObservation(casilla_id="07", value=casilla_07),
-        CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=Decimal("0")),
-    ]
+    casilla_values = {
+        _M130_PAGO_FRACCIONADO_CASILLA: casilla_07,
+        _M130_SALDO_NEGATIVO_CASILLA: Decimal("0"),
+    }
     if casilla_16 is not None:
-        casillas.append(CasillaObservation(casilla_id="16", value=casilla_16))
-    return RegistryModeloObservation(
+        casilla_values[_M130_HOME_DEDUCTION_CASILLA] = casilla_16
+    return registry_grounded_modelo_observation(
         modelo="130",
         filing_year=_FILING_YEAR,
         period=period,
-        observations=tuple(casillas),
+        casilla_values=casilla_values,
     )
 
 

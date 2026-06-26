@@ -58,6 +58,10 @@ def resolve_modelo_result_disposition(
 ) -> ResultDisposition:
     """Resolve the single fichero "Tipo de declaración" result disposition.
 
+    The boundary resolves a persisted :class:`CalculationRevision` for a
+    :class:`TaxpayerProfile`, using the supplied :class:`~aeat.core.Period` to
+    decide whether a Modelo 303 refund election is lawful.
+
     Computes the modelo's base disposition from its final-result casilla via the
     codified :func:`~aeat.core.derive_result_disposition`, then — for a Modelo 303
     credit (``C``) — applies the refund election: a taxpayer inscribed in the
@@ -106,6 +110,10 @@ def revision_is_refund_disposition(
     refund_election: RefundElection = RefundElection.COMPENSAR,
 ) -> bool:
     """Return whether the revision's resolved disposition is a refund (devolución).
+
+    Resolves the supplied :class:`CalculationRevision` for a
+    :class:`TaxpayerProfile`, with the same :class:`~aeat.core.Period` refund
+    eligibility context used by export.
 
     Convenience wrapper used by the cross-period carry path: a refunded Modelo 303
     period generates zero compensación carry-forward. Reads the SAME resolved

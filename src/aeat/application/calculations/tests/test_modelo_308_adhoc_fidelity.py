@@ -37,7 +37,12 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -50,6 +55,17 @@ _YEAR_N_PLUS_1 = 2025
 _CONTEXT_LABEL = "308-adhoc-iva-no-periodico-cadence-year-over-year"
 _CLOCK_N = datetime(2024, 6, 15, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2025, 9, 20, 10, 0, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M308 ad-hoc fidelity fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_DECL_TIPO_SOLICITUD_CASILLA: CasillaId = _casilla_id("decl.tipo-solicitud")
 
 
 def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):
@@ -67,27 +83,27 @@ def _year_n_observation() -> RegistryModeloObservation:
     distinguishes the trigger type. Both casilla values are non-default so a
     drop-then-default regression surfaces as strict inequality.
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="AD-HOC",
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N))),
-            CasillaObservation(casilla_id="decl.tipo-solicitud", value=Decimal("1")),
-        ),
+        casilla_values={
+            _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N)),
+            _DECL_TIPO_SOLICITUD_CASILLA: Decimal("1"),
+        },
     )
 
 
 def _year_n_plus_1_observation() -> RegistryModeloObservation:
     """Build the year-N+1 308 ad-hoc observation with a different tipo-solicitud."""
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,
         period="AD-HOC",
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N_PLUS_1))),
-            CasillaObservation(casilla_id="decl.tipo-solicitud", value=Decimal("2")),
-        ),
+        casilla_values={
+            _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N_PLUS_1)),
+            _DECL_TIPO_SOLICITUD_CASILLA: Decimal("2"),
+        },
     )
 
 
@@ -133,8 +149,8 @@ def test_both_ad_hoc_observations_are_independently_retrievable(tmp_path: Path) 
         assert loaded_n.observation == obs_n
         assert loaded_n1.observation == obs_n1
 
-        n_tipo = loaded_n.observation.casilla_values["decl.tipo-solicitud"]
-        n1_tipo = loaded_n1.observation.casilla_values["decl.tipo-solicitud"]
+        n_tipo = loaded_n.observation.casilla_values[_DECL_TIPO_SOLICITUD_CASILLA]
+        n1_tipo = loaded_n1.observation.casilla_values[_DECL_TIPO_SOLICITUD_CASILLA]
         assert n_tipo == Decimal("1")
         assert n1_tipo == Decimal("2")
         assert n_tipo != n1_tipo, "tipo-solicitud bled between year-N and year-N+1"
@@ -150,7 +166,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="AD-HOC",
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != "decl.tipo-solicitud"),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != _DECL_TIPO_SOLICITUD_CASILLA),
     )
     assert obs_n != obs_n_missing
 

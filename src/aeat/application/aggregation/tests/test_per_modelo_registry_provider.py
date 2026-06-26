@@ -5,6 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import Period
 from ....core.aggregation import AggregationSourceKind
@@ -17,6 +18,7 @@ from .. import (
     resolve_per_modelo_registry_binding_values,
 )
 from .._counterpart import CounterpartSourceKind
+from .._registry_provider import PerModeloRegistryBindingResolution
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -53,6 +55,28 @@ def _counterpart_obs(
         groi_verified=groi_verified,
         nif_iva_verified=nif_iva_verified,
     )
+
+
+def test_per_modelo_registry_binding_resolution_rejects_noncanonical_binding_keys() -> None:
+    with pytest.raises(ValidationError) as scalar_exc:
+        PerModeloRegistryBindingResolution(
+            modelo="349",
+            period=_P_2026_Q1,
+            provider=PerModeloAggregationProvider.COUNTERPART,
+            binding_values={"Bad Binding": Decimal("1.00")},
+            source_observation_count=1,
+        )
+    assert scalar_exc.value.errors()[0]["loc"][0] == "binding_values"
+
+    with pytest.raises(ValidationError) as row_exc:
+        PerModeloRegistryBindingResolution(
+            modelo="349",
+            period=_P_2026_Q1,
+            provider=PerModeloAggregationProvider.COUNTERPART,
+            row_values={("Bad Binding", 1): Decimal("1.00")},
+            source_observation_count=1,
+        )
+    assert row_exc.value.errors()[0]["loc"][0] == "row_values"
 
 
 def test_per_modelo_counterpart_provider_resolves_committed_349_registry_bindings() -> None:

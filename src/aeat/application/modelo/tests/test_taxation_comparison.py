@@ -27,12 +27,13 @@ typed envelope and that both cuota fields are populated.
 from __future__ import annotations
 
 import importlib
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry import RegistrySnapshot
+from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id, validated_casilla_id_map
 from .._taxation_comparison import (
     TaxationComparisonError,
     TaxationRecommendation,
@@ -53,7 +54,18 @@ def snapshot_2025() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
 
 
-_BASE_INPUTS = {
+def _casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
+    return validated_casilla_id_map(values, surface="taxation comparison casilla inputs")
+
+
+_M100_TRABAJO_INGRESO_CASILLA: CasillaId = validated_casilla_id(
+    "0003",
+    surface="_M100_TRABAJO_INGRESO_CASILLA",
+)
+
+
+_BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
+    {
     # Computed casillas supplied as zero inputs so the engine can evaluate them.
     "0003": Decimal("0"),
     "0429": Decimal("0"),
@@ -84,7 +96,8 @@ _BASE_INPUTS = {
     "0574": Decimal("0"),
     "0577": Decimal("0"),
     "0579": Decimal("0"),
-}
+    }
+)
 
 _ZERO_RELATIONS = {
     "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
@@ -132,7 +145,7 @@ def test_high_disparity_couple_conjunta_recommended(snapshot_2025: RegistrySnaps
     - delta_resultado > 0 (individual is more expensive than conjunta)
     - Both cuota fields are populated with real Decimals
     """
-    inputs = {**_BASE_INPUTS, "0003": Decimal("52000")}
+    inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("52000")}
     result = compare_taxation_modes(
         snapshot_2025,
         inputs=inputs,
@@ -176,7 +189,7 @@ def test_moderate_income_conjunta_recommended_via_art84_reduccion(snapshot_2025:
     - delta_resultado > 0 (individual costs more than conjunta)
     - conjunta_resultado < individual_resultado (model is consistent)
     """
-    inputs = {**_BASE_INPUTS, "0003": Decimal("45000")}
+    inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("45000")}
     result = compare_taxation_modes(
         snapshot_2025,
         inputs=inputs,
@@ -213,7 +226,7 @@ def test_comparison_result_structure_is_typed(snapshot_2025: RegistrySnapshot) -
     """
     from .._taxation_comparison import TaxationComparisonResult
 
-    inputs = {**_BASE_INPUTS, "0003": Decimal("52000")}
+    inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("52000")}
     result = compare_taxation_modes(
         snapshot_2025,
         inputs=inputs,
@@ -306,6 +319,26 @@ def test_comparison_error_raised_for_non_m100_snapshot() -> None:
     with pytest.raises(TaxationComparisonError, match="declaration-type"):
         compare_taxation_modes(
             snapshot_303,
+            inputs={},
+            binding_values={},
+            enum_binding_values={},
+        )
+
+
+def test_comparison_refuses_ambiguous_semantic_role(snapshot_2025: RegistrySnapshot) -> None:
+    """Conjunta comparison must not choose an arbitrary casilla for a duplicated role."""
+    original = next(
+        casilla
+        for casilla in snapshot_2025.revision.casillas
+        if casilla.semantic_role == "irpf_cuota_resultante_autoliquidacion"
+    )
+    duplicate = original.model_copy(update={"id": f"ambiguous-{original.id}"})
+    revision = snapshot_2025.revision.model_copy(update={"casillas": (*snapshot_2025.revision.casillas, duplicate)})
+    snapshot = snapshot_2025.model_copy(update={"revision": revision})
+
+    with pytest.raises(TaxationComparisonError, match="multiple casillas"):
+        compare_taxation_modes(
+            snapshot,
             inputs={},
             binding_values={},
             enum_binding_values={},

@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import Period
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .._records import (
     SheetEvidenceContributorRow,
     SheetEvidenceFacet,
@@ -19,6 +20,18 @@ from .._records import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"calc-sheet evidence fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_IVA_DEVENGADO_CUOTA_CASILLA: CasillaId = _casilla_id("iva.devengado.cuota")
+_RESULTADO_CONTABLE_CASILLA: CasillaId = _casilla_id("resultado.contable")
 
 
 def _metadata() -> SheetExportMetadata:
@@ -35,7 +48,7 @@ def _metadata() -> SheetExportMetadata:
 
 def test_sheet_export_plan_carries_typed_evidence_facet() -> None:
     contributor = SheetEvidenceContributorRow(
-        casilla_id="iva.devengado.cuota",
+        casilla_id=_IVA_DEVENGADO_CUOTA_CASILLA,
         transaction_id="c" * 64,
         amount=Decimal("-121.00"),
         currency="EUR",
@@ -49,7 +62,7 @@ def test_sheet_export_plan_carries_typed_evidence_facet() -> None:
         source_refs=("boe-a-2026-1",),
     )
     manual = SheetEvidenceManualEntry(
-        casilla_id="resultado.contable",
+        casilla_id=_RESULTADO_CONTABLE_CASILLA,
         value="140000.00",
         kind="casilla_input",
         note="resultado contable",

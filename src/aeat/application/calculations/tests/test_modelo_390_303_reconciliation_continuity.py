@@ -51,14 +51,15 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     IvaLedgerObservation,
     RegistryCalculationResult,
     RegistryModeloObservation,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
+    validated_casilla_id,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
@@ -77,13 +78,34 @@ _RENTA_YEARS = (2025, 2026)
 #: Quarterly periods of a renta year, summed by the 390 previous_filing bindings.
 _QUARTERS = ("1T", "2T", "3T", "4T")
 
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M390 reconciliation fixture casilla key {value!r} is not a CasillaId") from exc
+
+
 #: 390 annual computed totals and the parallel reconciliation casillas filled
 #: from the four 303 quarters via the relation resolver. The wiring invariant
 #: asserts each pair is equal.
-_RECONCILIATION_PAIRS = (
-    ("iva.anual.cuota-devengada-total", "iva.anual.reconciliacion.devengada-303"),
-    ("iva.anual.cuota-deducible-total", "iva.anual.reconciliacion.deducible-303"),
-    ("iva.anual.resultado-regimen-general", "iva.anual.reconciliacion.resultado-303"),
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-devengada-total")
+_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-deducible-total")
+_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.anual.resultado-regimen-general")
+_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.devengada-303",
+)
+_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.deducible-303",
+)
+_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.resultado-303",
+)
+_RECONCILIATION_PAIRS: tuple[tuple[CasillaId, CasillaId], ...] = (
+    (_M390_CUOTA_DEVENGADA_TOTAL_CASILLA, _M390_RECONCILIACION_DEVENGADA_303_CASILLA),
+    (_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA, _M390_RECONCILIACION_DEDUCIBLE_303_CASILLA),
+    (_M390_RESULTADO_REGIMEN_GENERAL_CASILLA, _M390_RECONCILIACION_RESULTADO_303_CASILLA),
 )
 
 #: 303 profile-gap workaround bindings (see module docstring / R2). Supplied
@@ -162,7 +184,7 @@ def _calculate_303_quarter(
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
     }
     inputs = {
-        **resolve_bound_casilla_inputs(snapshot.revision, binding_values),
+        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
     }
     return calculate_registry_snapshot(
         snapshot,
@@ -184,7 +206,7 @@ def _registry_observation(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
-        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+        observations=result.observations,
     )
 
 
@@ -213,7 +235,7 @@ def _calculate_390_annual(
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, annual_ledger),
         **relation_binding_values,
     }
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -239,7 +261,7 @@ def _file_year_quarters_and_reconcile(
         ledger = _quarter_ledger(filing_year, period)
         annual_ledger.extend(ledger)
         q_result = _calculate_303_quarter(filing_year=filing_year, period=period, observations=ledger)
-        quarter_devengada[period] = q_result.values["iva.cuota-devengada-total"]
+        quarter_devengada[period] = q_result.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
         repository.save_observation(
             _registry_observation(modelo="303", filing_year=filing_year, period=period, result=q_result),
             source_kind="app_filing",
@@ -274,7 +296,7 @@ def test_390_annual_reconciles_to_sum_of_303_quarters(tmp_path: Path) -> None:
         assert annual_result.values[computed_total] == annual_result.values[reconciliation], (
             f"390 {computed_total} must reconcile to {reconciliation} from the four 303 quarters"
         )
-    assert annual_result.values["iva.anual.reconciliacion.devengada-303"] == sum(
+    assert annual_result.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA] == sum(
         quarter_devengada.values(),
         Decimal("0"),
     )
@@ -299,8 +321,14 @@ def test_390_reconciliation_isolates_renta_years(tmp_path: Path) -> None:
             repository=repository,
         )
 
-    assert annual_2025.values["iva.anual.reconciliacion.devengada-303"] == sum(devengada_2025.values(), Decimal("0"))
-    assert annual_2026.values["iva.anual.reconciliacion.devengada-303"] == sum(devengada_2026.values(), Decimal("0"))
+    assert annual_2025.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA] == sum(
+        devengada_2025.values(),
+        Decimal("0"),
+    )
+    assert annual_2026.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA] == sum(
+        devengada_2026.values(),
+        Decimal("0"),
+    )
 
 
 def test_modelo_390_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> None:
@@ -323,10 +351,10 @@ def test_modelo_390_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> No
             )
             # Wiring invariant per year: annual computed total == 303-quarter sum.
             assert (
-                annual_result.values["iva.anual.cuota-devengada-total"]
-                == annual_result.values["iva.anual.reconciliacion.devengada-303"]
+                annual_result.values[_M390_CUOTA_DEVENGADA_TOTAL_CASILLA]
+                == annual_result.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA]
             )
-            assert annual_result.values["iva.anual.reconciliacion.devengada-303"] == sum(
+            assert annual_result.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA] == sum(
                 quarter_devengada.values(),
                 Decimal("0"),
             )

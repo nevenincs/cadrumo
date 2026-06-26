@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import CasillaId, Period
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.deadlines import CrossPeriodGroupMemberRoster, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ....domain.filing import ModeloDraftError
 from ....domain.modelos import (
@@ -22,6 +22,7 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     upsert_calculation_revision,
 )
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
     CalculationObservationRepository,
@@ -77,7 +78,7 @@ def _seed_verified_revision(
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
     )
@@ -113,7 +114,7 @@ def _seed_draft_revision(
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
     )
@@ -298,14 +299,14 @@ def test_export_modelo_390_passes_clean_state_with_imported_bound_justificantes(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cross-period-390-imported") as profile:
         target_snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
         observations = CalculationObservationRepository()
-        requirements_by_source: dict[tuple[str, int, str], set[str]] = {}
+        requirements_by_source: dict[tuple[str, int, str], set[CasillaId]] = {}
         for requirement in cross_period_dependency_requirements(target_snapshot):
             requirements_by_source.setdefault(
                 (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token),
                 set(),
-            ).update(requirement.source_casillas)
+            ).update(requirement.source_casilla_ids)
 
-        for (source_modelo, filing_year, period), source_casillas in sorted(requirements_by_source.items()):
+        for (source_modelo, filing_year, period), source_casilla_ids in sorted(requirements_by_source.items()):
             source_snapshot = resources().modelos.authority.snapshot(
                 source_modelo,
                 filing_year=filing_year,
@@ -320,7 +321,7 @@ def test_export_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                 clock=_CLOCK,
             )
             casilla_values = {
-                casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(sorted(source_casillas))
+                casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(sorted(source_casilla_ids))
             }
             evidence_reference_id = f"JUST-{source_modelo}-{filing_year}-{period}"
             persist_justificante_metadata(
@@ -344,9 +345,11 @@ def test_export_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                     modelo=source_modelo,
                     filing_year=filing_year,
                     period=period,
-                    observations=tuple(
-                        CasillaObservation(casilla_id=casilla_id, value=value)
-                        for casilla_id, value in casilla_values.items()
+                    observations=registry_grounded_observations(
+                        modelo=source_modelo,
+                        filing_year=filing_year,
+                        period=period,
+                        casilla_values=casilla_values,
                     ),
                 ),
                 source_kind="aeat_sede_justificante",
@@ -390,9 +393,14 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
                 modelo="322",
                 filing_year=2026,
                 period="12",
-                observations=tuple(
-                    CasillaObservation(casilla_id=casilla_id, value=Decimal(index + 1))
-                    for index, casilla_id in enumerate(requirement.source_casillas)
+                observations=registry_grounded_observations(
+                    modelo="322",
+                    filing_year=2026,
+                    period="12",
+                    casilla_values={
+                        casilla_id: Decimal(index + 1)
+                        for index, casilla_id in enumerate(requirement.source_casilla_ids)
+                    },
                 ),
             ),
             source_kind="aeat_sede_justificante",
@@ -438,9 +446,14 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
                 modelo="322",
                 filing_year=2026,
                 period="12",
-                observations=tuple(
-                    CasillaObservation(casilla_id=casilla_id, value=Decimal(index + 1))
-                    for index, casilla_id in enumerate(requirement.source_casillas)
+                observations=registry_grounded_observations(
+                    modelo="322",
+                    filing_year=2026,
+                    period="12",
+                    casilla_values={
+                        casilla_id: Decimal(index + 1)
+                        for index, casilla_id in enumerate(requirement.source_casilla_ids)
+                    },
                 ),
             ),
             source_kind="aeat_sede_justificante",

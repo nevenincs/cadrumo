@@ -23,10 +23,9 @@ saldo final 01498/01499 and the elective integrated amount 01496 stay
 operator-input; this enrollment proves the STOCK carry, not a computed identity.
 
 The cross-year hook relies on the previous_filing observation-coverage validator
-semantics: M200 is modelled only from 2024, but the prior saldo final is the
-operator's historical filing (an observation), so the ``-1`` source resolves
-present-or-zero-carry — a first-year filer simply has no prior deterioro stock to
-carry (a correct zero, not a silent under-declaration).
+semantics: because the repository validates every filed observation against a
+real Modelo 200 revision, this test uses target years whose prior source years
+are also modelled. Unsupported historical years must fail closed.
 """
 
 from __future__ import annotations
@@ -39,15 +38,18 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
+    RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos._verification_report import ModeloVerificationFindingKind
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._actions import _evaluate_verification_predicates
 from .._binding_prefill import resolve_bindings_from_local_store
@@ -65,19 +67,35 @@ _CASILLA_ONLY_PROFILE = TaxpayerProfile(tax_id="B12345678", iva_regime=IVARegime
 _MODELO_200 = "200"
 
 #: Cross-year art.13 dotaciones-deterioro carry casillas (Total block, page-020d).
-_SALDO_FINAL_NO_CUMPLIDO = "01498"  # end-of-year pending, conditions NOT met
-_SALDO_FINAL_CUMPLIDO = "01499"  # end-of-year pending, conditions met
-_SALDO_INICIAL_NO_CUMPLIDO = "01494"  # opening pending no-cumplido (bound from prior 01498)
-_SALDO_INICIAL_CUMPLIDO = "01495"  # opening pending cumplido (bound from prior 01499)
+_SALDO_FINAL_NO_CUMPLIDO: CasillaId = validated_casilla_id(
+    "01498",
+    surface="_SALDO_FINAL_NO_CUMPLIDO",
+)  # end-of-year pending, conditions NOT met
+_SALDO_FINAL_CUMPLIDO: CasillaId = validated_casilla_id(
+    "01499",
+    surface="_SALDO_FINAL_CUMPLIDO",
+)  # end-of-year pending, conditions met
+_SALDO_INICIAL_NO_CUMPLIDO: CasillaId = validated_casilla_id(
+    "01494",
+    surface="_SALDO_INICIAL_NO_CUMPLIDO",
+)  # opening pending no-cumplido (bound from prior 01498)
+_SALDO_INICIAL_CUMPLIDO: CasillaId = validated_casilla_id(
+    "01495",
+    surface="_SALDO_INICIAL_CUMPLIDO",
+)  # opening pending cumplido (bound from prior 01499)
+_SALDO_INTEGRADO_CUMPLIDO: CasillaId = validated_casilla_id(
+    "01496",
+    surface="_SALDO_INTEGRADO_CUMPLIDO",
+)
 
-_YEAR_N = 2024
-_YEAR_N_PLUS_1 = 2025
+_YEAR_N = 2025
+_YEAR_N_PLUS_1 = 2026
 
 #: Distinct prior-year stock per source year + condition-state so a cross-year
 #: contamination (or a condition-state channel swap) surfaces.
-_STOCK_BY_SOURCE_YEAR: dict[int, dict[str, Decimal]] = {
-    2023: {_SALDO_FINAL_NO_CUMPLIDO: Decimal("8000.00"), _SALDO_FINAL_CUMPLIDO: Decimal("5000.00")},
-    2024: {_SALDO_FINAL_NO_CUMPLIDO: Decimal("3000.00"), _SALDO_FINAL_CUMPLIDO: Decimal("12000.00")},
+_STOCK_BY_SOURCE_YEAR: dict[int, dict[CasillaId, Decimal]] = {
+    2024: {_SALDO_FINAL_NO_CUMPLIDO: Decimal("8000.00"), _SALDO_FINAL_CUMPLIDO: Decimal("5000.00")},
+    2025: {_SALDO_FINAL_NO_CUMPLIDO: Decimal("3000.00"), _SALDO_FINAL_CUMPLIDO: Decimal("12000.00")},
 }
 
 _M200_PAGOS_RELATION = "modelo-200-2024-rel-202-pagos-fraccionados"
@@ -102,9 +120,14 @@ def _seed_prior_saldo_final(*, source_year: int, obs_repo: CalculationObservatio
             modelo=_MODELO_200,
             filing_year=source_year,
             period="0A",
-            observations=(
-                CasillaObservation(casilla_id=_SALDO_FINAL_NO_CUMPLIDO, value=stock[_SALDO_FINAL_NO_CUMPLIDO]),
-                CasillaObservation(casilla_id=_SALDO_FINAL_CUMPLIDO, value=stock[_SALDO_FINAL_CUMPLIDO]),
+            observations=registry_grounded_observations(
+                modelo=_MODELO_200,
+                filing_year=source_year,
+                period="0A",
+                casilla_values={
+                    _SALDO_FINAL_NO_CUMPLIDO: stock[_SALDO_FINAL_NO_CUMPLIDO],
+                    _SALDO_FINAL_CUMPLIDO: stock[_SALDO_FINAL_CUMPLIDO],
+                },
             ),
         ),
         source_kind="app_filing",
@@ -115,7 +138,7 @@ def _seed_prior_saldo_final(*, source_year: int, obs_repo: CalculationObservatio
 def _calculate_200(
     *,
     filing_year: int,
-    relation_values: dict[str, Decimal],
+    relation_values: dict[RelationId, Decimal],
     obs_repo: CalculationObservationRepository,
 ) -> RegistryCalculationResult:
     snapshot = resources().modelos.authority.snapshot(_MODELO_200, filing_year=filing_year, period="0A")
@@ -129,7 +152,7 @@ def _calculate_200(
     bound_binding_ids = {c.binding for c in snapshot.revision.casillas if c.input_kind.value == "bound" and c.binding}
     carry_defaults = {bid: Decimal("0") for bid in bound_binding_ids}
     binding_values = {**carry_defaults, **prefilled, **relation_binding_values, **_PROFILE_DECIMAL_BINDINGS}
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -140,7 +163,7 @@ def _calculate_200(
     )
 
 
-def _resolve_relations(*, filing_year: int, obs_repo: CalculationObservationRepository) -> dict[str, Decimal]:
+def _resolve_relations(*, filing_year: int, obs_repo: CalculationObservationRepository) -> dict[RelationId, Decimal]:
     snapshot = resources().modelos.authority.snapshot(_MODELO_200, filing_year=filing_year, period="0A")
     resolved = {
         item.relation: item.value
@@ -161,11 +184,11 @@ def test_opening_dotaciones_stock_resolves_from_prior_year_per_condition_state(t
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_prior_saldo_final(source_year=2023, obs_repo=obs_repo)
+        _seed_prior_saldo_final(source_year=2024, obs_repo=obs_repo)
         resolved = _resolve_relations(filing_year=_YEAR_N, obs_repo=obs_repo)
         result = _calculate_200(filing_year=_YEAR_N, relation_values=resolved, obs_repo=obs_repo)
-    assert Decimal(result.values[_SALDO_INICIAL_NO_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2023][_SALDO_FINAL_NO_CUMPLIDO]
-    assert Decimal(result.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2023][_SALDO_FINAL_CUMPLIDO]
+    assert Decimal(result.values[_SALDO_INICIAL_NO_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2024][_SALDO_FINAL_NO_CUMPLIDO]
+    assert Decimal(result.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2024][_SALDO_FINAL_CUMPLIDO]
     # The two channels carry distinct values — a channel swap would surface here.
     assert result.values[_SALDO_INICIAL_NO_CUMPLIDO] != result.values[_SALDO_INICIAL_CUMPLIDO]
 
@@ -180,8 +203,8 @@ def test_dotaciones_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
     recorder = EnrollmentRecorder(_MODELO_200)
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_prior_saldo_final(source_year=2023, obs_repo=obs_repo)
         _seed_prior_saldo_final(source_year=2024, obs_repo=obs_repo)
+        _seed_prior_saldo_final(source_year=2025, obs_repo=obs_repo)
 
         resolved_n = _resolve_relations(filing_year=_YEAR_N, obs_repo=obs_repo)
         result_n = _calculate_200(filing_year=_YEAR_N, relation_values=resolved_n, obs_repo=obs_repo)
@@ -191,10 +214,10 @@ def test_dotaciones_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
         result_n1 = _calculate_200(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1, obs_repo=obs_repo)
         recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=len(result_n1.values))
 
-    assert Decimal(result_n.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2023][_SALDO_FINAL_CUMPLIDO]
-    assert Decimal(result_n1.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2024][_SALDO_FINAL_CUMPLIDO]
+    assert Decimal(result_n.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2024][_SALDO_FINAL_CUMPLIDO]
+    assert Decimal(result_n1.values[_SALDO_INICIAL_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2025][_SALDO_FINAL_CUMPLIDO]
     assert (
-        Decimal(result_n1.values[_SALDO_INICIAL_NO_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2024][_SALDO_FINAL_NO_CUMPLIDO]
+        Decimal(result_n1.values[_SALDO_INICIAL_NO_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2025][_SALDO_FINAL_NO_CUMPLIDO]
     )
 
     evidence = recorder.evidence()
@@ -224,7 +247,7 @@ def test_advisory_fires_when_cumplido_stock_available_but_none_integrated() -> N
     predicate = _advisory_predicate()
     findings = _evaluate_verification_predicates(
         (predicate,),
-        {"01495": Decimal("12000.00"), "01496": Decimal("0")},
+        {_SALDO_INICIAL_CUMPLIDO: Decimal("12000.00"), _SALDO_INTEGRADO_CUMPLIDO: Decimal("0")},
         _CASILLA_ONLY_PROFILE,
     )
     assert len(findings) == 1
@@ -238,7 +261,7 @@ def test_advisory_silent_when_some_cumplido_stock_integrated() -> None:
     predicate = _advisory_predicate()
     findings = _evaluate_verification_predicates(
         (predicate,),
-        {"01495": Decimal("12000.00"), "01496": Decimal("4000.00")},
+        {_SALDO_INICIAL_CUMPLIDO: Decimal("12000.00"), _SALDO_INTEGRADO_CUMPLIDO: Decimal("4000.00")},
         _CASILLA_ONLY_PROFILE,
     )
     assert findings == []
@@ -249,7 +272,7 @@ def test_advisory_silent_when_no_cumplido_stock_available() -> None:
     predicate = _advisory_predicate()
     findings = _evaluate_verification_predicates(
         (predicate,),
-        {"01495": Decimal("0"), "01496": Decimal("0")},
+        {_SALDO_INICIAL_CUMPLIDO: Decimal("0"), _SALDO_INTEGRADO_CUMPLIDO: Decimal("0")},
         _CASILLA_ONLY_PROFILE,
     )
     assert findings == []

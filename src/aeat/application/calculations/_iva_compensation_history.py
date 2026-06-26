@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import ClassVar, override
+from typing import ClassVar, Final, override
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -24,7 +24,9 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core import Modelo, Period
+from ...core.resources import resources
 from ...core.time import now
+from ...domain.calculations.registry import CasillaId, undeclared_casilla_ids, validated_casilla_id
 from ...domain.iva_compensation._carry_forward import (
     IvaCompensationCarryForwardReport,
     IvaCompensationPeriodState,
@@ -32,6 +34,7 @@ from ...domain.iva_compensation._carry_forward import (
     derive_iva_compensation_year_end_carry_partition,
 )
 from ...domain.iva_compensation._errors import (
+    IvaCompensationCasillaReferenceError,
     IvaCompensationDecimalParseError,
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
@@ -40,6 +43,29 @@ from ._errors import IvaCompensationModeloError
 from ._ports import FiledDeclaracionObservationProtocol
 
 _ZERO = Decimal("0")
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="IVA compensation history casilla constant")
+    except ValueError as exc:
+        raise RuntimeError(f"IVA compensation history casilla constant {value!r} is not a CasillaId") from exc
+
+
+_M303_RESULTADO_CASILLA: Final[CasillaId] = _casilla_id("iva.resultado")
+_M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = (
+    _casilla_id("iva.compensacion-pendiente-periodos-anteriores")
+)
+_M303_COMPENSACION_APLICADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-aplicada-periodo")
+_M303_RESULTADO_FINAL_CASILLA: Final[CasillaId] = _casilla_id("71")
+_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA: Final[CasillaId] = _casilla_id(
+    "iva.anual.compensacion-ultimo-periodo-97",
+)
+_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: Final[CasillaId] = _casilla_id(
+    "iva.anual.compensacion-generada-ejercicio-no-97",
+)
 
 
 class IvaCompensationAnnualSummary(BaseModel):
@@ -73,7 +99,7 @@ class IvaCompensationAnnualCrossCheck(BaseModel):
     last_period_difference_amount: Decimal
     generated_not_in_last_period_difference_amount: Decimal
     matches: bool
-    mismatched_casillas: tuple[str, ...] = ()
+    mismatched_casilla_ids: tuple[CasillaId, ...] = ()
     expiry_review_states: tuple[str, ...] = ()
     summary_source_observation_key: str = Field(min_length=1, max_length=96)
 
@@ -246,12 +272,12 @@ def iva_compensation_state_from_filed_observation(
             context={"modelo": observation.modelo},
         )
     values = _decimal_casilla_values(observation)
-    result = _resolve_casilla_value(values, "iva.resultado")
-    posterior = _resolve_casilla_value(values, "iva.compensacion-pendiente-periodos-posteriores")
+    result = _resolve_casilla_value(values, _M303_RESULTADO_CASILLA)
+    posterior = _resolve_casilla_value(values, _M303_POSTERIOR_CASILLA)
     generated = max(Decimal("0"), -result) if result is not None else Decimal("0")
     # Semantic-only casilla (no numeric AEAT box), so it was never an inline-number
     # routing literal — looked up directly by its registry id, behaviour-preserving.
-    available = _casilla_value(values, "iva.compensacion-disponible-fin-periodo")
+    available = _casilla_value(values, _M303_DISPONIBLE_CASILLA)
     if available is None:
         available = (posterior or Decimal("0")) + generated
     source_artefact_sha256 = next(
@@ -265,11 +291,11 @@ def iva_compensation_state_from_filed_observation(
         expediente_id=observation.expediente_id,
         status=observation.status,
         presented_at=observation.presented_at,
-        prior_pending_amount=_resolve_casilla_value(values, "iva.compensacion-pendiente-periodos-anteriores"),
-        applied_amount=_resolve_casilla_value(values, "iva.compensacion-aplicada-periodo"),
+        prior_pending_amount=_resolve_casilla_value(values, _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA),
+        applied_amount=_resolve_casilla_value(values, _M303_COMPENSACION_APLICADA_CASILLA),
         pending_for_later_amount=posterior,
         period_result_amount=result,
-        final_result_amount=_resolve_casilla_value(values, "71"),
+        final_result_amount=_resolve_casilla_value(values, _M303_RESULTADO_FINAL_CASILLA),
         generated_amount=generated,
         available_end_amount=available,
         source_observation_key=(
@@ -284,9 +310,10 @@ def iva_compensation_annual_summary_from_filed_observation(
 ) -> IvaCompensationAnnualSummary:
     """Build an :class:`IvaCompensationAnnualSummary` from a filed Modelo 390 observation.
 
-    Casilla 97 carries the final-period amount to compensate. Casilla 662
-    carries generated pending compensation from the exercise that is not
-    included in casilla 97. The summary is evidence for cross-checking the
+    ``iva.anual.compensacion-ultimo-periodo-97`` carries the final-period amount
+    to compensate. ``iva.anual.compensacion-generada-ejercicio-no-97`` carries
+    generated pending compensation from the exercise that is not included in the
+    final-period annual carry id. The summary is evidence for cross-checking the
     Modelo 303 carry-forward projection; it is not stored as a period state.
     """
     if observation.modelo != Modelo.M390.value:
@@ -295,8 +322,11 @@ def iva_compensation_annual_summary_from_filed_observation(
             context={"modelo": observation.modelo},
         )
     values = _decimal_casilla_values(observation)
-    last_period = _resolve_casilla_value(values, "iva.anual.compensacion-ultimo-periodo-97") or _ZERO
-    generated_not_in_last = _resolve_casilla_value(values, "iva.anual.compensacion-generada-ejercicio-no-97") or _ZERO
+    last_period = _resolve_casilla_value(values, _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA) or _ZERO
+    generated_not_in_last = _resolve_casilla_value(
+        values,
+        _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
+    ) or _ZERO
     source_artefact_sha256 = next(
         (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
         None,
@@ -323,14 +353,15 @@ def cross_check_iva_compensation_annual_summary(
 ) -> IvaCompensationAnnualCrossCheck:
     """Compare projections with filed evidence and return an :class:`IvaCompensationAnnualCrossCheck`.
 
-    The expected box 97 / box 662 figures are derived through the SAME FIFO
-    carry partition that drives the Modelo 390 calculation
+    The expected ``iva.anual.compensacion-ultimo-periodo-97`` and
+    ``iva.anual.compensacion-generada-ejercicio-no-97`` figures are derived
+    through the SAME FIFO carry partition that drives the Modelo 390 calculation
     (:func:`derive_iva_compensation_year_end_carry_partition`), so the
-    cross-check, the box-97 binding, and the box-662 binding cannot diverge: all
-    three read one partition of the year's pending credit. ``period_states`` is
-    the same tuple of filed Modelo 303 states the carry-forward ``report`` was
-    built from; it supplies the last period's disponible that discriminates box
-    97 (carried into the last period) from box 662 (generated-not-carried).
+    cross-check and both annual carry bindings cannot diverge: all three read
+    one partition of the year's pending credit. ``period_states`` is the same
+    tuple of filed Modelo 303 states the carry-forward ``report`` was built
+    from; it supplies the last period's disponible that discriminates the
+    final-period carry from the generated-not-carried amount.
     """
     partition = derive_iva_compensation_year_end_carry_partition(
         report,
@@ -344,7 +375,12 @@ def cross_check_iva_compensation_annual_summary(
     last_period_difference = last_period - summary.last_period_compensation_amount
     generated_difference = generated_not_in_last - summary.generated_not_in_last_period_amount
     mismatches = tuple(
-        casilla for casilla, drift in (("97", last_period_difference), ("662", generated_difference)) if drift != _ZERO
+        casilla
+        for casilla, drift in (
+            (_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA, last_period_difference),
+            (_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA, generated_difference),
+        )
+        if drift != _ZERO
     )
     return IvaCompensationAnnualCrossCheck(
         filing_year=summary.filing_year,
@@ -356,14 +392,15 @@ def cross_check_iva_compensation_annual_summary(
         last_period_difference_amount=last_period_difference,
         generated_not_in_last_period_difference_amount=generated_difference,
         matches=difference == _ZERO and not mismatches,
-        mismatched_casillas=mismatches,
+        mismatched_casilla_ids=mismatches,
         expiry_review_states=tuple(str(lot.expiry_review_state) for lot in report.lots),
         summary_source_observation_key=summary.source_observation_key,
     )
 
 
-def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) -> dict[str, Decimal]:
-    values: dict[str, Decimal] = {}
+def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) -> dict[CasillaId, Decimal]:
+    _validate_observed_casilla_ids(observation)
+    values: dict[CasillaId, Decimal] = {}
     for casilla in observation.casillas:
         if casilla.source_artefact_kind == "justificante_pdf":
             continue
@@ -377,7 +414,28 @@ def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) ->
     return values
 
 
-def _casilla_value(values: dict[str, Decimal], *casilla_ids: str) -> Decimal | None:
+def _validate_observed_casilla_ids(observation: FiledDeclaracionObservationProtocol) -> None:
+    snapshot = resources().modelos.authority.snapshot(
+        observation.modelo,
+        filing_year=observation.ejercicio,
+        period=observation.period.registry_token,
+    )
+    invalid = undeclared_casilla_ids(snapshot.revision, (casilla.casilla_id for casilla in observation.casillas))
+    if not invalid:
+        return
+    raise IvaCompensationCasillaReferenceError(
+        "IVA compensation observations must be keyed by canonical casilla.id values declared by the registry",
+        context={
+            "modelo": observation.modelo,
+            "revision": snapshot.revision.id,
+            "period": observation.period.registry_token,
+            "casilla_ids": invalid,
+        },
+        translated_message="errors.refused.refused_calculations_casilla_constraint",
+    )
+
+
+def _casilla_value(values: dict[CasillaId, Decimal], *casilla_ids: CasillaId) -> Decimal | None:
     for casilla_id in casilla_ids:
         value = values.get(casilla_id)
         if value is not None:
@@ -385,35 +443,9 @@ def _casilla_value(values: dict[str, Decimal], *casilla_ids: str) -> Decimal | N
     return None
 
 
-#: Compensación casilla identities: the AEAT official box number for each stable
-#: semantic casilla id (M303 2023-y-siguientes / M390 2010-y-siguientes). Centralised
-#: here as ONE named mapping rather than scattered as inline numeric literals at each
-#: call site. The registry casilla definitions remain the authority; this projection
-#: path must not load the raw registry tree (the registry-orchestration boundary —
-#: `test_public_api_boundaries`), so the numbers are pinned to the registry by
-#: `test_compensation_casilla_numbers_match_registry` instead, which fails the moment a
-#: registry box number drifts from this map.
-_COMPENSATION_CASILLA_NUMBERS: dict[str, str] = {
-    "iva.resultado": "69",
-    "iva.compensacion-pendiente-periodos-posteriores": "87",
-    "iva.compensacion-pendiente-periodos-anteriores": "110",
-    "iva.compensacion-aplicada-periodo": "78",
-    "iva.anual.compensacion-ultimo-periodo-97": "97",
-    "iva.anual.compensacion-generada-ejercicio-no-97": "662",
-}
-
-
-def _resolve_casilla_value(values: dict[str, Decimal], semantic_id: str) -> Decimal | None:
-    """Resolve a filed-observation casilla value by its registry identity.
-
-    Looks up the value under both the official box number (from the centralised
-    `_COMPENSATION_CASILLA_NUMBERS` map) and the semantic casilla id, so a
-    justificante keyed by either form resolves. The number is never an inline
-    literal scattered at the call site.
-    """
-    number = _COMPENSATION_CASILLA_NUMBERS.get(semantic_id)
-    candidate_ids = (number, semantic_id) if number is not None else (semantic_id,)
-    return _casilla_value(values, *candidate_ids)
+def _resolve_casilla_value(values: dict[CasillaId, Decimal], semantic_id: CasillaId) -> Decimal | None:
+    """Resolve a filed-observation casilla value by canonical ``casilla.id`` only."""
+    return _casilla_value(values, semantic_id)
 
 
 __all__ = [

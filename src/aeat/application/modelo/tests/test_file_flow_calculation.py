@@ -9,6 +9,9 @@ import pytest
 from ....core import Period
 from ._file_flow_support import (
     _DEFAULT_130_BINDING_VALUES,
+    _M130_EXPENSE_CASILLA,
+    _M130_INCOME_CASILLA,
+    _M130_NET_RESULT_CASILLA,
     _T0,
     _T1,
     _T2,
@@ -38,7 +41,7 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos: _Repos)
 
     first = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={_M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -48,7 +51,7 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos: _Repos)
 
     second = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("2000"), "02": Decimal("500")},
+        casilla_inputs={_M130_INCOME_CASILLA: Decimal("2000"), _M130_EXPENSE_CASILLA: Decimal("500")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -89,7 +92,7 @@ def test_calculate_is_idempotent_on_identical_inputs(repos: _Repos) -> None:
 
     first = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={_M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -98,7 +101,7 @@ def test_calculate_is_idempotent_on_identical_inputs(repos: _Repos) -> None:
     )
     second = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={_M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -121,7 +124,7 @@ def test_duplicate_draft_calculation_reuse_advances_current_pointer(repos: _Repo
 
     first = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={_M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -135,7 +138,7 @@ def test_duplicate_draft_calculation_reuse_advances_current_pointer(repos: _Repo
 
     duplicate = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={_M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -171,7 +174,7 @@ def test_calculate_refused_on_discarded_work_unit(repos: _Repos) -> None:
     with pytest.raises(WorkUnitMutationRefusedError):
         calculate_modelo_revision(
             work_unit.work_unit_id,
-            casilla_inputs={"01": Decimal("1000")},
+            casilla_inputs={_M130_INCOME_CASILLA: Decimal("1000")},
             binding_values=_DEFAULT_130_BINDING_VALUES,
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
@@ -215,14 +218,14 @@ def test_calculate_runs_registry_formula_engine(repos: _Repos) -> None:
     engine derives casilla 03 = 01 - 02 (subtract).
 
     The persisted revision carries the operator inputs in
-    ``inputs_snapshot`` (canonical decimal strings) and the full
+    ``input_values_by_casilla_id`` (canonical decimal strings) and the full
     engine output, inputs plus formula targets, in ``casilla_values``.
     The bucket event payload reports the formula count from the
     engine result."""
 
     wu_repo, cr_repo, _, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
-    casilla_inputs = {"01": Decimal("10000"), "02": Decimal("3000")}
+    casilla_inputs = {_M130_INCOME_CASILLA: Decimal("10000"), _M130_EXPENSE_CASILLA: Decimal("3000")}
 
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
@@ -235,17 +238,17 @@ def test_calculate_runs_registry_formula_engine(repos: _Repos) -> None:
         clock=_T1,
     )
 
-    # Operator inputs surface in ``inputs_snapshot``.
-    assert revision.inputs_snapshot["01"] == "10000"
-    assert revision.inputs_snapshot["02"] == "3000"
-    assert "03" not in revision.inputs_snapshot  # 03 is a formula target, not an input
+    # Operator inputs surface in ``input_values_by_casilla_id``.
+    assert revision.input_values_by_casilla_id[_M130_INCOME_CASILLA] == "10000"
+    assert revision.input_values_by_casilla_id[_M130_EXPENSE_CASILLA] == "3000"
+    assert _M130_NET_RESULT_CASILLA not in revision.input_values_by_casilla_id  # 03 is a formula target, not an input
 
     # Calculation output contains BOTH the operator inputs AND every
     # formula target; domain-level registry tests own arithmetic parity.
-    assert revision.casilla_values["01"] == casilla_inputs["01"]
-    assert revision.casilla_values["02"] == casilla_inputs["02"]
-    assert "03" in revision.casilla_values
-    assert revision.casilla_values["03"] < revision.casilla_values["01"]
+    assert revision.casilla_values[_M130_INCOME_CASILLA] == casilla_inputs[_M130_INCOME_CASILLA]
+    assert revision.casilla_values[_M130_EXPENSE_CASILLA] == casilla_inputs[_M130_EXPENSE_CASILLA]
+    assert _M130_NET_RESULT_CASILLA in revision.casilla_values
+    assert revision.casilla_values[_M130_NET_RESULT_CASILLA] < revision.casilla_values[_M130_INCOME_CASILLA]
     # Every casilla declared in the 130 1T 2026 revision is now in
     # the output — 9 manual + 10 formula targets = 19 entries.
     assert len(revision.casilla_values) >= 19
@@ -289,7 +292,7 @@ def test_calculate_works_when_cwd_is_not_the_repo_root(
         revision = calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator-A",
-            casilla_inputs={"01": Decimal("10000"), "02": Decimal("3000")},
+            casilla_inputs={_M130_INCOME_CASILLA: Decimal("10000"), _M130_EXPENSE_CASILLA: Decimal("3000")},
             binding_values=_DEFAULT_130_BINDING_VALUES,
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
@@ -298,7 +301,7 @@ def test_calculate_works_when_cwd_is_not_the_repo_root(
         )
 
     # Sanity: engine ran (formula casilla 03 computed = 01 - 02).
-    assert revision.casilla_values["03"] == Decimal("7000.00")
+    assert revision.casilla_values[_M130_NET_RESULT_CASILLA] == Decimal("7000.00")
 
 
 def test_calculate_refuses_when_registry_snapshot_unresolvable(repos: _Repos) -> None:
@@ -327,7 +330,7 @@ def test_calculate_refuses_when_registry_snapshot_unresolvable(repos: _Repos) ->
         calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator-A",
-            casilla_inputs={"01": Decimal("1000")},
+            casilla_inputs={_M130_INCOME_CASILLA: Decimal("1000")},
             binding_values=_DEFAULT_130_BINDING_VALUES,
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,

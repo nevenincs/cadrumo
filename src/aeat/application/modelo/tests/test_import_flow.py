@@ -25,6 +25,7 @@ from ....domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -83,6 +84,29 @@ _T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 _T5 = datetime(2026, 4, 17, 13, 0, 0, tzinfo=UTC)
 _TAX_ID = "X1234567L"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_IMPORT_INCOME_CASILLA: CasillaId = _casilla_id("01")
+_IMPORT_EXPENSE_CASILLA: CasillaId = _casilla_id("02")
+_UNKNOWN_IMPORT_CASILLA: CasillaId = _casilla_id("9999")
+_M111_AMENDMENT_CASILLA: CasillaId = _casilla_id("01")
+_M111_EMPLOYMENT_WITHHELD_CASILLA: CasillaId = _casilla_id("03")
+_M111_PROFESSIONAL_WITHHELD_CASILLA: CasillaId = _casilla_id("06")
+_M111_PRIZE_WITHHELD_CASILLA: CasillaId = _casilla_id("09")
+_M111_IMAGE_RIGHTS_WITHHELD_CASILLA: CasillaId = _casilla_id("12")
+_M111_FORESTRY_WITHHELD_CASILLA: CasillaId = _casilla_id("15")
+_M111_IMPUTED_INCOME_WITHHELD_CASILLA: CasillaId = _casilla_id("18")
+_M111_ACTIVITY_COUNT_CASILLA: CasillaId = _casilla_id("21")
+_M111_ACTIVITY_AMOUNT_CASILLA: CasillaId = _casilla_id("24")
+_M111_ACTIVITY_WITHHELD_CASILLA: CasillaId = _casilla_id("27")
+_M111_TOTAL_WITHHELD_CASILLA: CasillaId = _casilla_id("29")
 
 
 @pytest.fixture
@@ -146,7 +170,7 @@ def _drive_import_persists_filing(repos: _Repos) -> _ImportOutcome:
     )
     filing = import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1500"), "02": Decimal("300")},
+        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500"), _IMPORT_EXPENSE_CASILLA: Decimal("300")},
         evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
         evidence_reference_id="JUST-2026-303-Q1-OPERATOR1",
         actor="aeat-import",
@@ -223,8 +247,8 @@ def test_import_filing_records_no_amendment_link(repos: _Repos) -> None:
 
 
 _IMPORTED_REVISION_CASILLAS = (
-    ("01", Decimal("1500")),
-    ("02", Decimal("300")),
+    (_IMPORT_INCOME_CASILLA, Decimal("1500")),
+    (_IMPORT_EXPENSE_CASILLA, Decimal("300")),
 )
 
 
@@ -242,18 +266,19 @@ def test_import_persists_registry_grounded_casilla_observations(repos: _Repos) -
     revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
     observations = {obs.casilla_id: obs for obs in revision.observations}
 
-    assert set(observations) == {"01", "02"}
-    assert observations["01"].value == Decimal("1500")
-    assert observations["01"].formula_id is None
-    assert observations["01"].operand_refs == ()
-    assert observations["01"].legal_refs
-    assert observations["01"].source_refs
-    assert observations["02"].legal_refs
-    assert observations["02"].source_refs
+    assert set(observations) == {_IMPORT_INCOME_CASILLA, _IMPORT_EXPENSE_CASILLA}
+    assert observations[_IMPORT_INCOME_CASILLA].value == Decimal("1500")
+    assert observations[_IMPORT_INCOME_CASILLA].formula_id is None
+    assert observations[_IMPORT_INCOME_CASILLA].operand_refs == ()
+    assert observations[_IMPORT_INCOME_CASILLA].operand_casilla_refs == ()
+    assert observations[_IMPORT_INCOME_CASILLA].legal_refs
+    assert observations[_IMPORT_INCOME_CASILLA].source_refs
+    assert observations[_IMPORT_EXPENSE_CASILLA].legal_refs
+    assert observations[_IMPORT_EXPENSE_CASILLA].source_refs
 
 
 @pytest.mark.parametrize(("casilla_id", "expected"), _IMPORTED_REVISION_CASILLAS)
-def test_import_persists_casilla_value(repos: _Repos, casilla_id: str, expected: Decimal) -> None:
+def test_import_persists_casilla_value(repos: _Repos, casilla_id: CasillaId, expected: Decimal) -> None:
     outcome = _drive_import_persists_filing(repos)
     _, cr_repo, _, _, _ = repos
     revision = get_calculation_revision(outcome.filing.calculation_revision_id, calculation_repository=cr_repo)
@@ -317,7 +342,7 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
 
     first = import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1500")},
+        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
         evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
         evidence_reference_id="JUST-FIRST",
         work_unit_repository=wu_repo,
@@ -337,7 +362,7 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
     )
     second = import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1600")},
+        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1600")},
         evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
         evidence_reference_id="CSV-SECOND",
         work_unit_repository=wu_repo,
@@ -387,7 +412,7 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
 
     imported = import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1500"), "02": Decimal("300")},
+        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500"), _IMPORT_EXPENSE_CASILLA: Decimal("300")},
         evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
         evidence_reference_id="JUST-BASELINE",
         work_unit_repository=wu_repo,
@@ -401,7 +426,7 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
 
     amended = amend_modelo_revision(
         from_filing_record_id=imported.filing_record_id,
-        overrides={"01": Decimal("1650")},
+        overrides={_IMPORT_INCOME_CASILLA: Decimal("1650")},
         amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
         reason="under-reported revenue discovered in subsequent audit",
         actor="operator-A",
@@ -443,7 +468,7 @@ def test_import_refuses_casilla_ids_not_in_registry(repos: _Repos) -> None:
     with pytest.raises(ExternalModeloImportError) as exc_info:
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
-            casilla_values={"9999": Decimal("100")},
+            casilla_values={_UNKNOWN_IMPORT_CASILLA: Decimal("100")},
             evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="JUST-FABRICATED",
             work_unit_repository=wu_repo,
@@ -456,7 +481,30 @@ def test_import_refuses_casilla_ids_not_in_registry(repos: _Repos) -> None:
     assert exc_info.value.context is not None
     casillas_obj = exc_info.value.context.get("casillas", [])
     assert isinstance(casillas_obj, (list, tuple))
-    assert "9999" in casillas_obj
+    assert _UNKNOWN_IMPORT_CASILLA in casillas_obj
+
+
+def test_import_refuses_non_string_casilla_keys_without_coercion(repos: _Repos) -> None:
+    """Malformed external casilla keys fail before registry membership checks."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    with pytest.raises(ExternalModeloImportError) as exc_info:
+        import_external_filing_evidence(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_values={1: Decimal("100")},
+            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_reference_id="JUST-MALFORMED",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T1,
+        )
+    assert exc_info.value.translated_message == "application.modelo.errors.external_import_unknown_casillas"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context.get("casillas") == ["1"]
 
 
 def test_import_refuses_empty_casilla_values(repos: _Repos) -> None:
@@ -491,7 +539,7 @@ def test_import_refuses_empty_evidence_reference(repos: _Repos) -> None:
     with pytest.raises(ExternalModeloImportError) as raised:
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
-            casilla_values={"01": Decimal("1500")},
+            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
             evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="   ",
             work_unit_repository=wu_repo,
@@ -510,7 +558,7 @@ def test_import_refuses_justificante_evidence_without_persisted_artifact(repos: 
     with pytest.raises(ExternalModeloImportError) as raised:
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
-            casilla_values={"01": Decimal("1500")},
+            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
             evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="JUST-MISSING",
             work_unit_repository=wu_repo,
@@ -538,7 +586,7 @@ def test_import_refuses_justificante_evidence_without_expected_tax_id(repos: _Re
     with pytest.raises(ExternalModeloImportError) as raised:
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
-            casilla_values={"01": Decimal("1500")},
+            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
             evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="JUST-NO-TAX-ID",
             work_unit_repository=wu_repo,
@@ -565,7 +613,7 @@ def test_import_refuses_justificante_evidence_for_different_period(repos: _Repos
     with pytest.raises(ExternalModeloImportError) as raised:
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
-            casilla_values={"01": Decimal("1500")},
+            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
             evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="JUST-MISMATCH",
             work_unit_repository=wu_repo,
@@ -593,7 +641,7 @@ def test_import_refuses_justificante_evidence_for_different_taxpayer(repos: _Rep
     with pytest.raises(ExternalModeloImportError) as raised:
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
-            casilla_values={"01": Decimal("1500")},
+            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
             evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="JUST-WRONG-TAXPAYER",
             work_unit_repository=wu_repo,
@@ -621,7 +669,7 @@ def test_import_justificante_taxpayer_match_is_case_insensitive(repos: _Repos) -
 
     filing = import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1500")},
+        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
         evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
         evidence_reference_id="JUST-CASE-TAXPAYER",
         work_unit_repository=wu_repo,
@@ -644,7 +692,7 @@ def test_import_csv_register_refuses_without_enrolled_justificante(repos: _Repos
     with pytest.raises(ExternalModeloImportError) as exc_info:
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
-            casilla_values={"01": Decimal("1500")},
+            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
             evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             evidence_reference_id="CSV-MISSING-JUSTIFICANTE",
             work_unit_repository=wu_repo,
@@ -673,7 +721,7 @@ def test_import_refuses_discarded_work_unit(repos: _Repos) -> None:
     with pytest.raises(WorkUnitMutationRefusedError):
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
-            casilla_values={"01": Decimal("1500")},
+            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
             evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="JUST-LATE",
             work_unit_repository=wu_repo,
@@ -691,7 +739,7 @@ def test_import_refuses_unknown_work_unit(repos: _Repos) -> None:
     with pytest.raises(WorkUnitNotFoundError):
         import_external_filing_evidence(
             work_unit_id="0" * 64,
-            casilla_values={"01": Decimal("1500")},
+            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
             evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="JUST-WHATEVER",
             work_unit_repository=wu_repo,
@@ -721,16 +769,16 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
         work_unit.work_unit_id,
         actor="operator-A",
         casilla_inputs={
-            "03": Decimal("180.25"),
-            "06": Decimal("12.10"),
-            "09": Decimal("300.00"),
-            "12": Decimal("14.40"),
-            "15": Decimal("25.00"),
-            "18": Decimal("0.50"),
-            "21": Decimal("7.00"),
-            "24": Decimal("8.00"),
-            "27": Decimal("9.00"),
-            "29": Decimal("40.00"),
+            _M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
+            _M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
+            _M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
+            _M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
+            _M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
+            _M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
+            _M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
+            _M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
+            _M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
+            _M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
         },
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -756,7 +804,7 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
     with pytest.raises(AmendmentEvidenceMissingError, match=r"external_evidence|imported|baseline"):
         amend_modelo_revision(
             from_filing_record_id=locally_filed.filing_record_id,
-            overrides={"01": Decimal("1700")},
+            overrides={_M111_AMENDMENT_CASILLA: Decimal("1700")},
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             reason="needed to amend",
             actor="operator-A",

@@ -12,6 +12,7 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision
@@ -40,6 +41,38 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
+
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"bucket aggregation fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M303_REPERCUTIDO_GENERAL_CASILLA: CasillaId = _casilla_id("iva.repercutido.general")
+_M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = _casilla_id("iva.soportado.interiores")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
+_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M303_COMPENSACION_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
+_M303_2009_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("27")
+_M303_2009_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("45")
+_M303_BUCKET_SOURCE_CASILLAS: tuple[CasillaId, CasillaId] = (
+    _M303_REPERCUTIDO_GENERAL_CASILLA,
+    _M303_SOPORTADO_INTERIORES_CASILLA,
+)
+_M303_2009_RESULT_OPERAND_CASILLAS: set[CasillaId] = {
+    _M303_2009_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    _M303_2009_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+}
+_M303_RESULT_OPERAND_CASILLAS: set[CasillaId] = {
+    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+}
 
 
 @pytest.fixture
@@ -161,19 +194,24 @@ def _wallet_decision(*, period: str, selected_amount: Decimal) -> IvaCompensatio
 
 def _assert_modelo_303_trace(revision: CalculationRevision) -> None:
     observations = {observation.casilla_id: observation for observation in revision.observations}
-    for casilla_id in ("iva.repercutido.general", "iva.soportado.interiores"):
+    for casilla_id in _M303_BUCKET_SOURCE_CASILLAS:
         observation = observations[casilla_id]
         assert observation.formula_id is None
+        assert observation.operand_refs == ()
+        assert observation.operand_casilla_refs == ()
         assert observation.legal_refs
         assert observation.source_refs
 
-    computed_result = observations["iva.resultado-regimen-general"]
+    computed_result = observations[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
     assert computed_result.formula_id == "modelo-303-iva-resultado-regimen-general"
     # See note in test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transaction_catalogue.
-    assert set(computed_result.operand_refs) >= {"27", "45"} or set(computed_result.operand_refs) >= {
-        "iva.cuota-devengada-total",
-        "iva.cuota-deducible-total",
-    }
+    operand_refs = set(computed_result.operand_refs)
+    assert operand_refs >= _M303_2009_RESULT_OPERAND_CASILLAS or operand_refs >= _M303_RESULT_OPERAND_CASILLAS
+    operand_casilla_refs = set(computed_result.operand_casilla_refs)
+    assert (
+        operand_casilla_refs >= _M303_2009_RESULT_OPERAND_CASILLAS
+        or operand_casilla_refs >= _M303_RESULT_OPERAND_CASILLAS
+    )
     assert computed_result.legal_refs
     assert computed_result.source_refs
 
@@ -221,33 +259,40 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
         clock=_T1,
     )
 
-    assert Decimal(revision.inputs_snapshot["iva.repercutido.general"]) == incoming.iva_amount
-    assert Decimal(revision.inputs_snapshot["iva.soportado.interiores"]) == outgoing.iva_amount
+    assert Decimal(revision.input_values_by_casilla_id[_M303_REPERCUTIDO_GENERAL_CASILLA]) == incoming.iva_amount
+    assert Decimal(revision.input_values_by_casilla_id[_M303_SOPORTADO_INTERIORES_CASILLA]) == outgoing.iva_amount
     assert Decimal(revision.binding_overrides["modelo-303-iva-repercutido-general-cuota"]) == incoming.iva_amount
     assert Decimal(revision.binding_overrides["modelo-303-iva-soportado-interiores-cuota"]) == outgoing.iva_amount
-    assert revision.casilla_values["iva.repercutido.general"] == incoming.iva_amount
-    assert revision.casilla_values["iva.soportado.interiores"] == outgoing.iva_amount
+    assert revision.casilla_values[_M303_REPERCUTIDO_GENERAL_CASILLA] == incoming.iva_amount
+    assert revision.casilla_values[_M303_SOPORTADO_INTERIORES_CASILLA] == outgoing.iva_amount
     assert revision.source_transaction_ids == tuple(sorted((incoming.transaction_id, outgoing.transaction_id)))
 
     observations = {observation.casilla_id: observation for observation in revision.observations}
-    bound_output = observations["iva.repercutido.general"]
-    bound_input = observations["iva.soportado.interiores"]
+    bound_output = observations[_M303_REPERCUTIDO_GENERAL_CASILLA]
+    bound_input = observations[_M303_SOPORTADO_INTERIORES_CASILLA]
     assert bound_output.formula_id is None
     assert bound_input.formula_id is None
+    assert bound_output.operand_refs == ()
+    assert bound_output.operand_casilla_refs == ()
+    assert bound_input.operand_refs == ()
+    assert bound_input.operand_casilla_refs == ()
     assert bound_output.legal_refs
     assert bound_output.source_refs
     assert bound_input.legal_refs
     assert bound_input.source_refs
 
-    computed_result = observations["iva.resultado-regimen-general"]
+    computed_result = observations[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
     assert computed_result.formula_id == "modelo-303-iva-resultado-regimen-general"
-    # 2009 revision references its operands by casilla number ("27" - "45");
-    # 2023 revision uses the typed ids. Accept either to keep this assertion
+    # 2009 revision references operands by canonical numeric casilla.id
+    # values; 2023 revision uses semantic ids. Accept either to keep this assertion
     # tied to the formula wiring, not the registry revision generation.
-    assert set(computed_result.operand_refs) >= {"27", "45"} or set(computed_result.operand_refs) >= {
-        "iva.cuota-devengada-total",
-        "iva.cuota-deducible-total",
-    }
+    operand_refs = set(computed_result.operand_refs)
+    assert operand_refs >= _M303_2009_RESULT_OPERAND_CASILLAS or operand_refs >= _M303_RESULT_OPERAND_CASILLAS
+    operand_casilla_refs = set(computed_result.operand_casilla_refs)
+    assert (
+        operand_casilla_refs >= _M303_2009_RESULT_OPERAND_CASILLAS
+        or operand_casilla_refs >= _M303_RESULT_OPERAND_CASILLAS
+    )
     assert computed_result.legal_refs
     assert computed_result.source_refs
 
@@ -432,21 +477,22 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
     for revision in (q1_positive, q2_negative, q3_zero, q4_compensated):
         _assert_modelo_303_trace(revision)
 
-    assert q1_positive.casilla_values["iva.resultado-regimen-general"] > Decimal("0")
-    assert q1_positive.casilla_values["iva.resultado"] > Decimal("0")
-    assert q1_positive.casilla_values["iva.compensacion-generada-periodo"] == Decimal("0")
+    assert q1_positive.casilla_values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA] > Decimal("0")
+    assert q1_positive.casilla_values[_M303_RESULTADO_CASILLA] > Decimal("0")
+    assert q1_positive.casilla_values[_M303_COMPENSACION_GENERADA_CASILLA] == Decimal("0")
 
-    assert q2_negative.casilla_values["iva.resultado-regimen-general"] < Decimal("0")
-    assert q2_negative.casilla_values["iva.resultado"] < Decimal("0")
-    assert q2_negative.casilla_values["iva.compensacion-generada-periodo"] > Decimal("0")
+    assert q2_negative.casilla_values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA] < Decimal("0")
+    assert q2_negative.casilla_values[_M303_RESULTADO_CASILLA] < Decimal("0")
+    assert q2_negative.casilla_values[_M303_COMPENSACION_GENERADA_CASILLA] > Decimal("0")
 
-    assert q3_zero.casilla_values["iva.resultado-regimen-general"] == Decimal("0")
-    assert q3_zero.casilla_values["iva.resultado"] == Decimal("0")
-    assert q3_zero.casilla_values["iva.compensacion-generada-periodo"] == Decimal("0")
+    assert q3_zero.casilla_values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA] == Decimal("0")
+    assert q3_zero.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("0")
+    assert q3_zero.casilla_values[_M303_COMPENSACION_GENERADA_CASILLA] == Decimal("0")
 
-    assert q4_compensated.casilla_values["iva.compensacion-aplicada-periodo"] > Decimal("0")
+    assert q4_compensated.casilla_values[_M303_COMPENSACION_APLICADA_CASILLA] > Decimal("0")
     assert (
-        q4_compensated.casilla_values["iva.resultado"] < q4_compensated.casilla_values["iva.resultado-regimen-general"]
+        q4_compensated.casilla_values[_M303_RESULTADO_CASILLA]
+        < q4_compensated.casilla_values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
     )
 
 
@@ -523,7 +569,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",
-            casilla_inputs={"iva.repercutido.general": Decimal("99.00")},
+            casilla_inputs={_M303_REPERCUTIDO_GENERAL_CASILLA: Decimal("99.00")},
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             bucket_event_repository=event_repo,

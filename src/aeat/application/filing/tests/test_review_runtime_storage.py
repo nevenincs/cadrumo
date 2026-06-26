@@ -13,6 +13,7 @@ from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core import Period
 from ....core.config import override_settings
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....domain.transactions import (
@@ -37,18 +38,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MASTER_KEY = b"m" * 32
 _Q1_2026 = Period.from_year_and_code(2026, "1T")
-_MODELO_130_INPUTS = {
-    "01": "12500.00",
-    "02": "3500.00",
-    "05": "250.00",
-    "06": "100.00",
-    "08": "2000.00",
-    "10": "10.00",
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_PAGOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_PAGOS_PREVIOS_CASILLA")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
+_M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
+_MODELO_130_CASILLA_INPUTS: dict[CasillaId, str] = {
+    _M130_INGRESOS_CASILLA: "12500.00",
+    _M130_GASTOS_CASILLA: "3500.00",
+    _M130_PAGOS_PREVIOS_CASILLA: "250.00",
+    _M130_RETENCIONES_CASILLA: "100.00",
+    _M130_AGRARIAN_VOLUME_CASILLA: "2000.00",
+    _M130_AGRARIAN_WITHHELD_CASILLA: "10.00",
+    _M130_HOME_DEDUCTION_CASILLA: "0.00",
+    _M130_PRIOR_RETURN_CASILLA: "0.00",
+}
+_MODELO_130_BINDING_INPUTS = {
     "irpf.previous_year_economic_activity_net_income": "13000.00",
     "modelo-130-pagos-fraccionados-anteriores": "250.00",
     "modelo-130-resultados-negativos-anteriores": "0.00",
-    "16": "0.00",
-    "18": "0.00",
 }
 
 
@@ -111,7 +122,8 @@ def _ready_modelo_130_draft() -> ModeloDraft:
     return build_registry_filing_draft_from_decimals(
         modelo="130",
         period=_Q1_2026,
-        casilla_decimals=_MODELO_130_INPUTS,
+        casilla_decimals=_MODELO_130_CASILLA_INPUTS,
+        binding_decimals=_MODELO_130_BINDING_INPUTS,
         status=ModeloDraftStatus.LISTO_PARA_PRESENTAR,
     )
 

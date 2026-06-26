@@ -38,12 +38,14 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
+    RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._observations_repository import CalculationObservationRepository
@@ -56,8 +58,14 @@ _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
 
 _CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
-_CASILLA_110 = "iva.compensacion-pendiente-periodos-anteriores"
-_SALDO_CASILLA = "iva.compensacion-disponible-fin-periodo"
+_CASILLA_110: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+    surface="test_modelo_303_compensacion_carry_anti_regression:_CASILLA_110",
+)
+_SALDO_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-disponible-fin-periodo",
+    surface="test_modelo_303_compensacion_carry_anti_regression:_SALDO_CASILLA",
+)
 
 #: Profile-gap workaround bindings (mirror the companion module; contract-pinned
 #: as MUST-NOT-mutate to mask the diagnostic).
@@ -93,7 +101,7 @@ def _calculate_303(
     filing_year: int,
     period: str,
     cuota_binding_overrides: Mapping[str, Decimal],
-    relation_values: Mapping[str, Decimal],
+    relation_values: Mapping[RelationId, Decimal],
 ) -> RegistryCalculationResult:
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=period)
     relation_binding_values = materialize_relation_binding_values(
@@ -109,7 +117,7 @@ def _calculate_303(
         **cuota_binding_overrides,
         **relation_binding_values,
     }
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -129,7 +137,7 @@ def _registry_observation(
         modelo=_MODELO,
         filing_year=filing_year,
         period=period,
-        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+        observations=result.observations,
     )
 
 
@@ -167,7 +175,9 @@ def _run_carry_chain(
 
         snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
-        resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
+        resolved: dict[RelationId, Decimal] = {
+            item.relation: item.value for item in relation_values.values if item.value is not None
+        }
         result_n1 = _calculate_303(
             filing_year=_YEAR_N_PLUS_1,
             period="1T",

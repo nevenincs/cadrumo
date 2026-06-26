@@ -30,7 +30,12 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -50,6 +55,17 @@ _CONTEXT_LABEL = "840-iae-alta-baja-two-annual-contexts"
 
 _CLOCK_N = datetime(2024, 2, 1, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_2 = datetime(2026, 3, 1, 10, 0, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M840 IAE fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_DECL_TIPO_DECLARACION_CASILLA: CasillaId = _casilla_id("decl.tipo-declaracion")
+_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
 
 
 def _find_observation(
@@ -75,16 +91,16 @@ def _alta_observation() -> RegistryModeloObservation:
 
     Both are non-default so a save-drops-field regression surfaces as inequality.
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=(
+        casilla_values={
             # tipo-declaracion: 1 = alta (Orden HAC/2572/2003 apartado 1)
-            CasillaObservation(casilla_id="decl.tipo-declaracion", value=Decimal("1")),
+            _DECL_TIPO_DECLARACION_CASILLA: Decimal("1"),
             # ejercicio informational casilla
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N))),
-        ),
+            _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N)),
+        },
     )
 
 
@@ -96,15 +112,15 @@ def _baja_observation() -> RegistryModeloObservation:
     gap (N to N+2) mirrors a realistic IAE lifecycle where an activity starts,
     runs for at least one full ejercicio, then ceases.
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_2,
         period="0A",
-        observations=(
+        casilla_values={
             # tipo-declaracion: 3 = baja (Orden HAC/2572/2003 apartado 1)
-            CasillaObservation(casilla_id="decl.tipo-declaracion", value=Decimal("3")),
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N_PLUS_2))),
-        ),
+            _DECL_TIPO_DECLARACION_CASILLA: Decimal("3"),
+            _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N_PLUS_2)),
+        },
     )
 
 
@@ -163,8 +179,8 @@ def test_alta_and_baja_are_independently_retrievable(tmp_path: Path) -> None:
         assert loaded_n.observation == obs_n
         assert loaded_n2.observation == obs_n2
 
-        tipo_n = loaded_n.observation.casilla_values["decl.tipo-declaracion"]
-        tipo_n2 = loaded_n2.observation.casilla_values["decl.tipo-declaracion"]
+        tipo_n = loaded_n.observation.casilla_values[_DECL_TIPO_DECLARACION_CASILLA]
+        tipo_n2 = loaded_n2.observation.casilla_values[_DECL_TIPO_DECLARACION_CASILLA]
         assert tipo_n == Decimal("1"), f"year-N tipo should be 1 (alta); got {tipo_n}"
         assert tipo_n2 == Decimal("3"), f"year-N+2 tipo should be 3 (baja); got {tipo_n2}"
 
@@ -191,8 +207,8 @@ def test_ejercicio_casilla_matches_filing_year_in_both_contexts(tmp_path: Path) 
 
         assert loaded_n is not None
         assert loaded_n2 is not None
-        ej_n = loaded_n.observation.casilla_values.get("decl.ejercicio")
-        ej_n2 = loaded_n2.observation.casilla_values.get("decl.ejercicio")
+        ej_n = loaded_n.observation.casilla_values.get(_DECL_EJERCICIO_CASILLA)
+        ej_n2 = loaded_n2.observation.casilla_values.get(_DECL_EJERCICIO_CASILLA)
         assert ej_n == Decimal(str(_YEAR_N)), f"ejercicio should be {_YEAR_N}; got {ej_n}"
         assert ej_n2 == Decimal(str(_YEAR_N_PLUS_2)), f"ejercicio should be {_YEAR_N_PLUS_2}; got {ej_n2}"
 
@@ -204,7 +220,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != "decl.tipo-declaracion"),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != _DECL_TIPO_DECLARACION_CASILLA),
     )
 
     assert obs_n != obs_n_no_tipo, "the full alta observation and the tipo-omitted observation must be strictly unequal"

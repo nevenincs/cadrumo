@@ -42,7 +42,12 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -74,6 +79,21 @@ _SUBCLAVE_RENTA = Decimal("1")
 
 _CLOCK_N = datetime(2025, 2, 5, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2026, 2, 5, 10, 0, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M184 informativa fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_DECL_TIPO_DECLARACION_CASILLA: CasillaId = _casilla_id("decl.tipo-declaracion")
+_TIPO2_CLAVE_CASILLA: CasillaId = _casilla_id("tipo2.clave")
+_TIPO2_SUBCLAVE_CASILLA: CasillaId = _casilla_id("tipo2.subclave")
+_TIPO2_MIEMBRO_NIF_CASILLA: CasillaId = _casilla_id("tipo2.miembro-nif")
+_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA: CasillaId = _casilla_id("tipo2.renta-atribuible-importe")
 
 
 def _find_observation(
@@ -110,19 +130,19 @@ def _year_n_observation() -> RegistryModeloObservation:
     - ``tipo2.miembro-nif`` (casillas 9-17 — miembro NIF)
     - ``tipo2.renta-atribuible-importe`` (casillas 178-190 — attribution amount)
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N))),
-            CasillaObservation(casilla_id="decl.tipo-declaracion", value=Decimal("1")),
-            CasillaObservation(casilla_id="tipo2.clave", value=_CLAVE_RENTA),
-            CasillaObservation(casilla_id="tipo2.subclave", value=_SUBCLAVE_RENTA),
+        casilla_values={
+            _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N)),
+            _DECL_TIPO_DECLARACION_CASILLA: Decimal("1"),
+            _TIPO2_CLAVE_CASILLA: _CLAVE_RENTA,
+            _TIPO2_SUBCLAVE_CASILLA: _SUBCLAVE_RENTA,
             # NIF encoded as numeric part (NIF "11111111A" → 11111111).
-            CasillaObservation(casilla_id="tipo2.miembro-nif", value=Decimal("11111111")),
-            CasillaObservation(casilla_id="tipo2.renta-atribuible-importe", value=_BASE_N_A),
-        ),
+            _TIPO2_MIEMBRO_NIF_CASILLA: Decimal("11111111"),
+            _TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA: _BASE_N_A,
+        },
     )
 
 
@@ -133,19 +153,19 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
     (9,000 vs 7,200 in year N). Any field-bleeding regression will surface as
     strict inequality.
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,
         period="0A",
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N_PLUS_1))),
-            CasillaObservation(casilla_id="decl.tipo-declaracion", value=Decimal("1")),
-            CasillaObservation(casilla_id="tipo2.clave", value=_CLAVE_RENTA),
-            CasillaObservation(casilla_id="tipo2.subclave", value=_SUBCLAVE_RENTA),
+        casilla_values={
+            _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N_PLUS_1)),
+            _DECL_TIPO_DECLARACION_CASILLA: Decimal("1"),
+            _TIPO2_CLAVE_CASILLA: _CLAVE_RENTA,
+            _TIPO2_SUBCLAVE_CASILLA: _SUBCLAVE_RENTA,
             # Same NIF as year N — identity continuity across exercises.
-            CasillaObservation(casilla_id="tipo2.miembro-nif", value=Decimal("11111111")),
-            CasillaObservation(casilla_id="tipo2.renta-atribuible-importe", value=_BASE_N1_A),
-        ),
+            _TIPO2_MIEMBRO_NIF_CASILLA: Decimal("11111111"),
+            _TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA: _BASE_N1_A,
+        },
     )
 
 
@@ -210,11 +230,11 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
         n_vals = loaded_n.observation.casilla_values
         n1_vals = loaded_n1.observation.casilla_values
 
-        assert n_vals["tipo2.renta-atribuible-importe"] == _BASE_N_A, (
-            f"year-N importe should be {_BASE_N_A}; got {n_vals['tipo2.renta-atribuible-importe']}"
+        assert n_vals[_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA] == _BASE_N_A, (
+            f"year-N importe should be {_BASE_N_A}; got {n_vals[_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA]}"
         )
-        assert n1_vals["tipo2.renta-atribuible-importe"] == _BASE_N1_A, (
-            f"year-N+1 importe should be {_BASE_N1_A}; got {n1_vals['tipo2.renta-atribuible-importe']}"
+        assert n1_vals[_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA] == _BASE_N1_A, (
+            f"year-N+1 importe should be {_BASE_N1_A}; got {n1_vals[_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA]}"
         )
 
         assert loaded_n.captured_at == _CLOCK_N
@@ -239,8 +259,8 @@ def test_member_nif_identity_persists_across_both_exercises(tmp_path: Path) -> N
         assert loaded_n is not None
         assert loaded_n1 is not None
 
-        nif_n = loaded_n.observation.casilla_values.get("tipo2.miembro-nif")
-        nif_n1 = loaded_n1.observation.casilla_values.get("tipo2.miembro-nif")
+        nif_n = loaded_n.observation.casilla_values.get(_TIPO2_MIEMBRO_NIF_CASILLA)
+        nif_n1 = loaded_n1.observation.casilla_values.get(_TIPO2_MIEMBRO_NIF_CASILLA)
         assert nif_n is not None, "year-N observation missing tipo2.miembro-nif casilla"
         assert nif_n1 is not None, "year-N+1 observation missing tipo2.miembro-nif casilla"
         assert nif_n == Decimal("11111111"), f"NIF round-trip failed in year N: got {nif_n}"
@@ -265,8 +285,8 @@ def test_renta_atribuible_casilla_is_present_and_non_zero_in_both_years(tmp_path
 
         assert loaded_n is not None
         assert loaded_n1 is not None
-        val_n = loaded_n.observation.casilla_values.get("tipo2.renta-atribuible-importe")
-        val_n1 = loaded_n1.observation.casilla_values.get("tipo2.renta-atribuible-importe")
+        val_n = loaded_n.observation.casilla_values.get(_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA)
+        val_n1 = loaded_n1.observation.casilla_values.get(_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA)
         assert val_n is not None and val_n > Decimal("0"), (
             f"year-N tipo2.renta-atribuible-importe must be non-zero; got {val_n}"
         )
@@ -287,7 +307,9 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != "tipo2.renta-atribuible-importe"),
+        observations=tuple(
+            o for o in obs_n.observations if o.casilla_id != _TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA
+        ),
     )
 
     assert obs_n != obs_n_no_importe, (

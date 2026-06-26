@@ -176,7 +176,7 @@ def _delta(original_draft: ModeloDraft, amended_draft: ModeloDraft) -> CasillaDe
             continue
         changes.append(
             CasillaChange(
-                casilla_code=amended.casilla_id,
+                casilla_id=amended.casilla_id,
                 old_value=old,
                 new_value=amended.value,
                 reason="registry recalculation changed casilla value",

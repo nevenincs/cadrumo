@@ -18,8 +18,9 @@ verification report:
   well-defined.
 - ``_derive_status`` — maps classified discrepancies + coverage
   onto :class:`VerificationStatus`. Blocking causes
-  (``EXTRACTION_UNRELIABLE`` / ``CORRECTNESS_DIVERGENCE``) ALWAYS
-  yield ``NEEDS_REVIEW``; coverage below ``min_coverage`` ALSO
+  (``EXTRACTION_UNRELIABLE`` / ``UNMODELLED_RULE`` /
+  ``CORRECTNESS_DIVERGENCE``) ALWAYS yield ``NEEDS_REVIEW``;
+  coverage below ``min_coverage`` ALSO
   yields ``NEEDS_REVIEW``; otherwise ``VERIFIED``.
 - ``_compose_narrative`` — translation key picker keyed on status.
 
@@ -46,6 +47,7 @@ from ....adapters.inbound.declaracion._schema import (
 )
 from ....adapters.inbound.pdf._shared import ExtractedCasilla
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from .._schema import DiscrepancyCause, VerificationStatus
 from .._verify import (
     _classify_discrepancy,
@@ -59,8 +61,20 @@ from .._verify import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_DEFAULT_DISCREPANCY_CASILLA: CasillaId = validated_casilla_id("01", surface="_DEFAULT_DISCREPANCY_CASILLA")
+_SECOND_DISCREPANCY_CASILLA: CasillaId = validated_casilla_id("02", surface="_SECOND_DISCREPANCY_CASILLA")
+_THIRD_DISCREPANCY_CASILLA: CasillaId = validated_casilla_id("03", surface="_THIRD_DISCREPANCY_CASILLA")
+_UNKNOWN_DISCREPANCY_CASILLA: CasillaId = validated_casilla_id("UNKNOWN", surface="_UNKNOWN_DISCREPANCY_CASILLA")
+_MATERIAL_DELTA_CASILLA: CasillaId = validated_casilla_id("42", surface="_MATERIAL_DELTA_CASILLA")
+_EXTRA_CASILLA: CasillaId = validated_casilla_id("EXTRA", surface="_EXTRA_CASILLA")
+_EXTRA_ONE_CASILLA: CasillaId = validated_casilla_id("EXTRA1", surface="_EXTRA_ONE_CASILLA")
+_EXTRA_TWO_CASILLA: CasillaId = validated_casilla_id("EXTRA2", surface="_EXTRA_TWO_CASILLA")
 
-def _discrepancy(casilla_id: str = "01", delta: Decimal = Decimal("0.50")) -> DiscrepancyRecord:
+
+def _discrepancy(
+    casilla_id: CasillaId = _DEFAULT_DISCREPANCY_CASILLA,
+    delta: Decimal = Decimal("0.50"),
+) -> DiscrepancyRecord:
     return DiscrepancyRecord(
         casilla_id=casilla_id,
         computed_value=Decimal("100.00"),
@@ -75,12 +89,12 @@ def _discrepancy(casilla_id: str = "01", delta: Decimal = Decimal("0.50")) -> Di
 
 
 def test_classify_discrepancy_routes_extraction_warning_to_extraction_unreliable() -> None:
-    discrepancy = _discrepancy(casilla_id="01")
+    discrepancy = _discrepancy(casilla_id=_DEFAULT_DISCREPANCY_CASILLA)
 
     result = _classify_discrepancy(
         discrepancy,
-        unreliable_ids={"01"},
-        registry_casillas={"01"},
+        unreliable_ids={_DEFAULT_DISCREPANCY_CASILLA},
+        registry_casilla_ids={_DEFAULT_DISCREPANCY_CASILLA},
         tolerance=Decimal("0.01"),
     )
 
@@ -89,14 +103,13 @@ def test_classify_discrepancy_routes_extraction_warning_to_extraction_unreliable
 
 def test_classify_discrepancy_routes_missing_registry_to_unmodelled_rule() -> None:
     """When the casilla is not in the registry's known set, the
-    classifier routes to UNMODELLED_RULE — the user's value is
-    accepted as-is."""
-    discrepancy = _discrepancy(casilla_id="UNKNOWN")
+    classifier routes to UNMODELLED_RULE."""
+    discrepancy = _discrepancy(casilla_id=_UNKNOWN_DISCREPANCY_CASILLA)
 
     result = _classify_discrepancy(
         discrepancy,
         unreliable_ids=set(),
-        registry_casillas={"01", "02"},
+        registry_casilla_ids={_DEFAULT_DISCREPANCY_CASILLA, _SECOND_DISCREPANCY_CASILLA},
         tolerance=Decimal("0.01"),
     )
 
@@ -106,12 +119,12 @@ def test_classify_discrepancy_routes_missing_registry_to_unmodelled_rule() -> No
 def test_classify_discrepancy_routes_small_delta_to_rounding() -> None:
     """A delta within ``10 * tolerance`` on a known registry casilla
     classifies as ROUNDING — non-blocking."""
-    discrepancy = _discrepancy(casilla_id="01", delta=Decimal("0.05"))
+    discrepancy = _discrepancy(casilla_id=_DEFAULT_DISCREPANCY_CASILLA, delta=Decimal("0.05"))
 
     result = _classify_discrepancy(
         discrepancy,
         unreliable_ids=set(),
-        registry_casillas={"01"},
+        registry_casilla_ids={_DEFAULT_DISCREPANCY_CASILLA},
         tolerance=Decimal("0.01"),
     )
 
@@ -121,12 +134,12 @@ def test_classify_discrepancy_routes_small_delta_to_rounding() -> None:
 def test_classify_discrepancy_routes_material_delta_to_correctness_divergence() -> None:
     """A delta outside the rounding envelope on a known registry
     casilla classifies as CORRECTNESS_DIVERGENCE — blocking."""
-    discrepancy = _discrepancy(casilla_id="01", delta=Decimal("100.00"))
+    discrepancy = _discrepancy(casilla_id=_DEFAULT_DISCREPANCY_CASILLA, delta=Decimal("100.00"))
 
     result = _classify_discrepancy(
         discrepancy,
         unreliable_ids=set(),
-        registry_casillas={"01"},
+        registry_casilla_ids={_DEFAULT_DISCREPANCY_CASILLA},
         tolerance=Decimal("0.01"),
     )
 
@@ -138,12 +151,12 @@ def test_classify_discrepancy_precedence_extraction_unreliable_over_unmodelled_r
     registry, EXTRACTION_UNRELIABLE wins. A regression that flipped
     the branch order would silently classify a missing-registry
     casilla as a routine extractor warning."""
-    discrepancy = _discrepancy(casilla_id="UNKNOWN")
+    discrepancy = _discrepancy(casilla_id=_UNKNOWN_DISCREPANCY_CASILLA)
 
     result = _classify_discrepancy(
         discrepancy,
-        unreliable_ids={"UNKNOWN"},
-        registry_casillas={"01"},  # UNKNOWN is missing
+        unreliable_ids={_UNKNOWN_DISCREPANCY_CASILLA},
+        registry_casilla_ids={_DEFAULT_DISCREPANCY_CASILLA},  # UNKNOWN is missing
         tolerance=Decimal("0.01"),
     )
 
@@ -154,12 +167,12 @@ def test_classify_discrepancy_precedence_unmodelled_rule_over_rounding() -> None
     """An unknown-registry casilla with a small delta still routes
     to UNMODELLED_RULE — registry membership is checked before
     rounding-envelope sizing."""
-    discrepancy = _discrepancy(casilla_id="UNKNOWN", delta=Decimal("0.05"))
+    discrepancy = _discrepancy(casilla_id=_UNKNOWN_DISCREPANCY_CASILLA, delta=Decimal("0.05"))
 
     result = _classify_discrepancy(
         discrepancy,
         unreliable_ids=set(),
-        registry_casillas={"01"},
+        registry_casilla_ids={_DEFAULT_DISCREPANCY_CASILLA},
         tolerance=Decimal("0.01"),
     )
 
@@ -169,16 +182,16 @@ def test_classify_discrepancy_precedence_unmodelled_rule_over_rounding() -> None
 def test_classify_discrepancy_round_trips_casilla_id_and_delta() -> None:
     """The classified output preserves the casilla_id and delta
     from the input; the helper does not normalise / reshape them."""
-    discrepancy = _discrepancy(casilla_id="42", delta=Decimal("7.50"))
+    discrepancy = _discrepancy(casilla_id=_MATERIAL_DELTA_CASILLA, delta=Decimal("7.50"))
 
     result = _classify_discrepancy(
         discrepancy,
         unreliable_ids=set(),
-        registry_casillas={"42"},
+        registry_casilla_ids={_MATERIAL_DELTA_CASILLA},
         tolerance=Decimal("0.01"),
     )
 
-    assert result.casilla_id == "42"
+    assert result.casilla_id == _MATERIAL_DELTA_CASILLA
     assert result.delta == Decimal("7.50")
 
 
@@ -187,7 +200,7 @@ def test_classify_discrepancy_round_trips_casilla_id_and_delta() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _declaracion(casilla_ids: tuple[str, ...]) -> DeclaracionObservation:
+def _declaracion(casilla_ids: tuple[CasillaId, ...]) -> DeclaracionObservation:
     """Build a real :class:`DeclaracionObservation` with the given casillas.
 
     Uses the actual pydantic model — no fakes / stand-ins. Required
@@ -225,9 +238,9 @@ def test_compute_coverage_empty_expected_returns_zero_documented_short_circuit()
     """The helper short-circuits to ``0.0`` when ``expected`` is
     empty — division-by-zero would otherwise break downstream
     threshold comparisons."""
-    declaracion = _declaracion(("01", "02"))
+    declaracion = _declaracion((_DEFAULT_DISCREPANCY_CASILLA, _SECOND_DISCREPANCY_CASILLA))
 
-    assert _compute_coverage(declaracion, expected_casillas=set()) == 0.0
+    assert _compute_coverage(declaracion, expected_casilla_ids=set()) == 0.0
 
 
 def test_compute_coverage_empty_provided_returns_zero() -> None:
@@ -235,31 +248,55 @@ def test_compute_coverage_empty_provided_returns_zero() -> None:
     regardless of how many the registry expects."""
     declaracion = _declaracion(())
 
-    assert _compute_coverage(declaracion, expected_casillas={"01", "02"}) == 0.0
+    assert (
+        _compute_coverage(
+            declaracion,
+            expected_casilla_ids={_DEFAULT_DISCREPANCY_CASILLA, _SECOND_DISCREPANCY_CASILLA},
+        )
+        == 0.0
+    )
 
 
 def test_compute_coverage_full_overlap_returns_one() -> None:
     """When every expected casilla appears in the provided set,
     coverage is 1.0 — full overlap is the documented happy path."""
-    declaracion = _declaracion(("01", "02"))
+    declaracion = _declaracion((_DEFAULT_DISCREPANCY_CASILLA, _SECOND_DISCREPANCY_CASILLA))
 
-    assert _compute_coverage(declaracion, expected_casillas={"01", "02"}) == 1.0
+    assert (
+        _compute_coverage(
+            declaracion,
+            expected_casilla_ids={_DEFAULT_DISCREPANCY_CASILLA, _SECOND_DISCREPANCY_CASILLA},
+        )
+        == 1.0
+    )
 
 
 def test_compute_coverage_ignores_extra_provided_ids() -> None:
     """Provided casillas outside ``expected`` do not count toward
     coverage; the helper measures expected-set saturation, not
     provided-set extent. Coverage = 1.0 when expected ⊆ provided."""
-    declaracion = _declaracion(("01", "02", "EXTRA"))
+    declaracion = _declaracion((_DEFAULT_DISCREPANCY_CASILLA, _SECOND_DISCREPANCY_CASILLA, _EXTRA_CASILLA))
 
-    assert _compute_coverage(declaracion, expected_casillas={"01", "02"}) == 1.0
+    assert (
+        _compute_coverage(
+            declaracion,
+            expected_casilla_ids={_DEFAULT_DISCREPANCY_CASILLA, _SECOND_DISCREPANCY_CASILLA},
+        )
+        == 1.0
+    )
 
 
 def test_compute_coverage_no_overlap_returns_zero() -> None:
     """Disjoint provided and expected sets yield 0.0 coverage."""
-    declaracion = _declaracion(("EXTRA1", "EXTRA2"))
+    declaracion = _declaracion((_EXTRA_ONE_CASILLA, _EXTRA_TWO_CASILLA))
 
-    assert _compute_coverage(declaracion, expected_casillas={"01", "02"}) == 0.0
+    assert (
+        _compute_coverage(
+            declaracion,
+            expected_casilla_ids={_DEFAULT_DISCREPANCY_CASILLA, _SECOND_DISCREPANCY_CASILLA},
+        )
+        == 0.0
+    )
 
 
 def test_compute_coverage_partial_overlap_strictly_between_zero_and_one() -> None:
@@ -267,9 +304,12 @@ def test_compute_coverage_partial_overlap_strictly_between_zero_and_one() -> Non
     missing) yields a value in the open interval (0.0, 1.0). The
     test asserts the bounded property, not the specific ratio,
     so it does not duplicate the helper's arithmetic."""
-    declaracion = _declaracion(("01",))
+    declaracion = _declaracion((_DEFAULT_DISCREPANCY_CASILLA,))
 
-    coverage = _compute_coverage(declaracion, expected_casillas={"01", "02"})
+    coverage = _compute_coverage(
+        declaracion,
+        expected_casilla_ids={_DEFAULT_DISCREPANCY_CASILLA, _SECOND_DISCREPANCY_CASILLA},
+    )
 
     assert 0.0 < coverage < 1.0
 
@@ -279,10 +319,16 @@ def test_compute_coverage_is_monotonic_in_provided_set() -> None:
     increases coverage; adding one outside the expected set
     leaves coverage unchanged. Monotonicity is the documented
     contract that downstream thresholds depend on."""
-    expected = {"01", "02", "03"}
-    coverage_one = _compute_coverage(_declaracion(("01",)), expected_casillas=expected)
-    coverage_two = _compute_coverage(_declaracion(("01", "02")), expected_casillas=expected)
-    coverage_extra = _compute_coverage(_declaracion(("01", "EXTRA")), expected_casillas=expected)
+    expected = {_DEFAULT_DISCREPANCY_CASILLA, _SECOND_DISCREPANCY_CASILLA, _THIRD_DISCREPANCY_CASILLA}
+    coverage_one = _compute_coverage(_declaracion((_DEFAULT_DISCREPANCY_CASILLA,)), expected_casilla_ids=expected)
+    coverage_two = _compute_coverage(
+        _declaracion((_DEFAULT_DISCREPANCY_CASILLA, _SECOND_DISCREPANCY_CASILLA)),
+        expected_casilla_ids=expected,
+    )
+    coverage_extra = _compute_coverage(
+        _declaracion((_DEFAULT_DISCREPANCY_CASILLA, _EXTRA_CASILLA)),
+        expected_casilla_ids=expected,
+    )
 
     assert coverage_two > coverage_one
     assert coverage_extra == coverage_one
@@ -298,7 +344,7 @@ def _classified(*causes: DiscrepancyCause) -> tuple[Any, ...]:
 
     return tuple(
         ClassifiedDiscrepancy(
-            casilla_id="01",
+            casilla_id=_DEFAULT_DISCREPANCY_CASILLA,
             expected=Decimal("100.00"),
             actual=Decimal("100.50"),
             delta=Decimal("0.50"),
@@ -341,14 +387,17 @@ def test_derive_status_returns_verified_for_rounding_only() -> None:
     assert result is VerificationStatus.VERIFIED
 
 
-def test_derive_status_returns_verified_for_unmodelled_rule_only() -> None:
-    """UNMODELLED_RULE discrepancies are non-blocking — the
-    user's value is accepted as-is."""
+def test_derive_status_returns_needs_review_for_unmodelled_rule() -> None:
+    """UNMODELLED_RULE discrepancies block verification.
+
+    A registry gap means the declaration was not actually verified, even when
+    coverage over modelled casillas otherwise meets the threshold.
+    """
     classified = _classified(DiscrepancyCause.UNMODELLED_RULE)
 
     result = _derive_status(classified, coverage=1.0, min_coverage=Decimal("0.30"))
 
-    assert result is VerificationStatus.VERIFIED
+    assert result is VerificationStatus.NEEDS_REVIEW
 
 
 def test_derive_status_low_coverage_routes_to_needs_review_even_without_blocking_findings() -> None:

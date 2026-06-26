@@ -13,12 +13,12 @@ Layout strategy
 
 - The `Entradas` tab lists every operator-input casilla (input_kind
   in {"manual", "bound", "informational"}). Each row carries
-  `{section, casilla_number, label, value}` with the value cell
+  `{section, display_number, label, value}` with the value cell
   anchored in column D. Bindings the formulas reference appear in
   their own rows below the casilla rows so the operator can review
   and override pre-resolved values.
 - The `Cálculos` tab lists every computed casilla. Each row carries
-  `{section, casilla_number, label, formula_value}` with the formula
+  `{section, display_number, label, formula_value}` with the formula
   cell anchored in column D.
 - The `Tarifas` tab mirrors every parameter referenced (directly or
   via a `lookup_bracket_by_ccaa` dispatch table) by a computed
@@ -68,7 +68,7 @@ from ._records import (
 class _CasillaRow(BaseModel):
     model_config = _STRICT_FROZEN
 
-    casilla: CasillaId
+    casilla_id: CasillaId
     tab: Literal[TabName.ENTRADAS, TabName.CALCULOS]
     row: int = Field(ge=2)
     section_path: tuple[str, ...]
@@ -128,7 +128,7 @@ class SheetLayout(BaseModel):
     bracket_ranges: Mapping[ParameterId, BracketRanges]
     bracket_entries: Mapping[ParameterId, tuple[BracketEntry, ...]]
 
-    def address_for(self, casilla: CasillaId) -> SheetCellAddress:
+    def address_for(self, casilla_id: CasillaId) -> SheetCellAddress:
         """Resolve a casilla reference to the :class:`SheetCellAddress` holding its value.
 
         Computed casillas resolve to their ``Calculos`` cell; input
@@ -136,10 +136,10 @@ class SheetLayout(BaseModel):
         this to compile a ``FormulaExpression`` casilla leaf into an A1
         reference.
         """
-        if casilla in self.calculos_cells:
-            return self.calculos_cells[casilla]
-        if casilla in self.entradas_cells:
-            return self.entradas_cells[casilla]
+        if casilla_id in self.calculos_cells:
+            return self.calculos_cells[casilla_id]
+        if casilla_id in self.entradas_cells:
+            return self.entradas_cells[casilla_id]
         raise _unknown_layout_reference("casilla")
 
     def address_for_binding(self, binding: BindingId) -> SheetCellAddress:
@@ -373,7 +373,7 @@ def _layout_casillas(revision: ModeloRevision, *, value_column: int) -> _Casilla
             calculos_cells[casilla.id] = SheetCellAddress.at(TabName.CALCULOS, calculos_row, value_column)
             calculos_rows.append(
                 _CasillaRow(
-                    casilla=casilla.id,
+                    casilla_id=casilla.id,
                     tab=TabName.CALCULOS,
                     row=calculos_row,
                     section_path=casilla.section,
@@ -388,7 +388,7 @@ def _layout_casillas(revision: ModeloRevision, *, value_column: int) -> _Casilla
         entradas_cells[casilla.id] = SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
         entradas_rows.append(
             _CasillaRow(
-                casilla=casilla.id,
+                casilla_id=casilla.id,
                 tab=TabName.ENTRADAS,
                 row=entradas_row,
                 section_path=casilla.section,

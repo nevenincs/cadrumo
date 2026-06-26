@@ -29,7 +29,7 @@ Value-parity assertion (non-tautological):
 - The expected casilla values are derived from the seeded observations via the
   declared aggregation ops (sum / copy), never by re-evaluating the registry
   formula.  A change in the relation's ``aggregation``, ``source_periods``, or
-  ``source_output`` would cause the test to fail.
+  ``source_casilla_id`` would cause the test to fail.
 
 M390 declares no ``profile``-sourced bindings, so no :class:`UserProfileRecord`
 needs to be seeded.  The five ``ledger_iva_aggregation`` bindings resolve from an
@@ -57,13 +57,15 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryModeloObservation,
+    validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations._observations_repository import CalculationObservationRepository
 from .. import (
@@ -79,15 +81,37 @@ _T0 = datetime(2026, 1, 20, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 20, 11, 0, tzinfo=UTC)
 _YEAR = 2025
 
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M390 fold-in fixture casilla key {value!r} is not a CasillaId") from exc
+
 # Five seeded M303 casilla ids that the five M390←M303 relations consume.
-_DEVENGADA = "iva.cuota-devengada-total"
-_DEDUCIBLE = "iva.cuota-deducible-total"
-_RESULTADO = "iva.resultado-regimen-general"
-_COMPENSACION = "iva.compensacion-generada-periodo"
+_DEVENGADA: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_DEDUCIBLE: CasillaId = _casilla_id("iva.cuota-deducible-total")
+_RESULTADO: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_COMPENSACION: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
+_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.devengada-303",
+)
+_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.deducible-303",
+)
+_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.resultado-303",
+)
+_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.compensacion-ultimo-periodo-97",
+)
+_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.compensacion-generada-ejercicio-no-97",
+)
 
 # Per-quarter DISTINCT known values — four different Decimals per casilla so any
-# wrong aggregation (wrong period, wrong source_output, wrong op) fails the assertion.
-_M303_BY_PERIOD: dict[str, dict[str, Decimal]] = {
+# wrong aggregation (wrong period, wrong source_casilla_id, wrong op) fails the assertion.
+_M303_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
     "1T": {
         _DEVENGADA: Decimal("100.00"),
         _DEDUCIBLE: Decimal("40.00"),
@@ -148,7 +172,12 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
                 modelo="303",
                 filing_year=_YEAR,
                 period=period,
-                observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casillas.items()),
+                observations=registry_grounded_observations(
+                    modelo="303",
+                    filing_year=_YEAR,
+                    period=period,
+                    casilla_values=casillas,
+                ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
@@ -220,30 +249,34 @@ def test_m390_folds_five_m303_relations_on_live_calculate(secure_objects: Secure
     casilla_values = result.revision.casilla_values
 
     # Reconciliation casillas (sum of four 303 quarters via relation fold).
-    assert Decimal(casilla_values["iva.anual.reconciliacion.devengada-303"]) == _EXPECTED_DEVENGADA_TOTAL, (
+    assert Decimal(casilla_values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA]) == _EXPECTED_DEVENGADA_TOTAL, (
         f"M390 reconciliacion.devengada-303 must fold sum(1T-4T devengada)={_EXPECTED_DEVENGADA_TOTAL!r}; "
-        f"got {casilla_values['iva.anual.reconciliacion.devengada-303']!r}"
+        f"got {casilla_values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA]!r}"
     )
-    assert Decimal(casilla_values["iva.anual.reconciliacion.deducible-303"]) == _EXPECTED_DEDUCIBLE_TOTAL, (
+    assert Decimal(casilla_values[_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA]) == _EXPECTED_DEDUCIBLE_TOTAL, (
         f"M390 reconciliacion.deducible-303 must fold sum(1T-4T deducible)={_EXPECTED_DEDUCIBLE_TOTAL!r}; "
-        f"got {casilla_values['iva.anual.reconciliacion.deducible-303']!r}"
+        f"got {casilla_values[_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA]!r}"
     )
-    assert Decimal(casilla_values["iva.anual.reconciliacion.resultado-303"]) == _EXPECTED_RESULTADO_TOTAL, (
+    assert Decimal(casilla_values[_M390_RECONCILIACION_RESULTADO_303_CASILLA]) == _EXPECTED_RESULTADO_TOTAL, (
         f"M390 reconciliacion.resultado-303 must fold sum(1T-4T resultado)={_EXPECTED_RESULTADO_TOTAL!r}; "
-        f"got {casilla_values['iva.anual.reconciliacion.resultado-303']!r}"
+        f"got {casilla_values[_M390_RECONCILIACION_RESULTADO_303_CASILLA]!r}"
     )
 
     # Compensacion casillas (copy of 4T and sum of 1T-3T).
     # casilla_values is keyed by casilla id (not AEAT casilla number).
     # id="iva.anual.compensacion-ultimo-periodo-97" (AEAT number 97)
     # id="iva.anual.compensacion-generada-ejercicio-no-97" (AEAT number 662)
-    assert Decimal(casilla_values["iva.anual.compensacion-ultimo-periodo-97"]) == _EXPECTED_COMPENSACION_ULTIMO, (
+    assert Decimal(casilla_values[_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA]) == _EXPECTED_COMPENSACION_ULTIMO, (
         f"M390 compensacion-ultimo-periodo-97 (AEAT casilla 97) must copy 4T compensacion "
-        f"{_EXPECTED_COMPENSACION_ULTIMO!r}; got {casilla_values['iva.anual.compensacion-ultimo-periodo-97']!r}"
+        f"{_EXPECTED_COMPENSACION_ULTIMO!r}; got {casilla_values[_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA]!r}"
     )
-    assert Decimal(casilla_values["iva.anual.compensacion-generada-ejercicio-no-97"]) == _EXPECTED_COMPENSACION_NO97, (
+    assert (
+        Decimal(casilla_values[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA])
+        == _EXPECTED_COMPENSACION_NO97
+    ), (
         f"M390 compensacion-generada-ejercicio-no-97 (AEAT casilla 662) must sum 1T-3T compensacion "
-        f"{_EXPECTED_COMPENSACION_NO97!r}; got {casilla_values['iva.anual.compensacion-generada-ejercicio-no-97']!r}"
+        f"{_EXPECTED_COMPENSACION_NO97!r}; "
+        f"got {casilla_values[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA]!r}"
     )
 
     # The relation_prefill source is CLAIMED (resolver enrolled): no

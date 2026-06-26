@@ -536,8 +536,8 @@ def _schema_formula_fingerprint(
         "draft_schema_version": draft.schema_version,
         "casillas": [
             {
-                "formula_inputs": list(casilla.formula_inputs),
-                "id": casilla.id,
+                "formula_input_casilla_ids": list(casilla.formula_input_casilla_ids),
+                "casilla_id": casilla.casilla_id,
                 "required": casilla.required,
                 "value_type": casilla.value_type,
             }

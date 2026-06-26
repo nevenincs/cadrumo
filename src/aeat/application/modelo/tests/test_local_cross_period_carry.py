@@ -35,7 +35,12 @@ from decimal import Decimal
 import pytest
 
 from ....core import Period
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository
 from ...calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
 from ...calculations._cross_period_clean_state import _OFFICIAL_SOURCE_KINDS
@@ -50,6 +55,13 @@ from .._calculation_actions import (
 )
 from ._file_flow_support import (
     _DEFAULT_130_BINDING_VALUES,
+    _M130_AGRARIAN_VOLUME_CASILLA,
+    _M130_AGRARIAN_WITHHELD_CASILLA,
+    _M130_CARRY_FORWARD_CASILLA,
+    _M130_HOME_DEDUCTION_CASILLA,
+    _M130_PRIOR_RETURN_RESULT_CASILLA,
+    _M130_SALDO_NEGATIVO_CASILLA,
+    _M130_WITHHELD_CASILLA,
     _file_revision,
     _Repos,
     _verify_revision,
@@ -61,6 +73,16 @@ _T1 = datetime(2026, 4, 10, 9, 0, 0, tzinfo=UTC)
 _T2 = datetime(2026, 4, 11, 9, 0, 0, tzinfo=UTC)
 _T3 = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 7, 10, 9, 0, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"local carry fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M303_COMPENSACION_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 # The M130 carry binding casilla 15 lifts. Casilla 15 (input_kind=bound) reads its
 # value from this previous_filing binding; the carried saldo-negativo flows through it.
@@ -75,18 +97,18 @@ _CARRY_BINDING_ID = "modelo-130-resultados-negativos-anteriores"
 # Casilla 05 ("Pagos fraccionados anteriores") is now a bound carry (Stage 2);
 # at 1T its expanding span is empty (absent-by-design = 0), so it is NOT supplied
 # as a manual input here.
-_NEGATIVE_1T_INPUTS: dict[str, Decimal] = {
+_NEGATIVE_1T_INPUTS: dict[CasillaId, Decimal] = {
     # Casilla 01 (income) and 02 (gastos) are resolver-owned (the enrolled
     # LedgerRentaIncome/Gasto aggregation resolvers); they return 0 for this
     # empty transaction bucket and must not be supplied as manual inputs. The
     # negative result that seeds the carry comes from the manual casilla-16
     # deduction below applied against a zero rendimiento neto.
-    "06": Decimal("0"),
-    "08": Decimal("0"),
-    "10": Decimal("0"),
-    "15": Decimal("0"),
-    "16": Decimal("5000"),
-    "18": Decimal("0"),
+    _M130_WITHHELD_CASILLA: Decimal("0"),
+    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+    _M130_CARRY_FORWARD_CASILLA: Decimal("0"),
+    _M130_HOME_DEDUCTION_CASILLA: Decimal("5000"),
+    _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
 # Casilla "01" (actividad-económica gross income) is now owned by the enrolled
 # LedgerRentaIncomeAggregationSourceResolver, and casilla "02" (Gastos) by the
@@ -98,12 +120,12 @@ _NEGATIVE_1T_INPUTS: dict[str, Decimal] = {
 # resolver-supplied zero.  Casilla 05 (now a bound carry) and casilla 15 (the
 # carry under test) are both resolved by the previous_filing pipeline at 2T,
 # never supplied as manual inputs.
-_2T_INPUTS_WITHOUT_15: dict[str, Decimal] = {
-    "06": Decimal("0"),
-    "08": Decimal("0"),
-    "10": Decimal("0"),
-    "16": Decimal("0"),
-    "18": Decimal("0"),
+_2T_INPUTS_WITHOUT_15: dict[CasillaId, Decimal] = {
+    _M130_WITHHELD_CASILLA: Decimal("0"),
+    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+    _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+    _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
 
 
@@ -138,7 +160,7 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    saldo = Decimal(revision.casilla_values["saldo-negativo-fin-periodo"])
+    saldo = Decimal(revision.casilla_values[_M130_SALDO_NEGATIVO_CASILLA])
     assert saldo > 0, "1T inputs must produce a positive carry-forward seed for the test to be meaningful"
     # 1T's casilla-05 expanding-span and casilla-15 single-offset previous_filing
     # bindings are both absent-by-design at 1T (max_year_delta=0, no prior quarter),
@@ -199,7 +221,7 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(rep
         clock=_T4,
     )
 
-    carried_casilla_15 = Decimal(result.revision.casilla_values["15"])
+    carried_casilla_15 = Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
     assert carried_casilla_15 == carried_seed, (
         f"2T casilla 15 must auto-carry the filed 1T saldo-negativo {carried_seed}; got {carried_casilla_15}"
     )
@@ -233,7 +255,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     from ...calculations._cross_period_clean_state import CrossPeriodCleanStateBlocker
     from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
+    wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
     _file_1t_with_negative_result(repos)
     # Confirm the carry observation was persisted under the non-official source_kind.
     stored = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
@@ -324,7 +346,7 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repo
         clock=_T4,
     )
 
-    casilla_15 = Decimal(result.revision.casilla_values["15"])
+    casilla_15 = Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
     assert casilla_15 == override_value, (
         f"caller --binding {override_value} must override the auto-carried {carried_seed}; got {casilla_15}"
     )
@@ -387,7 +409,7 @@ def _persist_prior_303(repository: CalculationObservationRepository) -> None:
     """Persist a prior-period 303 observation carrying the compensation carry casilla.
 
     Stored under the prior period (1T) so the 2T snapshot's previous_filing
-    compensation binding (``source_output = iva.compensacion-disponible-fin-periodo``,
+    compensation binding (``source_casilla_id = iva.compensacion-disponible-fin-periodo``,
     offset -1) discovers it and the raw resolver emits the
     ``modelo-303-compensacion-pendiente-anteriores`` binding the D3 exclusion strips.
     """
@@ -396,8 +418,11 @@ def _persist_prior_303(repository: CalculationObservationRepository) -> None:
             modelo="303",
             filing_year=2026,
             period="1T",
-            observations=(
-                CasillaObservation(casilla_id="iva.compensacion-disponible-fin-periodo", value=Decimal("1200.00")),
+            observations=registry_grounded_observations(
+                modelo="303",
+                filing_year=2026,
+                period="1T",
+                casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("1200.00")},
             ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
@@ -450,7 +475,11 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
     assert cross_year, "expected the cross-year M100 prior-year minoración dependency"
     assert all(d.suppressed_pre_activity for d in cross_year)
     # The same-year M130/2026 dep is admitted with the disclosing advisory.
-    same_year = [d for d in verdict.dependencies if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026]
+    same_year = [
+        d
+        for d in verdict.dependencies
+        if d.requirement.source_modelo == "130" and d.requirement.filing_year == 2026
+    ]
     assert same_year and all(d.non_official_local_chain_advisory for d in same_year)
     # Both handled -> the verdict is clean -> the quarter is reachable.
     assert verdict.clean

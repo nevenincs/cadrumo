@@ -30,6 +30,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.identity import BucketId
+from ...domain.calculations.registry import BindingId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
     SecureSnapshotRepository,
@@ -68,7 +69,7 @@ class Borrador100Snapshot(BaseModel):
     captured_at: datetime
     source_url: str = Field(min_length=1, max_length=2048)
     state: SnapshotLifecycleState
-    binding_values: Mapping[str, _BorradorValue] = Field(default_factory=dict)
+    binding_values: Mapping[BindingId, _BorradorValue] = Field(default_factory=dict)
     superseded_by_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     discarded_at: datetime | None = None
     discarded_by: str = Field(default="", max_length=128)
@@ -106,7 +107,7 @@ def derive_borrador_100_snapshot_id(
     period: Period,
     captured_at: datetime,
     source_url: str,
-    binding_values: Mapping[str, _BorradorValue],
+    binding_values: Mapping[BindingId, _BorradorValue],
 ) -> str:
     """Return the content-addressed id for one Modelo 100 borrador capture.
 
@@ -202,7 +203,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot]):
         period: Period,
         captured_at: datetime,
         source_url: str,
-        binding_values: Mapping[str, _BorradorValue],
+        binding_values: Mapping[BindingId, _BorradorValue],
     ) -> Borrador100Snapshot:
         return self._capture_with_lifecycle(
             filing_year=filing_year,

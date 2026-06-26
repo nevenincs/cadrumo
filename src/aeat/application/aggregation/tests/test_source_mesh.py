@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -9,7 +10,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.errors import DecryptionError
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import load_registry_tree
+from ....domain.calculations.registry import CasillaId, load_registry_tree, validated_casilla_id
 from .. import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
@@ -23,6 +24,11 @@ from .._source_mesh import SourceMeshError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_IVA_REPERCUTIDO_GENERAL_CASILLA: CasillaId = validated_casilla_id(
+    "iva.repercutido.general",
+    surface="_IVA_REPERCUTIDO_GENERAL_CASILLA",
+)
+
 
 def test_source_resolution_contract_is_strict_and_serializable() -> None:
     resolution = CalculationSourceResolution(
@@ -30,8 +36,9 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
         owned_sources=("ledger_iva_aggregation",),
         binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("21.00")},
         enum_binding_values={"profile-ccaa": "madrid"},
+        date_binding_values={"profile-birth-date": date(1980, 1, 31)},
         relation_values={"modelo-180-rel-115-base-anual": Decimal("2128.75")},
-        bound_casilla_inputs={"iva.repercutido.general": Decimal("21.00")},
+        bound_inputs_by_casilla_id={_IVA_REPERCUTIDO_GENERAL_CASILLA: Decimal("21.00")},
         source_transaction_ids=("tx-2", "tx-1"),
         diagnostics=(
             CalculationSourceDiagnostic(
@@ -52,9 +59,59 @@ def test_source_resolution_contract_is_strict_and_serializable() -> None:
 
     assert tuple(resolution.source_transaction_ids) == ("tx-1", "tx-2")
     assert resolution.model_dump(mode="json")["binding_values"] == {"modelo-303-iva-repercutido-general-cuota": "21.00"}
+    assert resolution.model_dump(mode="json")["date_binding_values"] == {"profile-birth-date": "1980-01-31"}
     assert resolution.model_dump(mode="json")["relation_values"] == {"modelo-180-rel-115-base-anual": "2128.75"}
     with pytest.raises(ValidationError, match="Extra inputs"):
         CalculationSourceResolution.model_validate({"resolver_id": "ledger-iva", "unexpected": True})
+
+
+def test_source_resolution_rejects_legacy_bound_casilla_inputs_key() -> None:
+    with pytest.raises(ValidationError, match="bound_casilla_inputs"):
+        CalculationSourceResolution.model_validate(
+            {
+                "resolver_id": "ledger-iva",
+                "bound_casilla_inputs": {_IVA_REPERCUTIDO_GENERAL_CASILLA: Decimal("21.00")},
+            },
+        )
+
+
+def test_source_resolution_rejects_noncanonical_binding_keys() -> None:
+    with pytest.raises(ValidationError) as decimal_exc:
+        CalculationSourceResolution(
+            resolver_id="source-mesh",
+            binding_values={"Bad Binding": Decimal("1.00")},
+        )
+    assert decimal_exc.value.errors()[0]["loc"][0] == "binding_values"
+
+    with pytest.raises(ValidationError) as enum_exc:
+        CalculationSourceResolution(
+            resolver_id="source-mesh",
+            enum_binding_values={"Bad Binding": "madrid"},
+        )
+    assert enum_exc.value.errors()[0]["loc"][0] == "enum_binding_values"
+
+    with pytest.raises(ValidationError) as date_exc:
+        CalculationSourceResolution(
+            resolver_id="source-mesh",
+            date_binding_values={"Bad Binding": date(1980, 1, 31)},
+        )
+    assert date_exc.value.errors()[0]["loc"][0] == "date_binding_values"
+
+
+def test_source_resolution_rejects_noncanonical_relation_keys() -> None:
+    with pytest.raises(ValidationError) as relation_exc:
+        CalculationSourceResolution(
+            resolver_id="source-mesh",
+            relation_values={"Bad Relation": Decimal("1.00")},
+        )
+    assert relation_exc.value.errors()[0]["loc"][0] == "relation_values"
+
+    with pytest.raises(ValidationError) as unresolved_exc:
+        CalculationSourceResolution(
+            resolver_id="source-mesh",
+            unresolved_relation_ids=("Bad Relation",),
+        )
+    assert unresolved_exc.value.errors()[0]["loc"][0] == "unresolved_relation_ids"
 
 
 @pytest.mark.parametrize(
@@ -120,12 +177,12 @@ def test_source_resolution_merge_rejects_duplicate_bound_casilla_ownership() -> 
     left = CalculationSourceResolution(
         resolver_id="ledger-iva",
         owned_sources=("ledger_iva_aggregation",),
-        bound_casilla_inputs={"iva.repercutido.general": Decimal("21.00")},
+        bound_inputs_by_casilla_id={_IVA_REPERCUTIDO_GENERAL_CASILLA: Decimal("21.00")},
     )
     right = CalculationSourceResolution(
         resolver_id="invoice",
         owned_sources=("invoice",),
-        bound_casilla_inputs={"iva.repercutido.general": Decimal("99.00")},
+        bound_inputs_by_casilla_id={_IVA_REPERCUTIDO_GENERAL_CASILLA: Decimal("99.00")},
     )
 
     with pytest.raises(AggregationValidationError) as exc_info:
@@ -134,7 +191,7 @@ def test_source_resolution_merge_rejects_duplicate_bound_casilla_ownership() -> 
     assert str(exc_info.value) == "aggregation.source_mesh.errors.duplicate_bound_casilla_owner"
     context = exc_info.value.context
     assert context is not None
-    assert context["casilla_id"] == "iva.repercutido.general"
+    assert context["casilla_id"] == _IVA_REPERCUTIDO_GENERAL_CASILLA
     assert context["first_resolver"] == "ledger-iva"
     assert context["second_resolver"] == "invoice"
 
@@ -162,6 +219,29 @@ def test_source_resolution_merge_rejects_duplicate_relation_ownership() -> None:
     assert context["second_resolver"] == "aeat-live"
 
 
+def test_source_resolution_merge_rejects_duplicate_binding_across_value_channels() -> None:
+    left = CalculationSourceResolution(
+        resolver_id="profile",
+        owned_sources=("profile",),
+        date_binding_values={"profile-birth-date": date(1980, 1, 31)},
+    )
+    right = CalculationSourceResolution(
+        resolver_id="manual-bridge",
+        owned_sources=("manual_input",),
+        binding_values={"profile-birth-date": Decimal("1.00")},
+    )
+
+    with pytest.raises(AggregationValidationError) as exc_info:
+        merge_source_resolutions((left, right))
+
+    assert str(exc_info.value) == "aggregation.source_mesh.errors.duplicate_binding_owner"
+    context = exc_info.value.context
+    assert context is not None
+    assert context["binding_id"] == "profile-birth-date"
+    assert context["first_resolver"] == "profile"
+    assert context["second_resolver"] == "manual-bridge"
+
+
 def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -> None:
     diagnostic = CalculationSourceDiagnostic(
         reason="unhandled_binding_source",
@@ -182,6 +262,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
         owned_sources=("ledger_iva_aggregation",),
         binding_values={"binding-decimal": binding_input},
         relation_values={"relation-decimal": relation_input},
+        date_binding_values={"profile-birth-date": date(1980, 1, 31)},
         source_transaction_ids=("tx-1",),
         provenance=(provenance,),
     )
@@ -201,6 +282,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
     assert merged.owned_sources == ("ledger_iva_aggregation", "profile")
     assert merged.binding_values["binding-decimal"] == ledger_resolution.binding_values["binding-decimal"]
     assert merged.relation_values["relation-decimal"] == ledger_resolution.relation_values["relation-decimal"]
+    assert merged.date_binding_values["profile-birth-date"] == date(1980, 1, 31)
     assert merged.enum_binding_values["profile-ccaa"] == "madrid"
     assert tuple(merged.source_transaction_ids) == ("tx-1",)
     assert merged.diagnostics == (diagnostic,)

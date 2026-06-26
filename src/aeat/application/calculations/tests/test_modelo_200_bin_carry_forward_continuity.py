@@ -27,10 +27,9 @@ amount actually applied (00547) and its 70% / €1.000.000 ceiling are a
 separate elective-cap layer; this enrollment proves the STOCK carry.
 
 The cross-year hook relies on the previous_filing observation-coverage
-validator semantics: M200 is modelled only from 2024, but the prior 00671 is
-the operator's historical filing (an observation), so the ``-1`` source
-resolves present-or-zero-carry — a first-year filer simply has no prior BIN
-to carry (a correct zero, not a silent under-declaration).
+validator semantics: because the repository validates every filed observation
+against a real Modelo 200 revision, this test uses target years whose prior
+source years are also modelled. Unsupported historical years must fail closed.
 """
 
 from __future__ import annotations
@@ -43,15 +42,18 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
+    RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos._verification_report import ModeloVerificationFindingKind
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._actions import _evaluate_verification_predicates
 from .._binding_prefill import resolve_bindings_from_local_store
@@ -69,17 +71,28 @@ _CASILLA_ONLY_PROFILE = TaxpayerProfile(tax_id="B12345678", iva_regime=IVARegime
 _MODELO_200 = "200"
 
 #: Casillas on the cross-year BIN carry.
-_M200_BIN_PENDIENTE_FUTUROS = "00671"  # end-of-year stock pending future application
-_M200_BIN_PENDIENTE_INICIO = "00670"  # opening stock pending (bound from prior 00671)
+_M200_BIN_PENDIENTE_FUTUROS: CasillaId = validated_casilla_id(
+    "00671",
+    surface="_M200_BIN_PENDIENTE_FUTUROS",
+)  # end-of-year stock pending future application
+_M200_BIN_PENDIENTE_INICIO: CasillaId = validated_casilla_id(
+    "00670",
+    surface="_M200_BIN_PENDIENTE_INICIO",
+)  # opening stock pending (bound from prior 00671)
+_M200_BIN_APLICADA_MAXIMA: CasillaId = validated_casilla_id(
+    "DP200014:bin-aplicada-maxima",
+    surface="_M200_BIN_APLICADA_MAXIMA",
+)
+_M200_BIN_APLICADA: CasillaId = validated_casilla_id("DP200014:00547", surface="_M200_BIN_APLICADA")
 
 #: Two distinct renta years the enrollment spans; each sources the prior year's 00671.
-_YEAR_N = 2024
-_YEAR_N_PLUS_1 = 2025
+_YEAR_N = 2025
+_YEAR_N_PLUS_1 = 2026
 
 #: Distinct prior-year BIN stock per source year so a cross-year contamination surfaces.
 _BIN_STOCK_BY_SOURCE_YEAR: dict[int, Decimal] = {
-    2023: Decimal("30000.00"),
-    2024: Decimal("18000.00"),
+    2024: Decimal("30000.00"),
+    2025: Decimal("18000.00"),
 }
 
 #: The same-year M202 pagos relation the M200 cuota chain reads; zero here (no
@@ -108,14 +121,23 @@ def _seed_m200_bin_stock(*, source_year: int, stock: Decimal, obs_repo: Calculat
             modelo=_MODELO_200,
             filing_year=source_year,
             period="0A",
-            observations=(CasillaObservation(casilla_id=_M200_BIN_PENDIENTE_FUTUROS, value=stock),),
+            observations=registry_grounded_observations(
+                modelo=_MODELO_200,
+                filing_year=source_year,
+                period="0A",
+                casilla_values={_M200_BIN_PENDIENTE_FUTUROS: stock},
+            ),
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,
     )
 
 
-def _calculate_200(*, filing_year: int, relation_values: dict[str, Decimal]) -> tuple[RegistryCalculationResult, int]:
+def _calculate_200(
+    *,
+    filing_year: int,
+    relation_values: dict[RelationId, Decimal],
+) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL M200 annual calculation from resolved relations + the SL profile."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_200, filing_year=filing_year, period="0A")
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
@@ -129,7 +151,7 @@ def _calculate_200(*, filing_year: int, relation_values: dict[str, Decimal]) -> 
         c.binding: Decimal("0") for c in snapshot.revision.casillas if c.input_kind.value == "bound" and c.binding
     }
     binding_values = {**carry_defaults, **prefilled, **relation_binding_values, **_PROFILE_DECIMAL_BINDINGS}
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -145,7 +167,7 @@ def _resolve_and_supply_relations(
     *,
     filing_year: int,
     obs_repo: CalculationObservationRepository,
-) -> dict[str, Decimal]:
+) -> dict[RelationId, Decimal]:
     snapshot = resources().modelos.authority.snapshot(_MODELO_200, filing_year=filing_year, period="0A")
     resolved = {
         item.relation: item.value
@@ -168,17 +190,17 @@ def test_modelo_200_opening_bin_stock_resolves_from_prior_year(tmp_path: Path) -
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_bin_stock(source_year=2023, stock=_BIN_STOCK_BY_SOURCE_YEAR[2023], obs_repo=obs_repo)
+        _seed_m200_bin_stock(source_year=2024, stock=_BIN_STOCK_BY_SOURCE_YEAR[2024], obs_repo=obs_repo)
         resolved = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo)
         result, _ = _calculate_200(filing_year=_YEAR_N, relation_values=resolved)
-    assert Decimal(result.values["00670"]) == _BIN_STOCK_BY_SOURCE_YEAR[2023]
+    assert Decimal(result.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[2024]
 
 
 def test_modelo_200_bin_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
     """End-to-end enrollment: M200 BIN stock carry across two renta years.
 
-    Drives the real M200 engine for two distinct renta years (2024, 2025),
-    each sourcing the prior year's 00671 BIN stock (2023, 2024), records each
+    Drives the real M200 engine for two distinct renta years (2025, 2026),
+    each sourcing the prior year's 00671 BIN stock (2024, 2025), records each
     through the :class:`EnrollmentRecorder` (CALC), and cross-checks the
     recorded two-year set against the authorization manifest. Year N's prior
     filing is in the store but must not contaminate Year N+1's resolver. A
@@ -188,8 +210,8 @@ def test_modelo_200_bin_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
-        _seed_m200_bin_stock(source_year=2023, stock=_BIN_STOCK_BY_SOURCE_YEAR[2023], obs_repo=obs_repo)
         _seed_m200_bin_stock(source_year=2024, stock=_BIN_STOCK_BY_SOURCE_YEAR[2024], obs_repo=obs_repo)
+        _seed_m200_bin_stock(source_year=2025, stock=_BIN_STOCK_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
 
         resolved_n = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo)
         result_n, produced_n = _calculate_200(filing_year=_YEAR_N, relation_values=resolved_n)
@@ -201,8 +223,8 @@ def test_modelo_200_bin_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
 
     # Wiring invariant: each year's opening BIN stock equals the prior year's
     # end-of-year stock, year-isolated.
-    assert Decimal(result_n.values["00670"]) == _BIN_STOCK_BY_SOURCE_YEAR[2023]
-    assert Decimal(result_n1.values["00670"]) == _BIN_STOCK_BY_SOURCE_YEAR[2024]
+    assert Decimal(result_n.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[2024]
+    assert Decimal(result_n1.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[2025]
 
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
@@ -240,9 +262,9 @@ def test_modelo_200_bin_over_application_above_cap_is_blocked() -> None:
     a hand-built over-claim, not a re-run of the cap formula.
     """
     predicate = _bin_cap_predicate()
-    casilla_values = {
-        "DP200014:bin-aplicada-maxima": Decimal("1000000.00"),
-        "DP200014:00547": Decimal("1200000.00"),  # over the ceiling
+    casilla_values: dict[CasillaId, Decimal] = {
+        _M200_BIN_APLICADA_MAXIMA: Decimal("1000000.00"),
+        _M200_BIN_APLICADA: Decimal("1200000.00"),  # over the ceiling
     }
     findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
     assert len(findings) == 1
@@ -259,9 +281,9 @@ def test_modelo_200_electing_less_than_cap_is_permitted() -> None:
     direction, permitting the under-direction.
     """
     predicate = _bin_cap_predicate()
-    casilla_values = {
-        "DP200014:bin-aplicada-maxima": Decimal("1000000.00"),
-        "DP200014:00547": Decimal("400000.00"),  # elected below the ceiling
+    casilla_values: dict[CasillaId, Decimal] = {
+        _M200_BIN_APLICADA_MAXIMA: Decimal("1000000.00"),
+        _M200_BIN_APLICADA: Decimal("400000.00"),  # elected below the ceiling
     }
     findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
     assert findings == []
@@ -270,9 +292,9 @@ def test_modelo_200_electing_less_than_cap_is_permitted() -> None:
 def test_modelo_200_applying_exactly_the_cap_is_permitted() -> None:
     """Applying exactly the ceiling is permitted (<= holds at equality)."""
     predicate = _bin_cap_predicate()
-    casilla_values = {
-        "DP200014:bin-aplicada-maxima": Decimal("1000000.00"),
-        "DP200014:00547": Decimal("1000000.00"),
+    casilla_values: dict[CasillaId, Decimal] = {
+        _M200_BIN_APLICADA_MAXIMA: Decimal("1000000.00"),
+        _M200_BIN_APLICADA: Decimal("1000000.00"),
     }
     findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
     assert findings == []

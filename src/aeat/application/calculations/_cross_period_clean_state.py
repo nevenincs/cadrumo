@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core import Modelo, Period
 from ...domain.calculations.registry import (
+    CasillaId,
     Modelo202Modality,
     RegistryModeloObservation,
     RegistryModeloObservationRequirement,
@@ -242,7 +243,7 @@ class CrossPeriodDependencyRequirement(BaseModel):
     source_modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=2000, le=2099)
     period: Period
-    source_casillas: tuple[str, ...] = Field(min_length=1)
+    source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
     origin: CrossPeriodDependencyOrigin
     origin_ids: tuple[str, ...] = Field(min_length=1)
     requires_member_fan_in: bool = False
@@ -291,7 +292,11 @@ class CrossPeriodDependencyInventoryItem(BaseModel):
 
     @model_validator(mode="after")
     def _period_matches_filing_year(self) -> Self:
-        _require_period_year(self.target_period, self.target_filing_year, field_name="target_period")
+        _require_period_year(
+            self.target_period,
+            self.target_filing_year,
+            field_name="target_period",
+        )
         return self
 
     @property
@@ -431,7 +436,11 @@ class CrossPeriodCleanStateVerdict(BaseModel):
 
     @model_validator(mode="after")
     def _period_matches_filing_year(self) -> Self:
-        _require_period_year(self.target_period, self.target_filing_year, field_name="target_period")
+        _require_period_year(
+            self.target_period,
+            self.target_filing_year,
+            field_name="target_period",
+        )
         return self
 
     @property
@@ -875,7 +884,12 @@ def evaluate_cross_period_clean_state(
         target_modelo=str(snapshot.modelo.id),
         target_filing_year=snapshot.filing_year,
         target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
-        dependencies=(*in_scope_dependencies, *suppressed_dependencies, *not_applicable_dependencies, *first_year_fractional_dependencies),
+        dependencies=(
+            *in_scope_dependencies,
+            *suppressed_dependencies,
+            *not_applicable_dependencies,
+            *first_year_fractional_dependencies,
+        ),
     )
 
 
@@ -889,7 +903,7 @@ def _requirements_from_previous_filing(
         source_modelo=requirement.modelo,
         filing_year=requirement.filing_year,
         period=Period.from_year_and_code(requirement.filing_year, requirement.period),
-        source_casillas=requirement.source_casillas,
+        source_casilla_ids=requirement.source_casilla_ids,
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=requirement.binding_ids,
         requires_member_fan_in=(requirement.modelo, requirement.filing_year, requirement.period) in grouped_keys,
@@ -904,7 +918,7 @@ def _requirements_from_relation(
             source_modelo=requirement.source_modelo,
             filing_year=requirement.filing_year,
             period=Period.from_year_and_code(requirement.filing_year, period),
-            source_casillas=(requirement.source_output,),
+            source_casilla_ids=(requirement.source_casilla_id,),
             origin=CrossPeriodDependencyOrigin.REGISTRY_RELATION,
             origin_ids=requirement.relation_ids,
         )
@@ -1093,16 +1107,16 @@ def _resolve_observation_values(
     requirement: CrossPeriodDependencyRequirement,
     value_member_payloads: tuple[_ObservationPayload, ...],
     payload: _ObservationPayload | None,
-) -> tuple[str | None, dict[str, object], list[CrossPeriodCleanStateBlocker]]:
+) -> tuple[str | None, dict[CasillaId, object], list[CrossPeriodCleanStateBlocker]]:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     observation_source_kind: str | None = None
-    observation_values: dict[str, object] = {}
+    observation_values: dict[CasillaId, object] = {}
     if requirement.requires_member_fan_in and value_member_payloads:
         observation_source_kind = _combined_source_kind(item.source_kind for item in value_member_payloads)
         if any(item.source_kind == "operator_manual" for item in value_member_payloads):
             blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
         for item in value_member_payloads:
-            for casilla_id in requirement.source_casillas:
+            for casilla_id in requirement.source_casilla_ids:
                 if casilla_id not in item.observation.casilla_values:
                     blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
     elif payload is None:
@@ -1112,7 +1126,7 @@ def _resolve_observation_values(
         observation_values = dict(payload.observation.casilla_values)
         if payload.source_kind == "operator_manual":
             blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
-        for casilla_id in requirement.source_casillas:
+        for casilla_id in requirement.source_casilla_ids:
             if casilla_id not in observation_values:
                 blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
     return observation_source_kind, observation_values, blockers
@@ -1357,7 +1371,7 @@ def _filing_revision_blockers(
     filing: ModeloRecord,
     requirement: CrossPeriodDependencyRequirement,
     calculation_catalogue: CalculationRevisionCatalogue,
-    observation_values: Mapping[str, object],
+    observation_values: Mapping[CasillaId, object],
 ) -> tuple[CalculationRevisionState | None, list[CrossPeriodCleanStateBlocker]]:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     revision = calculation_catalogue.get(filing.calculation_revision_id)
@@ -1368,7 +1382,7 @@ def _filing_revision_blockers(
         revision_state = revision.state
         if revision.state is not CalculationRevisionState.PRESENTADO:
             blockers.append(CrossPeriodCleanStateBlocker.UNFILED_CALCULATION_REVISION)
-        for casilla_id in requirement.source_casillas:
+        for casilla_id in requirement.source_casilla_ids:
             observed = observation_values.get(casilla_id)
             if observed is None:
                 continue
@@ -1418,7 +1432,7 @@ def _evaluate_filing_history(
     taxpayer_tax_id: str | None,
     observation_source_kind: str | None,
     observation_source_metadata: Mapping[str, str] | None,
-    observation_values: Mapping[str, object],
+    observation_values: Mapping[CasillaId, object],
     member_nif: str | None,
 ) -> _FilingHistory:
     blockers: list[CrossPeriodCleanStateBlocker] = []

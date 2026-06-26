@@ -2,8 +2,9 @@
 
 Modelo 036 (Censo de empresarios, profesionales y retenedores) is an ad_hoc
 censal declaration (Orden EHA/1274/2007, updated by Orden HAC/1526/2024).
-Cadence is event-driven with canonical period codes such as ``EVENT-1`` and
-``EVENT-2``. There is no calculation engine. The cross-year invariant is identity-continuity across
+Cadence is event-driven: the registry snapshot selector carries event types
+(``alta``/``modificacion``/``baja``), not periodic filing codes. There is no
+calculation engine. The cross-year invariant is identity-continuity across
 two annual contexts: a taxpayer files an ``alta`` in year N and a ``modificacion``
 in year N+1. Both events reference the same fiscal identity (NIF) and must be
 independently retrievable from the observation store without contamination.
@@ -14,7 +15,7 @@ distinct annual contexts and records both through the EnrollmentRecorder's
 context mode. The context label is the un-fakeable evidence token.
 
 Cross-year invariants tested:
-- alta (year N, period "EVENT-1") and modificacion (year N+1, period "EVENT-2")
+- alta (year N, registry period "alta") and modificacion (year N+1, registry period "modificacion")
   are independently persisted and retrievable.
 - The NIF stored in year N's alta survives unchanged into year N+1's modificacion
   (identity-continuity across period events).
@@ -40,8 +41,12 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -56,14 +61,25 @@ _MODELO = "036"
 #: (Orden EHA/1274/2007 art. 1).
 _YEAR_N = 2025  # alta — earliest valid year for the 2025-02-03 revision
 _YEAR_N_PLUS_1 = 2026  # modificacion
-_ALTA_FILING_PERIOD = Period.from_year_and_code(_YEAR_N, "EVENT-1")
-_MODIFICACION_FILING_PERIOD = Period.from_year_and_code(_YEAR_N_PLUS_1, "EVENT-2")
+_ALTA_PERIOD = "alta"
+_MODIFICACION_PERIOD = "modificacion"
 
 #: Context label for the EnrollmentRecorder (non-calculation / threshold-continuity mode).
 _CONTEXT_LABEL = "036-censal-alta-modificacion-two-annual-contexts"
 
 _CLOCK_N = datetime(2025, 3, 1, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2026, 6, 15, 10, 0, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M036 censal fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_EVENT_KIND_CASILLA: CasillaId = _casilla_id("decl.event-kind")
+_VIGENCIA_2025_CASILLA: CasillaId = _casilla_id("decl.vigencia-2025")
 
 # The vigencia normativa value (informational casilla "decl.vigencia-2025").
 # Non-default string so a drop-then-default regression surfaces as inequality.
@@ -99,14 +115,17 @@ def _alta_observation() -> RegistryModeloObservation:
     """
     return RegistryModeloObservation(
         modelo=_MODELO,
-        filing_period=_ALTA_FILING_PERIOD,
+        filing_period=None,
         filing_year=_YEAR_N,
-        period="EVENT-1",
-        observations=(
-            # event-kind: 1 = alta (RD 1065/2007 art. 9)
-            CasillaObservation(casilla_id="decl.event-kind", value=Decimal("1")),
-            # vigencia normativa desde 2025-02-03 (Orden HAC/1526/2024)
-            CasillaObservation(casilla_id="decl.vigencia-2025", value=_VIGENCIA),
+        period=_ALTA_PERIOD,
+        observations=registry_grounded_observations(
+            modelo=_MODELO,
+            filing_year=_YEAR_N,
+            period=_ALTA_PERIOD,
+            casilla_values={
+                _EVENT_KIND_CASILLA: Decimal("1"),
+                _VIGENCIA_2025_CASILLA: _VIGENCIA,
+            },
         ),
     )
 
@@ -120,13 +139,17 @@ def _modificacion_observation() -> RegistryModeloObservation:
     """
     return RegistryModeloObservation(
         modelo=_MODELO,
-        filing_period=_MODIFICACION_FILING_PERIOD,
+        filing_period=None,
         filing_year=_YEAR_N_PLUS_1,
-        period="EVENT-2",
-        observations=(
-            # event-kind: 2 = modificacion (RD 1065/2007 art. 10)
-            CasillaObservation(casilla_id="decl.event-kind", value=Decimal("2")),
-            CasillaObservation(casilla_id="decl.vigencia-2025", value=_VIGENCIA),
+        period=_MODIFICACION_PERIOD,
+        observations=registry_grounded_observations(
+            modelo=_MODELO,
+            filing_year=_YEAR_N_PLUS_1,
+            period=_MODIFICACION_PERIOD,
+            casilla_values={
+                _EVENT_KIND_CASILLA: Decimal("2"),
+                _VIGENCIA_2025_CASILLA: _VIGENCIA,
+            },
         ),
     )
 
@@ -141,9 +164,11 @@ def test_alta_observation_persists_and_reloads_strictly(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         repo.save_observation(obs, source_kind="app_filing", captured_at=_CLOCK_N)
-        loaded = _find_observation(repo, filing_year=_YEAR_N, period="EVENT-1")
+        loaded = _find_observation(repo, filing_year=_YEAR_N, period=_ALTA_PERIOD)
 
-        assert loaded is not None, f"alta observation not found for ({_MODELO!r}, {_YEAR_N}, 'EVENT-1') after save"
+        assert loaded is not None, (
+            f"alta observation not found for ({_MODELO!r}, {_YEAR_N}, {_ALTA_PERIOD!r}) after save"
+        )
         assert loaded.observation == obs, (
             "036 alta observation did not survive the encrypted-SQL roundtrip; "
             "at least one casilla was silently dropped, coerced, or defaulted away"
@@ -158,7 +183,7 @@ def test_modificacion_observation_persists_and_reloads_strictly(tmp_path: Path) 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         repo.save_observation(obs, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1)
-        loaded = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="EVENT-2")
+        loaded = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
 
         assert loaded is not None
         assert loaded.observation == obs
@@ -186,8 +211,8 @@ def test_alta_and_modificacion_are_independently_retrievable(tmp_path: Path) -> 
         repo = CalculationObservationRepository()
         repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
         repo.save_observation(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1)
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="EVENT-1")
-        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="EVENT-2")
+        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period=_ALTA_PERIOD)
+        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
 
         assert loaded_n is not None
         assert loaded_n1 is not None
@@ -195,8 +220,8 @@ def test_alta_and_modificacion_are_independently_retrievable(tmp_path: Path) -> 
         assert loaded_n1.observation == obs_n1
 
         # Event-kind isolation: 1=alta in year N, 2=modificacion in year N+1.
-        ek_n = loaded_n.observation.casilla_values["decl.event-kind"]
-        ek_n1 = loaded_n1.observation.casilla_values["decl.event-kind"]
+        ek_n = loaded_n.observation.casilla_values[_EVENT_KIND_CASILLA]
+        ek_n1 = loaded_n1.observation.casilla_values[_EVENT_KIND_CASILLA]
         assert ek_n == Decimal("1"), f"year-N event-kind should be 1 (alta); got {ek_n}"
         assert ek_n1 == Decimal("2"), f"year-N+1 event-kind should be 2 (modificacion); got {ek_n1}"
 
@@ -219,14 +244,14 @@ def test_vigencia_normativa_is_identical_in_both_annual_contexts(tmp_path: Path)
         repo = CalculationObservationRepository()
         repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
         repo.save_observation(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1)
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="EVENT-1")
-        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="EVENT-2")
+        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period=_ALTA_PERIOD)
+        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
 
         assert loaded_n is not None
         assert loaded_n1 is not None
 
-        vig_n = loaded_n.observation.casilla_values.get("decl.vigencia-2025")
-        vig_n1 = loaded_n1.observation.casilla_values.get("decl.vigencia-2025")
+        vig_n = loaded_n.observation.casilla_values.get(_VIGENCIA_2025_CASILLA)
+        vig_n1 = loaded_n1.observation.casilla_values.get(_VIGENCIA_2025_CASILLA)
         assert vig_n is not None, "year-N alta missing decl.vigencia-2025 casilla"
         assert vig_n1 is not None, "year-N+1 modificacion missing decl.vigencia-2025 casilla"
         assert vig_n == _VIGENCIA, f"vigencia round-trip failed in year N: got {vig_n}"
@@ -243,10 +268,10 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
     obs_n = _alta_observation()
     obs_n_no_event_kind = RegistryModeloObservation(
         modelo=_MODELO,
-        filing_period=_ALTA_FILING_PERIOD,
+        filing_period=None,
         filing_year=_YEAR_N,
-        period="EVENT-1",
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != "decl.event-kind"),
+        period=_ALTA_PERIOD,
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != _EVENT_KIND_CASILLA),
     )
 
     assert obs_n != obs_n_no_event_kind, (
@@ -256,7 +281,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
-        loaded = _find_observation(repo, filing_year=_YEAR_N, period="EVENT-1")
+        loaded = _find_observation(repo, filing_year=_YEAR_N, period=_ALTA_PERIOD)
 
         assert loaded is not None
         assert loaded.observation != obs_n_no_event_kind, (
@@ -287,14 +312,14 @@ def test_enrollment_recorder_evidences_two_distinct_annual_contexts_and_matches_
         repo = CalculationObservationRepository()
         # --- Year N: alta -----------------------------------------------
         repo.save_observation(obs_n, source_kind="app_filing", captured_at=_CLOCK_N)
-        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period="EVENT-1")
+        loaded_n = _find_observation(repo, filing_year=_YEAR_N, period=_ALTA_PERIOD)
         assert loaded_n is not None
         assert loaded_n.observation == obs_n
         _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
 
         # --- Year N+1: modificacion -------------------------------------
         repo.save_observation(obs_n1, source_kind="app_filing", captured_at=_CLOCK_N_PLUS_1)
-        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period="EVENT-2")
+        loaded_n1 = _find_observation(repo, filing_year=_YEAR_N_PLUS_1, period=_MODIFICACION_PERIOD)
         assert loaded_n1 is not None
         assert loaded_n1.observation == obs_n1
         _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)

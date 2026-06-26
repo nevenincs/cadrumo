@@ -30,6 +30,7 @@ import pytest
 
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -42,6 +43,7 @@ from ....domain.modelos._calculation_revision import (
 from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ...calculations import IvaCompensationHistoryRepository
 from ...user_profile._orchestration import profile_create_storage_span
@@ -62,6 +64,18 @@ _BUCKET_ID = "operator"
 _SEED_YEAR = 2024
 _SEED_PERIOD = "4T"
 _SEED_FILING_PERIOD = Period.from_year_and_code(_SEED_YEAR, _SEED_PERIOD)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"IVA wallet correction fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
 
 
 @pytest.fixture(autouse=True)
@@ -103,10 +117,10 @@ def _persist_sealed_303(*, filing_year: int, period: str, state: CalculationRevi
         period=typed_period,
         revision_id=work_unit_revision_marker,
     )
-    casilla_values = {"iva.compensacion-pendiente-periodos-anteriores": Decimal("1000.00")}
+    casilla_values: dict[CasillaId, Decimal] = {_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Decimal("1000.00")}
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
     )
@@ -138,9 +152,15 @@ def _persist_sealed_303(*, filing_year: int, period: str, state: CalculationRevi
         "calculation_revision_id": revision_id,
         "work_unit_id": work_unit_id,
         "state": state,
-        "inputs_snapshot": {},
+        "input_values_by_casilla_id": {},
         "binding_overrides": {},
         "casilla_values": casilla_values,
+        "observations": registry_grounded_observations(
+            modelo="303",
+            filing_year=filing_year,
+            period=typed_period.registry_token,
+            casilla_values=casilla_values,
+        ),
         "created_at": when,
         "updated_at": when,
         **audit_metadata,

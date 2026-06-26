@@ -43,7 +43,12 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -57,6 +62,23 @@ _PERIOD = "4T"
 _CONTEXT_LABEL = "349-intracomunitario-recapitulativo-cadence-year-over-year"
 _CLOCK_N = datetime(2025, 1, 27, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2026, 1, 27, 10, 0, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M349 intracomunitario fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_DECL_NUMERO_OPERADORES_CASILLA: CasillaId = _casilla_id("decl.numero-operadores")
+_DECL_IMPORTE_OPERACIONES_CASILLA: CasillaId = _casilla_id("decl.importe-operaciones")
+_DECL_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = _casilla_id("decl.numero-rectificaciones")
+_DECL_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = _casilla_id("decl.importe-rectificaciones")
+_OP_CODIGO_PAIS_CASILLA: CasillaId = _casilla_id("op.codigo-pais")
+_OP_NIF_COMUNITARIO_CASILLA: CasillaId = _casilla_id("op.nif-comunitario")
+_OP_CLAVE_OPERACION_CASILLA: CasillaId = _casilla_id("op.clave-operacion")
+_OP_BASE_IMPONIBLE_CASILLA: CasillaId = _casilla_id("op.base-imponible")
 
 
 def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):
@@ -74,20 +96,20 @@ def _year_n_observation() -> RegistryModeloObservation:
     cross-year field-bleeding surfaces as strict inequality. The counterparty
     NIF is the identity anchor that must survive the roundtrip unchanged.
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period=_PERIOD,
-        observations=(
-            CasillaObservation(casilla_id="decl.numero-operadores", value=Decimal("1")),
-            CasillaObservation(casilla_id="decl.importe-operaciones", value=Decimal("85000.00")),
-            CasillaObservation(casilla_id="decl.numero-rectificaciones", value=Decimal("0")),
-            CasillaObservation(casilla_id="decl.importe-rectificaciones", value=Decimal("0")),
-            CasillaObservation(casilla_id="op.codigo-pais", value=Decimal("276")),  # DE
-            CasillaObservation(casilla_id="op.nif-comunitario", value=Decimal("123456789")),
-            CasillaObservation(casilla_id="op.clave-operacion", value=Decimal("1")),  # E=entregas
-            CasillaObservation(casilla_id="op.base-imponible", value=Decimal("85000.00")),
-        ),
+        casilla_values={
+            _DECL_NUMERO_OPERADORES_CASILLA: Decimal("1"),
+            _DECL_IMPORTE_OPERACIONES_CASILLA: Decimal("85000.00"),
+            _DECL_NUMERO_RECTIFICACIONES_CASILLA: Decimal("0"),
+            _DECL_IMPORTE_RECTIFICACIONES_CASILLA: Decimal("0"),
+            _OP_CODIGO_PAIS_CASILLA: Decimal("276"),  # DE
+            _OP_NIF_COMUNITARIO_CASILLA: Decimal("123456789"),
+            _OP_CLAVE_OPERACION_CASILLA: Decimal("1"),  # E=entregas
+            _OP_BASE_IMPONIBLE_CASILLA: Decimal("85000.00"),
+        },
     )
 
 
@@ -98,20 +120,20 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
     N+1. The base-imponible difference surfaces any cross-year value-bleeding
     as strict inequality.
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,
         period=_PERIOD,
-        observations=(
-            CasillaObservation(casilla_id="decl.numero-operadores", value=Decimal("1")),
-            CasillaObservation(casilla_id="decl.importe-operaciones", value=Decimal("112000.00")),
-            CasillaObservation(casilla_id="decl.numero-rectificaciones", value=Decimal("0")),
-            CasillaObservation(casilla_id="decl.importe-rectificaciones", value=Decimal("0")),
-            CasillaObservation(casilla_id="op.codigo-pais", value=Decimal("276")),  # DE
-            CasillaObservation(casilla_id="op.nif-comunitario", value=Decimal("123456789")),
-            CasillaObservation(casilla_id="op.clave-operacion", value=Decimal("1")),
-            CasillaObservation(casilla_id="op.base-imponible", value=Decimal("112000.00")),
-        ),
+        casilla_values={
+            _DECL_NUMERO_OPERADORES_CASILLA: Decimal("1"),
+            _DECL_IMPORTE_OPERACIONES_CASILLA: Decimal("112000.00"),
+            _DECL_NUMERO_RECTIFICACIONES_CASILLA: Decimal("0"),
+            _DECL_IMPORTE_RECTIFICACIONES_CASILLA: Decimal("0"),
+            _OP_CODIGO_PAIS_CASILLA: Decimal("276"),  # DE
+            _OP_NIF_COMUNITARIO_CASILLA: Decimal("123456789"),
+            _OP_CLAVE_OPERACION_CASILLA: Decimal("1"),
+            _OP_BASE_IMPONIBLE_CASILLA: Decimal("112000.00"),
+        },
     )
 
 
@@ -155,15 +177,15 @@ def test_both_observations_are_independently_retrievable_no_bleed(tmp_path: Path
         assert loaded_n.observation == obs_n
         assert loaded_n1.observation == obs_n1
 
-        base_n = loaded_n.observation.casilla_values["op.base-imponible"]
-        base_n1 = loaded_n1.observation.casilla_values["op.base-imponible"]
+        base_n = loaded_n.observation.casilla_values[_OP_BASE_IMPONIBLE_CASILLA]
+        base_n1 = loaded_n1.observation.casilla_values[_OP_BASE_IMPONIBLE_CASILLA]
         assert base_n == Decimal("85000.00")
         assert base_n1 == Decimal("112000.00")
         assert base_n != base_n1, "op.base-imponible bled between year-N and year-N+1"
 
         # NIF identity continuity: the same counterparty appears in both years
-        nif_n = loaded_n.observation.casilla_values["op.nif-comunitario"]
-        nif_n1 = loaded_n1.observation.casilla_values["op.nif-comunitario"]
+        nif_n = loaded_n.observation.casilla_values[_OP_NIF_COMUNITARIO_CASILLA]
+        nif_n1 = loaded_n1.observation.casilla_values[_OP_NIF_COMUNITARIO_CASILLA]
         assert nif_n == nif_n1 == Decimal("123456789"), "counterparty NIF must be identical in both years"
 
         assert loaded_n.captured_at != loaded_n1.captured_at
@@ -176,7 +198,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period=_PERIOD,
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != "op.base-imponible"),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != _OP_BASE_IMPONIBLE_CASILLA),
     )
     assert obs_n != obs_n_missing
 

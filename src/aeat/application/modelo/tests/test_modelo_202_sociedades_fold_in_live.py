@@ -12,13 +12,13 @@ not the direct-resolver path the existing continuity tests exercise:
   (``source = relation_prefill``), fed by the two self-pago relations
   ``modelo-202-2025-y-siguientes-rel-self-pagos-2p`` (period 2P, sums the 1P
   pago) and ``-rel-self-pagos-3p`` (period 3P, sums 1P + 2P), both reading
-  ``source_output = '34'`` (the instalment ingresado). So a 2P calculate folds
+  ``source_casilla_id = '34'`` (the instalment ingresado). So a 2P calculate folds
   the prior 1P pago and a 3P calculate folds 1P + 2P.
 * **M202 <- M200 cuota-base ejercicio anterior** (``cross_model_output``).
   Casilla 01 ("Importe de la base") is bound by
   ``modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior``
   (``source = relation_prefill``, ``selector source_modelo = '200',
-  source_output = 'DP200014B:00592'``), fed by the cuota-base relations whose
+  source_casilla_id = 'DP200014B:00592'``), fed by the cuota-base relations whose
   ``filing_year_delta`` selects the prior M200 cuota líquida. A 2P calculate
   folds the immediately prior M200 (filing_year_delta = -1) cuota líquida.
 
@@ -40,7 +40,7 @@ coincidental sum cannot satisfy the cumulative assertion; the prior M200 cuota
 líquida is a manual input no formula under test produces. The expected casilla
 values derive from the seeded observations via the declared aggregation ops
 (``sum`` / cross-year copy), never by re-evaluating any registry formula. A
-change in the relation's ``source_output``, ``source_periods``, or
+change in the relation's ``source_casilla_id``, ``source_periods``, or
 ``aggregation`` op would red the assertion.
 
 ----------------------------------------------------------------------------
@@ -89,14 +89,16 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryModeloObservation,
+    validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations._observations_repository import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
@@ -117,16 +119,25 @@ _M200 = "200"
 _FILING_YEAR = 2025
 _PRIOR_M200_YEAR = 2024  # filing_year_delta = -1 from the 2025 M202 ejercicio
 
-# M202 source_output 34 is the instalment ingresado that the self-pago relations
-# read; M200 source_output DP200014B:00592 is the prior cuota líquida the
+# M202 source_casilla_id 34 is the instalment ingresado that the self-pago relations
+# read; M200 source_casilla_id DP200014B:00592 is the prior cuota líquida the
 # cuota-base relation reads.
-_M202_PAGO_OUTPUT = "34"
-_M202_PAGO_OUTPUT_40_2 = "03"  # modalidad cuota (art. 40.2); folds alongside casilla 34
-_M200_CUOTA_LIQUIDA = "DP200014B:00592"
+_M202_PAGO_OUTPUT: CasillaId = validated_casilla_id("34", surface="_M202_PAGO_OUTPUT")
+_M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id(
+    "03",
+    surface="_M202_PAGO_OUTPUT_40_2",
+)  # modalidad cuota (art. 40.2); folds alongside casilla 34
+_M200_CUOTA_LIQUIDA: CasillaId = validated_casilla_id("DP200014B:00592", surface="_M200_CUOTA_LIQUIDA")
 
 # Bound casillas on the M202/2025 revision under test.
-_CASILLA_BASE = "01"  # bound by cuota-base-ejercicio-anterior (M202 <- M200)
-_CASILLA_PAGOS_ANTERIORES = "30"  # bound by pagos-fraccionados-anteriores (self-carry)
+_CASILLA_BASE: CasillaId = validated_casilla_id(
+    "01",
+    surface="_CASILLA_BASE",
+)  # bound by cuota-base-ejercicio-anterior (M202 <- M200)
+_CASILLA_PAGOS_ANTERIORES: CasillaId = validated_casilla_id(
+    "30",
+    surface="_CASILLA_PAGOS_ANTERIORES",
+)  # bound by pagos-fraccionados-anteriores (self-carry)
 
 # DISTINCT non-equal known per-period pago ingresado (M202 c34). Distinct values
 # make the cumulative fold unmistakable: a single-period copy or off-by-period
@@ -150,7 +161,10 @@ _BUCKET_ID_M200 = "bucket-m200-pagos-fold"
 # The *computed* casilla that the formula ``modelo-200-cuota-diferencial``
 # targets: 00611 = subtract(DP200014B:00599, relation[pagos-fraccionados]).
 # ``DP200014B`` is the xsd-group prefix for the Apartado B liquidación block.
-_CASILLA_CUOTA_DIFERENCIAL = "DP200014B:00611"
+_CASILLA_CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id(
+    "DP200014B:00611",
+    surface="_CASILLA_CUOTA_DIFERENCIAL",
+)
 
 # DISTINCT non-equal known c34 values for each of the three M202 instalments
 # (1P/2P/3P). Distinct values make the fold unmistakable: a single-period
@@ -209,9 +223,14 @@ def _seed_m202_pago_for_m200(*, period: str, value: Decimal, obs_repo: Calculati
             modelo=_M202,
             filing_year=_FILING_YEAR,
             period=period,
-            observations=(
-                CasillaObservation(casilla_id=_M202_PAGO_OUTPUT, value=value),
-                CasillaObservation(casilla_id=_M202_PAGO_OUTPUT_40_2, value=Decimal("0")),
+            observations=registry_grounded_observations(
+                modelo=_M202,
+                filing_year=_FILING_YEAR,
+                period=period,
+                casilla_values={
+                    _M202_PAGO_OUTPUT: value,
+                    _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                },
             ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
@@ -297,9 +316,14 @@ def _seed_m202_pago(*, period: str, value: Decimal, obs_repo: CalculationObserva
             modelo=_M202,
             filing_year=_FILING_YEAR,
             period=period,
-            observations=(
-                CasillaObservation(casilla_id=_M202_PAGO_OUTPUT, value=value),
-                CasillaObservation(casilla_id=_M202_PAGO_OUTPUT_40_2, value=Decimal("0")),
+            observations=registry_grounded_observations(
+                modelo=_M202,
+                filing_year=_FILING_YEAR,
+                period=period,
+                casilla_values={
+                    _M202_PAGO_OUTPUT: value,
+                    _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                },
             ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
@@ -314,7 +338,12 @@ def _seed_m200_prior_cuota(*, cuota: Decimal, obs_repo: CalculationObservationRe
             modelo=_M200,
             filing_year=_PRIOR_M200_YEAR,
             period="0A",
-            observations=(CasillaObservation(casilla_id=_M200_CUOTA_LIQUIDA, value=cuota),),
+            observations=registry_grounded_observations(
+                modelo=_M200,
+                filing_year=_PRIOR_M200_YEAR,
+                period="0A",
+                casilla_values={_M200_CUOTA_LIQUIDA: cuota},
+            ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=_T0,
@@ -467,7 +496,10 @@ def test_m202_2p_no_prior_filing_resolves_zero_on_live_calculate(
 # inputs supplied it resolves to zero, so 00611 == 00599 - sum(M202 pagos). The
 # assertion below reads 00599 from the result rather than assuming it, so the
 # fold-wiring invariant holds regardless of the minuend's resolved value.
-_CASILLA_CUOTA_A_INGRESAR = "DP200014B:00599"
+_CASILLA_CUOTA_A_INGRESAR: CasillaId = validated_casilla_id(
+    "DP200014B:00599",
+    surface="_CASILLA_CUOTA_A_INGRESAR",
+)
 
 
 def test_m200_0a_folds_m202_pagos_fraccionados_into_cuota_diferencial_live(

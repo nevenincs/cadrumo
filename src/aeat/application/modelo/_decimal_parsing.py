@@ -27,9 +27,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 
+from ...domain.calculations.registry import BindingId
+
 
 def decimal_from_string(
-    binding_id: str,
+    binding_id: BindingId,
     value: str,
     *,
     error_factory: Callable[[str], Exception],

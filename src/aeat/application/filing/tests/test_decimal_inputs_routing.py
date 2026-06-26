@@ -20,12 +20,35 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
+    CasillaId,
     calculate_registry_snapshot,
     enum_consumed_binding_ids,
+    validated_casilla_id,
 )
 from .. import _filing_binding_values, _string_inputs_for_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
+    "00501",
+    surface="_M200_RESULTADO_CONTABLE_CASILLA",
+)
+_M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:01033",
+    surface="_M200_CORRECCIONES_AUMENTO_CASILLA",
+)
+_M200_CORRECCIONES_DISMINUCION_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:01034",
+    surface="_M200_CORRECCIONES_DISMINUCION_CASILLA",
+)
+_M200_BIN_APLICADA_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00547",
+    surface="_M200_BIN_APLICADA_CASILLA",
+)
+_M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00562",
+    surface="_M200_CUOTA_INTEGRA_CASILLA",
+)
 
 
 def _m200_snapshot():  # type: ignore[return]
@@ -95,9 +118,9 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
             # Base imponible 00552 is now computed from the base-determination
             # chain, so the resultado contable 00501 is the operator input;
             # with zero correcciones/reserva/BIN it computes 00552 = 100000.
-            "00501": Decimal("100000.00"),
-            "DP200014:01033": Decimal("0.00"),
-            "DP200014:01034": Decimal("0.00"),
+            _M200_RESULTADO_CONTABLE_CASILLA: Decimal("100000.00"),
+            _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0.00"),
+            _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0.00"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values={
@@ -122,8 +145,7 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
     # SL at 23 % bracket: cuota integra = 100000 * 0.23 = 23000
     # Source: AEAT Modelo 200 manual 2024, art. 29 LIS tipo general 25 %
     # reduced to 23 % for PYME (INCN <= 1M EUR within SL entity type).
-    cuota = result.values.get("DP200014:00562")
-    assert cuota is not None
+    cuota = result.values[_M200_CUOTA_INTEGRA_CASILLA]
     assert cuota == Decimal("23000.00")
 
 
@@ -145,10 +167,10 @@ def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation
     result = calculate_registry_snapshot(
         snap,
         inputs={
-            "00501": Decimal("100000.00"),
-            "DP200014:01033": Decimal("0.00"),
-            "DP200014:01034": Decimal("0.00"),
-            "DP200014:00547": Decimal("10000.00"),
+            _M200_RESULTADO_CONTABLE_CASILLA: Decimal("100000.00"),
+            _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0.00"),
+            _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0.00"),
+            _M200_BIN_APLICADA_CASILLA: Decimal("10000.00"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values={
@@ -169,8 +191,7 @@ def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation
         },
     )
 
-    cuota = result.values.get("DP200014:00562")
-    assert cuota is not None
+    cuota = result.values[_M200_CUOTA_INTEGRA_CASILLA]
     assert cuota == Decimal("20700.00"), (
         f"BIN compensation did not propagate: expected 20700 (= (100000 - 10000) * 0.23), got {cuota}"
     )

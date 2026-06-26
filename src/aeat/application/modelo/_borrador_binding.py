@@ -24,7 +24,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
-from ...domain.calculations.registry import DataBindingDefinition, RegistrySnapshot
+from ...domain.calculations.registry import BindingId, DataBindingDefinition, RegistrySnapshot
 from ...domain.modelos._errors import ModeloError
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
@@ -58,8 +58,8 @@ class Modelo100BorradorBindingCommand(BaseModel):
     filing_year: int = Field(ge=1900, le=9999)
     period: Period
     borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
-    caller_binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
-    caller_enum_binding_values: Mapping[str, str] = Field(default_factory=dict)
+    caller_binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
+    caller_enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _enforce_binding_key_shape(self) -> Modelo100BorradorBindingCommand:
@@ -84,9 +84,9 @@ class Modelo100BorradorBindingResult(BaseModel):
     model_config = _STRICT_FROZEN
 
     borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
-    binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
-    enum_binding_values: Mapping[str, str] = Field(default_factory=dict)
-    bindings_sourced_from_borrador: tuple[str, ...] = ()
+    binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
+    enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
+    bindings_sourced_from_borrador: tuple[BindingId, ...] = ()
 
     @model_validator(mode="after")
     def _enforce_snapshot_trace(self) -> Modelo100BorradorBindingResult:
@@ -165,10 +165,10 @@ def resolve_modelo_100_borrador_bindings(
         )
 
     caller_owned = set(command.caller_binding_values) | set(command.caller_enum_binding_values)
-    decimal_values: dict[str, Decimal] = {}
-    enum_values: dict[str, str] = {}
+    decimal_values: dict[BindingId, Decimal] = {}
+    enum_values: dict[BindingId, str] = {}
     for binding_id, raw_value in snapshot.binding_values.items():
-        key = binding_id.strip()
+        key = binding_id
         if key in caller_owned:
             continue
         binding = eligible_bindings[key]
@@ -196,8 +196,8 @@ class Modelo100BorradorSourceResolver:
         self,
         *,
         borrador_snapshot_id: str | None,
-        caller_binding_values: Mapping[str, Decimal],
-        caller_enum_binding_values: Mapping[str, str],
+        caller_binding_values: Mapping[BindingId, Decimal],
+        caller_enum_binding_values: Mapping[BindingId, str],
         registry_snapshot: RegistrySnapshot | None = None,
         snapshot_repository: Borrador100SnapshotRepository | None = None,
     ) -> None:
@@ -312,13 +312,13 @@ def _assert_registry_snapshot_axis(
         )
 
 
-def _borrador_capable_bindings(registry_snapshot: RegistrySnapshot) -> dict[str, DataBindingDefinition]:
+def _borrador_capable_bindings(registry_snapshot: RegistrySnapshot) -> dict[BindingId, DataBindingDefinition]:
     return {
-        str(binding.id): binding for binding in registry_snapshot.revision.bindings if binding.aeat_prefilled is True
+        binding.id: binding for binding in registry_snapshot.revision.bindings if binding.aeat_prefilled is True
     }
 
 
-def _decimal_value(binding_id: str, value: Decimal | str) -> Decimal:
+def _decimal_value(binding_id: BindingId, value: Decimal | str) -> Decimal:
     if isinstance(value, Decimal):
         return value
     return decimal_from_string(

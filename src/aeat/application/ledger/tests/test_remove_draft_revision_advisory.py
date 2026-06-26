@@ -22,6 +22,7 @@ from datetime import datetime
 import pytest
 
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -36,6 +37,7 @@ from ....domain.modelos._work_unit import (
     WorkUnitCatalogue,
     derive_work_unit_id,
 )
+from ....tests.registry_observations import registry_grounded_observations
 from ._action_test_support import (
     UTC,
     Decimal,
@@ -50,6 +52,16 @@ from ._action_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_REVISION_CASILLA: CasillaId = _casilla_id("01")
 
 
 def _seed_revision_citing_transaction(
@@ -77,9 +89,9 @@ def _seed_revision_citing_transaction(
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={"01": "1"},
+        input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
-        casilla_values={"01": Decimal("1")},
+        casilla_values={_REVISION_CASILLA: Decimal("1")},
         source_transaction_ids=(transaction_id,),
     )
     work_unit = WorkUnit(
@@ -109,10 +121,16 @@ def _seed_revision_citing_transaction(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=state,
-        inputs_snapshot={"01": "1"},
+        input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
         source_transaction_ids=(transaction_id,),
-        casilla_values={"01": Decimal("1")},
+        casilla_values={_REVISION_CASILLA: Decimal("1")},
+        observations=registry_grounded_observations(
+            modelo="303",
+            filing_year=2026,
+            period=period.registry_token,
+            casilla_values={_REVISION_CASILLA: Decimal("1")},
+        ),
         created_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
         updated_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
         **audit_fields,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: state-keyed audit-field splat

@@ -43,6 +43,7 @@ from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
@@ -50,6 +51,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
@@ -87,16 +89,26 @@ _FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)
 _M303_REVISION = "2023-y-siguientes"
 _QUARTER_ORDER = ("1T", "2T", "3T", "4T")
 _IVA_RATE = Decimal("0.21")
+type StoredIvaAxis = Literal["devengada", "deducible"]
+type StoredIvaByPeriod = dict[str, dict[StoredIvaAxis, Decimal]]
+type ComputedM303CasillasByPeriod = dict[str, dict[CasillaId, Decimal]]
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"ledger M303/M390 E2E fixture casilla key {value!r} is not a CasillaId") from exc
 
 # M303 computed-output casillas the M390 reconciliation relations fold.
-_DEVENGADA_TOTAL = "iva.cuota-devengada-total"
-_DEDUCIBLE_TOTAL = "iva.cuota-deducible-total"
-_RESULTADO = "iva.resultado-regimen-general"
+_DEVENGADA_TOTAL: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_DEDUCIBLE_TOTAL: CasillaId = _casilla_id("iva.cuota-deducible-total")
+_RESULTADO: CasillaId = _casilla_id("iva.resultado-regimen-general")
 
 # M390 annual reconciliation casillas (folded from the four M303 quarters).
-_M390_DEVENGADA = "iva.anual.reconciliacion.devengada-303"
-_M390_DEDUCIBLE = "iva.anual.reconciliacion.deducible-303"
-_M390_RESULTADO = "iva.anual.reconciliacion.resultado-303"
+_M390_DEVENGADA: CasillaId = _casilla_id("iva.anual.reconciliacion.devengada-303")
+_M390_DEDUCIBLE: CasillaId = _casilla_id("iva.anual.reconciliacion.deducible-303")
+_M390_RESULTADO: CasillaId = _casilla_id("iva.anual.reconciliacion.resultado-303")
 
 # One coherent year of IVA-bearing operations, one issued (INCOMING → IVA
 # repercutido / devengada) and one received (OUTGOING → IVA soportado /
@@ -160,7 +172,7 @@ def _iva_transaction(
     )
 
 
-def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> dict[str, dict[str, Decimal]]:
+def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> StoredIvaByPeriod:
     """Persist all four quarters' issued + received IVA operations once upfront.
 
     Each M303 quarter's bucket aggregation selects only its own period's
@@ -175,7 +187,7 @@ def _persist_year_of_invoices(secure_objects: SecureObjectRepository) -> dict[st
     avoiding a shared-literal between the seed and the expectation.
     """
     transactions: list[Transaction] = []
-    stored: dict[str, dict[str, Decimal]] = {}
+    stored: StoredIvaByPeriod = {}
     for period, (issued_base, received_base) in _QUARTER_BASES.items():
         issued = _iva_transaction(
             f"sale-{period}", direction=TransactionDirection.INCOMING, taxable_base=issued_base, period=period
@@ -304,7 +316,7 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
     _store_profile(secure_objects)
     stored = _persist_year_of_invoices(secure_objects)
 
-    computed: dict[str, dict[str, Decimal]] = {}
+    computed: ComputedM303CasillasByPeriod = {}
     for period in _QUARTER_ORDER:
         revision = _calculate_and_file_m303_quarter(secure_objects, period=period)
 

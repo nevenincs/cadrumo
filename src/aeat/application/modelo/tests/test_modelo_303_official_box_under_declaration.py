@@ -42,7 +42,7 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.calculations.registry import RegistryValidationError
+from ....domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
@@ -86,23 +86,58 @@ _PURCHASE_BASE = Decimal("200.00")
 _PURCHASE_CUOTA = Decimal("42.00")
 
 # The official numbered boxes the sale/purchase fixtures populate via projection.
-_OFFICIAL_DEVENGADO_GENERAL_CUOTA = "09"
-_OFFICIAL_DEDUCIBLE_INTERIORES_CUOTA = "29"
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M303 official-box fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_OFFICIAL_REPERCUTIDO_SUPER_REDUCIDO_CUOTA: CasillaId = _casilla_id("03")
+_OFFICIAL_REPERCUTIDO_REDUCIDO_CUOTA: CasillaId = _casilla_id("06")
+_OFFICIAL_DEVENGADO_GENERAL_CUOTA: CasillaId = _casilla_id("09")
+_OFFICIAL_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO: CasillaId = _casilla_id("11")
+_OFFICIAL_AUTOREPERCUTIDO_INTERIOR_DEVENGADO: CasillaId = _casilla_id("13")
+_OFFICIAL_CUOTA_DEVENGADA_TOTAL: CasillaId = _casilla_id("27")
+_OFFICIAL_DEDUCIBLE_INTERIORES_CUOTA: CasillaId = _casilla_id("29")
+_OFFICIAL_SOPORTADO_IMPORTACIONES_CUOTA: CasillaId = _casilla_id("33")
+_OFFICIAL_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE: CasillaId = _casilla_id("37")
+_OFFICIAL_CUOTA_DEDUCIBLE_TOTAL: CasillaId = _casilla_id("45")
+
+_M303_REPERCUTIDO_GENERAL_CASILLA: CasillaId = _casilla_id("iva.repercutido.general")
+_M303_REPERCUTIDO_REDUCIDO_CASILLA: CasillaId = _casilla_id("iva.repercutido.reducido")
+_M303_REPERCUTIDO_SUPER_REDUCIDO_CASILLA: CasillaId = _casilla_id("iva.repercutido.super-reducido")
+_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA: CasillaId = _casilla_id(
+    "iva.autorepercutido.intracomunitaria.devengado",
+)
+_M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA: CasillaId = _casilla_id(
+    "iva.autorepercutido.interior.devengado",
+)
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_M303_SOPORTADO_INTERIORES_CASILLA: CasillaId = _casilla_id("iva.soportado.interiores")
+_M303_SOPORTADO_IMPORTACIONES_CASILLA: CasillaId = _casilla_id("iva.soportado.importaciones")
+_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id(
+    "iva.autorepercutido.intracomunitaria.deducible",
+)
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
 
 # Full Stage-2 box → semantic-source projection map (the ten in-scope cuota boxes).
 # Each numbered box is projection-populated from the single semantic source it
 # copies; on any calculate box == source must hold (the projection contract).
-_BOX_SOURCE_MAP: dict[str, str] = {
-    "09": "iva.repercutido.general",
-    "06": "iva.repercutido.reducido",
-    "03": "iva.repercutido.super-reducido",
-    "11": "iva.autorepercutido.intracomunitaria.devengado",
-    "13": "iva.autorepercutido.interior.devengado",
-    "27": "iva.cuota-devengada-total",
-    "29": "iva.soportado.interiores",
-    "33": "iva.soportado.importaciones",
-    "37": "iva.autorepercutido.intracomunitaria.deducible",
-    "45": "iva.cuota-deducible-total",
+_BOX_SOURCE_MAP: dict[CasillaId, CasillaId] = {
+    _OFFICIAL_DEVENGADO_GENERAL_CUOTA: _M303_REPERCUTIDO_GENERAL_CASILLA,
+    _OFFICIAL_REPERCUTIDO_REDUCIDO_CUOTA: _M303_REPERCUTIDO_REDUCIDO_CASILLA,
+    _OFFICIAL_REPERCUTIDO_SUPER_REDUCIDO_CUOTA: _M303_REPERCUTIDO_SUPER_REDUCIDO_CASILLA,
+    _OFFICIAL_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO: _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA,
+    _OFFICIAL_AUTOREPERCUTIDO_INTERIOR_DEVENGADO: _M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA,
+    _OFFICIAL_CUOTA_DEVENGADA_TOTAL: _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    _OFFICIAL_DEDUCIBLE_INTERIORES_CUOTA: _M303_SOPORTADO_INTERIORES_CASILLA,
+    _OFFICIAL_SOPORTADO_IMPORTACIONES_CUOTA: _M303_SOPORTADO_IMPORTACIONES_CASILLA,
+    _OFFICIAL_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE: _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA,
+    _OFFICIAL_CUOTA_DEDUCIBLE_TOTAL: _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
 }
 
 
@@ -274,8 +309,8 @@ def test_calculate_projects_official_boxes_from_semantic_sources(
     values = result.revision.casilla_values
 
     # Semantic layer carried the seeded cuotas.
-    assert Decimal(values["iva.repercutido.general"]) == _SALE_CUOTA
-    assert Decimal(values["iva.soportado.interiores"]) == _PURCHASE_CUOTA
+    assert Decimal(values[_M303_REPERCUTIDO_GENERAL_CASILLA]) == _SALE_CUOTA
+    assert Decimal(values[_M303_SOPORTADO_INTERIORES_CASILLA]) == _PURCHASE_CUOTA
 
     # Every in-scope box equals its semantic source (the projection contract).
     for box, source in _BOX_SOURCE_MAP.items():
@@ -326,7 +361,7 @@ def test_calculate_rejects_caller_override_of_projected_box(
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator-A",
-            casilla_inputs={"09": _SALE_CUOTA},
+            casilla_inputs={_OFFICIAL_DEVENGADO_GENERAL_CUOTA: _SALE_CUOTA},
             binding_values={
                 "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
                 "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
@@ -419,7 +454,7 @@ def test_equals_consistency_predicate_blocks_a_drifted_box() -> None:
     profile = _workflow_profile()
 
     # Consistent state: box == source for every pair → no findings.
-    consistent: dict[str, Decimal] = {}
+    consistent: dict[CasillaId, Decimal] = {}
     for index, (box, source) in enumerate(_BOX_SOURCE_MAP.items()):
         value = Decimal(10 + index)  # distinct non-zero per box so a copy cannot mask drift
         consistent[box] = value
@@ -428,7 +463,7 @@ def test_equals_consistency_predicate_blocks_a_drifted_box() -> None:
 
     # Drifted state: box 27 mutated away from its source → exactly one violation.
     drifted = dict(consistent)
-    drifted["27"] = drifted["iva.cuota-devengada-total"] + Decimal("1")
+    drifted[_OFFICIAL_CUOTA_DEVENGADA_TOTAL] = drifted[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA] + Decimal("1")
     findings = _evaluate_verification_predicates(equals_predicates, drifted, profile)
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
@@ -453,16 +488,16 @@ def test_each_projected_box_has_exactly_one_producing_formula() -> None:
 
     snap = _authority_for_303().snapshot("303", filing_year=2026, period="1T")
     rev = snap.revision
-    target_counts = Counter(f.target for f in rev.formulas)
-    by_target = {f.target: f for f in rev.formulas}
+    target_counts = Counter(f.target_casilla_id for f in rev.formulas)
+    by_target = {f.target_casilla_id: f for f in rev.formulas}
 
     for box, source in _BOX_SOURCE_MAP.items():
         assert target_counts[box] == 1, f"box {box} must have exactly one producing formula, got {target_counts[box]}"
         formula = by_target[box]
         # The producing formula is a single-leaf projection naming the semantic source.
         assert formula.expression.op is None, f"box {box} projection must be a bare leaf, not an op"
-        assert formula.expression.casilla == source, (
-            f"box {box} projection must copy semantic source {source}, got {formula.expression.casilla}"
+        assert formula.expression.casilla_id == source, (
+            f"box {box} projection must copy semantic source {source}, got {formula.expression.casilla_id}"
         )
         # No binding on the box casilla → no second aggregation surface.
         box_casilla = next(c for c in rev.casillas if c.id == box)
@@ -501,7 +536,7 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
     # slot; feed it via binding_values, not inputs (the engine rejects a smuggled
     # previous_filing input). The computed-total sources (devengada/deducible
     # total) are produced by the engine, so they are NOT seeded as inputs.
-    excluded = {"iva.compensacion-pendiente-periodos-anteriores"}
+    excluded = {_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA}
     inputs = {
         c.id: Decimal("0")
         for c in rev.casillas
@@ -524,7 +559,10 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
     relay_boxes = {box: relay.values[box] for box in _BOX_SOURCE_MAP}
 
     # Non-vacuous: at least the two seeded cuotas land on their boxes, non-zero.
-    assert live["09"] == _SALE_CUOTA and live["29"] == _PURCHASE_CUOTA
+    assert (
+        live[_OFFICIAL_DEVENGADO_GENERAL_CUOTA] == _SALE_CUOTA
+        and live[_OFFICIAL_DEDUCIBLE_INTERIORES_CUOTA] == _PURCHASE_CUOTA
+    )
     assert Decimal("0") < _SALE_CUOTA and Decimal("0") < _PURCHASE_CUOTA
 
     # Parity: every projected box equals across the two transports.
@@ -548,7 +586,7 @@ def test_export_ref_points_at_projected_box_carrying_value(
     rev = snap.revision
 
     # The export layout field for casilla 27 references the numbered box "27".
-    casilla_27 = next(c for c in rev.casillas if c.id == "27")
+    casilla_27 = next(c for c in rev.casillas if c.id == _OFFICIAL_CUOTA_DEVENGADA_TOTAL)
     assert "modelo-303-page-01-casilla-27" in tuple(casilla_27.export_refs), (
         "the casilla-27 export ref must still target the numbered box 27"
     )
@@ -556,8 +594,8 @@ def test_export_ref_points_at_projected_box_carrying_value(
     # On a ledger-fed calculate, box 27 carries the projected (non-zero) cuota,
     # equal to its semantic source — so the export reads value, not zero.
     result = _seeded_calculation(secure_objects)
-    box_27 = Decimal(result.revision.casilla_values["27"])
-    source_total = Decimal(result.revision.casilla_values["iva.cuota-devengada-total"])
+    box_27 = Decimal(result.revision.casilla_values[_OFFICIAL_CUOTA_DEVENGADA_TOTAL])
+    source_total = Decimal(result.revision.casilla_values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA])
     assert box_27 == source_total
     assert box_27 > Decimal("0"), "box 27 must carry the projected cuota, not zero, so the export writes value"
 

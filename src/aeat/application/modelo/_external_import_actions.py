@@ -13,6 +13,7 @@ from ...core import Period
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry import BindingId, CasillaId, RelationId
 from ...domain.justificante import Justificante, JustificanteRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
@@ -52,10 +53,10 @@ _JUSTIFICANTE_BOUND_EVIDENCE_KINDS = frozenset(
 )
 
 
-def _load_external_import_target(
+def _load_external_import_target[CasillaKey](
     *,
     work_unit_id: str,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaKey, Decimal],
     evidence_reference_id: str,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
 ):
@@ -73,19 +74,19 @@ def _load_external_import_target(
             translated_message="application.modelo.errors.work_unit_discarded_cannot_import",
             context={"work_unit_id": work_unit_id},
         )
-    snapshot = _reject_unknown_import_casillas(
+    snapshot, canonical_values = _reject_unknown_import_casillas(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         casilla_values=casilla_values,
     )
-    return work_units, work_unit, snapshot, cleaned_reference
+    return work_units, work_unit, snapshot, canonical_values, cleaned_reference
 
 
-def import_external_filing_evidence(
+def import_external_filing_evidence[CasillaKey](
     *,
     work_unit_id: str,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaKey, Decimal],
     evidence_kind: ExternalEvidenceKind,
     evidence_reference_id: str,
     actor: str = "aeat-import",
@@ -103,7 +104,7 @@ def import_external_filing_evidence(
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
-    work_units, work_unit, snapshot, cleaned_reference = _load_external_import_target(
+    work_units, work_unit, snapshot, canonical_values, cleaned_reference = _load_external_import_target(
         work_unit_id=work_unit_id,
         casilla_values=casilla_values,
         evidence_reference_id=evidence_reference_id,
@@ -119,16 +120,18 @@ def import_external_filing_evidence(
         justificante_repository=justificante_repository or JustificanteRepository(),
     )
 
-    inputs_snapshot: dict[str, str] = {}
-    binding_overrides: dict[str, str] = {}
-    outputs = dict(casilla_values)
+    input_values_by_casilla_id: dict[CasillaId, str] = {}
+    binding_overrides: dict[BindingId, str] = {}
+    relation_overrides: dict[RelationId, str] = {}
+    outputs = dict(canonical_values)
     observations = _external_filing_observations(casilla_values=outputs, snapshot=snapshot)
 
     now = clock or _utc_now()
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot=inputs_snapshot,
+        input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
+        relation_overrides=relation_overrides,
         casilla_values=outputs,
     )
     revisions = cr_repo.load()
@@ -142,8 +145,9 @@ def import_external_filing_evidence(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.PRESENTADO,
-        inputs_snapshot=inputs_snapshot,
+        input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
+        relation_overrides=relation_overrides,
         casilla_values=outputs,
         created_at=now,
         updated_at=now,
@@ -253,8 +257,8 @@ def import_external_filing_evidence(
     return new_filing
 
 
-def _validated_external_reference(
-    casilla_values: Mapping[str, Decimal],
+def _validated_external_reference[CasillaKey](
+    casilla_values: Mapping[CasillaKey, Decimal],
     evidence_reference_id: str,
 ) -> str:
     if not casilla_values:

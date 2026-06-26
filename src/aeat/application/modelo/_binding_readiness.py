@@ -20,6 +20,7 @@ from __future__ import annotations
 from ...core import Period
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
+    AmbiguousRevisionSelectionError,
     RegistrySnapshotError,
     RegistryValidationError,
     ValidatedRegistryAuthority,
@@ -133,7 +134,12 @@ def _annual_period_for_year(authority: ValidatedRegistryAuthority, *, modelo: st
     ]
     if not covering:
         return None
-    revision = max(covering, key=lambda item: (item.valid_from, str(item.id)))
+    if len(covering) > 1:
+        raise AmbiguousRevisionSelectionError(
+            modelo_id=str(definition.id),
+            candidate_ids=tuple(revision.id for revision in covering),
+        )
+    revision = covering[0]
     periods = revision.period_selector.periods
     return periods[0] if periods else None
 

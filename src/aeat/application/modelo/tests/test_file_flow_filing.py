@@ -7,6 +7,8 @@ import pytest
 from ._file_flow_support import (
     _DEFAULT_130_BASELINE_INPUTS,
     _DEFAULT_130_BINDING_VALUES,
+    _M130_EXPENSE_CASILLA,
+    _M130_INCOME_CASILLA,
     _T1,
     _T2,
     _T3,
@@ -47,7 +49,7 @@ def test_file_requires_verificado_completo_state(repos: _Repos) -> None:
     work_unit = _seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={_M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -79,7 +81,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos: _Repos) -> None
 
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, _M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -160,7 +162,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
     work_unit = _seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, _M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -296,7 +298,7 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
     # First filing: revision-1, filed at T3.
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, _M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -330,7 +332,11 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
     # Second filing: revision-2 with corrected inputs, filed at T5.
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1200"), "02": Decimal("100")},
+        casilla_inputs={
+            **_DEFAULT_130_BASELINE_INPUTS,
+            _M130_INCOME_CASILLA: Decimal("1200"),
+            _M130_EXPENSE_CASILLA: Decimal("100"),
+        },
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -427,7 +433,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos: _Repos) -> No
 
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, _M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -460,7 +466,7 @@ def test_list_filing_records_excludes_superseded_by_default(repos: _Repos) -> No
 
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1200")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, _M130_INCOME_CASILLA: Decimal("1200")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,

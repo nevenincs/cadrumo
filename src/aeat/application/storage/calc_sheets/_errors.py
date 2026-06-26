@@ -32,7 +32,7 @@ class CalcSheetsRecordError(CoreValidationError):
 class CalcSheetsParityError(AeatError):
     """Raised when a parity-harness scenario references unknown casillas.
 
-    Fired when a test scenario's casilla numbers cannot all be resolved
+    Fired when a test scenario's canonical casilla ids cannot all be resolved
     in the registry snapshot, making the scenario unprovable.
     """
 

@@ -16,6 +16,7 @@ from ....core import Period
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -49,6 +50,7 @@ from .. import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")
 
 
 def _summary(text: str = "demo") -> tr:
@@ -132,7 +134,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
         InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((invoice,)))
 
         finding = ModeloValidationFinding(
-            casilla_id="03",
+            casilla_id=_REVIEW_FINDING_CASILLA,
             severity=BaseSeverity.ERROR,
             code="casilla-out-of-range",
             message=_summary("range"),
@@ -145,7 +147,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
             status=ModeloDraftStatus.BORRADOR,
             values=(
                 ModeloValue(
-                    casilla_id="03",
+                    casilla_id=_REVIEW_FINDING_CASILLA,
                     value=Decimal("0"),
                     kind=ModeloValueKind.LITERAL,
                     source="test",

@@ -9,6 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy import text
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository, session_scope
@@ -59,6 +60,7 @@ from .. import (
     aggregate_oss_ioss_bindings,
     merge_source_resolutions,
 )
+from .._modelo_bindings import ModeloLedgerBindingAggregation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -72,6 +74,18 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
     modelo_definition = next(item for item in resources().modelos.all() if item.id == modelo)
     return modelo_definition.revisions[revision_id]
+
+
+def test_modelo_ledger_binding_aggregation_rejects_noncanonical_binding_keys() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        ModeloLedgerBindingAggregation(
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            binding_values={"Bad Binding": Decimal("1.00")},
+        )
+
+    assert exc_info.value.errors()[0]["loc"][0] == "binding_values"
 
 
 def _raw_transaction(

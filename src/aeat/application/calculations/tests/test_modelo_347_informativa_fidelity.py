@@ -49,7 +49,12 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -68,6 +73,23 @@ _CONTEXT_LABEL = "347-informativa-counterparty-identity-year-over-year"
 
 _CLOCK_N = datetime(2025, 2, 10, 9, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2026, 2, 10, 9, 0, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M347 informativa fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_DECL_TIPO_DECLARACION_CASILLA: CasillaId = _casilla_id("decl.tipo-declaracion")
+_CONTRAPARTE_NIF_CASILLA: CasillaId = _casilla_id("contraparte.nif")
+_CONTRAPARTE_CLAVE_OPERACION_CASILLA: CasillaId = _casilla_id("contraparte.clave-operacion")
+_CONTRAPARTE_IMPORTE_Q1_CASILLA: CasillaId = _casilla_id("contraparte.importe-Q1")
+_CONTRAPARTE_IMPORTE_Q2_CASILLA: CasillaId = _casilla_id("contraparte.importe-Q2")
+_CONTRAPARTE_IMPORTE_Q3_CASILLA: CasillaId = _casilla_id("contraparte.importe-Q3")
+_CONTRAPARTE_IMPORTE_Q4_CASILLA: CasillaId = _casilla_id("contraparte.importe-Q4")
 
 
 def _find_observation(
@@ -98,20 +120,20 @@ def _year_n_observation() -> RegistryModeloObservation:
     threshold per Orden EHA/3012/2008 art. 3.1. All casilla values are non-zero
     so a drop-then-default regression surfaces as strict inequality.
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N))),
-            CasillaObservation(casilla_id="decl.tipo-declaracion", value=Decimal("1")),
-            CasillaObservation(casilla_id="contraparte.nif", value=Decimal("12345678")),
-            CasillaObservation(casilla_id="contraparte.clave-operacion", value=Decimal("1")),
-            CasillaObservation(casilla_id="contraparte.importe-Q1", value=Decimal("1000.00")),
-            CasillaObservation(casilla_id="contraparte.importe-Q2", value=Decimal("1200.00")),
-            CasillaObservation(casilla_id="contraparte.importe-Q3", value=Decimal("900.00")),
-            CasillaObservation(casilla_id="contraparte.importe-Q4", value=Decimal("1500.00")),
-        ),
+        casilla_values={
+            _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N)),
+            _DECL_TIPO_DECLARACION_CASILLA: Decimal("1"),
+            _CONTRAPARTE_NIF_CASILLA: Decimal("12345678"),
+            _CONTRAPARTE_CLAVE_OPERACION_CASILLA: Decimal("1"),
+            _CONTRAPARTE_IMPORTE_Q1_CASILLA: Decimal("1000.00"),
+            _CONTRAPARTE_IMPORTE_Q2_CASILLA: Decimal("1200.00"),
+            _CONTRAPARTE_IMPORTE_Q3_CASILLA: Decimal("900.00"),
+            _CONTRAPARTE_IMPORTE_Q4_CASILLA: Decimal("1500.00"),
+        },
     )
 
 
@@ -122,20 +144,20 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
     quarterly breakdown. All importes are distinct from year N so a cross-year
     field-bleeding regression surfaces as strict inequality.
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,
         period="0A",
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N_PLUS_1))),
-            CasillaObservation(casilla_id="decl.tipo-declaracion", value=Decimal("1")),
-            CasillaObservation(casilla_id="contraparte.nif", value=Decimal("12345678")),
-            CasillaObservation(casilla_id="contraparte.clave-operacion", value=Decimal("1")),
-            CasillaObservation(casilla_id="contraparte.importe-Q1", value=Decimal("2000.00")),
-            CasillaObservation(casilla_id="contraparte.importe-Q2", value=Decimal("2500.00")),
-            CasillaObservation(casilla_id="contraparte.importe-Q3", value=Decimal("1800.00")),
-            CasillaObservation(casilla_id="contraparte.importe-Q4", value=Decimal("3200.00")),
-        ),
+        casilla_values={
+            _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N_PLUS_1)),
+            _DECL_TIPO_DECLARACION_CASILLA: Decimal("1"),
+            _CONTRAPARTE_NIF_CASILLA: Decimal("12345678"),
+            _CONTRAPARTE_CLAVE_OPERACION_CASILLA: Decimal("1"),
+            _CONTRAPARTE_IMPORTE_Q1_CASILLA: Decimal("2000.00"),
+            _CONTRAPARTE_IMPORTE_Q2_CASILLA: Decimal("2500.00"),
+            _CONTRAPARTE_IMPORTE_Q3_CASILLA: Decimal("1800.00"),
+            _CONTRAPARTE_IMPORTE_Q4_CASILLA: Decimal("3200.00"),
+        },
     )
 
 
@@ -202,11 +224,11 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
         n_values = loaded_n.observation.casilla_values
         n1_values = loaded_n1.observation.casilla_values
 
-        assert n_values["contraparte.importe-Q1"] == Decimal("1000.00"), (
-            f"year-N Q1 importe should be 1000.00; got {n_values['contraparte.importe-Q1']}"
+        assert n_values[_CONTRAPARTE_IMPORTE_Q1_CASILLA] == Decimal("1000.00"), (
+            f"year-N Q1 importe should be 1000.00; got {n_values[_CONTRAPARTE_IMPORTE_Q1_CASILLA]}"
         )
-        assert n1_values["contraparte.importe-Q1"] == Decimal("2000.00"), (
-            f"year-N+1 Q1 importe should be 2000.00; got {n1_values['contraparte.importe-Q1']}"
+        assert n1_values[_CONTRAPARTE_IMPORTE_Q1_CASILLA] == Decimal("2000.00"), (
+            f"year-N+1 Q1 importe should be 2000.00; got {n1_values[_CONTRAPARTE_IMPORTE_Q1_CASILLA]}"
         )
 
         assert loaded_n.captured_at == _CLOCK_N
@@ -232,8 +254,8 @@ def test_counterparty_nif_identity_persists_across_both_exercises(tmp_path: Path
         assert loaded_n is not None
         assert loaded_n1 is not None
 
-        nif_n = loaded_n.observation.casilla_values.get("contraparte.nif")
-        nif_n1 = loaded_n1.observation.casilla_values.get("contraparte.nif")
+        nif_n = loaded_n.observation.casilla_values.get(_CONTRAPARTE_NIF_CASILLA)
+        nif_n1 = loaded_n1.observation.casilla_values.get(_CONTRAPARTE_NIF_CASILLA)
         assert nif_n is not None, "year-N observation missing contraparte.nif casilla"
         assert nif_n1 is not None, "year-N+1 observation missing contraparte.nif casilla"
         assert nif_n == Decimal("12345678"), f"NIF round-trip failed in year N: got {nif_n}"
@@ -253,7 +275,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != "contraparte.importe-Q4"),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != _CONTRAPARTE_IMPORTE_Q4_CASILLA),
     )
 
     assert obs_n != obs_n_missing_q4, "the full observation and the Q4-omitted observation must be strictly unequal"

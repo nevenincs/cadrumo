@@ -52,13 +52,14 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     IvaLedgerObservation,
     RegistryCalculationResult,
     RegistryModeloObservation,
     calculate_registry_snapshot,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
+    validated_casilla_id,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
@@ -79,12 +80,24 @@ _RENTA_YEARS = (2025, 2026)
 #: own iva.cuota-* casillas are its (ledger-derived) aggregate; the reconciliation
 #: casillas are the previous_filing sum of the members' 322s — the A2 invariant
 #: asserts each reconciliation casilla equals Σ members' 322 source casilla.
-_RECONCILIATION_BY_322_CASILLA = {
-    "iva.cuota-devengada-total": "iva.reconciliacion.devengada-322",
-    "iva.cuota-deducible-total": "iva.reconciliacion.deducible-322",
-    "iva.resultado-regimen-general": "iva.reconciliacion.resultado-322",
-}
-_RESULT_CASILLAS = tuple(_RECONCILIATION_BY_322_CASILLA)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    return validated_casilla_id(value, surface="test_modelo_353_grupo_aggregation_continuity.casilla")
+
+
+def _reconciliation_pair(source: object, target: object) -> tuple[CasillaId, CasillaId]:
+    return (_casilla_id(source), _casilla_id(target))
+
+
+_RECONCILIATION_BY_322_CASILLA: dict[CasillaId, CasillaId] = dict(
+    (
+        _reconciliation_pair("iva.cuota-devengada-total", "iva.reconciliacion.devengada-322"),
+        _reconciliation_pair("iva.cuota-deducible-total", "iva.reconciliacion.deducible-322"),
+        _reconciliation_pair("iva.resultado-regimen-general", "iva.reconciliacion.resultado-322"),
+    ),
+)
+_RESULT_CASILLAS: tuple[CasillaId, ...] = tuple(_RECONCILIATION_BY_322_CASILLA)
 
 #: The two grupo members whose monthly 322s the entidad dominante aggregates.
 #: Distinct NIFs so the per-member storage keeps them separate (the resolver
@@ -137,7 +150,7 @@ def _calculate_322_member(*, member_nif: str, filing_year: int, period: str) -> 
         snapshot.revision,
         _member_ledger(member_nif=member_nif, filing_year=filing_year, period=period),
     )
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -156,7 +169,7 @@ def _member_322_observation(
         modelo="322",
         filing_year=filing_year,
         period=period,
-        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+        observations=result.observations,
     )
 
 
@@ -201,7 +214,7 @@ def _resolve_353_aggregate(
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, ()),
         **prefill.binding_values,
     }
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -215,13 +228,13 @@ def _file_members_and_aggregate(
     filing_year: int,
     period: str,
     repository: CalculationObservationRepository,
-) -> tuple[RegistryCalculationResult, dict[str, dict[str, Decimal]]]:
+) -> tuple[RegistryCalculationResult, dict[str, dict[CasillaId, Decimal]]]:
     """File both members' 322 for one month, then compute the 353 aggregate.
 
     Returns the 353 result and the per-member 322 result-casilla values (for the
     independent cross-member sum check).
     """
-    member_results: dict[str, dict[str, Decimal]] = {}
+    member_results: dict[str, dict[CasillaId, Decimal]] = {}
     for member_nif in _MEMBER_NIFS:
         member_result = _calculate_322_member(member_nif=member_nif, filing_year=filing_year, period=period)
         member_results[member_nif] = {cid: member_result.values[cid] for cid in _RESULT_CASILLAS}

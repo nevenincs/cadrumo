@@ -5,11 +5,23 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
+from ....domain.calculations.registry import CasillaId
 from ._file_flow_support import (
     _DEFAULT_130_BASELINE_INPUTS,
     _DEFAULT_130_BINDING_VALUES,
     _DEFAULT_180_BINDING_VALUES,
     _DEFAULT_180_RELATION_VALUES,
+    _M111_ACTIVITY_AMOUNT_CASILLA,
+    _M111_ACTIVITY_COUNT_CASILLA,
+    _M111_ACTIVITY_WITHHELD_CASILLA,
+    _M111_EMPLOYMENT_WITHHELD_CASILLA,
+    _M111_FORESTRY_WITHHELD_CASILLA,
+    _M111_IMAGE_RIGHTS_WITHHELD_CASILLA,
+    _M111_IMPUTED_INCOME_WITHHELD_CASILLA,
+    _M111_PRIZE_WITHHELD_CASILLA,
+    _M111_PROFESSIONAL_WITHHELD_CASILLA,
+    _M111_TOTAL_WITHHELD_CASILLA,
+    _M180_PERCEPTOR_BASE_CASILLA,
     _T0,
     _T1,
     _T2,
@@ -68,16 +80,16 @@ def test_mark_verificado_completo_requires_borrador_state(repos: _Repos) -> None
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs={
-            "03": Decimal("180.25"),
-            "06": Decimal("12.10"),
-            "09": Decimal("300.00"),
-            "12": Decimal("14.40"),
-            "15": Decimal("25.00"),
-            "18": Decimal("0.50"),
-            "21": Decimal("7.00"),
-            "24": Decimal("8.00"),
-            "27": Decimal("9.00"),
-            "29": Decimal("40.00"),
+            _M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
+            _M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
+            _M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
+            _M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
+            _M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
+            _M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
+            _M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
+            _M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
+            _M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
+            _M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
         },
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -306,8 +318,8 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     # Ruling 3 / R2) — it surfaces the carry to the operator without blocking the grant.
     assert not any(f.severity is ModeloVerificationFindingSeverity.BLOCKING for f in report.findings)
     assert all(f.kind is ModeloVerificationFindingKind.ADVISORY for f in report.findings)
-    assert set(report.resolved_casillas) == set(required)
-    assert report.missing_required_casillas == ()
+    assert set(report.resolved_casilla_ids) == set(required)
+    assert report.missing_required_casilla_ids == ()
 
     refreshed = get_calculation_revision(
         revision.calculation_revision_id,
@@ -379,7 +391,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
         and f.casilla_id == omitted
         for f in report.findings
     )
-    assert omitted in report.missing_required_casillas
+    assert omitted in report.missing_required_casilla_ids
 
     refreshed = get_calculation_revision(
         revision.calculation_revision_id,
@@ -419,6 +431,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     # BLOCKING_RULE path explicitly: the work unit was anchored at a
     # year that predates the modelo's earliest revision, so verify's
     # registry-snapshot resolution still fails.
+    from ....domain.calculations.registry import CasillaObservation
     from ....domain.modelos._calculation_repository import (
         upsert_calculation_revision,
     )
@@ -427,12 +440,12 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         derive_calculation_revision_id,
     )
 
-    inputs: dict[str, str] = {"perc.base": "1"}
+    inputs: dict[CasillaId, str] = {_M180_PERCEPTOR_BASE_CASILLA: "1"}
     overrides_map: dict[str, str] = {}
-    casillas: dict[str, Decimal] = {"perc.base": Decimal("1")}
+    casillas: dict[CasillaId, Decimal] = {_M180_PERCEPTOR_BASE_CASILLA: Decimal("1")}
     rid = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
-        inputs_snapshot=inputs,
+        input_values_by_casilla_id=inputs,
         binding_overrides=overrides_map,
         casilla_values=casillas,
     )
@@ -440,9 +453,17 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         calculation_revision_id=rid,
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.BORRADOR,
-        inputs_snapshot=inputs,
+        input_values_by_casilla_id=inputs,
         binding_overrides=overrides_map,
         casilla_values=casillas,
+        observations=(
+            CasillaObservation(
+                casilla_id=_M180_PERCEPTOR_BASE_CASILLA,
+                value=Decimal("1"),
+                legal_refs=("ley-58-2003:art-93",),
+                source_refs=("verify-unresolved-registry-test",),
+            ),
+        ),
         created_at=_T1,
         updated_at=_T1,
     )
