@@ -16,7 +16,7 @@ from typing import Annotated, Literal
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ....core import Period, TaxDomain
-from ....core.aggregation import BindingAggregation, BindingSourceKind
+from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 
@@ -1006,18 +1006,24 @@ class DataBindingDefinition(RegistryModel):
     source: BindingSourceKind
     selector: BindingSelectorMap
     aggregation: BindingAggregation | None = None
-    typed_enum: str | None = None
+    typed_enum: BindingTypedEnumKind | None = None
     """Closed-set enum class name a consumer routes the binding value through.
 
-    LIVE field (do NOT remove). Declared in registry TOML for the bindings that
-    bridge a closed-membership substrate axis — ``"censo_event_kind"`` (M036),
-    ``"CCAA"`` and ``"EstimacionDirectaModalidad"`` (M100), ``"LegalEntityForm"``
-    (M200) — and surfaced by the operator-facing ``bindings list`` CLI table
+    LIVE field (do NOT remove). Typed as the closed
+    :class:`~aeat.core.aggregation.BindingTypedEnumKind` reference (F8 — was a
+    bare ``str``); declared in registry TOML for the bindings that bridge a
+    closed-membership substrate axis — ``"censo_event_kind"`` (M036), ``"CCAA"``
+    and ``"EstimacionDirectaModalidad"`` (M100), ``"LegalEntityForm"`` (M200) —
+    and surfaced by the operator-facing ``bindings list`` CLI table
     (``_modelo_discovery_cli.py``), the :class:`ModeloBindingQueryRow` query
     projection, the borrador binding resolver, and the Sheets-pull edit router.
-    It is the closed-set *annotation* on the binding, distinct from the
-    ``input_channel`` (how a formula consumes the value); a binding may carry a
-    ``typed_enum`` yet still be a numeric ``decimal`` channel. Gated by
+    Because a :class:`~enum.StrEnum` serialises to its value, those ``str``
+    consumers stay byte-compatible. It is the closed-set *annotation* on the
+    binding, distinct from the ``input_channel`` (how a formula consumes the
+    value); a binding may carry a ``typed_enum`` yet still be a numeric
+    ``decimal`` channel. The loader's raw TOML token is hydrated to its member
+    by :meth:`_coerce_typed_enum` at the boundary (an unknown token raises).
+    Gated by
     ``test_schema_hygiene.py::test_renta_typed_binding_candidates_declare_substrate_enum_class``.
     """
     legal_refs: LegalRefs
@@ -1047,6 +1053,67 @@ class DataBindingDefinition(RegistryModel):
         if isinstance(value, str) and not isinstance(value, BindingSourceKind):
             return BindingSourceKind(value)
         return value
+
+    @field_validator("typed_enum", mode="before")
+    @classmethod
+    def _coerce_typed_enum(cls, value: object) -> object:
+        """Hydrate the registry TOML's raw ``typed_enum`` token into its member.
+
+        The authoring tree declares ``typed_enum`` as a plain string (the name
+        of the substrate enum class — ``"censo_event_kind"``, ``"CCAA"``,
+        ``"EstimacionDirectaModalidad"``, ``"LegalEntityForm"``). Under the
+        strict model config a :class:`~aeat.core.aggregation.BindingTypedEnumKind`
+        field requires the actual member, not its value, so the raw string from
+        ``model_validate`` would be rejected. Coercing the known closed-set token
+        to its member at the boundary keeps the TOML plain while preserving
+        strict rejection of an unknown annotation
+        (:class:`~aeat.core.aggregation.BindingTypedEnumKind` raises on an invalid
+        value). This is the ``typed_enum`` sibling of :meth:`_coerce_source`.
+        """
+        if isinstance(value, str) and not isinstance(value, BindingTypedEnumKind):
+            return BindingTypedEnumKind(value)
+        return value
+
+    @model_validator(mode="after")
+    def _validate_selector_shape(self) -> DataBindingDefinition:
+        """Validate the selector mapping against its source family's schema at construction.
+
+        Dispatches on :attr:`source` through the discriminated-union selector
+        table (``_BINDING_SELECTOR_REGISTRY`` in :mod:`._bindings`, surfaced by
+        :func:`._bindings.selector_model_for_source`): a source carrying a typed
+        selector schema re-validates the as-stored selector mapping against that
+        per-family model the moment the binding is constructed, promoting the
+        selector-shape half of the former snapshot-build-only gate
+        (:func:`._bindings.validate_binding_selector_shape`) up into the model.
+
+        This strictly TIGHTENS validation: a misshapen selector (an unknown key,
+        a legacy key name, an out-of-set ``fact`` literal) now fails at
+        construction rather than only when the snapshot-build section validator
+        runs. The op/fact cross-invariants — which depend on the separate
+        :attr:`aggregation` field — remain owned by ``validate_binding_selector_shape``
+        at snapshot build, so a binding whose selector is well-shaped but whose
+        op/fact pairing is wrong stays constructible (the build gate rejects it).
+        A free-form source absent from the table is not constrained here.
+
+        The accessor and validator are imported lazily because :mod:`._bindings`
+        imports :class:`DataBindingDefinition` from this module; the lazy import
+        breaks the cycle, matching the snapshot-build validators
+        (``_validate_reference_sections``, ``_validate_registry_scope``). The
+        shared :func:`._binding_selector_utils.selector_against_model` runs the
+        SAME normalisation and emits the SAME diagnostic the build gate does, so
+        a construction-time refusal and a build-time refusal carry identical
+        text.
+        """
+        from ._binding_selector_utils import selector_against_model
+        from ._bindings import selector_model_for_source
+
+        selector_model = selector_model_for_source(self.source)
+        if selector_model is None:
+            return self
+        diagnostics = selector_against_model(self, selector_model)
+        if diagnostics:
+            raise RegistryValidationError(diagnostics[0])
+        return self
 
 
 class FormulaDefinition(RegistryModel):

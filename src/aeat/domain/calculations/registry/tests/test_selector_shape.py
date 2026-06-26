@@ -1,23 +1,34 @@
-"""Strict tests for the snapshot-time selector-shape gate.
+"""Strict tests for the binding selector-shape contract.
 
 The :func:`validate_binding_selector_shape` helper pairs each
 :attr:`DataBindingDefinition.source` value with a strict pydantic
 model and asserts the binding's selector mapping validates against
-the source's schema. The snapshot-build path runs this on every
-binding so a misshapen selector fails at construction rather than
-at handler-call time.
+the source's schema. As of F8 (the binding-vocabulary selector-typing
+increment) the selector-shape half of that contract is also enforced
+at MODEL CONSTRUCTION: ``DataBindingDefinition._validate_selector_shape``
+dispatches on ``source`` through the same ``_BINDING_SELECTOR_REGISTRY``
+(surfaced by :func:`selector_model_for_source`) and raises when the
+selector mapping is misshapen — so a binding with a misshapen selector
+can no longer be constructed at all. The op/fact cross-invariants (which
+read the separate ``aggregation`` field) stay owned by
+:func:`validate_binding_selector_shape` at snapshot build, so a binding
+whose selector is well-shaped but whose op/fact pairing is wrong stays
+constructible and is rejected by the build gate.
 
 This file pins:
 
   * the registry of map-backed typed selectors is non-empty and
     registers every typed source key currently declared in
     ``_BINDING_SELECTOR_REGISTRY``;
-  * a well-shaped selector for each typed source passes the gate;
-  * a misshapen selector for a typed source surfaces the violation
-    as a typed diagnostic string (not as a silent pass);
+  * a well-shaped selector for each typed source constructs and passes
+    the gate;
+  * a misshapen selector for a typed source is REFUSED AT CONSTRUCTION
+    (the F8 tightening), with the diagnostic naming the binding id and
+    the violated typed model;
   * a binding whose source is intentionally free-form (no entry in
-    the discriminator registry) returns no diagnostics, so the gate
-    remains incremental rather than fail-closed.
+    the discriminator registry) constructs and returns no diagnostics,
+    so the contract remains incremental rather than fail-closed for
+    free-form sources.
 """
 
 from __future__ import annotations
@@ -26,13 +37,31 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .. import CasillaId, validated_casilla_id
 from .._bindings import (
     _BINDING_SELECTOR_REGISTRY,
+    selector_model_for_source,
     validate_binding_selector_shape,
 )
 from .._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M111_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("28", surface="_M111_RETENCIONES_CASILLA")
+_M303_CARRY_CASILLA: CasillaId = validated_casilla_id("66", surface="_M303_CARRY_CASILLA")
+_M100_MANUAL_BOOLEAN_CASILLA: CasillaId = validated_casilla_id("0168", surface="_M100_MANUAL_BOOLEAN_CASILLA")
+_M130_SALDO_NEGATIVO_CASILLA: CasillaId = validated_casilla_id(
+    "saldo-negativo-fin-periodo",
+    surface="_M130_SALDO_NEGATIVO_CASILLA",
+)
+_M303_COMPENSACION_DISPONIBLE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-disponible-fin-periodo",
+    surface="_M303_COMPENSACION_DISPONIBLE_CASILLA",
+)
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "iva.cuota-devengada-total",
+    surface="_M303_CUOTA_DEVENGADA_TOTAL_CASILLA",
+)
 
 
 def _binding(
@@ -52,6 +81,28 @@ def _binding(
             "source_refs": ("aeat.test",),
         },
     )
+
+
+def _assert_selector_refused_at_construction(
+    *,
+    source: str,
+    selector: dict[str, object],
+    binding_id: str,
+    expected_substrings: tuple[str, ...],
+) -> None:
+    """Assert a misshapen selector is refused when the binding is constructed.
+
+    The F8 model-construction selector gate raises a pydantic
+    :class:`ValidationError` wrapping the :class:`RegistryValidationError`
+    diagnostic. The wrapped message must carry every ``expected_substring`` the
+    snapshot-build gate's diagnostic carried, so the construction-time refusal is
+    as informative as the former build-time one.
+    """
+    with pytest.raises(ValidationError) as excinfo:
+        _binding(source=source, selector=selector, binding_id=binding_id)
+    message = str(excinfo.value)
+    for substring in expected_substrings:
+        assert substring in message, f"expected {substring!r} in construction refusal:\n{message}"
 
 
 def test_binding_selector_registry_covers_typed_sources() -> None:
@@ -80,6 +131,35 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
     assert set(_BINDING_SELECTOR_REGISTRY) == expected
 
 
+def test_construction_gate_dispatches_through_selector_model_for_source() -> None:
+    """F8: the model construction gate dispatches via ``selector_model_for_source``.
+
+    The accessor surfaces the same ``_BINDING_SELECTOR_REGISTRY`` table the model
+    validator consumes, so the construction gate covers exactly the typed sources
+    and leaves the free-form sources unconstrained.
+    """
+    for source, model in _BINDING_SELECTOR_REGISTRY.items():
+        assert selector_model_for_source(source) is model
+
+
+def test_free_form_source_constructs_with_any_selector() -> None:
+    """A source absent from the selector registry is not constrained at construction.
+
+    ``withholding`` has no entry in ``_BINDING_SELECTOR_REGISTRY`` (its op/fact
+    shape is validated by the snapshot-build dispatch validator, not a selector
+    model), so the F8 construction gate leaves an arbitrary selector intact —
+    keeping the contract incremental rather than fail-closed for free-form
+    sources.
+    """
+    assert selector_model_for_source("withholding") is None
+    binding = _binding(
+        source="withholding",
+        selector={"anything": "goes", "offset": 7},
+        binding_id="free-form-withholding",
+    )
+    assert isinstance(binding, DataBindingDefinition)
+
+
 def test_previous_filing_selector_accepts_well_shaped_selector() -> None:
     """A previous_filing binding with a registry-valid selector passes the gate."""
 
@@ -89,14 +169,14 @@ def test_previous_filing_selector_accepts_well_shaped_selector() -> None:
             "source_modelo": "303",
             "filing_year_delta": -1,
             "period": "0A",
-            "source_casilla_ids": ("66",),
+            "source_casilla_ids": (_M303_CARRY_CASILLA,),
         },
     )
     assert validate_binding_selector_shape(binding) == []
 
 
 def test_previous_filing_selector_rejects_legacy_source_casillas_key() -> None:
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="previous_filing",
         selector={
             "source_modelo": "303",
@@ -105,65 +185,45 @@ def test_previous_filing_selector_rejects_legacy_source_casillas_key() -> None:
             "source_casillas": ("66",),
         },
         binding_id="bad-legacy-source-casillas",
+        expected_substrings=("source_casilla_ids", "source_casillas"),
     )
-
-    failures = validate_binding_selector_shape(binding)
-
-    assert len(failures) == 1
-    assert "source_casilla_ids" in failures[0]
-    assert "source_casillas" in failures[0]
 
 
 def test_relation_prefill_selector_rejects_legacy_source_casillas_key() -> None:
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="relation_prefill",
         selector={
             "source_modelo": "322",
             "source_periods": ("1T",),
-            "source_casillas": ("iva.cuota-devengada-total",),
+            "source_casillas": (_M303_CUOTA_DEVENGADA_TOTAL_CASILLA,),
         },
         binding_id="bad-relation-prefill-legacy-source-casillas",
+        expected_substrings=("source_casilla_ids", "source_casillas"),
     )
-
-    failures = validate_binding_selector_shape(binding)
-
-    assert len(failures) == 1
-    assert "source_casilla_ids" in failures[0]
-    assert "source_casillas" in failures[0]
 
 
 def test_previous_filing_selector_rejects_legacy_source_output_key() -> None:
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="previous_filing",
         selector={
             "source_modelo": "111",
             "source_output": "28",
         },
         binding_id="bad-legacy-source-output",
+        expected_substrings=("source_casilla_id", "source_output"),
     )
-
-    failures = validate_binding_selector_shape(binding)
-
-    assert len(failures) == 1
-    assert "source_casilla_id" in failures[0]
-    assert "source_output" in failures[0]
 
 
 def test_relation_prefill_selector_rejects_legacy_source_output_key() -> None:
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="relation_prefill",
         selector={
             "source_modelo": "303",
             "source_output": "iva.cuota-devengada-total",
         },
         binding_id="bad-relation-prefill-source-output",
+        expected_substrings=("source_casilla_id", "source_output"),
     )
-
-    failures = validate_binding_selector_shape(binding)
-
-    assert len(failures) == 1
-    assert "source_casilla_id" in failures[0]
-    assert "source_output" in failures[0]
 
 
 def test_previous_filing_selector_accepts_singular_source_casilla_id_shape() -> None:
@@ -182,7 +242,7 @@ def test_previous_filing_selector_accepts_singular_source_casilla_id_shape() -> 
         source="previous_filing",
         selector={
             "source_modelo": "111",
-            "source_casilla_id": "28",
+            "source_casilla_id": _M111_RETENCIONES_CASILLA,
         },
     )
     assert validate_binding_selector_shape(binding) == []
@@ -193,7 +253,7 @@ def test_previous_filing_selector_accepts_singular_source_casilla_id_with_period
         source="previous_filing",
         selector={
             "source_modelo": "303",
-            "source_casilla_id": "iva.compensacion-disponible-fin-periodo",
+            "source_casilla_id": _M303_COMPENSACION_DISPONIBLE_CASILLA,
             "source_period_offset_from_target": -1,
         },
     )
@@ -208,19 +268,17 @@ def test_previous_filing_selector_rejects_both_source_shapes() -> None:
     typed model surfaces this as a validation failure.
     """
 
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="previous_filing",
         selector={
             "source_modelo": "111",
-            "source_casilla_id": "28",
-            "source_casilla_ids": ("28",),
+            "source_casilla_id": _M111_RETENCIONES_CASILLA,
+            "source_casilla_ids": (_M111_RETENCIONES_CASILLA,),
             "relation": "retenciones-trabajo-actividades-premios",
         },
         binding_id="bad-double-source",
+        expected_substrings=("bad-double-source",),
     )
-    failures = validate_binding_selector_shape(binding)
-    assert failures
-    assert "bad-double-source" in failures[0]
 
 
 def test_previous_filing_selector_rejects_unknown_key() -> None:
@@ -231,20 +289,17 @@ def test_previous_filing_selector_rejects_unknown_key() -> None:
     and the typed model.
     """
 
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="previous_filing",
         selector={
             "source_modelo": "303",
             "filing_year_delta": -1,
-            "source_casilla_ids": ("66",),
+            "source_casilla_ids": (_M303_CARRY_CASILLA,),
             "spurious_key": "leaked",
         },
         binding_id="bad-previous-filing",
+        expected_substrings=("bad-previous-filing", "_PreviousModeloSelector"),
     )
-    failures = validate_binding_selector_shape(binding)
-    assert failures, "extra key on previous_filing selector must be flagged"
-    assert "bad-previous-filing" in failures[0]
-    assert "_PreviousModeloSelector" in failures[0]
 
 
 def test_withholding_selector_accepts_well_shaped_selector() -> None:
@@ -377,7 +432,7 @@ def test_manual_input_accepts_boolean_casilla_shape() -> None:
     binding = _binding(
         source="manual_input",
         selector={
-            "casilla_id": "0168",
+            "casilla_id": _M100_MANUAL_BOOLEAN_CASILLA,
             "data_type": "boolean",
             "true_value": "N",
             "false_value": "S",
@@ -405,10 +460,10 @@ def test_manual_input_accepts_record_field_shape() -> None:
 def test_manual_input_rejects_both_shapes_together() -> None:
     """Declaring casilla_id AND record-field in the same selector fails."""
 
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="manual_input",
         selector={
-            "casilla_id": "0168",
+            "casilla_id": _M100_MANUAL_BOOLEAN_CASILLA,
             "record": "DPA",
             "field": "x",
             "offset": 1,
@@ -416,44 +471,38 @@ def test_manual_input_rejects_both_shapes_together() -> None:
             "data_type": "integer",
         },
         binding_id="bad-mixed",
+        expected_substrings=("bad-mixed",),
     )
-    failures = validate_binding_selector_shape(binding)
-    assert failures
-    assert "bad-mixed" in failures[0]
 
 
 def test_manual_input_rejects_generic_casilla_key() -> None:
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="manual_input",
         selector={
-            "casilla": "0168",
+            "casilla": _M100_MANUAL_BOOLEAN_CASILLA,
             "data_type": "boolean",
             "true_value": "N",
             "false_value": "S",
         },
         binding_id="bad-generic-casilla-key",
+        expected_substrings=("bad-generic-casilla-key",),
     )
-    failures = validate_binding_selector_shape(binding)
-    assert failures
-    assert "bad-generic-casilla-key" in failures[0]
 
 
 def test_manual_input_boolean_casilla_requires_value_strings() -> None:
     """A boolean casilla must declare both true_value and false_value."""
 
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="manual_input",
         selector={
-            "casilla_id": "0168",
+            "casilla_id": _M100_MANUAL_BOOLEAN_CASILLA,
             "data_type": "boolean",
             "true_value": "N",
             # missing false_value
         },
         binding_id="bad-boolean",
+        expected_substrings=("bad-boolean",),
     )
-    failures = validate_binding_selector_shape(binding)
-    assert failures
-    assert "bad-boolean" in failures[0]
 
 
 def test_profile_selector_accepts_scalar_shape() -> None:
@@ -509,7 +558,7 @@ def test_profile_selector_accepts_model_scalar_shape() -> None:
 def test_profile_selector_rejects_multiple_shapes() -> None:
     """Declaring scalar + composite shapes in the same selector fails."""
 
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="profile",
         selector={
             "profile_key": "tax.id",
@@ -517,16 +566,14 @@ def test_profile_selector_rejects_multiple_shapes() -> None:
             "format": "surnames_name",
         },
         binding_id="bad-double-shape",
+        expected_substrings=("bad-double-shape",),
     )
-    failures = validate_binding_selector_shape(binding)
-    assert failures
-    assert "bad-double-shape" in failures[0]
 
 
 def test_profile_selector_required_when_pair_must_match() -> None:
     """required_when_profile_key without required_when_value is rejected."""
 
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="profile",
         selector={
             "profile_key": "spouse.tax.id",
@@ -534,10 +581,8 @@ def test_profile_selector_required_when_pair_must_match() -> None:
             # missing required_when_value
         },
         binding_id="bad-required-when",
+        expected_substrings=("bad-required-when",),
     )
-    failures = validate_binding_selector_shape(binding)
-    assert failures
-    assert "bad-required-when" in failures[0]
 
 
 def test_invoice_binding_fact_op_mismatch_caught_at_snapshot_build() -> None:
@@ -604,17 +649,15 @@ def test_collectible_invoice_rejects_lowercase_clave() -> None:
     counterpart source must surface the violation through the gate.
     """
 
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source=BindingSourceKind.COLLECTIBLE_INVOICE,
         selector={
             "fact": "base_sum",
             "claves": ("e",),  # lowercase: invalid
         },
         binding_id="bad-collectible",
+        expected_substrings=("bad-collectible",),
     )
-    failures = validate_binding_selector_shape(binding)
-    assert failures
-    assert "bad-collectible" in failures[0]
 
 
 def test_bare_invoice_source_kind_is_not_constructible() -> None:
@@ -649,16 +692,13 @@ def test_previous_filing_selector_rejects_removed_relation_field() -> None:
     diagnostic.
     """
 
-    binding = _binding(
+    _assert_selector_refused_at_construction(
         source="previous_filing",
         selector={
             "source_modelo": "130",
-            "source_casilla_id": "saldo-negativo-fin-periodo",
+            "source_casilla_id": _M130_SALDO_NEGATIVO_CASILLA,
             "relation": "atribucion-actividades-economicas",
         },
         binding_id="dead-relation-binding",
+        expected_substrings=("dead-relation-binding", "relation"),
     )
-    failures = validate_binding_selector_shape(binding)
-    assert failures, "selector.relation must be rejected by the gate"
-    assert "dead-relation-binding" in failures[0]
-    assert "relation" in failures[0].lower() or "extra" in failures[0].lower()

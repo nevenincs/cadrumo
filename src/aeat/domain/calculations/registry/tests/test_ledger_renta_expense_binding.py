@@ -6,7 +6,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from .....core import Modelo
 from .....core.resources import bundled_path
@@ -50,6 +50,10 @@ _M100_GASTO_OTROS_CONCEPTOS_CASILLA: CasillaId = validated_casilla_id(
 _M100_GASTO_AMORTIZACIONES_CASILLA: CasillaId = validated_casilla_id(
     "0203",
     surface="_M100_GASTO_AMORTIZACIONES_CASILLA",
+)
+_UNKNOWN_RENTA_EXPENSE_CASILLA: CasillaId = validated_casilla_id(
+    "9999",
+    surface="_UNKNOWN_RENTA_EXPENSE_CASILLA",
 )
 
 
@@ -207,7 +211,7 @@ def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
             "selector": {
                 "modelo": "100",
                 "period": "0A",
-                "target_casilla_id": "9999",
+                "target_casilla_id": _UNKNOWN_RENTA_EXPENSE_CASILLA,
                 "fact": "deductible_amount_sum",
             },
             "aggregation": {"op": "sum"},
@@ -221,24 +225,26 @@ def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
 
 
 def test_renta_ledger_expense_binding_rejects_legacy_target_casilla_key() -> None:
-    binding = DataBindingDefinition.model_validate(
-        {
-            "id": "bad-renta-binding-legacy-target-key",
-            "source": "ledger_renta_expense_aggregation",
-            "selector": {
-                "modelo": "100",
-                "period": "0A",
-                "target_casilla": "0186",
-                "fact": "deductible_amount_sum",
+    # The legacy ``target_casilla`` key is a selector-SHAPE violation (the strict
+    # ``_RentaLedgerExpenseSelector`` forbids the extra key), so under the F8
+    # construction-time selector gate the binding is refused the moment it is
+    # built — the diagnostic still names both the canonical and legacy key.
+    with pytest.raises(ValidationError) as exc_info:
+        DataBindingDefinition.model_validate(
+            {
+                "id": "bad-renta-binding-legacy-target-key",
+                "source": "ledger_renta_expense_aggregation",
+                "selector": {
+                    "modelo": "100",
+                    "period": "0A",
+                    "target_casilla": _M100_GASTO_SS_CASILLA,
+                    "fact": "deductible_amount_sum",
+                },
+                "aggregation": {"op": "sum"},
+                "legal_refs": ("ley-35-2006:art-28",),
+                "source_refs": ("aeat-renta-2025-manual-parte1",),
             },
-            "aggregation": {"op": "sum"},
-            "legal_refs": ("ley-35-2006:art-28",),
-            "source_refs": ("aeat-renta-2025-manual-parte1",),
-        },
-    )
-
-    with pytest.raises(RegistryValidationError) as exc_info:
-        validate_ledger_renta_expense_aggregation_binding_definition(binding)
+        )
 
     detail = str(exc_info.value)
     assert "target_casilla_id" in detail
@@ -277,8 +283,8 @@ def test_unsupported_renta_expense_flags_observation_routed_to_no_binding() -> N
         category=SpendingCategory.ASESORIA_FISCAL,  # routes to 0199 — no binding on this revision
         gross_amount=Decimal("121.00"),
     )
-    assert routed.target_casilla_id == "0186"
-    assert unrouted.target_casilla_id == "0199"
+    assert routed.target_casilla_id == _M100_GASTO_SS_CASILLA
+    assert unrouted.target_casilla_id == _M100_GASTO_OTROS_CONCEPTOS_CASILLA
     assert unrouted.deductible_amount > Decimal("0")
 
     result = unsupported_ledger_renta_expense_observations(revision, (routed, unrouted))
