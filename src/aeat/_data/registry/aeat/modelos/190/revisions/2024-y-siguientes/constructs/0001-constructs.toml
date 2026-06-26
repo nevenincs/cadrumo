@@ -4,8 +4,9 @@ title = "Modelo 190 annual summary from Modelo 111 quarterly filings"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure", "boe-modelo-190-2025-form", "boe-modelo-190-2025-amendment"]
 casilla_ids = ["decl.total-percepciones", "decl.percepciones-total", "decl.retenciones-total"]
-formulas = ["modelo-190-total-percepciones", "modelo-190-percepciones-total", "modelo-190-retenciones-total"]
+formulas = ["modelo-190-percepciones-total", "modelo-190-retenciones-total"]
 bindings = [
+    "modelo-190-percepciones-anual",
     "modelo-190-111-trabajo-dinerario-percepciones-anual",
     "modelo-190-111-trabajo-especie-percepciones-anual",
     "modelo-190-111-actividades-dinerario-percepciones-anual",
@@ -35,15 +36,6 @@ bindings = [
     "modelo-190-perceptor-row-ingreso-a-cuenta",
 ]
 relations = [
-    "modelo-190-rel-111-trabajo-dinerario-percepciones-anual",
-    "modelo-190-rel-111-trabajo-especie-percepciones-anual",
-    "modelo-190-rel-111-actividades-dinerario-percepciones-anual",
-    "modelo-190-rel-111-actividades-especie-percepciones-anual",
-    "modelo-190-rel-111-premios-dinerario-percepciones-anual",
-    "modelo-190-rel-111-premios-especie-percepciones-anual",
-    "modelo-190-rel-111-ganancias-dinerario-percepciones-anual",
-    "modelo-190-rel-111-ganancias-especie-percepciones-anual",
-    "modelo-190-rel-111-derechos-imagen-percepciones-anual",
     "modelo-190-rel-111-trabajo-dinerario-importe-anual",
     "modelo-190-rel-111-trabajo-especie-importe-anual",
     "modelo-190-rel-111-actividades-dinerario-importe-anual",
