@@ -48,6 +48,7 @@ from ...domain.calculations.registry import (
     RelationId,
     materialize_relation_binding_values,
     relation_source_requirements,
+    resolve_observed_requirement_value,
     undeclared_casilla_ids,
     validated_casilla_id,
 )
@@ -415,7 +416,7 @@ def _resolve_available_relation_values(
     resolved: dict[RelationId, Decimal] = {}
     for requirement in by_requirement:
         try:
-            value = _resolve_requirement_value(requirement, observations)
+            value = resolve_observed_requirement_value(requirement, observations)
         except RegistryValidationError as exc:
             _log.warning(
                 "relation prefill: relation requirement %s remains operator-manual: %s",
@@ -426,54 +427,6 @@ def _resolve_available_relation_values(
         for relation_id in requirement.relation_ids:
             resolved[relation_id] = value
     return resolved
-
-
-def _resolve_requirement_value(
-    requirement: RegistryFoldRequirement,
-    observations: tuple[RegistryModeloObservation, ...],
-) -> Decimal:
-    values = tuple(_observed_requirement_values(requirement, observations))
-    if requirement.aggregation_op == "copy":
-        if len(values) != 1:
-            raise RegistryValidationError(
-                f"relation requirement {requirement.relation_ids!r} copy aggregation requires one observation",
-            )
-        return values[0]
-    if requirement.aggregation_op == "sum":
-        return sum(values, Decimal("0"))
-    raise RegistryValidationError(
-        f"relation requirement {requirement.relation_ids!r} uses unsupported aggregation op "
-        f"{requirement.aggregation_op!r}",
-    )
-
-
-def _observed_requirement_values(
-    requirement: RegistryFoldRequirement,
-    observations: tuple[RegistryModeloObservation, ...],
-) -> tuple[Decimal, ...]:
-    source_casilla_id = requirement.source_casilla_ids[0]
-    values: list[Decimal] = []
-    for source_period in requirement.periods:
-        matches = tuple(
-            observation
-            for observation in observations
-            if observation.modelo == requirement.source_modelo
-            and observation.filing_year == requirement.filing_year
-            and observation.period == source_period
-        )
-        if len(matches) != 1:
-            raise RegistryValidationError(
-                f"expected one observed filing {requirement.source_modelo!r}/"
-                f"{requirement.filing_year}/{source_period!r}, found {len(matches)}",
-            )
-        value = matches[0].casilla_values.get(source_casilla_id)
-        if value is None:
-            raise RegistryValidationError(
-                f"requires observed source casilla id {source_casilla_id!r} from "
-                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
-            )
-        values.append(value)
-    return tuple(values)
 
 
 def _formula_relation_ids(snapshot: RegistrySnapshot) -> frozenset[RelationId]:

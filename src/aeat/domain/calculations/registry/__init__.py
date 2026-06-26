@@ -219,6 +219,11 @@ from ._loader import (
     load_modelo_source,
     load_registry_tree,
 )
+from ._observation_fold import (
+    fold_observed_requirement_values,
+    gather_observed_requirement_values,
+    resolve_observed_requirement_value,
+)
 from ._parity_tapes import (
     ParityScenario,
     ParityTape,
@@ -631,6 +636,8 @@ __all__ = [
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",
     "extract_record_design_workbook",
+    "fold_observed_requirement_values",
+    "gather_observed_requirement_values",
     "generate_parity_tape_path",
     "get_censo_modelo_foundation_contract",
     "has_applicability_rule",
@@ -678,6 +685,7 @@ __all__ = [
     "resolve_ledger_renta_expense_aggregation_binding_values",
     "resolve_ledger_renta_gasto_aggregation_binding_values",
     "resolve_ledger_renta_income_aggregation_binding_values",
+    "resolve_observed_requirement_value",
     "resolve_previous_filing_binding_values",
     "resolve_refund_binding_row_values",
     "resolve_related_party_binding_row_values",
