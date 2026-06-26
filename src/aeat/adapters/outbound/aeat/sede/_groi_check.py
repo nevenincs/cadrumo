@@ -63,6 +63,7 @@ from ._adapter_utils import (
     make_locate_helper,
     normalize_response_text,
     registry_failure_message,
+    require_playwright_page,
 )
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
@@ -282,15 +283,7 @@ async def collect_groi_observations(
     context = None
     try:
         context = await browser_session.create_context()
-        from playwright.async_api import Page as _Page
-
-        _raw_page = await context.new_page()
-        if not isinstance(_raw_page, _Page):
-            raise BrowserAdapterTypeError(
-                f"BrowserContext.new_page() did not return a Playwright Page; got {type(_raw_page)}",
-                context={"actual_type": type(_raw_page).__name__},
-            )
-        page: _Page = _raw_page
+        page = require_playwright_page(await context.new_page())
         await _playwright_stage(
             page.set_viewport_size(default_viewport()),
             stage="set-viewport",

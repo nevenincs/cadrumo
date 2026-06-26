@@ -30,6 +30,7 @@ from .....application.storage.calc_sheets import (
     serialize_offline_workbook,
 )
 from .....core import Period
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .._calc_sheets_apply import (
     _build_emphasis_format_requests,
     _build_evidence_value_data,
@@ -39,6 +40,8 @@ from .._calc_sheets_apply import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_BASE_CASILLA: CasillaId = validated_casilla_id("base", surface="_BASE_CASILLA")
+_CUOTA_CASILLA: CasillaId = validated_casilla_id("cuota", surface="_CUOTA_CASILLA")
 
 
 def _plan() -> SheetExportPlan:
@@ -57,7 +60,7 @@ def _plan() -> SheetExportPlan:
                 address=SheetCellAddress.at(TabName.ENTRADAS, 2, 4),
                 value=Decimal("100.00"),
                 role="operator_input",
-                casilla="base",
+                casilla_id=_BASE_CASILLA,
             ),
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.ENTRADAS, 1, 1),
@@ -69,7 +72,7 @@ def _plan() -> SheetExportPlan:
             SheetFormulaCell(
                 address=SheetCellAddress.at(TabName.CALCULOS, 2, 4),
                 formula="'Entradas'!D2*0.21",
-                casilla="cuota",
+                casilla_id=_CUOTA_CASILLA,
                 rounding_rule="money",
                 rounding_scale=2,
             ),
@@ -79,7 +82,7 @@ def _plan() -> SheetExportPlan:
             snapshot_fingerprint="f" * 64,
             contributor_rows=(
                 SheetEvidenceContributorRow(
-                    casilla_id="cuota",
+                    casilla_id=_CUOTA_CASILLA,
                     transaction_id="tx-001",
                     amount=Decimal("-121.00"),
                     currency="EUR",
@@ -128,7 +131,7 @@ def test_apply_adapter_emits_number_format_and_emphasis_requests() -> None:
             "number_formats": (
                 SheetNumberFormat(
                     address=SheetCellAddress.at(TabName.CALCULOS, 2, 4),
-                    casilla="cuota",
+                    casilla_id=_CUOTA_CASILLA,
                     data_type="money",
                     pattern="#,##0.00",
                 ),

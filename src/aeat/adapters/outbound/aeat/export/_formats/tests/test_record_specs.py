@@ -39,7 +39,7 @@ from types import ModuleType
 import pytest
 
 from .......core.resources import resources
-from .......domain.calculations.registry import ValidatedRegistryAuthority
+from .......domain.calculations.registry import CasillaId, ValidatedRegistryAuthority
 from .. import RecordFieldSpec, validate_record_specs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -49,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 # ---------------------------------------------------------------------------
 
 _FORMATS_PKG = "aeat.adapters.outbound.aeat.export._formats"
-_FORMATS_DIR = Path(__file__).parent
+_FORMATS_DIR = Path(__file__).parent.parent
 
 
 def _discover_spec_modules() -> list[ModuleType]:
@@ -69,10 +69,23 @@ def _discover_spec_modules() -> list[ModuleType]:
 
 
 _SPEC_MODULES: list[ModuleType] = _discover_spec_modules()
+_SPEC_MODULE_CASES: list[ModuleType | None] = list(_SPEC_MODULES) if _SPEC_MODULES else [None]
 
 
-def _module_id(mod: ModuleType) -> str:
+def _module_id(mod: ModuleType | None) -> str:
+    if mod is None:
+        return "no-record-spec-modules-discovered"
     return mod.__name__.split(".")[-1]
+
+
+def _require_spec_module(mod: ModuleType | None) -> ModuleType:
+    if mod is None:
+        raise AssertionError(
+            "No BOE record-spec modules were discovered under "
+            f"{_FORMATS_DIR}. Parametrized record-spec integrity tests must fail "
+            "instead of producing pytest's empty-parameter-set skip.",
+        )
+    return mod
 
 
 def _get_record_specs(mod: ModuleType) -> tuple[RecordFieldSpec, ...]:
@@ -147,8 +160,8 @@ def _registry() -> ValidatedRegistryAuthority:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("mod", _SPEC_MODULES, ids=_module_id)
-def test_record_spec_byte_length_integrity(mod: ModuleType) -> None:
+@pytest.mark.parametrize("mod", _SPEC_MODULE_CASES, ids=_module_id)
+def test_record_spec_byte_length_integrity(mod: ModuleType | None) -> None:
     """Record spec total length matches BOE-declared RECORD_LENGTH.
 
     Asserts:
@@ -158,6 +171,7 @@ def test_record_spec_byte_length_integrity(mod: ModuleType) -> None:
     A failure means the hand-authored ``_RECORD_SPECS`` tuple is inconsistent
     with the declared ``RECORD_LENGTH`` — a real transcription error.
     """
+    mod = _require_spec_module(mod)
     specs = _get_record_specs(mod)
     record_length = _get_record_length(mod)
 
@@ -179,8 +193,8 @@ def test_record_spec_byte_length_integrity(mod: ModuleType) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("mod", _SPEC_MODULES, ids=_module_id)
-def test_record_spec_casilla_ids_resolve_in_registry(mod: ModuleType) -> None:
+@pytest.mark.parametrize("mod", _SPEC_MODULE_CASES, ids=_module_id)
+def test_record_spec_casilla_ids_resolve_in_registry(mod: ModuleType | None) -> None:
     """Every casilla_id in _RECORD_SPECS exists in the registry snapshot.
 
     Loads the registry snapshot for ``(MODELO_ID, FILING_YEAR, PERIOD)``
@@ -192,6 +206,7 @@ def test_record_spec_casilla_ids_resolve_in_registry(mod: ModuleType) -> None:
     from the registry — a real transcription error requiring either a spec
     fix or a registry update.
     """
+    mod = _require_spec_module(mod)
     specs = _get_record_specs(mod)
     modelo_id = _get_modelo_id(mod)
     filing_year = _get_filing_year(mod)
@@ -200,7 +215,7 @@ def test_record_spec_casilla_ids_resolve_in_registry(mod: ModuleType) -> None:
     authority = _registry()
     snapshot = authority.snapshot(modelo_id, filing_year=filing_year, period=period)
 
-    revision_casilla_ids: frozenset[str] = frozenset(c.id for c in snapshot.revision.casillas)
+    revision_casilla_ids: frozenset[CasillaId] = frozenset(c.id for c in snapshot.revision.casillas)
 
     missing: list[str] = []
     for spec in specs:
@@ -235,6 +250,10 @@ def test_record_spec_surface_is_known() -> None:
     so this is not tautological.
     """
     assert isinstance(_SPEC_MODULES, list), "_discover_spec_modules() must return a list"
+    assert _SPEC_MODULES, (
+        "No BOE record-spec modules discovered; structural coverage must fail "
+        "instead of passing with empty parametrized test cases."
+    )
     for mod in _SPEC_MODULES:
         assert hasattr(mod, "_RECORD_SPECS"), f"{mod.__name__} is discovered as a spec module but lacks _RECORD_SPECS"
         assert hasattr(mod, "RECORD_LENGTH"), f"{mod.__name__} is discovered as a spec module but lacks RECORD_LENGTH"

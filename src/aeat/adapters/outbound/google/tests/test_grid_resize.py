@@ -28,9 +28,12 @@ from .....application.storage.calc_sheets import (
     TabName,
 )
 from .....core import Period
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .._calc_sheets_apply import _build_grid_resize_requests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_TEST_CASILLA: CasillaId = validated_casilla_id("test.casilla", surface="_TEST_CASILLA")
 
 
 def _plan(
@@ -183,7 +186,7 @@ def test_formula_cell_address_extends_grid_bound() -> None:
             SheetFormulaCell(
                 address=SheetCellAddress.at(TabName.CALCULOS, 1200, 4),
                 formula="A1+B1",
-                casilla="test.casilla",
+                casilla_id=_TEST_CASILLA,
                 rounding_rule="money",
             ),
         ),

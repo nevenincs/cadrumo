@@ -26,6 +26,7 @@ from pydantic import BaseModel, Field
 from ......core import STRICT_FROZEN_CONFIG
 from ......core.hashing import sha256_hex as _sha256_hex
 from ......core.money import round_to_cents as _round_to_cents
+from ......domain.calculations.registry import CasillaId
 from .._errors import AeatExportFormatError
 from ._record_spec import (
     DateFmt,
@@ -61,7 +62,7 @@ class ParsedRecord(BaseModel):
     field_values: Mapping[str, str | Decimal | date]
     """Every field_id mapped to its parsed value."""
 
-    casilla_values: Mapping[str, Decimal]
+    casilla_values: Mapping[CasillaId, Decimal]
     """Casilla-keyed currency values (subset of field_values)."""
 
     raw_length: Annotated[int, Field(ge=0)]
@@ -180,7 +181,7 @@ def deserialise(
         )
 
     field_values: dict[str, str | Decimal | date] = {}
-    casilla_values: dict[str, Decimal] = {}
+    casilla_values: dict[CasillaId, Decimal] = {}
 
     for spec in specs:
         raw = _slice_field_bytes(body, spec)
@@ -218,7 +219,7 @@ def _decode_field_into(
     *,
     encoding: FicheroBoeEncoding,
     field_values: dict[str, str | Decimal | date],
-    casilla_values: dict[str, Decimal],
+    casilla_values: dict[CasillaId, Decimal],
 ) -> None:
     """Dispatch one field's raw bytes to its kind-specific decoder.
 
@@ -260,7 +261,7 @@ def _decode_currency_field(
     spec: RecordFieldSpec,
     raw: bytes,
     field_values: dict[str, str | Decimal | date],
-    casilla_values: dict[str, Decimal],
+    casilla_values: dict[CasillaId, Decimal],
 ) -> None:
     """Decode a CURRENCY field and mirror the value into casilla_values when bound."""
     inline_sign = spec.signed_mode is SignedMode.INLINE_SIGN
@@ -338,7 +339,7 @@ class ParsedEnvelope(BaseModel):
     segments: Mapping[str, ParsedRecord]
     """Per-segment parsed records keyed by ``segment_id``."""
 
-    merged_casilla_values: Mapping[str, Decimal]
+    merged_casilla_values: Mapping[CasillaId, Decimal]
     """Flat view of every casilla across every segment."""
 
     merged_field_values: Mapping[str, str | Decimal | date]
@@ -386,7 +387,7 @@ def deserialise_envelope(
         )
 
     parsed: dict[str, ParsedRecord] = {}
-    merged: dict[str, Decimal] = {}
+    merged: dict[CasillaId, Decimal] = {}
     merged_fields: dict[str, str | Decimal | date] = {}
     cursor = 0
     for segment in segments:

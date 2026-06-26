@@ -18,7 +18,7 @@ Two safety gates fire before any value is read:
    and `aeat_modelo_id` / `aeat_revision_id` / `aeat_filing_year` /
    `aeat_period` matching the caller's snapshot. A mismatch means
    the workbook was compiled against a different registry slice —
-   casilla numbering, formula chains, and bracket tables may have
+   casilla identity/layout, formula chains, and bracket tables may have
    shifted. The pull is refused with a typed error.
 
 The pull adapter does NOT mutate any local state; it returns a
@@ -62,6 +62,8 @@ from ....domain.calculations.registry import (
     RelationId,
     RevisionId,
     calculate_registry_snapshot,
+    casillas_by_id,
+    undeclared_casilla_ids,
 )
 from ...outbound.storage._errors import (
     OutboundStorageConflictError,
@@ -92,7 +94,7 @@ _ValueRange = dict[str, Any]
 class OperatorEdit(BaseModel):
     """One operator-edited cell value.
 
-    ``casilla_number`` and ``label`` are display-only fields added by the
+    ``display_number`` and ``label`` are display-only fields added by the
     pull adapter from the workbook's column metadata. They are not part of
     the canonical :class:`OperatorInput` contract; use
     :meth:`to_operator_input` to project this shape onto the canonical one.
@@ -108,14 +110,14 @@ class OperatorEdit(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    casilla: CasillaId
-    casilla_number: str
+    casilla_id: CasillaId
+    display_number: str
     label: str
     value: Decimal | str | bool | None = None
 
     def to_operator_input(self) -> OperatorInput:
         """Project onto the canonical :class:`OperatorInput` shape, dropping display fields."""
-        return OperatorInput(casilla=self.casilla, value=self.value)
+        return OperatorInput(casilla_id=self.casilla_id, value=self.value)
 
 
 class BindingEdit(BaseModel):
@@ -376,7 +378,7 @@ def _classify_metadata_match(
     # The registry-SHA gate the module docstring promises: a workbook
     # whose `aeat_registry_sha` stamp diverges from the live snapshot's
     # calculation-surface hash was compiled against a different registry
-    # slice (casilla numbering, formula chains, bracket tables may have
+    # slice (casilla identity/layout, formula chains, bracket tables may have
     # shifted) even when modelo / revision / year / period still align.
     # Such a workbook is `stale`, never `matches` — `compute_from_pull`
     # refuses to merge it.
@@ -463,7 +465,7 @@ def pull_operator_edits(
     all_ranges = operator_input_ranges + binding_ranges + relation_ranges
     value_ranges = _batch_get_values(sheets, spreadsheet_id, all_ranges)
 
-    casilla_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    casilla_by_id = casillas_by_id(snapshot.revision)
     cursor = 0
     operator_edits, cursor, casilla_cells_read = _decode_operator_edits(
         value_ranges,
@@ -571,8 +573,8 @@ def _decode_operator_edits(
         casilla = casilla_by_id[casilla_id]
         edits.append(
             OperatorEdit(
-                casilla=casilla_id,
-                casilla_number=casilla.number,
+                casilla_id=casilla_id,
+                display_number=casilla.number,
                 label=casilla.label,
                 value=coerced,
             ),
@@ -1017,7 +1019,26 @@ def _collect_input_casilla_values(
     snapshot: RegistrySnapshot,
     edits: tuple[OperatorEdit, ...],
 ) -> dict[CasillaId, Decimal]:
-    edits_by_casilla = {edit.casilla: edit for edit in edits}
+    edits_by_casilla = {edit.casilla_id: edit for edit in edits}
+    input_ids = frozenset(
+        casilla.id
+        for casilla in snapshot.revision.casillas
+        if casilla.input_kind not in {InputKind.COMPUTED, InputKind.INFORMATIONAL}
+    )
+    undeclared_edits = undeclared_casilla_ids(snapshot.revision, edits_by_casilla)
+    non_input_edits = tuple(sorted(set(edits_by_casilla) - set(undeclared_edits) - input_ids))
+    invalid_edits = (*undeclared_edits, *non_input_edits)
+    if invalid_edits:
+        raise OutboundStorageValidationError(
+            "operator edits must reference canonical input casilla.id values declared by the workbook snapshot",
+            context={
+                "modelo_id": snapshot.modelo.id,
+                "revision_id": snapshot.revision.id,
+                "casilla_ids": ",".join(invalid_edits),
+                "undeclared_casilla_ids": ",".join(undeclared_edits),
+                "non_input_casilla_ids": ",".join(non_input_edits),
+            },
+        )
     inputs: dict[CasillaId, Decimal] = {}
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind in {InputKind.COMPUTED, InputKind.INFORMATIONAL}:

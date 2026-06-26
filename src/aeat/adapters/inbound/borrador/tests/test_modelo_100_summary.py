@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from .....domain.calculations.registry import ExtractionProfileDefinition, ExtractionTargetDefinition
+from .....domain.calculations.registry import (
+    CasillaId,
+    ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
+    validated_casilla_id,
+)
 from ...pdf._utils import source_pdf_reference_path
 from .. import ArtefactKind, BorradorObservation, BorradorParseError, BorradorParseMode, parse_borrador
 
@@ -18,12 +24,30 @@ pytestmark = [
 ]
 
 
-_OBSERVED_VALUES: dict[str, str] = {
-    "0550": "3500.00",
-    "0595": "6440.00",
-    "0699": "1200.00",
-    "0700": "1800.00",
-    "0720": "3140.00",
+_CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA = validated_casilla_id(
+    "0550",
+    surface="test_modelo_100_summary.cuota_integra_general_estatal",
+)
+_CUOTA_INTEGRA_TOTAL_CASILLA = validated_casilla_id(
+    "0595",
+    surface="test_modelo_100_summary.cuota_integra_total",
+)
+_RETENCIONES_CASILLA = validated_casilla_id("0699", surface="test_modelo_100_summary.retenciones")
+_PAGOS_FRACCIONADOS_CASILLA = validated_casilla_id(
+    "0700",
+    surface="test_modelo_100_summary.pagos_fraccionados",
+)
+_CUOTA_RESULTANTE_CASILLA = validated_casilla_id(
+    "0720",
+    surface="test_modelo_100_summary.cuota_resultante",
+)
+
+_OBSERVED_VALUES: dict[CasillaId, str] = {
+    _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA: "3500.00",
+    _CUOTA_INTEGRA_TOTAL_CASILLA: "6440.00",
+    _RETENCIONES_CASILLA: "1200.00",
+    _PAGOS_FRACCIONADOS_CASILLA: "1800.00",
+    _CUOTA_RESULTANTE_CASILLA: "3140.00",
 }
 
 
@@ -32,7 +56,7 @@ def _generate_pdf(
     *,
     artefact_kind: str = "BORRADOR",
     csv: str | None = None,
-    casilla_values: dict[str, str] | None = None,
+    casilla_values: Mapping[CasillaId, str] | None = None,
 ) -> Path:
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
@@ -67,7 +91,10 @@ def _generate_pdf(
 
 def _profile(
     *,
-    target_casilla_ids: tuple[str, ...] = ("0550", "0700"),
+    target_casilla_ids: tuple[CasillaId, ...] = (
+        _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA,
+        _PAGOS_FRACCIONADOS_CASILLA,
+    ),
     min_coverage: Decimal = Decimal("1"),
 ) -> ExtractionProfileDefinition:
     return ExtractionProfileDefinition(
@@ -182,12 +209,15 @@ class TestObservedValues:
             parse_mode=BorradorParseMode.REGISTRY_PROFILE,
         )
 
-        assert {value.casilla_id for value in filing.values} == {"0550", "0700"}
+        assert {value.casilla_id for value in filing.values} == {
+            _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA,
+            _PAGOS_FRACCIONADOS_CASILLA,
+        }
         assert filing.registry_extraction_profile_id == "modelo-100-observed-values"
         assert filing.extraction_coverage == Decimal("1")
 
     def test_registry_profile_fails_below_required_coverage(self, tmp_path: Path) -> None:
-        pdf = _generate_pdf(tmp_path, casilla_values={"0550": "3500.00"})
+        pdf = _generate_pdf(tmp_path, casilla_values={_CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA: "3500.00"})
         profile = _profile()
 
         with pytest.raises(BorradorParseError, match="coverage below minimum"):
@@ -227,8 +257,8 @@ class TestSparseExtraction:
 
     def test_sparse_predeclaracion_yields_observed_values_only(self, tmp_path: Path) -> None:
         sparse = {
-            "0550": "100.00",
-            "0595": "220.00",
+            _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA: "100.00",
+            _CUOTA_INTEGRA_TOTAL_CASILLA: "220.00",
         }
         pdf = _generate_pdf(
             tmp_path,
@@ -258,28 +288,41 @@ class TestBorradorParseErrorAttributes:
 
     def test_coverage_failure_populates_missing_and_coverage(self, tmp_path: Path) -> None:
         # PDF has only 0550; profile requires 0550 + 0700 with full coverage.
-        pdf = _generate_pdf(tmp_path, casilla_values={"0550": "3500.00"})
-        profile = _profile(target_casilla_ids=("0550", "0700"), min_coverage=Decimal("1"))
+        pdf = _generate_pdf(tmp_path, casilla_values={_CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA: "3500.00"})
+        profile = _profile(
+            target_casilla_ids=(
+                _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA,
+                _PAGOS_FRACCIONADOS_CASILLA,
+            ),
+            min_coverage=Decimal("1"),
+        )
 
         with pytest.raises(BorradorParseError) as exc_info:
             parse_borrador(pdf, extraction_profile=profile, parse_mode=BorradorParseMode.REGISTRY_PROFILE)
 
         err = exc_info.value
-        assert err.missing == ("0700",)
+        assert err.missing == (_PAGOS_FRACCIONADOS_CASILLA,)
         assert err.coverage == Decimal("1") / Decimal("2")
         assert err.malformed == ()
         assert err.ambiguous == ()
 
     def test_coverage_failure_missing_sorted_tuple(self, tmp_path: Path) -> None:
         # Profile requires three casillas; PDF only has 0550 — both absent IDs surface sorted.
-        pdf = _generate_pdf(tmp_path, casilla_values={"0550": "100.00"})
-        profile = _profile(target_casilla_ids=("0550", "0595", "0700"), min_coverage=Decimal("1"))
+        pdf = _generate_pdf(tmp_path, casilla_values={_CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA: "100.00"})
+        profile = _profile(
+            target_casilla_ids=(
+                _CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA,
+                _CUOTA_INTEGRA_TOTAL_CASILLA,
+                _PAGOS_FRACCIONADOS_CASILLA,
+            ),
+            min_coverage=Decimal("1"),
+        )
 
         with pytest.raises(BorradorParseError) as exc_info:
             parse_borrador(pdf, extraction_profile=profile, parse_mode=BorradorParseMode.REGISTRY_PROFILE)
 
         err = exc_info.value
-        assert err.missing == ("0595", "0700")
+        assert err.missing == (_CUOTA_INTEGRA_TOTAL_CASILLA, _PAGOS_FRACCIONADOS_CASILLA)
         assert err.coverage == Decimal("1") / Decimal("3")
 
     def test_default_raise_has_empty_structured_attributes(self) -> None:
@@ -293,12 +336,12 @@ class TestBorradorParseErrorAttributes:
     def test_explicit_population_of_all_attributes(self) -> None:
         err = BorradorParseError(
             "test",
-            missing=("0550",),
-            malformed=("0700",),
-            ambiguous=("0595",),
+            missing=(_CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA,),
+            malformed=(_PAGOS_FRACCIONADOS_CASILLA,),
+            ambiguous=(_CUOTA_INTEGRA_TOTAL_CASILLA,),
             coverage=Decimal("0.5"),
         )
-        assert err.missing == ("0550",)
-        assert err.malformed == ("0700",)
-        assert err.ambiguous == ("0595",)
+        assert err.missing == (_CUOTA_INTEGRA_GENERAL_ESTATAL_CASILLA,)
+        assert err.malformed == (_PAGOS_FRACCIONADOS_CASILLA,)
+        assert err.ambiguous == (_CUOTA_INTEGRA_TOTAL_CASILLA,)
         assert err.coverage == Decimal("0.5")

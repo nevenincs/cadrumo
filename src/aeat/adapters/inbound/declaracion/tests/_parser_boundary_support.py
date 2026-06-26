@@ -13,6 +13,7 @@ from reportlab.pdfgen import canvas
 from .....core import Period
 from .....core.errors import AeatError
 from .....core.resources import resources
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .....domain.justificante import PdfModeloImportError
 from .....tests import FIXTURES_DIR
 from ...pdf._utils import source_pdf_reference_path
@@ -51,11 +52,14 @@ __all__ = [
     "_REAL_MODELO_190_DECLARATION_COPY",
     "_REAL_MODELO_303_DECLARATION_COPY",
     "AeatError",
+    "CasillaId",
     "Decimal",
     "DeclaracionParseError",
     "Path",
     "PdfModeloImportError",
     "TemplateNotDetectedError",
+    "_casilla_id",
+    "_casilla_ids",
     "_expected_period",
     "_extract_pages_words",
     "_modelo_130_snapshot",
@@ -103,9 +107,18 @@ _MODELO_115_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "115" / "2024-1
 
 _MODELO_131_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "131" / "2024-1T.pdf"
 
-_MODELO_130_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 20))
 
-_MODELO_111_EXPECTED_TARGETS = (
+def _casilla_id(value: object) -> CasillaId:
+    return validated_casilla_id(value, surface="declaracion_parser_boundary.casilla")
+
+
+def _casilla_ids(*values: object) -> tuple[CasillaId, ...]:
+    return tuple(_casilla_id(value) for value in values)
+
+
+_MODELO_130_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(*(f"{index:02d}" for index in range(1, 20)))
+
+_MODELO_111_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(
     "01",
     "04",
     "07",
@@ -137,9 +150,13 @@ _MODELO_111_EXPECTED_TARGETS = (
     "30",  # col C
 )
 
-_MODELO_123_CURRENT_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 15))
+_MODELO_123_CURRENT_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(
+    *(f"{index:02d}" for index in range(1, 15)),
+)
 
-_MODELO_123_HISTORICAL_EXPECTED_TARGETS = tuple(f"{index:02d}-legacy" for index in range(1, 9))
+_MODELO_123_HISTORICAL_EXPECTED_TARGETS: tuple[CasillaId, ...] = _casilla_ids(
+    *(f"{index:02d}-legacy" for index in range(1, 9)),
+)
 
 
 def _modelo_130_snapshot():
@@ -157,7 +174,7 @@ def _expected_period(filing_year: int, period: str) -> Period:
 def _write_declaration_pdf(
     path: Path,
     *,
-    values: dict[str, Decimal],
+    values: dict[CasillaId, Decimal],
     modelo: str = "130",
     ejercicio: str = "2024",
     period: str = "1T",

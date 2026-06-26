@@ -105,7 +105,7 @@ def test_decode_operator_edits_reads_decimal_from_value_range() -> None:
     vr = _value_range("Entradas!B2", [[1234]])
     edits, cursor, count = _decode_operator_edits([vr], 0, [casilla_id], casilla_by_id)
     assert len(edits) == 1
-    assert edits[0].casilla == casilla_id
+    assert edits[0].casilla_id == casilla_id
     assert edits[0].value == Decimal("1234")
     assert cursor == 1
     assert count == 1

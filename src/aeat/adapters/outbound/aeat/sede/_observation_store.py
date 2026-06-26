@@ -16,7 +16,9 @@ from pathlib import Path
 from .....core import Period
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex
+from .....core.resources import resources
 from .....core.time import now
+from .....domain.calculations.registry import RegistrySnapshotError, undeclared_casilla_ids
 from ....persistence.storage import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
@@ -104,6 +106,7 @@ class FiledDeclaracionObservationStore:
 
     def persist_observation(self, observation: FiledDeclaracionObservation) -> Path:
         """Persist a normalized observation manifest and return its logical object path."""
+        _validate_observation_casilla_ids(observation)
         object_key = self._observation_key(
             observation.modelo,
             observation.ejercicio,
@@ -318,6 +321,30 @@ def _safe_segment(value: str) -> str:
 
 def _logical_path(namespace: str, object_key: str) -> Path:
     return Path("db://secure_objects") / namespace / object_key
+
+
+def _validate_observation_casilla_ids(observation: FiledDeclaracionObservation) -> None:
+    """Reject filed observations whose casilla rows are not registry ids."""
+    if not observation.casillas:
+        return
+    try:
+        snapshot = resources().modelos.authority.snapshot(
+            observation.modelo,
+            filing_year=observation.ejercicio,
+            period=observation.period.registry_token,
+        )
+    except RegistrySnapshotError as exc:
+        raise SedeValidationError(
+            "filed-declaration observation casilla ids cannot be validated because "
+            f"registry has no snapshot for modelo {observation.modelo!r} "
+            f"{observation.ejercicio} {observation.period.registry_token!r}",
+        ) from exc
+    invalid = undeclared_casilla_ids(snapshot.revision, (casilla.casilla_id for casilla in observation.casillas))
+    if invalid:
+        raise SedeValidationError(
+            "filed-declaration observations must use canonical casilla.id values declared by "
+            f"registry:{observation.modelo}:{snapshot.revision.id}; invalid casilla ids: {invalid!r}",
+        )
 
 
 def _format_storage_ref(digest: str) -> str:

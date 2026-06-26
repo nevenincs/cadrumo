@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from ._parser_boundary_support import (
@@ -11,9 +13,11 @@ from ._parser_boundary_support import (
     _REAL_DECLARATION_COPY,
     _REAL_MODELO_190_DECLARATION_COPY,
     FIXTURES_DIR,
+    CasillaId,
     Decimal,
     DeclaracionParseError,
     Path,
+    _casilla_id,
     _expected_period,
     _modelo_130_snapshot,
     _write_declaration_pdf,
@@ -21,6 +25,33 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+
+def _expected_casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
+    return {_casilla_id(casilla_id): amount for casilla_id, amount in values.items()}
+
+
+_M303_CASILLA_27: CasillaId = _casilla_id("27")
+_M303_CASILLA_29: CasillaId = _casilla_id("29")
+_M303_CASILLA_37: CasillaId = _casilla_id("37")
+_M303_CASILLA_45: CasillaId = _casilla_id("45")
+_M303_CASILLA_64: CasillaId = _casilla_id("64")
+_M303_CASILLA_66: CasillaId = _casilla_id("66")
+_M303_CASILLA_71: CasillaId = _casilla_id("71")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_M303_COMPENSACION_ANTERIORES_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-anteriores")
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
+_M303_COMPENSACION_POSTERIORES_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M349_NUMERO_OPERADORES_CASILLA: CasillaId = _casilla_id("decl.numero-operadores")
+_M349_IMPORTE_OPERACIONES_CASILLA: CasillaId = _casilla_id("decl.importe-operaciones")
+_M349_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = _casilla_id("decl.numero-rectificaciones")
+_M349_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = _casilla_id("decl.importe-rectificaciones")
+_M840_TIPO_DECLARACION_CASILLA: CasillaId = _casilla_id("decl.tipo-declaracion")
+_M840_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_M036_EVENT_KIND_CASILLA: CasillaId = _casilla_id("decl.event-kind")
+_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = _casilla_id("03")
+_M130_RESULTADO_CASILLA: CasillaId = _casilla_id("19")
 
 
 @pytest.mark.parametrize(
@@ -44,71 +75,71 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
     Box 37 (intracomunitarias) is always 0.00; compensation boxes are all 0.00.
     """
     # Per-specimen expected values derived from _MODELO_303_CORPUS_FIXTURES in _generate.py
-    _expected: dict[str, dict[str, Decimal]] = {
-        "2023-1T": {
+    _expected: dict[str, dict[CasillaId, Decimal]] = {
+        "2023-1T": _expected_casilla_values({
             "27": Decimal("12600.00"),
             "29": Decimal("8100.00"),
             "37": Decimal("0.00"),
             "45": Decimal("8100.00"),
             "c46": Decimal("4500.00"),
             "c69": Decimal("4500.00"),
-        },
-        "2023-2T": {
+        }),
+        "2023-2T": _expected_casilla_values({
             "27": Decimal("13800.00"),
             "29": Decimal("8700.00"),
             "37": Decimal("0.00"),
             "45": Decimal("8700.00"),
             "c46": Decimal("5100.00"),
             "c69": Decimal("5100.00"),
-        },
-        "2023-3T": {
+        }),
+        "2023-3T": _expected_casilla_values({
             "27": Decimal("15000.00"),
             "29": Decimal("9300.00"),
             "37": Decimal("0.00"),
             "45": Decimal("9300.00"),
             "c46": Decimal("5700.00"),
             "c69": Decimal("5700.00"),
-        },
-        "2023-4T": {
+        }),
+        "2023-4T": _expected_casilla_values({
             "27": Decimal("16800.00"),
             "29": Decimal("10500.00"),
             "37": Decimal("0.00"),
             "45": Decimal("10500.00"),
             "c46": Decimal("6300.00"),
             "c69": Decimal("6300.00"),
-        },
-        "2024-1T": {
+        }),
+        "2024-1T": _expected_casilla_values({
             "27": Decimal("13200.00"),
             "29": Decimal("8400.00"),
             "37": Decimal("0.00"),
             "45": Decimal("8400.00"),
             "c46": Decimal("4800.00"),
             "c69": Decimal("4800.00"),
-        },
-        "2024-2T": {
+        }),
+        "2024-2T": _expected_casilla_values({
             "27": Decimal("14400.00"),
             "29": Decimal("9000.00"),
             "37": Decimal("0.00"),
             "45": Decimal("9000.00"),
             "c46": Decimal("5400.00"),
             "c69": Decimal("5400.00"),
-        },
-        "2024-3T": {
+        }),
+        "2024-3T": _expected_casilla_values({
             "27": Decimal("16200.00"),
             "29": Decimal("10200.00"),
             "37": Decimal("0.00"),
             "45": Decimal("10200.00"),
             "c46": Decimal("6000.00"),
             "c69": Decimal("6000.00"),
-        },
-        "2024-4T": {
+        }),
+        "2024-4T": _expected_casilla_values({
             "27": Decimal("18000.00"),
             "29": Decimal("11400.00"),
             "37": Decimal("0.00"),
             "45": Decimal("11400.00"),
             "c46": Decimal("6600.00"),
             "c69": Decimal("6600.00"),
-        },
+        }),
     }
     exp = _expected[pdf_stem]
 
@@ -154,28 +185,33 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
     }
 
     # Stable casillas: formula-consistent values derived from _generate.py fixtures.
-    assert values["27"] == exp["27"], f"{pdf_stem}: casilla '27' got {values['27']!r}"
-    assert values["29"] == exp["29"], f"{pdf_stem}: casilla '29' got {values['29']!r}"
-    assert values["37"] == exp["37"], f"{pdf_stem}: casilla '37' got {values['37']!r}"
-    assert values["45"] == exp["45"], f"{pdf_stem}: casilla '45' got {values['45']!r}"
-    assert values["iva.resultado-regimen-general"] == exp["c46"], (
-        f"{pdf_stem}: iva.resultado-regimen-general got {values['iva.resultado-regimen-general']!r}"
-    )
-    assert values["64"] == exp["c46"], f"{pdf_stem}: casilla '64' got {values['64']!r}"
-    assert values["66"] == exp["c46"], f"{pdf_stem}: casilla '66' got {values['66']!r}"
-    assert values["iva.resultado"] == exp["c69"], f"{pdf_stem}: iva.resultado got {values['iva.resultado']!r}"
-    assert values["71"] == exp["c69"], f"{pdf_stem}: casilla '71' got {values['71']!r}"
+    expected_c46 = exp[_casilla_id("c46")]
+    expected_c69 = exp[_casilla_id("c69")]
+    stable_expected = {
+        _M303_CASILLA_27: exp[_M303_CASILLA_27],
+        _M303_CASILLA_29: exp[_M303_CASILLA_29],
+        _M303_CASILLA_37: exp[_M303_CASILLA_37],
+        _M303_CASILLA_45: exp[_M303_CASILLA_45],
+        _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: expected_c46,
+        _M303_CASILLA_64: expected_c46,
+        _M303_CASILLA_66: expected_c46,
+        _M303_RESULTADO_CASILLA: expected_c69,
+        _M303_CASILLA_71: expected_c69,
+    }
+    for casilla_id, expected_value in stable_expected.items():
+        assert values[casilla_id] == expected_value, (
+            f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, got {values[casilla_id]!r}"
+        )
 
     # Compensation boxes are all 0.00 in synthetic fixtures
-    assert values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("0.00"), (
-        f"{pdf_stem}: comp-ant got {values['iva.compensacion-pendiente-periodos-anteriores']!r}"
-    )
-    assert values["iva.compensacion-aplicada-periodo"] == Decimal("0.00"), (
-        f"{pdf_stem}: comp-ap got {values['iva.compensacion-aplicada-periodo']!r}"
-    )
-    assert values["iva.compensacion-pendiente-periodos-posteriores"] == Decimal("0.00"), (
-        f"{pdf_stem}: comp-post got {values['iva.compensacion-pendiente-periodos-posteriores']!r}"
-    )
+    for casilla_id in (
+        _M303_COMPENSACION_ANTERIORES_CASILLA,
+        _M303_COMPENSACION_APLICADA_CASILLA,
+        _M303_COMPENSACION_POSTERIORES_CASILLA,
+    ):
+        assert values[casilla_id] == Decimal("0.00"), (
+            f"{pdf_stem}: compensation casilla {casilla_id!r} got {values[casilla_id]!r}"
+        )
 
 
 @pytest.mark.parametrize(
@@ -201,49 +237,49 @@ def test_parser_extracts_modelo_303_old_template_profile_targets_from_corpus(
     is derived from the synthetic fixture values in _generate.py: c46 = c27 - c45.
     """
     # Per-specimen expected values derived from _MODELO_303_CORPUS_FIXTURES in _generate.py
-    _expected: dict[str, dict[str, Decimal]] = {
-        "2021-2T": {
+    _expected: dict[str, dict[CasillaId, Decimal]] = {
+        "2021-2T": _expected_casilla_values({
             "27": Decimal("12000.00"),
             "29": Decimal("7800.00"),
             "45": Decimal("7800.00"),
             "c46": Decimal("4200.00"),
-        },
-        "2021-3T": {
+        }),
+        "2021-3T": _expected_casilla_values({
             "27": Decimal("13200.00"),
             "29": Decimal("8400.00"),
             "45": Decimal("8400.00"),
             "c46": Decimal("4800.00"),
-        },
-        "2021-4T": {
+        }),
+        "2021-4T": _expected_casilla_values({
             "27": Decimal("14400.00"),
             "29": Decimal("9000.00"),
             "45": Decimal("9000.00"),
             "c46": Decimal("5400.00"),
-        },
-        "2022-1T": {
+        }),
+        "2022-1T": _expected_casilla_values({
             "27": Decimal("12600.00"),
             "29": Decimal("8100.00"),
             "45": Decimal("8100.00"),
             "c46": Decimal("4500.00"),
-        },
-        "2022-2T": {
+        }),
+        "2022-2T": _expected_casilla_values({
             "27": Decimal("15000.00"),
             "29": Decimal("9600.00"),
             "45": Decimal("9600.00"),
             "c46": Decimal("5400.00"),
-        },
-        "2022-3T": {
+        }),
+        "2022-3T": _expected_casilla_values({
             "27": Decimal("16200.00"),
             "29": Decimal("10200.00"),
             "45": Decimal("10200.00"),
             "c46": Decimal("6000.00"),
-        },
-        "2022-4T": {
+        }),
+        "2022-4T": _expected_casilla_values({
             "27": Decimal("18000.00"),
             "29": Decimal("11400.00"),
             "45": Decimal("11400.00"),
             "c46": Decimal("6600.00"),
-        },
+        }),
     }
     exp = _expected[pdf_stem]
 
@@ -284,12 +320,16 @@ def test_parser_extracts_modelo_303_old_template_profile_targets_from_corpus(
     }
 
     # Formula-consistent values from _generate.py synthetic fixtures.
-    assert values["27"] == exp["27"], f"{pdf_stem}: casilla '27' got {values['27']!r}"
-    assert values["29"] == exp["29"], f"{pdf_stem}: casilla '29' got {values['29']!r}"
-    assert values["45"] == exp["45"], f"{pdf_stem}: casilla '45' got {values['45']!r}"
-    assert values["iva.resultado-regimen-general"] == exp["c46"], (
-        f"{pdf_stem}: iva.resultado-regimen-general got {values['iva.resultado-regimen-general']!r}"
-    )
+    expected_values = {
+        _M303_CASILLA_27: exp[_M303_CASILLA_27],
+        _M303_CASILLA_29: exp[_M303_CASILLA_29],
+        _M303_CASILLA_45: exp[_M303_CASILLA_45],
+        _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: exp[_casilla_id("c46")],
+    }
+    for casilla_id, expected_value in expected_values.items():
+        assert values[casilla_id] == expected_value, (
+            f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, got {values[casilla_id]!r}"
+        )
 
 
 def test_parser_extracts_modelo_190_targets_from_real_redacted_declaration_copy() -> None:
@@ -303,11 +343,13 @@ def test_parser_extracts_modelo_190_targets_from_real_redacted_declaration_copy(
     assert filing.modelo == "190"
     assert filing.period == _expected_period(2024, "0A")
     assert filing.tax_id == "Y0000001S"
-    assert {value.casilla_id: value.printed_value for value in filing.values} == {
-        "decl.total-percepciones": Decimal("1"),
-        "decl.percepciones-total": Decimal("1000.00"),
-        "decl.retenciones-total": Decimal("1000.00"),
-    }
+    assert {value.casilla_id: value.printed_value for value in filing.values} == _expected_casilla_values(
+        {
+            "decl.total-percepciones": Decimal("1"),
+            "decl.percepciones-total": Decimal("1000.00"),
+            "decl.retenciones-total": Decimal("1000.00"),
+        },
+    )
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "190"
     assert filing.registry_snapshot_ref.revision_id == "2024-y-siguientes"
@@ -337,8 +379,8 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
       2022-0A: c06=10500, c04=0, c02=0, c26=0, c49=8400 → c47=10500, c64=8400, c65=2100
       2023-0A: c06=12600, c04=0, c02=0, c26=0, c49=9800 → c47=12600, c64=9800, c65=2800
     """
-    _EXPECTED: dict[str, dict[str, Decimal]] = {
-        "2022-0A": {
+    _EXPECTED: dict[str, dict[CasillaId, Decimal]] = {
+        "2022-0A": _expected_casilla_values({
             "iva.anual.repercutido.general": Decimal("10500.00"),
             "iva.anual.repercutido.reducido": Decimal("0.00"),
             "iva.anual.repercutido.super-reducido": Decimal("0.00"),
@@ -347,8 +389,8 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
             "iva.anual.cuota-devengada-total": Decimal("10500.00"),
             "iva.anual.cuota-deducible-total": Decimal("8400.00"),
             "iva.anual.resultado-regimen-general": Decimal("2100.00"),
-        },
-        "2023-0A": {
+        }),
+        "2023-0A": _expected_casilla_values({
             "iva.anual.repercutido.general": Decimal("12600.00"),
             "iva.anual.repercutido.reducido": Decimal("0.00"),
             "iva.anual.repercutido.super-reducido": Decimal("0.00"),
@@ -357,7 +399,7 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
             "iva.anual.cuota-devengada-total": Decimal("12600.00"),
             "iva.anual.cuota-deducible-total": Decimal("9800.00"),
             "iva.anual.resultado-regimen-general": Decimal("2800.00"),
-        },
+        }),
     }
     expected = _EXPECTED[pdf_stem]
 
@@ -548,11 +590,11 @@ def test_real_redacted_declaration_copy_extracts_partial_casillas() -> None:
         period_override="1T",
     )
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert set(extracted.keys()) == {"03", "19"}, (
+    assert set(extracted.keys()) == {_M130_RENDIMIENTO_NETO_CASILLA, _M130_RESULTADO_CASILLA}, (
         f"2024-1T: expected casillas {{03, 19}}, got {set(extracted.keys())!r}"
     )
-    assert isinstance(extracted["19"], Decimal)
-    assert isinstance(extracted["03"], Decimal)
+    assert isinstance(extracted[_M130_RESULTADO_CASILLA], Decimal)
+    assert isinstance(extracted[_M130_RENDIMIENTO_NETO_CASILLA], Decimal)
 
 
 def test_parser_extracts_modelo_349_synthetic_fixture_targets() -> None:
@@ -593,24 +635,24 @@ def test_parser_extracts_modelo_349_synthetic_fixture_targets() -> None:
 
     # All four casillas defined by the M349 declaracion_pdf profile must be present.
     assert set(values.keys()) == {
-        "decl.numero-operadores",
-        "decl.importe-operaciones",
-        "decl.numero-rectificaciones",
-        "decl.importe-rectificaciones",
+        _M349_NUMERO_OPERADORES_CASILLA,
+        _M349_IMPORTE_OPERACIONES_CASILLA,
+        _M349_NUMERO_RECTIFICACIONES_CASILLA,
+        _M349_IMPORTE_RECTIFICACIONES_CASILLA,
     }, f"expected exactly the four M349 profile casillas, got {set(values.keys())!r}"
 
     # decl.numero-operadores: fixture prints "Numero total de operadores intracomunitarios 5";
     # parse_spanish_decimal("5") = Decimal("5").
     # Ground truth: AEAT instructions page 8 "Casilla 01 Número total de operadores intracomunitarios."
-    assert values["decl.numero-operadores"] == Decimal("5"), (
-        f"decl.numero-operadores: expected Decimal('5'), got {values['decl.numero-operadores']!r}"
+    assert values[_M349_NUMERO_OPERADORES_CASILLA] == Decimal("5"), (
+        f"decl.numero-operadores: expected Decimal('5'), got {values[_M349_NUMERO_OPERADORES_CASILLA]!r}"
     )
 
     # decl.importe-operaciones: fixture prints "Importe de las operaciones intracomunitarias 1.234,56";
     # parse_spanish_decimal("1.234,56") = Decimal("1234.56").
     # Ground truth: AEAT instructions page 8 "Casilla 02 Importe de las operaciones intracomunitarias."
-    assert values["decl.importe-operaciones"] == Decimal("1234.56"), (
-        f"decl.importe-operaciones: expected Decimal('1234.56'), got {values['decl.importe-operaciones']!r}"
+    assert values[_M349_IMPORTE_OPERACIONES_CASILLA] == Decimal("1234.56"), (
+        f"decl.importe-operaciones: expected Decimal('1234.56'), got {values[_M349_IMPORTE_OPERACIONES_CASILLA]!r}"
     )
 
     # decl.numero-rectificaciones: fixture prints
@@ -618,15 +660,15 @@ def test_parser_extracts_modelo_349_synthetic_fixture_targets() -> None:
     # parse_spanish_decimal("0") = Decimal("0").
     # Ground truth: AEAT instructions page 9 "Casilla 03 Número total de operadores
     # intracomunitarios con rectificaciones."
-    assert values["decl.numero-rectificaciones"] == Decimal("0"), (
-        f"decl.numero-rectificaciones: expected Decimal('0'), got {values['decl.numero-rectificaciones']!r}"
+    assert values[_M349_NUMERO_RECTIFICACIONES_CASILLA] == Decimal("0"), (
+        f"decl.numero-rectificaciones: expected Decimal('0'), got {values[_M349_NUMERO_RECTIFICACIONES_CASILLA]!r}"
     )
 
     # decl.importe-rectificaciones: fixture prints "Importe de las rectificaciones 0,00";
     # parse_spanish_decimal("0,00") = Decimal("0.00").
     # Ground truth: AEAT instructions page 9 "Casilla 04 Importe de las rectificaciones."
-    assert values["decl.importe-rectificaciones"] == Decimal("0.00"), (
-        f"decl.importe-rectificaciones: expected Decimal('0.00'), got {values['decl.importe-rectificaciones']!r}"
+    assert values[_M349_IMPORTE_RECTIFICACIONES_CASILLA] == Decimal("0.00"), (
+        f"decl.importe-rectificaciones: expected Decimal('0.00'), got {values[_M349_IMPORTE_RECTIFICACIONES_CASILLA]!r}"
     )
 
 
@@ -671,15 +713,16 @@ def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
     # Both casillas defined by the M840 declaracion_pdf profile must be present.
-    assert set(values.keys()) == {"decl.tipo-declaracion", "decl.ejercicio"}, (
+    assert set(values.keys()) == {_M840_TIPO_DECLARACION_CASILLA, _M840_EJERCICIO_CASILLA}, (
         f"expected exactly {{decl.tipo-declaracion, decl.ejercicio}}, got {set(values.keys())!r}"
     )
 
     # decl.ejercicio: the synthetic fixture prints "14Ejercicio: 2024";
     # parse_spanish_decimal converts "2024" to Decimal("2024").
     # Ground truth: the printed form label is "14Ejercicio:" (corpus-confirmed).
-    assert values["decl.ejercicio"] == Decimal("2024"), (
-        f"decl.ejercicio: expected Decimal('2024') from corpus-grounded fixture, got {values['decl.ejercicio']!r}"
+    assert values[_M840_EJERCICIO_CASILLA] == Decimal("2024"), (
+        f"decl.ejercicio: expected Decimal('2024') from corpus-grounded fixture, got "
+        f"{values[_M840_EJERCICIO_CASILLA]!r}"
     )
 
     # decl.tipo-declaracion: the synthetic fixture prints "15Declaracion de: Alta";
@@ -689,7 +732,9 @@ def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
     # "15Declaración de:" (corpus-confirmed).
     # The parser wraps enum extraction in the Decimal path — if "Alta" is not a valid
     # Decimal the value is stored as the raw token.  Either way the casilla is present.
-    assert values["decl.tipo-declaracion"] is not None, "decl.tipo-declaracion: expected a non-None extracted value"
+    assert values[_M840_TIPO_DECLARACION_CASILLA] is not None, (
+        "decl.tipo-declaracion: expected a non-None extracted value"
+    )
 
 
 def test_parser_extracts_modelo_036_synthetic_fixture_targets() -> None:
@@ -743,7 +788,7 @@ def test_parser_extracts_modelo_036_synthetic_fixture_targets() -> None:
 
     # Only decl.event-kind is in the extraction profile — decl.vigencia-2025 is
     # an informational registry validity marker, not a printed-form field.
-    assert set(values.keys()) == {"decl.event-kind"}, (
+    assert set(values.keys()) == {_M036_EVENT_KIND_CASILLA}, (
         f"expected exactly {{decl.event-kind}}, got {set(values.keys())!r}"
     )
 
@@ -754,6 +799,6 @@ def test_parser_extracts_modelo_036_synthetic_fixture_targets() -> None:
     # declaración" (instrucciones-cumplimentacion-pagina-1.html, h3 element).
     # TIPO column values per AEAT instructions: ALTA / MODIFICACIÓN / BAJA.
     # The fixture places "Alta" so the enum token is the mixed-case form.
-    assert values["decl.event-kind"] == "Alta", (
-        f"decl.event-kind: expected 'Alta' from AEAT-grounded fixture, got {values['decl.event-kind']!r}"
+    assert values[_M036_EVENT_KIND_CASILLA] == "Alta", (
+        f"decl.event-kind: expected 'Alta' from AEAT-grounded fixture, got {values[_M036_EVENT_KIND_CASILLA]!r}"
     )

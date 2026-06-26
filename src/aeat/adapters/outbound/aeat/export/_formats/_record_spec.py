@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ......core import STRICT_FROZEN_CONFIG
 from ......core.money import round_to_cents as _round_to_cents
+from ......domain.calculations.registry import CasillaId
 from .._errors import AeatExportFormatError
 
 # FicheroBoeEncoding must stay as a Literal for static type-checking, but the
@@ -162,8 +163,8 @@ class RecordFieldSpec(BaseModel):
     field_id: Annotated[str, Field(min_length=1, max_length=96)]
     """AEAT field identifier."""
 
-    casilla_id: Annotated[str, Field(max_length=5)] | None = None
-    """Optional mapping to a registry casilla."""
+    casilla_id: CasillaId | None = None
+    """Optional mapping to a canonical registry ``casilla.id``."""
 
     kind: FieldKind
 
@@ -214,7 +215,7 @@ def record_field(
     offset: int,
     length: int,
     field_id: str,
-    casilla_id: str | None = None,
+    casilla_id: CasillaId | None = None,
     kind: FieldKind,
     justification: Justification | None = None,
     pad_char: str | None = None,
@@ -237,7 +238,7 @@ def record_field(
         offset: 1-based byte offset within the record.
         length: Field byte length.
         field_id: AEAT field identifier.
-        casilla_id: Optional registry casilla mapping.
+        casilla_id: Optional canonical registry casilla mapping.
         kind: Semantic :class:`FieldKind`.
         justification: Override the kind-aware default justification.
         pad_char: Override the kind-aware default pad character.
@@ -497,7 +498,7 @@ def validate_record_specs(
             f"got offset={specs[0].offset} for field_id={specs[0].field_id!r}",
         )
     seen_field_ids: set[str] = set()
-    seen_casilla_ids: set[str] = set()
+    seen_casilla_ids: set[CasillaId] = set()
     expected = 1
     for i, spec in enumerate(specs):
         if spec.offset != expected:

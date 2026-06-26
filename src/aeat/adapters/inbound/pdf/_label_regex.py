@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
 from ....core.decimal import normalize_decimal_separators
+from ....domain.calculations.registry import CasillaId
 
 # AEAT per UNE 82100 uses a non-breaking space (U+00A0)
 # or narrow no-break space (U+202F) as the thousands separator —
@@ -120,7 +121,7 @@ class LabelHit:
             consumers should downgrade confidence.
     """
 
-    casilla_id: str
+    casilla_id: CasillaId
     raw_value: str
     decimal_value: Decimal | None
     match_count: int
@@ -128,8 +129,8 @@ class LabelHit:
 
 def apply_label_regex(
     text: str,
-    label_regex_map: Mapping[str, re.Pattern[str]],
-) -> dict[str, LabelHit]:
+    label_regex_map: Mapping[CasillaId, re.Pattern[str]],
+) -> dict[CasillaId, LabelHit]:
     """Run each ``(casilla_id, pattern)`` regex against ``text``.
 
     First match wins for the raw value; :attr:`LabelHit.match_count`
@@ -145,7 +146,7 @@ def apply_label_regex(
         A dict keyed by casilla identifier, populated only for patterns
         that matched at least once. Each value is a :class:`LabelHit`.
     """
-    hits: dict[str, LabelHit] = {}
+    hits: dict[CasillaId, LabelHit] = {}
     for casilla_id, pattern in label_regex_map.items():
         matches = list(pattern.finditer(text))
         if not matches:

@@ -9,14 +9,17 @@ import pytest
 
 from .....core.resources import resources
 from .....domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    RegistryValidationError,
+    calculate_registry_snapshot,
+    validated_casilla_id,
+)
+from .....domain.calculations.registry import (
     CasillaObservation as CasillaObservation,
 )
 from .....domain.calculations.registry import (
     RegistryModeloObservation as RegistryModeloObservation,
-)
-from .....domain.calculations.registry import (
-    RegistryValidationError,
-    calculate_registry_snapshot,
 )
 from .....domain.calculations.registry import (
     resolve_relation_values_from_observations as resolve_relation_values_from_observations,
@@ -29,11 +32,37 @@ pytestmark = [
     pytest.mark.hex_inbound_adapter,
 ]
 
-_COMPUTED_CASILLAS_M130 = frozenset(
-    {"03", "04", "07", "09", "11", "12", "13", "14", "17", "19", "saldo-negativo-fin-periodo"},
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"verification fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+def _casilla_ids(*values: object) -> frozenset[CasillaId]:
+    return frozenset(_casilla_id(value) for value in values)
+
+
+_M303_STATE_ATTRIBUTION_RATIO_CASILLA: CasillaId = _casilla_id("65")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
+_COMPUTED_CASILLAS_M130: frozenset[CasillaId] = _casilla_ids(
+    "03",
+    "04",
+    "07",
+    "09",
+    "11",
+    "12",
+    "13",
+    "14",
+    "17",
+    "19",
+    "saldo-negativo-fin-periodo",
 )
 
-_COMPUTED_CASILLAS_M111 = frozenset({"28", "30"})
+_COMPUTED_CASILLAS_M111: frozenset[CasillaId] = _casilla_ids("28", "30")
 
 
 def _registry_snapshot(modelo: str, filing_year: int, period: str):
@@ -41,22 +70,33 @@ def _registry_snapshot(modelo: str, filing_year: int, period: str):
     return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
 
 
-_DR303_PROJECTION_CASILLAS = frozenset({"03", "06", "09", "11", "13", "27", "29", "33", "37", "45"})
+_DR303_PROJECTION_CASILLAS: frozenset[CasillaId] = _casilla_ids(
+    "03",
+    "06",
+    "09",
+    "11",
+    "13",
+    "27",
+    "29",
+    "33",
+    "37",
+    "45",
+)
 
-_COMPUTED_CASILLAS_M303 = frozenset(
+_COMPUTED_CASILLAS_M303: frozenset[CasillaId] = frozenset(
     {
-        "iva.cuota-devengada-total",
-        "iva.cuota-deducible-total",
-        "iva.resultado-regimen-general",
+        _casilla_id("iva.cuota-devengada-total"),
+        _casilla_id("iva.cuota-deducible-total"),
+        _casilla_id("iva.resultado-regimen-general"),
         *_DR303_PROJECTION_CASILLAS,
-        "64",  # suma de resultados (46 + 58 + 76) — Orden HAC/819/2024 art. 1
-        "66",  # atribuible Estado (64 × 65 / 100) — Orden HAC/819/2024 art. 1
-        "iva.compensacion-aplicada-periodo",
-        "iva.compensacion-pendiente-periodos-posteriores",
-        "iva.resultado",  # resultado autoliquidación (66 + 77 + 68 - 78)
-        "71",  # resultado final (69 - 70 + 109) — Orden HAC/819/2024 art. 1
-        "iva.compensacion-generada-periodo",
-        "iva.compensacion-disponible-fin-periodo",
+        _casilla_id("64"),  # suma de resultados (46 + 58 + 76) — Orden HAC/819/2024 art. 1
+        _casilla_id("66"),  # atribuible Estado (64 × 65 / 100) — Orden HAC/819/2024 art. 1
+        _casilla_id("iva.compensacion-aplicada-periodo"),
+        _casilla_id("iva.compensacion-pendiente-periodos-posteriores"),
+        _casilla_id("iva.resultado"),  # resultado autoliquidación (66 + 77 + 68 - 78)
+        _casilla_id("71"),  # resultado final (69 - 70 + 109) — Orden HAC/819/2024 art. 1
+        _casilla_id("iva.compensacion-generada-periodo"),
+        _casilla_id("iva.compensacion-disponible-fin-periodo"),
     },
 )
 
@@ -87,7 +127,7 @@ def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: i
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
-    inputs: dict[str, Decimal] = {}
+    inputs: dict[CasillaId, Decimal] = {}
     for casilla_id, value in extracted.items():
         if casilla_id in _COMPUTED_CASILLAS_M303:
             continue
@@ -105,11 +145,11 @@ def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: i
     # the casilla value for the formula multiplier; binding_values satisfies
     # any explicit binding-fact lookups.
     # Grounded in Orden HAC/819/2024 art. 1 (casilla 65 instrucciones).
-    inputs["65"] = Decimal("100")
+    inputs[_M303_STATE_ATTRIBUTION_RATIO_CASILLA] = Decimal("100")
 
-    _extracted_comp = extracted.get("iva.compensacion-pendiente-periodos-anteriores", Decimal("0"))
+    _extracted_comp = extracted.get(_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, Decimal("0"))
     _comp = _extracted_comp if isinstance(_extracted_comp, Decimal) else Decimal("0")
-    binding_values: dict[str, Decimal] = {
+    binding_values: dict[BindingId, Decimal] = {
         "modelo-303-compensacion-pendiente-anteriores": _comp,
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
@@ -133,8 +173,10 @@ def _build_m303_engine_result(pdf_stem: str, year: int, period: str):  # type: i
     return extracted, dict(result.values), inputs
 
 
-_COMPUTED_CASILLAS_M390 = frozenset(
-    {"iva.anual.cuota-devengada-total", "iva.anual.cuota-deducible-total", "iva.anual.resultado-regimen-general"},
+_COMPUTED_CASILLAS_M390: frozenset[CasillaId] = _casilla_ids(
+    "iva.anual.cuota-devengada-total",
+    "iva.anual.cuota-deducible-total",
+    "iva.anual.resultado-regimen-general",
 )
 
 _M390_PREVIOUS_FILING_BINDING_IDS = (
@@ -145,13 +187,21 @@ _M390_PREVIOUS_FILING_BINDING_IDS = (
     "modelo-390-prev-303-compensacion-generada-ejercicio-no-97",
 )
 
-_COMPUTED_CASILLAS_M115 = frozenset({"03", "05"})
+_COMPUTED_CASILLAS_M115: frozenset[CasillaId] = _casilla_ids("03", "05")
 
-_COMPUTED_CASILLAS_M123_2019 = frozenset({"06-legacy", "08-legacy"})
+_COMPUTED_CASILLAS_M123_2019: frozenset[CasillaId] = _casilla_ids("06-legacy", "08-legacy")
 
-_COMPUTED_CASILLAS_M123_2024 = frozenset({"03", "06", "09", "12", "14"})
+_COMPUTED_CASILLAS_M123_2024: frozenset[CasillaId] = _casilla_ids("03", "06", "09", "12", "14")
 
-_COMPUTED_CASILLAS_M131 = frozenset({"04", "06", "07", "10", "13", "15", "saldo-negativo-fin-periodo"})
+_COMPUTED_CASILLAS_M131: frozenset[CasillaId] = _casilla_ids(
+    "04",
+    "06",
+    "07",
+    "10",
+    "13",
+    "15",
+    "saldo-negativo-fin-periodo",
+)
 
 
 def _period_to_date(year: int, period: str) -> date:

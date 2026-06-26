@@ -26,6 +26,7 @@ from pydantic import AnyHttpUrl
 
 from ......core import Period
 from ......core.config import Settings
+from ......domain.calculations.registry import CasillaId, validated_casilla_id
 from ......tests.secure_sql import isolated_runtime_profile
 from .._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from .._observation_store import FiledDeclaracionObservationStore
@@ -41,6 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "sede-observation"
 _AEAT = Settings.external_constants().aeat
 _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
+_M100_BASE_LIQUIDABLE_CASILLA: CasillaId = validated_casilla_id("0500", surface="_M100_BASE_LIQUIDABLE_CASILLA")
 
 
 def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaracionObservation:
@@ -55,7 +57,7 @@ def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaraci
         artefacts=(artefact,),
         casillas=(
             ObservedCasillaValue(
-                casilla_id="0500",
+                casilla_id=_M100_BASE_LIQUIDABLE_CASILLA,
                 value="42500.00",
                 source_artefact_kind="declaration_pdf",
                 source_locator="page=3,row=Casilla 500",

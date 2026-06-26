@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ......domain.calculations.registry import CasillaId, validated_casilla_id
 from ._declarations_support import (
     _COTEJO_QUERY_URL,
     _DECLARATIONS_LISTING_URL,
@@ -44,6 +45,23 @@ from ._declarations_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+
+def _casilla_id(value: object) -> CasillaId:
+    return validated_casilla_id(value, surface="test casilla id")
+
+
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
+_M303_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
+_M303_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("71")
+_M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_PRINTED_COMPENSATION_ALIAS_CASILLA: CasillaId = _casilla_id("87")
 
 
 def test_authoritative_declaration_selection_uses_latest_alta_row_for_duplicate_period() -> None:
@@ -131,17 +149,20 @@ def test_modelo_303_submitted_file_fallback_extracts_result_casillas() -> None:
     )
 
     assert {casilla.casilla_id: casilla.value for casilla in observed} == {
-        "110": "0",
-        "78": "0",
-        "87": "0",
-        "69": "-258.02",
-        "71": "-258.02",
+        _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: "0",
+        _M303_COMPENSACION_APLICADA_CASILLA: "0",
+        _M303_POSTERIOR_CASILLA: "0",
+        _M303_RESULTADO_CASILLA: "-258.02",
+        _M303_RESULTADO_FINAL_CASILLA: "-258.02",
     }
 
 
 def test_modelo_303_2022_submitted_file_fallback_uses_2022_result_position() -> None:
     snapshot = _modelo_snapshot("303", filing_year=2022, period="1T")
-    casilla_71_position = _modelo_303_design_position(_MODELO_303_2022_RECORD_DESIGN, casilla_id="71")
+    casilla_71_position = _modelo_303_design_position(
+        _MODELO_303_2022_RECORD_DESIGN,
+        casilla_id=_M303_RESULTADO_FINAL_CASILLA,
+    )
     artefact = FiledDeclaracionArtefact(
         kind="submitted_file",
         source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
@@ -171,10 +192,9 @@ def test_modelo_303_2022_submitted_file_fallback_uses_2022_result_position() -> 
         artefact=artefact,
     )
 
-    assert {casilla.casilla_id: casilla.value for casilla in observed}["71"] == "-258.02"
-    assert next(casilla for casilla in observed if casilla.casilla_id == "71").source_locator == (
-        f"record:T30303:pos:{casilla_71_position}:width:17"
-    )
+    assert {casilla.casilla_id: casilla.value for casilla in observed}[_M303_RESULTADO_FINAL_CASILLA] == "-258.02"
+    observed_result = next(casilla for casilla in observed if casilla.casilla_id == _M303_RESULTADO_FINAL_CASILLA)
+    assert observed_result.source_locator == f"record:T30303:pos:{casilla_71_position}:width:17"
 
 
 def test_modelo_303_submitted_file_fallback_refuses_invalid_page_record_footer() -> None:
@@ -215,16 +235,62 @@ def test_modelo_303_filed_observation_derives_compensation_available() -> None:
         modelo="303",
         ejercicio=2024,
         period="4T",
-        casilla_values={"87": Decimal("0"), "69": Decimal("-258.02")},
+        casilla_values={
+            _M303_POSTERIOR_CASILLA: Decimal("0"),
+            _M303_RESULTADO_CASILLA: Decimal("-258.02"),
+        },
     )
 
     derived = _with_derived_303_compensation_available_observation(observation)
     registry_observation = registry_observation_from_filed_declaration(derived)
+    registry_casillas = {
+        casilla.id: casilla
+        for casilla in _modelo_snapshot("303", filing_year=2024, period="4T").revision.casillas
+    }
 
-    assert {casilla.casilla_id: casilla.value for casilla in derived.casillas}[
-        "iva.compensacion-disponible-fin-periodo"
-    ] == "258.02"
-    assert registry_observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("258.02")
+    assert {casilla.casilla_id: casilla.value for casilla in derived.casillas}[_M303_DISPONIBLE_CASILLA] == "258.02"
+    assert registry_observation.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("258.02")
+    observation_by_id = {casilla.casilla_id: casilla for casilla in registry_observation.observations}
+    available_observation = observation_by_id[_M303_DISPONIBLE_CASILLA]
+    registry_casilla = registry_casillas[_M303_DISPONIBLE_CASILLA]
+    assert available_observation.legal_refs == registry_casilla.legal_refs
+    assert available_observation.source_refs == registry_casilla.source_refs
+    derived_value = next(casilla for casilla in derived.casillas if casilla.casilla_id == _M303_DISPONIBLE_CASILLA)
+    assert derived_value.source_artefact_kind == "derived_carry_policy"
+
+
+def test_modelo_303_filed_observation_derives_compensation_available_from_registry_formula() -> None:
+    observation = _filed_observation(
+        modelo="303",
+        ejercicio=2024,
+        period="4T",
+        casilla_values={
+            _M303_POSTERIOR_CASILLA: Decimal("10.00"),
+            _M303_RESULTADO_CASILLA: Decimal("-999.99"),
+            _M303_GENERADA_CASILLA: Decimal("2.50"),
+        },
+    )
+
+    derived = _with_derived_303_compensation_available_observation(observation)
+
+    derived_value = next(casilla for casilla in derived.casillas if casilla.casilla_id == _M303_DISPONIBLE_CASILLA)
+    assert derived_value.value == "12.50"
+    assert derived_value.source_artefact_kind == "derived_registry_formula"
+    assert derived_value.source_locator == (
+        f"formula:{_M303_POSTERIOR_CASILLA}+{_M303_GENERADA_CASILLA}"
+    )
+
+
+def test_registry_observation_from_filed_declaration_refuses_noncanonical_casilla_ids() -> None:
+    observation = _filed_observation(
+        modelo="303",
+        ejercicio=2024,
+        period="4T",
+        casilla_values={_M303_PRINTED_COMPENSATION_ALIAS_CASILLA: Decimal("0")},
+    )
+
+    with pytest.raises(SedeParseError, match=r"canonical casilla\.id"):
+        registry_observation_from_filed_declaration(observation)
 
 
 class TestParseListbox:

@@ -56,7 +56,13 @@ from .....domain.buckets import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from .....domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotRef
+from .....domain.calculations.registry import (
+    CasillaId,
+    CasillaObservation,
+    RegistryModeloObservation,
+    RegistrySnapshotRef,
+    validated_casilla_id,
+)
 from .....domain.categories import SpendingCategory
 from .....domain.contribuyente.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from .....domain.contribuyente.inventory import InventoryLedger, ValuationMethod
@@ -221,6 +227,17 @@ _DEK = b"d" * 32
 _MASTER_KEY = b"m" * 32
 
 _GOOGLE_OAUTH_ENDPOINT = "https://oauth2.googleapis.com/token"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_CALCULATION_INPUT_CASILLA: CasillaId = _casilla_id("base")
+_CALCULATION_OUTPUT_CASILLA: CasillaId = _casilla_id("casilla-01")
 
 
 @pytest.fixture(autouse=True)
@@ -417,7 +434,7 @@ def _modelo_draft(label: str) -> ModeloDraft:
         status=ModeloDraftStatus.BORRADOR,
         values=(
             ModeloValue(
-                casilla_id=f"iva.devengado.{label}",
+                casilla_id=_casilla_id(f"iva.devengado.{label}"),
                 value=Decimal("100.00"),
                 kind=ModeloValueKind.LITERAL,
                 source="runtime migrated repository test",
@@ -435,7 +452,7 @@ def _modelo_amendment(label: str) -> ModeloComplementaria:
     draft = _modelo_draft(label)
     delta = (
         CasillaChange(
-            casilla_code="iva.devengado",
+            casilla_id=_casilla_id("iva.devengado"),
             old_value=Decimal("100.00"),
             new_value=Decimal("121.00"),
             reason=f"runtime migrated amendment {label}",
@@ -530,10 +547,11 @@ def _work_unit(bucket_id: str, label: str) -> WorkUnit:
 
 def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
     work_unit_id = _hex(f"work-unit-{label}")
-    values = {"casilla-01": Decimal("100.00")}
+    input_values_by_casilla_id = {_CALCULATION_INPUT_CASILLA: "100.00"}
+    values = {_CALCULATION_OUTPUT_CASILLA: Decimal("100.00")}
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={"base": "100.00"},
+        input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides={},
         casilla_values=values,
         source_transaction_ids=(),
@@ -542,10 +560,18 @@ def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.BORRADOR,
-        inputs_snapshot={"base": "100.00"},
+        input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides={},
         source_transaction_ids=(),
         casilla_values=values,
+        observations=(
+            CasillaObservation(
+                casilla_id=_CALCULATION_OUTPUT_CASILLA,
+                value=Decimal("100.00"),
+                legal_refs=("ley-58-2003:art-93",),
+                source_refs=("runtime-migrated-repository-test",),
+            ),
+        ),
         created_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
         updated_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
     )
@@ -596,8 +622,8 @@ def _verification_catalogue(label: str) -> VerificationReportCatalogue:
         calculation_revision_id=revision_id,
         completeness_status=VerificationCompletenessStatus.COMPLETE,
         findings=(),
-        resolved_casillas=("iva.devengado",),
-        missing_required_casillas=(),
+        resolved_casilla_ids=(_casilla_id("iva.devengado"),),
+        missing_required_casilla_ids=(),
         run_at=run_at,
         verified_by="aeat.cli.modelo.verify",
         granted_verificado_completo=True,
