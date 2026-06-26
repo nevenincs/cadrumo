@@ -19,6 +19,7 @@ from ....core import STRICT_FROZEN_CONFIG, Period
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
+from ._ids import BindingId, CasillaId, RelationId
 
 ScenarioStatus = Literal["match", "mismatch"]
 
@@ -32,11 +33,22 @@ class RegistryScenarioModel(BaseModel):
 class RegistryScenarioExpectedOutput(RegistryScenarioModel):
     """Expected value and trace contract for one scenario output."""
 
-    target: str = Field(min_length=1)
+    target_casilla_id: CasillaId
     value: Decimal
     operand_refs: tuple[str, ...] = ()
+    operand_casilla_refs: tuple[CasillaId, ...] = ()
     legal_refs: tuple[str, ...] = ()
     source_refs: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def _operand_casilla_refs_are_traced(self) -> RegistryScenarioExpectedOutput:
+        missing = tuple(ref for ref in self.operand_casilla_refs if ref not in self.operand_refs)
+        if missing:
+            raise RegistryValidationError(
+                f"scenario expected output for {self.target_casilla_id!r} declares operand_casilla_refs "
+                f"that are absent from operand_refs: {missing!r}",
+            )
+        return self
 
 
 class RegistryCalculationScenario(RegistryScenarioModel):
@@ -48,12 +60,12 @@ class RegistryCalculationScenario(RegistryScenarioModel):
     filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1)
-    inputs: dict[str, Decimal] = Field(default_factory=dict)
-    binding_values: dict[str, Decimal] = Field(default_factory=dict)
-    enum_binding_values: dict[str, str] = Field(default_factory=dict)
-    relation_values: dict[str, Decimal] = Field(default_factory=dict)
+    inputs: dict[CasillaId, Decimal] = Field(default_factory=dict)
+    binding_values: dict[BindingId, Decimal] = Field(default_factory=dict)
+    enum_binding_values: dict[BindingId, str] = Field(default_factory=dict)
+    relation_values: dict[RelationId, Decimal] = Field(default_factory=dict)
     date_context: dict[str, date] = Field(default_factory=dict)
-    date_binding_values: dict[str, date] = Field(default_factory=dict)
+    date_binding_values: dict[BindingId, date] = Field(default_factory=dict)
     expected_outputs: tuple[RegistryScenarioExpectedOutput, ...] = Field(min_length=1)
     notes: tuple[str, ...] = ()
 
@@ -82,7 +94,7 @@ class RegistryCalculationScenario(RegistryScenarioModel):
             self.filing_period.filing_year != self.filing_year or self.filing_period.registry_token != self.period
         ):
             raise RegistryValidationError("scenario filing_period must match filing_year and period")
-        expected_targets = [expected.target for expected in self.expected_outputs]
+        expected_targets = [expected.target_casilla_id for expected in self.expected_outputs]
         if len(set(expected_targets)) != len(expected_targets):
             raise RegistryValidationError("scenario expected outputs must target unique casillas")
         return self
@@ -91,12 +103,14 @@ class RegistryCalculationScenario(RegistryScenarioModel):
 class RegistryScenarioComparison(RegistryScenarioModel):
     """One expected-vs-actual output comparison for a scenario run."""
 
-    target: str
+    target_casilla_id: CasillaId
     expected_value: Decimal
     actual_value: Decimal | None = None
     status: ScenarioStatus
     expected_operand_refs: tuple[str, ...] = ()
     actual_operand_refs: tuple[str, ...] = ()
+    expected_operand_casilla_refs: tuple[CasillaId, ...] = ()
+    actual_operand_casilla_refs: tuple[CasillaId, ...] = ()
     expected_legal_refs: tuple[str, ...] = ()
     actual_legal_refs: tuple[str, ...] = ()
     expected_source_refs: tuple[str, ...] = ()
@@ -145,7 +159,7 @@ def run_registry_calculation_scenario(
         relation_values=scenario.relation_values,
         date_binding_values=scenario.date_binding_values or None,
     )
-    entries_by_target = {entry.target: entry for entry in calculation.entries}
+    entries_by_target = {entry.target_casilla_id: entry for entry in calculation.entries}
     comparisons = tuple(
         _compare_expected_output(expected, values=calculation.values, entries_by_target=entries_by_target)
         for expected in scenario.expected_outputs
@@ -165,7 +179,7 @@ def assert_registry_scenario_matches(report: RegistryScenarioRunReport) -> None:
     if report.status == "match":
         return
     details = "\n".join(
-        f" - {comparison.target}: {comparison.detail or 'mismatch'}"
+        f" - {comparison.target_casilla_id}: {comparison.detail or 'mismatch'}"
         for comparison in report.comparisons
         if comparison.status == "mismatch"
     )
@@ -175,12 +189,13 @@ def assert_registry_scenario_matches(report: RegistryScenarioRunReport) -> None:
 def _compare_expected_output(
     expected: RegistryScenarioExpectedOutput,
     *,
-    values: Mapping[str, Decimal],
-    entries_by_target: Mapping[str, RegistryCalculationEntry],
+    values: Mapping[CasillaId, Decimal],
+    entries_by_target: Mapping[CasillaId, RegistryCalculationEntry],
 ) -> RegistryScenarioComparison:
-    actual = values.get(expected.target)
-    entry = entries_by_target.get(expected.target)
+    actual = values.get(expected.target_casilla_id)
+    entry = entries_by_target.get(expected.target_casilla_id)
     actual_operand_refs = entry.operand_refs if entry is not None else ()
+    actual_operand_casilla_refs = entry.operand_casilla_refs if entry is not None else ()
     actual_legal_refs = entry.legal_refs if entry is not None else ()
     actual_source_refs = entry.source_refs if entry is not None else ()
     mismatches: list[str] = []
@@ -190,18 +205,30 @@ def _compare_expected_output(
         mismatches.append(f"expected value {expected.value} but got {actual}")
     if expected.operand_refs and actual_operand_refs != expected.operand_refs:
         mismatches.append(f"expected operands {expected.operand_refs!r} but got {actual_operand_refs!r}")
+    if expected.operand_refs and actual_operand_casilla_refs and not expected.operand_casilla_refs:
+        mismatches.append(
+            "expected operand casillas were not declared; "
+            f"actual casilla operands were {actual_operand_casilla_refs!r}",
+        )
+    if expected.operand_casilla_refs and actual_operand_casilla_refs != expected.operand_casilla_refs:
+        mismatches.append(
+            f"expected operand casillas {expected.operand_casilla_refs!r} "
+            f"but got {actual_operand_casilla_refs!r}",
+        )
     if expected.legal_refs and actual_legal_refs != expected.legal_refs:
         mismatches.append(f"expected legal refs {expected.legal_refs!r} but got {actual_legal_refs!r}")
     if expected.source_refs and actual_source_refs != expected.source_refs:
         mismatches.append(f"expected source refs {expected.source_refs!r} but got {actual_source_refs!r}")
     status: ScenarioStatus = "match" if not mismatches else "mismatch"
     return RegistryScenarioComparison(
-        target=expected.target,
+        target_casilla_id=expected.target_casilla_id,
         expected_value=expected.value,
         actual_value=actual,
         status=status,
         expected_operand_refs=expected.operand_refs,
         actual_operand_refs=actual_operand_refs,
+        expected_operand_casilla_refs=expected.operand_casilla_refs,
+        actual_operand_casilla_refs=actual_operand_casilla_refs,
         expected_legal_refs=expected.legal_refs,
         actual_legal_refs=actual_legal_refs,
         expected_source_refs=expected.source_refs,

@@ -14,7 +14,14 @@ from .....core import TaxDomain, freeze_toml
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .....core.resources import bundled_path
-from .. import InputKind, RegistryValidationError, ValidatedRegistryAuthority, load_registry_tree
+from .. import (
+    CasillaId,
+    InputKind,
+    RegistryValidationError,
+    ValidatedRegistryAuthority,
+    load_registry_tree,
+    validated_casilla_id,
+)
 from .._schema import (
     ApplicationLinkDefinition,
     CalculationCompletenessCasilla,
@@ -90,6 +97,8 @@ def _snapshot_for_revision(
 _DUMMY_LEGAL_ID = "lirpf:art-1"
 
 _DUMMY_SOURCE_ID = "aeat-dr-130-2019-v12"
+_DEFAULT_MINIMAL_CASILLA_ID: CasillaId = validated_casilla_id("01", surface="_DEFAULT_MINIMAL_CASILLA_ID")
+_SINGLE_SEGMENT_CASILLA_ID: CasillaId = validated_casilla_id("00592", surface="_SINGLE_SEGMENT_CASILLA_ID")
 
 
 def _minimal_legal_ref() -> LegalReference:
@@ -128,7 +137,7 @@ def _minimal_catalogues() -> RegistryCatalogues:
     )
 
 
-def _minimal_casilla(casilla_id: str = "01") -> CasillaDefinition:
+def _minimal_casilla(casilla_id: CasillaId = _DEFAULT_MINIMAL_CASILLA_ID) -> CasillaDefinition:
     return CasillaDefinition(
         id=casilla_id,
         number=casilla_id,
@@ -284,7 +293,7 @@ def _build_snapshot_with_missing_source(revision: ModeloRevision, missing_source
 
 
 def _segmented_casilla(
-    casilla_id: str,
+    casilla_id: CasillaId,
     number: str,
     segmento: str | None,
 ) -> CasillaDefinition:
@@ -304,7 +313,7 @@ def _segmented_casilla(
 def _single_segment_casilla() -> CasillaDefinition:
     """A real single-segment casilla, the shape every existing modelo authors."""
     return CasillaDefinition(
-        id="00592",
+        id=_SINGLE_SEGMENT_CASILLA_ID,
         number="00592",
         label="Cuota liquida",
         section=("liquidacion",),

@@ -1,9 +1,9 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-resto-a-ingresar-positivo"
-target = "0695"
+target_casilla_id = "0695"
 expression = { op = "max", args = [
     { literal = "0" },
-    { op = "subtract", args = [{ casilla = "0670" }, { casilla = "0693" }] },
+    { op = "subtract", args = [{ casilla_id = "0670" }, { casilla_id = "0693" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]

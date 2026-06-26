@@ -96,7 +96,7 @@ def test_full_deductible_first_slice_fact_builds_binding_ready_observation() -> 
 
     assert result.status is RentaDeductibilityStatus.ELIGIBLE
     assert observation.source_kind == LEDGER_RENTA_EXPENSE_SOURCE
-    assert observation.target_casilla == "0186"
+    assert observation.target_casilla_id == "0186"
     assert observation.filing_date == date(2025, 3, 7)
     assert observation.gross_amount == Decimal("294.00")
     assert observation.deductible_amount == Decimal("294.00")
@@ -120,7 +120,7 @@ def test_transaction_only_fact_uses_operation_date_and_prevents_invoice_evidence
 
     observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
-    assert observation.target_casilla == "0203"
+    assert observation.target_casilla_id == "0203"
     assert observation.filing_date == date(2025, 3, 8)
     assert observation.invoice_id is None
     assert observation.invoice_evidence_status is RentaInvoiceEvidenceStatus.NONE
@@ -142,7 +142,7 @@ def test_linked_refund_preserves_category_and_becomes_negative_observation() -> 
     observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
 
     assert observation.sign == -1
-    assert observation.target_casilla == "0203"
+    assert observation.target_casilla_id == "0203"
     assert observation.gross_amount == Decimal("-35.00")
     assert observation.deductible_amount == Decimal("-35.00")
 
@@ -345,7 +345,26 @@ def test_observation_model_rejects_mismatched_first_slice_casilla() -> None:
     )
     observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
     payload = observation.model_dump()
-    payload["target_casilla"] = "0199"
+    payload["target_casilla_id"] = "0199"
 
-    with pytest.raises(ValidationError, match="target_casilla must match"):
+    with pytest.raises(ValidationError, match="target_casilla_id must match"):
         type(observation).model_validate(payload)
+
+
+def test_observation_model_rejects_legacy_target_casilla_key() -> None:
+    fact = _fact(category=SpendingCategory.GASTOS_BANCARIOS)
+    result = evaluate_renta_deductibility(
+        fact,
+        resolve_category_profiles(2025)[SpendingCategory.GASTOS_BANCARIOS],
+        _context(),
+    )
+    observation = build_renta_deductible_expense_observation(fact, result, tax_year=2025)
+    payload = observation.model_dump()
+    payload["target_casilla"] = payload.pop("target_casilla_id")
+
+    with pytest.raises(ValidationError) as exc_info:
+        type(observation).model_validate(payload)
+
+    detail = str(exc_info.value)
+    assert "target_casilla_id" in detail
+    assert "target_casilla" in detail

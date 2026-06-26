@@ -4,7 +4,7 @@ kind = "cross_model_output"
 dependency_role = "factual_evidence"
 source_modelo = "303"
 source_revision_selector = { year_from = 2009 }
-source_output = "iva.compensacion-generada-periodo"
+source_casilla_id = "iva.compensacion-generada-periodo"
 target_binding = "modelo-390-prev-303-compensacion-ultimo-periodo"
 period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["4T"]

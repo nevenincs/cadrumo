@@ -12,7 +12,7 @@ repeat = "binding_rows"
 binding_record = "operador"
 discriminator = { offset = 147, length = 32, requires = "blank" }
 
-[revisions."2020-y-siguientes".export_layouts.records.row_field_casillas]
+[revisions."2020-y-siguientes".export_layouts.records.row_field_casilla_ids]
 country_code = "op.codigo-pais"
 party_tax_id = "op.nif-comunitario"
 party_legal_name = "op.apellidos-razon-social"

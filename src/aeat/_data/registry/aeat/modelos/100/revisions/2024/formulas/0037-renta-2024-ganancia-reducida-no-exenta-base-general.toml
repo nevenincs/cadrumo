@@ -1,9 +1,9 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-ganancia-reducida-no-exenta-base-general"
-target = "1649"
+target_casilla_id = "1649"
 expression = { op = "subtract", args = [
-    { casilla = "1645" },
-    { casilla = "1648" },
+    { casilla_id = "1645" },
+    { casilla_id = "1648" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

@@ -12,7 +12,19 @@ from typing import Literal, TypedDict
 import pytest
 from pydantic import ValidationError
 
-from .._schema import CasillaDefinition, CasillaFieldKind, ExportFieldDefinition, InputKind
+from .._ids import CasillaId, validated_casilla_id
+from .._schema import (
+    AlgorithmBindingDefinition,
+    CasillaDefinition,
+    CasillaFieldKind,
+    ConstructDefinition,
+    ExportFieldDefinition,
+    FormulaDefinition,
+    FormulaExpression,
+    InputKind,
+    RelationDefinition,
+    VerificationExpectationDefinition,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -22,6 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DUMMY_LEGAL_ID = "lirpf:art-test"
 _DUMMY_SOURCE_ID = "aeat-test-source-001"
+_DUMMY_CASILLA_ID: CasillaId = validated_casilla_id("01", surface="_DUMMY_CASILLA_ID")
 
 
 # ---------------------------------------------------------------------------
@@ -59,40 +72,41 @@ def test_input_kind_is_str() -> None:
 )
 def test_casilla_roundtrip_valid_input_kind(member: InputKind, raw_string: str) -> None:
     """Constructor accepts each member string and model_dump round-trips it."""
-    # CasillaDefinition constructor (strict-mode pydantic) accepts string
-    # literals for StrEnum fields — matching TOML-ingest behaviour.
+    # Validate TOML-shaped payloads so raw string enum coercion stays on the
+    # same boundary production registry loading uses.
     if member == InputKind.COMPUTED:
-        casilla = CasillaDefinition(
-            id="01",
-            number="01",
-            label="Test casilla",
-            section=("test",),
-            input_kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
-            formula="test.formula",
-            legal_refs=(_DUMMY_LEGAL_ID,),
-            source_refs=(_DUMMY_SOURCE_ID,),
-        )
+        payload: dict[str, object] = {
+            "id": _DUMMY_CASILLA_ID,
+            "number": "01",
+            "label": "Test casilla",
+            "section": ("test",),
+            "input_kind": raw_string,
+            "formula": "test.formula",
+            "legal_refs": (_DUMMY_LEGAL_ID,),
+            "source_refs": (_DUMMY_SOURCE_ID,),
+        }
     elif member == InputKind.BOUND:
-        casilla = CasillaDefinition(
-            id="01",
-            number="01",
-            label="Test casilla",
-            section=("test",),
-            input_kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
-            binding="test.binding",
-            legal_refs=(_DUMMY_LEGAL_ID,),
-            source_refs=(_DUMMY_SOURCE_ID,),
-        )
+        payload = {
+            "id": _DUMMY_CASILLA_ID,
+            "number": "01",
+            "label": "Test casilla",
+            "section": ("test",),
+            "input_kind": raw_string,
+            "binding": "test.binding",
+            "legal_refs": (_DUMMY_LEGAL_ID,),
+            "source_refs": (_DUMMY_SOURCE_ID,),
+        }
     else:
-        casilla = CasillaDefinition(
-            id="01",
-            number="01",
-            label="Test casilla",
-            section=("test",),
-            input_kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
-            legal_refs=(_DUMMY_LEGAL_ID,),
-            source_refs=(_DUMMY_SOURCE_ID,),
-        )
+        payload = {
+            "id": _DUMMY_CASILLA_ID,
+            "number": "01",
+            "label": "Test casilla",
+            "section": ("test",),
+            "input_kind": raw_string,
+            "legal_refs": (_DUMMY_LEGAL_ID,),
+            "source_refs": (_DUMMY_SOURCE_ID,),
+        }
+    casilla = CasillaDefinition.model_validate(payload)
 
     assert casilla.input_kind == member
     assert isinstance(casilla.input_kind, InputKind)
@@ -109,42 +123,48 @@ def test_casilla_roundtrip_valid_input_kind(member: InputKind, raw_string: str) 
 def test_casilla_rejects_unknown_input_kind() -> None:
     """CasillaDefinition raises ValidationError for an unrecognised input_kind token."""
     with pytest.raises(ValidationError):
-        CasillaDefinition(
-            id="01",
-            number="01",
-            label="Test casilla",
-            section=("test",),
-            input_kind="garbage",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
-            legal_refs=(_DUMMY_LEGAL_ID,),
-            source_refs=(_DUMMY_SOURCE_ID,),
+        CasillaDefinition.model_validate(
+            {
+                "id": _DUMMY_CASILLA_ID,
+                "number": "01",
+                "label": "Test casilla",
+                "section": ("test",),
+                "input_kind": "garbage",
+                "legal_refs": (_DUMMY_LEGAL_ID,),
+                "source_refs": (_DUMMY_SOURCE_ID,),
+            },
         )
 
 
 def test_casilla_rejects_empty_string_input_kind() -> None:
     """An empty string is not a valid InputKind member."""
     with pytest.raises(ValidationError):
-        CasillaDefinition(
-            id="01",
-            number="01",
-            label="Test casilla",
-            section=("test",),
-            input_kind="",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
-            legal_refs=(_DUMMY_LEGAL_ID,),
-            source_refs=(_DUMMY_SOURCE_ID,),
+        CasillaDefinition.model_validate(
+            {
+                "id": _DUMMY_CASILLA_ID,
+                "number": "01",
+                "label": "Test casilla",
+                "section": ("test",),
+                "input_kind": "",
+                "legal_refs": (_DUMMY_LEGAL_ID,),
+                "source_refs": (_DUMMY_SOURCE_ID,),
+            },
         )
 
 
 def test_casilla_rejects_numeric_input_kind() -> None:
     """A numeric value is not a valid InputKind member."""
     with pytest.raises(ValidationError):
-        CasillaDefinition(
-            id="01",
-            number="01",
-            label="Test casilla",
-            section=("test",),
-            input_kind=42,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
-            legal_refs=(_DUMMY_LEGAL_ID,),
-            source_refs=(_DUMMY_SOURCE_ID,),
+        CasillaDefinition.model_validate(
+            {
+                "id": _DUMMY_CASILLA_ID,
+                "number": "01",
+                "label": "Test casilla",
+                "section": ("test",),
+                "input_kind": 42,
+                "legal_refs": (_DUMMY_LEGAL_ID,),
+                "source_refs": (_DUMMY_SOURCE_ID,),
+            },
         )
 
 
@@ -156,7 +176,7 @@ def test_casilla_rejects_numeric_input_kind() -> None:
 def test_casilla_default_input_kind_is_manual() -> None:
     """When input_kind is omitted, CasillaDefinition defaults to MANUAL."""
     casilla = CasillaDefinition(
-        id="01",
+        id=_DUMMY_CASILLA_ID,
         number="01",
         label="Test casilla",
         section=("test",),
@@ -164,7 +184,145 @@ def test_casilla_default_input_kind_is_manual() -> None:
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     assert casilla.input_kind is InputKind.MANUAL
-    assert casilla.input_kind == "manual"
+
+
+def test_formula_expression_rejects_generic_casilla_key() -> None:
+    with pytest.raises(ValidationError):
+        FormulaExpression.model_validate({"casilla": _DUMMY_CASILLA_ID})
+
+
+def test_formula_definition_rejects_legacy_target_key() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        FormulaDefinition.model_validate(
+            {
+                "id": "test.formula",
+                "target": _DUMMY_CASILLA_ID,
+                "expression": {"literal": "0"},
+                "legal_refs": (_DUMMY_LEGAL_ID,),
+                "source_refs": (_DUMMY_SOURCE_ID,),
+            },
+        )
+
+    message = str(exc_info.value)
+    assert "target_casilla_id" in message
+    assert "target" in message
+
+
+def test_algorithm_binding_definition_rejects_legacy_target_key() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        AlgorithmBindingDefinition.model_validate(
+            {
+                "id": "test.algorithm-binding",
+                "provider": "test.algorithm-provider",
+                "target": _DUMMY_CASILLA_ID,
+                "inputs": {"value": _DUMMY_CASILLA_ID},
+                "output_casilla_ids": {"result": _DUMMY_CASILLA_ID},
+                "legal_refs": (_DUMMY_LEGAL_ID,),
+                "source_refs": (_DUMMY_SOURCE_ID,),
+            },
+        )
+
+    message = str(exc_info.value)
+    assert "target_casilla_id" in message
+    assert "target" in message
+
+
+def test_algorithm_binding_definition_rejects_legacy_outputs_key() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        AlgorithmBindingDefinition.model_validate(
+            {
+                "id": "test.algorithm-binding",
+                "provider": "test.algorithm-provider",
+                "target_casilla_id": _DUMMY_CASILLA_ID,
+                "inputs": {"value": _DUMMY_CASILLA_ID},
+                "outputs": {"result": _DUMMY_CASILLA_ID},
+                "legal_refs": (_DUMMY_LEGAL_ID,),
+                "source_refs": (_DUMMY_SOURCE_ID,),
+            },
+        )
+
+    message = str(exc_info.value)
+    assert "output_casilla_ids" in message
+    assert "outputs" in message
+
+
+def test_relation_definition_rejects_legacy_source_output_key() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        RelationDefinition.model_validate(
+            {
+                "id": "test-rel",
+                "kind": "cross_model_output",
+                "dependency_role": "direct_calculation",
+                "source_modelo": "303",
+                "source_revision_selector": {"filing_year_delta": 0},
+                "source_output": _DUMMY_CASILLA_ID,
+                "target_binding": "test.binding",
+                "period_alignment": {"mode": "same_period"},
+                "legal_refs": (_DUMMY_LEGAL_ID,),
+                "source_refs": (_DUMMY_SOURCE_ID,),
+            },
+        )
+
+    message = str(exc_info.value)
+    assert "source_casilla_id" in message
+    assert "source_output" in message
+
+
+def test_verification_expectation_definition_rejects_legacy_computed_casillas_key() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        VerificationExpectationDefinition.model_validate(
+            {
+                "id": "test.expectation",
+                "computed_casillas": (_DUMMY_CASILLA_ID,),
+                "tolerance": "0.01",
+                "rounding": "cent",
+                "min_coverage": "1",
+                "discrepancy_causes": ("rounding",),
+                "legal_refs": (_DUMMY_LEGAL_ID,),
+                "source_refs": (_DUMMY_SOURCE_ID,),
+            },
+        )
+
+    message = str(exc_info.value)
+    assert "computed_casilla_ids" in message
+    assert "computed_casillas" in message
+
+
+def test_verification_expectation_definition_rejects_legacy_reconciliation_totals_key() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        VerificationExpectationDefinition.model_validate(
+            {
+                "id": "test.expectation",
+                "computed_casilla_ids": (_DUMMY_CASILLA_ID,),
+                "reconciliation_totals": {"ingresar": _DUMMY_CASILLA_ID},
+                "tolerance": "0.01",
+                "rounding": "cent",
+                "min_coverage": "1",
+                "discrepancy_causes": ("rounding",),
+                "legal_refs": (_DUMMY_LEGAL_ID,),
+                "source_refs": (_DUMMY_SOURCE_ID,),
+            },
+        )
+
+    message = str(exc_info.value)
+    assert "reconciliation_totals" in message
+
+
+def test_construct_definition_rejects_legacy_casillas_key() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        ConstructDefinition.model_validate(
+            {
+                "id": "test.construct",
+                "title": "Test construct",
+                "casillas": (_DUMMY_CASILLA_ID,),
+                "legal_refs": (_DUMMY_LEGAL_ID,),
+                "source_refs": (_DUMMY_SOURCE_ID,),
+            },
+        )
+
+    message = str(exc_info.value)
+    assert "casillas" in message
+    assert "Extra inputs are not permitted" in message
 
 
 # ---------------------------------------------------------------------------
@@ -217,37 +375,29 @@ def test_casilla_field_kind_is_str() -> None:
 
 def _make_export_field_literal(raw_string: str, literal: str) -> ExportFieldDefinition:
     """Construct an ExportFieldDefinition for a LITERAL kind field."""
-    return ExportFieldDefinition(
-        **_FIELD_BASE,
-        kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
-        literal=literal,
+    return ExportFieldDefinition.model_validate(
+        {**_FIELD_BASE, "kind": raw_string, "literal": literal},
     )
 
 
-def _make_export_field_casilla(raw_string: str, casilla: str) -> ExportFieldDefinition:
+def _make_export_field_casilla(raw_string: str, casilla_id: CasillaId) -> ExportFieldDefinition:
     """Construct an ExportFieldDefinition for a CASILLA kind field."""
-    return ExportFieldDefinition(
-        **_FIELD_BASE,
-        kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
-        casilla=casilla,
+    return ExportFieldDefinition.model_validate(
+        {**_FIELD_BASE, "kind": raw_string, "casilla_id": casilla_id},
     )
 
 
 def _make_export_field_binding(raw_string: str, binding: str) -> ExportFieldDefinition:
     """Construct an ExportFieldDefinition for a BINDING kind field."""
-    return ExportFieldDefinition(
-        **_FIELD_BASE,
-        kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
-        binding=binding,
+    return ExportFieldDefinition.model_validate(
+        {**_FIELD_BASE, "kind": raw_string, "binding": binding},
     )
 
 
 def _make_export_field_filler(raw_string: str, length: int) -> ExportFieldDefinition:
     """Construct an ExportFieldDefinition for a FILLER kind field."""
-    return ExportFieldDefinition(
-        **_FIELD_BASE,
-        kind=raw_string,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # tests TOML-string coercion path
-        length=length,
+    return ExportFieldDefinition.model_validate(
+        {**_FIELD_BASE, "kind": raw_string, "length": length},
     )
 
 
@@ -268,7 +418,7 @@ def test_export_field_roundtrip_valid_casilla_field_kind(
     if member == CasillaFieldKind.LITERAL:
         field = _make_export_field_literal(raw_string, "TEST")
     elif member == CasillaFieldKind.CASILLA:
-        field = _make_export_field_casilla(raw_string, "01")
+        field = _make_export_field_casilla(raw_string, _DUMMY_CASILLA_ID)
     elif member == CasillaFieldKind.BINDING:
         field = _make_export_field_binding(raw_string, "some.binding")
     else:
@@ -279,19 +429,24 @@ def test_export_field_roundtrip_valid_casilla_field_kind(
     assert dumped["kind"] == raw_string
 
 
+def test_export_field_rejects_generic_casilla_key() -> None:
+    with pytest.raises(ValidationError):
+        ExportFieldDefinition.model_validate({**_FIELD_BASE, "kind": "casilla", "casilla": _DUMMY_CASILLA_ID})
+
+
 def test_export_field_rejects_unknown_kind() -> None:
     """ExportFieldDefinition raises ValidationError for an unrecognised kind token."""
     with pytest.raises(ValidationError):
-        ExportFieldDefinition(**_FIELD_BASE, kind="bogus_kind")  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        ExportFieldDefinition.model_validate({**_FIELD_BASE, "kind": "bogus_kind"})
 
 
 def test_export_field_rejects_empty_string_kind() -> None:
     """An empty string is not a valid CasillaFieldKind member."""
     with pytest.raises(ValidationError):
-        ExportFieldDefinition(**_FIELD_BASE, kind="")  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        ExportFieldDefinition.model_validate({**_FIELD_BASE, "kind": ""})
 
 
 def test_export_field_rejects_numeric_kind() -> None:
     """A numeric value is not a valid CasillaFieldKind member."""
     with pytest.raises(ValidationError):
-        ExportFieldDefinition(**_FIELD_BASE, kind=99)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        ExportFieldDefinition.model_validate({**_FIELD_BASE, "kind": 99})

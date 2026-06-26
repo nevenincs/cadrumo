@@ -1,7 +1,7 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-capital-mobiliario-general-suma-rendimientos-reducidos"
-target = "0060"
-expression = { op = "copy", args = [{ casilla = "0056" }] }
+target_casilla_id = "0060"
+expression = { op = "copy", args = [{ casilla_id = "0056" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
 source_refs = ["lirpf-cuota-chain-authority"]

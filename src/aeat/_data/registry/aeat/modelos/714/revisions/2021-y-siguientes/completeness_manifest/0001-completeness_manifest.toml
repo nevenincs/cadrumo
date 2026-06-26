@@ -16,10 +16,13 @@ legal_refs = ["ley-19-1991:art-30"]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "patrimonio.base-liquidable"
 number = "patrimonio.base-liquidable"
 
 [[revisions."2021-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "patrimonio.cuota-integra"
 number = "29"
 
 [[revisions."2021-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "patrimonio.reduccion-limite-80"
 number = "39"

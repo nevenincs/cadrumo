@@ -11,11 +11,12 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ....core import STRICT_FROZEN_CONFIG, Period
 from ....core.aggregation import AggregationSourceKind, BindingAggregationOp, CounterpartSourceKind, RowSetGroupingKind
 from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
-from ._binding_selector_utils import selector_against_model
+from ._binding_selector_utils import selector_against_model, selector_as_dict
 from ._bindings_previous_filing import (
     RegistryModeloObservationRequirement,
     _PreviousModeloSelector,
     previous_filing_observation_requirements,
+    previous_filing_source_reference,
     resolve_previous_filing_binding_values,
     validate_previous_filing_binding,
 )
@@ -48,7 +49,7 @@ from ._detail_record_bindings import (
     validate_related_party_binding,
 )
 from ._errors import RegistryValidationError
-from ._ids import CasillaId, FormulaId, OracleId
+from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, OracleId, SourceRefId
 from ._invoice_bindings import (
     INVOICE_BINDING_SOURCE_KINDS,
     InvoiceObservation,
@@ -135,12 +136,14 @@ __all__ = [
     "_build_foreign_asset_rows",
     "_build_related_party_rows",
     "binding_aggregation_op",
+    "binding_source_casilla_ids",
     "counterpart_binding_requirements",
     "default_binding_aggregation_op",
     "invoice_binding_requirements",
     "previous_filing_observation_requirements",
+    "previous_filing_source_reference",
     "resolve_atribucion_binding_row_values",
-    "resolve_bound_casilla_inputs",
+    "resolve_bound_inputs_by_casilla_id",
     "resolve_counterpart_binding_row_values",
     "resolve_counterpart_binding_values",
     "resolve_foreign_asset_binding_row_values",
@@ -203,7 +206,8 @@ class CasillaObservation(BaseModel):
 
     Carries the casilla id + final Decimal value plus optional formula
     provenance: when ``formula_id`` is set, the runtime computed this
-    casilla and ``operand_refs`` / ``operand_values`` trace its inputs;
+    casilla and ``operand_refs`` / ``operand_values`` trace its inputs
+    while ``operand_casilla_refs`` carries the casilla-id-only projection;
     when ``formula_id`` is ``None`` the casilla was supplied as input
     (manual / bound) and the trace fields are empty.
 
@@ -223,9 +227,10 @@ class CasillaObservation(BaseModel):
     # input / bound casillas where no formula ran.
     op: str | None = None
     operand_refs: tuple[str, ...] = ()
+    operand_casilla_refs: tuple[CasillaId, ...] = ()
     operand_values: tuple[Decimal, ...] = ()
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     # Set ``True`` when the casilla's declared binding produced no
     # source anchor for the target period (e.g. Modelo 130 casilla 15
     # at 1T — the prior-quarter carry-forward selector with
@@ -249,7 +254,7 @@ class CasillaObservation(BaseModel):
             raise RegistryValidationError("casilla observation value must be Decimal")
         return value
 
-    @field_validator("operand_refs", "legal_refs", "source_refs", mode="before")
+    @field_validator("operand_refs", "operand_casilla_refs", "legal_refs", "source_refs", mode="before")
     @classmethod
     def _tuple_fields_from_json_arrays(cls, value: object) -> object:
         return _tuple_from_json_array(value)
@@ -258,6 +263,16 @@ class CasillaObservation(BaseModel):
     @classmethod
     def _decimal_tuple_field_from_json_array(cls, value: object) -> object:
         return _decimal_tuple_from_json_array(value)
+
+    @model_validator(mode="after")
+    def _operand_casilla_refs_are_traced(self) -> CasillaObservation:
+        missing = tuple(ref for ref in self.operand_casilla_refs if ref not in self.operand_refs)
+        if missing:
+            raise RegistryValidationError(
+                f"casilla observation for {self.casilla_id!r} declares operand_casilla_refs "
+                f"that are absent from operand_refs: {missing!r}",
+            )
+        return self
 
 
 class RegistryModeloObservation(BaseModel):
@@ -273,7 +288,7 @@ class RegistryModeloObservation(BaseModel):
     modelo: str = Field(min_length=1, max_length=8)
     filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=8)
+    period: str = Field(min_length=1, max_length=32)
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="before")
@@ -307,7 +322,7 @@ class RegistryModeloObservation(BaseModel):
         return self
 
     @property
-    def casilla_values(self) -> Mapping[str, Decimal]:
+    def casilla_values(self) -> Mapping[CasillaId, Decimal]:
         """Read-only mapping view: casilla_id -> Decimal derived from typed observations.
 
         Deliberately a plain ``@property`` and NOT a pydantic
@@ -337,11 +352,11 @@ class OracleModeloObservation(RegistryModeloObservation):
     oracle_id: OracleId
 
 
-def resolve_bound_casilla_inputs(
+def resolve_bound_inputs_by_casilla_id(
     revision: ModeloRevision,
-    facts: Mapping[str, Decimal],
-) -> dict[str, Decimal]:
-    """Resolve factual binding values into casilla input values.
+    facts: Mapping[BindingId, Decimal],
+) -> dict[CasillaId, Decimal]:
+    """Resolve factual binding values into input values keyed by canonical ``casilla.id``.
 
     ``facts`` is keyed by registry binding id. The binding layer only selects
     factual values; it does not own legal rates, thresholds, or casilla meaning.
@@ -357,7 +372,7 @@ def resolve_bound_casilla_inputs(
     unknown = sorted(set(facts).difference(binding_ids))
     if unknown:
         raise RegistryValidationError(f"unknown binding fact ids: {unknown!r}")
-    resolved: dict[str, Decimal] = {}
+    resolved: dict[CasillaId, Decimal] = {}
     for casilla in revision.casillas:
         if casilla.input_kind != InputKind.BOUND:
             continue
@@ -383,7 +398,7 @@ class _RelationPrefillSelector(BaseModel):
     fold-in value is produced by :class:`RelationPrefillSourceResolver`
     folding prior filed observations through the relation's aggregation op,
     and written into this binding's slot. The selector therefore mirrors the
-    relation's source descriptor (``source_modelo`` plus the output it pulls)
+    relation's source descriptor (``source_modelo`` plus the source casilla id it pulls)
     rather than carrying its own resolution logic — the relation is the
     authority for periods, year alignment, and aggregation. The slot exists
     only so a bound casilla can consume the materialised Decimal.
@@ -397,9 +412,48 @@ class _RelationPrefillSelector(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_modelo: str = Field(min_length=1, max_length=8)
-    source_output: str | None = Field(default=None, min_length=1)
-    source_casillas: tuple[str, ...] = ()
+    source_casilla_id: CasillaId | None = Field(default=None, min_length=1)
+    source_casilla_ids: tuple[CasillaId, ...] = ()
     source_periods: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def _validate_source_shape(self) -> _RelationPrefillSelector:
+        if self.source_casilla_id is not None and self.source_casilla_ids:
+            raise RegistryValidationError(
+                "relation_prefill selector cannot declare both source_casilla_id and source_casilla_ids",
+            )
+        if self.source_casilla_id is None and not self.source_casilla_ids:
+            raise RegistryValidationError(
+                "relation_prefill selector must declare source_casilla_id or source_casilla_ids",
+            )
+        return self
+
+
+def _relation_prefill_selector(binding: DataBindingDefinition) -> _RelationPrefillSelector:
+    selector = selector_as_dict(binding)
+    try:
+        return _RelationPrefillSelector.model_validate(selector)
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed relation_prefill selector: {exc}",
+        ) from exc
+
+
+def _relation_prefill_source_ids(selector: _RelationPrefillSelector) -> tuple[CasillaId, ...]:
+    if selector.source_casilla_ids:
+        return selector.source_casilla_ids
+    if selector.source_casilla_id is not None:
+        return (selector.source_casilla_id,)
+    return ()
+
+
+def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaId, ...]:
+    """Return typed source casilla ids declared by binding families that have them."""
+    if binding.source == "previous_filing":
+        return previous_filing_source_reference(binding).source_casilla_ids
+    if binding.source == "relation_prefill":
+        return _relation_prefill_source_ids(_relation_prefill_selector(binding))
+    return ()
 
 
 class _ProfileSelector(BaseModel):
@@ -504,10 +558,11 @@ class _ManualInputSelector(BaseModel):
 
     Two shapes are accepted, gated by ``_validate_manual_input_shape``:
 
-    * **Casilla shape** ``{casilla, data_type, true_value?, false_value?}``:
+    * **Casilla shape** ``{casilla_id, data_type, true_value?, false_value?}``:
       The operator types the value directly into a registry casilla; the
-      ``data_type`` declares how the typed enum / boolean maps to the
-      on-wire payload string. Used for boolean casillas like M100/0168
+      ``casilla_id`` names the canonical ``casilla.id`` and ``data_type``
+      declares how the typed enum / boolean maps to the on-wire payload
+      string. Used for boolean casillas like M100/0168
       (estimacion-directa modality flag).
     * **Record-field shape** ``{record, field, offset, length, data_type}``:
       The operator types a value that lands in a fichero-BOE record field
@@ -521,7 +576,7 @@ class _ManualInputSelector(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     # casilla shape
-    casilla: str | None = Field(default=None, min_length=1, max_length=64)
+    casilla_id: CasillaId | None = Field(default=None, min_length=1, max_length=64)
     true_value: str | None = Field(default=None, min_length=1, max_length=64)
     false_value: str | None = Field(default=None, min_length=1, max_length=64)
     # record-field shape
@@ -535,14 +590,14 @@ class _ManualInputSelector(BaseModel):
     @model_validator(mode="after")
     def _validate_manual_input_shape(self) -> _ManualInputSelector:
         record_shape_keys = _MANUAL_INPUT_RECORD_SHAPE_KEYS
-        has_casilla = self.casilla is not None
+        has_casilla = self.casilla_id is not None
         has_record_shape = any(getattr(self, key) is not None for key in record_shape_keys)
         if has_casilla and has_record_shape:
             raise RegistryValidationError(
                 "manual_input selector must declare either the casilla shape or the record-field shape, not both",
             )
         if not has_casilla and not has_record_shape:
-            raise RegistryValidationError("manual_input selector must declare a casilla or a record-field shape")
+            raise RegistryValidationError("manual_input selector must declare a casilla_id or a record-field shape")
         if has_record_shape:
             missing = [key for key in record_shape_keys if getattr(self, key) is None]
             if missing:
@@ -554,7 +609,7 @@ class _ManualInputSelector(BaseModel):
         # deterministic.
         if has_casilla and self.data_type == "boolean" and (self.true_value is None or self.false_value is None):
             raise RegistryValidationError(
-                "manual_input boolean-casilla selector must declare true_value and false_value",
+                "manual_input boolean-casilla_id selector must declare true_value and false_value",
             )
         return self
 

@@ -1,6 +1,6 @@
 [[revisions.2019-2022.formulas]]
 id = "modelo-202-2019-2022-base-imponible-corregida"
-target = "16"
+target_casilla_id = "16"
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]
@@ -9,12 +9,12 @@ expression = { op = "max", args = [
     { op = "subtract", args = [
         { op = "add", args = [
             { op = "subtract", args = [
-                { op = "subtract", args = [{ casilla = "13" }, { casilla = "44" }] },
-                { casilla = "14" },
+                { op = "subtract", args = [{ casilla_id = "13" }, { casilla_id = "44" }] },
+                { casilla_id = "14" },
             ] },
-            { casilla = "45" },
+            { casilla_id = "45" },
         ] },
-        { casilla = "46" },
+        { casilla_id = "46" },
     ] },
 ] }
 

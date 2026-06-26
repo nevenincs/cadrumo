@@ -1,10 +1,10 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-ganancia-no-exenta-base-general"
-target = "1645"
+target_casilla_id = "1645"
 expression = { op = "sum", args = [
-    { casilla = "1640" },
-    { op = "negate", args = [{ casilla = "1642" }] },
-    { op = "negate", args = [{ casilla = "1644" }] },
+    { casilla_id = "1640" },
+    { op = "negate", args = [{ casilla_id = "1642" }] },
+    { op = "negate", args = [{ casilla_id = "1644" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

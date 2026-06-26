@@ -1,10 +1,10 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-deducciones-actividades-economicas-estatal-suma"
-target = "0547"
+target_casilla_id = "0547"
 expression = { op = "sum", args = [
-    { casilla = "0698" },
-    { casilla = "0702" },
-    { casilla = "0704" },
+    { casilla_id = "0698" },
+    { casilla_id = "0702" },
+    { casilla_id = "0704" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]

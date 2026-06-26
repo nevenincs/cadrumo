@@ -1,6 +1,7 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01039"
 number = "01039"
+segmento = "DP200014B"
 label = "Liquidación IV - Otras deducciones - Deducciones por producc. Cinematograf. Extranjeras (art. 36.2 LIS) (desglose en página 18 bis) [01039]"
 section = ["liquidacion_iv", "otras_deducciones"]
 data_type = "money"
@@ -13,6 +14,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01040"
 number = "01040"
+segmento = "DP200014B"
 label = "Liquidación IV - Otras deducciones - Deducciones por reversión de medidas temporales DT 37ª.1 LIS (desglose en página 19) [01040]"
 section = ["liquidacion_iv", "otras_deducciones"]
 data_type = "money"
@@ -25,6 +27,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01041"
 number = "01041"
+segmento = "DP200014B"
 label = "Liquidación IV - Otras deducciones - Deducciones por reversión de medidas temporales DT 37ª.2 LIS (desglose en página 19) [01041]"
 section = ["liquidacion_iv", "otras_deducciones"]
 data_type = "money"

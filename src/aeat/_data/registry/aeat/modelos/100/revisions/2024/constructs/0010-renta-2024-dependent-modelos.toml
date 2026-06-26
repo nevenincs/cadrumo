@@ -32,7 +32,7 @@ bindings = [
     "renta-2024-modelo-131-pagos-fraccionados",
     "renta-2024-modelo-193-retenciones-anuales",
 ]
-casillas = [
+casilla_ids = [
     "0604",
 ]
 formulas = [

@@ -8,6 +8,7 @@ from functools import lru_cache
 import pytest
 
 from .....core.resources import bundled_path
+from .. import binding_source_casilla_ids
 from .._errors import RegistryValidationError
 from .._loader import load_registry_tree
 from .._relations import relation_source_requirements
@@ -211,7 +212,7 @@ def test_formula_relation_dependencies_are_attached_to_computed_casillas() -> No
             for formula in revision.formulas:
                 for relation_id in expression_relation_refs(formula.expression):
                     relation = relations[relation_id]
-                    casilla = casillas[formula.target]
+                    casilla = casillas[formula.target_casilla_id]
                     assert casilla.input_kind == InputKind.COMPUTED, f"{modelo.id}/{revision.id}/{formula.id}"
                     assert casilla.formula == formula.id, f"{modelo.id}/{revision.id}/{formula.id}"
                     assert relation.target_binding in bindings, f"{modelo.id}/{revision.id}/{relation.id}"
@@ -235,7 +236,7 @@ def _assert_relation_binding_mirrors_source(*, binding, relation, scope: str) ->
     """Verify a relation's target binding mirrors the relation's source contract.
 
     Reads four optional selector keys (``source_modelo`` /
-    ``modelo``, ``source_output``, ``source_casillas``,
+    ``modelo``, ``source_casilla_id``, ``source_casilla_ids``,
     ``source_periods``) and asserts that whichever are declared
     match the relation's published source contract. The
     aggregation-op equality check ensures the binding's
@@ -244,9 +245,8 @@ def _assert_relation_binding_mirrors_source(*, binding, relation, scope: str) ->
     """
     selector = binding.selector
     selector_modelo = selector.get("source_modelo", selector.get("modelo"))
-    selector_output = selector.get("source_output")
-    selector_casillas = selector.get("source_casillas")
     selector_periods = selector.get("source_periods")
+    selector_source_casilla_ids = binding_source_casilla_ids(binding)
 
     # A relation's target_binding is canonically a ``relation_prefill`` slot
     # (aggregation-taxonomy decision ruling 3): the relation owns the cross-period
@@ -257,10 +257,7 @@ def _assert_relation_binding_mirrors_source(*, binding, relation, scope: str) ->
     _iva_wallet_owned = binding.id == "modelo-303-compensacion-pendiente-anteriores"
     assert binding.source == ("previous_filing" if _iva_wallet_owned else "relation_prefill"), scope
     assert selector_modelo == relation.source_modelo, scope
-    if selector_output is not None:
-        assert selector_output == relation.source_output, scope
-    if selector_casillas is not None:
-        assert selector_casillas == (relation.source_output,), scope
+    assert selector_source_casilla_ids == (relation.source_casilla_id,), scope
     if selector_periods is not None:
         assert selector_periods == relation.source_periods, scope
     binding_op = binding.aggregation.op if binding.aggregation is not None else None
@@ -281,7 +278,7 @@ def test_formula_relation_dependencies_carry_relation_legal_basis() -> None:
                     )
 
 
-def test_relation_source_outputs_are_filing_grade_source_outputs() -> None:
+def test_relation_source_casilla_ids_are_filing_grade_source_casilla_ids() -> None:
     modelos, _catalogues = _validated_registry_tree()
     modelos_by_id = {modelo.id: modelo for modelo in modelos}
 
@@ -300,14 +297,16 @@ def test_relation_source_outputs_are_filing_grade_source_outputs() -> None:
                     algorithm_outputs = {
                         str(output)
                         for algorithm_binding in source_revision.algorithm_bindings
-                        for output in algorithm_binding.outputs.values()
+                        for output in algorithm_binding.output_casilla_ids.values()
                     }
-                    if relation.source_output in casillas:
-                        assert casillas[relation.source_output].input_kind != InputKind.INFORMATIONAL, (
+                    if relation.source_casilla_id in casillas:
+                        assert casillas[relation.source_casilla_id].input_kind != InputKind.INFORMATIONAL, (
                             f"{modelo.id}/{revision.id}/{relation.id}"
                         )
                     else:
-                        assert relation.source_output in algorithm_outputs, f"{modelo.id}/{revision.id}/{relation.id}"
+                        assert relation.source_casilla_id in algorithm_outputs, (
+                            f"{modelo.id}/{revision.id}/{relation.id}"
+                        )
 
 
 def test_dependency_classifications_preserve_relation_authority_basis() -> None:

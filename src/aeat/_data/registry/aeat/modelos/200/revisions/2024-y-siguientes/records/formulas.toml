@@ -16,13 +16,13 @@
 # determination-chain refs available today.
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-base-imponible-previa"
-target = "DP200014:00550"
+target_casilla_id = "DP200014:00550"
 expression = { op = "subtract", args = [
     { op = "add", args = [
-        { casilla = "00501" },
-        { casilla = "DP200013:00417" },
+        { casilla_id = "00501" },
+        { casilla_id = "DP200013:00417" },
     ] },
-    { casilla = "DP200013:00418" },
+    { casilla_id = "DP200013:00418" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-15", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105"]
@@ -46,14 +46,14 @@ required_text = [
 # Arts. 25, 26; diseño de registro 2024 DP200014 pos 13/64/115/166.
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-base-imponible"
-target = "DP200014:00552"
+target_casilla_id = "DP200014:00552"
 expression = { op = "max", args = [
     { op = "subtract", args = [
         { op = "subtract", args = [
-            { casilla = "DP200014:00550" },
-            { casilla = "01032" },
+            { casilla_id = "DP200014:00550" },
+            { casilla_id = "01032" },
         ] },
-        { casilla = "DP200014:00547" },
+        { casilla_id = "DP200014:00547" },
     ] },
     { literal = "0" },
 ] }
@@ -70,13 +70,13 @@ required_text = [
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-base-imponible-despues-reserva-nivelacion"
-target = "DP200014:01330"
+target_casilla_id = "DP200014:01330"
 expression = { op = "subtract", args = [
     { op = "add", args = [
-        { casilla = "DP200014:00552" },
-        { casilla = "DP200014:01033" },
+        { casilla_id = "DP200014:00552" },
+        { casilla_id = "DP200014:01033" },
     ] },
-    { casilla = "DP200014:01034" },
+    { casilla_id = "DP200014:01034" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-105", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-41"]
@@ -110,7 +110,7 @@ required_text = [
 # `modelo-200-cuota-integra` via bracket application.
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-tipo-gravamen-por-forma-juridica"
-target = "DP200014:00558"
+target_casilla_id = "DP200014:00558"
 expression = { op = "if_then_else", args = [
     { binding = "modelo-200-2024-profile-new-entity-flag" },
     { op = "lookup_parameter_by_entity_type", args = [
@@ -209,11 +209,11 @@ required_text = [
 # is no longer derived from 00558.
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-cuota-integra"
-target = "DP200014:00562"
+target_casilla_id = "DP200014:00562"
 expression = { op = "if_then_else", args = [
     { binding = "modelo-200-2024-profile-new-entity-flag" },
     { op = "lookup_bracket_by_entity_type", args = [
-        { casilla = "DP200014:01330" },
+        { casilla_id = "DP200014:01330" },
         { binding = "modelo-200-2024-profile-legal-entity-form" },
         { dispatch_table_entries = [
             { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
@@ -232,7 +232,7 @@ expression = { op = "if_then_else", args = [
             { literal = "1000000" },
         ] },
         { op = "lookup_bracket_by_entity_type", args = [
-            { casilla = "DP200014:01330" },
+            { casilla_id = "DP200014:01330" },
             { binding = "modelo-200-2024-profile-legal-entity-form" },
             { dispatch_table_entries = [
                 { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
@@ -246,7 +246,7 @@ expression = { op = "if_then_else", args = [
             ] },
         ] },
         { op = "lookup_bracket_by_entity_type", args = [
-            { casilla = "DP200014:01330" },
+            { casilla_id = "DP200014:01330" },
             { binding = "modelo-200-2024-profile-legal-entity-form" },
             { dispatch_table_entries = [
                 { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-general" },
@@ -274,30 +274,30 @@ required_text = [
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-cuota-integra-ajustada-positiva"
-target = "DP200014:00582"
+target_casilla_id = "DP200014:00582"
 expression = { op = "max", args = [
     { op = "subtract", args = [
         { op = "add", args = [
-            { casilla = "DP200014:00562" },
-            { casilla = "01038" },
+            { casilla_id = "DP200014:00562" },
+            { casilla_id = "01038" },
         ] },
         { op = "add", args = [
-            { casilla = "DP200014:00567" },
-            { casilla = "DP200014:00568" },
-            { casilla = "DP200014:00563" },
-            { casilla = "00815" },
-            { casilla = "DP200014:00566" },
-            { casilla = "DP200014:00576" },
-            { casilla = "DP200014:00569" },
-            { casilla = "DP200014:00570" },
-            { casilla = "01344" },
-            { casilla = "01280" },
-            { casilla = "DP200014:00572" },
-            { casilla = "DP200014:00571" },
-            { casilla = "00573" },
-            { casilla = "DP200014:00575" },
-            { casilla = "DP200014:00577" },
-            { casilla = "DP200014:00581" },
+            { casilla_id = "DP200014:00567" },
+            { casilla_id = "DP200014:00568" },
+            { casilla_id = "DP200014:00563" },
+            { casilla_id = "00815" },
+            { casilla_id = "DP200014:00566" },
+            { casilla_id = "DP200014:00576" },
+            { casilla_id = "DP200014:00569" },
+            { casilla_id = "DP200014:00570" },
+            { casilla_id = "01344" },
+            { casilla_id = "01280" },
+            { casilla_id = "DP200014:00572" },
+            { casilla_id = "DP200014:00571" },
+            { casilla_id = "00573" },
+            { casilla_id = "DP200014:00575" },
+            { casilla_id = "DP200014:00577" },
+            { casilla_id = "DP200014:00581" },
         ] },
     ] },
     { literal = "0" },
@@ -316,26 +316,26 @@ required_text = [
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-cuota-liquida"
-target = "DP200014B:00592"
+target_casilla_id = "DP200014B:00592"
 expression = { op = "max", args = [
-    { casilla = "DP200014B:00619" },
+    { casilla_id = "DP200014B:00619" },
     { op = "max", args = [
         { op = "subtract", args = [
-            { casilla = "DP200014:00582" },
+            { casilla_id = "DP200014:00582" },
             { op = "add", args = [
-                { casilla = "DP200014B:00583" },
-                { casilla = "DP200014B:00585" },
-                { casilla = "DP200014B:00584" },
-                { casilla = "DP200014B:00588" },
-                { casilla = "01039" },
-                { casilla = "02314" },
-                { casilla = "02315" },
-                { casilla = "DP200014B:00565" },
-                { casilla = "DP200014B:00590" },
-                { casilla = "DP200014B:00399" },
-                { casilla = "DP200014B:00082" },
-                { casilla = "01040" },
-                { casilla = "01041" },
+                { casilla_id = "DP200014B:00583" },
+                { casilla_id = "DP200014B:00585" },
+                { casilla_id = "DP200014B:00584" },
+                { casilla_id = "DP200014B:00588" },
+                { casilla_id = "01039" },
+                { casilla_id = "02314" },
+                { casilla_id = "02315" },
+                { casilla_id = "DP200014B:00565" },
+                { casilla_id = "DP200014B:00590" },
+                { casilla_id = "DP200014B:00399" },
+                { casilla_id = "DP200014B:00082" },
+                { casilla_id = "01040" },
+                { casilla_id = "01041" },
             ] },
         ] },
         { literal = "0" },
@@ -355,7 +355,7 @@ required_text = [
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-cuota-ejercicio-a-ingresar-devolver"
-target = "DP200014B:00599"
+target_casilla_id = "DP200014B:00599"
 # Binding reference for DP200026:00625: the casilla stays manual (export
 # layout writes it) but the formula consumes the profile-sourced binding
 # directly so common-regime SLs (where tributacion_estado_porcentaje = 100
@@ -367,10 +367,10 @@ expression = { op = "multiply", args = [
     ] },
     { op = "subtract", args = [
         { op = "subtract", args = [
-            { casilla = "DP200014B:00592" },
-            { casilla = "DP200014B:01766" },
+            { casilla_id = "DP200014B:00592" },
+            { casilla_id = "DP200014B:01766" },
         ] },
-        { casilla = "DP200014B:01784" },
+        { casilla_id = "DP200014B:01784" },
     ] },
 ] }
 rounding = "money-2"
@@ -387,13 +387,13 @@ required_text = [
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-cuota-diferencial"
-target = "DP200014B:00611"
+target_casilla_id = "DP200014B:00611"
 # Pagos fraccionados credited = M202 instalments under EITHER modality: casilla 34
 # (modalidad base imponible, art. 40.3) PLUS casilla 03 (modalidad cuota, art. 40.2).
 # The two are mutually exclusive per filing (the non-elected one is 0), so summing
 # both relations credits a 40.2 filer's instalments that the 40.3-only fold-in drops.
 expression = { op = "subtract", args = [
-    { casilla = "DP200014B:00599" },
+    { casilla_id = "DP200014B:00599" },
     { op = "add", args = [
         { relation = "modelo-200-2024-rel-202-pagos-fraccionados" },
         { relation = "modelo-200-2024-rel-202-pagos-fraccionados-40-2" },
@@ -419,12 +419,12 @@ required_text = [
 # BLOCKING cap_le_when_positive predicate; it never forces 00547 to the cap.
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-2024-bin-aplicada-maxima"
-target = "DP200014:bin-aplicada-maxima"
+target_casilla_id = "DP200014:bin-aplicada-maxima"
 expression = { op = "min", args = [
-    { casilla = "00670" },
+    { casilla_id = "00670" },
     { op = "max", args = [
         { literal = "1000000" },
-        { op = "percent", args = [{ casilla = "DP200014:00550" }, { literal = "70" }] },
+        { op = "percent", args = [{ casilla_id = "DP200014:00550" }, { literal = "70" }] },
     ] },
 ] }
 rounding = "money-2"

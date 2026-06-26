@@ -8,7 +8,7 @@ source_refs = [
     "aeat-modelo-123-procedure",
     "boe-modelo-123-2007-form",
 ]
-casillas = ["01-legacy", "02-legacy", "03-legacy", "04-legacy", "05-legacy", "06-legacy", "07-legacy", "08-legacy"]
+casilla_ids = ["01-legacy", "02-legacy", "03-legacy", "04-legacy", "05-legacy", "06-legacy", "07-legacy", "08-legacy"]
 formulas = ["modelo-123-2019-total-liquidacion", "modelo-123-2019-resultado-ingresar"]
 export_layouts = ["modelo-123-2019-fichero-boe"]
 extraction_profiles = ["modelo-123-2019-export-record", "modelo-123-2019-declaracion-pdf"]

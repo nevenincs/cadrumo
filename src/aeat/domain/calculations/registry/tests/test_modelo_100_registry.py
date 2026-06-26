@@ -17,6 +17,7 @@ from ....contribuyente import PROFILE_KEYS, TaxResidenceProfile
 from ....contribuyente.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 from .. import (
     CasillaDefinition,
+    CasillaId,
     DataBindingDefinition,
     InputKind,
     ModeloDefinition,
@@ -35,6 +36,7 @@ from .. import (
     resolve_construct,
     resolve_export_layout,
     resolve_revision_constructs,
+    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -110,11 +112,10 @@ def test_modelo_100_dependency_relations_resolve_against_registered_modelos() ->
         assert source_revisions, relation.id
         for source_revision in source_revisions:
             outputs = {casilla.id for casilla in source_revision.casillas}
-            outputs.update(binding.id for binding in source_revision.bindings)
             for binding in source_revision.algorithm_bindings:
-                outputs.update(binding.outputs.values())
+                outputs.update(binding.output_casilla_ids.values())
 
-            assert relation.source_output in outputs, relation.id
+            assert relation.source_casilla_id in outputs, relation.id
             assert set(relation.source_periods).issubset(source_revision.period_selector.periods), relation.id
         assert relation.target_binding in {binding.id for binding in revision.bindings}
         assert set(relation.target_periods).issubset(revision.period_selector.periods)
@@ -155,39 +156,50 @@ _PERSONAL_FAMILY_BINDINGS: frozenset[str] = frozenset(
     },
 )
 
-_PERSONAL_FAMILY_CASILLAS: frozenset[str] = frozenset(
-    {
-        "DPNIF_D",
-        "DP_APENOM_D",
-        "ZCCAD",
-        "TIPOTRIBUTACION",
-        "SEXO_D",
-        "ECIVIL",
-        "DPFNAC_D",
-        "DPNIF_C",
-        "DP_APENOM_C",
-        "DPFNAC_C",
-        "SEXO_C",
-        "DPGMIN_D",
-        "DECFAL",
-        "DPGMIN_C",
-        "NORESIDENTE",
-        "RESIDENTEUE",
-        "ZRUE2",
-        "HIJOSUE",
-        "PH18",
-        "NIFDLG",
-        "APENOMDLG",
-        "FNACDLG",
-        "MINUSDLG",
-        "FALLDLG",
-        "DNIASDLG",
-        "APENOMDLG_ASC",
-        "ANOASDLG",
-        "PCTMINASDLG",
-        "CONVASDLG",
-        "FALLASDLG",
-    },
+
+def _casilla_id(value: object) -> CasillaId:
+    return validated_casilla_id(value, surface="test_modelo_100_registry.casilla")
+
+
+def _casilla_ids(*values: object) -> frozenset[CasillaId]:
+    return frozenset(_casilla_id(value) for value in values)
+
+
+def _binding_map_by_casilla(*pairs: tuple[object, str]) -> Mapping[CasillaId, str]:
+    return {_casilla_id(casilla_id): binding_id for casilla_id, binding_id in pairs}
+
+
+_PERSONAL_FAMILY_CASILLAS: frozenset[CasillaId] = _casilla_ids(
+    "DPNIF_D",
+    "DP_APENOM_D",
+    "ZCCAD",
+    "TIPOTRIBUTACION",
+    "SEXO_D",
+    "ECIVIL",
+    "DPFNAC_D",
+    "DPNIF_C",
+    "DP_APENOM_C",
+    "DPFNAC_C",
+    "SEXO_C",
+    "DPGMIN_D",
+    "DECFAL",
+    "DPGMIN_C",
+    "NORESIDENTE",
+    "RESIDENTEUE",
+    "ZRUE2",
+    "HIJOSUE",
+    "PH18",
+    "NIFDLG",
+    "APENOMDLG",
+    "FNACDLG",
+    "MINUSDLG",
+    "FALLDLG",
+    "DNIASDLG",
+    "APENOMDLG_ASC",
+    "ANOASDLG",
+    "PCTMINASDLG",
+    "CONVASDLG",
+    "FALLASDLG",
 )
 
 _SOURCE_FOUNDATION_APPLICATION_LINKS: frozenset[str] = frozenset(
@@ -234,7 +246,7 @@ def test_modelo_100_personal_family_construct_bindings_match_expected_set() -> N
 def test_modelo_100_personal_family_construct_casillas_match_expected_set() -> None:
     snapshot = _modelo_100_snapshot()
     personal_family = snapshot.constructs["renta-personal-family"]
-    assert set(personal_family.casillas) == _PERSONAL_FAMILY_CASILLAS
+    assert set(personal_family.casilla_ids) == _PERSONAL_FAMILY_CASILLAS
 
 
 def test_modelo_100_dependent_modelos_construct_covers_every_previous_filing_binding() -> None:
@@ -307,7 +319,7 @@ def test_modelo_100_economic_activities_construct_pins_estimacion_directa_bindin
     snapshot = _modelo_100_snapshot()
     economic_activities = snapshot.constructs["renta-economic-activities"]
     assert "renta-2025-modelo-100-estimacion-directa-es-normal" in economic_activities.bindings
-    assert {"1479", "1553", "1577"}.issubset(economic_activities.casillas)
+    assert {"1479", "1553", "1577"}.issubset(economic_activities.casilla_ids)
 
 
 def test_modelo_100_observation_parsing_construct_lists_filed_declarations_read() -> None:
@@ -333,38 +345,38 @@ def test_modelo_100_payments_retentions_construct_dependency_classifications_tar
     assert set(payments_retentions.dependency_classifications) == expected
 
 
-_CASILLA_TO_PROFILE_BINDING: Mapping[str, str] = {
-    "DPNIF_D": "renta-2025-profile-tax-id",
-    "DP_APENOM_D": "renta-2025-profile-display-name",
-    "ZCCAD": "renta-2025-profile-tax-residence-ccaa",
-    "TIPOTRIBUTACION": "renta-2025-profile-declaration-type",
-    "SEXO_D": "renta-2025-profile-taxpayer-sex",
-    "ECIVIL": "renta-2025-profile-marital-status",
-    "DPFNAC_D": "renta-2025-profile-taxpayer-birth-date",
-    "DPNIF_C": "renta-2025-profile-spouse-tax-id",
-    "DP_APENOM_C": "renta-2025-profile-spouse-display-name",
-    "DPFNAC_C": "renta-2025-profile-spouse-birth-date",
-    "SEXO_C": "renta-2025-profile-spouse-sex",
-    "DPGMIN_D": "renta-2025-profile-taxpayer-disability-grade",
-    "DECFAL": "renta-2025-profile-taxpayer-death-date",
-    "DPGMIN_C": "renta-2025-profile-spouse-disability-grade",
-    "NORESIDENTE": "renta-2025-profile-spouse-non-resident-irpf",
-    "RESIDENTEUE": "renta-2025-profile-spouse-eu-eea-resident",
-    "ZRUE2": "renta-2025-profile-spouse-eu-eea-country",
-    "HIJOSUE": "renta-2025-profile-family-descendants-eu-eea-deduction",
-    "PH18": "renta-2025-profile-family-minor-children-in-unit",
-    "NIFDLG": "renta-2025-family-descendant-tax-id",
-    "APENOMDLG": "renta-2025-family-descendant-display-name",
-    "FNACDLG": "renta-2025-family-descendant-birth-date",
-    "MINUSDLG": "renta-2025-family-descendant-disability-grade",
-    "FALLDLG": "renta-2025-family-descendant-death-date",
-    "DNIASDLG": "renta-2025-family-ascendant-tax-id",
-    "APENOMDLG_ASC": "renta-2025-family-ascendant-display-name",
-    "ANOASDLG": "renta-2025-family-ascendant-birth-date",
-    "PCTMINASDLG": "renta-2025-family-ascendant-disability-grade",
-    "CONVASDLG": "renta-2025-family-ascendant-cohabiting-descendant-count",
-    "FALLASDLG": "renta-2025-family-ascendant-death-date",
-}
+_CASILLA_TO_PROFILE_BINDING: Mapping[CasillaId, str] = _binding_map_by_casilla(
+    ("DPNIF_D", "renta-2025-profile-tax-id"),
+    ("DP_APENOM_D", "renta-2025-profile-display-name"),
+    ("ZCCAD", "renta-2025-profile-tax-residence-ccaa"),
+    ("TIPOTRIBUTACION", "renta-2025-profile-declaration-type"),
+    ("SEXO_D", "renta-2025-profile-taxpayer-sex"),
+    ("ECIVIL", "renta-2025-profile-marital-status"),
+    ("DPFNAC_D", "renta-2025-profile-taxpayer-birth-date"),
+    ("DPNIF_C", "renta-2025-profile-spouse-tax-id"),
+    ("DP_APENOM_C", "renta-2025-profile-spouse-display-name"),
+    ("DPFNAC_C", "renta-2025-profile-spouse-birth-date"),
+    ("SEXO_C", "renta-2025-profile-spouse-sex"),
+    ("DPGMIN_D", "renta-2025-profile-taxpayer-disability-grade"),
+    ("DECFAL", "renta-2025-profile-taxpayer-death-date"),
+    ("DPGMIN_C", "renta-2025-profile-spouse-disability-grade"),
+    ("NORESIDENTE", "renta-2025-profile-spouse-non-resident-irpf"),
+    ("RESIDENTEUE", "renta-2025-profile-spouse-eu-eea-resident"),
+    ("ZRUE2", "renta-2025-profile-spouse-eu-eea-country"),
+    ("HIJOSUE", "renta-2025-profile-family-descendants-eu-eea-deduction"),
+    ("PH18", "renta-2025-profile-family-minor-children-in-unit"),
+    ("NIFDLG", "renta-2025-family-descendant-tax-id"),
+    ("APENOMDLG", "renta-2025-family-descendant-display-name"),
+    ("FNACDLG", "renta-2025-family-descendant-birth-date"),
+    ("MINUSDLG", "renta-2025-family-descendant-disability-grade"),
+    ("FALLDLG", "renta-2025-family-descendant-death-date"),
+    ("DNIASDLG", "renta-2025-family-ascendant-tax-id"),
+    ("APENOMDLG_ASC", "renta-2025-family-ascendant-display-name"),
+    ("ANOASDLG", "renta-2025-family-ascendant-birth-date"),
+    ("PCTMINASDLG", "renta-2025-family-ascendant-disability-grade"),
+    ("CONVASDLG", "renta-2025-family-ascendant-cohabiting-descendant-count"),
+    ("FALLASDLG", "renta-2025-family-ascendant-death-date"),
+)
 """Maps each personal/family casilla id to the profile binding that feeds it.
 
 Single source of truth for the binding-presence, casilla-binding link,
@@ -439,7 +451,7 @@ def _assert_profile_bindings_present(bindings_by_id: Mapping[str, DataBindingDef
     assert not missing, f"missing profile bindings: {sorted(missing)}"
 
 
-def _assert_casilla_binding_links(casillas_by_id: Mapping[str, CasillaDefinition]) -> None:
+def _assert_casilla_binding_links(casillas_by_id: Mapping[CasillaId, CasillaDefinition]) -> None:
     """Each personal/family casilla links to its declared profile binding."""
     mismatches = [
         f"{casilla_id}: expected binding {expected_binding!r}, got {casillas_by_id[casilla_id].binding!r}"
@@ -449,7 +461,7 @@ def _assert_casilla_binding_links(casillas_by_id: Mapping[str, CasillaDefinition
     assert not mismatches, "casilla-binding link mismatches:\n  " + "\n  ".join(mismatches)
 
 
-def _assert_casillas_are_bound_input(casillas_by_id: Mapping[str, CasillaDefinition]) -> None:
+def _assert_casillas_are_bound_input(casillas_by_id: Mapping[CasillaId, CasillaDefinition]) -> None:
     """Every personal/family casilla is ``input_kind='bound'`` (profile-fed)."""
     non_bound = [
         f"{casilla_id}: input_kind={casillas_by_id[casilla_id].input_kind!r}"
@@ -505,7 +517,7 @@ def _assert_tax_residence_selector(bindings_by_id: Mapping[str, DataBindingDefin
 
 def _assert_family_row_selectors(
     bindings_by_id: Mapping[str, DataBindingDefinition],
-    casillas_by_id: Mapping[str, CasillaDefinition],
+    casillas_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> None:
     """Family-row bindings address a repeating collection + field pair on RentaFamilyProfile."""
     for binding_id, (collection, field) in _FAMILY_ROW_BINDINGS.items():
@@ -815,8 +827,8 @@ def test_construct_reader_rejects_unknown_member_id_at_runtime() -> None:
     modelos_by_id, _catalogues = _loaded_registry()
     modelo = modelos_by_id["100"]
     revision = modelo.revisions["2025"]
-    construct = next(item for item in revision.constructs if item.casillas)
-    mutated_construct = construct.model_copy(update={"casillas": (*construct.casillas, "0000-ghost")})
+    construct = next(item for item in revision.constructs if item.casilla_ids)
+    mutated_construct = construct.model_copy(update={"casilla_ids": (*construct.casilla_ids, "0000-ghost")})
     mutated_revision = revision.model_copy(
         update={
             "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs),

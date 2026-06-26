@@ -1,7 +1,7 @@
 [[revisions."2024-y-siguientes".constructs]]
 id = "modelo-200-2024-foundation"
 
-casillas = [
+casilla_ids = [
     "00918",
     "00919",
     "00920",

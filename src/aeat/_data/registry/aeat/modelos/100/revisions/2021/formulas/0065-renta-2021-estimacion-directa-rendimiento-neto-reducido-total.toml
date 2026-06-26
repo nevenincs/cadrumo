@@ -1,15 +1,15 @@
 [[revisions."2021".formulas]]
 id = "renta-2021-estimacion-directa-rendimiento-neto-reducido-total"
-target = "0235"
+target_casilla_id = "0235"
 expression = { op = "subtract", args = [
         { op = "subtract", args = [
             { op = "subtract", args = [
-                { casilla = "0231" },
-                { casilla = "0232" },
+                { casilla_id = "0231" },
+                { casilla_id = "0232" },
             ] },
-            { casilla = "0233" },
+            { casilla_id = "0233" },
         ] },
-        { casilla = "0234" },
+        { casilla_id = "0234" },
     ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]

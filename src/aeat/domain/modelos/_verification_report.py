@@ -4,7 +4,7 @@ A :class:`VerificationReport` is the decision artifact the verify
 command persists for every run. It captures whether the target
 calculation revision meets the ``verificado_completo`` contract,
 which blocking findings prevent that transition, which inputs are
-missing, which casillas are unresolved, which waivers were
+missing, which casilla ids are unresolved, which waivers were
 accepted, and what the operator should do next.
 
 The report is bucket-scoped and content-addressed by the parent
@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
+from ..calculations.registry import CasillaId, VerificationExpectationId
 from ._errors import ModeloValidationError
 from ._ids import VerificationReportId
 
@@ -49,11 +50,6 @@ _FindingMessage = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
 ]
-_CasillaRef = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
-]
-
 
 class VerificationCompletenessStatus(StrEnum):
     """Top-level verdict from one verification run.
@@ -110,8 +106,8 @@ class ModeloVerificationFinding(BaseModel):
 
     kind: ModeloVerificationFindingKind
     severity: ModeloVerificationFindingSeverity
-    casilla_id: _CasillaRef | None = None
-    expectation_id: _CasillaRef | None = None
+    casilla_id: CasillaId | None = None
+    expectation_id: VerificationExpectationId | None = None
     message: _FindingMessage
     next_action: _FindingMessage | None = None
     legal_refs: tuple[str, ...] = ()
@@ -152,8 +148,8 @@ class VerificationReport(BaseModel):
     calculation_revision_id: _CalculationRevisionId
     completeness_status: VerificationCompletenessStatus
     findings: tuple[ModeloVerificationFinding, ...] = Field(default_factory=tuple)
-    resolved_casillas: tuple[_CasillaRef, ...] = Field(default_factory=tuple)
-    missing_required_casillas: tuple[_CasillaRef, ...] = Field(default_factory=tuple)
+    resolved_casilla_ids: tuple[CasillaId, ...] = Field(default_factory=tuple)
+    missing_required_casilla_ids: tuple[CasillaId, ...] = Field(default_factory=tuple)
     run_at: datetime
     verified_by: ModeloActorLabel
     granted_verificado_completo: bool
@@ -183,7 +179,7 @@ class VerificationReport(BaseModel):
                     "completeness_status=COMPLETE with no blocking findings must set granted_verificado_completo=True",
                 )
         # Required-casilla sets must be disjoint from resolved.
-        overlap = set(self.resolved_casillas) & set(self.missing_required_casillas)
+        overlap = set(self.resolved_casilla_ids) & set(self.missing_required_casilla_ids)
         if overlap:
             raise ModeloValidationError(f"casillas cannot be both resolved and missing: {sorted(overlap)!r}")
         return self

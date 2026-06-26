@@ -10,6 +10,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
+from ._ids import CasillaId
 from ._schema import ModeloDefinition
 
 _UNRESOLVED_FORMAT_PLACEHOLDER = re.compile(r"\{[A-Za-z0-9_]+\}")
@@ -27,7 +28,7 @@ class LabelArtifactFinding:
 
     modelo_id: str
     revision_id: str
-    casilla_id: str
+    casilla_id: CasillaId
     artifact: str
     placeholder_token: str
     label: str

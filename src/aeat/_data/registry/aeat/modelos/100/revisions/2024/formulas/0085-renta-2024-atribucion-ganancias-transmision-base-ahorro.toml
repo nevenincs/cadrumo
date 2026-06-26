@@ -1,8 +1,8 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-atribucion-ganancias-transmision-base-ahorro"
-target = "1608"
+target_casilla_id = "1608"
 expression = { op = "sum", args = [
-    { casilla = "1595" },
+    { casilla_id = "1595" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

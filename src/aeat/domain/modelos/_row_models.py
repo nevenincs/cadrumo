@@ -248,11 +248,11 @@ class Modelo349OperadorRow(BaseModel):
     the operator declares intracom counterparties directly via the CLI.
 
     Parity assertions:
-    * ``codigo_pais`` → ``op.codigo-pais`` (casilla 76-77)
-    * ``nif_comunitario`` → ``op.nif-comunitario`` (casilla 78-92)
-    * ``razon_social`` → ``op.apellidos-razon-social`` (casilla 93-132)
-    * ``clave_operacion`` → ``op.clave-operacion`` (casilla 133)
-    * ``importe`` → ``op.base-imponible`` (casilla 134-146)
+    * ``codigo_pais`` -> ``op.codigo-pais`` (record positions 76-77)
+    * ``nif_comunitario`` -> ``op.nif-comunitario`` (record positions 78-92)
+    * ``razon_social`` -> ``op.apellidos-razon-social`` (record positions 93-132)
+    * ``clave_operacion`` -> ``op.clave-operacion`` (record position 133)
+    * ``importe`` -> ``op.base-imponible`` (record positions 134-146)
     """
 
     model_config = STRICT_FROZEN_CONFIG

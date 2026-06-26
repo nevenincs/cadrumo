@@ -1,12 +1,12 @@
 [[revisions.2023-2024.formulas]]
 id = "modelo-202-2023-2024-importe-pago-fraccionado-b2-tipo-1"
-target = "22"
+target_casilla_id = "22"
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
 expression = { op = "percent", args = [
-    { casilla = "20" },
-    { casilla = "21" },
+    { casilla_id = "20" },
+    { casilla_id = "21" },
 ] }
 
 [[revisions.2023-2024.formulas.source_citations]]

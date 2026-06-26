@@ -1,10 +1,10 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-ganancias-patrimoniales-base-ahorro-saldo-negativo"
-target = "0425"
+target_casilla_id = "0425"
 expression = { op = "max", args = [
     { op = "subtract", args = [
-        { casilla = "0423" },
-        { casilla = "0422" },
+        { casilla_id = "0423" },
+        { casilla_id = "0422" },
     ] },
     { literal = "0" },
 ] }

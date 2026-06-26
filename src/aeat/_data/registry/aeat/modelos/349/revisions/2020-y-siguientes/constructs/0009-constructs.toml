@@ -33,7 +33,7 @@ bindings = [
     "iva-349-rectificacion-row-base-rectificada",
     "iva-349-rectificacion-row-base-anterior",
 ]
-casillas = [
+casilla_ids = [
     "decl.numero-operadores",
     "decl.importe-operaciones",
     "decl.numero-rectificaciones",

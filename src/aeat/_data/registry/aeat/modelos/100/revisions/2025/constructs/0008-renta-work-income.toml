@@ -19,7 +19,7 @@ source_refs = [
     "aeat-dr-100-2025-dictionary",
     "boe-modelo-190-2025-form",
 ]
-casillas = [
+casilla_ids = [
     "0003",
     "0004",
     "0005",

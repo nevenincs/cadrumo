@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ._ids import CasillaId
+
 if TYPE_CHECKING:
     from ._snapshot import RegistrySnapshot
 
@@ -49,8 +51,8 @@ class IdReferenceChecker:
         revision = snapshot.revision
         self.prefix = f"snapshot modelo {snapshot.modelo.id} revision {revision.id}"
         self.failures: list[str] = []
-        self.casilla_ids = {c.id for c in revision.casillas}
-        self.casilla_data_types: dict[str, str] = {c.id: c.data_type for c in revision.casillas}
+        self.casilla_ids: set[CasillaId] = {c.id for c in revision.casillas}
+        self.casilla_data_types: dict[CasillaId, str] = {c.id: c.data_type for c in revision.casillas}
         self.formula_ids = {f.id for f in revision.formulas}
         self.parameter_ids = {p.id for p in revision.parameters}
         self.binding_ids = {b.id for b in revision.bindings}

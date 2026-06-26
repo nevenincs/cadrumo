@@ -14,7 +14,7 @@ source_refs = [
     "aeat-dr-036-2025",
     "aeat-modelo-036-procedure",
 ]
-casillas = ["decl.event-kind", "decl.vigencia-2025"]
+casilla_ids = ["decl.event-kind", "decl.vigencia-2025"]
 bindings = ["modelo-036-profile-censo-status"]
 workbook_parity_refs = ["modelo-036-dr-2025"]
 verification_expectations = ["modelo-036-censo-foundation-verification"]

@@ -1,15 +1,15 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-deduccion-unidad-familiar-clamp-positiva"
-target = "0731"
+target_casilla_id = "0731"
 expression = { op = "max", args = [
     { literal = "0" },
     { op = "subtract", args = [
         { op = "sum", args = [
-    { casilla = "0728" },
-    { casilla = "0729" },
+    { casilla_id = "0728" },
+    { casilla_id = "0729" },
         ] },
         { op = "sum", args = [
-    { casilla = "0730" },
+    { casilla_id = "0730" },
         ] },
     ] },
 ] }

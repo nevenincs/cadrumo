@@ -1,7 +1,7 @@
 
 [[revisions."2019-2023".casillas]]
 id = "01-legacy"
-number = "01-legacy"
+number = "01"
 label = "Numero de perceptores"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "integer"
@@ -14,7 +14,7 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 
 [[revisions."2019-2023".casillas]]
 id = "02-legacy"
-number = "02-legacy"
+number = "02"
 label = "Base de retenciones e ingresos a cuenta"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "money"
@@ -28,7 +28,7 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 
 [[revisions."2019-2023".casillas]]
 id = "03-legacy"
-number = "03-legacy"
+number = "03"
 label = "Retenciones e ingresos a cuenta"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "money"
@@ -42,7 +42,7 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 
 [[revisions."2019-2023".casillas]]
 id = "04-legacy"
-number = "04-legacy"
+number = "04"
 label = "Ingresos de ejercicios anteriores"
 section = ["periodificacion"]
 data_type = "money"
@@ -55,7 +55,7 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 
 [[revisions."2019-2023".casillas]]
 id = "05-legacy"
-number = "05-legacy"
+number = "05"
 label = "Regularizacion"
 section = ["periodificacion"]
 data_type = "money"
@@ -68,7 +68,7 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 
 [[revisions."2019-2023".casillas]]
 id = "06-legacy"
-number = "06-legacy"
+number = "06"
 label = "Suma de retenciones y regularizacion"
 section = ["total_liquidacion"]
 data_type = "money"
@@ -82,7 +82,7 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 
 [[revisions."2019-2023".casillas]]
 id = "07-legacy"
-number = "07-legacy"
+number = "07"
 label = "Resultado de anteriores autoliquidaciones"
 section = ["total_liquidacion"]
 data_type = "money"
@@ -95,7 +95,7 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 
 [[revisions."2019-2023".casillas]]
 id = "08-legacy"
-number = "08-legacy"
+number = "08"
 label = "Resultado a ingresar"
 section = ["total_liquidacion"]
 data_type = "money"

@@ -13,6 +13,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01038"
 number = "01038"
+segmento = "DP200014"
 label = "Liquidación III - Base imponible - Incremento por incumplimiento reserva de nivelación [01038]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"

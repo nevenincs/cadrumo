@@ -16,7 +16,7 @@ source_refs = [
     "aeat-modelo-232-procedure",
     "boe-modelo-232-2017-form",
 ]
-casillas = ["decl.ejercicio", "decl.tipo-ejercicio", "decl.cnae"]
+casilla_ids = ["decl.ejercicio", "decl.tipo-ejercicio", "decl.cnae"]
 bindings = [
     "modelo-232-2018.page_01.144-158.vinculada-1-nif",
     "modelo-232-2018.page_01.159-159.vinculada-1-fjo",

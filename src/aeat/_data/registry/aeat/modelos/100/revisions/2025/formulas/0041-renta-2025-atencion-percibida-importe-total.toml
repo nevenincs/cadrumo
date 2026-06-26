@@ -1,9 +1,9 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-atencion-percibida-importe-total"
-target = "2211"
+target_casilla_id = "2211"
 expression = { op = "sum", args = [
-    { casilla = "2207" },
-    { casilla = "2210" },
+    { casilla_id = "2207" },
+    { casilla_id = "2210" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

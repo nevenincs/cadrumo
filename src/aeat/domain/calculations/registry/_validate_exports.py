@@ -10,8 +10,10 @@ from collections.abc import Mapping
 
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
+from ._ids import BindingId, CasillaId
 from ._schema import (
     CasillaDefinition,
+    CasillaFieldKind,
     ExportFieldDefinition,
     ExportRecordDefinition,
     LegalReference,
@@ -27,9 +29,9 @@ def validate_export_layout_section(
     *,
     prefix: str,
     revision: ModeloRevision,
-    casillas: set[str],
-    bindings: set[str],
-    casilla_by_id: Mapping[str, CasillaDefinition],
+    casillas: set[CasillaId],
+    bindings: set[BindingId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
@@ -59,9 +61,9 @@ def _validate_export_record(
     prefix: str,
     revision: ModeloRevision,
     record: ExportRecordDefinition,
-    casillas: set[str],
-    bindings: set[str],
-    casilla_by_id: Mapping[str, CasillaDefinition],
+    casillas: set[CasillaId],
+    bindings: set[BindingId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
 ) -> None:
@@ -69,14 +71,14 @@ def _validate_export_record(
         _validate_export_record_binding_link(failures, prefix=prefix, revision=revision, record=record)
     if (
         record.repeat == "binding_rows"
-        and not any(field.kind == "binding" for field in record.fields)
+        and not any(field.kind == CasillaFieldKind.BINDING for field in record.fields)
         and record.binding_record is None
     ):
         failures.append(f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields")
-    if record.requires_positive_casilla is not None and record.requires_positive_casilla not in casillas:
+    if record.requires_positive_casilla_id is not None and record.requires_positive_casilla_id not in casillas:
         failures.append(
             f"{prefix}: export record {record.id!r} requires unknown positive casilla "
-            f"{record.requires_positive_casilla!r}",
+            f"{record.requires_positive_casilla_id!r}",
         )
     for field in record.fields:
         _validate_export_field(
@@ -125,26 +127,26 @@ def _validate_export_field(
     prefix: str,
     record: ExportRecordDefinition,
     field: ExportFieldDefinition,
-    casillas: set[str],
-    bindings: set[str],
-    casilla_by_id: Mapping[str, CasillaDefinition],
+    casillas: set[CasillaId],
+    bindings: set[BindingId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
 ) -> None:
     owner = f"export field {field.id}"
     failures.extend(_missing_refs(prefix, owner, field.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, owner, field.source_refs, source_refs, "source"))
-    if field.casilla is not None and field.casilla not in casillas:
-        failures.append(f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla!r}")
+    if field.casilla_id is not None and field.casilla_id not in casillas:
+        failures.append(f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla_id!r}")
     if (
-        field.casilla is not None
-        and field.casilla in casilla_by_id
-        and field.id not in casilla_by_id[field.casilla].export_refs
+        field.casilla_id is not None
+        and field.casilla_id in casilla_by_id
+        and field.id not in casilla_by_id[field.casilla_id].export_refs
     ):
-        failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla!r}")
+        failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla_id!r}")
     if field.binding is not None and field.binding not in bindings:
         failures.append(f"{prefix}: export field {field.id!r} references unknown binding {field.binding!r}")
-    if field.kind == "literal" and field.literal is not None and field.length is not None:
+    if field.kind == CasillaFieldKind.LITERAL and field.literal is not None and field.length is not None:
         literal_length = len(field.literal.encode(record.encoding))
         if literal_length > field.length:
             failures.append(

@@ -8,9 +8,20 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ...calculations.registry import CasillaId, validated_casilla_id
 from .._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_EVIDENCE_CASILLA: CasillaId = _casilla_id("00501")
 
 
 def test_ledger_filing_evidence_round_trips_strict_json_with_all_carriers() -> None:
@@ -47,7 +58,7 @@ def test_ledger_filing_evidence_round_trips_strict_json_with_all_carriers() -> N
         rows=(row,),
         manual_entries=(
             ManualFactBasisEntry(
-                casilla="00501",
+                casilla_id=_EVIDENCE_CASILLA,
                 value="140000.00",
                 kind="casilla_input",
                 note="resultado contable",

@@ -1,8 +1,8 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-cuota-escala-estatal-sobre-minimo-personal-familiar"
-target = "0530"
+target_casilla_id = "0530"
 expression = { op = "lookup_bracket", args = [
-    { casilla = "0521" },
+    { casilla_id = "0521" },
     { parameter = "renta-2025-escala-estatal-base-general" },
 ] }
 rounding = "money-2"

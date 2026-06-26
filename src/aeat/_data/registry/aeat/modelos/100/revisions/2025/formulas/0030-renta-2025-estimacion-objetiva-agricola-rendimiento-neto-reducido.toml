@@ -1,9 +1,9 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-estimacion-objetiva-agricola-rendimiento-neto-reducido"
-target = "1550"
+target_casilla_id = "1550"
 expression = { op = "subtract", args = [
-    { casilla = "1548" },
-    { casilla = "1549" },
+    { casilla_id = "1548" },
+    { casilla_id = "1549" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-1347-2024:art-4"]

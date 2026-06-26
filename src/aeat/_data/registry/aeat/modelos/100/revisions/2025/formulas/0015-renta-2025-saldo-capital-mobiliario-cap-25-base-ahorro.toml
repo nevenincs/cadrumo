@@ -1,9 +1,9 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-saldo-capital-mobiliario-cap-25-base-ahorro"
-target = "0436"
+target_casilla_id = "0436"
 expression = { op = "min", args = [
-    { casilla = "0430" },
-    { op = "percent", args = [{ casilla = "0424" }, { literal = "25" }] },
+    { casilla_id = "0430" },
+    { op = "percent", args = [{ casilla_id = "0424" }, { literal = "25" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-49"]

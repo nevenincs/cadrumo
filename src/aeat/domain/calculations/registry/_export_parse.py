@@ -16,8 +16,9 @@ from ....core.decimal import normalize_decimal_separators
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
 from ....core.parsing._utils import _parse_bool as _core_parse_bool
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, ExportFieldId, ExportLayoutId, RecordId
+from ._ids import BindingId, CasillaId, ExportFieldId, ExportLayoutId, RecordId, validated_casilla_id
 from ._schema import (
+    CasillaFieldKind,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
@@ -56,7 +57,7 @@ class _XmlDictionaryEntry:
     field_id: str
     path: str
     data_type: str
-    casilla_id: str | None
+    casilla_id: CasillaId | None
 
 
 def parse_export_payload(
@@ -181,7 +182,7 @@ def _load_xml_dictionary_entries(
         match = _DICTIONARY_LINE_RE.match(stripped)
         if match is None:
             continue
-        casilla_id = _normalize_dictionary_casilla(match["casilla"])
+        casilla_id = _parse_dictionary_casilla_id(match["casilla"])
         entries.append(
             _XmlDictionaryEntry(
                 field_id=match["field"].strip(),
@@ -210,11 +211,13 @@ def _read_dictionary_text_cached(path: str, byte_count: int, modified_ns: int) -
         return body.decode(_LATIN_1_ENCODING)
 
 
-def _normalize_dictionary_casilla(value: str) -> str | None:
+def _parse_dictionary_casilla_id(value: str) -> CasillaId | None:
     text = value.strip()
     if not text or text.startswith("*"):
         return None
-    return text if text.isdigit() else None
+    if not text.isdigit():
+        return None
+    return validated_casilla_id(text, surface="XML dictionary casilla id")
 
 
 def _find_xml_path(root: Element[str], absolute_path: str) -> tuple[Element[str], ...]:
@@ -298,7 +301,7 @@ def _matches_record_start(record: ExportRecordDefinition | None, payload: bytes,
         return False
     matched_literal = False
     for field in record.fields:
-        if field.kind != "literal" or field.offset is None or field.length is None:
+        if field.kind != CasillaFieldKind.LITERAL or field.offset is None or field.length is None:
             continue
         matched_literal = True
         raw = record_text[field.offset - 1 : field.offset - 1 + field.length]
@@ -346,13 +349,13 @@ def _parse_record_fields(
         if len(raw) != field.length:
             raise RegistryValidationError(f"export field {field.id!r} ended before declared length")
         value = _parse_field_value(field, raw)
-        if field.kind == "literal" and value != field.literal:
+        if field.kind == CasillaFieldKind.LITERAL and value != field.literal:
             raise RegistryValidationError(f"export literal field {field.id!r} does not match the registry layout")
         parsed.append(
             ParsedExportFieldValue(
                 record_id=record_id,
                 field_id=field.id,
-                casilla_id=field.casilla,
+                casilla_id=field.casilla_id,
                 binding_id=field.binding,
                 raw=raw,
                 value=value,
@@ -363,7 +366,7 @@ def _parse_record_fields(
 
 
 def _parse_field_value(field: ExportFieldDefinition, raw: str) -> Decimal | str | bool | None:
-    if field.kind == "filler":
+    if field.kind == CasillaFieldKind.FILLER:
         return None
     if field.data_type == "money":
         return _parse_money(field, raw)

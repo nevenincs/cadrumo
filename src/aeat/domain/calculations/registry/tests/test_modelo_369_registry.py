@@ -12,6 +12,7 @@ from .....core import Period
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
+    CasillaId,
     ModeloDefinition,
     OssIossLedgerObservation,
     RegistryCatalogues,
@@ -20,11 +21,33 @@ from .. import (
     extract_record_design,
     load_registry_tree,
     resolve_ledger_oss_aggregation_binding_values,
+    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"Modelo 369 fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M369_EXTERIOR_DE_SERVICES_CUOTA_CASILLA: CasillaId = _casilla_id("iva.exterior.de.services-cuota")
+_M369_EXTERIOR_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.exterior.cuota-total")
+_M369_UNION_DE_SERVICES_CUOTA_CASILLA: CasillaId = _casilla_id("iva.union.de.services-cuota")
+_M369_UNION_FR_SERVICES_CUOTA_CASILLA: CasillaId = _casilla_id("iva.union.fr.services-cuota")
+_M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA: CasillaId = _casilla_id(
+    "iva.union.de.goods-distance-cuota",
+)
+_M369_UNION_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.union.cuota-total")
+_M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA: CasillaId = _casilla_id(
+    "iva.importacion.de.low-value-cuota",
+)
+_M369_IMPORTACION_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.importacion.cuota-total")
 
 
 _FORBIDDEN_REMOTE_ACTIONS = frozenset(
@@ -313,7 +336,7 @@ def test_modelo_369_constructs_close_over_revision_members() -> None:
         assert len(revision.constructs) == 1
         construct = revision.constructs[0]
 
-        assert construct.casillas == tuple(c.id for c in revision.casillas)
+        assert construct.casilla_ids == tuple(c.id for c in revision.casillas)
         assert construct.workbook_parity_refs == tuple(w.id for w in revision.workbook_parity_refs)
         assert construct.live_cross_references == tuple(r.id for r in revision.live_cross_references)
         assert construct.application_links == tuple(link.id for link in revision.application_links)
@@ -473,26 +496,26 @@ def test_modelo_369_esquema_union_constructs_link_oss_bindings() -> None:
     [
         (
             "esquema-exterior",
-            ("iva.exterior.de.services-cuota",),
-            "iva.exterior.cuota-total",
+            (_M369_EXTERIOR_DE_SERVICES_CUOTA_CASILLA,),
+            _M369_EXTERIOR_CUOTA_TOTAL_CASILLA,
             "modelo-369-exterior-cuota-total",
             "modelo-369-exterior-calculation",
         ),
         (
             "esquema-union",
             (
-                "iva.union.de.services-cuota",
-                "iva.union.fr.services-cuota",
-                "iva.union.de.goods-distance-cuota",
+                _M369_UNION_DE_SERVICES_CUOTA_CASILLA,
+                _M369_UNION_FR_SERVICES_CUOTA_CASILLA,
+                _M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA,
             ),
-            "iva.union.cuota-total",
+            _M369_UNION_CUOTA_TOTAL_CASILLA,
             "modelo-369-union-cuota-total",
             "modelo-369-union-calculation",
         ),
         (
             "esquema-importacion",
-            ("iva.importacion.de.low-value-cuota",),
-            "iva.importacion.cuota-total",
+            (_M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA,),
+            _M369_IMPORTACION_CUOTA_TOTAL_CASILLA,
             "modelo-369-importacion-cuota-total",
             "modelo-369-importacion-calculation",
         ),
@@ -500,8 +523,8 @@ def test_modelo_369_esquema_union_constructs_link_oss_bindings() -> None:
 )
 def test_modelo_369_per_esquema_result_casillas_present(
     revision_id: str,
-    bound_casilla_ids: tuple[str, ...],
-    total_casilla_id: str,
+    bound_casilla_ids: tuple[CasillaId, ...],
+    total_casilla_id: CasillaId,
     formula_id: str,
     app_link_id: str,
 ) -> None:
@@ -533,7 +556,7 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
     from .. import (
         build_snapshot,
         calculate_registry_snapshot,
-        resolve_bound_casilla_inputs,
+        resolve_bound_inputs_by_casilla_id,
     )
 
     modelo, catalogues = _load_modelo_369()
@@ -584,7 +607,7 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
         period="1T",
         revision_id="esquema-union",
     )
-    casilla_inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    casilla_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=casilla_inputs,
@@ -595,17 +618,22 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
     # Identity threading: each bound casilla equals its binding fact value.
     # The cuota-total formula is verified structurally (operands present);
     # the arithmetic itself stays bound to workbook-parity / oracle replays.
-    assert result.values["iva.union.de.services-cuota"] == binding_values["modelo-369-union-de-services-21pct"]
-    assert result.values["iva.union.fr.services-cuota"] == binding_values["modelo-369-union-fr-services-21pct"]
+    assert result.values[_M369_UNION_DE_SERVICES_CUOTA_CASILLA] == binding_values[
+        "modelo-369-union-de-services-21pct"
+    ]
+    assert result.values[_M369_UNION_FR_SERVICES_CUOTA_CASILLA] == binding_values[
+        "modelo-369-union-fr-services-21pct"
+    ]
     assert (
-        result.values["iva.union.de.goods-distance-cuota"] == binding_values["modelo-369-union-de-goods-distance-21pct"]
+        result.values[_M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA]
+        == binding_values["modelo-369-union-de-goods-distance-21pct"]
     )
-    assert "iva.union.cuota-total" in result.values
-    union_total_entry = next(e for e in result.entries if e.target == "iva.union.cuota-total")
+    assert _M369_UNION_CUOTA_TOTAL_CASILLA in result.values
+    union_total_entry = next(e for e in result.entries if e.target_casilla_id == _M369_UNION_CUOTA_TOTAL_CASILLA)
     assert set(union_total_entry.operand_refs) == {
-        "iva.union.de.services-cuota",
-        "iva.union.fr.services-cuota",
-        "iva.union.de.goods-distance-cuota",
+        _M369_UNION_DE_SERVICES_CUOTA_CASILLA,
+        _M369_UNION_FR_SERVICES_CUOTA_CASILLA,
+        _M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA,
     }
 
 
@@ -622,7 +650,7 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
     from .. import (
         build_snapshot,
         calculate_registry_snapshot,
-        resolve_bound_casilla_inputs,
+        resolve_bound_inputs_by_casilla_id,
     )
 
     modelo, catalogues = _load_modelo_369()
@@ -662,7 +690,7 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
         period="01",
         revision_id="esquema-importacion",
     )
-    casilla_inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    casilla_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=casilla_inputs,
@@ -676,16 +704,18 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
     # 15.20 + 22.80 IVA) exercise genuine resolver aggregation INTO that single
     # bound casilla, so a broken aggregation surfaces in the bound input.
     expected_cuota = binding_values["modelo-369-importacion-de-low-value-21pct"]
-    assert result.values["iva.importacion.de.low-value-cuota"] == expected_cuota
-    assert result.values["iva.importacion.cuota-total"] == expected_cuota
+    assert result.values[_M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA] == expected_cuota
+    assert result.values[_M369_IMPORTACION_CUOTA_TOTAL_CASILLA] == expected_cuota
 
     # Mirror the union companion test: verify the cuota-total formula
     # structurally. Asserting the formula entry's operand_refs defends the
     # wiring — a registry edit that drops or mis-points the operand fails
     # here even though the single-operand arithmetic stays an identity.
-    importacion_total_entry = next(e for e in result.entries if e.target == "iva.importacion.cuota-total")
+    importacion_total_entry = next(
+        e for e in result.entries if e.target_casilla_id == _M369_IMPORTACION_CUOTA_TOTAL_CASILLA
+    )
     assert importacion_total_entry.op == "add"
-    assert set(importacion_total_entry.operand_refs) == {"iva.importacion.de.low-value-cuota"}
+    assert set(importacion_total_entry.operand_refs) == {_M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA}
 
 
 def test_modelo_369_constructs_link_calculation_application_link() -> None:

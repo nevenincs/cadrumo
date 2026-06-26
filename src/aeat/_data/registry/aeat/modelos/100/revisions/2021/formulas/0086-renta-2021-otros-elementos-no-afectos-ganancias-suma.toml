@@ -1,8 +1,8 @@
 [[revisions."2021".formulas]]
 id = "renta-2021-otros-elementos-no-afectos-ganancias-suma"
-target = "0386"
+target_casilla_id = "0386"
 expression = { op = "sum", args = [
-    { casilla = "1650" },
+    { casilla_id = "1650" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

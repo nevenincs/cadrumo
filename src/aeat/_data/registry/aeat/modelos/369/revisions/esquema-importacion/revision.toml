@@ -27,7 +27,7 @@ source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".verification_expectations]]
 id = "modelo-369-importacion-iva-chain-verification"
-computed_casillas = ["iva.importacion.cuota-total"]
+computed_casilla_ids = ["iva.importacion.cuota-total"]
 tolerance = "0.00"
 rounding = "money-2"
 min_coverage = "1"
@@ -104,9 +104,9 @@ source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".formulas]]
 id = "modelo-369-importacion-cuota-total"
-target = "iva.importacion.cuota-total"
+target_casilla_id = "iva.importacion.cuota-total"
 expression = { op = "add", args = [
-    { casilla = "iva.importacion.de.low-value-cuota" },
+    { casilla_id = "iva.importacion.de.low-value-cuota" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-163-quinvicies", "orden-hac-610-2021:art-1"]
@@ -310,7 +310,7 @@ source_refs = [
     "aeat-modelo-369-procedure",
     "boe-modelo-369-2021-form",
 ]
-casillas = [
+casilla_ids = [
     "decl.ejercicio",
     "decl.periodo",
     "iva.importacion.de.low-value-cuota",

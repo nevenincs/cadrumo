@@ -18,159 +18,208 @@ legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-115
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "109"
 number = "109"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
 number = "110"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "58"
 number = "58"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "64"
 number = "64"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "65"
 number = "65"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "66"
 number = "66"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "68"
 number = "68"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.resultado"
 number = "69"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "70"
 number = "70"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "71"
 number = "71"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "76"
 number = "76"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "77"
 number = "77"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.compensacion-aplicada-periodo"
 number = "78"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.compensacion-pendiente-periodos-posteriores"
 number = "87"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.compensacion-disponible-fin-periodo"
 number = "compensacion-disponible-fin-periodo"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.compensacion-generada-periodo"
 number = "compensacion-generada-periodo"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autoconsumo.promotor.base"
 number = "iva.autoconsumo.promotor.base"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autoconsumo.promotor.cuota"
 number = "iva.autoconsumo.promotor.cuota"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.soportado.importaciones"
 number = "iva.soportado.importaciones"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
 number = "iva.autorepercutido.intracomunitaria"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.intracomunitaria.devengado"
 number = "iva.autorepercutido.intracomunitaria.devengado"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.intracomunitaria.deducible"
 number = "iva.autorepercutido.intracomunitaria.deducible"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.interior.devengado"
 number = "iva.autorepercutido.interior.devengado"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.interior.deducible"
 number = "iva.autorepercutido.interior.deducible"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.cuota-deducible-total"
 number = "iva.cuota-deducible-total"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.cuota-devengada-total"
 number = "iva.cuota-devengada-total"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.general"
 number = "iva.repercutido.general"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.reducido"
 number = "iva.repercutido.reducido"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.super-reducido"
 number = "iva.repercutido.super-reducido"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.resultado-regimen-general"
 number = "iva.resultado-regimen-general"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.soportado.interiores"
 number = "iva.soportado.interiores"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.prorrata-porcentaje"
 number = "prorrata-porcentaje"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.prorrata-volumen-con-derecho"
 number = "prorrata-volumen-con-derecho"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.prorrata-volumen-total"
 number = "prorrata-volumen-total"
 
 # Official Diseño box projections (Stage 2): each numbered cuota box is now a
 # computed formula target that copies its semantic source, so it joins the
 # calculation-completeness surface.
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "03"
 number = "03"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "06"
 number = "06"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "09"
 number = "09"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "11"
 number = "11"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "13"
 number = "13"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "27"
 number = "27"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "29"
 number = "29"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "33"
 number = "33"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "37"
 number = "37"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "45"
 number = "45"
 
 # Informativa base-imponible boxes (entregas intracomunitarias exentas, casilla
 # 59; exportaciones exentas, casilla 60) became computed projection targets when
 # their ledger_iva_aggregation bindings landed; they join the calculation closure.
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "59"
 number = "59"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "60"
 number = "60"
 
 # Recargo de equivalencia cuota casillas join the calculation closure once their
 # ledger_iva_aggregation recargo_amount_sum bindings landed (LIVA art. 161 tiers:
 # general 5.2%, reducido 1.4%, super-reducido 0.5%).
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "158"
 number = "158"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "21"
 number = "21"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "24"
 number = "24"
 
 # Régimen-general per-tier base casillas (01 super-reducido 4%, 04 reducido 10%,
@@ -178,13 +227,17 @@ number = "24"
 # calculation closure once their ledger_iva_aggregation base_amount_sum bindings
 # landed (LIVA art. 88 repercutido base / art. 92 soportado base).
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "01"
 number = "01"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "04"
 number = "04"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "07"
 number = "07"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "28"
 number = "28"

@@ -15,7 +15,7 @@ source_refs = [
     "boe-modelo-347-2008-form",
     "boe-modelo-347-2011-amendment",
 ]
-casillas = [
+casilla_ids = [
     "decl.ejercicio",
     "decl.tipo-declaracion",
     "contraparte.nif",

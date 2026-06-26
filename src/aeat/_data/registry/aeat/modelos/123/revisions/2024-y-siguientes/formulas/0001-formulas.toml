@@ -1,7 +1,7 @@
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-123-total-rentas"
-target = "03"
-expression = { op = "add", args = [{ casilla = "01" }, { casilla = "02" }] }
+target_casilla_id = "03"
+expression = { op = "add", args = [{ casilla_id = "01" }, { casilla_id = "02" }] }
 rounding = "integer"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20-form-text"]
@@ -12,8 +12,8 @@ required_text = ["Totales [03]"]
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-123-total-base"
-target = "06"
-expression = { op = "add", args = [{ casilla = "04" }, { casilla = "05" }] }
+target_casilla_id = "06"
+expression = { op = "add", args = [{ casilla_id = "04" }, { casilla_id = "05" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20-form-text"]
@@ -24,8 +24,8 @@ required_text = ["Base de retenciones e ingresos a cuenta. Totales [06]"]
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-123-total-retenciones"
-target = "09"
-expression = { op = "add", args = [{ casilla = "07" }, { casilla = "08" }] }
+target_casilla_id = "09"
+expression = { op = "add", args = [{ casilla_id = "07" }, { casilla_id = "08" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20-form-text"]
@@ -36,8 +36,8 @@ required_text = ["Retenciones e ingresos a cuenta. Totales [09]"]
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-123-total-liquidacion"
-target = "12"
-expression = { op = "add", args = [{ casilla = "09" }, { casilla = "11" }] }
+target_casilla_id = "12"
+expression = { op = "add", args = [{ casilla_id = "09" }, { casilla_id = "11" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20-form-text"]
@@ -48,8 +48,8 @@ required_text = ["Suma de retenciones"]
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-123-resultado-ingresar"
-target = "14"
-expression = { op = "subtract", args = [{ casilla = "12" }, { casilla = "13" }] }
+target_casilla_id = "14"
+expression = { op = "subtract", args = [{ casilla_id = "12" }, { casilla_id = "13" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20-form-text"]

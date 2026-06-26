@@ -10,6 +10,6 @@ source_refs = ["boe-modelo-193-2011-form"]
 # Calculation-completeness manifest for revision 2024-y-siguientes: the
 # casillas in this revision's calculation closure (formula targets,
 # formula-expression refs, formula/binding endpoints, verification
-# operands), keyed on each casilla's own registry (segmento, number)
-# identity. Derived off-load-path from the registry calculation
+# operands), keyed by canonical casilla_id plus reviewed segment/number
+# metadata. Derived off-load-path from the registry calculation
 # surface; the drift re-verification test re-derives it.

@@ -1,9 +1,9 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-juegos-ganancias-suma"
-target = "0288"
+target_casilla_id = "0288"
 expression = { op = "sum", args = [
-    { casilla = "0282" },
-    { casilla = "0286" },
+    { casilla_id = "0282" },
+    { casilla_id = "0286" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

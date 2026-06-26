@@ -16,6 +16,7 @@ import pytest
 
 from .._errors import RegistryValidationError
 from .._formula_runtime import _evaluate_expression
+from .._ids import CasillaId
 from .._schema import BracketEntry, FormulaExpression, ParameterDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -111,6 +112,7 @@ def _evaluate(
     enum_bindings: dict[str, str],
 ) -> Decimal:
     operand_refs: list[str] = []
+    operand_casilla_refs: list[CasillaId] = []
     operand_values: list[Decimal] = []
     return _evaluate_expression(
         expression,
@@ -120,10 +122,11 @@ def _evaluate(
         date_context={"filing_period": date(2025, 12, 31)},
         relation_values={},
         operand_refs=operand_refs,
+        operand_casilla_refs=operand_casilla_refs,
         operand_values=operand_values,
         enum_binding_values=enum_bindings,
         unresolved_relation_ids=frozenset(),
-        unresolved_casillas=set(),
+        unresolved_casilla_ids=set(),
     )
 
 

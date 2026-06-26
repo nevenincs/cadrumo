@@ -40,6 +40,7 @@ from ....adapters.persistence.storage.sql._orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations.registry import CasillaId, validated_casilla_id
 from ...calculations.registry._schema import RegistrySnapshotRef
 from .._repository import ModeloDraftRepository
 from .._schema import (
@@ -54,6 +55,19 @@ from .._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "filing-runtime"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"anti-tautology roundtrip fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.devengado")
+_IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
+_IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_IVA_RESULTADO_OPERANDS = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
 
 
 def _populated_draft() -> ModeloDraft:
@@ -73,20 +87,20 @@ def _populated_draft() -> ModeloDraft:
         status=ModeloDraftStatus.BORRADOR,
         values=(
             ModeloValue(
-                casilla_id="iva.resultado",
+                casilla_id=_IVA_RESULTADO_CASILLA,
                 value=Decimal("12345.67"),
                 kind=ModeloValueKind.COMPUTED,
                 source="computed from inputs",
-                formula_trace=("iva.devengado", "iva.deducible"),
+                formula_trace_casilla_ids=_IVA_RESULTADO_OPERANDS,
             ),
         ),
         binding_values=(),
         casilla_provenance=(
             ModeloCasillaProvenance(
-                casilla_id="iva.devengado",
+                casilla_id=_IVA_DEVENGADO_CASILLA,
                 formula_id="iva-cuota-devengada-formula",
-                legal_refs=("LIVA.art-92",),
-                source_refs=("AEAT.IVA.2025.casilla-01",),
+                legal_refs=("ley-37-1992:art-92",),
+                source_refs=("aeat-iva-2025:casilla-01",),
             ),
         ),
         findings=(),

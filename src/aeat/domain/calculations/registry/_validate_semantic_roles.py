@@ -15,6 +15,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
 from . import _validate_semantic_role_typos as _semantic_role_typos
+from ._ids import CasillaId
 from ._schema import CasillaDefinition, ModeloDefinition
 from ._validate_semantic_role_required import (
     _REQUIRED_ROLE_LABEL_PATTERNS as _REQUIRED_ROLE_LABEL_PATTERNS,
@@ -32,7 +33,7 @@ class _RoleObservation:
 
     modelo_id: str
     revision_id: str
-    casilla_id: str
+    casilla_id: CasillaId
     data_type: object
     constraints: object
     label: str

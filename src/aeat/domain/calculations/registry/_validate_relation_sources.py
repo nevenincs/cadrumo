@@ -2,7 +2,7 @@
 
 Validates cross-model relations declared on each :class:`ModeloRevision`
 against the source :class:`ModeloDefinition`, checking selector coverage,
-source-output existence, and period alignment.
+source-casilla-id existence, and period alignment.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from ._validate_relation_periods import (
     select_relation_source_revisions,
     validate_source_year_coverage,
 )
-from ._validate_source_outputs import revision_output_ids as _revision_output_ids
+from ._validate_source_casilla_ids import revision_output_ids as _revision_output_ids
 
 # The single iva-wallet-owned slot binding (aggregation-taxonomy ADR ruling D3):
 # the M303 compensación-pendiente binding is owned by the iva-wallet compensación
@@ -170,8 +170,8 @@ def _validate_relation_source_revision(
     failures: list[str] = []
     source_scope = f"{relation_scope} source revision {source_revision.id!r}"
     source_values = _revision_output_ids(source_revision)
-    if relation.source_output not in source_values:
-        failures.append(f"{source_scope} has no source output {relation.source_output!r}")
+    if relation.source_casilla_id not in source_values:
+        failures.append(f"{source_scope} has no source casilla id {relation.source_casilla_id!r}")
     source_periods, period_failures = _relation_source_periods_for_validation(relation)
     failures.extend(f"{source_scope} {failure}" for failure in period_failures)
     unknown_source_periods = sorted(set(source_periods).difference(source_revision.period_selector.periods))
@@ -191,7 +191,7 @@ def validate_slot_source_hygiene(
 
     (a) A binding with ``source = "previous_filing"`` MUST satisfy the
         direct-selector predicate (``_is_direct_previous_filing_binding``). A
-        NON-direct previous_filing binding (e.g. ``{source_modelo, source_output}``
+        NON-direct previous_filing binding (e.g. ``{source_modelo, source_casilla_id}``
         with no period anchor) is a mis-stamped relation-materialisation slot and
         becomes a registry validation ERROR — it MUST declare
         ``source = "relation_prefill"`` instead.

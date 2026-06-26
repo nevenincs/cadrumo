@@ -19,6 +19,7 @@ from decimal import Decimal
 from typing import TypedDict, get_type_hints
 
 import pytest
+from pydantic import ValidationError
 
 from .....core import Period
 from ....filing._schema import (
@@ -34,6 +35,7 @@ from ....modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from .. import CasillaId, validated_casilla_id
 from .._bindings import (
     CasillaObservation,
     OracleModeloObservation,
@@ -42,6 +44,20 @@ from .._bindings import (
 from .._schema import LiveCrossReferenceDecision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"cross-boundary fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.devengado")
+_IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
+_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_IVA_RESULTADO_OPERANDS: tuple[CasillaId, CasillaId] = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
 
 
 class _ModeloDraftCommonKwargs(TypedDict):
@@ -72,13 +88,14 @@ def test_casilla_observation_full_roundtrip() -> None:
     """
 
     original = CasillaObservation(
-        casilla_id="iva.resultado-regimen-general",
+        casilla_id=_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
         value=Decimal("12345.67"),
         formula_id="iva.formula.resultado",
-        operand_refs=("iva.devengado", "iva.deducible"),
+        operand_refs=_IVA_RESULTADO_OPERANDS,
+        operand_casilla_refs=_IVA_RESULTADO_OPERANDS,
         operand_values=(Decimal("20000.00"), Decimal("7654.33")),
-        legal_refs=("LIVA.art-21", "LIVA.art-94"),
-        source_refs=("BOE.LIVA.1992", "AEAT.IVA.2025"),
+        legal_refs=("ley-37-1992:art-21", "ley-37-1992:art-94"),
+        source_refs=("boe-liva-1992", "aeat-iva-2025"),
     )
 
     roundtripped = CasillaObservation.model_validate_json(original.model_dump_json())
@@ -107,22 +124,24 @@ def test_registry_filing_observation_preserves_observation_tuple() -> None:
         period="1T",
         observations=(
             CasillaObservation(
-                casilla_id="iva.devengado",
+                casilla_id=_IVA_DEVENGADO_CASILLA,
                 value=Decimal("20000.00"),
                 formula_id=None,
                 operand_refs=(),
+                operand_casilla_refs=(),
                 operand_values=(),
-                legal_refs=("LIVA.art-21",),
-                source_refs=("BOE.LIVA.1992",),
+                legal_refs=("ley-37-1992:art-21",),
+                source_refs=("boe-liva-1992",),
             ),
             CasillaObservation(
-                casilla_id="iva.resultado-regimen-general",
+                casilla_id=_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
                 value=Decimal("12345.67"),
                 formula_id="iva.formula.resultado",
-                operand_refs=("iva.devengado", "iva.deducible"),
+                operand_refs=_IVA_RESULTADO_OPERANDS,
+                operand_casilla_refs=_IVA_RESULTADO_OPERANDS,
                 operand_values=(Decimal("20000.00"), Decimal("7654.33")),
-                legal_refs=("LIVA.art-94",),
-                source_refs=("AEAT.IVA.2025",),
+                legal_refs=("ley-37-1992:art-94",),
+                source_refs=("aeat-iva-2025",),
             ),
         ),
     )
@@ -244,23 +263,23 @@ def test_filing_draft_full_roundtrip() -> None:
         status=ModeloDraftStatus.BORRADOR,
         values=(
             ModeloValue(
-                casilla_id="iva.devengado",
+                casilla_id=_IVA_DEVENGADO_CASILLA,
                 value=Decimal("20000.00"),
                 kind=ModeloValueKind.LITERAL,
                 source="user-supplied",
             ),
             ModeloValue(
-                casilla_id="iva.deducible",
+                casilla_id=_IVA_DEDUCIBLE_CASILLA,
                 value=Decimal("7654.33"),
                 kind=ModeloValueKind.LITERAL,
                 source="user-supplied",
             ),
             ModeloValue(
-                casilla_id="iva.resultado-regimen-general",
+                casilla_id=_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
                 value=Decimal("12345.67"),
                 kind=ModeloValueKind.COMPUTED,
                 source="computed from iva.devengado - iva.deducible",
-                formula_trace=("iva.devengado", "iva.deducible"),
+                formula_trace_casilla_ids=_IVA_RESULTADO_OPERANDS,
             ),
         ),
         binding_values=(),
@@ -276,10 +295,10 @@ def test_filing_draft_full_roundtrip() -> None:
     assert roundtripped == original
     assert tuple(v.casilla_id for v in roundtripped.values) == tuple(v.casilla_id for v in original.values)
     assert tuple(v.value for v in roundtripped.values) == tuple(v.value for v in original.values)
-    # formula_trace MUST survive round-trip: the test fails if any
+    # formula_trace_casilla_ids MUST survive round-trip: the test fails if any
     # boundary erases the computation provenance.
     computed = next(v for v in roundtripped.values if v.kind is ModeloValueKind.COMPUTED)
-    assert computed.formula_trace == ("iva.devengado", "iva.deducible")
+    assert computed.formula_trace_casilla_ids == _IVA_RESULTADO_OPERANDS
 
 
 def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
@@ -290,7 +309,6 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
     """
 
     import pytest as _pytest
-    from pydantic import ValidationError
 
     now = datetime.now(UTC).replace(microsecond=0)
     common_kwargs: _ModeloDraftCommonKwargs = {
@@ -397,6 +415,23 @@ def test_workbook_parity_reference_output_cells_roundtrip() -> None:
     assert roundtripped.tolerance == Decimal("0.01")
 
 
+def test_workbook_parity_reference_rejects_malformed_output_identifier() -> None:
+    from .._schema import WorkbookParityReference
+
+    with pytest.raises(ValidationError):
+        WorkbookParityReference(
+            id="m130-1t-parity",
+            workbook_source="boe.modelo.130.workbook",
+            fixture_id="m130-1t-2025-fixture",
+            formula_coverage="formula_form",
+            runner_required=True,
+            output_cells={"bad output": "Modelo!A1"},
+            tolerance=Decimal("0.01"),
+            legal_refs=("lirpf.art-99",),
+            source_refs=("boe.modelo.130.workbook",),
+        )
+
+
 def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
     """``OracleModeloObservation`` marks oracle-originated values as a distinct subtype.
 
@@ -408,11 +443,11 @@ def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
     """
 
     obs = CasillaObservation(
-        casilla_id="iva.devengado",
+        casilla_id=_IVA_DEVENGADO_CASILLA,
         value=Decimal("20000.00"),
         formula_id=None,
-        legal_refs=("LIVA.art-21",),
-        source_refs=("AEAT.IVA.2025",),
+        legal_refs=("ley-37-1992:art-21",),
+        source_refs=("aeat-iva-2025",),
     )
     original = OracleModeloObservation(
         modelo="303",
@@ -482,27 +517,29 @@ def test_calculation_revision_carries_typed_observations() -> None:
 
     The engine emits provenance-rich entries; the persistence boundary
     historically kept only the flat ``casilla_values`` mapping and
-    dropped operand_refs / operand_values / legal_refs / source_refs.
+    dropped operand_refs / operand_casilla_refs / operand_values /
+    legal_refs / source_refs.
     A round-trip test asserts the typed envelope survives JSON
     serialization without value loss.
     """
 
     now = datetime.now(UTC).replace(microsecond=0)
     observation = CasillaObservation(
-        casilla_id="iva.resultado-regimen-general",
+        casilla_id=_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
         value=Decimal("12345.67"),
         formula_id="iva.formula.resultado",
-        operand_refs=("iva.devengado", "iva.deducible"),
+        operand_refs=_IVA_RESULTADO_OPERANDS,
+        operand_casilla_refs=_IVA_RESULTADO_OPERANDS,
         operand_values=(Decimal("20000.00"), Decimal("7654.33")),
-        legal_refs=("LIVA.art-94",),
-        source_refs=("AEAT.IVA.2025",),
+        legal_refs=("ley-37-1992:art-94",),
+        source_refs=("aeat-iva-2025",),
     )
     work_unit_id = "b" * 64
-    casilla_values = {"iva.resultado-regimen-general": Decimal("12345.67")}
+    casilla_values: dict[CasillaId, Decimal] = {_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("12345.67")}
     revision = CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=work_unit_id,
-            inputs_snapshot={},
+            input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values=casilla_values,
         ),
@@ -519,4 +556,5 @@ def test_calculation_revision_carries_typed_observations() -> None:
     assert roundtripped == revision
     assert roundtripped.observations == (observation,)
     assert roundtripped.observations[0].operand_refs == observation.operand_refs
+    assert roundtripped.observations[0].operand_casilla_refs == observation.operand_casilla_refs
     assert roundtripped.observations[0].operand_values == observation.operand_values

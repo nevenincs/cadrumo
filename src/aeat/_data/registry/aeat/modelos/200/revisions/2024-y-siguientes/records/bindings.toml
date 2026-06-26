@@ -1,7 +1,7 @@
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-200-2024-pagos-fraccionados-anuales"
 source = "relation_prefill"
-selector = { source_modelo = "202" }
+selector = { source_modelo = "202", source_casilla_id = "34" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-modelo-200-manual-2024"]
@@ -21,7 +21,7 @@ required_text = [
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-200-2024-pagos-fraccionados-anuales-40-2"
 source = "relation_prefill"
-selector = { source_modelo = "202" }
+selector = { source_modelo = "202", source_casilla_id = "03" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-modelo-200-manual-2024"]
@@ -167,7 +167,7 @@ required_text = ["base imponible"]
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-200-2024-bin-pendiente-ejercicios-anteriores"
 source = "relation_prefill"
-selector = { source_modelo = "200", source_output = "00671" }
+selector = { source_modelo = "200", source_casilla_id = "00671" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
 source_refs = ["aeat-modelo-200-manual-2024"]
@@ -195,7 +195,7 @@ required_text = ["bases imponibles negativas"]
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores"
 source = "relation_prefill"
-selector = { source_modelo = "200", source_output = "01498" }
+selector = { source_modelo = "200", source_casilla_id = "01498" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-13"]
 source_refs = ["aeat-modelo-200-manual-2024"]
@@ -207,7 +207,7 @@ required_text = ["deterioro"]
 [[revisions."2024-y-siguientes".bindings]]
 id = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores"
 source = "relation_prefill"
-selector = { source_modelo = "200", source_output = "01499" }
+selector = { source_modelo = "200", source_casilla_id = "01499" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-13"]
 source_refs = ["aeat-modelo-200-manual-2024"]

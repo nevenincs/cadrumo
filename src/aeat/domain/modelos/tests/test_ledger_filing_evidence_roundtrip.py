@@ -8,10 +8,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
 from .._calculation_repository import CalculationRevisionCatalogueRepository
 from .._calculation_revision import (
     CalculationRevision,
@@ -26,6 +28,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _NOW = datetime(2026, 6, 3, 14, 0, tzinfo=UTC)
 _TX_ID = "c" * 64
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_EVIDENCE_CASILLA: CasillaId = _casilla_id("00501")
 
 
 @pytest.fixture
@@ -69,7 +81,7 @@ def _evidence() -> LedgerFilingEvidence:
         ),
         manual_entries=(
             ManualFactBasisEntry(
-                casilla="00501",
+                casilla_id=_EVIDENCE_CASILLA,
                 value="140000.00",
                 kind="casilla_input",
                 note="resultado contable",
@@ -89,18 +101,26 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={"00501": "140000.00"},
+        input_values_by_casilla_id={_EVIDENCE_CASILLA: "140000.00"},
         binding_overrides={},
-        casilla_values={"00501": Decimal("140000.00")},
+        casilla_values={_EVIDENCE_CASILLA: Decimal("140000.00")},
         source_transaction_ids=(_TX_ID,),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        inputs_snapshot={"00501": "140000.00"},
+        input_values_by_casilla_id={_EVIDENCE_CASILLA: "140000.00"},
         source_transaction_ids=(_TX_ID,),
-        casilla_values={"00501": Decimal("140000.00")},
+        casilla_values={_EVIDENCE_CASILLA: Decimal("140000.00")},
+        observations=(
+            CasillaObservation(
+                casilla_id=_EVIDENCE_CASILLA,
+                value=Decimal("140000.00"),
+                legal_refs=("liva-art-99",),
+                source_refs=("boe-a-2026-1",),
+            ),
+        ),
         ledger_filing_evidence=evidence,
         created_at=_NOW,
         updated_at=_NOW,
@@ -141,8 +161,6 @@ def test_ledger_evidence_negative_amount_payload_rejected_at_load(objects: Secur
     """
 
     import json as _json
-
-    from pydantic import ValidationError
 
     from ....adapters.persistence.storage import SensitivityClass
     from .._calculation_repository import (

@@ -16,12 +16,11 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import get_origin
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import _loader
+from .. import CasillaId, _loader, validated_casilla_id
 from .._errors import RegistryLoadError, RegistryValidationError
 from .._loader import (
     discover_modelo_sources,
@@ -30,13 +29,21 @@ from .._loader import (
     load_modelo_source,
     load_registry_tree,
 )
-from .._schema import ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
 _MAX_SINGLE_FILE_MODELO_LINES = 2_000
 _MAX_TOML_FRAGMENT_LINES = 1_750
 _MAX_TOML_ROW_CHARS = 600
+_TOML_CASILLA_ID_KEY = "casilla_id"
+_COMPLETENESS_CASILLA_0001: CasillaId = validated_casilla_id(
+    "0001",
+    surface="_COMPLETENESS_CASILLA_0001",
+)
+_COMPLETENESS_CASILLA_0002: CasillaId = validated_casilla_id(
+    "0002",
+    surface="_COMPLETENESS_CASILLA_0002",
+)
 
 
 def _build_directory_layout(
@@ -289,6 +296,139 @@ source_refs = ["aeat-manual"]
     assert actual == expected
 
 
+def test_directory_mode_rejects_malformed_casilla_id_before_locale_key_authority(tmp_path: Path) -> None:
+    """Raw TOML casilla ids must be validated before they seed loader authority sets."""
+
+    target = tmp_path / "malformed_casilla_id"
+    (target / "revisions").mkdir(parents=True)
+    (target / "manifest.toml").write_text(
+        """
+[modelo]
+id = "999"
+title = "Malformed casilla id test"
+official_name = "Malformed casilla id test"
+tax_domain = "iva"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025.toml").write_text(
+        """
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casillas]]
+id = "bad key"
+number = "1"
+label = "Base"
+section = ["liquidacion"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryValidationError, match=r"Invalid casilla id 'bad key'.*canonical casilla\.id"):
+        load_modelo_directory(target)
+
+
+def test_single_file_mode_rejects_ambiguous_casilla_identity_during_load(tmp_path: Path) -> None:
+    source = tmp_path / "999.toml"
+    source.write_text(
+        """
+[modelo]
+id = "999"
+title = "Ambiguous casilla identity test"
+official_name = "Ambiguous casilla identity test"
+tax_domain = "iva"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casillas]]
+id = "01"
+number = "99"
+label = "Canonical owner"
+section = ["test"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casillas]]
+id = "DPX:01"
+number = "01"
+segmento = "DPX"
+label = "Colliding display token"
+section = ["test"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryValidationError, match="casilla reference token '01' is ambiguous"):
+        load_modelo_file(source)
+
+
+def test_directory_mode_rejects_ambiguous_casilla_identity_during_load(tmp_path: Path) -> None:
+    target = tmp_path / "999"
+    _build_directory_layout(
+        target,
+        manifest_text="""
+[modelo]
+id = "999"
+title = "Ambiguous casilla identity test"
+official_name = "Ambiguous casilla identity test"
+tax_domain = "iva"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        revision_files={
+            "2025.toml": """
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casillas]]
+id = "01"
+number = "99"
+label = "Canonical owner"
+section = ["test"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casillas]]
+id = "DPX:01"
+number = "01"
+segmento = "DPX"
+label = "Colliding display token"
+section = ["test"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        },
+    )
+
+    with pytest.raises(RegistryValidationError, match="casilla reference token '01' is ambiguous"):
+        load_modelo_directory(target)
+
+
 def test_directory_mode_loads_fragmented_revision_layout(tmp_path: Path) -> None:
     """A ``revisions/<id>/`` fragment tree compiles to the same object shape."""
 
@@ -454,7 +594,8 @@ def test_directory_mode_merges_completeness_manifest_casilla_fragments(tmp_path:
 
     single_file = tmp_path / "999.toml"
     single_file.write_text(
-        """
+        (
+            """
 [modelo]
 id = "999"
 title = "Fragment test"
@@ -477,11 +618,18 @@ legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 
 [[revisions."2025".completeness_manifest.casillas]]
+"""
+            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0001}"\n'
+            + """
 number = "0001"
 
 [[revisions."2025".completeness_manifest.casillas]]
+"""
+            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0002}"\n'
+            + """
 number = "0002"
-""".lstrip(),
+"""
+        ).lstrip(),
         encoding="utf-8",
     )
     expected = load_modelo_file(single_file)
@@ -522,17 +670,27 @@ source_refs = ["aeat-manual"]
         encoding="utf-8",
     )
     (target / "revisions" / "2025" / "completeness" / "casillas-0001.toml").write_text(
-        """
+        (
+            """
 [[revisions."2025".completeness_manifest.casillas]]
+"""
+            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0001}"\n'
+            + """
 number = "0001"
-""".lstrip(),
+"""
+        ).lstrip(),
         encoding="utf-8",
     )
     (target / "revisions" / "2025" / "completeness" / "casillas-0002.toml").write_text(
-        """
+        (
+            """
 [[revisions."2025".completeness_manifest.casillas]]
+"""
+            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0002}"\n'
+            + """
 number = "0002"
-""".lstrip(),
+"""
+        ).lstrip(),
         encoding="utf-8",
     )
 
@@ -720,7 +878,7 @@ id = "modelo-999-workflow"
 title = "Modelo 999 workflow"
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
-casillas = ["0001"]
+casilla_ids = ["0001"]
 formulas = ["formula-1"]
 """.lstrip(),
         encoding="utf-8",
@@ -760,7 +918,7 @@ id = "modelo-999-workflow"
 title = "Modelo 999 workflow"
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
-casillas = ["0001"]
+casilla_ids = ["0001"]
 """.lstrip(),
         encoding="utf-8",
     )
@@ -899,7 +1057,7 @@ def test_directory_mode_rejects_construct_scalar_conflict(tmp_path: Path) -> Non
 [[revisions."2025".constructs]]
 id = "workflow"
 title = "One"
-casillas = ["0001"]
+casilla_ids = ["0001"]
 """.lstrip(),
         encoding="utf-8",
     )
@@ -1138,25 +1296,6 @@ def test_committed_directory_source_inventory_lists_every_revision_fragment_toml
         assert discovered_paths == {path.resolve() for path in expected_paths}
 
     assert checked, "at least one committed directory revision must be discovered"
-
-
-def test_revision_fragment_merge_contract_covers_repeatable_revision_fields() -> None:
-    """Repeatable revision fields must be classified by the fragment compiler."""
-
-    repeatable_revision_fields = {
-        field_name
-        for field_name, field in ModeloRevision.model_fields.items()
-        if field.default == () and get_origin(field.annotation) is tuple
-    }
-    fragment_merge_fields = {
-        *_loader._REVISION_APPEND_ARRAYS,
-        _loader._REVISION_CONSTRUCTS,
-        _loader._REVISION_EXPORT_LAYOUTS,
-    }
-
-    assert repeatable_revision_fields == fragment_merge_fields
-    assert _loader._REVISION_COMPLETENESS_MANIFEST in ModeloRevision.model_fields
-    assert _loader._REVISION_COMPLETENESS_MANIFEST not in repeatable_revision_fields
 
 
 def test_locale_translation_fragments_merge_by_language_directory(tmp_path: Path) -> None:

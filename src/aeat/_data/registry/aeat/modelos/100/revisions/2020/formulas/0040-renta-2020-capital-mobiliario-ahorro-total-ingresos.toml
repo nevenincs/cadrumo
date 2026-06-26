@@ -1,16 +1,16 @@
 [[revisions."2020".formulas]]
 id = "renta-2020-capital-mobiliario-ahorro-total-ingresos"
-target = "0036"
+target_casilla_id = "0036"
 expression = { op = "sum", args = [
-        { casilla = "0027" },
-        { casilla = "0028" },
-        { casilla = "0029" },
-        { casilla = "0030" },
-        { casilla = "0031" },
-        { casilla = "0032" },
-        { casilla = "0033" },
-        { casilla = "0034" },
-        { casilla = "0035" },
+        { casilla_id = "0027" },
+        { casilla_id = "0028" },
+        { casilla_id = "0029" },
+        { casilla_id = "0030" },
+        { casilla_id = "0031" },
+        { casilla_id = "0032" },
+        { casilla_id = "0033" },
+        { casilla_id = "0034" },
+        { casilla_id = "0035" },
     ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25"]

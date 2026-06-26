@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from graphlib import TopologicalSorter
 
+from ._ids import BindingId, CasillaId, ParameterId, RelationId
 from ._schema import FormulaExpression, ModeloRevision
 
 # These walkers are pure O(expression-node) traversals and intentionally
@@ -22,28 +23,28 @@ from ._schema import FormulaExpression, ModeloRevision
 # small — so the walkers simply re-walk on every call.
 
 
-def expression_casilla_refs(expression: FormulaExpression) -> tuple[str, ...]:
+def expression_casilla_refs(expression: FormulaExpression) -> tuple[CasillaId, ...]:
     """Return all casilla ids referenced by a formula expression."""
-    refs: list[str] = []
+    refs: list[CasillaId] = []
     _collect_casilla_refs(expression, refs)
     return tuple(refs)
 
 
-def expression_relation_refs(expression: FormulaExpression) -> tuple[str, ...]:
+def expression_relation_refs(expression: FormulaExpression) -> tuple[RelationId, ...]:
     """Return all relation ids referenced by a formula expression."""
-    refs: list[str] = []
+    refs: list[RelationId] = []
     _collect_relation_refs(expression, refs)
     return tuple(refs)
 
 
-def expression_binding_refs(expression: FormulaExpression) -> tuple[str, ...]:
+def expression_binding_refs(expression: FormulaExpression) -> tuple[BindingId, ...]:
     """Return all binding ids referenced by a formula expression."""
-    refs: list[str] = []
+    refs: list[BindingId] = []
     _collect_binding_refs(expression, refs)
     return tuple(refs)
 
 
-def expression_date_binding_refs(expression: FormulaExpression) -> tuple[str, ...]:
+def expression_date_binding_refs(expression: FormulaExpression) -> tuple[BindingId, ...]:
     """Return all date_binding ids referenced by a formula expression.
 
     ``date_binding`` leaves carry date-valued profile facts (e.g.
@@ -52,12 +53,12 @@ def expression_date_binding_refs(expression: FormulaExpression) -> tuple[str, ..
     own collector so callers can populate the ``date_binding_values``
     channel selectively.
     """
-    refs: list[str] = []
+    refs: list[BindingId] = []
     _collect_date_binding_refs(expression, refs)
     return tuple(refs)
 
 
-def expression_parameter_refs(expression: FormulaExpression) -> tuple[str, ...]:
+def expression_parameter_refs(expression: FormulaExpression) -> tuple[ParameterId, ...]:
     """Return all parameter ids referenced by a formula expression.
 
     Walks both the direct ``parameter = "..."`` leaf and the
@@ -65,35 +66,35 @@ def expression_parameter_refs(expression: FormulaExpression) -> tuple[str, ...]:
     ``lookup_bracket_by_ccaa`` op; dispatch_table values reference
     parameters just like the direct leaf.
     """
-    refs: list[str] = []
+    refs: list[ParameterId] = []
     _collect_parameter_refs(expression, refs)
     return tuple(refs)
 
 
-def _collect_casilla_refs(expression: FormulaExpression, refs: list[str]) -> None:
-    if expression.casilla is not None:
-        refs.append(expression.casilla)
+def _collect_casilla_refs(expression: FormulaExpression, refs: list[CasillaId]) -> None:
+    if expression.casilla_id is not None:
+        refs.append(expression.casilla_id)
     for arg in expression.args:
         _collect_casilla_refs(arg, refs)
 
 
-def _collect_relation_refs(expression: FormulaExpression, refs: list[str]) -> None:
+def _collect_relation_refs(expression: FormulaExpression, refs: list[RelationId]) -> None:
     if expression.relation is not None:
         refs.append(expression.relation)
     for arg in expression.args:
         _collect_relation_refs(arg, refs)
 
 
-def _collect_binding_refs(expression: FormulaExpression, refs: list[str]) -> None:
+def _collect_binding_refs(expression: FormulaExpression, refs: list[BindingId]) -> None:
     if expression.binding is not None:
         refs.append(expression.binding)
     for arg in expression.args:
         _collect_binding_refs(arg, refs)
 
 
-def _collect_date_binding_refs(expression: FormulaExpression, refs: list[str]) -> None:
+def _collect_date_binding_refs(expression: FormulaExpression, refs: list[BindingId]) -> None:
     if expression.date_binding is not None:
-        refs.append(str(expression.date_binding))
+        refs.append(expression.date_binding)
     for arg in expression.args:
         _collect_date_binding_refs(arg, refs)
 
@@ -123,7 +124,7 @@ _ENUM_DISPATCH_BINDING_ARG_INDEX: dict[str, int] = {
 }
 
 
-def _collect_enum_dispatch_binding_refs(expression: FormulaExpression, refs: list[str]) -> None:
+def _collect_enum_dispatch_binding_refs(expression: FormulaExpression, refs: list[BindingId]) -> None:
     arg_index = _ENUM_DISPATCH_BINDING_ARG_INDEX.get(expression.op or "")
     if arg_index is not None and len(expression.args) > arg_index:
         dispatch_binding = expression.args[arg_index].binding
@@ -133,7 +134,7 @@ def _collect_enum_dispatch_binding_refs(expression: FormulaExpression, refs: lis
         _collect_enum_dispatch_binding_refs(arg, refs)
 
 
-def enum_consumed_binding_ids(revision: ModeloRevision) -> frozenset[str]:
+def enum_consumed_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
     """Return binding ids the revision's formulas consume as string enums.
 
     A registry binding leaf is resolved from one of two engine
@@ -156,13 +157,13 @@ def enum_consumed_binding_ids(revision: ModeloRevision) -> frozenset[str]:
         revision: The :class:`ModeloRevision` whose formula graph is
             inspected for enum dispatch binding references.
     """
-    refs: list[str] = []
+    refs: list[BindingId] = []
     for formula in revision.formulas:
         _collect_enum_dispatch_binding_refs(formula.expression, refs)
     return frozenset(refs)
 
 
-def revision_date_binding_ids(revision: ModeloRevision) -> frozenset[str]:
+def revision_date_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
     """Return every date_binding id the revision's formulas consume.
 
     Date bindings carry date-valued profile facts (e.g. taxpayer birth date)
@@ -177,13 +178,13 @@ def revision_date_binding_ids(revision: ModeloRevision) -> frozenset[str]:
         revision: The :class:`ModeloRevision` whose formula graph is inspected
             for ``date_binding`` leaf references.
     """
-    refs: list[str] = []
+    refs: list[BindingId] = []
     for formula in revision.formulas:
         refs.extend(expression_date_binding_refs(formula.expression))
     return frozenset(refs)
 
 
-def _collect_parameter_refs(expression: FormulaExpression, refs: list[str]) -> None:
+def _collect_parameter_refs(expression: FormulaExpression, refs: list[ParameterId]) -> None:
     if expression.parameter is not None:
         refs.append(expression.parameter)
     if expression.dispatch_table:
@@ -204,95 +205,33 @@ def _collect_parameter_refs(expression: FormulaExpression, refs: list[str]) -> N
 # formula set — cheap — so they simply recompute on every call.
 
 
-def _casilla_reference_resolver(revision: ModeloRevision) -> dict[str, str]:
-    """Return a token-to-canonical-id map for segment-aware casilla lookup.
-
-    A casilla's identity is the pair ``(segmento, number)``; ``id`` is
-    the canonical within-revision handle. A formula leaf or target may
-    name a casilla either by its ``id`` directly, or by its bare
-    ``number`` when that number is unambiguous within the revision.
-
-    The returned map sends every such reference token to the canonical
-    casilla ``id``: each ``id`` maps to itself, and a bare ``number``
-    that occurs on exactly one casilla maps to that casilla's ``id``. A
-    bare ``number`` that recurs across distinct record segments is
-    omitted — it is ambiguous on its own and must be named by the
-    segment-qualified ``id``.
-
-    For a single-segment modelo every casilla sets ``id == number``, so
-    the map is the identity on the casilla ids and resolution is a
-    no-op: multi-segment numbers resolve correctly while single-segment
-    dependency ordering is unchanged.
-    """
-    resolver: dict[str, str] = {casilla.id: casilla.id for casilla in revision.casillas}
-    number_counts: dict[str, int] = {}
-    for casilla in revision.casillas:
-        number_counts[casilla.number] = number_counts.get(casilla.number, 0) + 1
-    for casilla in revision.casillas:
-        if number_counts[casilla.number] == 1:
-            resolver.setdefault(casilla.number, casilla.id)
-    return resolver
+def _casilla_reference_resolver(revision: ModeloRevision) -> dict[CasillaId, CasillaId]:
+    """Return the id-only casilla lookup used by runtime graph builders."""
+    return {casilla.id: casilla.id for casilla in revision.casillas}
 
 
-def input_casilla_alias_map(revision: ModeloRevision) -> dict[str, str]:
-    """Return a token-to-canonical-id map for operator-supplied casilla input.
-
-    A casilla's canonical handle is its within-revision ``id``. Spanish
-    taxpayers, however, know a casilla by the number printed on the
-    paper AEAT form. This map sends every operator-facing token an
-    operator could reasonably type — the canonical ``id``, the registry
-    ``number``, and the BOE ``form_number`` — to the canonical ``id``.
-
-    A token is included only when it resolves unambiguously: an ``id``
-    always maps to itself; a ``number`` or ``form_number`` maps to a
-    casilla ``id`` only when exactly one casilla in the revision carries
-    that value. An ambiguous ``number`` / ``form_number`` (one shared
-    across record segments) is omitted — it must be named by the
-    canonical ``id``. The canonical ``id`` always wins a collision so
-    the canonical handle is never shadowed by an alias.
-
-    Args:
-        revision: The :class:`ModeloRevision` whose casilla identifiers
-            are indexed into the returned alias map.
-    """
-    canonical_ids = {casilla.id for casilla in revision.casillas}
-    number_counts: dict[str, int] = {}
-    form_number_counts: dict[str, int] = {}
-    for casilla in revision.casillas:
-        number_counts[casilla.number] = number_counts.get(casilla.number, 0) + 1
-        if casilla.form_number is not None:
-            form_number_counts[casilla.form_number] = form_number_counts.get(casilla.form_number, 0) + 1
-    resolver: dict[str, str] = {casilla.id: casilla.id for casilla in revision.casillas}
-    for casilla in revision.casillas:
-        if casilla.number not in canonical_ids and number_counts[casilla.number] == 1:
-            resolver.setdefault(casilla.number, casilla.id)
-        if (
-            casilla.form_number is not None
-            and casilla.form_number not in canonical_ids
-            and form_number_counts[casilla.form_number] == 1
-        ):
-            resolver.setdefault(casilla.form_number, casilla.id)
-    return resolver
+def input_casilla_id_map(revision: ModeloRevision) -> dict[CasillaId, CasillaId]:
+    """Return the canonical casilla id map for operator-supplied input."""
+    return {casilla.id: casilla.id for casilla in revision.casillas}
 
 
-def formula_evaluation_order(revision: ModeloRevision) -> tuple[str, ...]:
+def formula_evaluation_order(revision: ModeloRevision) -> tuple[CasillaId, ...]:
     """Return computed casilla ids in dependency order.
 
-    Casilla references in a formula expression and the formula
-    ``target`` are resolved segment-aware to their canonical casilla
-    ``id`` before the dependency graph is built, so a multi-segment
-    bare-number reference is matched against the correct casilla
-    occurrence. For single-segment modelos the resolution is the
-    identity and the ordering is unchanged.
+    Casilla references in formula expressions and formula ``target`` fields
+    are canonical ``casilla.id`` values. Registry validation rejects
+    ``number`` fallback references before runtime reaches this graph builder.
 
     Args:
         revision: The :class:`ModeloRevision` whose formulas to topologically sort.
     """
     resolver = _casilla_reference_resolver(revision)
-    computed_targets = {resolver.get(formula.target, formula.target) for formula in revision.formulas}
-    sorter: TopologicalSorter[str] = TopologicalSorter()
+    computed_targets = {
+        resolver.get(formula.target_casilla_id, formula.target_casilla_id) for formula in revision.formulas
+    }
+    sorter: TopologicalSorter[CasillaId] = TopologicalSorter()
     for formula in revision.formulas:
-        target = resolver.get(formula.target, formula.target)
+        target = resolver.get(formula.target_casilla_id, formula.target_casilla_id)
         dependencies = [
             resolved
             for casilla in expression_casilla_refs(formula.expression)

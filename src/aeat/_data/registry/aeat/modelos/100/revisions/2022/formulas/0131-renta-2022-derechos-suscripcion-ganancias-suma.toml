@@ -1,8 +1,8 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-derechos-suscripcion-ganancias-suma"
-target = "0354"
+target_casilla_id = "0354"
 expression = { op = "sum", args = [
-    { casilla = "0351" },
+    { casilla_id = "0351" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

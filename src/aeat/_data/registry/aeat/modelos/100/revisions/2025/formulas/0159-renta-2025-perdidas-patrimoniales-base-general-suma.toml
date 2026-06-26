@@ -1,9 +1,9 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-perdidas-patrimoniales-base-general-suma"
-target = "0419"
+target_casilla_id = "0419"
 expression = { op = "sum", args = [
-    { casilla = "1607" },
-    { casilla = "0307" },
+    { casilla_id = "1607" },
+    { casilla_id = "0307" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-50"]

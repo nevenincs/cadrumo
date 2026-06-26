@@ -23,7 +23,7 @@ source_refs = ["aeat-dr-303-2025"]
 
 [[revisions.2023-y-siguientes.verification_expectations]]
 id = "modelo-303-iva-chain-verification"
-computed_casillas = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general", "64", "66", "iva.compensacion-aplicada-periodo", "iva.compensacion-pendiente-periodos-posteriores", "iva.resultado", "71", "iva.compensacion-generada-periodo", "iva.compensacion-disponible-fin-periodo"]
+computed_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general", "64", "66", "iva.compensacion-aplicada-periodo", "iva.compensacion-pendiente-periodos-posteriores", "iva.resultado", "71", "iva.compensacion-generada-periodo", "iva.compensacion-disponible-fin-periodo"]
 tolerance = "0.00"
 rounding = "money-2"
 min_coverage = "1"
@@ -142,7 +142,7 @@ required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
 source_modelo = "303"
-source_output = "iva.compensacion-disponible-fin-periodo"
+source_casilla_id = "iva.compensacion-disponible-fin-periodo"
 source_period_offset_from_target = -1
 
 [revisions.2023-y-siguientes.bindings.aggregation]
@@ -182,7 +182,7 @@ op = "copy"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-cuota-devengada-total"
-target = "iva.cuota-devengada-total"
+target_casilla_id = "iva.cuota-devengada-total"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -195,26 +195,26 @@ required_text = ["modelo 303"]
 op = "add"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.repercutido.general"
+casilla_id = "iva.repercutido.general"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.repercutido.reducido"
+casilla_id = "iva.repercutido.reducido"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.repercutido.super-reducido"
+casilla_id = "iva.repercutido.super-reducido"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.autorepercutido.intracomunitaria"
+casilla_id = "iva.autorepercutido.intracomunitaria"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.autorepercutido.interior.devengado"
+casilla_id = "iva.autorepercutido.interior.devengado"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.autoconsumo.promotor.cuota"
+casilla_id = "iva.autoconsumo.promotor.cuota"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-autoconsumo-promotor-cuota"
-target = "iva.autoconsumo.promotor.cuota"
+target_casilla_id = "iva.autoconsumo.promotor.cuota"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["boe-modelo-303-2008-form"]
@@ -227,14 +227,14 @@ required_text = ["modelo 303 de autoliquidación del Impuesto sobre el Valor Añ
 op = "multiply"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.autoconsumo.promotor.base"
+casilla_id = "iva.autoconsumo.promotor.base"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
 literal = "0.21"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-cuota-deducible-total"
-target = "iva.cuota-deducible-total"
+target_casilla_id = "iva.cuota-deducible-total"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -247,20 +247,20 @@ required_text = ["modelo 303"]
 op = "add"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.soportado.interiores"
+casilla_id = "iva.soportado.interiores"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.soportado.importaciones"
+casilla_id = "iva.soportado.importaciones"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.autorepercutido.intracomunitaria"
+casilla_id = "iva.autorepercutido.intracomunitaria"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.autorepercutido.interior.deducible"
+casilla_id = "iva.autorepercutido.interior.deducible"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-resultado-regimen-general"
-target = "iva.resultado-regimen-general"
+target_casilla_id = "iva.resultado-regimen-general"
 rounding = "money-2"
 # Orden EHA/3786/2008 art. 1 as amended by successive annual orders including the 2024 reform:
 # box [46] = [27] - [45].  The M303 printed form labels this cell "Resultado régimen general
@@ -282,14 +282,14 @@ required_text = ["modelo 303"]
 op = "subtract"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.cuota-devengada-total"
+casilla_id = "iva.cuota-devengada-total"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.cuota-deducible-total"
+casilla_id = "iva.cuota-deducible-total"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-prorrata-porcentaje"
-target = "iva.prorrata-porcentaje"
+target_casilla_id = "iva.prorrata-porcentaje"
 rounding = "integer"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -305,7 +305,7 @@ op = "if_then_else"
 op = "greater_than"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args]]
-casilla = "iva.prorrata-volumen-total"
+casilla_id = "iva.prorrata-volumen-total"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args]]
 literal = "0"
@@ -317,13 +317,13 @@ op = "divide"
 op = "multiply"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args.args]]
-casilla = "iva.prorrata-volumen-con-derecho"
+casilla_id = "iva.prorrata-volumen-con-derecho"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args.args]]
 literal = "100"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args]]
-casilla = "iva.prorrata-volumen-total"
+casilla_id = "iva.prorrata-volumen-total"
 
 # No prorrata-volume data declared (volumen-total = 0) means no exempt-without-
 # right operations limit the deduction, so the prorrata percentage defaults to
@@ -336,7 +336,7 @@ literal = "100"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-compensacion-aplicada-periodo"
-target = "iva.compensacion-aplicada-periodo"
+target_casilla_id = "iva.compensacion-aplicada-periodo"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -349,7 +349,7 @@ required_text = ["modelo 303"]
 op = "min"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.compensacion-pendiente-periodos-anteriores"
+casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
 op = "max"
@@ -358,11 +358,11 @@ op = "max"
 literal = "0"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args]]
-casilla = "iva.resultado-regimen-general"
+casilla_id = "iva.resultado-regimen-general"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-compensacion-pendiente-periodos-posteriores"
-target = "iva.compensacion-pendiente-periodos-posteriores"
+target_casilla_id = "iva.compensacion-pendiente-periodos-posteriores"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -375,14 +375,14 @@ required_text = ["modelo 303"]
 op = "subtract"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.compensacion-pendiente-periodos-anteriores"
+casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.compensacion-aplicada-periodo"
+casilla_id = "iva.compensacion-aplicada-periodo"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-suma-resultados"
-target = "64"
+target_casilla_id = "64"
 rounding = "money-2"
 # Orden HAC/819/2024 art. 1 (Modelo 303 2023+): casilla [64] = [46] + [58] + [76].
 #   [46] = resultado régimen general (LIVA arts. 88, 92)
@@ -405,17 +405,17 @@ required_text = ["modelo 303"]
 op = "add"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.resultado-regimen-general"
+casilla_id = "iva.resultado-regimen-general"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "58"
+casilla_id = "58"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "76"
+casilla_id = "76"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-atribuible-estado"
-target = "66"
+target_casilla_id = "66"
 rounding = "money-2"
 # Orden HAC/819/2024 art. 1 (Modelo 303 2023+): casilla [66] = [64] × [65] / 100.
 #   [64] = suma de resultados (total neto IVA antes de apportionment)
@@ -442,17 +442,17 @@ op = "divide"
 op = "multiply"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args]]
-casilla = "64"
+casilla_id = "64"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args]]
-casilla = "65"
+casilla_id = "65"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
 literal = "100"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-resultado"
-target = "iva.resultado"
+target_casilla_id = "iva.resultado"
 rounding = "money-2"
 # Orden HAC/819/2024 art. 1 (Modelo 303 2023+): casilla [69] = [66] + [77] + [68] - [78].
 #   [66] = importe atribuible Administración del Estado
@@ -483,20 +483,20 @@ op = "add"
 op = "add"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args.args]]
-casilla = "66"
+casilla_id = "66"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args.args]]
-casilla = "77"
+casilla_id = "77"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args]]
-casilla = "68"
+casilla_id = "68"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.compensacion-aplicada-periodo"
+casilla_id = "iva.compensacion-aplicada-periodo"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-resultado-final"
-target = "71"
+target_casilla_id = "71"
 rounding = "money-2"
 # Orden HAC/819/2024 art. 1 (Modelo 303 2023+): casilla [71] = [69] - [70] + [109].
 #   [69] = resultado de la autoliquidación
@@ -524,17 +524,17 @@ op = "add"
 op = "subtract"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args]]
-casilla = "iva.resultado"
+casilla_id = "iva.resultado"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args]]
-casilla = "70"
+casilla_id = "70"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "109"
+casilla_id = "109"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-compensacion-disponible-fin-periodo"
-target = "iva.compensacion-disponible-fin-periodo"
+target_casilla_id = "iva.compensacion-disponible-fin-periodo"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -547,14 +547,14 @@ required_text = ["modelo 303"]
 op = "add"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.compensacion-pendiente-periodos-posteriores"
+casilla_id = "iva.compensacion-pendiente-periodos-posteriores"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
-casilla = "iva.compensacion-generada-periodo"
+casilla_id = "iva.compensacion-generada-periodo"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-compensacion-generada-periodo"
-target = "iva.compensacion-generada-periodo"
+target_casilla_id = "iva.compensacion-generada-periodo"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -573,7 +573,7 @@ literal = "0"
 op = "negate"
 
 [[revisions.2023-y-siguientes.formulas.expression.args.args]]
-casilla = "iva.resultado"
+casilla_id = "iva.resultado"
 
 # The M303 official Diseño box projection formulas (Stage 2) live in the
 # formulas/ fragment directory (formulas/0001-dr303-projections.toml) to keep
@@ -585,7 +585,7 @@ id = "modelo-303-rel-self-compensacion-anteriores"
 kind = "previous_period"
 dependency_role = "direct_calculation"
 source_modelo = "303"
-source_output = "iva.compensacion-disponible-fin-periodo"
+source_casilla_id = "iva.compensacion-disponible-fin-periodo"
 target_binding = "modelo-303-compensacion-pendiente-anteriores"
 target_periods = ["1T", "2T", "3T", "4T"]
 source_period_offset_from_target = -1
@@ -925,7 +925,7 @@ legal_refs = [
     "ley-37-1992:art-124",
 ]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
-casillas = [
+casilla_ids = [
     "iva.repercutido.general",
     "iva.repercutido.reducido",
     "iva.repercutido.super-reducido",

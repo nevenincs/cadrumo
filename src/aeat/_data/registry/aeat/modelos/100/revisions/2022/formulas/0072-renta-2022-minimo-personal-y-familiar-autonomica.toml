@@ -1,11 +1,11 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-minimo-personal-y-familiar-autonomica"
-target = "0520"
+target_casilla_id = "0520"
 expression = { op = "sum", args = [
-    { casilla = "0512" },
-    { casilla = "0514" },
-    { casilla = "0516" },
-    { casilla = "0518" },
+    { casilla_id = "0512" },
+    { casilla_id = "0514" },
+    { casilla_id = "0516" },
+    { casilla_id = "0518" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-73"]

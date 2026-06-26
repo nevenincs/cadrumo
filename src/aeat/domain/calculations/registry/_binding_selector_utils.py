@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from decimal import Decimal
 from typing import Protocol
 
@@ -46,13 +46,26 @@ def selector_against_model(
 
     Returns an empty list when the selector validates.
     """
+    selector = selector_as_dict(binding)
     try:
-        selector_model.model_validate(selector_as_dict(binding))
+        selector_model.model_validate(selector)
     except ValueError as exc:
+        hint = _canonical_selector_key_hint(selector, selector_model)
         return [
-            f"binding {binding.id!r} (source={binding.source!r}) selector violates {selector_model.__name__}: {exc}",
+            f"binding {binding.id!r} (source={binding.source!r}) selector violates {selector_model.__name__}: "
+            f"{exc}{hint}",
         ]
     return []
+
+
+def _canonical_selector_key_hint(selector: Mapping[str, object], selector_model: type[BaseModel]) -> str:
+    if "source_casillas" in selector and "source_casilla_ids" in selector_model.model_fields:
+        return "; use source_casilla_ids, not source_casillas"
+    if "source_output" in selector and "source_casilla_id" in selector_model.model_fields:
+        return "; use source_casilla_id, not source_output"
+    if "target_casilla" in selector and "target_casilla_id" in selector_model.model_fields:
+        return "; use target_casilla_id, not target_casilla"
+    return ""
 
 
 def invariant_diagnostics(

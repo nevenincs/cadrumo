@@ -14,28 +14,59 @@ import pytest
 from pydantic import ValidationError
 
 from .._bindings import CasillaObservation
+from .._ids import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_casilla_observation_minimal_construction() -> None:
-    obs = CasillaObservation(casilla_id="0511", value=Decimal("5550"))
 
-    assert obs.casilla_id == "0511"
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"CasillaObservation fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_MINIMAL_CASILLA: CasillaId = _casilla_id("0511")
+_FULL_PROVENANCE_CASILLA: CasillaId = _casilla_id("0519")
+_VALUE_TYPE_TEST_CASILLA: CasillaId = _casilla_id("0001")
+_ABSENT_BY_DESIGN_CASILLA: CasillaId = _casilla_id("15")
+_ROUNDTRIP_CASILLA: CasillaId = _casilla_id("01")
+_EMPTY_CASILLA_ID = ""
+_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:art-56",)
+_SOURCE_REFS: tuple[SourceRefId, ...] = ("aeat-renta-2025-manual-parte1",)
+_OPERAND_CASILLAS: tuple[CasillaId, ...] = (
+    _casilla_id("0511"),
+    _casilla_id("0513"),
+    _casilla_id("0515"),
+    _casilla_id("0517"),
+)
+
+
+def test_casilla_observation_minimal_construction() -> None:
+    obs = CasillaObservation(
+        casilla_id=_MINIMAL_CASILLA,
+        value=Decimal("5550"),
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
+    )
+
+    assert obs.casilla_id == _MINIMAL_CASILLA
     assert obs.value == Decimal("5550")
     assert obs.formula_id is None
     assert obs.operand_refs == ()
     assert obs.operand_values == ()
-    assert obs.legal_refs == ()
-    assert obs.source_refs == ()
+    assert obs.legal_refs == _LEGAL_REFS
+    assert obs.source_refs == _SOURCE_REFS
 
 
 def test_casilla_observation_full_provenance() -> None:
     obs = CasillaObservation(
-        casilla_id="0519",
+        casilla_id=_FULL_PROVENANCE_CASILLA,
         value=Decimal("5550"),
         formula_id="renta-2025-minimo-personal-y-familiar-estatal",
-        operand_refs=("0511", "0513", "0515", "0517"),
+        operand_refs=_OPERAND_CASILLAS,
+        operand_casilla_refs=_OPERAND_CASILLAS,
         operand_values=(Decimal("5550"), Decimal("0"), Decimal("0"), Decimal("0")),
         legal_refs=("ley-35-2006:art-56", "orden-hac-277-2026:art-3"),
         source_refs=("aeat-renta-2025-manual-parte1",),
@@ -46,18 +77,47 @@ def test_casilla_observation_full_provenance() -> None:
     assert obs.operand_values[0] == Decimal("5550")
 
 
+def test_casilla_observation_rejects_untraced_operand_casilla_refs() -> None:
+    with pytest.raises(ValidationError, match="declares operand_casilla_refs"):
+        CasillaObservation(
+            casilla_id=_FULL_PROVENANCE_CASILLA,
+            value=Decimal("5550"),
+            formula_id="renta-2025-minimo-personal-y-familiar-estatal",
+            operand_refs=("irpf.urban_rental_withholding_rate",),
+            operand_casilla_refs=(_MINIMAL_CASILLA,),
+            operand_values=(Decimal("0.19"),),
+            legal_refs=("ley-35-2006:art-56",),
+            source_refs=("aeat-renta-2025-manual-parte1",),
+        )
+
+
 def test_casilla_observation_value_must_be_decimal_not_bool() -> None:
     with pytest.raises(ValidationError, match="Input should be an instance of Decimal"):
-        CasillaObservation(casilla_id="0001", value=cast(Decimal, True))
+        CasillaObservation(
+            casilla_id=_VALUE_TYPE_TEST_CASILLA,
+            value=cast(Decimal, True),
+            legal_refs=_LEGAL_REFS,
+            source_refs=_SOURCE_REFS,
+        )
 
 
 def test_casilla_observation_casilla_id_must_be_non_empty() -> None:
     with pytest.raises(ValidationError):
-        CasillaObservation(casilla_id="", value=Decimal("0"))
+        CasillaObservation(
+            casilla_id=_EMPTY_CASILLA_ID,
+            value=Decimal("0"),
+            legal_refs=_LEGAL_REFS,
+            source_refs=_SOURCE_REFS,
+        )
 
 
 def test_casilla_observation_is_frozen() -> None:
-    obs = CasillaObservation(casilla_id="0511", value=Decimal("0"))
+    obs = CasillaObservation(
+        casilla_id=_MINIMAL_CASILLA,
+        value=Decimal("0"),
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
+    )
     with pytest.raises(ValidationError):
         obs.value = Decimal("100")  # type: ignore[misc]
 
@@ -66,8 +126,10 @@ def test_casilla_observation_rejects_extra_fields() -> None:
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         CasillaObservation.model_validate(
             {
-                "casilla_id": "0511",
+                "casilla_id": _MINIMAL_CASILLA,
                 "value": Decimal("0"),
+                "legal_refs": _LEGAL_REFS,
+                "source_refs": _SOURCE_REFS,
                 "unknown_field": "x",
             },
         )
@@ -82,7 +144,12 @@ def test_casilla_observation_absent_by_design_defaults_to_false() -> None:
     deserialise as "value-bearing" — the historical contract — until
     the campaign-level migration is run.
     """
-    obs = CasillaObservation(casilla_id="15", value=Decimal("0"))
+    obs = CasillaObservation(
+        casilla_id=_ABSENT_BY_DESIGN_CASILLA,
+        value=Decimal("0"),
+        legal_refs=("rd-439-2007:art-110",),
+        source_refs=("aeat-modelo-130-instructions",),
+    )
     assert obs.absent_by_design is False
 
 
@@ -96,7 +163,7 @@ def test_casilla_observation_absent_by_design_roundtrips_through_json() -> None:
     silently drop the field without breaking this test.
     """
     original = CasillaObservation(
-        casilla_id="15",
+        casilla_id=_ABSENT_BY_DESIGN_CASILLA,
         value=Decimal("0"),
         absent_by_design=True,
         legal_refs=("rd-439-2007:art-110",),
@@ -119,7 +186,12 @@ def test_casilla_observation_absent_by_design_default_roundtrips_through_json() 
     roundtrips cleanly — so an observation persisted today with
     the field implicit will load back identically.
     """
-    original = CasillaObservation(casilla_id="01", value=Decimal("1000"))
+    original = CasillaObservation(
+        casilla_id=_ROUNDTRIP_CASILLA,
+        value=Decimal("1000"),
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
+    )
     payload = original.model_dump_json()
     restored = CasillaObservation.model_validate_json(payload)
 

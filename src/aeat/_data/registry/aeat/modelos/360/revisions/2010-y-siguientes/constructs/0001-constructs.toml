@@ -11,7 +11,7 @@ source_refs = [
     "aeat-modelo-360-procedure",
     "boe-modelo-360-2010-form",
 ]
-casillas = ["decl.ejercicio", "decl.estado-miembro"]
+casilla_ids = ["decl.ejercicio", "decl.estado-miembro"]
 bindings = [
     "modelo-360-refund-row-member-state",
     "modelo-360-refund-row-operation-kind",

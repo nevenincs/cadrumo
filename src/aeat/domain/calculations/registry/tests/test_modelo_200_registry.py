@@ -10,7 +10,15 @@ from html import unescape
 import pytest
 
 from .....core.resources import bundled_path
-from .. import RegistryValidator, build_snapshot, calculate_registry_snapshot, load_registry_tree, resolve_export_layout
+from .. import (
+    CasillaId,
+    RegistryValidator,
+    build_snapshot,
+    calculate_registry_snapshot,
+    load_registry_tree,
+    resolve_export_layout,
+    validated_casilla_id,
+)
 from .._errors import RegistryValidationError
 from .._runtime_graph import expression_casilla_refs
 from .._schema import InputKind
@@ -18,6 +26,70 @@ from .._schema import InputKind
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
+
+
+def _m200_casilla(value: object, *, surface: str = "test_modelo_200_registry.casilla") -> CasillaId:
+    return validated_casilla_id(value, surface=surface)
+
+
+_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
+_M200_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00552",
+    surface="_M200_BASE_IMPONIBLE_CASILLA",
+)
+_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:01033",
+    surface="_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA",
+)
+_M200_BONIFICACIONES_CASILLA: CasillaId = validated_casilla_id("DP200014:01034", surface="_M200_BONIFICACIONES_CASILLA")
+_M200_CUOTA_LIQUIDA_PREVIA_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00582",
+    surface="_M200_CUOTA_LIQUIDA_PREVIA_CASILLA",
+)
+_M200_CUOTA_LIQUIDA_PREVIA_FORMULA = "modelo-200-cuota-integra-ajustada-positiva"
+_M200_CUOTA_LIQUIDA_CASILLA: CasillaId = validated_casilla_id("DP200014B:00592", surface="_M200_CUOTA_LIQUIDA_CASILLA")
+_M200_CUOTA_LIQUIDA_FORMULA = "modelo-200-cuota-liquida"
+_M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:01766",
+    surface="_M200_CUOTA_LIQUIDA_POSITIVA_CASILLA",
+)
+_M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:01784",
+    surface="_M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA",
+)
+_M200_CUOTA_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:00599",
+    surface="_M200_CUOTA_EJERCICIO_CASILLA",
+)
+_M200_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:00611",
+    surface="_M200_CUOTA_DIFERENCIAL_CASILLA",
+)
+_M200_CUOTA_LIQUIDA_RESTA_AJUSTES_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:00619",
+    surface="_M200_CUOTA_LIQUIDA_RESTA_AJUSTES_CASILLA",
+)
+_M200_TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("DP200014:00558", surface="_M200_TIPO_GRAVAMEN_CASILLA")
+_M200_BASE_NIVELACION_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:01330",
+    surface="_M200_BASE_NIVELACION_CASILLA",
+)
+_M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", surface="_M200_CUOTA_INTEGRA_CASILLA")
+
+
+def _base_inputs(
+    base: Decimal,
+    *,
+    cuota_liquida_positiva: Decimal = Decimal("0"),
+    cuota_liquida_negativa: Decimal = Decimal("0"),
+) -> dict[CasillaId, Decimal]:
+    return {
+        _M200_RESULTADO_CONTABLE_CASILLA: base,
+        _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
+        _M200_BONIFICACIONES_CASILLA: Decimal("0"),
+        _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: cuota_liquida_positiva,
+        _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: cuota_liquida_negativa,
+    }
 
 
 @lru_cache(maxsize=1)
@@ -99,7 +171,7 @@ def test_modelo_200_schedule_is_annual_for_calendar_year_entities() -> None:
 def test_modelo_200_liquidacion_cuota_chain_casillas_resolve_under_their_segmento() -> None:
     """The Liquidación cuota-chain casillas resolve under their DP200014 / DP200014B segmento.
 
-    The segment-scoped casilla identity model lets Modelo 200 declare its
+    The segment-scoped metadata model lets Modelo 200 declare its
     Liquidación III / IV cuota-chain casillas under the AEAT record
     segments that carry them, distinct from the ECPN occurrences of the
     same five-digit numbers. This test resolves each cuota-chain casilla
@@ -120,15 +192,15 @@ def test_modelo_200_liquidacion_cuota_chain_casillas_resolve_under_their_segment
     )
 
     casilla_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    expected = {
-        "DP200014:00552": ("DP200014", "00552"),
-        "DP200014:00558": ("DP200014", "00558"),
-        "DP200014:00562": ("DP200014", "00562"),
-        "DP200014:00582": ("DP200014", "00582"),
-        "DP200014B:00592": ("DP200014B", "00592"),
-        "DP200014B:00599": ("DP200014B", "00599"),
-        "DP200014B:00611": ("DP200014B", "00611"),
-        "DP200014B:00619": ("DP200014B", "00619"),
+    expected: dict[CasillaId, tuple[str, str]] = {
+        _M200_BASE_IMPONIBLE_CASILLA: ("DP200014", "00552"),
+        _M200_TIPO_GRAVAMEN_CASILLA: ("DP200014", "00558"),
+        _M200_CUOTA_INTEGRA_CASILLA: ("DP200014", "00562"),
+        _M200_CUOTA_LIQUIDA_PREVIA_CASILLA: ("DP200014", "00582"),
+        _M200_CUOTA_LIQUIDA_CASILLA: ("DP200014B", "00592"),
+        _M200_CUOTA_EJERCICIO_CASILLA: ("DP200014B", "00599"),
+        _M200_CUOTA_DIFERENCIAL_CASILLA: ("DP200014B", "00611"),
+        _M200_CUOTA_LIQUIDA_RESTA_AJUSTES_CASILLA: ("DP200014B", "00619"),
     }
     for casilla_id, (segmento, number) in expected.items():
         casilla = casilla_by_id.get(casilla_id)
@@ -169,12 +241,12 @@ def test_modelo_200_page_014_export_binding_resolves_00562_to_liquidacion() -> N
     assert page_014_field is not None, (
         "the Modelo 200 fichero-BOE layout must carry the page-014 export field for casilla 00562"
     )
-    assert page_014_field.casilla == "DP200014:00562", (
+    assert page_014_field.casilla_id == _M200_CUOTA_INTEGRA_CASILLA, (
         "the page-014 export binding for 00562 must resolve to the Liquidación "
-        f"DP200014 occurrence, not the ECPN one; got {page_014_field.casilla!r}"
+        f"DP200014 occurrence, not the ECPN one; got {page_014_field.casilla_id!r}"
     )
 
-    liquidacion_casilla = next((c for c in snapshot.revision.casillas if c.id == page_014_field.casilla), None)
+    liquidacion_casilla = next((c for c in snapshot.revision.casillas if c.id == page_014_field.casilla_id), None)
     assert liquidacion_casilla is not None
     assert liquidacion_casilla.segmento == "DP200014"
     assert liquidacion_casilla.number == "00562"
@@ -191,29 +263,29 @@ def test_modelo_200_liquidacion_014_014b_formulas_and_exports_use_segment_identi
         period="0A",
     )
 
-    formulas_by_target = {formula.target: formula for formula in snapshot.revision.formulas}
+    formulas_by_target = {formula.target_casilla_id: formula for formula in snapshot.revision.formulas}
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
 
-    assert casillas_by_id["DP200014:00582"].input_kind == InputKind.COMPUTED
-    assert casillas_by_id["DP200014:00582"].formula == "modelo-200-cuota-integra-ajustada-positiva"
-    assert casillas_by_id["DP200014B:00592"].input_kind == InputKind.COMPUTED
-    assert casillas_by_id["DP200014B:00592"].formula == "modelo-200-cuota-liquida"
+    assert casillas_by_id[_M200_CUOTA_LIQUIDA_PREVIA_CASILLA].input_kind == InputKind.COMPUTED
+    assert casillas_by_id[_M200_CUOTA_LIQUIDA_PREVIA_CASILLA].formula == _M200_CUOTA_LIQUIDA_PREVIA_FORMULA
+    assert casillas_by_id[_M200_CUOTA_LIQUIDA_CASILLA].input_kind == InputKind.COMPUTED
+    assert casillas_by_id[_M200_CUOTA_LIQUIDA_CASILLA].formula == _M200_CUOTA_LIQUIDA_FORMULA
 
-    ajustada_refs = set(expression_casilla_refs(formulas_by_target["DP200014:00582"].expression))
+    ajustada_refs = set(expression_casilla_refs(formulas_by_target[_M200_CUOTA_LIQUIDA_PREVIA_CASILLA].expression))
     assert {
-        "DP200014:00562",
-        "DP200014:00567",
-        "DP200014:00568",
-        "DP200014:00563",
-        "DP200014:00566",
-        "DP200014:00576",
-        "DP200014:00569",
-        "DP200014:00570",
-        "DP200014:00572",
-        "DP200014:00571",
-        "DP200014:00575",
-        "DP200014:00577",
-        "DP200014:00581",
+        _M200_CUOTA_INTEGRA_CASILLA,
+        _m200_casilla("DP200014:00567"),
+        _m200_casilla("DP200014:00568"),
+        _m200_casilla("DP200014:00563"),
+        _m200_casilla("DP200014:00566"),
+        _m200_casilla("DP200014:00576"),
+        _m200_casilla("DP200014:00569"),
+        _m200_casilla("DP200014:00570"),
+        _m200_casilla("DP200014:00572"),
+        _m200_casilla("DP200014:00571"),
+        _m200_casilla("DP200014:00575"),
+        _m200_casilla("DP200014:00577"),
+        _m200_casilla("DP200014:00581"),
     } <= ajustada_refs
     assert not {
         "00567",
@@ -231,18 +303,18 @@ def test_modelo_200_liquidacion_014_014b_formulas_and_exports_use_segment_identi
         "00582",
     } & ajustada_refs
 
-    liquida_refs = set(expression_casilla_refs(formulas_by_target["DP200014B:00592"].expression))
+    liquida_refs = set(expression_casilla_refs(formulas_by_target[_M200_CUOTA_LIQUIDA_CASILLA].expression))
     assert {
-        "DP200014:00582",
-        "DP200014B:00619",
-        "DP200014B:00583",
-        "DP200014B:00585",
-        "DP200014B:00584",
-        "DP200014B:00588",
-        "DP200014B:00565",
-        "DP200014B:00590",
-        "DP200014B:00399",
-        "DP200014B:00082",
+        _M200_CUOTA_LIQUIDA_PREVIA_CASILLA,
+        _M200_CUOTA_LIQUIDA_RESTA_AJUSTES_CASILLA,
+        _m200_casilla("DP200014B:00583"),
+        _m200_casilla("DP200014B:00585"),
+        _m200_casilla("DP200014B:00584"),
+        _m200_casilla("DP200014B:00588"),
+        _m200_casilla("DP200014B:00565"),
+        _m200_casilla("DP200014B:00590"),
+        _m200_casilla("DP200014B:00399"),
+        _m200_casilla("DP200014B:00082"),
     } <= liquida_refs
     assert not {
         "00582",
@@ -258,31 +330,31 @@ def test_modelo_200_liquidacion_014_014b_formulas_and_exports_use_segment_identi
     } & liquida_refs
 
     layout = resolve_export_layout(snapshot, "modelo-200-fichero-boe")
-    expected_exports = {
-        "modelo-200-page-014-casilla-00567": "DP200014:00567",
-        "modelo-200-page-014-casilla-00568": "DP200014:00568",
-        "modelo-200-page-014-casilla-00563": "DP200014:00563",
-        "modelo-200-page-014-casilla-00566": "DP200014:00566",
-        "modelo-200-page-014-casilla-00576": "DP200014:00576",
-        "modelo-200-page-014-casilla-00569": "DP200014:00569",
-        "modelo-200-page-014-casilla-00570": "DP200014:00570",
-        "modelo-200-page-014-casilla-00572": "DP200014:00572",
-        "modelo-200-page-014-casilla-00571": "DP200014:00571",
-        "modelo-200-page-014-casilla-00575": "DP200014:00575",
-        "modelo-200-page-014-casilla-00577": "DP200014:00577",
-        "modelo-200-page-014-casilla-00581": "DP200014:00581",
-        "modelo-200-page-014-casilla-00582": "DP200014:00582",
-        "modelo-200-page-014b-casilla-00583": "DP200014B:00583",
-        "modelo-200-page-014b-casilla-00585": "DP200014B:00585",
-        "modelo-200-page-014b-casilla-00584": "DP200014B:00584",
-        "modelo-200-page-014b-casilla-00588": "DP200014B:00588",
-        "modelo-200-page-014b-casilla-00565": "DP200014B:00565",
-        "modelo-200-page-014b-casilla-00590": "DP200014B:00590",
-        "modelo-200-page-014b-casilla-00399": "DP200014B:00399",
-        "modelo-200-page-014b-casilla-00082": "DP200014B:00082",
-        "modelo-200-page-014b-casilla-00619": "DP200014B:00619",
+    expected_exports: dict[str, CasillaId] = {
+        "modelo-200-page-014-casilla-00567": _m200_casilla("DP200014:00567"),
+        "modelo-200-page-014-casilla-00568": _m200_casilla("DP200014:00568"),
+        "modelo-200-page-014-casilla-00563": _m200_casilla("DP200014:00563"),
+        "modelo-200-page-014-casilla-00566": _m200_casilla("DP200014:00566"),
+        "modelo-200-page-014-casilla-00576": _m200_casilla("DP200014:00576"),
+        "modelo-200-page-014-casilla-00569": _m200_casilla("DP200014:00569"),
+        "modelo-200-page-014-casilla-00570": _m200_casilla("DP200014:00570"),
+        "modelo-200-page-014-casilla-00572": _m200_casilla("DP200014:00572"),
+        "modelo-200-page-014-casilla-00571": _m200_casilla("DP200014:00571"),
+        "modelo-200-page-014-casilla-00575": _m200_casilla("DP200014:00575"),
+        "modelo-200-page-014-casilla-00577": _m200_casilla("DP200014:00577"),
+        "modelo-200-page-014-casilla-00581": _m200_casilla("DP200014:00581"),
+        "modelo-200-page-014-casilla-00582": _M200_CUOTA_LIQUIDA_PREVIA_CASILLA,
+        "modelo-200-page-014b-casilla-00583": _m200_casilla("DP200014B:00583"),
+        "modelo-200-page-014b-casilla-00585": _m200_casilla("DP200014B:00585"),
+        "modelo-200-page-014b-casilla-00584": _m200_casilla("DP200014B:00584"),
+        "modelo-200-page-014b-casilla-00588": _m200_casilla("DP200014B:00588"),
+        "modelo-200-page-014b-casilla-00565": _m200_casilla("DP200014B:00565"),
+        "modelo-200-page-014b-casilla-00590": _m200_casilla("DP200014B:00590"),
+        "modelo-200-page-014b-casilla-00399": _m200_casilla("DP200014B:00399"),
+        "modelo-200-page-014b-casilla-00082": _m200_casilla("DP200014B:00082"),
+        "modelo-200-page-014b-casilla-00619": _M200_CUOTA_LIQUIDA_RESTA_AJUSTES_CASILLA,
     }
-    actual_exports = {field_id: layout.fields_by_id[field_id].casilla for field_id in expected_exports}
+    actual_exports = {field_id: layout.fields_by_id[field_id].casilla_id for field_id in expected_exports}
     assert actual_exports == expected_exports
 
 
@@ -330,13 +402,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
 
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={
-            "00501": Decimal("0"),
-            "DP200014:01033": Decimal("0"),
-            "DP200014:01034": Decimal("0"),
-            "DP200014B:01766": Decimal("20000"),
-            "DP200014B:01784": Decimal("0"),
-        },
+        inputs=_base_inputs(Decimal("0"), cuota_liquida_positiva=Decimal("20000")),
         enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
         binding_values={
             "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
@@ -353,10 +419,10 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
         date_context={"filing_period": date(2024, 12, 31)},
     )
 
-    assert result.values["DP200014B:00599"] == Decimal("-20000.00"), (
+    assert result.values[_M200_CUOTA_EJERCICIO_CASILLA] == Decimal("-20000.00"), (
         "cuota del ejercicio 00599 must equal the AEAT manual worked-example oracle of -20.000 (manual pages 399/401)"
     )
-    assert result.values["DP200014B:00611"] == Decimal("-30000.00"), (
+    assert result.values[_M200_CUOTA_DIFERENCIAL_CASILLA] == Decimal("-30000.00"), (
         "cuota diferencial 00611 must equal the AEAT manual worked-example oracle of -30.000 (manual pages 399/401)"
     )
 
@@ -425,13 +491,13 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
     )
 
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    assert casillas_by_id["DP200014:00582"].input_kind == InputKind.COMPUTED
-    assert casillas_by_id["DP200014B:00592"].input_kind == InputKind.COMPUTED
+    assert casillas_by_id[_M200_CUOTA_LIQUIDA_PREVIA_CASILLA].input_kind == InputKind.COMPUTED
+    assert casillas_by_id[_M200_CUOTA_LIQUIDA_CASILLA].input_kind == InputKind.COMPUTED
 
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"):
         calculate_registry_snapshot(
             snapshot,
-            inputs={"DP200014B:00592": Decimal("0")},
+            inputs={_M200_CUOTA_LIQUIDA_CASILLA: Decimal("0")},
             enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
             binding_values={
                 "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
@@ -486,13 +552,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
     # worked-example base that the post-nivelación and cuota chain consume.
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={
-            "00501": Decimal("1000000"),
-            "DP200014:01033": Decimal("0"),
-            "DP200014:01034": Decimal("0"),
-            "DP200014B:01766": Decimal("0"),
-            "DP200014B:01784": Decimal("0"),
-        },
+        inputs=_base_inputs(Decimal("1000000")),
         enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
         binding_values={
             "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
@@ -509,14 +569,14 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
         date_context={"filing_period": date(2024, 12, 31)},
     )
 
-    assert result.values["DP200014:00558"] == Decimal("25"), (
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25"), (
         "tipo de gravamen 00558 must be dispatched to the LIS Art. 29 general rate (25) for a sociedad limitada"
     )
-    assert result.values["DP200014:01330"] == Decimal("1000000.00"), (
+    assert result.values[_M200_BASE_NIVELACION_CASILLA] == Decimal("1000000.00"), (
         "base imponible después de la reserva de nivelación 01330 must equal "
         "the AEAT manual worked-example figure of 1.000.000 (manual page 401)"
     )
-    assert result.values["DP200014:00562"] == Decimal("250000.00"), (
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00"), (
         "cuota íntegra 00562 must equal the AEAT manual worked-example figure of 250.000 (manual page 401)"
     )
 

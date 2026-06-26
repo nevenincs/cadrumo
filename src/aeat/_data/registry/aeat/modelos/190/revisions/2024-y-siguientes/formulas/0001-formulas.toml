@@ -1,6 +1,6 @@
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-190-total-percepciones"
-target = "decl.total-percepciones"
+target_casilla_id = "decl.total-percepciones"
 expression.op = "add"
 expression.args = [
     { relation = "modelo-190-rel-111-trabajo-dinerario-percepciones-anual" },
@@ -23,7 +23,7 @@ required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-190-percepciones-total"
-target = "decl.percepciones-total"
+target_casilla_id = "decl.percepciones-total"
 expression.op = "add"
 expression.args = [
     { relation = "modelo-190-rel-111-trabajo-dinerario-importe-anual" },
@@ -46,7 +46,7 @@ required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "posiciones 82 a 94"]
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-190-retenciones-total"
-target = "decl.retenciones-total"
+target_casilla_id = "decl.retenciones-total"
 expression = { op = "copy", args = [{ relation = "modelo-190-rel-111-retenciones-anual" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]

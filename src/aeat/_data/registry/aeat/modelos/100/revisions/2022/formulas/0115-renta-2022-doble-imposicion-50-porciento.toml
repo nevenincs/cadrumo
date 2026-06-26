@@ -1,11 +1,11 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-doble-imposicion-50-porciento"
-target = "0672"
+target_casilla_id = "0672"
 expression = { op = "percent", args = [
     { op = "sum", args = [
-        { casilla = "0588" },
-        { casilla = "0589" },
-        { casilla = "0590" },
+        { casilla_id = "0588" },
+        { casilla_id = "0589" },
+        { casilla_id = "0590" },
     ] },
     { literal = "50" },
 ] }

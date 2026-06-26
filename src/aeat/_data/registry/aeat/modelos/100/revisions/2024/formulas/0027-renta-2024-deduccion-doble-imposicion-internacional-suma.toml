@@ -1,9 +1,9 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-deduccion-doble-imposicion-internacional-suma"
-target = "1128"
+target_casilla_id = "1128"
 expression = { op = "sum", args = [
-    { casilla = "1124" },
-    { casilla = "1127" },
+    { casilla_id = "1124" },
+    { casilla_id = "1127" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-80"]

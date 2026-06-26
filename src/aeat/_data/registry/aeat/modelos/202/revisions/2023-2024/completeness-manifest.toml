@@ -8,7 +8,7 @@
 # casillas belong to foreign modelos and are excluded.
 #
 # Derived off-load-path from the modelo's calculation surface, keyed
-# on each closure casilla's own registry (segmento, number) identity.
+# on each closure casilla's canonical casilla_id plus reviewed segment/number metadata.
 # A casilla the revision declares but the manifest does not list (a
 # pure data-entry field that feeds no calculation) is not a gate
 # failure. The off-load-path drift re-verification test re-derives
@@ -20,127 +20,169 @@ legal_refs = ["ley-27-2014:art-105", "ley-27-2014:art-25", "ley-27-2014:art-29",
 source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "01"
 number = "01"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "02"
 number = "02"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "03"
 number = "03"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "04"
 number = "04"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "05"
 number = "05"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "06"
 number = "06"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "07"
 number = "07"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "08"
 number = "08"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "13"
 number = "13"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "14"
 number = "14"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "16"
 number = "16"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "17"
 number = "17"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "18"
 number = "18"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "20"
 number = "20"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "21"
 number = "21"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "22"
 number = "22"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "23"
 number = "23"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "24"
 number = "24"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "25"
 number = "25"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "26"
 number = "26"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "27"
 number = "27"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "28"
 number = "28"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "29"
 number = "29"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "30"
 number = "30"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "31"
 number = "31"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "32"
 number = "32"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "33"
 number = "33"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "34"
 number = "34"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "37"
 number = "37"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "38"
 number = "38"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "39"
 number = "39"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "40"
 number = "40"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "42"
 number = "42"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "44"
 number = "44"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "45"
 number = "45"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "46"
 number = "46"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "47"
 number = "47"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "48"
 number = "48"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "49"
 number = "49"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "50"
 number = "50"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "51"
 number = "51"
 
 [[revisions."2023-2024".completeness_manifest.casillas]]
+casilla_id = "52"
 number = "52"

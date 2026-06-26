@@ -1,9 +1,9 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-estimacion-objetiva-agricola-rendimiento-neto-reducido-total"
-target = "1560"
+target_casilla_id = "1560"
 expression = { op = "subtract", args = [
-    { casilla = "1558" },
-    { casilla = "1559" },
+    { casilla_id = "1558" },
+    { casilla_id = "1559" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-31"]

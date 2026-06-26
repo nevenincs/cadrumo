@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from .. import CasillaId, validated_casilla_id
 from .._schema_input_kind import InputKind
 from ._referential_integrity_support import (
     _DUMMY_LEGAL_ID,
@@ -23,6 +24,20 @@ from ._referential_integrity_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+_NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
+_NUMERIC_CASILLA_02: CasillaId = validated_casilla_id("02", surface="_NUMERIC_CASILLA_02")
+_SEGMENTED_LIQUIDACION_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00562",
+    surface="_SEGMENTED_LIQUIDACION_CASILLA",
+)
+_SEGMENTED_ECPN_CASILLA: CasillaId = validated_casilla_id(
+    "DP200032:00562",
+    surface="_SEGMENTED_ECPN_CASILLA",
+)
+_SEGMENTED_TARGET_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00999",
+    surface="_SEGMENTED_TARGET_CASILLA",
+)
 
 
 def test_segment_qualified_reference_resolves_across_segments() -> None:
@@ -36,20 +51,20 @@ def test_segment_qualified_reference_resolves_across_segments() -> None:
     from .._schema import FormulaDefinition, FormulaExpression
     from .._validate import RegistryValidator
 
-    liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
-    ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
-    target_casilla = _segmented_casilla("DP200014:00999", "00999", "DP200014").model_copy(
-        update={"input_kind": "computed", "formula": "test.formula"},
+    liquidacion = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    ecpn = _segmented_casilla(_SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
+    target_casilla_def = _segmented_casilla(_SEGMENTED_TARGET_CASILLA, "00999", "DP200014").model_copy(
+        update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
-        target="DP200014:00999",
-        expression=FormulaExpression(casilla="DP200014:00562"),
+        target_casilla_id=_SEGMENTED_TARGET_CASILLA,
+        expression=FormulaExpression(casilla_id=_SEGMENTED_LIQUIDACION_CASILLA),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     revision = _minimal_revision(
-        casillas=(liquidacion, ecpn, target_casilla),
+        casillas=(liquidacion, ecpn, target_casilla_def),
         formulas=(formula,),
     )
     failures = RegistryValidator(_minimal_catalogues())._validate_revision(
@@ -119,7 +134,7 @@ def test_segmented_casilla_survives_strict_load_cycle_roundtrip() -> None:
     close.
     """
     casilla = CasillaDefinition(
-        id="DP200014:00562",
+        id=_SEGMENTED_LIQUIDACION_CASILLA,
         number="00562",
         segmento="DP200014",
         label="Liquidación III - Base imponible - Cuota íntegra [00562]",
@@ -156,7 +171,7 @@ def test_revision_without_manifest_passes_completeness_gate() -> None:
     """
     from .._validate import RegistryValidator
 
-    revision = _minimal_revision(casillas=(_minimal_casilla("01"),))
+    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),))
     modelo = _minimal_modelo(revision)
     # A clean return proves the manifest-less revision clears the gate.
     RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
@@ -165,14 +180,16 @@ def test_revision_without_manifest_passes_completeness_gate() -> None:
 def test_completeness_gate_passes_when_manifest_required_subset_of_declared() -> None:
     """A revision whose declared casillas cover the manifest's required set validates.
 
-    The manifest enumerates a single required casilla number; the
+    The manifest enumerates a single required canonical casilla id; the
     revision declares exactly that casilla, so the required set is a
     subset of the declared set and the gate raises nothing.
     """
     from .._validate import RegistryValidator
 
-    casilla = _minimal_casilla("01")
-    manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
+    casilla = _minimal_casilla(_NUMERIC_CASILLA_01)
+    manifest = _completeness_manifest(
+        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+    )
     revision = _minimal_revision(casillas=(casilla,)).model_copy(update={"completeness_manifest": manifest})
     modelo = _minimal_modelo(revision)
     RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
@@ -190,8 +207,12 @@ def test_completeness_gate_passes_when_revision_declares_extra_accounting_casill
     """
     from .._validate import RegistryValidator
 
-    manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
-    revision = _minimal_revision(casillas=(_minimal_casilla("01"), _minimal_casilla("02"))).model_copy(
+    manifest = _completeness_manifest(
+        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+    )
+    revision = _minimal_revision(
+        casillas=(_minimal_casilla(_NUMERIC_CASILLA_01), _minimal_casilla(_NUMERIC_CASILLA_02)),
+    ).model_copy(
         update={"completeness_manifest": manifest},
     )
     modelo = _minimal_modelo(revision)
@@ -202,56 +223,65 @@ def test_completeness_gate_passes_when_revision_declares_extra_accounting_casill
 def test_completeness_gate_fails_on_missing_required_casilla() -> None:
     """A manifest requiring a casilla the revision omits hard-fails the gate.
 
-    The manifest requires calculation-closure casilla numbers '01' and
-    '02' but the revision declares only '01'. The completeness gate must
+    The manifest requires calculation-closure casilla ids '01' and '02'
+    but the revision declares only '01'. The completeness gate must
     report the missing required '02' as a hard RegistryValidationError.
     """
     from .._validate import RegistryValidator
 
     manifest = _completeness_manifest(
-        (CalculationCompletenessCasilla(number="01"), CalculationCompletenessCasilla(number="02")),
+        (
+            CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),
+            CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_02, number="02"),
+        ),
     )
-    revision = _minimal_revision(casillas=(_minimal_casilla("01"),)).model_copy(
+    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={"completeness_manifest": manifest},
     )
     modelo = _minimal_modelo(revision)
     with pytest.raises(
         RegistryValidationError,
         match=(
-            r"calculation-completeness manifest requires casilla number '02' "
+            r"calculation-completeness manifest requires casilla\.id '02' "
             r"but the revision does not declare it"
         ),
     ):
         RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
 
 
-def test_completeness_gate_fails_on_mis_segmented_required_casilla() -> None:
-    """A required casilla declared under the wrong segmento hard-fails the gate.
+def test_completeness_gate_fails_on_manifest_metadata_mismatch() -> None:
+    """A manifest whose metadata disagrees with its casilla id hard-fails the gate.
 
-    The manifest requires casilla 00562 under segmento DP200032; the
-    revision declares casilla 00562 but under segmento DP200014. The
-    identity pairs (DP200032, 00562) and (DP200014, 00562) are distinct,
-    so no casilla is declared at the manifest's required identity and the
-    gate reports the mis-segmented casilla as missing at that identity.
-
-    The wrongly-segmented (DP200014, 00562) casilla, being absent from
-    the manifest, is NOT separately reported — the refocused gate's
-    subset semantics never red an unrequested declared casilla.
+    The manifest resolves by canonical casilla id DP200014:00562, then
+    verifies the retained record-design metadata. If the manifest says
+    that id belongs under DP200032, validation must fail as a metadata
+    mismatch instead of treating DP200032:00562 as a second address.
     """
     from .._validate import RegistryValidator
 
-    declared = _segmented_casilla("DP200014:00562", "00562", "DP200014")
-    manifest = _completeness_manifest((CalculationCompletenessCasilla(number="00562", segmento="DP200032"),))
+    declared = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    manifest = _completeness_manifest(
+        (
+            CalculationCompletenessCasilla(
+                casilla_id=_SEGMENTED_LIQUIDACION_CASILLA,
+                number="00562",
+                segmento="DP200032",
+            ),
+        ),
+    )
     revision = _minimal_revision(casillas=(declared,)).model_copy(update={"completeness_manifest": manifest})
     modelo = _minimal_modelo(revision)
     failures = RegistryValidator(_minimal_catalogues())._validate_revision(modelo, revision)
-    missing = [f for f in failures if "manifest requires casilla number '00562' within segmento 'DP200032'" in f]
-    extra = [f for f in failures if "within segmento 'DP200014' absent" in f]
-    assert missing, f"mis-segmented required casilla must be reported missing; got: {failures}"
-    assert not extra, (
-        "the wrongly-segmented declared casilla, being absent from the manifest, "
-        f"must NOT be reported under subset semantics; got: {failures}"
-    )
+    mismatch = [
+        f
+        for f in failures
+        if "casilla.id 'DP200014:00562' metadata mismatch" in f
+        and "within segmento 'DP200032'" in f
+        and "within segmento 'DP200014'" in f
+    ]
+    missing = [f for f in failures if "requires casilla.id" in f]
+    assert mismatch, f"manifest metadata mismatch must be reported; got: {failures}"
+    assert not missing, f"the manifest id resolves, so this must not be reported as missing; got: {failures}"
 
 
 def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
@@ -271,23 +301,25 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
     from .._validate import RegistryValidator
 
     ungrounded = CasillaDefinition.model_construct(
-        id="01",
+        id=_NUMERIC_CASILLA_01,
         number="01",
         segmento=None,
         label="Casilla 01",
         section=("test",),
-        input_kind="manual",
+        input_kind=InputKind.MANUAL,
         legal_refs=(),
         source_refs=(),
     )
-    manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
-    revision = _minimal_revision(casillas=(_minimal_casilla("01"),)).model_copy(
+    manifest = _completeness_manifest(
+        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+    )
+    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
         update={"completeness_manifest": manifest, "casillas": (ungrounded,)},
     )
     modelo = _minimal_modelo(revision)
     failures = RegistryValidator(_minimal_catalogues())._validate_revision(modelo, revision)
-    legal = [f for f in failures if "casilla number '01'" in f and "without legal_refs" in f]
-    source = [f for f in failures if "casilla number '01'" in f and "without source_refs" in f]
+    legal = [f for f in failures if "casilla.id '01'" in f and "without legal_refs" in f]
+    source = [f for f in failures if "casilla.id '01'" in f and "without source_refs" in f]
     assert legal, f"ungrounded required casilla must be reported without legal_refs; got: {failures}"
     assert source, f"ungrounded required casilla must be reported without source_refs; got: {failures}"
 
@@ -305,12 +337,14 @@ def test_filing_modelo_with_formula_passes_invariant() -> None:
 
     formula = FormulaDefinition(
         id="test.formula",
-        target="01",
-        expression=FormulaExpression(casilla="01"),
+        target_casilla_id=_NUMERIC_CASILLA_01,
+        expression=FormulaExpression(casilla_id=_NUMERIC_CASILLA_01),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
-    computed_casilla = _minimal_casilla("01").model_copy(update={"input_kind": "computed", "formula": "test.formula"})
+    computed_casilla = _minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
+        update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
+    )
     revision = _minimal_revision(
         casillas=(computed_casilla,),
         formulas=(formula,),

@@ -1,12 +1,12 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-capital-mobiliario-general-total-ingresos"
-target = "0052"
+target_casilla_id = "0052"
 expression = { op = "sum", args = [
-    { casilla = "0046" },
-    { casilla = "0047" },
-    { casilla = "0048" },
-    { casilla = "0050" },
-    { casilla = "0051" },
+    { casilla_id = "0046" },
+    { casilla_id = "0047" },
+    { casilla_id = "0048" },
+    { casilla_id = "0050" },
+    { casilla_id = "0051" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "orden-hac-277-2026:art-3"]

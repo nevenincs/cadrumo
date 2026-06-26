@@ -1,18 +1,18 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-estimacion-directa-rendimiento-neto"
-target = "0224"
+target_casilla_id = "0224"
 expression = { op = "if_then_else", args = [
     { op = "equal", args = [
         { binding = "renta-2025-modelo-100-estimacion-directa-es-normal" },
         { literal = "1" },
     ] },
     { op = "subtract", args = [
-        { casilla = "0180" },
-        { casilla = "0220" },
+        { casilla_id = "0180" },
+        { casilla_id = "0220" },
     ] },
     { op = "subtract", args = [
-        { casilla = "0180" },
-        { casilla = "0223" },
+        { casilla_id = "0180" },
+        { casilla_id = "0223" },
     ] },
 ] }
 rounding = "money-2"

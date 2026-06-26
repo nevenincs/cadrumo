@@ -7,9 +7,9 @@
 
 [[revisions."2021-y-siguientes".formulas]]
 id = "patrimonio-cuota-integra-escala-estatal"
-target = "patrimonio.cuota-integra"
+target_casilla_id = "patrimonio.cuota-integra"
 expression = { op = "lookup_bracket", args = [
-    { casilla = "patrimonio.base-liquidable" },
+    { casilla_id = "patrimonio.base-liquidable" },
     { parameter = "patrimonio-escala-estatal" },
 ] }
 rounding = "money-2"

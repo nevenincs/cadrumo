@@ -19,6 +19,7 @@ from ._binding_selector_utils import (
     validate_rectification_fields,
 )
 from ._errors import RegistryValidationError
+from ._ids import BindingId
 from ._invoice_bindings import (
     InvoiceObservation,
     _invoice_selector,
@@ -90,7 +91,7 @@ class CounterpartObservationRequirement(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    binding_ids: tuple[str, ...] = Field(min_length=1)
+    binding_ids: tuple[BindingId, ...] = Field(min_length=1)
     source_kinds: tuple[str, ...] = Field(min_length=1)
     claves: tuple[str, ...] = ()
     rectification_scope: _RectificationScope = "any"
@@ -158,7 +159,7 @@ def counterpart_binding_requirements(
     Args:
         revision: The :class:`ModeloRevision` whose counterpart bindings to inspect.
     """
-    grouped: dict[tuple[tuple[str, ...], tuple[str, ...], _RectificationScope], set[str]] = {}
+    grouped: dict[tuple[tuple[str, ...], tuple[str, ...], _RectificationScope], set[BindingId]] = {}
     for binding in revision.bindings:
         if binding.source not in COUNTERPART_BINDING_SOURCE_KINDS:
             continue
@@ -206,7 +207,7 @@ def _counterpart_observations_for_binding(
 def resolve_counterpart_binding_values(
     revision: ModeloRevision,
     observations: Iterable[CounterpartAggregationObservation],
-) -> dict[str, Decimal]:
+) -> dict[BindingId, Decimal]:
     """Resolve scalar counterpart-source bindings into Decimal aggregates.
 
     Delegates to the shared invoice-family scalar resolver core
@@ -231,7 +232,7 @@ def resolve_counterpart_binding_values(
 def resolve_counterpart_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[CounterpartAggregationObservation],
-) -> dict[tuple[str, int], Decimal | str]:
+) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer counterpart-source bindings into per-row indexed values.
 
     Delegates to the shared invoice-family row resolver core

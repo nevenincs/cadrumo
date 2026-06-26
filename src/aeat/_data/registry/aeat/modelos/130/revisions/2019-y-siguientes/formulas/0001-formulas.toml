@@ -1,9 +1,9 @@
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-saldo-negativo-fin-periodo"
-target = "saldo-negativo-fin-periodo"
+target_casilla_id = "saldo-negativo-fin-periodo"
 expression = { op = "max", args = [
     { literal = "0" },
-    { op = "negate", args = [{ casilla = "17" }] },
+    { op = "negate", args = [{ casilla_id = "17" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
@@ -17,10 +17,10 @@ required_text = ["Resultados negativos"]
 
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-rendimiento-neto"
-target = "03"
+target_casilla_id = "03"
 expression = { op = "subtract", args = [
-    { casilla = "01" },
-    { casilla = "02" },
+    { casilla_id = "01" },
+    { casilla_id = "02" },
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
@@ -33,11 +33,11 @@ required_text = ["Rendimiento neto", "Casilla 03"]
 
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-pago-fraccionado-directa"
-target = "04"
+target_casilla_id = "04"
 expression = { op = "max", args = [
     { literal = "0" },
     { op = "percent", args = [
-        { casilla = "03" },
+        { casilla_id = "03" },
         { parameter = "irpf.direct_estimation_fractional_payment_rate" },
     ] },
 ] }
@@ -51,10 +51,10 @@ required_text = ["Casilla 04.", "20 por 100", "casilla 03 sea negativo", "cero"]
 
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-resultado-apartado-i"
-target = "07"
+target_casilla_id = "07"
 expression = { op = "subtract", args = [
-    { op = "subtract", args = [{ casilla = "04" }, { casilla = "05" }] },
-    { casilla = "06" },
+    { op = "subtract", args = [{ casilla_id = "04" }, { casilla_id = "05" }] },
+    { casilla_id = "06" },
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
@@ -66,9 +66,9 @@ required_text = ["Casilla 07.", "restar el importe de la casilla 05 y 06 al impo
 
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-pago-fraccionado-agrario"
-target = "09"
+target_casilla_id = "09"
 expression = { op = "percent", args = [
-    { casilla = "08" },
+    { casilla_id = "08" },
     { parameter = "irpf.agriculture_fractional_payment_rate" },
 ] }
 rounding = "money-2"
@@ -81,8 +81,8 @@ required_text = ["Casilla 09.", "2 por 100", "casilla 08"]
 
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-resultado-apartado-ii"
-target = "11"
-expression = { op = "subtract", args = [{ casilla = "09" }, { casilla = "10" }] }
+target_casilla_id = "11"
+expression = { op = "subtract", args = [{ casilla_id = "09" }, { casilla_id = "10" }] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
@@ -93,10 +93,10 @@ required_text = ["Casilla 11.", "restar el importe de la casilla 10 al importe d
 
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-suma-parciales"
-target = "12"
+target_casilla_id = "12"
 expression = { op = "max", args = [
     { literal = "0" },
-    { op = "add", args = [{ casilla = "07" }, { casilla = "11" }] },
+    { op = "add", args = [{ casilla_id = "07" }, { casilla_id = "11" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
@@ -108,8 +108,8 @@ required_text = ["Casilla 12.", "sumar, teniendo en cuenta sus respectivos signo
 
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-neto-tras-minoracion"
-target = "14"
-expression = { op = "subtract", args = [{ casilla = "12" }, { casilla = "13" }] }
+target_casilla_id = "14"
+expression = { op = "subtract", args = [{ casilla_id = "12" }, { casilla_id = "13" }] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
@@ -120,26 +120,26 @@ required_text = ["casilla 14", "Casilla 12", "Casilla 13"]
 
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-diferencia"
-target = "17"
+target_casilla_id = "17"
 # Art. 110.3.b RIRPF: when retenciones acumuladas (c06) / ingresos (c01) >= 70%
 # the autónomo is exempt and casilla 17 is zero. The zero branch only activates
 # when c01 > 0 (denominator guard); otherwise the standard subtraction applies.
 expression = { op = "if_then_else", args = [
-    { op = "greater_than", args = [{ casilla = "01" }, { literal = "0" }] },
+    { op = "greater_than", args = [{ casilla_id = "01" }, { literal = "0" }] },
     { op = "if_then_else", args = [
         { op = "greater_equal", args = [
-            { op = "divide", args = [{ casilla = "06" }, { casilla = "01" }] },
+            { op = "divide", args = [{ casilla_id = "06" }, { casilla_id = "01" }] },
             { literal = "0.70" },
         ] },
         { literal = "0" },
         { op = "subtract", args = [
-            { op = "subtract", args = [{ casilla = "14" }, { casilla = "15" }] },
-            { casilla = "16" },
+            { op = "subtract", args = [{ casilla_id = "14" }, { casilla_id = "15" }] },
+            { casilla_id = "16" },
         ] },
     ] },
     { op = "subtract", args = [
-        { op = "subtract", args = [{ casilla = "14" }, { casilla = "15" }] },
-        { casilla = "16" },
+        { op = "subtract", args = [{ casilla_id = "14" }, { casilla_id = "15" }] },
+        { casilla_id = "16" },
     ] },
 ] }
 rounding = "money-2"
@@ -152,8 +152,8 @@ required_text = ["Casilla 17.", "restar el importe de las casillas 15 y 16 del i
 
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-resultado-final"
-target = "19"
-expression = { op = "subtract", args = [{ casilla = "17" }, { casilla = "18" }] }
+target_casilla_id = "19"
+expression = { op = "subtract", args = [{ casilla_id = "17" }, { casilla_id = "18" }] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]

@@ -1,12 +1,12 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-estimacion-directa-gastos-dificil-justificacion"
-target = "0222"
+target_casilla_id = "0222"
 expression = { op = "min", args = [
     { op = "max", args = [
         { op = "percent", args = [
             { op = "subtract", args = [
-                { casilla = "0180" },
-                { casilla = "0218" },
+                { casilla_id = "0180" },
+                { casilla_id = "0218" },
             ] },
             { parameter = "renta-2023-estimacion-directa-simplificada-gastos-dificil-justificacion-rate" },
         ] },

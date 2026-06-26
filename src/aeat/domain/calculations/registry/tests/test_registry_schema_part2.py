@@ -10,8 +10,11 @@ from pydantic import ValidationError
 
 from .....core import Period
 from .....core.resources import bundled_path
+from .. import CasillaId, validated_casilla_id
 from .._errors import RegistryValidationError
 from .._schema import (
+    CalculationCompletenessCasilla,
+    CalculationCompletenessManifest,
     ConvenioRateRow,
     DeadlineWindowDefinition,
     ExtractionProfileDefinition,
@@ -32,6 +35,8 @@ from ._registry_schema_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+_NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
+_NUMERIC_CASILLA_02: CasillaId = validated_casilla_id("02", surface="_NUMERIC_CASILLA_02")
 
 
 def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() -> None:
@@ -74,12 +79,12 @@ def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla
             parser="aeat.adapters.inbound.declaracion.parse_declaracion",
             target_casillas=(
                 ExtractionTargetDefinition(
-                    casilla_id="01",
+                    casilla_id=_NUMERIC_CASILLA_01,
                     match_strategy="numeric_casilla",
                     value_kind="amount",
                 ),
                 ExtractionTargetDefinition(
-                    casilla_id="01",
+                    casilla_id=_NUMERIC_CASILLA_01,
                     match_strategy="numeric_casilla",
                     value_kind="amount",
                 ),
@@ -87,6 +92,21 @@ def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla
             confidence="strict",
             min_coverage=Decimal("1"),
             failure_semantics="fail_hard",
+            legal_refs=("rd-439-2007:art-110",),
+            source_refs=("aeat-dr-130-2019-v12",),
+        )
+
+
+def test_calculation_completeness_manifest_rejects_duplicate_casilla_id() -> None:
+    """A completeness manifest cannot reuse the same canonical casilla id."""
+
+    with pytest.raises(ValidationError, match="duplicate casilla ids"):
+        CalculationCompletenessManifest(
+            source_ref="aeat-dr-130-2019-v12",
+            casillas=(
+                CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),
+                CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="02"),
+            ),
             legal_refs=("rd-439-2007:art-110",),
             source_refs=("aeat-dr-130-2019-v12",),
         )
@@ -364,11 +384,11 @@ def test_validator_rejects_export_field_not_declared_by_casilla() -> None:
         for layout in revision.export_layouts
         for record in layout.records
         for field in record.fields
-        if field.casilla is not None
+        if field.casilla_id is not None
     )
     casillas = tuple(
         casilla.model_copy(update={"export_refs": tuple(ref for ref in casilla.export_refs if ref != exported.id)})
-        if casilla.id == exported.casilla
+        if casilla.id == exported.casilla_id
         else casilla
         for casilla in revision.casillas
     )
@@ -388,14 +408,14 @@ def test_validator_rejects_submitted_file_profile_without_exported_casilla() -> 
         for layout in revision.export_layouts
         for record in layout.records
         for field in record.fields
-        if field.casilla == target
+        if field.casilla_id == target
     }
     export_layouts = tuple(
         layout.model_copy(
             update={
                 "records": tuple(
                     record.model_copy(
-                        update={"fields": tuple(field for field in record.fields if field.casilla != target)},
+                        update={"fields": tuple(field for field in record.fields if field.casilla_id != target)},
                     )
                     for record in layout.records
                 ),
@@ -421,7 +441,7 @@ def test_validator_rejects_reconciliation_total_unknown_casilla() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
     expectation = revision.verification_expectations[0].model_copy(
-        update={"reconciliation_totals": {"ingresar": "missing"}},
+        update={"reconciliation_total_casilla_ids": {"ingresar": "missing"}},
     )
     mutated = revision.model_copy(update={"verification_expectations": (expectation,)})
 
@@ -432,12 +452,14 @@ def test_validator_rejects_reconciliation_total_unknown_casilla() -> None:
 def test_validator_requires_reconciliation_total_to_be_computed() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
-    expectation = revision.verification_expectations[0].model_copy(update={"reconciliation_totals": {"ingresar": "01"}})
+    expectation = revision.verification_expectations[0].model_copy(
+        update={"reconciliation_total_casilla_ids": {"ingresar": "01"}},
+    )
     mutated = revision.model_copy(update={"verification_expectations": (expectation,)})
 
     with pytest.raises(
         RegistryValidationError,
-        match="reconciliation total 'ingresar' must be one of computed_casillas",
+        match="reconciliation total 'ingresar' must be one of computed_casilla_ids",
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
@@ -447,7 +469,7 @@ def test_validator_rejects_dispatch_table_referencing_unknown_parameter() -> Non
     to a declared parameter; otherwise the registry would only fault at runtime."""
     modelo, catalogues = _committed_modelo("100")
     revision = modelo.revisions["2025"]
-    formula = next(item for item in revision.formulas if item.target == "0529")
+    formula = next(item for item in revision.formulas if item.target_casilla_id == "0529")
     dispatch_leaf = formula.expression.args[2]
     assert dispatch_leaf.dispatch_table is not None, "fixture must expose a dispatch_table leaf"
 

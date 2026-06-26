@@ -23,7 +23,7 @@ bindings = [
     "renta-2024-ledger-expense-0199-deductible",
     "renta-2024-ledger-expense-0203-deductible",
 ]
-casillas = [
+casilla_ids = [
     "0171",
     "0186",
     "0192",

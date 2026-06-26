@@ -16,6 +16,7 @@ from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model, uppercase_alpha_code
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
+from ._ids import BindingId
 from ._schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
@@ -138,7 +139,7 @@ def validate_related_party_binding(binding: DataBindingDefinition) -> list[str]:
 def resolve_related_party_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[RelatedPartyOperationObservation],
-) -> dict[tuple[str, int], Decimal | str]:
+) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer related-party bindings into per-row indexed values.
 
     Args:
@@ -156,7 +157,7 @@ def resolve_related_party_binding_row_values(
     if not members:
         return {}
     rows = _build_related_party_rows(available)
-    resolved: dict[tuple[str, int], Decimal | str] = {}
+    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     for binding, selector in members:
         assert selector.row_field is not None
         for row_index, row in enumerate(rows, start=1):
@@ -272,7 +273,7 @@ def validate_foreign_asset_binding(binding: DataBindingDefinition) -> list[str]:
 def resolve_foreign_asset_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[Modelo720RowObservation],
-) -> dict[tuple[str, int], Decimal | str]:
+) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer foreign-asset bindings into per-row indexed values.
 
     Args:
@@ -295,7 +296,7 @@ def resolve_foreign_asset_binding_row_values(
     class_filter = set(sample_classes)
     filtered = tuple(obs for obs in available if not class_filter or obs.asset_class_code in class_filter)
     rows = _build_foreign_asset_rows(filtered)
-    resolved: dict[tuple[str, int], Decimal | str] = {}
+    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     for binding, selector in members:
         assert selector.row_field is not None
         for row_index, row in enumerate(rows, start=1):
@@ -412,7 +413,7 @@ def validate_atribucion_binding(binding: DataBindingDefinition) -> list[str]:
 def resolve_atribucion_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[AtributionMemberObservation],
-) -> dict[tuple[str, int], Decimal | str]:
+) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer atribucion bindings into per-row indexed values.
 
     Args:
@@ -438,7 +439,7 @@ def resolve_atribucion_binding_row_values(
         }
         for obs in sorted(available, key=lambda o: (o.country_code, o.member_tax_id))
     )
-    resolved: dict[tuple[str, int], Decimal | str] = {}
+    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     for binding, selector in members:
         assert selector.row_field is not None
         for row_index, row in enumerate(rows, start=1):
@@ -526,7 +527,7 @@ def validate_refund_binding(binding: DataBindingDefinition) -> list[str]:
 def resolve_refund_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[RefundOperationObservation],
-) -> dict[tuple[str, int], Decimal | str]:
+) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer refund-operation bindings into per-row indexed values.
 
     Args:
@@ -555,7 +556,7 @@ def resolve_refund_binding_row_values(
             key=lambda o: (o.member_state_code, o.operation_date.isoformat(), o.supplier_tax_id),
         )
     )
-    resolved: dict[tuple[str, int], Decimal | str] = {}
+    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     for binding, selector in members:
         assert selector.row_field is not None
         for row_index, row in enumerate(rows, start=1):

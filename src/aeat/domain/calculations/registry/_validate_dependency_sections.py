@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from ._ids import BindingId
 from ._schema import (
     ConstructDefinition,
     DataBindingDefinition,
@@ -26,8 +27,8 @@ def validate_relation_section(
     *,
     prefix: str,
     revision: ModeloRevision,
-    bindings: set[str],
-    binding_by_id: Mapping[str, DataBindingDefinition],
+    bindings: set[BindingId],
+    binding_by_id: Mapping[BindingId, DataBindingDefinition],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
 ) -> None:

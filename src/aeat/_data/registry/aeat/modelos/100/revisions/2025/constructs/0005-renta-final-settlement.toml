@@ -50,7 +50,7 @@ source_refs = [
     "boe-modelo-100-2025-form",
     "aeat-renta-2025-manual-parte1",
 ]
-casillas = [
+casilla_ids = [
     "0585",
     "0586",
     "0587",

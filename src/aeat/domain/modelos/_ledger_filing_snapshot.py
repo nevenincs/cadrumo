@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.hashing import sha256_hex
+from ..calculations.registry import CasillaId
 
 
 class LedgerRowFingerprint(BaseModel):
@@ -192,12 +193,13 @@ class ManualFactBasisEntry(BaseModel):
 
     Manual casilla inputs and binding overrides have no contributing ledger row;
     they are nonetheless part of the fact basis a filing artefact must explain.
-    ``value`` is the rendered canonical string of the operator-entered value.
+    ``casilla_id`` is the canonical registry casilla id and ``value`` is the
+    rendered canonical string of the operator-entered value.
     """
 
     model_config = _STRICT_FROZEN
 
-    casilla: str = Field(min_length=1)
+    casilla_id: CasillaId
     value: str = Field(min_length=1)
     kind: str = Field(default="casilla_input", min_length=1)
     note: str = ""

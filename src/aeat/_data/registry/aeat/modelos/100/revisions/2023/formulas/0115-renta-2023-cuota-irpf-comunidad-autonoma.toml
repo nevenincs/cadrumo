@@ -1,9 +1,9 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-cuota-irpf-comunidad-autonoma"
-target = "0675"
+target_casilla_id = "0675"
 expression = { op = "subtract", args = [
-    { casilla = "0671" },
-    { casilla = "0672" },
+    { casilla_id = "0671" },
+    { casilla_id = "0672" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77"]

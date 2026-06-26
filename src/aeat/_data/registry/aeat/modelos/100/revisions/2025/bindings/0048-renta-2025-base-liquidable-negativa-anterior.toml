@@ -18,7 +18,7 @@
 [[revisions."2025".bindings]]
 id = "renta-2025-base-liquidable-negativa-general-anterior"
 source = "previous_filing"
-selector = { source_modelo = "100", source_output = "1391", filing_year_delta = -1, period = "0A" }
+selector = { source_modelo = "100", source_casilla_id = "1391", filing_year_delta = -1, period = "0A" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-48", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form", "aeat-dr-100-2025-dictionary"]

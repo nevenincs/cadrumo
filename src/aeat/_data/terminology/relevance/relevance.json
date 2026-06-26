@@ -327,13 +327,6 @@
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.397363
-        },
-        {
-          "record_id": "code:aeat.application.filing.reconciliation._reconcile",
-          "target": "api/aeat.application.filing.reconciliation._reconcile.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.380589
         }
       ],
       "dropped_count": 13,
@@ -408,8 +401,8 @@
           "ranking_weight": 1.0
         },
         {
-          "record_id": "casilla:100:###",
-          "target": "search.html?q=100+###",
+          "record_id": "casilla-record:887c517cb4bbff8eec748645",
+          "target": "search.html?q=100+PH18",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.638046
@@ -439,8 +432,8 @@
           "ranking_weight": 1.0
         },
         {
-          "record_id": "casilla:100:###",
-          "target": "search.html?q=100+###",
+          "record_id": "casilla-record:887c517cb4bbff8eec748645",
+          "target": "search.html?q=100+PH18",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.688977
@@ -733,7 +726,7 @@
           "ranking_weight": 0.974683
         },
         {
-          "record_id": "casilla:347:contraparte.clave-operacion",
+          "record_id": "casilla-record:ad52a94d31bd87c799f0500e",
           "target": "search.html?q=347+contraparte.clave-operacion",
           "kind": "casilla",
           "surface": "casilla",
@@ -1150,7 +1143,7 @@
           "ranking_weight": 0.998185
         },
         {
-          "record_id": "casilla:347:contraparte.clave-operacion",
+          "record_id": "casilla-record:ad52a94d31bd87c799f0500e",
           "target": "search.html?q=347+contraparte.clave-operacion",
           "kind": "casilla",
           "surface": "casilla",
@@ -1281,14 +1274,14 @@
           "ranking_weight": 0.969356
         },
         {
-          "record_id": "casilla:131:01",
+          "record_id": "casilla-record:a4ae8b87e8e2ed0721c248d0",
           "target": "search.html?q=131+01",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.61204
         },
         {
-          "record_id": "casilla:303:01",
+          "record_id": "casilla-record:7b05f42effac46cf0c0e5f86",
           "target": "search.html?q=303+01",
           "kind": "casilla",
           "surface": "casilla",
@@ -1510,8 +1503,8 @@
           "ranking_weight": 0.972537
         },
         {
-          "record_id": "casilla:360:ejercicio",
-          "target": "search.html?q=360+ejercicio",
+          "record_id": "casilla-record:0ef210154ad84cd9ed8ac1a3",
+          "target": "search.html?q=360+decl.ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.664129
@@ -1522,13 +1515,6 @@
           "kind": "page",
           "surface": "codebase",
           "ranking_weight": 0.492449
-        },
-        {
-          "record_id": "code:aeat.application.filing.reconciliation._schema",
-          "target": "api/aeat.application.filing.reconciliation._schema.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.450827
         },
         {
           "record_id": "code:aeat.application.live._justificante",
@@ -1749,8 +1735,8 @@
           "ranking_weight": 1.0
         },
         {
-          "record_id": "casilla:100:###",
-          "target": "search.html?q=100+###",
+          "record_id": "casilla-record:887c517cb4bbff8eec748645",
+          "target": "search.html?q=100+PH18",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.687014
@@ -1780,7 +1766,7 @@
           "ranking_weight": 0.977145
         },
         {
-          "record_id": "casilla:130:01",
+          "record_id": "casilla-record:72682934c9ce0782ee8ba38d",
           "target": "search.html?q=130+01",
           "kind": "casilla",
           "surface": "casilla",
@@ -1922,7 +1908,7 @@
           "ranking_weight": 1.0
         },
         {
-          "record_id": "casilla:303:01",
+          "record_id": "casilla-record:7b05f42effac46cf0c0e5f86",
           "target": "search.html?q=303+01",
           "kind": "casilla",
           "surface": "casilla",
@@ -1960,8 +1946,8 @@
           "ranking_weight": 1.0
         },
         {
-          "record_id": "casilla:390:662",
-          "target": "search.html?q=390+662",
+          "record_id": "casilla-record:fe0169c831b8e37bf0c1641c",
+          "target": "search.html?q=390+iva.anual.compensacion-generada-ejercicio-no-97",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.692256
@@ -2098,8 +2084,8 @@
           "ranking_weight": 0.974399
         },
         {
-          "record_id": "casilla:100:###",
-          "target": "search.html?q=100+###",
+          "record_id": "casilla-record:887c517cb4bbff8eec748645",
+          "target": "search.html?q=100+PH18",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.65845
@@ -2164,29 +2150,29 @@
           "ranking_weight": 0.998946
         },
         {
-          "record_id": "casilla:347:contraparte.clave-operacion",
+          "record_id": "casilla-record:ad52a94d31bd87c799f0500e",
           "target": "search.html?q=347+contraparte.clave-operacion",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.681199
         },
         {
-          "record_id": "casilla:720:ejercicio",
-          "target": "search.html?q=720+ejercicio",
+          "record_id": "casilla-record:8b981f9d5851140dc06a6f77",
+          "target": "search.html?q=720+decl.ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.668091
         },
         {
-          "record_id": "casilla:184:178-190",
-          "target": "search.html?q=184+178-190",
+          "record_id": "casilla-record:292c599d5a02e02025aa5254",
+          "target": "search.html?q=184+tipo2.renta-atribuible-importe",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.658908
         },
         {
-          "record_id": "casilla:190:136-144",
-          "target": "search.html?q=190+136-144",
+          "record_id": "casilla-record:5ba734e53bd5da4719183586",
+          "target": "search.html?q=190+decl.total-percepciones",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.657595
@@ -2485,8 +2471,8 @@
           "ranking_weight": 0.921156
         },
         {
-          "record_id": "casilla:322:ejercicio",
-          "target": "search.html?q=322+ejercicio",
+          "record_id": "casilla-record:75667132dbf04550bd5e5aa4",
+          "target": "search.html?q=322+decl.ejercicio",
           "kind": "casilla",
           "surface": "casilla",
           "ranking_weight": 0.653734

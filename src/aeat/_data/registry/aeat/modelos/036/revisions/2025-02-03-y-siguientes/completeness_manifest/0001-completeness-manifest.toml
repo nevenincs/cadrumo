@@ -1,8 +1,8 @@
 # Calculation-completeness manifest for revision 2025-02-03-y-siguientes: the
 # casillas in this revision's calculation closure (formula targets,
 # formula-expression refs, formula/binding endpoints, verification
-# operands), keyed on each casilla's own registry (segmento, number)
-# identity. Derived off-load-path from the registry calculation
+# operands), keyed by canonical casilla_id plus reviewed segment/number
+# metadata. Derived off-load-path from the registry calculation
 # surface; the drift re-verification test re-derives it.
 [revisions."2025-02-03-y-siguientes".completeness_manifest]
 source_ref = "aeat-dr-036-2025"
@@ -10,6 +10,7 @@ legal_refs = ["orden-eha-1274-2007:art-1", "orden-eha-1274-2007:art-2", "orden-h
 source_refs = ["aeat-dr-036-2025", "aeat-modelo-036-procedure"]
 
 [[revisions."2025-02-03-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.event-kind"
 number = "tipo-declaracion"
 
 # decl.vigencia-2025 was previously listed here but is input_kind =

@@ -1,7 +1,7 @@
 [[revisions."2020".bindings]]
 id = "renta-2020-modelo-123-retenciones-periodicas"
 source = "relation_prefill"
-selector = { source_modelo = "123", source_output = "03-legacy" }
+selector = { source_modelo = "123", source_casilla_id = "03-legacy" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii"]
 source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]

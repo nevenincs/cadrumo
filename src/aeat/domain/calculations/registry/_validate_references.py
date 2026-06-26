@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ._errors import RegistryValidationError
+from ._ids import BindingId
 from ._schema import InputKind, ModeloRevision
 from ._validate_cross_domain_snapshot import (
     _CROSS_DOMAIN_SNAPSHOT_CHECKS as _CROSS_DOMAIN_SNAPSHOT_CHECKS,
@@ -100,7 +101,11 @@ def _check_casilla_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
             )
 
 
-def _check_bound_casilla_binding_coverage(checker: _IdReferenceChecker, field_path: str, binding: str | None) -> None:
+def _check_bound_casilla_binding_coverage(
+    checker: _IdReferenceChecker,
+    field_path: str,
+    binding: BindingId | None,
+) -> None:
     if binding is None:
         checker.failures.append(
             f"{checker.prefix}: {field_path}.binding has no binding definition for input_kind='bound'",
@@ -112,7 +117,7 @@ def _check_bound_casilla_binding_coverage(checker: _IdReferenceChecker, field_pa
 def _check_formula_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
     for formula in revision.formulas:
         fp = f"formula {formula.id}"
-        checker.chk(f"{fp}.target", formula.target, checker.casilla_ids)
+        checker.chk(f"{fp}.target_casilla_id", formula.target_casilla_id, checker.casilla_ids)
         checker.chk_legal_source_refs(fp, formula.legal_refs, formula.source_refs)
         for citation in formula.source_citations:
             checker.chk(f"{fp}.source_citations.{citation.source_ref}", citation.source_ref, checker.source_ids)
@@ -139,8 +144,8 @@ def _check_relation_refs(checker: _IdReferenceChecker, revision: ModeloRevision)
         rp = f"relation {relation.id}"
         checker.chk(f"{rp}.target_binding", relation.target_binding, checker.binding_ids)
         checker.chk_legal_source_refs(rp, relation.legal_refs, relation.source_refs)
-        # source_output is CasillaId | str; cross-model outputs are not in this
-        # snapshot's casilla set -- checked at registry-validate time instead.
+        # cross-model source_casilla_id values are checked at registry-validate time
+        # instead of against this snapshot's casilla set.
 
 
 def _check_extraction_profile_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
@@ -197,9 +202,9 @@ def _check_workbook_parity_refs(checker: _IdReferenceChecker, revision: ModeloRe
 def _check_verification_expectation_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
     for expectation in revision.verification_expectations:
         vep = f"verification_expectation {expectation.id}"
-        checker.chk_tuple(f"{vep}.computed_casillas", expectation.computed_casillas, checker.casilla_ids)
-        for total_kind, casilla_id in expectation.reconciliation_totals.items():
-            checker.chk(f"{vep}.reconciliation_totals.{total_kind}", casilla_id, checker.casilla_ids)
+        checker.chk_tuple(f"{vep}.computed_casilla_ids", expectation.computed_casilla_ids, checker.casilla_ids)
+        for total_kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
+            checker.chk(f"{vep}.reconciliation_total_casilla_ids.{total_kind}", casilla_id, checker.casilla_ids)
         checker.chk_legal_source_refs(vep, expectation.legal_refs, expectation.source_refs)
 
 

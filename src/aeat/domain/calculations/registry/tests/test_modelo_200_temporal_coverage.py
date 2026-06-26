@@ -52,7 +52,7 @@ from functools import lru_cache
 import pytest
 
 from .....core.resources import bundled_path
-from .. import build_snapshot, load_registry_tree
+from .. import CasillaId, build_snapshot, load_registry_tree, validated_casilla_id
 from .._formula_runtime import calculate_registry_snapshot
 from .._schema import InputKind, ParameterDefinition
 from .._validate_revision_rules import _bracket_coverage_gaps
@@ -61,6 +61,31 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _DISPATCH_BINDING = "modelo-200-2024-profile-legal-entity-form"
+_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
+_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:01033",
+    surface="_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA",
+)
+_M200_BONIFICACIONES_CASILLA: CasillaId = validated_casilla_id("DP200014:01034", surface="_M200_BONIFICACIONES_CASILLA")
+_M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:01766",
+    surface="_M200_CUOTA_LIQUIDA_POSITIVA_CASILLA",
+)
+_M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:01784",
+    surface="_M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA",
+)
+_M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", surface="_M200_CUOTA_INTEGRA_CASILLA")
+
+
+def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
+    return {
+        _M200_RESULTADO_CONTABLE_CASILLA: base,
+        _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
+        _M200_BONIFICACIONES_CASILLA: Decimal("0"),
+        _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
+        _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
+    }
 
 
 @lru_cache(maxsize=1)
@@ -105,15 +130,9 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
     # equals 00552 when nivelación corrections 01033/01034 are zero.
     result = calculate_registry_snapshot(
         _snapshot_2024(),
-        inputs={
-            # 00552 is now computed; feed resultado contable 00501 with zero
-            # correcciones/reserva/BIN so the chain computes 00552 = 100.000.
-            "00501": Decimal("100000"),
-            "DP200014:01033": Decimal("0"),
-            "DP200014:01034": Decimal("0"),
-            "DP200014B:01766": Decimal("0"),
-            "DP200014B:01784": Decimal("0"),
-        },
+        # 00552 is now computed; feed resultado contable 00501 with zero
+        # corrections/reserva/BIN so the chain computes 00552 = 100.000.
+        inputs=_base_inputs(Decimal("100000")),
         enum_binding_values={_DISPATCH_BINDING: "sl"},
         binding_values={
             "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
@@ -135,7 +154,7 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
     # 23.000 EUR.  External authority: LIS Art. 29 (BOE-A-2014-12328) as
     # in force for ejercicios iniciados en 2024; AEAT Manual de
     # Sociedades "Tipos de gravamen" 2024.
-    assert result.values["DP200014:00562"] == Decimal("23000.00"), (
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("23000.00"), (
         "cuota íntegra for micro-empresa SL on 100.000 EUR base at 23 % must be 23.000 EUR"
     )
 
@@ -263,7 +282,7 @@ def test_cuota_integra_casilla_is_classified_computed_not_manual() -> None:
     would fail against the pre-fix TOML regardless of test ordering.
     """
     parameters_by_id = {c.id: c for c in _snapshot_2024().revision.casillas}
-    casilla = parameters_by_id.get("DP200014:00562")
+    casilla = parameters_by_id.get(_M200_CUOTA_INTEGRA_CASILLA)
     assert casilla is not None, "DP200014:00562 must be declared in the 2024-y-siguientes revision"
     assert casilla.input_kind == InputKind.COMPUTED, (
         "DP200014:00562 must be input_kind='computed'; formula modelo-200-cuota-integra owns the value"
@@ -289,13 +308,9 @@ def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
     inputs_without_00562 = {
         # 00552 is now computed; feed resultado contable 00501 (zero
         # correcciones/reserva/BIN) so the chain computes 00552 = 200.000.
-        "00501": Decimal("200000"),
-        "DP200014:01033": Decimal("0"),
-        "DP200014:01034": Decimal("0"),
-        "DP200014B:01766": Decimal("0"),
-        "DP200014B:01784": Decimal("0"),
+        **_base_inputs(Decimal("200000")),
     }
-    assert "DP200014:00562" not in inputs_without_00562, (
+    assert _M200_CUOTA_INTEGRA_CASILLA not in inputs_without_00562, (
         "Test fixture must NOT supply DP200014:00562 — the whole point is that "
         "the engine must produce it without operator input"
     )
@@ -318,13 +333,13 @@ def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
         },
         date_context={"filing_period": date(2024, 12, 31)},
     )
-    assert "DP200014:00562" in result.values, (
+    assert _M200_CUOTA_INTEGRA_CASILLA in result.values, (
         "formula engine must emit DP200014:00562 in result.values; "
         "if absent the formula graph is not wired correctly after TOML fix"
     )
     # S.A. (gran empresa, INCN ≥ 1.000.000 EUR) pays 25 % on 200.000 EUR base.
     # Authority: LIS Art. 29.1 (BOE-A-2014-12328) general rate for 2024.
-    assert result.values["DP200014:00562"] == Decimal("50000.00"), (
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("50000.00"), (
         "cuota íntegra for S.A. at LIS Art. 29.1 general rate (25 %) on 200.000 EUR base must be 50.000 EUR"
     )
 
@@ -344,7 +359,7 @@ def test_cuota_integra_antitautology_manual_casilla_still_required() -> None:
     compute/manual distinction is unreliable across the entire revision.
     """
     parameters_by_id = {c.id: c for c in _snapshot_2024().revision.casillas}
-    casilla = parameters_by_id.get("00501")
+    casilla = parameters_by_id.get(_M200_RESULTADO_CONTABLE_CASILLA)
     assert casilla is not None, (
         "00501 must be declared in the 2024-y-siguientes revision; "
         "if absent the snapshot failed to load the casilla TOML cluster"

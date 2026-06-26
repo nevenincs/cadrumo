@@ -1,7 +1,7 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-estimacion-directa-total-rendimiento-neto-reducido"
-target = "0231"
-expression = { op = "copy", args = [{ casilla = "0226" }] }
+target_casilla_id = "0231"
+expression = { op = "copy", args = [{ casilla_id = "0226" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
 source_refs = ["lirpf-cuota-chain-authority"]

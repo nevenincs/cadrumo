@@ -7,8 +7,13 @@ empty-payload violations within a single :class:`ModeloRevision`.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from typing import TYPE_CHECKING
 
-from ._schema import ModeloRevision
+from ._casilla_membership import declared_casilla_ids
+from ._ids import CasillaId
+
+if TYPE_CHECKING:
+    from ._schema import ModeloRevision
 
 
 def _duplicates(values: Iterable[str]) -> set[str]:
@@ -41,18 +46,9 @@ _RECORD_ID_KINDS: tuple[tuple[str, str], ...] = (
     ("construct", "constructs"),
     ("dependency classification", "dependency_classifications"),
 )
-"""Maps the human-readable record kind name to the ``ModeloRevision`` attribute.
-
-Used to fold the 18 per-kind ``[record.id for record in revision.<kind>]``
-comprehensions in :meth:`RegistryValidator._validate_revision` into a
-single iteration over a typed table. The (kind, attribute) tuple shape
-is what every downstream consumer needs: the human-readable label
-appears in failure messages, the attribute is what we read.
-"""
 
 
 def _collect_record_id_lists(revision: ModeloRevision) -> dict[str, list[str]]:
-    """Return ``{kind: [record.id, ...]}`` for every record kind on the revision."""
     return {kind: [record.id for record in getattr(revision, attr)] for kind, attr in _RECORD_ID_KINDS}
 
 
@@ -61,16 +57,13 @@ def _emit_per_kind_duplicate_failures(
     prefix: str,
     ids_by_kind: Mapping[str, list[str]],
 ) -> None:
-    """Append a "duplicate <kind> id <id>" failure for every duplicate id, per kind."""
     for kind, ids in ids_by_kind.items():
         for duplicate in sorted(_duplicates(ids)):
             failures.append(f"{prefix}: duplicate {kind} id {duplicate!r}")
 
 
-# Primary-id deduplication checks the union of every typed-record kind
-# EXCEPT ``provider`` (algorithm providers share a namespace with
-# algorithm-binding ``provider`` references; collisions there are not
-# duplicate-id offences).
+# Primary-id deduplication excludes algorithm providers; they share a namespace
+# with algorithm-binding ``provider`` references.
 _PRIMARY_ID_KINDS: frozenset[str] = frozenset(kind for kind, _ in _RECORD_ID_KINDS) - {"algorithm provider"}
 
 
@@ -79,64 +72,129 @@ def _emit_combined_primary_id_failures(
     prefix: str,
     ids_by_kind: Mapping[str, list[str]],
 ) -> None:
-    """Cross-kind id uniqueness: no two record kinds may share an id."""
-    primary_ids: list[str] = []
-    for kind in _PRIMARY_ID_KINDS:
-        primary_ids.extend(ids_by_kind[kind])
-    for duplicate in sorted(_duplicates(primary_ids)):
-        failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
+    owners_by_id: dict[str, list[str]] = {}
+    for kind, _attr in _RECORD_ID_KINDS:
+        if kind not in _PRIMARY_ID_KINDS:
+            continue
+        for record_id in ids_by_kind[kind]:
+            owners_by_id.setdefault(record_id, []).append(kind)
+    for duplicate, owners in sorted(owners_by_id.items()):
+        if len(owners) > 1:
+            failures.append(f"{prefix}: duplicate registry id {duplicate!r} shared by {', '.join(owners)}")
 
 
-def _resolvable_casilla_references(revision: ModeloRevision) -> frozenset[str]:
-    """Return every token that resolves to a casilla within ``revision``.
-
-    A casilla reference — a formula ``casilla`` leaf or ``target``, an
-    export field ``casilla``, a relation ``source_output``, an algorithm
-    binding input or output — is segment-aware.
-
-    A reference resolves when it is either:
-
-    * a casilla ``id`` declared on the revision (the stable
-      within-revision handle), or
-    * a bare ``number`` that occurs on exactly one casilla across the
-      whole revision, so the segment is unambiguous and the bare number
-      resolves within its segment context.
-
-    A bare ``number`` that recurs across distinct record segments is
-    NOT resolvable on its own: the reference must use the
-    segment-qualified ``id`` to name the intended occurrence. Only those
-    genuinely cross-segment numbers carry that cost.
-
-    For a single-segment modelo every casilla sets ``id == number`` and
-    every number is unique, so the resolvable set is exactly the set of
-    casilla ids — identical to the pre-change ``set(casilla_by_id)``
-    behaviour. Single-segment references resolve precisely as before.
-    """
-    ids = {casilla.id for casilla in revision.casillas}
-    number_counts: dict[str, int] = {}
-    for casilla in revision.casillas:
-        number_counts[casilla.number] = number_counts.get(casilla.number, 0) + 1
-    unambiguous_numbers = {number for number, count in number_counts.items() if count == 1}
-    return frozenset(ids | unambiguous_numbers)
+def _resolvable_casilla_references(revision: ModeloRevision) -> frozenset[CasillaId]:
+    """Return canonical ``casilla.id`` tokens resolvable within ``revision``."""
+    return declared_casilla_ids(revision)
 
 
-def _emit_casilla_identity_failures(
+def _emit_duplicate_export_ref_failures(
     failures: list[str],
     prefix: str,
     revision: ModeloRevision,
 ) -> None:
-    """Append a failure for every duplicate ``(segmento, number)`` casilla pair.
+    owners_by_export_ref: dict[str, list[str]] = {}
+    for casilla in revision.casillas:
+        for export_ref in casilla.export_refs:
+            owners_by_export_ref.setdefault(export_ref, []).append(casilla.id)
+    for export_ref, owners in sorted(owners_by_export_ref.items()):
+        if len(owners) <= 1:
+            continue
+        failures.append(
+            f"{prefix}: export field {export_ref!r} is declared by multiple casillas {sorted(owners)!r}",
+        )
 
-    A casilla's identity is the pair ``(segmento, number)``: a
-    multi-segment AEAT modelo (e.g. Modelo 200) reuses the same bare
-    five-digit ``number`` across distinct record segments, so uniqueness
-    must be keyed on the pair, not on ``number`` alone.
 
-    For a single-segment modelo every casilla leaves ``segmento`` unset,
-    so the pair degrades to ``(None, number)`` and this check reproduces
-    the prior bare-number uniqueness exactly: two casillas sharing a
-    number with no ``segmento`` collide on ``(None, number)`` and
-    hard-fail precisely as the previous duplicate-id check did.
+def revision_reference_identity_failures(prefix: str, revision: ModeloRevision) -> tuple[str, ...]:
+    """Return revision identity failures that would make any reference ambiguous."""
+    failures: list[str] = []
+    ids_by_kind = _collect_record_id_lists(revision)
+    _emit_per_kind_duplicate_failures(failures, prefix, ids_by_kind)
+    _emit_combined_primary_id_failures(failures, prefix, ids_by_kind)
+    failures.extend(revision_casilla_identity_failures(prefix, revision))
+    _emit_duplicate_export_ref_failures(failures, prefix, revision)
+    return tuple(failures)
+
+
+def revision_casilla_identity_failures(prefix: str, revision: ModeloRevision) -> tuple[str, ...]:
+    failures: list[str] = []
+    _emit_casilla_metadata_uniqueness_failures(failures, prefix, revision)
+    _emit_ambiguous_bare_casilla_id_failures(failures, prefix, revision)
+    _emit_ambiguous_casilla_reference_token_failures(failures, prefix, revision)
+    return tuple(failures)
+
+
+def _emit_ambiguous_bare_casilla_id_failures(
+    failures: list[str],
+    prefix: str,
+    revision: ModeloRevision,
+) -> None:
+    """Reject bare casilla ids when a printed number is reused."""
+    owners_by_printed_number: dict[str, list[tuple[str, str | None]]] = {}
+    for casilla in revision.casillas:
+        owners_by_printed_number.setdefault(casilla.number, []).append((casilla.id, casilla.segmento))
+
+    for number, owners in sorted(owners_by_printed_number.items()):
+        if len(owners) <= 1:
+            continue
+        ambiguous_owner_ids = sorted(
+            casilla_id for casilla_id, segmento in owners if segmento is None or casilla_id == number
+        )
+        if not ambiguous_owner_ids:
+            continue
+        candidate_ids = sorted(casilla_id for casilla_id, _ in owners)
+        failures.append(
+            f"{prefix}: casilla number {number!r} is reused by multiple casillas; "
+            f"ambiguous bare casilla ids {ambiguous_owner_ids!r} must declare a "
+            f"segment-qualified casilla id and segmento (candidates {candidate_ids!r})",
+        )
+
+
+def _emit_ambiguous_casilla_reference_token_failures(
+    failures: list[str],
+    prefix: str,
+    revision: ModeloRevision,
+) -> None:
+    """Reject a token that is a primary id and casilla display/export metadata."""
+    primary_id_owners: dict[str, list[str]] = {}
+    for kind, attr in _RECORD_ID_KINDS:
+        if kind not in _PRIMARY_ID_KINDS:
+            continue
+        for record in getattr(revision, attr):
+            primary_id_owners.setdefault(record.id, []).append(kind)
+
+    metadata_owners: dict[str, list[str]] = {}
+    for casilla in revision.casillas:
+        metadata_tokens: list[tuple[str, str | None]] = [
+            ("number", casilla.number),
+            ("form_number", casilla.form_number),
+        ]
+        metadata_tokens.extend(("export_ref", export_ref) for export_ref in casilla.export_refs)
+        for kind, token in metadata_tokens:
+            if token is None or token == casilla.id:
+                continue
+            metadata_owners.setdefault(token, []).append(f"{kind} metadata for casilla {casilla.id!r}")
+
+    for token, owners in sorted(metadata_owners.items()):
+        primary_owners = primary_id_owners.get(token)
+        if primary_owners is None:
+            continue
+        failures.append(
+            f"{prefix}: casilla reference token {token!r} is ambiguous; it is "
+            f"{', '.join(sorted(primary_owners))} id {token!r} and {', '.join(sorted(owners))}",
+        )
+
+
+def _emit_casilla_metadata_uniqueness_failures(
+    failures: list[str],
+    prefix: str,
+    revision: ModeloRevision,
+) -> None:
+    """Append failures for duplicate ``(segmento, number)`` metadata pairs.
+
+    ``casilla.id`` is canonical; ``number`` is AEAT/display metadata.
+    With ``segmento`` unset, the pair preserves single-segment
+    duplicate-number failures.
     """
     pairs = [(casilla.segmento, casilla.number) for casilla in revision.casillas]
     seen: set[tuple[str | None, str]] = set()
@@ -157,7 +215,6 @@ def _emit_revision_payload_failures(
     prefix: str,
     revision: ModeloRevision,
 ) -> None:
-    """Reject registry revisions that carry no casilla payload at all."""
     if revision.casillas:
         return
     failures.append(

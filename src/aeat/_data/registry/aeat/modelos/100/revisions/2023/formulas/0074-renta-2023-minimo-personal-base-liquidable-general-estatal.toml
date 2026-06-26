@@ -1,9 +1,9 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-minimo-personal-base-liquidable-general-estatal"
-target = "0521"
+target_casilla_id = "0521"
 expression = { op = "min", args = [
-    { casilla = "0505" },
-    { casilla = "0519" },
+    { casilla_id = "0505" },
+    { casilla_id = "0519" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-63"]

@@ -7,9 +7,8 @@
 # test drives the real M200 + M202 engines across two distinct target renta
 # years (2026, 2027), each sourcing the prior M200 (2025, 2026).
 #
-# Note: the 1P (April) instalment binds two years back (filing_year_delta = -2)
-# and is deferred until Modelo 200 is modelled before 2024 (see the parked
-# relation under .vault-scratch/coder-opus-is/ and the M202 1P follow-up).
+# The same enrolling test also verifies the 1P (April) two-years-back relation
+# using target year 2026, so both source M200 observations are modelled years.
 [modelo]
 modelo = "202"
 renta_years = [2026, 2027]

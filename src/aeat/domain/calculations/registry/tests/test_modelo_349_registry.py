@@ -12,6 +12,8 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_host
 from .. import (
+    CasillaFieldKind,
+    CasillaId,
     InputKind,
     InvoiceObservation,
     RegistryValidator,
@@ -19,10 +21,11 @@ from .. import (
     invoice_binding_requirements,
     load_registry_tree,
     parse_export_payload,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
     resolve_export_layout,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
+    validated_casilla_id,
 )
 from .._schema import DataBindingDefinition
 
@@ -33,20 +36,46 @@ _WWW6_HOST = aeat_host("www6")
 # pages 9-22), the layout authority cited by Modelo 349's registry revision.
 # Tipo 1 = registro de declarante (500 bytes); Tipo 2 = registro de operador
 # intracomunitario / rectificaciones (500 bytes).
-_OFFICIAL_FIELD_POSITIONS: dict[str, tuple[int, int]] = {
-    "decl.numero-operadores": (138, 146),
-    "decl.importe-operaciones": (147, 161),
-    "decl.numero-rectificaciones": (162, 170),
-    "decl.importe-rectificaciones": (171, 185),
-    "op.codigo-pais": (76, 77),
-    "op.nif-comunitario": (78, 92),
-    "op.apellidos-razon-social": (93, 132),
-    "op.clave-operacion": (133, 133),
-    "op.base-imponible": (134, 146),
-    "rect.ejercicio-rectificado": (147, 150),
-    "rect.periodo-rectificado": (151, 152),
-    "rect.base-rectificada": (153, 165),
-    "rect.base-anterior": (166, 178),
+
+
+def _casilla_id(value: object) -> CasillaId:
+    return validated_casilla_id(value, surface="test_modelo_349_registry._OFFICIAL_FIELD_POSITIONS")
+
+
+_DECL_NUMERO_OPERADORES_CASILLA: CasillaId = _casilla_id("decl.numero-operadores")
+_DECL_IMPORTE_OPERACIONES_CASILLA: CasillaId = _casilla_id("decl.importe-operaciones")
+_DECL_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = _casilla_id("decl.numero-rectificaciones")
+_DECL_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = _casilla_id("decl.importe-rectificaciones")
+_OP_CODIGO_PAIS_CASILLA: CasillaId = _casilla_id("op.codigo-pais")
+_OP_NIF_COMUNITARIO_CASILLA: CasillaId = _casilla_id("op.nif-comunitario")
+_OP_APELLIDOS_RAZON_SOCIAL_CASILLA: CasillaId = _casilla_id("op.apellidos-razon-social")
+_OP_CLAVE_OPERACION_CASILLA: CasillaId = _casilla_id("op.clave-operacion")
+_OP_BASE_IMPONIBLE_CASILLA: CasillaId = _casilla_id("op.base-imponible")
+_RECT_EJERCICIO_RECTIFICADO_CASILLA: CasillaId = _casilla_id("rect.ejercicio-rectificado")
+_RECT_PERIODO_RECTIFICADO_CASILLA: CasillaId = _casilla_id("rect.periodo-rectificado")
+_RECT_BASE_RECTIFICADA_CASILLA: CasillaId = _casilla_id("rect.base-rectificada")
+_RECT_BASE_ANTERIOR_CASILLA: CasillaId = _casilla_id("rect.base-anterior")
+_DECLARANT_SUMMARY_CASILLAS: tuple[CasillaId, ...] = (
+    _DECL_NUMERO_OPERADORES_CASILLA,
+    _DECL_IMPORTE_OPERACIONES_CASILLA,
+    _DECL_NUMERO_RECTIFICACIONES_CASILLA,
+    _DECL_IMPORTE_RECTIFICACIONES_CASILLA,
+)
+
+_OFFICIAL_FIELD_POSITIONS: dict[CasillaId, tuple[int, int]] = {
+    _DECL_NUMERO_OPERADORES_CASILLA: (138, 146),
+    _DECL_IMPORTE_OPERACIONES_CASILLA: (147, 161),
+    _DECL_NUMERO_RECTIFICACIONES_CASILLA: (162, 170),
+    _DECL_IMPORTE_RECTIFICACIONES_CASILLA: (171, 185),
+    _OP_CODIGO_PAIS_CASILLA: (76, 77),
+    _OP_NIF_COMUNITARIO_CASILLA: (78, 92),
+    _OP_APELLIDOS_RAZON_SOCIAL_CASILLA: (93, 132),
+    _OP_CLAVE_OPERACION_CASILLA: (133, 133),
+    _OP_BASE_IMPONIBLE_CASILLA: (134, 146),
+    _RECT_EJERCICIO_RECTIFICADO_CASILLA: (147, 150),
+    _RECT_PERIODO_RECTIFICADO_CASILLA: (151, 152),
+    _RECT_BASE_RECTIFICADA_CASILLA: (153, 165),
+    _RECT_BASE_ANTERIOR_CASILLA: (166, 178),
 }
 
 
@@ -108,12 +137,12 @@ def test_committed_modelo_349_is_informative_static_documentation_only() -> None
 
     assert snapshot.revision.formulas == ()
     assert snapshot.revision.relations == ()
-    assert {casilla.input_kind for casilla in snapshot.revision.casillas} == {"manual", "bound"}
+    assert {casilla.input_kind for casilla in snapshot.revision.casillas} == {InputKind.MANUAL, InputKind.BOUND}
     assert decision.surface == "static_official_documentation"
     assert decision.requires_authentication is False
     assert decision.synthetic_data_allowed is False
     assert "declaration-submission" in decision.forbidden_actions
-    assert set(construct.casillas) == {casilla.id for casilla in snapshot.revision.casillas}
+    assert set(construct.casilla_ids) == {casilla.id for casilla in snapshot.revision.casillas}
     assert {
         "modelo-349-portal",
         "modelo-349-filed-declarations-observation",
@@ -139,23 +168,23 @@ def test_committed_modelo_349_casilla_numbers_match_official_record_design() -> 
 @pytest.mark.parametrize(
     ("casilla_id", "expected_data_type"),
     [
-        ("decl.numero-operadores", "integer"),
-        ("decl.importe-operaciones", "money"),
-        ("decl.numero-rectificaciones", "integer"),
-        ("decl.importe-rectificaciones", "money"),
-        ("op.codigo-pais", "country_code"),
-        ("op.nif-comunitario", "nif_iva"),
-        ("op.apellidos-razon-social", "text"),
-        ("op.clave-operacion", "text"),
-        ("op.base-imponible", "money"),
-        ("rect.ejercicio-rectificado", "year"),
-        ("rect.periodo-rectificado", "period_code"),
-        ("rect.base-rectificada", "money"),
-        ("rect.base-anterior", "money"),
+        (_DECL_NUMERO_OPERADORES_CASILLA, "integer"),
+        (_DECL_IMPORTE_OPERACIONES_CASILLA, "money"),
+        (_DECL_NUMERO_RECTIFICACIONES_CASILLA, "integer"),
+        (_DECL_IMPORTE_RECTIFICACIONES_CASILLA, "money"),
+        (_OP_CODIGO_PAIS_CASILLA, "country_code"),
+        (_OP_NIF_COMUNITARIO_CASILLA, "nif_iva"),
+        (_OP_APELLIDOS_RAZON_SOCIAL_CASILLA, "text"),
+        (_OP_CLAVE_OPERACION_CASILLA, "text"),
+        (_OP_BASE_IMPONIBLE_CASILLA, "money"),
+        (_RECT_EJERCICIO_RECTIFICADO_CASILLA, "year"),
+        (_RECT_PERIODO_RECTIFICADO_CASILLA, "period_code"),
+        (_RECT_BASE_RECTIFICADA_CASILLA, "money"),
+        (_RECT_BASE_ANTERIOR_CASILLA, "money"),
     ],
 )
 def test_committed_modelo_349_casilla_data_types_match_official_record_design(
-    casilla_id: str,
+    casilla_id: CasillaId,
     expected_data_type: str,
 ) -> None:
     modelo, _ = _load_modelo_349()
@@ -169,9 +198,9 @@ def test_committed_modelo_349_base_intracomunitaria_role_coverage() -> None:
     revision = modelo.revisions["2020-y-siguientes"]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     expected_ids = {
-        "op.base-imponible",
-        "rect.base-rectificada",
-        "rect.base-anterior",
+        _OP_BASE_IMPONIBLE_CASILLA,
+        _RECT_BASE_RECTIFICADA_CASILLA,
+        _RECT_BASE_ANTERIOR_CASILLA,
     }
 
     found_ids = {casilla.id for casilla in revision.casillas if casilla.semantic_role == "base_intracomunitaria"}
@@ -188,20 +217,20 @@ def test_committed_modelo_349_base_intracomunitaria_role_coverage() -> None:
 
 
 def test_committed_modelo_349_casilla_widths_match_official_record_design() -> None:
-    expected_lengths = {
-        "decl.numero-operadores": 9,
-        "decl.importe-operaciones": 15,
-        "decl.numero-rectificaciones": 9,
-        "decl.importe-rectificaciones": 15,
-        "op.codigo-pais": 2,
-        "op.nif-comunitario": 15,
-        "op.apellidos-razon-social": 40,
-        "op.clave-operacion": 1,
-        "op.base-imponible": 13,
-        "rect.ejercicio-rectificado": 4,
-        "rect.periodo-rectificado": 2,
-        "rect.base-rectificada": 13,
-        "rect.base-anterior": 13,
+    expected_lengths: dict[CasillaId, int] = {
+        _DECL_NUMERO_OPERADORES_CASILLA: 9,
+        _DECL_IMPORTE_OPERACIONES_CASILLA: 15,
+        _DECL_NUMERO_RECTIFICACIONES_CASILLA: 9,
+        _DECL_IMPORTE_RECTIFICACIONES_CASILLA: 15,
+        _OP_CODIGO_PAIS_CASILLA: 2,
+        _OP_NIF_COMUNITARIO_CASILLA: 15,
+        _OP_APELLIDOS_RAZON_SOCIAL_CASILLA: 40,
+        _OP_CLAVE_OPERACION_CASILLA: 1,
+        _OP_BASE_IMPONIBLE_CASILLA: 13,
+        _RECT_EJERCICIO_RECTIFICADO_CASILLA: 4,
+        _RECT_PERIODO_RECTIFICADO_CASILLA: 2,
+        _RECT_BASE_RECTIFICADA_CASILLA: 13,
+        _RECT_BASE_ANTERIOR_CASILLA: 13,
     }
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
@@ -281,7 +310,7 @@ def test_committed_modelo_349_construct_collects_all_revision_members() -> None:
     assert len(revision.constructs) == 1
     construct = revision.constructs[0]
 
-    assert set(construct.casillas) == {casilla.id for casilla in revision.casillas}
+    assert set(construct.casilla_ids) == {casilla.id for casilla in revision.casillas}
     assert set(construct.workbook_parity_refs) == {ref.id for ref in revision.workbook_parity_refs}
     assert set(construct.live_cross_references) == {ref.id for ref in revision.live_cross_references}
     assert set(construct.application_links) == {link.id for link in revision.application_links}
@@ -408,7 +437,7 @@ def test_committed_modelo_349_export_records_open_with_official_record_type_lite
     first_field = record.fields[0]
     assert first_field.offset == 1
     assert first_field.length == 1
-    assert first_field.kind == "literal"
+    assert first_field.kind is CasillaFieldKind.LITERAL
     assert first_field.literal == expected_record_type_literal
 
 
@@ -444,10 +473,10 @@ def test_committed_modelo_349_export_casilla_fields_resolve_to_revision_casillas
     casilla_ids = {casilla.id for casilla in revision.casillas}
     for record in layout.records:
         for field in record.fields:
-            if field.kind != "casilla":
+            if field.kind is not CasillaFieldKind.CASILLA:
                 continue
-            assert field.casilla in casilla_ids, (
-                f"export field {field.id!r} references unknown casilla {field.casilla!r}"
+            assert field.casilla_id in casilla_ids, (
+                f"export field {field.id!r} references unknown casilla {field.casilla_id!r}"
             )
 
 
@@ -478,12 +507,7 @@ def test_committed_modelo_349_extraction_profiles_target_declarant_summary_casil
     assert pdf_profile.surface == "declaracion_pdf"
     assert pdf_profile.parser == "aeat.adapters.inbound.declaracion.parse_declaracion"
     assert pdf_profile.failure_semantics == "fail_hard"
-    assert {t.casilla_id for t in pdf_profile.target_casillas} == {
-        "decl.numero-operadores",
-        "decl.importe-operaciones",
-        "decl.numero-rectificaciones",
-        "decl.importe-rectificaciones",
-    }
+    assert {t.casilla_id for t in pdf_profile.target_casillas} == set(_DECLARANT_SUMMARY_CASILLAS)
 
     submitted_profile = profiles_by_id["modelo-349-submitted-file"]
     assert submitted_profile.surface == "export_record"
@@ -578,10 +602,10 @@ def test_committed_modelo_349_record_design_round_trips_declarante_operador_rect
     rect = "modelo-349-rectificacion"
 
     # Declarant casillas remain casilla-kind fields and parse via casilla_id.
-    assert by_record_casilla[(decl, "decl.numero-operadores")] == Decimal("2")
-    assert by_record_casilla[(decl, "decl.importe-operaciones")] == Decimal("1500.50")
-    assert by_record_casilla[(decl, "decl.numero-rectificaciones")] == Decimal("1")
-    assert by_record_casilla[(decl, "decl.importe-rectificaciones")] == Decimal("100.00")
+    assert by_record_casilla[(decl, _DECL_NUMERO_OPERADORES_CASILLA)] == Decimal("2")
+    assert by_record_casilla[(decl, _DECL_IMPORTE_OPERACIONES_CASILLA)] == Decimal("1500.50")
+    assert by_record_casilla[(decl, _DECL_NUMERO_RECTIFICACIONES_CASILLA)] == Decimal("1")
+    assert by_record_casilla[(decl, _DECL_IMPORTE_RECTIFICACIONES_CASILLA)] == Decimal("100.00")
 
     # Operador and rectificacion records render via binding-row fields and the
     # parser distinguishes them via the rectification-block discriminator
@@ -751,11 +775,11 @@ def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bi
     revision = modelo.revisions["2020-y-siguientes"]
 
     casillas_by_id = {c.id: c for c in revision.casillas}
-    expected_bindings = {
-        "decl.numero-operadores": "iva-349-declarante-numero-operadores",
-        "decl.importe-operaciones": "iva-349-declarante-importe-operaciones",
-        "decl.numero-rectificaciones": "iva-349-declarante-numero-rectificaciones",
-        "decl.importe-rectificaciones": "iva-349-declarante-importe-rectificaciones",
+    expected_bindings: dict[CasillaId, str] = {
+        _DECL_NUMERO_OPERADORES_CASILLA: "iva-349-declarante-numero-operadores",
+        _DECL_IMPORTE_OPERACIONES_CASILLA: "iva-349-declarante-importe-operaciones",
+        _DECL_NUMERO_RECTIFICACIONES_CASILLA: "iva-349-declarante-numero-rectificaciones",
+        _DECL_IMPORTE_RECTIFICACIONES_CASILLA: "iva-349-declarante-importe-rectificaciones",
     }
     for casilla_id, expected_binding in expected_bindings.items():
         casilla = casillas_by_id[casilla_id]
@@ -943,33 +967,36 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
     observations = (*non_rect_obs, rect_obs)
 
     binding_values = resolve_invoice_binding_values(revision, observations)
-    casilla_values = resolve_bound_casilla_inputs(revision, binding_values)
+    casilla_values = resolve_bound_inputs_by_casilla_id(revision, binding_values)
 
     # Assert the four expected casilla keys are present — wiring check.
-    expected_casilla_keys = {
-        "decl.numero-operadores",
-        "decl.importe-operaciones",
-        "decl.numero-rectificaciones",
-        "decl.importe-rectificaciones",
-    }
+    expected_casilla_keys = set(_DECLARANT_SUMMARY_CASILLAS)
     assert expected_casilla_keys == set(casilla_values.keys()), (
         "invoice-to-casilla pipeline must produce exactly the four declarant casillas"
     )
 
     # Operator and importe values must equal what the resolver computed from the
     # non-rectification observations.
-    assert casilla_values["decl.numero-operadores"] == binding_values["iva-349-declarante-numero-operadores"]
-    assert casilla_values["decl.importe-operaciones"] == binding_values["iva-349-declarante-importe-operaciones"]
+    assert (
+        casilla_values[_DECL_NUMERO_OPERADORES_CASILLA]
+        == binding_values["iva-349-declarante-numero-operadores"]
+    )
+    assert (
+        casilla_values[_DECL_IMPORTE_OPERACIONES_CASILLA]
+        == binding_values["iva-349-declarante-importe-operaciones"]
+    )
 
     # Rectification casillas must pass through from binding to casilla unchanged.
     assert (
-        casilla_values["decl.numero-rectificaciones"] == (binding_values["iva-349-declarante-numero-rectificaciones"])
+        casilla_values[_DECL_NUMERO_RECTIFICACIONES_CASILLA]
+        == (binding_values["iva-349-declarante-numero-rectificaciones"])
     )
     assert (
-        casilla_values["decl.importe-rectificaciones"] == (binding_values["iva-349-declarante-importe-rectificaciones"])
+        casilla_values[_DECL_IMPORTE_RECTIFICACIONES_CASILLA]
+        == (binding_values["iva-349-declarante-importe-rectificaciones"])
     )
 
     # Rectification delta must equal the absolute difference between new and previous base.
     assert rect_obs.rectified_base_previous is not None
     expected_rect_delta = abs(rect_obs.base_amount - rect_obs.rectified_base_previous)
-    assert casilla_values["decl.importe-rectificaciones"] == expected_rect_delta
+    assert casilla_values[_DECL_IMPORTE_RECTIFICACIONES_CASILLA] == expected_rect_delta

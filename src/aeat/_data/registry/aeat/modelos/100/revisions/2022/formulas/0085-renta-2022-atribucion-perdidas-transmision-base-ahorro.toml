@@ -1,8 +1,8 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-atribucion-perdidas-transmision-base-ahorro"
-target = "1609"
+target_casilla_id = "1609"
 expression = { op = "sum", args = [
-    { casilla = "1596" },
+    { casilla_id = "1596" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

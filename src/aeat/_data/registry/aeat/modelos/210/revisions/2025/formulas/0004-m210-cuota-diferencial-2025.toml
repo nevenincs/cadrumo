@@ -6,10 +6,10 @@
 
 [[revisions."2025".formulas]]
 id = "m210-cuota-diferencial-2025"
-target = "cuota_diferencial"
+target_casilla_id = "cuota_diferencial"
 expression = { op = "subtract", args = [
-    { casilla = "cuota_integra" },
-    { casilla = "retencion_practicada" },
+    { casilla_id = "cuota_integra" },
+    { casilla_id = "retencion_practicada" },
 ] }
 rounding = "money-2"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]

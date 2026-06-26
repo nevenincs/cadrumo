@@ -1,6 +1,7 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02314"
 number = "02314"
+segmento = "DP200014B"
 label = "Liquidación IV - Otras deducciones - Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) (desglose en página 18 bis) [02314]"
 section = ["liquidacion_iv", "otras_deducciones"]
 data_type = "money"
@@ -13,6 +14,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02315"
 number = "02315"
+segmento = "DP200014B"
 label = "Liquidación IV - Otras deducciones - Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) (desglose en página 18 bis) [02315]"
 section = ["liquidacion_iv", "otras_deducciones"]
 data_type = "money"

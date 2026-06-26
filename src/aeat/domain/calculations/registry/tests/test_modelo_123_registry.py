@@ -8,11 +8,46 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
-from .. import RegistrySnapshot, RegistryValidator, build_snapshot, calculate_registry_snapshot, load_registry_tree
+from .. import (
+    CasillaId,
+    RegistrySnapshot,
+    RegistryValidator,
+    build_snapshot,
+    calculate_registry_snapshot,
+    load_registry_tree,
+    validated_casilla_id,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M123 registry test casilla key {value!r} is not a CasillaId") from exc
+
+
+_M123_RENTAS_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("01")
+_M123_RENTAS_RESTO_CASILLA: CasillaId = _casilla_id("02")
+_M123_RENTAS_TOTAL_CASILLA: CasillaId = _casilla_id("03")
+_M123_BASE_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("04")
+_M123_BASE_RESTO_CASILLA: CasillaId = _casilla_id("05")
+_M123_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("06")
+_M123_RETENCIONES_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("07")
+_M123_RETENCIONES_RESTO_CASILLA: CasillaId = _casilla_id("08")
+_M123_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("10")
+_M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: CasillaId = _casilla_id("11")
+_M123_A_INGRESAR_CASILLA: CasillaId = _casilla_id("13")
+_M123_LEGACY_NPERCEPTORES_CASILLA: CasillaId = _casilla_id("01-legacy")
+_M123_LEGACY_BASE_CASILLA: CasillaId = _casilla_id("02-legacy")
+_M123_LEGACY_RETENCIONES_CASILLA: CasillaId = _casilla_id("03-legacy")
+_M123_LEGACY_REGULARIZACION_CASILLA: CasillaId = _casilla_id("04-legacy")
+_M123_LEGACY_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("05-legacy")
+_M123_LEGACY_RESULTADO_CASILLA: CasillaId = _casilla_id("06-legacy")
+_M123_LEGACY_INGRESO_CASILLA: CasillaId = _casilla_id("07-legacy")
 
 
 def _load_modelo(modelo_id: str):
@@ -117,15 +152,15 @@ def _calculate_2024(
     return calculate_registry_snapshot(
         snapshot,
         inputs={
-            "01": Decimal(nperceptores_dividendos),
-            "02": Decimal(nperceptores_resto),
-            "04": base_dividendos,
-            "05": base_resto,
-            "07": Decimal("0"),
-            "08": Decimal("0"),
-            "10": Decimal("0"),
-            "11": Decimal("0"),
-            "13": Decimal("0"),
+            _M123_RENTAS_DIVIDENDOS_CASILLA: Decimal(nperceptores_dividendos),
+            _M123_RENTAS_RESTO_CASILLA: Decimal(nperceptores_resto),
+            _M123_BASE_DIVIDENDOS_CASILLA: base_dividendos,
+            _M123_BASE_RESTO_CASILLA: base_resto,
+            _M123_RETENCIONES_DIVIDENDOS_CASILLA: Decimal("0"),
+            _M123_RETENCIONES_RESTO_CASILLA: Decimal("0"),
+            _M123_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+            _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: Decimal("0"),
+            _M123_A_INGRESAR_CASILLA: Decimal("0"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
     )
@@ -149,8 +184,8 @@ def test_m123_casilla_06_equals_base_dividendos_plus_base_resto() -> None:
         base_dividendos=Decimal("42000.00"),
         base_resto=Decimal("0.00"),
     )
-    casilla_03 = result.values["03"]
-    casilla_06 = result.values["06"]
+    casilla_03 = result.values[_M123_RENTAS_TOTAL_CASILLA]
+    casilla_06 = result.values[_M123_BASE_TOTAL_CASILLA]
     assert casilla_03 == Decimal("7"), f"precondition: casilla 03 (total count) should be 7, got {casilla_03}"
     assert casilla_06 == Decimal("42000.00"), (
         f"casilla 06 (base total) should be 42000.00 (= base_dividendos + base_resto), "
@@ -172,8 +207,8 @@ def test_m123_casilla_06_base_resto_only() -> None:
         base_dividendos=Decimal("0.00"),
         base_resto=Decimal("5000.00"),
     )
-    casilla_03 = result.values["03"]
-    casilla_06 = result.values["06"]
+    casilla_03 = result.values[_M123_RENTAS_TOTAL_CASILLA]
+    casilla_06 = result.values[_M123_BASE_TOTAL_CASILLA]
     assert casilla_03 == Decimal("1"), f"precondition: casilla 03 should be 1, got {casilla_03}"
     assert casilla_06 == Decimal("5000.00"), (
         f"casilla 06 must be 5000.00, got {casilla_06}; if 5001 then perceptor count is leaking into casilla 06"
@@ -197,7 +232,7 @@ def test_m123_casilla_06_invariant_to_nperceptores() -> None:
             nperceptores_resto=0,
             base_dividendos=base_fixed,
             base_resto=Decimal("0.00"),
-        ).values["06"]
+        ).values[_M123_BASE_TOTAL_CASILLA]
         for n in (1, 7, 100)
     ]
     assert results[0] == results[1] == results[2] == base_fixed, (
@@ -231,16 +266,16 @@ def test_m123_legacy_casilla_06_invariant_to_nperceptores_and_base() -> None:
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
-            "01-legacy": Decimal("7"),
-            "02-legacy": Decimal("42000.00"),
-            "03-legacy": Decimal("100.00"),
-            "04-legacy": Decimal("0.00"),
-            "05-legacy": Decimal("0.00"),
-            "07-legacy": Decimal("0.00"),
+            _M123_LEGACY_NPERCEPTORES_CASILLA: Decimal("7"),
+            _M123_LEGACY_BASE_CASILLA: Decimal("42000.00"),
+            _M123_LEGACY_RETENCIONES_CASILLA: Decimal("100.00"),
+            _M123_LEGACY_REGULARIZACION_CASILLA: Decimal("0.00"),
+            _M123_LEGACY_PREVIOUS_RESULT_CASILLA: Decimal("0.00"),
+            _M123_LEGACY_INGRESO_CASILLA: Decimal("0.00"),
         },
         date_context={"filing_period": date(2022, 12, 31)},
     )
-    casilla_06 = result.values["06-legacy"]
+    casilla_06 = result.values[_M123_LEGACY_RESULTADO_CASILLA]
     assert casilla_06 == Decimal("100.00"), (
         f"casilla 06-legacy (suma retenciones+regularizacion = [03]+[05]) "
         f"should be 100.00 (= retenciones + 0), got {casilla_06}; "

@@ -36,7 +36,7 @@ from pydantic import BaseModel, Field, field_validator
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
-from ._ids import CrossReferenceId, OracleId, RevisionId
+from ._ids import CasillaId, CrossReferenceId, OracleId, RevisionId
 from ._remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -697,9 +697,10 @@ class ReplayPayload(_ParityModel):
     """Typed envelope for a decoded replay JSON payload.
 
     Every replay driver shares the same top-level JSON contract: an
-    ``observed`` mapping of string keys to string values (the surface's
-    response data) and an optional ``raw_evidence_locator`` that links
-    back to the raw HTTP response artifact for audit trails.
+    ``observed`` mapping of legacy surface strings to string values (kept
+    only as audit evidence, not as a comparison key surface) and an optional
+    ``raw_evidence_locator`` that links back to the raw HTTP response
+    artifact for audit trails.
 
     Replay fixtures on disk are captured response artefacts and carry
     additional documented metadata that pre-dates the tightened schema:
@@ -708,12 +709,11 @@ class ReplayPayload(_ParityModel):
       operator scenario the payload was captured against;
     * ``profile_overrides`` — per-fixture profile overrides used to
       drive the registry comparison;
-    * ``expected`` — operator-facing labels paired with their
-      expected values (the human-readable AEAT mapping the fixture
-      author transcribed from the live response);
-    * ``expected_by_casilla`` — registry-casilla-keyed expected
+    * ``expected`` — legacy human-readable labels paired with their
+      expected values, retained only for audit readability;
+    * ``expected_by_casilla_id`` — registry-casilla-id-keyed expected
       values, used by the oracle's matcher;
-    * ``observed_by_casilla`` — registry-casilla-keyed observed
+    * ``observed_by_casilla_id`` — registry-casilla-id-keyed observed
       values, used by the oracle's matcher.
 
     ``model_config`` inherits ``strict=True, frozen=True, extra="forbid"``
@@ -726,8 +726,8 @@ class ReplayPayload(_ParityModel):
     scenario_id: str | None = Field(default=None, max_length=256)
     profile_overrides: Mapping[str, str] = Field(default_factory=dict)
     expected: Mapping[str, str] = Field(default_factory=dict)
-    expected_by_casilla: Mapping[str, str] = Field(default_factory=dict)
-    observed_by_casilla: Mapping[str, str] = Field(default_factory=dict)
+    expected_by_casilla_id: Mapping[CasillaId, str] = Field(default_factory=dict)
+    observed_by_casilla_id: Mapping[CasillaId, str] = Field(default_factory=dict)
 
 
 def decode_replay_json_payload(raw: bytes, *, surface_label: str) -> ReplayPayload:

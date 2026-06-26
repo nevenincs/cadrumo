@@ -1,21 +1,21 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-total-pagos-a-cuenta"
-target = "0609"
+target_casilla_id = "0609"
 expression = { op = "sum", args = [
-    { casilla = "0592" },
-    { casilla = "0593" },
-    { casilla = "0594" },
-    { casilla = "0596" },
-    { casilla = "0597" },
-    { casilla = "0598" },
-    { casilla = "0599" },
-    { casilla = "0600" },
-    { casilla = "0601" },
-    { casilla = "0602" },
-    { casilla = "0603" },
-    { casilla = "0604" },
-    { casilla = "0605" },
-    { casilla = "0606" },
+    { casilla_id = "0592" },
+    { casilla_id = "0593" },
+    { casilla_id = "0594" },
+    { casilla_id = "0596" },
+    { casilla_id = "0597" },
+    { casilla_id = "0598" },
+    { casilla_id = "0599" },
+    { casilla_id = "0600" },
+    { casilla_id = "0601" },
+    { casilla_id = "0602" },
+    { casilla_id = "0603" },
+    { casilla_id = "0604" },
+    { casilla_id = "0605" },
+    { casilla_id = "0606" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]

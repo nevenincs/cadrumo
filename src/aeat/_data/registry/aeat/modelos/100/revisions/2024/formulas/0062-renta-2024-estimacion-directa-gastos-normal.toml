@@ -1,9 +1,9 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-estimacion-directa-gastos-normal"
-target = "0220"
+target_casilla_id = "0220"
 expression = { op = "sum", args = [
-        { casilla = "0218" },
-        { casilla = "0219" },
+        { casilla_id = "0218" },
+        { casilla_id = "0219" },
     ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]

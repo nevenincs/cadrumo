@@ -1,9 +1,9 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-inmuebles-ganancia-no-exenta-base-general"
-target = "1833"
+target_casilla_id = "1833"
 expression = { op = "max", args = [
     { literal = "0" },
-    { op = "subtract", args = [{ casilla = "1826" }, { casilla = "1830" }] },
+    { op = "subtract", args = [{ casilla_id = "1826" }, { casilla_id = "1830" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

@@ -1,9 +1,9 @@
 [[revisions."2020".formulas]]
 id = "renta-2020-capital-mobiliario-ahorro-rendimiento-neto"
-target = "0038"
+target_casilla_id = "0038"
 expression = { op = "subtract", args = [
-        { casilla = "0036" },
-        { casilla = "0037" },
+        { casilla_id = "0036" },
+        { casilla_id = "0037" },
     ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]

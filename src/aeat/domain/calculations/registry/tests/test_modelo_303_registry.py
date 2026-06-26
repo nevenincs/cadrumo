@@ -10,11 +10,41 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from .....tests.registry_observations import registry_grounded_modelo_observation
+from .. import (
+    CasillaId,
+    ModeloDefinition,
+    RegistryCatalogues,
+    RegistryValidator,
+    build_snapshot,
+    load_registry_tree,
+    validated_casilla_id,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
 _WWW6_HOST = aeat_host("www6")
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
+_M303_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
+_M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_AUTOCONSUMO_PROMOTOR_BASE_CASILLA: CasillaId = _casilla_id("iva.autoconsumo.promotor.base")
+_M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA: CasillaId = _casilla_id("iva.autoconsumo.promotor.cuota")
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = _casilla_id("iva.prorrata-porcentaje")
 
 
 @lru_cache(maxsize=1)
@@ -290,20 +320,18 @@ def test_modelo_303_compensation_chain_uses_current_record_design_casillas() -> 
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     relation = next(item for item in revision.relations if item.id == "modelo-303-rel-self-compensacion-anteriores")
 
-    assert casillas["iva.compensacion-pendiente-periodos-anteriores"].number == "110"
-    assert casillas["iva.compensacion-aplicada-periodo"].number == "78"
-    assert casillas["iva.compensacion-pendiente-periodos-posteriores"].number == "87"
-    assert casillas["iva.resultado"].number == "69"
+    assert casillas[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA].number == "110"
+    assert casillas[_M303_COMPENSACION_APLICADA_CASILLA].number == "78"
+    assert casillas[_M303_POSTERIOR_CASILLA].number == "87"
+    assert casillas[_M303_RESULTADO_CASILLA].number == "69"
     assert relation.target_periods == ("1T", "2T", "3T", "4T")
     assert relation.source_period_offset_from_target == -1
     assert relation.source_periods == ()
     assert relation.target_binding == "modelo-303-compensacion-pendiente-anteriores"
 
 
-def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_output() -> None:
+def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_casilla_id() -> None:
     from .. import (
-        CasillaObservation,
-        RegistryModeloObservation,
         materialize_relation_binding_values,
         previous_filing_observation_requirements,
         relation_source_requirements,
@@ -314,27 +342,22 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_o
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2009-y-siguientes"]
     observations = (
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(
-                CasillaObservation(
-                    casilla_id="iva.compensacion-disponible-fin-periodo",
-                    value=Decimal("1200.00"),
-                ),
-            ),
+            casilla_values={_M303_DISPONIBLE_CASILLA: Decimal("1200.00")},
         ),
     )
 
     binding_requirements = previous_filing_observation_requirements(revision, filing_year=2025, period="2T")
-    assert [(item.period, item.source_casillas) for item in binding_requirements] == [
-        ("1T", ("iva.compensacion-disponible-fin-periodo",)),
+    assert [(item.period, item.source_casilla_ids) for item in binding_requirements] == [
+        ("1T", (_M303_DISPONIBLE_CASILLA,)),
     ]
 
     relation_requirements = relation_source_requirements(revision, filing_year=2025, period="2T")
-    assert [(item.periods, item.source_output) for item in relation_requirements] == [
-        (("1T",), "iva.compensacion-disponible-fin-periodo"),
+    assert [(item.periods, item.source_casilla_id) for item in relation_requirements] == [
+        (("1T",), _M303_DISPONIBLE_CASILLA),
     ]
 
     assert resolve_previous_filing_binding_values(
@@ -358,8 +381,6 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_o
 
 def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourth_quarter() -> None:
     from .. import (
-        CasillaObservation,
-        RegistryModeloObservation,
         materialize_relation_binding_values,
         previous_filing_observation_requirements,
         relation_source_requirements,
@@ -370,27 +391,22 @@ def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourt
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2009-y-siguientes"]
     observations = (
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="303",
             filing_year=2025,
             period="4T",
-            observations=(
-                CasillaObservation(
-                    casilla_id="iva.compensacion-disponible-fin-periodo",
-                    value=Decimal("450.00"),
-                ),
-            ),
+            casilla_values={_M303_DISPONIBLE_CASILLA: Decimal("450.00")},
         ),
     )
 
     binding_requirements = previous_filing_observation_requirements(revision, filing_year=2026, period="1T")
-    assert [(item.filing_year, item.period, item.source_casillas) for item in binding_requirements] == [
-        (2025, "4T", ("iva.compensacion-disponible-fin-periodo",)),
+    assert [(item.filing_year, item.period, item.source_casilla_ids) for item in binding_requirements] == [
+        (2025, "4T", (_M303_DISPONIBLE_CASILLA,)),
     ]
 
     relation_requirements = relation_source_requirements(revision, filing_year=2026, period="1T")
-    assert [(item.filing_year, item.periods, item.source_output) for item in relation_requirements] == [
-        (2025, ("4T",), "iva.compensacion-disponible-fin-periodo"),
+    assert [(item.filing_year, item.periods, item.source_casilla_id) for item in relation_requirements] == [
+        (2025, ("4T",), _M303_DISPONIBLE_CASILLA),
     ]
 
     assert resolve_previous_filing_binding_values(
@@ -413,7 +429,7 @@ def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourt
 
 
 def test_modelo_303_compensation_calculation_applies_available_balance_and_carries_remainder() -> None:
-    from .. import calculate_registry_snapshot, resolve_bound_casilla_inputs
+    from .. import calculate_registry_snapshot, resolve_bound_inputs_by_casilla_id
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="2T")
@@ -443,7 +459,7 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
-    bound_inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    bound_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=bound_inputs,
@@ -453,27 +469,27 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
 
     # Structural wiring: all compensation casillas must be present in the result.
     compensation_casillas = {
-        "iva.compensacion-pendiente-periodos-anteriores",
-        "iva.compensacion-aplicada-periodo",
-        "iva.compensacion-pendiente-periodos-posteriores",
-        "iva.resultado",
-        "iva.compensacion-generada-periodo",
-        "iva.compensacion-disponible-fin-periodo",
+        _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+        _M303_COMPENSACION_APLICADA_CASILLA,
+        _M303_POSTERIOR_CASILLA,
+        _M303_RESULTADO_CASILLA,
+        _M303_GENERADA_CASILLA,
+        _M303_DISPONIBLE_CASILLA,
     }
     for casilla_id in compensation_casillas:
         assert casilla_id in result.values, f"{casilla_id!r} must be computed by the compensation chain"
 
     # Compensation balance constraint: applied + remainder must equal the incoming balance.
     # This is a structural invariant of the compensation mechanism, not a hand-computed value.
-    pendiente_anteriores = result.values["iva.compensacion-pendiente-periodos-anteriores"]
-    aplicada = result.values["iva.compensacion-aplicada-periodo"]
-    pendiente_posteriores = result.values["iva.compensacion-pendiente-periodos-posteriores"]
+    pendiente_anteriores = result.values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA]
+    aplicada = result.values[_M303_COMPENSACION_APLICADA_CASILLA]
+    pendiente_posteriores = result.values[_M303_POSTERIOR_CASILLA]
     assert aplicada + pendiente_posteriores == pendiente_anteriores, "applied + remainder must equal incoming balance"
 
     # When compensation exceeds IVA output, resultado must be zero (no tax due).
     # The binding carries compensacion_pendiente_anteriores=1200 > repercutido=1000,
     # so the full repercutido is absorbed and resultado must be 0.
-    assert result.values["iva.resultado"] == Decimal("0.00"), (
+    assert result.values[_M303_RESULTADO_CASILLA] == Decimal("0.00"), (
         "resultado must be zero when compensation balance exceeds IVA output"
     )
 
@@ -481,7 +497,7 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
     assert aplicada <= binding_values["modelo-303-iva-repercutido-general-cuota"]
 
     # Disponible at end of period equals the remainder carried forward.
-    assert result.values["iva.compensacion-disponible-fin-periodo"] == pendiente_posteriores
+    assert result.values[_M303_DISPONIBLE_CASILLA] == pendiente_posteriores
 
 
 def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
@@ -548,7 +564,7 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
     tipo general = 21%), NOT from the registry implementation under test; this
     test would fail if the formula were mis-wired or the tipo were wrong.
     """
-    from .. import calculate_registry_snapshot, resolve_bound_casilla_inputs
+    from .. import calculate_registry_snapshot, resolve_bound_inputs_by_casilla_id
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
@@ -577,7 +593,7 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-autoconsumo-promotor-base": Decimal("1400000"),
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
-    bound_inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    bound_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=bound_inputs,
@@ -586,14 +602,14 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
     )
 
     # Art. 90 LISIVA tipo general 21%: 1,400,000 x 0.21 = 294,000.00
-    assert result.values["iva.autoconsumo.promotor.base"] == Decimal("1400000"), (
+    assert result.values[_M303_AUTOCONSUMO_PROMOTOR_BASE_CASILLA] == Decimal("1400000"), (
         "base casilla must carry the supplied construction cost"
     )
-    assert result.values["iva.autoconsumo.promotor.cuota"] == Decimal("294000.00"), (
+    assert result.values[_M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA] == Decimal("294000.00"), (
         "cuota must equal 1,400,000 x 21% = 294,000.00 per Art. 90 LISIVA"
     )
     # The autoconsumo cuota must also flow into the total devengada.
-    cuota_devengada_total = result.values["iva.cuota-devengada-total"]
+    cuota_devengada_total = result.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
     assert cuota_devengada_total == Decimal("294000.00"), (
         "cuota-devengada-total must include the autoconsumo promotor cuota"
     )
@@ -606,7 +622,7 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
     tipo 21%), not from a second call to the same formula.  If the formula
     constant were changed to, say, 0.10, this test would catch it immediately.
     """
-    from .. import calculate_registry_snapshot, resolve_bound_casilla_inputs
+    from .. import calculate_registry_snapshot, resolve_bound_inputs_by_casilla_id
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
@@ -637,14 +653,14 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
 
     def _run(base: Decimal) -> Decimal:
         bv = {**zero_bindings, "modelo-303-autoconsumo-promotor-base": base}
-        bound = resolve_bound_casilla_inputs(snapshot.revision, bv)
+        bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, bv)
         r = calculate_registry_snapshot(
             snapshot,
             inputs=bound,
             binding_values=bv,
             date_context={"filing_period": date(2025, 3, 31)},
         )
-        return r.values["iva.autoconsumo.promotor.cuota"]
+        return r.values[_M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA]
 
     # Statutory expectation from Art. 90 LISIVA (tipo general 21%):
     #   700,000 x 0.21 = 147,000.00
@@ -674,7 +690,7 @@ def test_modelo_303_prorrata_defaults_to_100_when_no_volume_data() -> None:
     derived from the regulated full-deduction default, not from re-running the
     formula under test.
     """
-    from .. import calculate_registry_snapshot, resolve_bound_casilla_inputs
+    from .. import calculate_registry_snapshot, resolve_bound_inputs_by_casilla_id
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
@@ -702,11 +718,11 @@ def test_modelo_303_prorrata_defaults_to_100_when_no_volume_data() -> None:
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
         "modelo-303-autoconsumo-promotor-base": Decimal("0"),
     }
-    bound = resolve_bound_casilla_inputs(snapshot.revision, zero_bindings)
+    bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, zero_bindings)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=bound,
         binding_values=zero_bindings,
         date_context={"filing_period": date(2025, 3, 31)},
     )
-    assert result.values["iva.prorrata-porcentaje"] == Decimal("100")
+    assert result.values[_M303_PRORRATA_PORCENTAJE_CASILLA] == Decimal("100")

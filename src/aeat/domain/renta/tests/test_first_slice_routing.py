@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import pytest
 
+from ...calculations.registry import CasillaId
 from ...categories import SpendingCategory
 from .._first_slice_routing import (
     FIRST_SLICE_EXPENSE_CASILLAS,
@@ -84,7 +85,7 @@ def test_first_slice_routing_targets_exist_in_modelo_100_registry() -> None:
     modelo_100 = next((m for m in modelos if m.id == "100"), None)
     assert modelo_100 is not None, "modelo-100 must be present in bundled registry"
 
-    all_casilla_ids: set[str] = set()
+    all_casilla_ids: set[CasillaId] = set()
     for revision in modelo_100.revisions.values():
         all_casilla_ids.update(casilla.id for casilla in revision.casillas)
 

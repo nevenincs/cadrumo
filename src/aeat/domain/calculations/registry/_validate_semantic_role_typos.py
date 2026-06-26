@@ -9,6 +9,7 @@ from difflib import SequenceMatcher
 from functools import lru_cache
 from typing import NamedTuple, Protocol
 
+from ._ids import CasillaId
 from ._validate_semantic_role_axes import (
     semantic_roles_are_axis_siblings,
     semantic_roles_are_tax_domain_siblings,
@@ -18,7 +19,7 @@ from ._validate_semantic_role_axes import (
 class _RoleObservationLike(Protocol):
     modelo_id: str
     revision_id: str
-    casilla_id: str
+    casilla_id: CasillaId
     semantic_role_cardinality: str
 
 

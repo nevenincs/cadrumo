@@ -1,6 +1,6 @@
 [[revisions."2025-02-03-y-siguientes".verification_expectations]]
 id = "modelo-036-censo-foundation-verification"
-computed_casillas = ["decl.event-kind"]
+computed_casilla_ids = ["decl.event-kind"]
 tolerance = "0.00"
 rounding = "none"
 min_coverage = "1.0"

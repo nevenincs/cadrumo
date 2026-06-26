@@ -15,19 +15,22 @@ from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.money import round_to_cents as _round_to_cents
 from ._bindings import CasillaObservation
+from ._casilla_membership import casillas_by_id as _casillas_by_id
+from ._casilla_membership import undeclared_casilla_ids
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
 from ._formula_initial_values import initial_values as _initial_values
 from ._formula_initial_values import materialise_observations as _materialise_observations
-from ._ids import FormulaId
+from ._ids import BindingId, CasillaId, FormulaId, ParameterId, RelationId, validated_casilla_id
 from ._runtime_graph import formula_evaluation_order
 from ._schema import (
     DatedValue,
     FormulaExpression,
+    ModeloRevision,
     ParameterDefinition,
     RegistrySnapshot,
 )
@@ -74,10 +77,10 @@ class _UnresolvedFormulaDependencyError(Exception):
 
 @dataclass(frozen=True, slots=True)
 class _M210ResolveRateArgs:
-    tipo_casilla: str
-    baseline_parameter: str
-    convenio_parameter: str
-    country_binding: str
+    tipo_casilla_id: CasillaId
+    baseline_parameter: ParameterId
+    convenio_parameter: ParameterId
+    country_binding: BindingId
 
 
 class RegistryCalculationEntry(BaseModel):
@@ -96,9 +99,10 @@ class RegistryCalculationEntry(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     formula_id: FormulaId
-    target: str
+    target_casilla_id: CasillaId
     op: str
     operand_refs: tuple[str, ...]
+    operand_casilla_refs: tuple[CasillaId, ...]
     operand_values: tuple[Decimal, ...]
     value: Decimal
     legal_refs: tuple[str, ...]
@@ -141,8 +145,24 @@ class RegistryCalculationResult(BaseModel):
     revision: str
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
 
+    @model_validator(mode="after")
+    def _require_observation_provenance(self) -> RegistryCalculationResult:
+        for observation in self.observations:
+            if not observation.legal_refs or not observation.source_refs:
+                raise RegistryValidationError(
+                    f"registry calculation result for modelo {self.modelo!r} revision {self.revision!r} "
+                    f"contains ungrounded CasillaObservation for casilla {observation.casilla_id!r}; "
+                    "legal_refs and source_refs are required",
+                    context={
+                        "modelo": self.modelo,
+                        "revision": self.revision,
+                        "casilla_id": observation.casilla_id,
+                    },
+                )
+        return self
+
     @property
-    def values(self) -> Mapping[str, Decimal]:
+    def values(self) -> Mapping[CasillaId, Decimal]:
         """Read-only view: casilla_id → final Decimal value.
 
         Deliberately a plain ``@property``, not a pydantic
@@ -157,18 +177,19 @@ class RegistryCalculationResult(BaseModel):
     def entries(self) -> tuple[RegistryCalculationEntry, ...]:
         """Read-only view: formula-computed observations as :class:`RegistryCalculationEntry` rows.
 
-        Preserves the historical entry shape (with ``target`` and
-        ``op`` fields) for the application-layer indexers that build
-        ``{target: entry}`` dictionaries. Insertion order from
+        Preserves the formula-only entry view with ``target_casilla_id`` and
+        ``op`` fields for the application-layer indexers that build
+        ``{target_casilla_id: entry}`` dictionaries. Insertion order from
         ``observations`` is preserved — the engine emits in formula
         evaluation order, which matches the original ``entries`` shape.
         """
         return tuple(
             RegistryCalculationEntry(
                 formula_id=obs.formula_id,
-                target=obs.casilla_id,
+                target_casilla_id=obs.casilla_id,
                 op=obs.op or "value",
                 operand_refs=obs.operand_refs,
+                operand_casilla_refs=obs.operand_casilla_refs,
                 operand_values=obs.operand_values,
                 value=obs.value,
                 legal_refs=obs.legal_refs,
@@ -179,17 +200,17 @@ class RegistryCalculationResult(BaseModel):
         )
 
 
-def calculate_registry_snapshot(
+def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputValue](
     snapshot: RegistrySnapshot,
     *,
-    inputs: Mapping[str, Decimal],
+    inputs: Mapping[InputKey, InputValue],
     date_context: Mapping[str, date],
-    binding_values: Mapping[str, Decimal] | None = None,
-    enum_binding_values: Mapping[str, str] | None = None,
-    relation_values: Mapping[str, Decimal] | None = None,
-    unresolved_relation_ids: tuple[str, ...] = (),
-    date_binding_values: Mapping[str, date] | None = None,
-    text_inputs: Mapping[str, str] | None = None,
+    binding_values: Mapping[BindingId, Decimal] | None = None,
+    enum_binding_values: Mapping[BindingId, str] | None = None,
+    relation_values: Mapping[RelationId, Decimal] | None = None,
+    unresolved_relation_ids: tuple[RelationId, ...] = (),
+    date_binding_values: Mapping[BindingId, date] | None = None,
+    text_inputs: Mapping[TextInputKey, TextInputValue] | None = None,
 ) -> RegistryCalculationResult:
     """Evaluate all computed formulas and return a :class:`RegistryCalculationResult`.
 
@@ -227,7 +248,11 @@ def calculate_registry_snapshot(
         text_inputs: Optional string-valued operator inputs keyed by casilla
             id; consumed by text-routed ops.
     """
-    _reject_non_decimal(inputs, "input")
+    revision = snapshot.revision
+    resolved_inputs = _validated_decimal_input_casilla_ids(
+        inputs,
+        revision=revision,
+    )
     resolved_date_context = dict(date_context)
     default_filing_date = (
         snapshot.filing_period.end_date
@@ -242,11 +267,9 @@ def calculate_registry_snapshot(
     resolved_relations = relation_values or {}
     _reject_non_decimal(resolved_relations, "relation")
     resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
-    resolved_date_bindings: Mapping[str, date] = date_binding_values or {}
-    resolved_text_inputs: Mapping[str, str] = text_inputs or {}
-    _reject_non_string(resolved_text_inputs, "text_input")
+    resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or {}
+    resolved_text_inputs = _validated_text_input_casilla_ids(text_inputs or {})
 
-    revision = snapshot.revision
     _reject_unknown_external_values(resolved_bindings, {binding.id for binding in revision.bindings}, "binding")
     _reject_unknown_external_values(
         resolved_relations,
@@ -266,15 +289,15 @@ def calculate_registry_snapshot(
         },
         "unresolved_relation",
     )
-    values, absent_by_design_casillas = _initial_values(
+    values, absent_by_design_casilla_ids = _initial_values(
         revision,
-        inputs,
+        resolved_inputs,
         binding_values=resolved_bindings,
         target_period=snapshot.period,
     )
-    formulas = {formula.target: formula for formula in revision.formulas}
+    formulas = {formula.target_casilla_id: formula for formula in revision.formulas}
     parameters = {parameter.id: parameter for parameter in revision.parameters}
-    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    casillas_by_id = _casillas_by_id(revision)
     # Text-input casillas (e.g. an IRNR ``tipo_renta`` enum string) flow
     # through a dedicated string-keyed channel into the eval context;
     # the Decimal ``values`` map carries a Decimal(0) placeholder for
@@ -300,14 +323,15 @@ def calculate_registry_snapshot(
     # Per-casilla provenance accumulator. Formula-computed casillas overwrite
     # the input/bound placeholder with the full operand lineage; non-computed
     # casillas keep the registry-sourced legal_refs/source_refs.
-    computed_provenance: dict[str, CasillaObservation] = {}
-    unresolved_casillas: set[str] = set()
+    computed_provenance: dict[CasillaId, CasillaObservation] = {}
+    unresolved_casilla_ids: set[CasillaId] = set()
 
     with localcontext() as ctx:
         ctx.prec = 28
         for target in formula_evaluation_order(revision):
             formula = formulas[target]
             operand_refs: list[str] = []
+            operand_casilla_refs: list[CasillaId] = []
             operand_values: list[Decimal] = []
             try:
                 value = _evaluate_expression(
@@ -318,8 +342,9 @@ def calculate_registry_snapshot(
                     date_context=resolved_date_context,
                     relation_values=resolved_relations,
                     unresolved_relation_ids=resolved_unresolved_relations,
-                    unresolved_casillas=unresolved_casillas,
+                    unresolved_casilla_ids=unresolved_casilla_ids,
                     operand_refs=operand_refs,
+                    operand_casilla_refs=operand_casilla_refs,
                     operand_values=operand_values,
                     enum_binding_values=resolved_enum_bindings,
                     date_binding_values=resolved_date_bindings,
@@ -327,25 +352,25 @@ def calculate_registry_snapshot(
                     text_values=resolved_text_inputs,
                 )
             except _UnresolvedFormulaDependencyError:
-                unresolved_casillas.add(target)
+                unresolved_casilla_ids.add(target)
                 continue
             value = _apply_rounding(value, formula.rounding)
-            target_casilla = casillas_by_id.get(target)
-            if target_casilla is not None and target_casilla.constraints is not None:
-                violation = target_casilla.constraints.violates(value)
+            target_casilla_def = casillas_by_id.get(target)
+            if target_casilla_def is not None and target_casilla_def.constraints is not None:
+                violation = target_casilla_def.constraints.violates(value)
                 if violation is not None:
                     raise CasillaConstraintViolationError(
-                        f"casilla {target_casilla.number!r} ({target_casilla.label}) "
+                        f"casilla {target_casilla_def.number!r} ({target_casilla_def.label}) "
                         f"violates declared constraint: {violation}",
                         translated_message="errors.calc.casilla_constraint_violation",
                         context={
                             "casilla_id": target,
-                            "casilla_number": target_casilla.number,
+                            "display_number": target_casilla_def.number,
                             "value": str(value),
                             "violation": str(violation),
                             "formula_id": formula.id,
-                            "legal_refs": ",".join(target_casilla.constraints.legal_refs),
-                            "source_refs": ",".join(target_casilla.constraints.source_refs),
+                            "legal_refs": ",".join(target_casilla_def.constraints.legal_refs),
+                            "source_refs": ",".join(target_casilla_def.constraints.source_refs),
                         },
                     )
             values[target] = value
@@ -355,6 +380,7 @@ def calculate_registry_snapshot(
                 formula_id=formula.id,
                 op=formula.expression.op or "value",
                 operand_refs=tuple(operand_refs),
+                operand_casilla_refs=tuple(operand_casilla_refs),
                 operand_values=tuple(operand_values),
                 legal_refs=tuple(formula.legal_refs),
                 source_refs=tuple(formula.source_refs),
@@ -364,8 +390,9 @@ def calculate_registry_snapshot(
         values=values,
         computed_provenance=computed_provenance,
         casillas_by_id=casillas_by_id,
-        absent_by_design_casillas=absent_by_design_casillas,
+        absent_by_design_casilla_ids=absent_by_design_casilla_ids,
     )
+    _validate_operand_casilla_refs(observations, known_casilla_ids=frozenset(casillas_by_id))
 
     return RegistryCalculationResult(
         modelo=snapshot.modelo.id,
@@ -374,26 +401,61 @@ def calculate_registry_snapshot(
     )
 
 
+def _validate_operand_casilla_refs(
+    observations: tuple[CasillaObservation, ...],
+    *,
+    known_casilla_ids: frozenset[CasillaId],
+) -> None:
+    for observation in observations:
+        unknown = sorted(set(observation.operand_casilla_refs).difference(known_casilla_ids))
+        if unknown:
+            raise RegistryValidationError(
+                f"formula provenance for casilla {observation.casilla_id!r} references unknown "
+                f"operand casilla ids: {unknown!r}",
+                context={
+                    "casilla_id": observation.casilla_id,
+                    "operand_casilla_refs": ",".join(unknown),
+                },
+            )
+        expected: list[CasillaId] = []
+        for ref in observation.operand_refs:
+            if ref in known_casilla_ids:
+                expected.append(validated_casilla_id(ref, surface="formula operand_ref casilla projection"))
+        expected_tuple = tuple(expected)
+        if observation.operand_casilla_refs != expected_tuple:
+            raise RegistryValidationError(
+                f"formula provenance for casilla {observation.casilla_id!r} has ambiguous operand refs: "
+                f"operand_refs projects to casillas {expected_tuple!r} but operand_casilla_refs is "
+                f"{observation.operand_casilla_refs!r}",
+                context={
+                    "casilla_id": observation.casilla_id,
+                    "expected_operand_casilla_refs": ",".join(expected_tuple),
+                    "actual_operand_casilla_refs": ",".join(observation.operand_casilla_refs),
+                },
+            )
+
+
 def _evaluate_expression(
     expression: FormulaExpression,
     *,
-    values: Mapping[str, Decimal],
-    binding_values: Mapping[str, Decimal],
+    values: Mapping[CasillaId, Decimal],
+    binding_values: Mapping[BindingId, Decimal],
     parameters: Mapping[str, ParameterDefinition],
     date_context: Mapping[str, date],
-    relation_values: Mapping[str, Decimal],
-    unresolved_relation_ids: frozenset[str],
-    unresolved_casillas: set[str],
+    relation_values: Mapping[RelationId, Decimal],
+    unresolved_relation_ids: frozenset[RelationId],
+    unresolved_casilla_ids: set[CasillaId],
     operand_refs: list[str],
+    operand_casilla_refs: list[CasillaId],
     operand_values: list[Decimal],
-    enum_binding_values: Mapping[str, str] | None = None,
-    date_binding_values: Mapping[str, date] | None = None,
+    enum_binding_values: Mapping[BindingId, str] | None = None,
+    date_binding_values: Mapping[BindingId, date] | None = None,
     filing_year: int = 0,
-    text_values: Mapping[str, str] | None = None,
+    text_values: Mapping[CasillaId, str] | None = None,
 ) -> Decimal:
-    resolved_enum_bindings: Mapping[str, str] = enum_binding_values or {}
-    resolved_date_bindings: Mapping[str, date] = date_binding_values or {}
-    resolved_text_values: Mapping[str, str] = text_values or {}
+    resolved_enum_bindings: Mapping[BindingId, str] = enum_binding_values or {}
+    resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or {}
+    resolved_text_values: Mapping[CasillaId, str] = text_values or {}
     if expression.op is None:
         return _evaluate_leaf(
             expression,
@@ -403,8 +465,9 @@ def _evaluate_expression(
             date_context=date_context,
             relation_values=relation_values,
             unresolved_relation_ids=unresolved_relation_ids,
-            unresolved_casillas=unresolved_casillas,
+            unresolved_casilla_ids=unresolved_casilla_ids,
             operand_refs=operand_refs,
+            operand_casilla_refs=operand_casilla_refs,
             operand_values=operand_values,
             date_binding_values=resolved_date_bindings,
             filing_year=filing_year,
@@ -416,8 +479,9 @@ def _evaluate_expression(
         date_context=date_context,
         relation_values=relation_values,
         unresolved_relation_ids=unresolved_relation_ids,
-        unresolved_casillas=unresolved_casillas,
+        unresolved_casilla_ids=unresolved_casilla_ids,
         operand_refs=operand_refs,
+        operand_casilla_refs=operand_casilla_refs,
         operand_values=operand_values,
         enum_binding_values=resolved_enum_bindings,
         date_binding_values=resolved_date_bindings,
@@ -448,24 +512,25 @@ class _EvalContext:
     """Bundles the runtime sinks + maps threaded through every recursive call.
 
     Kept frozen and slot-equivalent so the dispatcher can hand the same
-    context to every per-op evaluator without copying. The two list
-    sinks (operand_refs, operand_values) ARE mutated in place — they
+    context to every per-op evaluator without copying. The three list
+    sinks (operand_refs, operand_casilla_refs, operand_values) ARE mutated in place — they
     accumulate evaluation provenance for the explainability surface.
     """
 
-    values: Mapping[str, Decimal]
-    binding_values: Mapping[str, Decimal]
+    values: Mapping[CasillaId, Decimal]
+    binding_values: Mapping[BindingId, Decimal]
     parameters: Mapping[str, ParameterDefinition]
     date_context: Mapping[str, date]
-    relation_values: Mapping[str, Decimal]
-    unresolved_relation_ids: frozenset[str]
-    unresolved_casillas: set[str]
+    relation_values: Mapping[RelationId, Decimal]
+    unresolved_relation_ids: frozenset[RelationId]
+    unresolved_casilla_ids: set[CasillaId]
     operand_refs: list[str]
+    operand_casilla_refs: list[CasillaId]
     operand_values: list[Decimal]
-    enum_binding_values: Mapping[str, str]
-    date_binding_values: Mapping[str, date]
+    enum_binding_values: Mapping[BindingId, str]
+    date_binding_values: Mapping[BindingId, date]
     filing_year: int
-    text_values: Mapping[str, str] = field(default_factory=dict)
+    text_values: Mapping[CasillaId, str] = field(default_factory=dict)
 
 
 def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
@@ -478,8 +543,9 @@ def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Deci
         date_context=ctx.date_context,
         relation_values=ctx.relation_values,
         unresolved_relation_ids=ctx.unresolved_relation_ids,
-        unresolved_casillas=ctx.unresolved_casillas,
+        unresolved_casilla_ids=ctx.unresolved_casilla_ids,
         operand_refs=ctx.operand_refs,
+        operand_casilla_refs=ctx.operand_casilla_refs,
         operand_values=ctx.operand_values,
         enum_binding_values=ctx.enum_binding_values,
         date_binding_values=ctx.date_binding_values,
@@ -561,8 +627,9 @@ def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext
     the sentinels into BLOCKING findings post-engine.
     """
     args = _m210_resolve_rate_args(expression)
-    tipo_renta = ctx.text_values.get(args.tipo_casilla, "")
-    ctx.operand_refs.append(args.tipo_casilla)
+    tipo_renta = ctx.text_values.get(args.tipo_casilla_id, "")
+    ctx.operand_refs.append(args.tipo_casilla_id)
+    ctx.operand_casilla_refs.append(args.tipo_casilla_id)
     if not tipo_renta:
         ctx.operand_values.append(_M210_DEFERRED_TIPO_SENTINEL)
         return _M210_DEFERRED_TIPO_SENTINEL
@@ -599,7 +666,7 @@ def _m210_resolve_rate_args(expression: FormulaExpression) -> _M210ResolveRateAr
     if len(expression.args) != 4:
         raise RegistryValidationError(f"formula op {op!r} expects 4 args, got {len(expression.args)}")
     tipo_arg, baseline_arg, convenio_arg, country_arg = expression.args
-    if tipo_arg.casilla is None:
+    if tipo_arg.casilla_id is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[0] to be a casilla leaf")
     if baseline_arg.parameter is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[1] to be a parameter leaf")
@@ -608,7 +675,7 @@ def _m210_resolve_rate_args(expression: FormulaExpression) -> _M210ResolveRateAr
     if country_arg.binding is None:
         raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a binding leaf")
     return _M210ResolveRateArgs(
-        tipo_casilla=tipo_arg.casilla,
+        tipo_casilla_id=tipo_arg.casilla_id,
         baseline_parameter=baseline_arg.parameter,
         convenio_parameter=convenio_arg.parameter,
         country_binding=country_arg.binding,
@@ -923,31 +990,33 @@ def _dispatch_named_arithmetic_op(op: str, args: list[Decimal]) -> Decimal:
 def _evaluate_leaf(
     expression: FormulaExpression,
     *,
-    values: Mapping[str, Decimal],
-    binding_values: Mapping[str, Decimal],
+    values: Mapping[CasillaId, Decimal],
+    binding_values: Mapping[BindingId, Decimal],
     parameters: Mapping[str, ParameterDefinition],
     date_context: Mapping[str, date],
-    relation_values: Mapping[str, Decimal],
-    unresolved_relation_ids: frozenset[str],
-    unresolved_casillas: set[str],
+    relation_values: Mapping[RelationId, Decimal],
+    unresolved_relation_ids: frozenset[RelationId],
+    unresolved_casilla_ids: set[CasillaId],
     operand_refs: list[str],
+    operand_casilla_refs: list[CasillaId],
     operand_values: list[Decimal],
-    date_binding_values: Mapping[str, date] | None = None,
+    date_binding_values: Mapping[BindingId, date] | None = None,
     filing_year: int = 0,
 ) -> Decimal:
     if expression.literal is not None:
         return expression.literal
-    if expression.casilla is not None:
-        if expression.casilla not in values:
-            if expression.casilla in unresolved_casillas:
-                raise _UnresolvedFormulaDependencyError((expression.casilla,))
+    if expression.casilla_id is not None:
+        if expression.casilla_id not in values:
+            if expression.casilla_id in unresolved_casilla_ids:
+                raise _UnresolvedFormulaDependencyError((expression.casilla_id,))
             raise RegistryValidationError(
-                f"casilla {expression.casilla!r} referenced before evaluation",
+                f"casilla {expression.casilla_id!r} referenced before evaluation",
                 translated_message="errors.calc.casilla_referenced_before_evaluation",
-                context={"casilla_id": expression.casilla},
+                context={"casilla_id": expression.casilla_id},
             )
-        value = values[expression.casilla]
-        operand_refs.append(expression.casilla)
+        value = values[expression.casilla_id]
+        operand_refs.append(expression.casilla_id)
+        operand_casilla_refs.append(expression.casilla_id)
         operand_values.append(value)
         return value
     if expression.binding is not None:
@@ -1084,20 +1153,87 @@ def _apply_rounding(value: Decimal, rounding: str | None) -> Decimal:
     raise RegistryValidationError(f"unsupported rounding rule {rounding!r}")
 
 
-def _reject_non_decimal(values: Mapping[str, Decimal], label: str) -> None:
-    for key, value in values.items():
+def _reject_non_decimal[Key](items: Mapping[Key, Decimal], label: str) -> None:
+    for key, value in items.items():
         if isinstance(value, bool) or not isinstance(value, Decimal):
             raise RegistryValidationError(f"{label} {key!r} must be a Decimal")
 
 
-def _reject_non_string(values: Mapping[str, str], label: str) -> None:
+def _validated_decimal_input_casilla_ids[InputKey, InputValue](
+    inputs: Mapping[InputKey, InputValue],
+    *,
+    revision: ModeloRevision,
+) -> dict[CasillaId, Decimal]:
+    invalid = tuple(repr(key) for key in inputs if not isinstance(key, str))
+    if invalid:
+        raise RegistryValidationError(
+            f"input keys must be canonical casilla.id strings: {sorted(invalid)!r}",
+            translated_message="errors.calc.unknown_input_casillas",
+            context={"casilla_ids": ",".join(sorted(invalid))},
+        )
+    malformed: list[str] = []
+    canonical_inputs: dict[CasillaId, InputValue] = {}
+    for key in inputs:
+        try:
+            canonical_inputs[validated_casilla_id(key, surface="input casilla.id")] = inputs[key]
+        except ValueError:
+            malformed.append(str(key))
+    if malformed:
+        raise RegistryValidationError(
+            f"input keys must be canonical casilla.id strings: {sorted(malformed)!r}",
+            translated_message="errors.calc.unknown_input_casillas",
+            context={"casilla_ids": ",".join(sorted(malformed))},
+        )
+    unknown = undeclared_casilla_ids(revision, canonical_inputs)
+    if unknown:
+        raise RegistryValidationError.for_unknown_input_casilla_ids(casilla_ids=unknown)
+    resolved_inputs: dict[CasillaId, Decimal] = {}
+    for key, value in canonical_inputs.items():
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise RegistryValidationError(f"input {key!r} must be a Decimal")
+        resolved_inputs[key] = value
+    return resolved_inputs
+
+
+def _validated_text_input_casilla_ids[InputKey, InputValue](
+    text_inputs: Mapping[InputKey, InputValue],
+) -> dict[CasillaId, str]:
+    invalid = tuple(repr(key) for key in text_inputs if not isinstance(key, str))
+    if invalid:
+        raise RegistryValidationError(
+            f"text_input keys must be canonical casilla.id strings: {sorted(invalid)!r}",
+            translated_message="errors.calc.unknown_text_input_casillas",
+            context={"casilla_ids": ",".join(sorted(invalid))},
+        )
+    malformed: list[str] = []
+    canonical_text_inputs: dict[CasillaId, InputValue] = {}
+    for key in text_inputs:
+        try:
+            canonical_text_inputs[validated_casilla_id(key, surface="text_input casilla.id")] = text_inputs[key]
+        except ValueError:
+            malformed.append(str(key))
+    if malformed:
+        raise RegistryValidationError(
+            f"text_input keys must be canonical casilla.id strings: {sorted(malformed)!r}",
+            translated_message="errors.calc.unknown_text_input_casillas",
+            context={"casilla_ids": ",".join(sorted(malformed))},
+        )
+    resolved_text_inputs: dict[CasillaId, str] = {}
+    for key, value in canonical_text_inputs.items():
+        if not isinstance(value, str) or not value:
+            raise RegistryValidationError(f"text_input {key!r} must be a non-empty string")
+        resolved_text_inputs[key] = value
+    return resolved_text_inputs
+
+
+def _reject_non_string[Key](values: Mapping[Key, str], label: str) -> None:
     for key, value in values.items():
         if not isinstance(value, str) or not value:
             raise RegistryValidationError(f"{label} {key!r} must be a non-empty string")
 
 
-def _reject_unknown_external_values(values: Mapping[str, Decimal], known_ids: set[str], label: str) -> None:
-    unknown = sorted(set(values).difference(known_ids))
+def _reject_unknown_external_values[Key](items: Mapping[Key, Decimal], known_ids: set[Key], label: str) -> None:
+    unknown = sorted(set(items).difference(known_ids))
     if unknown:
         raise RegistryValidationError(f"unknown registry {label} ids: {unknown!r}")
 

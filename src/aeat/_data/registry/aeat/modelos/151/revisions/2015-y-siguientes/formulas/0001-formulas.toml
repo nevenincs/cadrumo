@@ -5,9 +5,9 @@
 # sobre la tabla modelo-151.escala-cuota-integra-general.
 [[revisions."2015-y-siguientes".formulas]]
 id = "modelo-151-cuota-integra-general"
-target = "impatriado.cuota-integra-general"
+target_casilla_id = "impatriado.cuota-integra-general"
 expression = { op = "lookup_bracket", args = [
-    { casilla = "impatriado.base-liquidable-general" },
+    { casilla_id = "impatriado.base-liquidable-general" },
     { parameter = "modelo-151.escala-cuota-integra-general" },
 ] }
 rounding = "money-2"
@@ -22,10 +22,10 @@ required_text = ["modelo 151"]
 # (los pagos a cuenta de la letra f), que son distintos de la cuota).
 [[revisions."2015-y-siguientes".formulas]]
 id = "modelo-151-cuota-diferencial"
-target = "impatriado.cuota-diferencial"
+target_casilla_id = "impatriado.cuota-diferencial"
 expression = { op = "subtract", args = [
-    { casilla = "impatriado.cuota-integra-general" },
-    { casilla = "impatriado.retenciones" },
+    { casilla_id = "impatriado.cuota-integra-general" },
+    { casilla_id = "impatriado.retenciones" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-93"]

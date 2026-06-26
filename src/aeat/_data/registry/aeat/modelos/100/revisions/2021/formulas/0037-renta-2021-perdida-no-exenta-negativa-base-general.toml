@@ -1,9 +1,9 @@
 [[revisions."2021".formulas]]
 id = "renta-2021-perdida-no-exenta-negativa-base-general"
-target = "1638"
+target_casilla_id = "1638"
 expression = { op = "min", args = [
     { literal = "0" },
-    { op = "subtract", args = [{ casilla = "1633" }, { casilla = "1637" }] },
+    { op = "subtract", args = [{ casilla_id = "1633" }, { casilla_id = "1637" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

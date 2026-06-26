@@ -1,9 +1,9 @@
 [[revisions."2025".formulas]]
 id = "modelo-131-2025-saldo-negativo-fin-periodo"
-target = "saldo-negativo-fin-periodo"
+target_casilla_id = "saldo-negativo-fin-periodo"
 expression = { op = "max", args = [
     { literal = "0" },
-    { op = "negate", args = [{ casilla = "10" }] },
+    { op = "negate", args = [{ casilla_id = "10" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]

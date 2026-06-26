@@ -21,9 +21,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations.registry import CasillaId, validated_casilla_id
 from ...calculations.registry._schema import RegistrySnapshotRef
 from .._repository import ModeloDraftRepository
 from .._schema import (
@@ -38,6 +40,19 @@ from .._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "filing-runtime"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"secure-storage roundtrip fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.devengado")
+_IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
+_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_IVA_RESULTADO_OPERANDS = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
 
 
 def _populated_draft() -> ModeloDraft:
@@ -65,26 +80,26 @@ def _populated_draft() -> ModeloDraft:
         status=ModeloDraftStatus.BORRADOR,
         values=(
             ModeloValue(
-                casilla_id="iva.devengado",
+                casilla_id=_IVA_DEVENGADO_CASILLA,
                 value=Decimal("20000.00"),
                 kind=ModeloValueKind.LITERAL,
                 source="user-supplied",
             ),
             ModeloValue(
-                casilla_id="iva.resultado-regimen-general",
+                casilla_id=_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
                 value=Decimal("12345.67"),
                 kind=ModeloValueKind.COMPUTED,
                 source="computed from iva.devengado - iva.deducible",
-                formula_trace=("iva.devengado", "iva.deducible"),
+                formula_trace_casilla_ids=_IVA_RESULTADO_OPERANDS,
             ),
         ),
         binding_values=(),
         casilla_provenance=(
             ModeloCasillaProvenance(
-                casilla_id="iva.devengado",
+                casilla_id=_IVA_DEVENGADO_CASILLA,
                 formula_id="iva-cuota-devengada-formula",
-                legal_refs=("LIVA.art-92",),
-                source_refs=("AEAT.IVA.2025.casilla-01",),
+                legal_refs=("ley-37-1992:art-92",),
+                source_refs=("aeat-iva-2025:casilla-01",),
             ),
         ),
         findings=(),
@@ -117,7 +132,7 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
                 ModeloDraft.
 
     If any layer drops a field on the typed envelope (subject_tax_id,
-    snapshot_ref, formula_trace on a ModeloValue, the period or
+    snapshot_ref, formula_trace_casilla_ids on a ModeloValue, the period or
     revision_id of the snapshot_ref nested model, etc.), the strict
     pydantic equality fails. No mocks; the encryption hook is driven
     by the active bucket runtime.
@@ -141,9 +156,9 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     assert loaded.snapshot_ref.modelo_year == 2025
     assert loaded.snapshot_ref.period == "1T"
     computed = next(v for v in loaded.values if v.kind is ModeloValueKind.COMPUTED)
-    assert computed.formula_trace == ("iva.devengado", "iva.deducible")
+    assert computed.formula_trace_casilla_ids == _IVA_RESULTADO_OPERANDS
     assert len(loaded.casilla_provenance) == 1
-    assert loaded.casilla_provenance[0].casilla_id == "iva.devengado"
+    assert loaded.casilla_provenance[0].casilla_id == _IVA_DEVENGADO_CASILLA
     assert loaded.casilla_provenance[0].formula_id == "iva-cuota-devengada-formula"
     assert loaded.notes == "Draft pending operator review"
     assert loaded.approved_at == datetime(2026, 5, 25, 14, 30, tzinfo=UTC)
@@ -151,6 +166,19 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     assert loaded.review_checksum == "a" * 64
     assert loaded.approval_basis is not None
     assert loaded.approval_basis.draft_payload_fingerprint == "b" * 64
+
+
+def test_modelo_value_rejects_legacy_formula_trace_key() -> None:
+    with pytest.raises(ValidationError, match="formula_trace"):
+        ModeloValue.model_validate(
+            {
+                "casilla_id": _IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
+                "value": Decimal("12345.67"),
+                "kind": ModeloValueKind.COMPUTED,
+                "source": "computed from iva.devengado - iva.deducible",
+                "formula_trace": _IVA_RESULTADO_OPERANDS,
+            },
+        )
 
 
 def test_calculation_revision_observations_survive_encrypted_storage(
@@ -184,20 +212,21 @@ def test_calculation_revision_observations_survive_encrypted_storage(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         now = datetime.now(UTC).replace(microsecond=0)
         observation = CasillaObservation(
-            casilla_id="iva.resultado-regimen-general",
+            casilla_id=_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
             value=Decimal("12345.67"),
             formula_id="iva.formula.resultado",
-            operand_refs=("iva.devengado", "iva.deducible"),
+            operand_refs=_IVA_RESULTADO_OPERANDS,
+            operand_casilla_refs=_IVA_RESULTADO_OPERANDS,
             operand_values=(Decimal("20000.00"), Decimal("7654.33")),
-            legal_refs=("LIVA.art-94",),
-            source_refs=("AEAT.IVA.2025",),
+            legal_refs=("ley-37-1992:art-94",),
+            source_refs=("aeat-iva-2025",),
         )
         work_unit_id = "9" * 64
-        casilla_values = {"iva.resultado-regimen-general": Decimal("12345.67")}
+        casilla_values: dict[CasillaId, Decimal] = {_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("12345.67")}
         revision = CalculationRevision(
             calculation_revision_id=derive_calculation_revision_id(
                 work_unit_id=work_unit_id,
-                inputs_snapshot={},
+                input_values_by_casilla_id={},
                 binding_overrides={},
                 casilla_values=casilla_values,
             ),

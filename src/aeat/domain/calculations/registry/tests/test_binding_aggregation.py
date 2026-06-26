@@ -49,7 +49,7 @@ def _binding(*, source: str, op: BindingAggregationOp | None) -> DataBindingDefi
         {
             "id": f"test-binding-aggregation-{source}",
             "source": source,
-            "selector": {"target_casilla": "01"},
+            "selector": {"target_casilla_id": "01"},
             "aggregation": None if op is None else BindingAggregation(op=op),
             "legal_refs": (_DUMMY_LEGAL_ID,),
             "source_refs": (_DUMMY_SOURCE_ID,),

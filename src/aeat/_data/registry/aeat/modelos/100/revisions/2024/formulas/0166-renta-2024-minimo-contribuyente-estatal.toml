@@ -1,6 +1,6 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-minimo-contribuyente-estatal"
-target = "0511"
+target_casilla_id = "0511"
 # Art. 57.1.b LIRPF: mínimo del contribuyente = base + incremento por edad al final
 # del período impositivo (31 de diciembre del ejercicio).
 # Edad 65–74: +1.150 €  (Art. 57.1.b primer tramo)

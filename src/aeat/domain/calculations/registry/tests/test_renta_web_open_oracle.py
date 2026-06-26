@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from .....core.config import Settings
 from .....tests.aeat_literal_fixtures import aeat_host
 from .._errors import RegistryValidationError
+from .._ids import CasillaId, validated_casilla_id
 from .._live_parity import ParityFieldComparison
 from .._remote_state_guard import (
     RemoteOperation,
@@ -24,6 +25,7 @@ from .._renta_web_open_oracle import (
     _overall_verdict,
     _parse_decimal_text,
     equivalent_renta_web_open_value,
+    validate_renta_web_open_expected_casilla_ids,
 )
 from .._schema import LiveCrossReferenceDecision
 
@@ -31,6 +33,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SEDE_HOST = aeat_host("sede")
 _WWW2_HOST = aeat_host("www2")
+_RENTA_TRABAJO_CASILLA: CasillaId = validated_casilla_id("0180", surface="_RENTA_TRABAJO_CASILLA")
+_RENTA_COTIZACIONES_CASILLA: CasillaId = validated_casilla_id("0224", surface="_RENTA_COTIZACIONES_CASILLA")
+_RENTA_REDUCCION_CASILLA: CasillaId = validated_casilla_id("0235", surface="_RENTA_REDUCCION_CASILLA")
+_RENTA_RESULTADO_CASILLA: CasillaId = validated_casilla_id("0670", surface="_RENTA_RESULTADO_CASILLA")
+_RENTA_OVERRIDE_CASILLA: CasillaId = validated_casilla_id("0511", surface="_RENTA_OVERRIDE_CASILLA")
+_RENTA_SCRAPE_CASILLA: CasillaId = validated_casilla_id("0695", surface="_RENTA_SCRAPE_CASILLA")
+_RENTA_OVERRIDE_DISPLAY_NUMBER = "0528"
+_RENTA_SCRAPE_DISPLAY_NUMBER = "0695"
+
+
+def _casilla_id_from_payload(value: object) -> CasillaId:
+    return validated_casilla_id(value, surface="test casilla id")
 
 
 def _open_simulator_policy() -> RemoteStateGuardPolicy:
@@ -82,7 +96,11 @@ def test_landing_url_targets_aeat_sede_documentation() -> None:
 
 def test_planned_operations_lists_get_navigate_fill_scrape_and_discard() -> None:
     oracle = RentaWebOpenOracle()
-    expected = {"0180": object(), "0224": object(), "0235": object()}
+    expected = {
+        _RENTA_TRABAJO_CASILLA: object(),
+        _RENTA_COTIZACIONES_CASILLA: object(),
+        _RENTA_REDUCCION_CASILLA: object(),
+    }
     plan = oracle.planned_operations(b"", expected=expected)
     actions = tuple(op.action for op in plan if op.action is not None)
     assert actions == ("requires-renta-web-open-driver",)
@@ -94,14 +112,48 @@ def test_planned_operations_lists_get_navigate_fill_scrape_and_discard() -> None
 def test_live_driver_plans_casilla_override_and_scrape_navigation() -> None:
     from .....adapters.outbound.aeat.sede._renta_web_open import RentaWebOpenSedeDriver
 
-    payload = b'{"casilla_overrides": {"0528": "5000,00"}, "scrape_casillas": ["0695"]}'
-    plan = RentaWebOpenSedeDriver().planned_operations(payload, expected={"0180": object()})
+    payload = json.dumps(
+        {
+            "display_overrides_by_casilla_id": {
+                _RENTA_OVERRIDE_CASILLA: {
+                    "display_number": _RENTA_OVERRIDE_DISPLAY_NUMBER,
+                    "value": "5000,00",
+                },
+            },
+            "scrape_display_numbers_by_casilla_id": {
+                _RENTA_SCRAPE_CASILLA: _RENTA_SCRAPE_DISPLAY_NUMBER,
+            },
+        },
+    ).encode()
+    plan = RentaWebOpenSedeDriver().planned_operations(payload, expected={_RENTA_SCRAPE_CASILLA: object()})
     actions = tuple(op.action for op in plan if op.kind == "browser_action")
 
-    assert "navigate-to-casilla:0528" in actions
-    assert "apply-casilla-override:0528" in actions
+    assert f"navigate-to-display-number:{_RENTA_OVERRIDE_DISPLAY_NUMBER}" in actions
+    assert f"apply-display-override:{_RENTA_OVERRIDE_CASILLA}" in actions
     assert "navigate-to-resumen" in actions
-    assert "navigate-to-casilla:0695" in actions
+    assert f"navigate-to-display-number:{_RENTA_SCRAPE_DISPLAY_NUMBER}" in actions
+
+
+def test_live_driver_refuses_payload_without_canonical_scrape_map() -> None:
+    from .....adapters.outbound.aeat.sede._renta_web_open import RentaWebOpenSedeDriver
+
+    with pytest.raises(RegistryValidationError, match=r"keyed by canonical casilla\.id"):
+        RentaWebOpenSedeDriver().planned_operations(b"{}", expected={_RENTA_TRABAJO_CASILLA: object()})
+
+
+def test_live_driver_refuses_expected_casilla_not_declared_for_scraping() -> None:
+    from .....adapters.outbound.aeat.sede._renta_web_open import RentaWebOpenSedeDriver
+
+    payload = json.dumps(
+        {
+            "scrape_display_numbers_by_casilla_id": {
+                _RENTA_SCRAPE_CASILLA: _RENTA_SCRAPE_DISPLAY_NUMBER,
+            },
+        },
+    ).encode()
+
+    with pytest.raises(RegistryValidationError, match=r"does not declare scrape coordinates"):
+        RentaWebOpenSedeDriver().planned_operations(payload, expected={_RENTA_TRABAJO_CASILLA: object()})
 
 
 def test_renta_policy_rejects_unclassified_browser_action() -> None:
@@ -123,17 +175,49 @@ def test_renta_policy_rejects_unclassified_browser_action() -> None:
 
 
 def test_planned_operations_rejects_empty_expected_mapping() -> None:
-    with pytest.raises(Exception, match="at least one expected casilla"):
+    with pytest.raises(RegistryValidationError, match="at least one expected casilla"):
         RentaWebOpenOracle().planned_operations(b"", expected={})
+
+
+def test_expected_casilla_validator_rejects_non_string_keys() -> None:
+    with pytest.raises(RegistryValidationError):
+        validate_renta_web_open_expected_casilla_ids({1: Decimal("0")})
+
+
+def test_planned_operations_rejects_label_keyed_expected_mapping() -> None:
+    with pytest.raises(RegistryValidationError, match="canonical casilla\\.id"):
+        RentaWebOpenOracle().planned_operations(
+            b"",
+            expected={"Resultado de la declaracion": "0,00"},
+        )
 
 
 def test_verify_payload_without_driver_is_unverifiable_not_live_implementation() -> None:
     oracle = RentaWebOpenOracle()
     policy = _open_simulator_policy()
-    result = oracle.verify_payload(policy, b"", expected={"0180": object()})
+    result = oracle.verify_payload(policy, b"", expected={_RENTA_TRABAJO_CASILLA: object()})
 
     assert result.verdict == "unverifiable"
     assert "browser driver is not configured" in result.narrative
+
+
+def test_verify_payload_rejects_label_keyed_expected_mapping_before_replay() -> None:
+    from .._renta_web_open_oracle import RentaWebOpenReplayDriver
+
+    raw = json.dumps(
+        {
+            "observed": {"Resultado de la declaracion": "0,00"},
+            "observed_by_casilla_id": {_RENTA_RESULTADO_CASILLA: "0,00"},
+        },
+    ).encode()
+    oracle = RentaWebOpenOracle(driver=RentaWebOpenReplayDriver())
+
+    with pytest.raises(RegistryValidationError, match="canonical casilla\\.id"):
+        oracle.verify_payload(
+            _open_simulator_policy(),
+            raw,
+            expected={"Resultado de la declaracion": "0,00"},
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -250,22 +334,51 @@ def test_replay_payload_roundtrip_via_renta_web_open_driver() -> None:
 
     raw = json.dumps(
         {
-            "observed": {"0180": "12345.67", "0224": "0.00"},
+            "observed": {"Resultado de la declaracion": "legacy-label-value"},
+            "observed_by_casilla_id": {
+                _RENTA_TRABAJO_CASILLA: "12345.67",
+                _RENTA_COTIZACIONES_CASILLA: "0.00",
+            },
             "raw_evidence_locator": "corpus/aeat_official/renta_web_open/sample.json",
         },
     ).encode()
 
     # Direct schema validation — strict, frozen, extra=forbid.
     payload = ReplayPayload.model_validate(json.loads(raw))
-    assert payload.observed == {"0180": "12345.67", "0224": "0.00"}
+    expected_by_casilla: dict[CasillaId, str] = {
+        _RENTA_TRABAJO_CASILLA: "12345.67",
+        _RENTA_COTIZACIONES_CASILLA: "0.00",
+    }
+    assert payload.observed == {"Resultado de la declaracion": "legacy-label-value"}
+    assert {
+        _casilla_id_from_payload(casilla_id): value
+        for casilla_id, value in payload.observed_by_casilla_id.items()
+    } == expected_by_casilla
     assert payload.raw_evidence_locator == "corpus/aeat_official/renta_web_open/sample.json"
 
     # Drive through the production reader path.
     driver = RentaWebOpenReplayDriver()
     observation = driver.collect_observation(raw, expected={})
 
-    assert observation.values == {"0180": "12345.67", "0224": "0.00"}
+    assert {
+        _casilla_id_from_payload(casilla_id): value
+        for casilla_id, value in observation.values.items()
+    } == expected_by_casilla
     assert observation.raw_evidence_locator == payload.raw_evidence_locator
+
+
+def test_renta_web_open_replay_driver_requires_observed_by_casilla_id() -> None:
+    from .._renta_web_open_oracle import RentaWebOpenReplayDriver
+
+    raw = json.dumps(
+        {
+            "observed": {"Resultado de la declaracion": "0,00"},
+            "raw_evidence_locator": "corpus/aeat_official/renta_web_open/sample.json",
+        },
+    ).encode()
+
+    with pytest.raises(RegistryValidationError, match="observed_by_casilla_id"):
+        RentaWebOpenReplayDriver().collect_observation(raw, expected={})
 
 
 def test_replay_payload_strict_rejects_extra_fields_renta_web_open() -> None:
@@ -277,10 +390,38 @@ def test_replay_payload_strict_rejects_extra_fields_renta_web_open() -> None:
         ReplayPayload.model_validate({"observed": {}, "stray_key": "oops"})
 
 
+def test_live_payload_strict_rejects_legacy_scrape_field_names() -> None:
+    from .._renta_web_open_oracle import parse_renta_web_open_live_payload
+
+    raw = json.dumps(
+        {
+            "casilla_overrides": {"0528": "5000,00"},
+            "scrape_casillas": ["0695"],
+        },
+    ).encode()
+
+    with pytest.raises(ValidationError, match="Extra"):
+        parse_renta_web_open_live_payload(raw)
+
+
+def test_live_payload_rejects_display_number_keyed_overrides() -> None:
+    from .._renta_web_open_oracle import parse_renta_web_open_live_payload
+
+    raw = json.dumps(
+        {
+            "display_overrides": {"0528": "5000,00"},
+            "scrape_display_numbers_by_casilla_id": {"0695": "0695"},
+        },
+    ).encode()
+
+    with pytest.raises(ValidationError, match="Extra"):
+        parse_renta_web_open_live_payload(raw)
+
+
 def test_replay_payload_strict_rejects_non_string_value_in_observed_renta_web_open() -> None:
     """Mapping[str, str] under strict mode rejects non-string values."""
 
     from .._live_parity import ReplayPayload
 
     with pytest.raises(ValidationError):
-        ReplayPayload.model_validate({"observed": {"0180": 12345.67}})
+        ReplayPayload.model_validate({"observed": {"Resultado de la declaracion": 12345.67}})

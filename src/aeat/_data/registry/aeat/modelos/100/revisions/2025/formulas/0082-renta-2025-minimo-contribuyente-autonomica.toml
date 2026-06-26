@@ -1,6 +1,6 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-minimo-contribuyente-autonomica"
-target = "0512"
+target_casilla_id = "0512"
 expression = { op = "lookup_parameter_by_entity_type", args = [
     { literal = "0" },
     { binding = "renta-2025-profile-tax-residence-ccaa" },

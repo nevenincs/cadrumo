@@ -8,7 +8,7 @@
 # casillas belong to foreign modelos and are excluded.
 #
 # Derived off-load-path from the modelo's calculation surface, keyed
-# on each closure casilla's own registry (segmento, number) identity.
+# on each closure casilla's canonical casilla_id plus reviewed segment/number metadata.
 # A casilla the revision declares but the manifest does not list (a
 # pure data-entry field that feeds no calculation) is not a gate
 # failure. The off-load-path drift re-verification test re-derives
@@ -20,13 +20,17 @@ legal_refs = ["ley-58-2003:art-93", "orden-eha-769-2010:art-1", "orden-hac-174-2
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.numero-operadores"
 number = "138-146"
 
 [[revisions."2020-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.importe-operaciones"
 number = "147-161"
 
 [[revisions."2020-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.numero-rectificaciones"
 number = "162-170"
 
 [[revisions."2020-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.importe-rectificaciones"
 number = "171-185"

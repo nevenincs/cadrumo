@@ -8,10 +8,13 @@ from pathlib import Path
 
 import pytest
 from openpyxl import Workbook, load_workbook
+from pydantic import ValidationError
 
 from ......core.errors import ERROR_REGISTRY, get_registered_error_code
 from ......core.resources import bundled_path
+from ..._ids import CasillaId, validated_casilla_id
 from ..._loader import load_registry_tree
+from ..._parity_tapes import ParityScenario
 from ..._schema import RegistrySnapshot
 from ..._snapshot import build_snapshot
 from ..._workbook_parity import (
@@ -33,6 +36,8 @@ from ..._workbook_parity import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M130_CASILLA_19: CasillaId = validated_casilla_id("19", surface="_M130_CASILLA_19")
 
 
 def _write_formula_workbook(path: Path) -> None:
@@ -212,7 +217,7 @@ def test_registry_workbook_parity_rejects_record_design_as_calculation_oracle(tm
             workbook_path=workbook_path,
             workbook=workbook,
             output_cells={"casilla-19": WorkbookCellRef(sheet="Modelo", coordinate="B1")},
-            registry_outputs={"casilla-19": "19"},
+            registry_outputs={"casilla-19": _M130_CASILLA_19},
             date_context={"filing_period": date(2026, 3, 31)},
         )
 
@@ -302,6 +307,65 @@ def test_compare_registry_to_workbook_reports_mismatch(tmp_path: Path) -> None:
     assert report.comparisons[0].expected_workbook_value == Decimal("31")
     assert report.comparisons[0].legal_refs == ("ley-37-1992:art-90",)
     assert report.comparisons[0].source_refs == ("aeat-dr-303-2026",)
+
+
+def test_compare_registry_to_workbook_rejects_missing_registry_output(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"
+    _write_formula_workbook(workbook_path)
+    workbook = scan_workbook(workbook_path, root=tmp_path)
+    synthetic = SyntheticInputSet(
+        id="synthetic-303-basic",
+        modelo="303",
+        revision="2026",
+        values=(
+            SyntheticInputValue(
+                id="base",
+                value=Decimal("10"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
+                registry_binding="iva.base",
+            ),
+        ),
+    )
+
+    with pytest.raises(Exception, match="output ids must match exactly"):
+        compare_registry_to_workbook(
+            synthetic_input=synthetic,
+            workbook=workbook,
+            runner=verify_workbook_backend(tmp_path, scan_limit=1).runner,
+            expected_workbook_values={"result": None},
+            actual_registry_values={},
+            output_cells={"result": WorkbookCellRef(sheet="Modelo", coordinate="B1", formula="=A1+A2")},
+            registry_snapshot_id="303:2026:1T",
+        )
+
+
+def test_parity_scenario_rejects_malformed_output_identifier(tmp_path: Path) -> None:
+    synthetic = SyntheticInputSet(
+        id="modelo-130-basic",
+        modelo="130",
+        revision="2019-y-siguientes",
+        values=(
+            SyntheticInputValue(
+                id="casilla-01",
+                value=Decimal("10000"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
+                registry_binding="01",
+            ),
+        ),
+    )
+
+    with pytest.raises(ValidationError):
+        ParityScenario(
+            id="modelo-130-basic",
+            modelo="130",
+            revision="2019-y-siguientes",
+            filing_year=2026,
+            period="1T",
+            workbook_path=tmp_path / "modelo-130.xlsx",
+            synthetic_input=synthetic,
+            output_cells={"bad output": WorkbookCellRef(sheet="Modelo", coordinate="B1")},
+            registry_outputs={"bad output": _M130_CASILLA_19},
+        )
 
 
 def test_verify_workbook_backend_reports_existing_backend(tmp_path: Path) -> None:

@@ -1,9 +1,9 @@
 [[revisions."2021".formulas]]
 id = "renta-2021-cuota-base-liquidable-ahorro-autonomica"
-target = "0541"
+target_casilla_id = "0541"
 expression = { op = "subtract", args = [
-    { casilla = "0537" },
-    { casilla = "0539" },
+    { casilla_id = "0537" },
+    { casilla_id = "0539" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-76"]

@@ -8,9 +8,9 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
+from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
-    CasillaObservation,
-    RegistryModeloObservation,
+    CasillaId,
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
@@ -78,8 +78,8 @@ def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
     )
 
     modelo_123_outputs = {casilla.id for casilla in snapshot_123.revision.casillas}
-    relation_source_outputs = {relation.source_output for relation in snapshot.revision.relations}
-    assert relation_source_outputs <= modelo_123_outputs
+    relation_source_casilla_ids = {relation.source_casilla_id for relation in snapshot.revision.relations}
+    assert relation_source_casilla_ids <= modelo_123_outputs
     assert {tuple(relation.source_periods) for relation in snapshot.revision.relations} == {("1T", "2T", "3T", "4T")}
 
 
@@ -100,20 +100,20 @@ def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -
         filing_year=2025,
         period="1T",
     )
-    source_casillas = {casilla.id: casilla for casilla in snapshot_123.revision.casillas}
+    source_casilla_ids = {casilla.id: casilla for casilla in snapshot_123.revision.casillas}
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
-    observed_by_period: dict[str, dict[str, Decimal]] = {}
+    observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}
     for requirement in requirements:
-        source_casilla = source_casillas[requirement.source_output]
+        source_casilla = source_casilla_ids[requirement.source_casilla_id]
         for index, period in enumerate(requirement.periods):
             value = _value_for(source_casilla.data_type, index)
-            observed_by_period.setdefault(period, {})[requirement.source_output] = value
+            observed_by_period.setdefault(period, {})[requirement.source_casilla_id] = value
     observations = tuple(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="123",
             filing_year=2025,
             period=period,
-            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
+            casilla_values=casilla_values,
         )
         for period, casilla_values in sorted(observed_by_period.items())
     )
@@ -130,7 +130,7 @@ def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -
         relation_values=relation_values,
     )
 
-    entries_by_target = {entry.target: entry for entry in result.entries}
+    entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
     assert "modelo-193-rel-123-perceptores-anual" in entries_by_target["decl.total-perceptores"].operand_refs
     assert "modelo-193-rel-123-base-anual" in entries_by_target["decl.base-total"].operand_refs
     assert "modelo-193-rel-123-retenciones-anual" in entries_by_target["decl.retenciones-total"].operand_refs

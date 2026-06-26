@@ -5,15 +5,16 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import resources
+from .._ids import BindingId
 from .._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _modelo_100_bindings() -> dict[str, DataBindingDefinition]:
+def _modelo_100_bindings() -> dict[BindingId, DataBindingDefinition]:
     authority = resources().modelos.authority
     snapshot = authority.snapshot("100", filing_year=2025, period="0A")
-    return {str(binding.id): binding for binding in snapshot.revision.bindings}
+    return {binding.id: binding for binding in snapshot.revision.bindings}
 
 
 def test_data_binding_definition_accepts_explicit_aeat_prefilled_marker() -> None:

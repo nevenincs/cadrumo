@@ -22,6 +22,7 @@ from ._binding_selector_utils import (
 )
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
+from ._ids import BindingId
 from ._schema import DataBindingDefinition, ModeloRevision
 
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
@@ -115,7 +116,7 @@ class InvoiceObservationRequirement(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    binding_ids: tuple[str, ...] = Field(min_length=1)
+    binding_ids: tuple[BindingId, ...] = Field(min_length=1)
     claves: tuple[str, ...] = ()
     rectification_scope: _RectificationScope = "any"
     iva_regime: str | None = None
@@ -171,7 +172,7 @@ def invoice_binding_requirements(
     """
     grouped: dict[
         tuple[tuple[str, ...], _RectificationScope, str | None],
-        set[str],
+        set[BindingId],
     ] = {}
     for binding in revision.bindings:
         if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
@@ -343,7 +344,7 @@ def resolve_invoice_family_scalar_values(
     source_kinds: frozenset[str] | frozenset[object],
     validate_selector: Callable[[DataBindingDefinition], _InvoiceSelector],
     observations_for_binding: Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]],
-) -> dict[str, Decimal]:
+) -> dict[BindingId, Decimal]:
     """Resolve scalar bindings on a :class:`ModeloRevision` for one invoice family into Decimal aggregates.
 
     Shared core for both the invoice and counterpart scalar resolvers; the two
@@ -352,7 +353,7 @@ def resolve_invoice_family_scalar_values(
     matched by ``source_kind`` and converted from counterpart observations.
     Row-producer bindings (``fact == "row_field"``) are skipped here.
     """
-    resolved: dict[str, Decimal] = {}
+    resolved: dict[BindingId, Decimal] = {}
     for binding in revision.bindings:
         if binding.source not in source_kinds:
             continue
@@ -371,7 +372,7 @@ def resolve_invoice_family_row_values(
     validate_selector: Callable[[DataBindingDefinition], _InvoiceSelector],
     observations_for_binding: Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]],
     cohort_by_source: bool,
-) -> dict[tuple[str, int], Decimal | str]:
+) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer bindings on a :class:`ModeloRevision` for one invoice family into per-row values.
 
     Shared core for both the invoice and counterpart row resolvers. Bindings
@@ -381,7 +382,7 @@ def resolve_invoice_family_row_values(
     the cohort key (``cohort_by_source = True``) so a different counterpart
     source kind does not share rows; the invoice family does not.
     """
-    resolved: dict[tuple[str, int], Decimal | str] = {}
+    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     cohorts: dict[
         tuple[object, _InvoiceGrouping, _RectificationScope, tuple[str, ...], str | None],
         list[tuple[DataBindingDefinition, _InvoiceSelector]],
@@ -426,7 +427,7 @@ def resolve_invoice_family_row_values(
 def resolve_invoice_binding_values(
     revision: ModeloRevision,
     observations: Iterable[InvoiceObservation],
-) -> dict[str, Decimal]:
+) -> dict[BindingId, Decimal]:
     """Resolve scalar invoice-source bindings into Decimal aggregates.
 
     Row-producer bindings (``aggregation.op == "rows"``) are skipped here; they
@@ -448,7 +449,7 @@ def resolve_invoice_binding_values(
 def resolve_invoice_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[InvoiceObservation],
-) -> dict[tuple[str, int], Decimal | str]:
+) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer invoice bindings into per-row indexed values.
 
     Bindings with ``aggregation.op == "rows"`` aggregate observations into rows

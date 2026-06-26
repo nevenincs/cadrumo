@@ -188,12 +188,13 @@ class CasillaConstraints(RegistryModel):
 class CasillaDefinition(RegistryModel):
     """A single AEAT casilla within a modelo revision.
 
-    A casilla's identity is the pair ``(segmento, number)``. For
+    ``id`` is the canonical reference identity. ``number`` and
+    ``segmento`` are reviewed AEAT record-design metadata. For
     single-segment modelos ``segmento`` is unset and ``number`` alone is
     unique within the revision. Multi-segment AEAT modelos (e.g. Modelo
     200) reuse the same five-digit ``number`` across distinct record
     segments with a different meaning in each; those casillas carry the
-    AEAT record-segment code in ``segmento`` to disambiguate.
+    AEAT record-segment code in ``segmento`` to disambiguate metadata.
     """
 
     id: CasillaId
@@ -205,8 +206,8 @@ class CasillaDefinition(RegistryModel):
         description=(
             "AEAT record-segment code (e.g. 'DP200014') for multi-segment "
             "modelos that reuse a casilla number across record segments. "
-            "Unset for single-segment modelos; a casilla's identity is the "
-            "pair (segmento, number)."
+            "Unset for single-segment modelos; references still use canonical "
+            "casilla.id, not this metadata pair."
         ),
     )
     label: str
@@ -324,19 +325,13 @@ class CasillaDefinition(RegistryModel):
 
 
 class CalculationCompletenessCasilla(RegistryModel):
-    """One required ``(segmento, number)`` casilla in a calculation-completeness manifest.
+    """One required canonical ``casilla.id`` in a calculation-completeness manifest.
 
-    A casilla's identity is the pair ``(segmento, number)``. A
-    single-segment modelo leaves ``segmento`` unset, so the pair degrades
-    to ``(None, number)`` and the manifest enumerates bare numbers.
-
-    ``number`` carries the registry ``number`` of the closure casilla
-    verbatim. Only Modelo 200's casilla numbers are five-digit AEAT
-    Diseño tags; the other calculation-bearing modelos identify casillas
-    by semantic slug (``iva.cuota-devengada-total``) or short ordinal
-    (``01``-``19``), so the manifest carries whatever vocabulary the
-    modelo's registry uses. The field is unbounded above to match the
-    unconstrained ``CasillaDefinition.number``.
+    ``casilla_id`` is the authoritative reference key consumed by the
+    validator. ``number`` and ``segmento`` remain official record-design
+    metadata for drift review: the validator cross-checks them against
+    the referenced casilla, but no consumer may resolve the manifest by
+    those metadata fields.
 
     The manifest enumerates only the casillas inside a modelo's
     *calculation closure* — formula targets, the casillas referenced
@@ -346,6 +341,7 @@ class CalculationCompletenessCasilla(RegistryModel):
     from this required set.
     """
 
+    casilla_id: CasillaId
     number: str = Field(min_length=1)
     segmento: str | None = Field(
         default=None,
@@ -358,28 +354,32 @@ class CalculationCompletenessCasilla(RegistryModel):
         ),
     )
 
-    def identity(self) -> tuple[str | None, str]:
-        """Return the ``(segmento, number)`` identity pair for this casilla."""
+    def record_design_metadata(self) -> tuple[str | None, str]:
+        """Return the reviewed ``(segmento, number)`` metadata pair."""
         return (self.segmento, self.number)
+
+    def manifest_key(self) -> tuple[str, str | None, str]:
+        """Return the canonical id plus its reviewed record-design metadata."""
+        return (self.casilla_id, self.segmento, self.number)
 
 
 class CalculationCompletenessManifest(RegistryModel):
     """The required calculation-closure casilla set for a modelo revision.
 
-    Enumerates the ``(segmento, number)`` casillas in a modelo's
+    Enumerates the canonical ``casilla.id`` values in a modelo's
     *calculation closure* — the casillas the cross-connecting
     calculation engine traverses: every formula target, every casilla
     referenced inside a formula expression, every binding and relation
     endpoint casilla, and every verification-expectation operand. It is
     derived from the official AEAT Diseño de Registros *intersected
     with* the modelo's calculation surface — Diseño-authoritative on
-    each casilla's segment, number, and label, but bounded to what the
-    engine needs (an off-load-path derivation step, never parsed on the
-    snapshot-build hot path) and checked into the registry as reviewed
-    data.
+    each casilla's segment, number, and label, but the checked-in
+    reference key is the registry's canonical ``casilla.id``. The
+    segment/number metadata is retained as reviewed evidence and
+    cross-checked against that id.
 
     The registry validator enforces ``manifest-required ⊆ declared``
-    plus a ``(segmento, number)`` identity check and a
+    by canonical ``casilla.id`` plus a segment/number metadata check and a
     ``legal_refs`` / ``source_refs`` grounding check on each required
     casilla. A casilla the revision declares but the manifest does not
     list (a pure accounting-statement field) is *not* a failure.
@@ -404,15 +404,22 @@ class CalculationCompletenessManifest(RegistryModel):
     def _validate_manifest(self) -> CalculationCompletenessManifest:
         if not self.casillas:
             raise RegistryValidationError("calculation-completeness manifest must enumerate at least one casilla")
-        identities = [casilla.identity() for casilla in self.casillas]
-        duplicates = sorted({pair for pair in identities if identities.count(pair) > 1})
+        casilla_ids = [casilla.casilla_id for casilla in self.casillas]
+        duplicate_ids = sorted({casilla_id for casilla_id in casilla_ids if casilla_ids.count(casilla_id) > 1})
+        if duplicate_ids:
+            rendered_ids = ", ".join(repr(casilla_id) for casilla_id in duplicate_ids)
+            raise RegistryValidationError(
+                f"calculation-completeness manifest declares duplicate casilla ids: {rendered_ids}",
+            )
+        metadata_pairs = [casilla.record_design_metadata() for casilla in self.casillas]
+        duplicates = sorted({pair for pair in metadata_pairs if metadata_pairs.count(pair) > 1})
         if duplicates:
             rendered = ", ".join(
                 f"{number!r}" if segmento is None else f"{number!r} within segmento {segmento!r}"
                 for segmento, number in duplicates
             )
             raise RegistryValidationError(
-                f"calculation-completeness manifest declares duplicate casilla identities: {rendered}",
+                f"calculation-completeness manifest declares duplicate casilla record-design metadata: {rendered}",
             )
         if self.source_ref not in self.source_refs:
             raise RegistryValidationError(
@@ -428,9 +435,13 @@ class CalculationCompletenessManifest(RegistryModel):
             )
         return self
 
-    def identities(self) -> frozenset[tuple[str | None, str]]:
-        """Return the frozenset of required ``(segmento, number)`` identity pairs."""
-        return frozenset(casilla.identity() for casilla in self.casillas)
+    def casilla_ids(self) -> frozenset[CasillaId]:
+        """Return the frozenset of required canonical ``casilla.id`` values."""
+        return frozenset(casilla.casilla_id for casilla in self.casillas)
+
+    def manifest_keys(self) -> frozenset[tuple[str, str | None, str]]:
+        """Return canonical ids paired with their reviewed record-design metadata."""
+        return frozenset(casilla.manifest_key() for casilla in self.casillas)
 
 
 class AlgorithmProviderDefinition(RegistryModel):
@@ -449,9 +460,9 @@ class AlgorithmProviderDefinition(RegistryModel):
 class AlgorithmBindingDefinition(RegistryModel):
     id: str
     provider: str
-    target: CasillaId | str
+    target_casilla_id: CasillaId
     inputs: Mapping[str, BindingId | CasillaId | ParameterId | RelationId]
-    outputs: Mapping[str, CasillaId | str]
+    output_casilla_ids: Mapping[str, CasillaId]
     constants: tuple[ParameterId, ...] = ()
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -469,7 +480,7 @@ class RelationDefinition(RegistryModel):
     ]
     source_modelo: ModeloId
     source_revision_selector: Mapping[str, str | int]
-    source_output: CasillaId
+    source_casilla_id: CasillaId
     target_binding: BindingId
     period_alignment: Mapping[str, str | int]
     source_periods: tuple[str, ...] = ()
@@ -511,7 +522,7 @@ class ExportFieldDefinition(RegistryModel):
     offset: int | None = Field(default=None, ge=0)
     length: int | None = Field(default=None, gt=0)
     kind: CasillaFieldKindValue
-    casilla: CasillaId | None = None
+    casilla_id: CasillaId | None = None
     binding: BindingId | None = None
     literal: str | None = None
     header_key: str | None = None
@@ -528,8 +539,8 @@ class ExportFieldDefinition(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_field_kind(self) -> ExportFieldDefinition:
-        if self.kind == CasillaFieldKind.CASILLA and self.casilla is None:
-            raise RegistryValidationError(f"export field {self.id!r} must declare casilla")
+        if self.kind == CasillaFieldKind.CASILLA and self.casilla_id is None:
+            raise RegistryValidationError(f"export field {self.id!r} must declare casilla_id")
         if self.kind == CasillaFieldKind.BINDING and self.binding is None:
             raise RegistryValidationError(f"export field {self.id!r} must declare binding")
         if self.kind == CasillaFieldKind.LITERAL and self.literal is None:
@@ -570,9 +581,9 @@ class ExportRecordDefinition(RegistryModel):
     required: bool = True
     repeat: Literal["binding_rows"] | None = None
     binding_record: str | None = None
-    row_field_casillas: Mapping[str, CasillaId] = Field(default_factory=dict)
+    row_field_casilla_ids: Mapping[str, CasillaId] = Field(default_factory=dict)
     discriminator: RecordDiscriminator | None = None
-    requires_positive_casilla: CasillaId | None = None
+    requires_positive_casilla_id: CasillaId | None = None
     fields: tuple[ExportFieldDefinition, ...] = Field(default_factory=tuple)
 
     @field_validator("binding_record")

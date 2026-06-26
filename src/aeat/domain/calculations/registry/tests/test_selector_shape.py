@@ -89,18 +89,89 @@ def test_previous_filing_selector_accepts_well_shaped_selector() -> None:
             "source_modelo": "303",
             "filing_year_delta": -1,
             "period": "0A",
-            "source_casillas": ("66",),
+            "source_casilla_ids": ("66",),
         },
     )
     assert validate_binding_selector_shape(binding) == []
 
 
-def test_previous_filing_selector_accepts_singular_source_output_shape() -> None:
-    """The direct-value-copy shape (singular source_output) passes.
+def test_previous_filing_selector_rejects_legacy_source_casillas_key() -> None:
+    binding = _binding(
+        source="previous_filing",
+        selector={
+            "source_modelo": "303",
+            "filing_year_delta": -1,
+            "period": "0A",
+            "source_casillas": ("66",),
+        },
+        binding_id="bad-legacy-source-casillas",
+    )
+
+    failures = validate_binding_selector_shape(binding)
+
+    assert len(failures) == 1
+    assert "source_casilla_ids" in failures[0]
+    assert "source_casillas" in failures[0]
+
+
+def test_relation_prefill_selector_rejects_legacy_source_casillas_key() -> None:
+    binding = _binding(
+        source="relation_prefill",
+        selector={
+            "source_modelo": "322",
+            "source_periods": ("1T",),
+            "source_casillas": ("iva.cuota-devengada-total",),
+        },
+        binding_id="bad-relation-prefill-legacy-source-casillas",
+    )
+
+    failures = validate_binding_selector_shape(binding)
+
+    assert len(failures) == 1
+    assert "source_casilla_ids" in failures[0]
+    assert "source_casillas" in failures[0]
+
+
+def test_previous_filing_selector_rejects_legacy_source_output_key() -> None:
+    binding = _binding(
+        source="previous_filing",
+        selector={
+            "source_modelo": "111",
+            "source_output": "28",
+        },
+        binding_id="bad-legacy-source-output",
+    )
+
+    failures = validate_binding_selector_shape(binding)
+
+    assert len(failures) == 1
+    assert "source_casilla_id" in failures[0]
+    assert "source_output" in failures[0]
+
+
+def test_relation_prefill_selector_rejects_legacy_source_output_key() -> None:
+    binding = _binding(
+        source="relation_prefill",
+        selector={
+            "source_modelo": "303",
+            "source_output": "iva.cuota-devengada-total",
+        },
+        binding_id="bad-relation-prefill-source-output",
+    )
+
+    failures = validate_binding_selector_shape(binding)
+
+    assert len(failures) == 1
+    assert "source_casilla_id" in failures[0]
+    assert "source_output" in failures[0]
+
+
+def test_previous_filing_selector_accepts_singular_source_casilla_id_shape() -> None:
+    """The direct-value-copy shape (singular source_casilla_id) passes.
 
     Real registry bindings (e.g. M100 retenciones relations against
-    M111/M115/M123) declare a ``source_output`` casilla rather than
-    a ``source_casillas`` tuple. The typed selector must accept this
+    M111/M115/M123) declare a ``source_casilla_id`` casilla rather than
+    a ``source_casilla_ids`` tuple. The typed selector must accept this
     second shape, validated as the exclusive alternative to the
     plural form. (The selector.relation shorthand was retired under
     selector contract; relation->binding linkage is via
@@ -111,18 +182,18 @@ def test_previous_filing_selector_accepts_singular_source_output_shape() -> None
         source="previous_filing",
         selector={
             "source_modelo": "111",
-            "source_output": "28",
+            "source_casilla_id": "28",
         },
     )
     assert validate_binding_selector_shape(binding) == []
 
 
-def test_previous_filing_selector_accepts_singular_source_output_with_period_offset() -> None:
+def test_previous_filing_selector_accepts_singular_source_casilla_id_with_period_offset() -> None:
     binding = _binding(
         source="previous_filing",
         selector={
             "source_modelo": "303",
-            "source_output": "iva.compensacion-disponible-fin-periodo",
+            "source_casilla_id": "iva.compensacion-disponible-fin-periodo",
             "source_period_offset_from_target": -1,
         },
     )
@@ -130,7 +201,7 @@ def test_previous_filing_selector_accepts_singular_source_output_with_period_off
 
 
 def test_previous_filing_selector_rejects_both_source_shapes() -> None:
-    """Declaring source_output AND source_casillas in the same selector fails.
+    """Declaring source_casilla_id AND source_casilla_ids in the same selector fails.
 
     The two shapes are exclusive: one for direct copy, one for
     aggregation. A binding that declares both is malformed; the
@@ -141,8 +212,8 @@ def test_previous_filing_selector_rejects_both_source_shapes() -> None:
         source="previous_filing",
         selector={
             "source_modelo": "111",
-            "source_output": "28",
-            "source_casillas": ("28",),
+            "source_casilla_id": "28",
+            "source_casilla_ids": ("28",),
             "relation": "retenciones-trabajo-actividades-premios",
         },
         binding_id="bad-double-source",
@@ -165,7 +236,7 @@ def test_previous_filing_selector_rejects_unknown_key() -> None:
         selector={
             "source_modelo": "303",
             "filing_year_delta": -1,
-            "source_casillas": ("66",),
+            "source_casilla_ids": ("66",),
             "spurious_key": "leaked",
         },
         binding_id="bad-previous-filing",
@@ -298,7 +369,7 @@ def test_counterpart_sources_validate_against_invoice_selector() -> None:
 
 
 def test_manual_input_accepts_boolean_casilla_shape() -> None:
-    """The casilla-shape manual_input selector (boolean toggles) validates.
+    """The casilla_id-shape manual_input selector (boolean toggles) validates.
 
     Used by Modelo 100 estimacion-directa modality flags etc.
     """
@@ -306,7 +377,7 @@ def test_manual_input_accepts_boolean_casilla_shape() -> None:
     binding = _binding(
         source="manual_input",
         selector={
-            "casilla": "0168",
+            "casilla_id": "0168",
             "data_type": "boolean",
             "true_value": "N",
             "false_value": "S",
@@ -332,12 +403,12 @@ def test_manual_input_accepts_record_field_shape() -> None:
 
 
 def test_manual_input_rejects_both_shapes_together() -> None:
-    """Declaring casilla AND record-field in the same selector fails."""
+    """Declaring casilla_id AND record-field in the same selector fails."""
 
     binding = _binding(
         source="manual_input",
         selector={
-            "casilla": "0168",
+            "casilla_id": "0168",
             "record": "DPA",
             "field": "x",
             "offset": 1,
@@ -351,13 +422,29 @@ def test_manual_input_rejects_both_shapes_together() -> None:
     assert "bad-mixed" in failures[0]
 
 
+def test_manual_input_rejects_generic_casilla_key() -> None:
+    binding = _binding(
+        source="manual_input",
+        selector={
+            "casilla": "0168",
+            "data_type": "boolean",
+            "true_value": "N",
+            "false_value": "S",
+        },
+        binding_id="bad-generic-casilla-key",
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-generic-casilla-key" in failures[0]
+
+
 def test_manual_input_boolean_casilla_requires_value_strings() -> None:
     """A boolean casilla must declare both true_value and false_value."""
 
     binding = _binding(
         source="manual_input",
         selector={
-            "casilla": "0168",
+            "casilla_id": "0168",
             "data_type": "boolean",
             "true_value": "N",
             # missing false_value
@@ -566,7 +653,7 @@ def test_previous_filing_selector_rejects_removed_relation_field() -> None:
         source="previous_filing",
         selector={
             "source_modelo": "130",
-            "source_output": "saldo-negativo-fin-periodo",
+            "source_casilla_id": "saldo-negativo-fin-periodo",
             "relation": "atribucion-actividades-economicas",
         },
         binding_id="dead-relation-binding",

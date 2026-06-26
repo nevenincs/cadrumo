@@ -4,46 +4,61 @@ legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101", "aeat-modelo-131-instructions"]
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "02"
 number = "02"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "03"
 number = "03"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "04"
 number = "04"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "05"
 number = "05"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "06"
 number = "06"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "07"
 number = "07"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "08"
 number = "08"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "09"
 number = "09"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "10"
 number = "10"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "11"
 number = "11"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "12"
 number = "12"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "13"
 number = "13"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "14"
 number = "14"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "15"
 number = "15"
 
 [[revisions."2019-2023".completeness_manifest.casillas]]
+casilla_id = "saldo-negativo-fin-periodo"
 number = "saldo-negativo-fin-periodo"

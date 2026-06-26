@@ -1,11 +1,11 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-trabajo-rendimiento-neto"
-target = "0022"
+target_casilla_id = "0022"
 expression = { op = "sum", args = [
-        { casilla = "0018" },
-        { op = "negate", args = [{ casilla = "0019" }] },
-        { op = "negate", args = [{ casilla = "0020" }] },
-        { op = "negate", args = [{ casilla = "0021" }] },
+        { casilla_id = "0018" },
+        { op = "negate", args = [{ casilla_id = "0019" }] },
+        { op = "negate", args = [{ casilla_id = "0020" }] },
+        { op = "negate", args = [{ casilla_id = "0021" }] },
     ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-19"]

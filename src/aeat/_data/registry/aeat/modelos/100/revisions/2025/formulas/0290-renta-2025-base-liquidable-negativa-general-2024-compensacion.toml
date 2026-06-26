@@ -10,14 +10,14 @@
 # of that 25% allowance, so the residual headroom is max(0, 25%·0432 − 0433).
 [[revisions."2025".formulas]]
 id = "renta-2025-base-liquidable-negativa-general-2024-aplicada-maxima"
-target = "base-liq-neg-general-2024-aplicada-maxima"
+target_casilla_id = "base-liq-neg-general-2024-aplicada-maxima"
 expression = { op = "min", args = [
-    { casilla = "1388" },
+    { casilla_id = "1388" },
     { op = "max", args = [
         { literal = "0" },
         { op = "subtract", args = [
-            { op = "percent", args = [{ casilla = "0432" }, { literal = "25" }] },
-            { casilla = "0433" },
+            { op = "percent", args = [{ casilla_id = "0432" }, { literal = "25" }] },
+            { casilla_id = "0433" },
         ] },
     ] },
 ] }
@@ -35,10 +35,10 @@ required_text = ["Base liquidable general negativa", "Pendiente de aplicación"]
 # subtraction is non-negative, and the clamp is defence-in-depth.
 [[revisions."2025".formulas]]
 id = "renta-2025-base-liquidable-negativa-general-2024-pendiente-fin"
-target = "1390"
+target_casilla_id = "1390"
 expression = { op = "max", args = [
     { literal = "0" },
-    { op = "subtract", args = [{ casilla = "1388" }, { casilla = "1389" }] },
+    { op = "subtract", args = [{ casilla_id = "1388" }, { casilla_id = "1389" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-48", "ley-35-2006:art-50"]

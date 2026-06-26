@@ -21,9 +21,9 @@ import pytest
 from .._errors import RegistryValidationError
 from .._export_parse import (
     _local_name,
-    _normalize_dictionary_casilla,
     _parse_boolean,
     _parse_decimal,
+    _parse_dictionary_casilla_id,
     _parse_xml_decimal,
     _parse_xml_dictionary_value,
 )
@@ -33,37 +33,37 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 # ---------------------------------------------------------------------------
-# _normalize_dictionary_casilla
+# _parse_dictionary_casilla_id
 # ---------------------------------------------------------------------------
 
 
-def test_normalize_dictionary_casilla_returns_digit_string_unchanged() -> None:
-    assert _normalize_dictionary_casilla("01") == "01"
-    assert _normalize_dictionary_casilla("1234") == "1234"
+def test_parse_dictionary_casilla_id_returns_digit_string_unchanged() -> None:
+    assert _parse_dictionary_casilla_id("01") == "01"
+    assert _parse_dictionary_casilla_id("1234") == "1234"
 
 
-def test_normalize_dictionary_casilla_strips_surrounding_whitespace() -> None:
-    assert _normalize_dictionary_casilla("  01  ") == "01"
+def test_parse_dictionary_casilla_id_strips_surrounding_whitespace() -> None:
+    assert _parse_dictionary_casilla_id("  01  ") == "01"
 
 
-def test_normalize_dictionary_casilla_returns_none_for_empty_input() -> None:
-    assert _normalize_dictionary_casilla("") is None
+def test_parse_dictionary_casilla_id_returns_none_for_empty_input() -> None:
+    assert _parse_dictionary_casilla_id("") is None
 
 
-def test_normalize_dictionary_casilla_returns_none_for_whitespace_only() -> None:
-    assert _normalize_dictionary_casilla("   ") is None
+def test_parse_dictionary_casilla_id_returns_none_for_whitespace_only() -> None:
+    assert _parse_dictionary_casilla_id("   ") is None
 
 
-def test_normalize_dictionary_casilla_returns_none_for_asterisk_prefixed() -> None:
+def test_parse_dictionary_casilla_id_returns_none_for_asterisk_prefixed() -> None:
     """AEAT dictionaries use `*` to mark non-casilla rows (notes, separators)."""
-    assert _normalize_dictionary_casilla("*not-a-casilla") is None
-    assert _normalize_dictionary_casilla("*01") is None
+    assert _parse_dictionary_casilla_id("*not-a-casilla") is None
+    assert _parse_dictionary_casilla_id("*01") is None
 
 
-def test_normalize_dictionary_casilla_returns_none_for_non_digit_text() -> None:
-    assert _normalize_dictionary_casilla("abc") is None
-    assert _normalize_dictionary_casilla("01a") is None
-    assert _normalize_dictionary_casilla("01.5") is None
+def test_parse_dictionary_casilla_id_returns_none_for_non_digit_text() -> None:
+    assert _parse_dictionary_casilla_id("abc") is None
+    assert _parse_dictionary_casilla_id("01a") is None
+    assert _parse_dictionary_casilla_id("01.5") is None
 
 
 # ---------------------------------------------------------------------------

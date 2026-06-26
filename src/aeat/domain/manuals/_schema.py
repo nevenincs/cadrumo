@@ -19,6 +19,7 @@ from typing import Annotated, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
+from ..calculations.registry import CasillaId, ModeloId
 from ._errors import ManualValidationError
 from ._ids import ManualId, ManualPart
 
@@ -38,17 +39,6 @@ _Reviewer = Annotated[
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
 ]
 """Reviewer handle or ID (e.g. 'operator')."""
-
-_CasillaRef = Annotated[
-    str,
-    StringConstraints(
-        strip_whitespace=True,
-        min_length=3,
-        max_length=32,
-        pattern=r"^[A-Z0-9_]+:[0-9]{1,4}$",
-    ),
-]
-"""Dotted reference to a modelo field, e.g. 'MODELO:CASILLA'."""
 
 _LegalActRef = Annotated[
     str,
@@ -93,6 +83,13 @@ class _ManualStrictFrozen(BaseModel):
         extra="forbid",
         str_strip_whitespace=False,
     )
+
+
+class ManualCasillaReference(_ManualStrictFrozen):
+    """Structured manual cross-reference to a canonical registry casilla."""
+
+    modelo_id: ModeloId = Field(description="Registry modelo id that owns the casilla.")
+    casilla_id: CasillaId = Field(description="Canonical registry casilla.id value.")
 
 
 class SectionRef(_ManualStrictFrozen):
@@ -162,7 +159,7 @@ class Rule(_ManualStrictFrozen):
         statement: Authoritative Spanish rule statement.
         applies_when: Optional natural-language predicate describing
             the rule's applicability (Spanish).
-        references_casillas: Cross-references to modelo fields.
+        references_casillas: Cross-references to canonical registry casilla ids.
         references_sections: Cross-references to sibling sections by
             stable id.
         references_legal_acts: Cross-references to external legal acts
@@ -186,9 +183,9 @@ class Rule(_ManualStrictFrozen):
         default=None,
         description="Optional natural-language predicate describing the rule's applicability (Spanish).",
     )
-    references_casillas: tuple[_CasillaRef, ...] = Field(
+    references_casillas: tuple[ManualCasillaReference, ...] = Field(
         default_factory=tuple,
-        description="Cross-references to modelo fields (e.g. 'MODELO:CASILLA').",
+        description="Cross-references to canonical registry casilla ids scoped by modelo_id.",
     )
     references_sections: tuple[_StableId, ...] = Field(
         default_factory=tuple,

@@ -1,92 +1,125 @@
-"""Real-behavior enrollment test: every former bare-string CasillaFieldKind site
-now uses the enum.  The test greps the affected source files for surviving bare
-``"draft"`` / ``"binding"`` / ``"casilla"`` comparison or assignment patterns
-and fails loudly if any are found.
-
-Only comparison and model-copy assignment contexts are targeted; TOML fixture
-strings and docstrings are not false-positives because they don't reach runtime
-field.kind comparisons.
-"""
+"""Real-behavior CasillaFieldKind enrollment checks."""
 
 from __future__ import annotations
 
-import re
-from pathlib import Path
-
 import pytest
+
+from .....core import BindingSourceKind
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....core.resources import bundled_path
+from ..._export_field_kind import CasillaFieldKind
+from .. import (
+    CasillaId,
+    DataBindingDefinition,
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    derive_export_layouts_from_bindings,
+    load_registry_tree,
+    validated_casilla_id,
+)
+from .._schema import PeriodSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# ---------------------------------------------------------------------------
-# Paths of the files that carried bare-string kind usages (contract).
-# ---------------------------------------------------------------------------
-_REPO_ROOT = Path(__file__).resolve().parents[6]
-
-_AFFECTED_FILES: list[Path] = [
-    _REPO_ROOT / "src/aeat/adapters/outbound/aeat/sede/_declarations.py",
-    _REPO_ROOT / "src/aeat/domain/user_profile/_registry_contract.py",
-    _REPO_ROOT / "src/aeat/application/filing/_export.py",
-    _REPO_ROOT / "src/aeat/domain/calculations/registry/_export.py",
-]
-
-# Patterns that indicate a surviving bare-string comparison or assignment that
-# should have been replaced with the CasillaFieldKind enum:
-#   field.kind == "draft"
-#   field.kind != "draft"
-#   field.kind == "binding"
-#   field.kind == "casilla"
-#   case "draft":
-#   case "binding":
-#   case "casilla":
-#   "kind": "draft"   (dict-literal assignment)
-#   "kind": "binding"
-#   "kind": "casilla"
-#   kind="draft"      (keyword-argument)
-#   kind="binding"
-#   kind="casilla"
-
-_BARE_PATTERNS: list[re.Pattern[str]] = [
-    # Comparison operators
-    re.compile(r"""\.kind\s*[!=]=\s*["'](draft|binding|casilla)["']"""),
-    # match/case arms
-    re.compile(r"""^\s*case\s+["'](draft|binding|casilla)["']\s*:""", re.MULTILINE),
-    # dict-literal "kind" key assignment
-    re.compile(r""""kind"\s*:\s*["'](draft|binding|casilla)["']"""),
-    # keyword argument kind=
-    re.compile(r"""\bkind\s*=\s*["'](draft|binding|casilla)["']"""),
-]
+_LEGAL_REF = "lirpf:art-test"
+_SOURCE_REF = "aeat-test-source-001"
+_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_CASILLA_01")
 
 
-def _scan_file(path: Path) -> list[tuple[int, str]]:
-    """Return (line_number, line_text) pairs for every bare-string hit.
+def test_bundled_export_field_kinds_are_hydrated_enum_members() -> None:
+    """Every committed export field reaches consumers as a CasillaFieldKind."""
 
-    Comment-only lines (stripped line starts with ``#``) are excluded because
-    they carry doc text, not runtime comparisons.
-    """
-    hits: list[tuple[int, str]] = []
-    text = path.read_text(encoding="utf-8")
-    for lineno, line in enumerate(text.splitlines(), start=1):
-        if line.lstrip().startswith("#"):
-            continue  # skip comment lines — only runtime expressions matter
-        for pattern in _BARE_PATTERNS:
-            if pattern.search(line):
-                hits.append((lineno, line.rstrip()))
-                break  # one hit per line is enough
-    return hits
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+
+    checked = 0
+    offenders: list[str] = []
+    for modelo in modelos:
+        for revision_id, revision in modelo.revisions.items():
+            for layout in revision.export_layouts:
+                for record in layout.records:
+                    for field in record.fields:
+                        checked += 1
+                        if not isinstance(field.kind, CasillaFieldKind):
+                            offenders.append(
+                                f"modelo {modelo.id} revision {revision_id} "
+                                f"field {layout.id}.{record.id}.{field.id} kind={field.kind!r}",
+                            )
+
+    assert checked, "bundled registry exposes no export fields"
+    assert not offenders, "export field kinds were not hydrated as CasillaFieldKind:\n  " + "\n  ".join(offenders)
 
 
-def test_no_bare_kind_strings_survive_in_affected_files() -> None:
-    """Fail if any affected file still compares field.kind to a bare string."""
-    failures: list[str] = []
-    for path in _AFFECTED_FILES:
-        assert path.exists(), f"Expected source file missing: {path}"
-        hits = _scan_file(path)
-        for lineno, line in hits:
-            failures.append(f"{path.relative_to(_REPO_ROOT)}:{lineno}: {line}")
+def test_binding_derived_export_fields_preserve_enum_kind() -> None:
+    """The binding-derived export path emits CasillaFieldKind members."""
 
-    if failures:
-        joined = "\n  ".join(failures)
-        raise AssertionError(
-            f"Bare CasillaFieldKind string(s) still present in affected files:\n  {joined}\n"
-            "Replace each with the corresponding CasillaFieldKind.<MEMBER> enum value.",
-        )
+    binding = DataBindingDefinition(
+        id="binding.rows",
+        source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        selector={"record": "ventas", "row_field": "importe"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+        legal_refs=(_LEGAL_REF,),
+        source_refs=(_SOURCE_REF,),
+    )
+    template = ExportFieldDefinition(
+        id="importe.template",
+        offset=1,
+        length=10,
+        kind=CasillaFieldKind.CASILLA,
+        casilla_id=_CASILLA_01,
+        data_type="money",
+        required=False,
+        padding="left_zero",
+        justification="right",
+        signed=False,
+        legal_refs=(_LEGAL_REF,),
+        source_refs=(_SOURCE_REF,),
+    )
+    record = ExportRecordDefinition(
+        id="ventas",
+        record_type="ventas",
+        order=1,
+        encoding="utf-8",
+        line_ending="none",
+        binding_record="ventas",
+        row_field_casilla_ids={"importe": _CASILLA_01},
+        fields=(template,),
+    )
+    revision = _minimal_revision(
+        bindings=(binding,),
+        export_layouts=(
+            ExportLayoutDefinition(
+                id="layout",
+                legal_refs=(_LEGAL_REF,),
+                source_refs=(_SOURCE_REF,),
+                records=(record,),
+            ),
+        ),
+    )
+
+    (layout,) = derive_export_layouts_from_bindings(revision)
+    (derived_record,) = layout.records
+    derived_field = next(field for field in derived_record.fields if field.id == "ventas.binding.rows")
+
+    assert derived_field.kind is CasillaFieldKind.BINDING
+    assert all(isinstance(field.kind, CasillaFieldKind) for field in derived_record.fields)
+
+
+def _minimal_revision(
+    *,
+    bindings: tuple[DataBindingDefinition, ...],
+    export_layouts: tuple[ExportLayoutDefinition, ...],
+):
+    from datetime import date
+
+    from .. import ModeloRevision
+
+    return ModeloRevision(
+        id="test-revision",
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
+        legal_refs=(_LEGAL_REF,),
+        source_refs=(_SOURCE_REF,),
+        bindings=bindings,
+        export_layouts=export_layouts,
+    )

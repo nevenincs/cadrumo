@@ -1,6 +1,6 @@
 [[revisions."2023".verification_expectations]]
 id = "modelo-100-2023-cuota-chain-verification"
-computed_casillas = [
+computed_casilla_ids = [
     "0519", "0520", "0521", "0522", "0523", "0524",
     "0432", "0435", "0460", "0500", "0510",
     "0532", "0533", "0545", "0546",

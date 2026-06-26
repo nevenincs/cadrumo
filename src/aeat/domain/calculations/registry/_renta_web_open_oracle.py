@@ -13,6 +13,7 @@ from ....core import STRICT_FROZEN_CONFIG
 from ....core.config import Settings
 from ....core.decimal import normalize_decimal_separators
 from ._errors import RegistryValidationError
+from ._ids import CasillaId, validated_casilla_id
 from ._live_parity import (
     OracleSurfaceKind,
     ParityFieldComparison,
@@ -50,22 +51,32 @@ class RentaWebOpenSyntheticProfile(RentaWebOpenModel):
         return normalized
 
 
+class RentaWebOpenDisplayOverride(RentaWebOpenModel):
+    """One browser-coordinate override keyed externally by canonical casilla id."""
+
+    display_number: str = Field(min_length=1, max_length=16)
+    value: str = Field(max_length=128)
+
+    @field_validator("display_number", "value")
+    @classmethod
+    def _trimmed(cls, value: str) -> str:
+        trimmed = value.strip()
+        if not trimmed:
+            raise RegistryValidationError("Renta WEB Open display overrides must not contain blank strings")
+        return trimmed
+
+
 class RentaWebOpenLivePayload(RentaWebOpenModel):
     """Payload for a Renta WEB Open parity run.
 
-    ``casilla_overrides`` lets a per-scenario capture fill specific casilla
-    inputs (e.g. 0528=5000 for the cuota-integra scenario) before scraping
-    the summary. The driver navigates from the post-identification Resumen
-    page into the editable form (Tu Declaración), applies overrides, then
-    returns to the summary to scrape outputs. The map is keyed by casilla
-    number (e.g. "0528") with string-formatted Decimal values
-    (e.g. "5000.00") which the driver fills as-is into the form fields.
-    Empty mapping → driver stays on the identification path (baseline mode).
-
-    ``scrape_casillas`` declares which casilla numbers (in addition to the
-    summary labels) the capture should record. The driver searches the
-    editable form for these casilla ids and emits matched values into the
-    observation under their casilla numbers.
+    Browser-visible labels and display numbers are external UI coordinates.
+    They are never output keys. ``summary_labels_by_casilla_id`` maps the
+    canonical registry casilla id to the Renta WEB summary label to scrape.
+    ``scrape_display_numbers_by_casilla_id`` maps the canonical registry
+    casilla id to a browser-visible display number that the driver should
+    navigate to and read. ``display_overrides_by_casilla_id`` is also keyed
+    by canonical casilla id; the nested display number is only the external
+    browser coordinate used to reach AEAT's input widget.
     """
 
     profile: RentaWebOpenSyntheticProfile = Field(default_factory=RentaWebOpenSyntheticProfile)
@@ -77,14 +88,15 @@ class RentaWebOpenLivePayload(RentaWebOpenModel):
         ),
     )
     timeout_ms: int = Field(default=60_000, ge=1_000, le=180_000)
-    casilla_overrides: dict[str, str] = Field(default_factory=dict)
-    scrape_casillas: list[str] = Field(default_factory=list)
+    display_overrides_by_casilla_id: dict[CasillaId, RentaWebOpenDisplayOverride] = Field(default_factory=dict)
+    summary_labels_by_casilla_id: dict[CasillaId, str] = Field(default_factory=dict)
+    scrape_display_numbers_by_casilla_id: dict[CasillaId, str] = Field(default_factory=dict)
 
 
 class RentaWebOpenObservation(RentaWebOpenModel):
     """Observed Renta WEB Open outputs returned by a concrete adapter."""
 
-    values: dict[str, str] = Field(default_factory=dict)
+    values: dict[CasillaId, str] = Field(default_factory=dict)
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
 
 
@@ -108,7 +120,7 @@ class RentaWebOpenDriver(Protocol):
         self,
         payload: bytes,
         *,
-        expected: Mapping[str, object],
+        expected: Mapping[CasillaId, object],
     ) -> tuple[RemoteOperation, ...]:
         """Describe the remote work this driver would perform, without performing it.
 
@@ -119,8 +131,8 @@ class RentaWebOpenDriver(Protocol):
             payload: Raw request bytes; for the live driver this carries the
                 optional JSON capture configuration, for the replay driver the
                 captured observation document.
-            expected: Mapping of expected casilla numbers (the numbered boxes on
-                Modelo 100) to their expected values, used to scope the plan.
+            expected: Mapping of expected canonical casilla ids to their
+                expected values.
 
         Returns:
             The ordered :class:`RemoteOperation` tuple the driver intends to run.
@@ -131,20 +143,20 @@ class RentaWebOpenDriver(Protocol):
         self,
         payload: bytes,
         *,
-        expected: Mapping[str, object],
+        expected: Mapping[CasillaId, object],
     ) -> RentaWebOpenObservation:
         """Execute the driver and return the observed Modelo 100 outputs.
 
         Args:
             payload: Raw request bytes carrying the live capture configuration
                 or the replay document.
-            expected: Mapping of expected casilla numbers (the numbered boxes on
-                the form) to their expected values, available to scope scraping.
+            expected: Mapping of expected canonical casilla ids to their
+                expected values, available to scope scraping.
 
         Returns:
-            A :class:`RentaWebOpenObservation` whose ``values`` maps casilla numbers
-            to their observed string renderings, plus an optional evidence
-            locator pointing at the captured source.
+            A :class:`RentaWebOpenObservation` whose ``values`` maps
+            canonical casilla ids to their observed string renderings, plus
+            an optional evidence locator pointing at the captured source.
         """
         ...
 
@@ -167,7 +179,7 @@ class RentaWebOpenReplayDriver:
         self,
         payload: bytes,
         *,
-        expected: Mapping[str, object],
+        expected: Mapping[CasillaId, object],
     ) -> tuple[RemoteOperation, ...]:
         """Declare the single local-parse operation this replay driver performs.
 
@@ -178,7 +190,7 @@ class RentaWebOpenReplayDriver:
         Args:
             payload: Raw request bytes (the captured document is read in
                 ``collect_observation``; this method ignores its contents).
-            expected: Mapping of expected casilla numbers to expected values;
+            expected: Mapping of expected canonical casilla ids to expected values;
                 unused, present to satisfy the ``RentaWebOpenDriver`` protocol.
 
         Returns:
@@ -190,14 +202,14 @@ class RentaWebOpenReplayDriver:
         self,
         payload: bytes,
         *,
-        expected: Mapping[str, object],
+        expected: Mapping[CasillaId, object],
     ) -> RentaWebOpenObservation:
         """Decode the captured replay payload into observed Modelo 100 outputs.
 
         Args:
             payload: UTF-8 JSON bytes holding a previously captured Renta WEB
                 Open observation document.
-            expected: Mapping of expected casilla numbers to expected values;
+            expected: Mapping of expected canonical casilla ids to expected values;
                 unused, present to satisfy the ``RentaWebOpenDriver`` protocol.
 
         Returns:
@@ -209,8 +221,12 @@ class RentaWebOpenReplayDriver:
                 expected replay JSON document.
         """
         document = decode_replay_json_payload(payload, surface_label="Renta WEB Open replay")
+        if not document.observed_by_casilla_id:
+            raise RegistryValidationError(
+                "Renta WEB Open replay payload must declare observed_by_casilla_id keyed by canonical casilla.id",
+            )
         return RentaWebOpenObservation(
-            values=dict(document.observed),
+            values=dict(document.observed_by_casilla_id),
             raw_evidence_locator=document.raw_evidence_locator,
         )
 
@@ -259,8 +275,8 @@ class RentaWebOpenOracle:
 
         Args:
             payload: Raw request bytes forwarded to the driver when present.
-            expected: Mapping of expected casilla numbers (the numbered boxes on
-                Modelo 100) to their expected values. Must be non-empty.
+            expected: Mapping of expected canonical casilla ids to their
+                expected values. Must be non-empty.
 
         Returns:
             The ordered :class:`RemoteOperation` tuple the run intends to perform.
@@ -273,8 +289,9 @@ class RentaWebOpenOracle:
             raise RegistryValidationError(
                 "RentaWebOpenOracle.planned_operations requires at least one expected casilla",
             )
+        expected_values = validate_renta_web_open_expected_casilla_values(expected)
         if self._driver is not None:
-            return self._driver.planned_operations(payload, expected=expected)
+            return self._driver.planned_operations(payload, expected=expected_values)
         template = Settings.external_constants().aeat.oracles.renta_web_open_app_template
         app_url = AnyUrl(template.format(year=_RENTA_WEB_OPEN_DEFAULT_YEAR))
         return (
@@ -294,23 +311,23 @@ class RentaWebOpenOracle:
         The remote-state guard first authorizes the planned operations. A
         blocked plan yields a ``"blocked"`` result; an unconfigured driver yields
         an ``"unverifiable"`` result after a passing preflight. With a driver, each
-        expected casilla (a numbered box on Modelo 100) is compared against its
-        observed value, and the per-casilla verdicts are combined into one overall
-        verdict.
+        expected canonical casilla id is compared against its observed value,
+        and the per-field verdicts are combined into one overall verdict.
 
         Args:
             policy: The remote-state guard policy authorizing the run; its id is
                 recorded as the result's cross-reference.
             payload: Raw request bytes passed to the driver.
-            expected: Mapping of expected casilla numbers to expected values to
-                compare against the observation.
+            expected: Mapping of expected canonical casilla ids to expected
+                values to compare against the observation.
 
         Returns:
             A :class:`ParityResult` carrying the verdict (``"match"``, ``"mismatch"``,
             ``"unverifiable"``, or ``"blocked"``), a human-readable narrative,
             the per-casilla comparisons, and any raw evidence locator.
         """
-        operations = self.planned_operations(payload, expected=expected)
+        expected_values = validate_renta_web_open_expected_casilla_values(expected)
+        operations = self.planned_operations(payload, expected=expected_values)
         try:
             assert_oracle_operations_allowed(self, policy, operations)
         except RegistryValidationError as exc:
@@ -331,7 +348,7 @@ class RentaWebOpenOracle:
                 ),
             )
         try:
-            observation = self._driver.collect_observation(payload, expected=expected)
+            observation = self._driver.collect_observation(payload, expected=expected_values)
         except RegistryValidationError as exc:
             return ParityResult(
                 oracle_id=self.oracle_id,
@@ -341,7 +358,7 @@ class RentaWebOpenOracle:
             )
         fields = tuple(
             _compare_expected_field(casilla_id, expected_value, observed=observation.values.get(casilla_id))
-            for casilla_id, expected_value in sorted(expected.items())
+            for casilla_id, expected_value in sorted(expected_values.items())
         )
         verdict = _overall_verdict(fields)
         return ParityResult(
@@ -367,6 +384,41 @@ def parse_renta_web_open_live_payload(payload: bytes) -> RentaWebOpenLivePayload
     return RentaWebOpenLivePayload.model_validate(document)
 
 
+def validate_renta_web_open_expected_casilla_ids[ExpectedKey](
+    expected: Mapping[ExpectedKey, object],
+) -> frozenset[CasillaId]:
+    """Return expected keys validated as canonical ``casilla.id`` values.
+
+    Renta WEB Open browser labels and display numbers are UI coordinates only.
+    They must be carried by the live payload's explicit casilla-id-keyed maps,
+    never by the oracle ``expected`` comparison surface.
+    """
+    return frozenset(validate_renta_web_open_expected_casilla_values(expected))
+
+
+def validate_renta_web_open_expected_casilla_values[ExpectedKey](
+    expected: Mapping[ExpectedKey, object],
+) -> dict[CasillaId, object]:
+    """Return expected values re-keyed by validated canonical ``casilla.id``."""
+    invalid_keys: list[str] = []
+    casilla_values: dict[CasillaId, object] = {}
+    for key, value in expected.items():
+        if not isinstance(key, str):
+            invalid_keys.append(repr(key))
+            continue
+        try:
+            casilla_values[validated_casilla_id(key, surface="Renta WEB Open expected casilla key")] = value
+        except ValueError:
+            invalid_keys.append(key)
+    if invalid_keys:
+        sample = ", ".join(repr(key) for key in sorted(invalid_keys)[:5])
+        raise RegistryValidationError(
+            "Renta WEB Open expected values must be keyed by canonical casilla.id; "
+            f"labels and display-number aliases are not accepted (invalid keys: {sample})",
+        )
+    return casilla_values
+
+
 def equivalent_renta_web_open_value(expected: str, observed: str) -> bool:
     """Return true when dot or comma decimal renderings represent the same number."""
     if observed == expected:
@@ -376,14 +428,14 @@ def equivalent_renta_web_open_value(expected: str, observed: str) -> bool:
     return expected_decimal is not None and observed_decimal is not None and expected_decimal == observed_decimal
 
 
-def _compare_expected_field(name: str, expected: object, *, observed: str | None) -> ParityFieldComparison:
+def _compare_expected_field(casilla_id: CasillaId, expected: object, *, observed: str | None) -> ParityFieldComparison:
     expected_text = str(expected)
     if observed is None:
-        return ParityFieldComparison(name=name, expected=expected_text, observed="", verdict="unverifiable")
+        return ParityFieldComparison(name=casilla_id, expected=expected_text, observed="", verdict="unverifiable")
     verdict: Literal["match", "mismatch"] = (
         "match" if equivalent_renta_web_open_value(expected_text, observed) else "mismatch"
     )
-    return ParityFieldComparison(name=name, expected=expected_text, observed=observed, verdict=verdict)
+    return ParityFieldComparison(name=casilla_id, expected=expected_text, observed=observed, verdict=verdict)
 
 
 def _parse_decimal_text(value: str) -> Decimal | None:
@@ -419,6 +471,7 @@ def _narrative_for_verdict(
 
 
 __all__ = [
+    "RentaWebOpenDisplayOverride",
     "RentaWebOpenDriver",
     "RentaWebOpenLivePayload",
     "RentaWebOpenObservation",
@@ -427,4 +480,6 @@ __all__ = [
     "RentaWebOpenSyntheticProfile",
     "equivalent_renta_web_open_value",
     "parse_renta_web_open_live_payload",
+    "validate_renta_web_open_expected_casilla_ids",
+    "validate_renta_web_open_expected_casilla_values",
 ]

@@ -1,8 +1,8 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-iic-paraisos-fiscales-suma"
-target = "0280"
+target_casilla_id = "0280"
 expression = { op = "sum", args = [
-    { casilla = "0278" },
+    { casilla_id = "0278" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-85"]

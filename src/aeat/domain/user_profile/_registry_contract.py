@@ -280,7 +280,7 @@ def _export_issues(
                             message="profile_tax_id draft attribute is not declared by user-profile schema",
                         ),
                     )
-                if field.kind == "header" and field.header_key not in index.export_headers:
+                if field.kind == CasillaFieldKind.HEADER and field.header_key not in index.export_headers:
                     issues.append(
                         _issue(
                             severity=UserProfileRegistryContractSeverity.WARNING,

@@ -38,7 +38,7 @@ def test_modelo_180_copies_three_relations_into_three_output_casillas() -> None:
     # op=copy formula sourcing the matching 115 relation. A declaration
     # regression that flipped the operator or renamed the source
     # relation fails here before the runtime threading assertions run.
-    formulas_by_target = {f.target: f for f in revision.formulas}
+    formulas_by_target = {f.target_casilla_id: f for f in revision.formulas}
     expected_wiring = {
         "decl.total-perceptores": "modelo-180-rel-115-perceptores-anual",
         "decl.base-total": "modelo-180-rel-115-base-anual",

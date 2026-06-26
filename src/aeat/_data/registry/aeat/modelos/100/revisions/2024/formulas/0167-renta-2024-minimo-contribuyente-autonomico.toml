@@ -1,6 +1,6 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-minimo-contribuyente-autonomico"
-target = "0512"
+target_casilla_id = "0512"
 expression = { op = "lookup_parameter", args = [{ parameter = "renta-2024-minimo-contribuyente-base-2024" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-74"]

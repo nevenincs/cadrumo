@@ -1,6 +1,6 @@
 [[revisions."2024-y-siguientes".constructs]]
 id = "modelo-200-2024-foundation"
-casillas = [
+casilla_ids = [
     "02799",
     "02800",
     "02801",
@@ -725,6 +725,8 @@ formulas = [
     "modelo-200-tipo-gravamen-por-forma-juridica",
     "modelo-200-base-imponible-despues-reserva-nivelacion",
     "modelo-200-cuota-integra",
+    "modelo-200-cuota-integra-ajustada-positiva",
+    "modelo-200-cuota-liquida",
     "modelo-200-cuota-ejercicio-a-ingresar-devolver",
     "modelo-200-cuota-diferencial",
 ]

@@ -8,23 +8,57 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
+from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
-    CasillaObservation,
+    CasillaId,
     ModeloDefinition,
     RegistryCatalogues,
-    RegistryModeloObservation,
     RegistryValidationError,
     build_snapshot,
     calculate_registry_snapshot,
     load_registry_tree,
     resolve_previous_filing_binding_values,
+    validated_casilla_id,
 )
+from .._bindings import RegistryModeloObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ModeloFixture = tuple[ModeloDefinition, RegistryCatalogues]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"Modelo 130 registry fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
+_M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
+_M130_PAGOS_PREVIOS_CASILLA: CasillaId = _casilla_id("05")
+_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
+_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = _casilla_id("07")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
+_M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = _casilla_id("14")
+_M130_CARRY_FORWARD_CASILLA: CasillaId = _casilla_id("15")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
+_M130_DIFERENCIA_CASILLA: CasillaId = _casilla_id("17")
+_M130_PRIOR_RETURN_CASILLA: CasillaId = _casilla_id("18")
+_M130_SALDO_NEGATIVO_CASILLA: CasillaId = _casilla_id("saldo-negativo-fin-periodo")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
+_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
+_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
+_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
+_M100_RENDIMIENTO_SOURCE_CASILLAS = (
+    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA,
+    _M100_RENDIMIENTO_SOURCE_1479_CASILLA,
+    _M100_RENDIMIENTO_SOURCE_1553_CASILLA,
+    _M100_RENDIMIENTO_SOURCE_1577_CASILLA,
+)
 _REQUIRED_SURFACES = {
     "approval",
     "calculation",
@@ -86,7 +120,7 @@ def test_modelo_130_requires_external_previous_year_income_binding_for_minoracio
     with pytest.raises(RegistryValidationError, match="previous_year_economic_activity_net_income"):
         calculate_registry_snapshot(
             _snapshot_130(modelo_130_registry),
-            inputs={"01": Decimal("12000.00"), "02": Decimal("4000.00")},
+            inputs={_M130_INGRESOS_CASILLA: Decimal("12000.00"), _M130_GASTOS_CASILLA: Decimal("4000.00")},
             date_context={"filing_period": date(2026, 4, 20)},
             binding_values={"modelo-130-resultados-negativos-anteriores": Decimal("0")},
         )
@@ -115,13 +149,13 @@ def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_re
     result = calculate_registry_snapshot(
         _snapshot_130(modelo_130_registry),
         inputs={
-            "01": Decimal("10000"),
-            "02": Decimal("4000"),
-            "06": Decimal("100"),
-            "08": Decimal("2000"),
-            "10": Decimal("10"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_INGRESOS_CASILLA: Decimal("10000"),
+            _M130_GASTOS_CASILLA: Decimal("4000"),
+            _M130_RETENCIONES_CASILLA: Decimal("100"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         date_context={"filing_period": date(2026, 4, 20)},
         binding_values={
@@ -129,14 +163,14 @@ def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_re
         },
     )
 
-    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == "15")
+    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
     assert casilla_15.value == Decimal("0")
     assert casilla_15.absent_by_design is True
 
     # Casilla 05 (pagos fraccionados anteriores) is now a bound carry; at 1T the
     # expanding span has no prior same-ejercicio quarter, so it resolves to a
     # clean zero through the same absent-by-design path as casilla 15.
-    casilla_05 = next(obs for obs in result.observations if obs.casilla_id == "05")
+    casilla_05 = next(obs for obs in result.observations if obs.casilla_id == _M130_PAGOS_PREVIOS_CASILLA)
     assert casilla_05.value == Decimal("0")
     assert casilla_05.absent_by_design is True
 
@@ -148,7 +182,7 @@ def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is
 
     The original design mandated `RegistryValidationError` when any
     bound-casilla input was supplied. The P03 narrowing accepted
-    the production `resolve_bound_casilla_inputs` projection
+    the production `resolve_bound_inputs_by_casilla_id` projection
     pattern (inputs mirrors binding_values for runtime ergonomics).
     The narrowing left a hole: a test fixture could lie by passing
     a previous_filing bound casilla via inputs ONLY, with no
@@ -168,14 +202,14 @@ def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is
         calculate_registry_snapshot(
             _snapshot_130(modelo_130_registry),
             inputs={
-                "01": Decimal("10000"),
-                "02": Decimal("4000"),
-                "06": Decimal("100"),
-                "08": Decimal("2000"),
-                "10": Decimal("10"),
-                "15": Decimal("999"),  # smuggled — no matching binding_value
-                "16": Decimal("0"),
-                "18": Decimal("0"),
+                _M130_INGRESOS_CASILLA: Decimal("10000"),
+                _M130_GASTOS_CASILLA: Decimal("4000"),
+                _M130_RETENCIONES_CASILLA: Decimal("100"),
+                _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
+                _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
+                _M130_CARRY_FORWARD_CASILLA: Decimal("999"),  # smuggled — no matching binding_value
+                _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+                _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
             },
             date_context={"filing_period": date(2026, 4, 20)},
             binding_values={
@@ -221,27 +255,25 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
     prior_quarters = {"3T": ("1T", "2T"), "4T": ("1T", "2T", "3T")}[target_period]
 
     def _prior_obs(period: str) -> RegistryModeloObservation:
-        casillas = [
-            CasillaObservation(casilla_id="07", value=_PRIOR_07[period]),
-            CasillaObservation(casilla_id="16", value=_PRIOR_16[period]),
-        ]
+        casilla_values = {
+            _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07[period],
+            _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16[period],
+        }
         if period == prior_period:
-            casillas.append(CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=saldo_seed))
-        return RegistryModeloObservation(
+            casilla_values[_M130_SALDO_NEGATIVO_CASILLA] = saldo_seed
+        return registry_grounded_modelo_observation(
             modelo="130",
             filing_year=filing_year,
             period=period,
-            observations=tuple(casillas),
+            casilla_values=casilla_values,
         )
 
     prior_observations = tuple(_prior_obs(period) for period in prior_quarters)
-    prior_year_income_observation = RegistryModeloObservation(
+    prior_year_income_observation = registry_grounded_modelo_observation(
         modelo="100",
         filing_year=filing_year - 1,
         period="0A",
-        observations=tuple(
-            CasillaObservation(casilla_id=cid, value=Decimal("0")) for cid in ("0224", "1479", "1553", "1577")
-        ),
+        casilla_values={cid: Decimal("0") for cid in _M100_RENDIMIENTO_SOURCE_CASILLAS},
     )
 
     resolved_bindings = resolve_previous_filing_binding_values(
@@ -263,13 +295,13 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
-            "01": Decimal("20000"),
-            "02": Decimal("8000"),
-            "06": Decimal("200"),
-            "08": Decimal("4000"),
-            "10": Decimal("20"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_INGRESOS_CASILLA: Decimal("20000"),
+            _M130_GASTOS_CASILLA: Decimal("8000"),
+            _M130_RETENCIONES_CASILLA: Decimal("200"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("4000"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("20"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         date_context={
             "filing_period": date(
@@ -284,10 +316,10 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
         },
     )
 
-    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == "15")
+    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
     assert casilla_15.value == saldo_seed
     assert casilla_15.absent_by_design is False
-    casilla_05 = next(obs for obs in result.observations if obs.casilla_id == "05")
+    casilla_05 = next(obs for obs in result.observations if obs.casilla_id == _M130_PAGOS_PREVIOS_CASILLA)
     assert casilla_05.value == expected_casilla_05
     assert casilla_05.absent_by_design is False
 
@@ -310,14 +342,14 @@ def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(model
         calculate_registry_snapshot(
             _snapshot_130(modelo_130_registry, period="2T"),
             inputs={
-                "01": Decimal("10000"),
-                "02": Decimal("4000"),
-                "06": Decimal("100"),
-                "08": Decimal("2000"),
-                "10": Decimal("10"),
-                "15": Decimal("500"),  # claims 500
-                "16": Decimal("0"),
-                "18": Decimal("0"),
+                _M130_INGRESOS_CASILLA: Decimal("10000"),
+                _M130_GASTOS_CASILLA: Decimal("4000"),
+                _M130_RETENCIONES_CASILLA: Decimal("100"),
+                _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
+                _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
+                _M130_CARRY_FORWARD_CASILLA: Decimal("500"),  # claims 500
+                _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+                _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
             },
             date_context={"filing_period": date(2026, 7, 20)},
             binding_values={
@@ -354,27 +386,25 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
     # expanding-span carry) alongside the saldo seed.
     prior_07 = Decimal("450.00")
     prior_16 = Decimal("25.00")
-    first_period_observation = RegistryModeloObservation(
+    first_period_observation = registry_grounded_modelo_observation(
         modelo="130",
         filing_year=2026,
         period="1T",
-        observations=(
-            CasillaObservation(casilla_id="07", value=prior_07),
-            CasillaObservation(casilla_id="16", value=prior_16),
-            CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=saldo_seed),
-        ),
+        casilla_values={
+            _M130_PAGO_FRACCIONADO_CASILLA: prior_07,
+            _M130_HOME_DEDUCTION_CASILLA: prior_16,
+            _M130_SALDO_NEGATIVO_CASILLA: saldo_seed,
+        },
     )
     # The M100 income-reduction binding also resolves through the
     # previous-filing pipeline. Supply a zeroed 2025 0A observation
     # so the resolver completes; the test asserts the M130
     # carry-forward path independently.
-    prior_year_income_observation = RegistryModeloObservation(
+    prior_year_income_observation = registry_grounded_modelo_observation(
         modelo="100",
         filing_year=2025,
         period="0A",
-        observations=tuple(
-            CasillaObservation(casilla_id=cid, value=Decimal("0")) for cid in ("0224", "1479", "1553", "1577")
-        ),
+        casilla_values={cid: Decimal("0") for cid in _M100_RENDIMIENTO_SOURCE_CASILLAS},
     )
 
     resolved_bindings = resolve_previous_filing_binding_values(
@@ -392,13 +422,13 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
     result = calculate_registry_snapshot(
         snapshot_2t,
         inputs={
-            "01": Decimal("16000"),
-            "02": Decimal("6000"),
-            "06": Decimal("250"),
-            "08": Decimal("3000"),
-            "10": Decimal("20"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_INGRESOS_CASILLA: Decimal("16000"),
+            _M130_GASTOS_CASILLA: Decimal("6000"),
+            _M130_RETENCIONES_CASILLA: Decimal("250"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("3000"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("20"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         date_context={"filing_period": date(2026, 7, 20)},
         binding_values={
@@ -407,19 +437,19 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
         },
     )
 
-    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == "15")
+    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
     assert casilla_15.value == saldo_seed
     assert casilla_15.absent_by_design is False
-    casilla_05 = next(obs for obs in result.observations if obs.casilla_id == "05")
+    casilla_05 = next(obs for obs in result.observations if obs.casilla_id == _M130_PAGOS_PREVIOS_CASILLA)
     assert casilla_05.value == expected_casilla_05
     assert casilla_05.absent_by_design is False
 
     # Casilla 17 (diferencia) is `(C14 - C15) - C16`; the carry-forward
     # subtracts the seed from the gross diferencia. Structural assert:
     # C17 is strictly less than (C14 - C16) by the seed amount.
-    casilla_14 = next(obs for obs in result.observations if obs.casilla_id == "14")
-    casilla_16 = next(obs for obs in result.observations if obs.casilla_id == "16")
-    casilla_17 = next(obs for obs in result.observations if obs.casilla_id == "17")
+    casilla_14 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_PREVIA_CASILLA)
+    casilla_16 = next(obs for obs in result.observations if obs.casilla_id == _M130_HOME_DEDUCTION_CASILLA)
+    casilla_17 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_CASILLA)
     assert casilla_17.value == casilla_14.value - saldo_seed - casilla_16.value
 
 
@@ -453,13 +483,13 @@ def test_modelo_130_art110_3b_casilla_17_is_zero_when_retention_ratio_meets_thre
     result = calculate_registry_snapshot(
         _snapshot_130(modelo_130_registry),
         inputs={
-            "01": Decimal("15000"),
-            "02": Decimal("5000"),
-            "06": Decimal("10500"),  # 10500/15000 = exactly 70%
-            "08": Decimal("0"),
-            "10": Decimal("0"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_INGRESOS_CASILLA: Decimal("15000"),
+            _M130_GASTOS_CASILLA: Decimal("5000"),
+            _M130_RETENCIONES_CASILLA: Decimal("10500"),  # 10500/15000 = exactly 70%
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         date_context={"filing_period": date(2026, 4, 20)},
         binding_values={
@@ -468,7 +498,7 @@ def test_modelo_130_art110_3b_casilla_17_is_zero_when_retention_ratio_meets_thre
         },
     )
 
-    casilla_17 = next(obs for obs in result.observations if obs.casilla_id == "17")
+    casilla_17 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_CASILLA)
     assert casilla_17.value == Decimal("0"), (
         f"Art. 110.3.b: casilla 17 must be zero when retention ratio >= 70%; got {casilla_17.value}"
     )
@@ -496,18 +526,18 @@ def test_modelo_130_art110_3b_casilla_17_computes_normally_when_retention_ratio_
     result = calculate_registry_snapshot(
         _snapshot_130(modelo_130_registry),
         inputs={
-            "01": Decimal("50000"),
-            "02": Decimal("10000"),
+            _M130_INGRESOS_CASILLA: Decimal("50000"),
+            _M130_GASTOS_CASILLA: Decimal("10000"),
             # c03 (rendimiento neto) is computed via the
             # ``modelo-130-rendimiento-neto`` formula (c01 − c02);
             # supplying it as input would trip the computed-casilla gate.
             # c05 (pagos fraccionados anteriores) is a bound carry; at 1T the
             # expanding span is empty so it resolves to 0 absent-by-design.
-            "06": Decimal("1000"),  # 1000/50000 = 2% — well below threshold; c04=8000 > c06
-            "08": Decimal("0"),
-            "10": Decimal("0"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_RETENCIONES_CASILLA: Decimal("1000"),  # 1000/50000 = 2% — well below threshold; c04=8000 > c06
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         date_context={"filing_period": date(2026, 4, 20)},
         binding_values={
@@ -516,10 +546,10 @@ def test_modelo_130_art110_3b_casilla_17_computes_normally_when_retention_ratio_
         },
     )
 
-    casilla_17 = next(obs for obs in result.observations if obs.casilla_id == "17")
-    casilla_14 = next(obs for obs in result.observations if obs.casilla_id == "14")
-    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == "15")
-    casilla_16 = next(obs for obs in result.observations if obs.casilla_id == "16")
+    casilla_17 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_CASILLA)
+    casilla_14 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_PREVIA_CASILLA)
+    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
+    casilla_16 = next(obs for obs in result.observations if obs.casilla_id == _M130_HOME_DEDUCTION_CASILLA)
 
     # The standard subtraction formula: (c14 - c15) - c16
     expected = casilla_14.value - casilla_15.value - casilla_16.value

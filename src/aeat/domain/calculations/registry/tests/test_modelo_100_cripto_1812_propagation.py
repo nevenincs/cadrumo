@@ -27,10 +27,23 @@ from decimal import Decimal
 
 import pytest
 
-from .. import RegistrySnapshot, calculate_registry_snapshot
+from .. import BindingId, CasillaId, RegistrySnapshot, RelationId, calculate_registry_snapshot, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M100_CRIPTO_TRANSMISION_CASILLA: CasillaId = validated_casilla_id(
+    "1804",
+    surface="_M100_CRIPTO_TRANSMISION_CASILLA",
+)
+_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA: CasillaId = validated_casilla_id(
+    "1811",
+    surface="_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA",
+)
+_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA: CasillaId = validated_casilla_id(
+    "1812",
+    surface="_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -48,7 +61,7 @@ def m100_2025_snapshot(registry_authority: ValidatedRegistryAuthority):
     return registry_authority.snapshot("100", filing_year=2025, period="0A")
 
 
-def _binding_values_2024() -> dict[str, Decimal]:
+def _binding_values_2024() -> dict[BindingId, Decimal]:
     return {
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
@@ -71,7 +84,7 @@ def _binding_values_2024() -> dict[str, Decimal]:
     }
 
 
-_RELATION_VALUES_2024: dict[str, Decimal] = {
+_RELATION_VALUES_2024: dict[RelationId, Decimal] = {
     "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
     "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
     "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
@@ -82,15 +95,23 @@ _RELATION_VALUES_2024: dict[str, Decimal] = {
 }
 
 
+def _enum_binding_values_2024() -> dict[BindingId, str]:
+    return {"renta-2024-profile-tax-residence-ccaa": "madrid"}
+
+
+def _date_binding_values_2024() -> dict[BindingId, date]:
+    return {"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)}
+
+
 def _run_2024(snapshot: RegistrySnapshot, valor_1804: Decimal):
     return calculate_registry_snapshot(
         snapshot,
-        inputs={"1804": valor_1804},
+        inputs={_M100_CRIPTO_TRANSMISION_CASILLA: valor_1804},
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values=_binding_values_2024(),
         relation_values=_RELATION_VALUES_2024,
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
-        date_binding_values={"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)},
+        enum_binding_values=_enum_binding_values_2024(),
+        date_binding_values=_date_binding_values_2024(),
     )
 
 
@@ -108,13 +129,17 @@ def test_2024_1812_identity_copy_standard_gain(m100_2024_snapshot: RegistrySnaps
     """
     result = _run_2024(m100_2024_snapshot, Decimal("8500"))
 
-    assert result.values["1811"] == Decimal("8500.00"), (
-        f"casilla 1811 = {result.values['1811']!r}; expected 8500.00.  "
+    assert result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA] == Decimal("8500.00"), (
+        f"casilla 1811 = {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r}; expected 8500.00.  "
         "Formula renta-2024-criptomonedas-ganancia-no-exenta should compute "
         "1811 = 1804 - 1806 - 1810 = 8500 - 0 - 0."
     )
-    assert result.values["1812"] == result.values["1811"], (
-        f"casilla 1812 = {result.values['1812']!r}; expected {result.values['1811']!r}. "
+    assert (
+        result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]
+        == result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]
+    ), (
+        f"casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; "
+        f"expected {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r}. "
         "Formula renta-2024-ganancia-cripto-imputable must copy 1811 to 1812 "
         "(S371 regression: before the fix 1812 stayed at 0)."
     )
@@ -128,11 +153,13 @@ def test_2024_1812_zero_when_no_crypto_gain(m100_2024_snapshot: RegistrySnapshot
     """
     result = _run_2024(m100_2024_snapshot, Decimal("0"))
 
-    assert result.values["1811"] == Decimal("0.00"), (
-        f"casilla 1811 = {result.values['1811']!r}; expected 0.00 when no crypto gain."
+    assert result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA] == Decimal("0.00"), (
+        f"casilla 1811 = {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r}; "
+        "expected 0.00 when no crypto gain."
     )
-    assert result.values["1812"] == Decimal("0.00"), (
-        f"casilla 1812 = {result.values['1812']!r}; expected 0.00 when no crypto gain.  "
+    assert result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == Decimal("0.00"), (
+        f"casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; "
+        "expected 0.00 when no crypto gain.  "
         "No spurious value must appear in 1812 when 1811 = 0."
     )
 
@@ -147,12 +174,17 @@ def test_2024_1812_anti_tautology_different_gain(m100_2024_snapshot: RegistrySna
     """
     result = _run_2024(m100_2024_snapshot, Decimal("7000"))
 
-    assert result.values["1812"] == Decimal("7000.00"), (
-        f"casilla 1812 = {result.values['1812']!r}; expected 7000.00. "
+    assert result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == Decimal("7000.00"), (
+        f"casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; expected 7000.00. "
         "Formula must propagate the actual 1811 value, not a cached constant."
     )
-    assert result.values["1812"] == result.values["1811"], (
-        f"1812 ({result.values['1812']!r}) != 1811 ({result.values['1811']!r}). Identity copy must hold for any input."
+    assert (
+        result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]
+        == result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]
+    ), (
+        f"1812 ({result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}) != "
+        f"1811 ({result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r}). "
+        "Identity copy must hold for any input."
     )
 
 
@@ -161,7 +193,7 @@ def test_2024_1812_anti_tautology_different_gain(m100_2024_snapshot: RegistrySna
 # ---------------------------------------------------------------------------
 
 
-def _binding_values_2025() -> dict[str, Decimal]:
+def _binding_values_2025() -> dict[BindingId, Decimal]:
     # 2025 retenciones/pagos are carried via relation_values not binding_values.
     # Only scalar bindings that lack a relation source are passed here.
     return {
@@ -179,7 +211,7 @@ def _binding_values_2025() -> dict[str, Decimal]:
     }
 
 
-def _relation_values_2025() -> dict[str, Decimal]:
+def _relation_values_2025() -> dict[RelationId, Decimal]:
     # All retenciones/pagos relations zero — no retenciones scenario.
     return {
         "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
@@ -195,15 +227,23 @@ def _relation_values_2025() -> dict[str, Decimal]:
     }
 
 
+def _enum_binding_values_2025() -> dict[BindingId, str]:
+    return {"renta-2025-profile-tax-residence-ccaa": "madrid"}
+
+
+def _date_binding_values_2025() -> dict[BindingId, date]:
+    return {"renta-2025-profile-taxpayer-birth-date": date(1975, 6, 15)}
+
+
 def _run_2025(snapshot: RegistrySnapshot, valor_1804: Decimal):
     return calculate_registry_snapshot(
         snapshot,
-        inputs={"1804": valor_1804},
+        inputs={_M100_CRIPTO_TRANSMISION_CASILLA: valor_1804},
         date_context={"filing_period": date(2025, 12, 31)},
         binding_values=_binding_values_2025(),
         relation_values=_relation_values_2025(),
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1975, 6, 15)},
+        enum_binding_values=_enum_binding_values_2025(),
+        date_binding_values=_date_binding_values_2025(),
     )
 
 
@@ -211,9 +251,12 @@ def test_2025_1812_identity_copy_standard_gain(m100_2025_snapshot: RegistrySnaps
     """2025 revision: 1812 must equal 1811 when 1804 = 8500."""
     result = _run_2025(m100_2025_snapshot, Decimal("8500"))
 
-    assert result.values["1812"] == result.values["1811"], (
-        f"2025: casilla 1812 = {result.values['1812']!r}; "
-        f"expected {result.values['1811']!r} (= 1811).  "
+    assert (
+        result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]
+        == result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]
+    ), (
+        f"2025: casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; "
+        f"expected {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r} (= 1811).  "
         "Formula renta-2025-ganancia-cripto-imputable must copy 1811 to 1812."
     )
 
@@ -222,4 +265,6 @@ def test_2025_1812_zero_when_no_crypto_gain(m100_2025_snapshot: RegistrySnapshot
     """2025 revision: no spurious 1812 when 1804 = 0."""
     result = _run_2025(m100_2025_snapshot, Decimal("0"))
 
-    assert result.values["1812"] == Decimal("0.00"), f"2025: casilla 1812 = {result.values['1812']!r}; expected 0.00."
+    assert result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA] == Decimal("0.00"), (
+        f"2025: casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; expected 0.00."
+    )

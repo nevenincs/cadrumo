@@ -90,12 +90,12 @@ class TestFormulaStructure:
         args = expr.get("args", [])
         # Find negate(0058) in the args
         negated_casillas = {
-            arg["args"][0]["casilla"]
+            arg["args"][0]["casilla_id"]
             for arg in args
             if arg.get("op") == "negate"
             and arg.get("args")
             and isinstance(arg["args"], (list, tuple))
-            and arg["args"][0].get("casilla")
+            and arg["args"][0].get("casilla_id")
         }
         assert "0058" in negated_casillas, (
             f"renta-2024-trabajo-total-ingresos-integros-computables must negate casilla 0058; "
@@ -110,12 +110,12 @@ class TestFormulaStructure:
         assert expr.get("op") == "sum", "top-level op must be sum"
         args = expr.get("args", [])
         negated_casillas = {
-            arg["args"][0]["casilla"]
+            arg["args"][0]["casilla_id"]
             for arg in args
             if arg.get("op") == "negate"
             and arg.get("args")
             and isinstance(arg["args"], (list, tuple))
-            and arg["args"][0].get("casilla")
+            and arg["args"][0].get("casilla_id")
         }
         assert "0059" in negated_casillas, (
             f"renta-2025-trabajo-total-ingresos-integros-computables must negate casilla 0059; "
@@ -128,7 +128,7 @@ class TestFormulaStructure:
         assert formula is not None
         expr = formula.expression.model_dump(exclude_none=True)
         args = expr.get("args", [])
-        direct_casillas = {arg.get("casilla") for arg in args if arg.get("casilla")}
+        direct_casillas = {arg.get("casilla_id") for arg in args if arg.get("casilla_id")}
         assert "0003" in direct_casillas, "0003 (Retribuciones dinerarias) must remain in the formula"
 
     def test_2025_formula_still_includes_casilla_0003(self) -> None:
@@ -137,7 +137,7 @@ class TestFormulaStructure:
         assert formula is not None
         expr = formula.expression.model_dump(exclude_none=True)
         args = expr.get("args", [])
-        direct_casillas = {arg.get("casilla") for arg in args if arg.get("casilla")}
+        direct_casillas = {arg.get("casilla_id") for arg in args if arg.get("casilla_id")}
         assert "0003" in direct_casillas, "0003 must remain in the 2025 formula"
 
 

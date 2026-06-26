@@ -26,7 +26,7 @@ from ....iva import (
     derive_flow_for_classification,
 )
 from .. import (
-    CasillaObservation,
+    CasillaId,
     DataBindingDefinition,
     IvaLedgerObservation,
     ModeloRevision,
@@ -35,14 +35,66 @@ from .. import (
     RegistryValidationError,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
     validate_ledger_iva_aggregation_binding_definition,
+    validated_casilla_id,
 )
 from .._relations import resolve_relation_values_from_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"ledger IVA aggregation fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA: CasillaId = _casilla_id(
+    "iva.autorepercutido.interior.devengado",
+)
+_M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA: CasillaId = _casilla_id(
+    "iva.autorepercutido.interior.deducible",
+)
+_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA: CasillaId = _casilla_id(
+    "iva.autorepercutido.intracomunitaria.devengado",
+)
+_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id(
+    "iva.autorepercutido.intracomunitaria.deducible",
+)
+_M303_SOPORTADO_IMPORTACIONES_CASILLA: CasillaId = _casilla_id("iva.soportado.importaciones")
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_M303_COMPENSACION_GENERADA_PERIODO_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
+_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-devengada-total")
+_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-deducible-total")
+_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.anual.resultado-regimen-general")
+_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.devengada-303",
+)
+_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.deducible-303",
+)
+_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.resultado-303",
+)
+_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.compensacion-ultimo-periodo-97",
+)
+_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.compensacion-generada-ejercicio-no-97",
+)
+_M303_REPERCUTIDO_GENERAL_BASE_CASILLA: CasillaId = _casilla_id("07")
+_M303_SOPORTADO_INTERIORES_BASE_CASILLA: CasillaId = _casilla_id("28")
+_M303_REPERCUTIDO_GENERAL_CUOTA_CASILLA: CasillaId = _casilla_id("09")
+_M303_SOPORTADO_INTERIORES_CUOTA_CASILLA: CasillaId = _casilla_id("29")
+_M303_REPERCUTIDO_SUPER_REDUCIDO_BASE_CASILLA: CasillaId = _casilla_id("01")
+_M303_REPERCUTIDO_REDUCIDO_BASE_CASILLA: CasillaId = _casilla_id("04")
 
 
 @lru_cache(maxsize=1)
@@ -110,7 +162,7 @@ def _calculate_303_from_observations(
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
     }
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -132,7 +184,7 @@ def _calculate_390_from_observations_and_303_filings(
             modelo="303",
             filing_year=filing_year,
             period=period,
-            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+            observations=result.observations,
         )
         for period, result in quarterly_results.items()
     )
@@ -144,7 +196,7 @@ def _calculate_390_from_observations_and_303_filings(
     )
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     binding_values = {**ledger_binding_values, **relation_binding_values}
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -347,23 +399,25 @@ def test_calculate_303_domestic_reverse_charge_books_boxes_13_and_37_with_zero_n
     )
     # Box 13 (devengado) and box 37 (deducible) both echo the self-assessed cuota
     # the observation carried — the binding copies the ledger fact verbatim.
-    assert with_reverse_charge.values["iva.autorepercutido.interior.devengado"] == reverse_charge_cuota
-    assert with_reverse_charge.values["iva.autorepercutido.interior.deducible"] == reverse_charge_cuota
+    assert with_reverse_charge.values[_M303_AUTOREPERCUTIDO_INTERIOR_DEVENGADO_CASILLA] == reverse_charge_cuota
+    assert with_reverse_charge.values[_M303_AUTOREPERCUTIDO_INTERIOR_DEDUCIBLE_CASILLA] == reverse_charge_cuota
     # The reverse-charge nets to zero: both totals rose by exactly the
     # self-assessed cuota, so the resultado is unchanged versus the
     # domestic-only filing. Each delta is computed by comparison, not by
     # summing literals (no-tautological-calculation-tests).
     assert (
-        with_reverse_charge.values["iva.cuota-devengada-total"] - domestic_only.values["iva.cuota-devengada-total"]
+        with_reverse_charge.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
+        - domestic_only.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
         == reverse_charge_cuota
     )
     assert (
-        with_reverse_charge.values["iva.cuota-deducible-total"] - domestic_only.values["iva.cuota-deducible-total"]
+        with_reverse_charge.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+        - domestic_only.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
         == reverse_charge_cuota
     )
     assert (
-        with_reverse_charge.values["iva.resultado-regimen-general"]
-        == domestic_only.values["iva.resultado-regimen-general"]
+        with_reverse_charge.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
+        == domestic_only.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
     )
 
 
@@ -550,10 +604,10 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
         quarterly_results=quarterly_results,
     )
 
-    chain_pairs = (
-        ("iva.anual.cuota-devengada-total", "iva.anual.reconciliacion.devengada-303"),
-        ("iva.anual.cuota-deducible-total", "iva.anual.reconciliacion.deducible-303"),
-        ("iva.anual.resultado-regimen-general", "iva.anual.reconciliacion.resultado-303"),
+    chain_pairs: tuple[tuple[CasillaId, CasillaId], ...] = (
+        (_M390_CUOTA_DEVENGADA_TOTAL_CASILLA, _M390_RECONCILIACION_DEVENGADA_303_CASILLA),
+        (_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA, _M390_RECONCILIACION_DEDUCIBLE_303_CASILLA),
+        (_M390_RESULTADO_REGIMEN_GENERAL_CASILLA, _M390_RECONCILIACION_RESULTADO_303_CASILLA),
     )
     for annual_casilla, reconciliation_casilla in chain_pairs:
         assert annual_casilla in annual_result.values, f"{annual_casilla!r} missing from 390 result"
@@ -566,17 +620,17 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
     q4_result = quarterly_results["4T"].values
     non_q4_results = tuple(result.values for period, result in quarterly_results.items() if period != "4T")
     non_q4_generated = sum(
-        (values["iva.compensacion-generada-periodo"] for values in non_q4_results),
+        (values[_M303_COMPENSACION_GENERADA_PERIODO_CASILLA] for values in non_q4_results),
         Decimal("0"),
     )
 
     assert (
-        annual_result.values["iva.anual.compensacion-ultimo-periodo-97"]
-        == q4_result["iva.compensacion-generada-periodo"]
+        annual_result.values[_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA]
+        == q4_result[_M303_COMPENSACION_GENERADA_PERIODO_CASILLA]
     )
-    assert annual_result.values["iva.anual.compensacion-generada-ejercicio-no-97"] == non_q4_generated
-    assert annual_result.values["iva.anual.compensacion-ultimo-periodo-97"] > Decimal("0")
-    assert annual_result.values["iva.anual.compensacion-generada-ejercicio-no-97"] > Decimal("0")
+    assert annual_result.values[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA] == non_q4_generated
+    assert annual_result.values[_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA] > Decimal("0")
+    assert annual_result.values[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA] > Decimal("0")
 
 
 def test_resolve_aic_official_box_parity_routes_devengado_and_deducible_net_zero() -> None:
@@ -652,12 +706,15 @@ def test_calculate_303_aic_official_box_parity_books_boxes_and_leaves_resultado_
             ),
         ),
     )
-    assert with_aic.values["iva.autorepercutido.intracomunitaria.devengado"] == aic_cuota
-    assert with_aic.values["iva.autorepercutido.intracomunitaria.deducible"] == aic_cuota
+    assert with_aic.values[_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA] == aic_cuota
+    assert with_aic.values[_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA] == aic_cuota
     # The AIC contribution nets to zero in the resultado (the semantic
     # intracomunitaria casilla feeds both totals equally); the parity casillas
     # are pure official-box exposure, not in the resultado formula.
-    assert with_aic.values["iva.resultado-regimen-general"] == domestic_only.values["iva.resultado-regimen-general"]
+    assert (
+        with_aic.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
+        == domestic_only.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
+    )
 
 
 def test_resolve_import_third_country_routes_deducible_only() -> None:
@@ -712,13 +769,15 @@ def test_calculate_303_import_deducible_reduces_resultado_by_its_cuota() -> None
             ),
         ),
     )
-    assert with_import.values["iva.soportado.importaciones"] == import_cuota
+    assert with_import.values[_M303_SOPORTADO_IMPORTACIONES_CASILLA] == import_cuota
     assert (
-        with_import.values["iva.cuota-deducible-total"] - without_import.values["iva.cuota-deducible-total"]
+        with_import.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+        - without_import.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
         == import_cuota
     )
     assert (
-        without_import.values["iva.resultado-regimen-general"] - with_import.values["iva.resultado-regimen-general"]
+        without_import.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
+        - with_import.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
         == import_cuota
     )
 
@@ -868,15 +927,15 @@ def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
         observations=(repercutido, soportado),
     )
     # Base imponible boxes now carry the ledger base sum (the regression target).
-    assert result.values["07"] == Decimal("6500")
-    assert result.values["28"] == Decimal("300")
+    assert result.values[_M303_REPERCUTIDO_GENERAL_BASE_CASILLA] == Decimal("6500")
+    assert result.values[_M303_SOPORTADO_INTERIORES_BASE_CASILLA] == Decimal("300")
     # Cuota boxes are unchanged — the base binding is independent of the cuota
     # binding (casilla 09 is not base x tipo here, it is its own aggregation).
-    assert result.values["09"] == Decimal("1365")
-    assert result.values["29"] == Decimal("63")
+    assert result.values[_M303_REPERCUTIDO_GENERAL_CUOTA_CASILLA] == Decimal("1365")
+    assert result.values[_M303_SOPORTADO_INTERIORES_CUOTA_CASILLA] == Decimal("63")
     # No reduced / super-reduced operations -> those base boxes resolve to zero.
-    assert result.values["01"] == Decimal("0")
-    assert result.values["04"] == Decimal("0")
+    assert result.values[_M303_REPERCUTIDO_SUPER_REDUCIDO_BASE_CASILLA] == Decimal("0")
+    assert result.values[_M303_REPERCUTIDO_REDUCIDO_BASE_CASILLA] == Decimal("0")
 
 
 def test_iva_ledger_observation_is_strict_and_frozen() -> None:

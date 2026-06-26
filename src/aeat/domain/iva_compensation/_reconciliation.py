@@ -328,7 +328,8 @@ def _first_period_zero_decision(ctx: _ReconciliationContext) -> IvaCompensationR
             blocked=False,
             stale_wallet=False,
             reason=(
-                "First registered IVA filing period: casilla 110 is zero per LIVA art. 99.5. "
+                "First registered IVA filing period: "
+                "iva.compensacion-pendiente-periodos-anteriores is zero per LIVA art. 99.5. "
                 "No prior compensation balance exists; zero is legally certain and non-blocking."
             ),
             wallet_captured_at=ctx.wallet_captured_at,

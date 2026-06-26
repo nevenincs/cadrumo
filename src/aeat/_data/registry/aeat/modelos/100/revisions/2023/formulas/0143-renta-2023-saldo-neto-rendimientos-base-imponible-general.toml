@@ -1,12 +1,12 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-saldo-neto-rendimientos-base-imponible-general"
-target = "0432"
+target_casilla_id = "0432"
 expression = { op = "sum", args = [
-    { casilla = "0025" },
-    { casilla = "0060" },
-    { casilla = "0155" },
-    { casilla = "0156" },
-    { casilla = "0235" },
+    { casilla_id = "0025" },
+    { casilla_id = "0060" },
+    { casilla_id = "0155" },
+    { casilla_id = "0156" },
+    { casilla_id = "0235" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-22", "ley-35-2006:art-25", "ley-35-2006:art-27", "ley-35-2006:art-50"]

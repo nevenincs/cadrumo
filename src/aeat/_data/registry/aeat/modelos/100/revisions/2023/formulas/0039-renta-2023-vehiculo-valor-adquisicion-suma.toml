@@ -1,9 +1,9 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-vehiculo-valor-adquisicion-suma"
-target = "1919"
+target_casilla_id = "1919"
 expression = { op = "sum", args = [
-    { casilla = "1920" },
-    { casilla = "1921" },
+    { casilla_id = "1920" },
+    { casilla_id = "1921" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

@@ -1,6 +1,6 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-matrimonio-mes-fin"
-target = "0247"
+target_casilla_id = "0247"
 # Casilla 0247: Último mes completo de 2025 en que estuvo vigente el matrimonio.
 # Always 12 when a marriage_date is present (the marriage remains in force
 # through year-end by assumption; dissolution is not modelled here).

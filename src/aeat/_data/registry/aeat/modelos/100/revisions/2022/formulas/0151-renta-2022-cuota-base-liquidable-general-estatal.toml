@@ -1,9 +1,9 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-cuota-base-liquidable-general-estatal"
-target = "0532"
+target_casilla_id = "0532"
 expression = { op = "subtract", args = [
-    { casilla = "0528" },
-    { casilla = "0530" },
+    { casilla_id = "0528" },
+    { casilla_id = "0530" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]

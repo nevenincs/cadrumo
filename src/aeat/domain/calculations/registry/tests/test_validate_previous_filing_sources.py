@@ -17,6 +17,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import resources
+from .. import CasillaId, validated_casilla_id
 from .._bindings_previous_filing import (
     RegistryModeloObservationRequirement,
     previous_filing_observation_requirements,
@@ -26,6 +27,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CARRY_BINDING_ID = "modelo-130-pagos-fraccionados-anteriores"
 _FILING_YEAR = 2026
+_POSITIVE_PART_CASILLA: CasillaId = validated_casilla_id("07", surface="_POSITIVE_PART_CASILLA")
+_MINORACION_CASILLA: CasillaId = validated_casilla_id("16", surface="_MINORACION_CASILLA")
 
 
 def _casilla_05_requirements(period: str) -> tuple[RegistryModeloObservationRequirement, ...]:
@@ -57,7 +60,7 @@ def test_second_quarter_requires_only_the_single_prior_quarter() -> None:
     # The carry reads both the positive-part (07) and minoración (16) source
     # casillas; the 1T requirement also bundles the casilla-15 carry's
     # saldo-negativo-fin-periodo because both bindings share the (130, 2026, 1T) key.
-    assert {"07", "16"}.issubset(set(requirement.source_casillas))
+    assert {_POSITIVE_PART_CASILLA, _MINORACION_CASILLA}.issubset(set(requirement.source_casilla_ids))
 
 
 def test_fourth_quarter_requires_every_prior_same_ejercicio_quarter() -> None:

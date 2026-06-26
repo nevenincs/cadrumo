@@ -1,9 +1,9 @@
 [[revisions."2004-y-siguientes".formulas]]
 id = "modelo-309-iva-cuota-no-periodica-total"
-target = "iva.cuota-no-periodica-total"
+target_casilla_id = "iva.cuota-no-periodica-total"
 expression = { op = "add", args = [
-    { casilla = "iva.autorepercutido.intracomunitaria" },
-    { casilla = "iva.soportado.recargo-equivalencia" },
+    { casilla_id = "iva.autorepercutido.intracomunitaria" },
+    { casilla_id = "iva.soportado.recargo-equivalencia" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]

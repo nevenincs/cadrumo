@@ -11,10 +11,10 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from .....core.resources import bundled_path
-from .. import build_snapshot, load_registry_tree, resolve_export_layout
+from .. import CasillaFieldKind, build_snapshot, load_registry_tree, resolve_export_layout
 from .._record_design import (
     build_diseno_coverage_report,
-    calculation_closure_identities,
+    calculation_closure_record_design_metadata,
     derive_calculation_completeness_casillas,
     derive_diseno_coverage_casillas,
     extract_record_design,
@@ -309,16 +309,17 @@ def test_calculation_completeness_manifests_match_their_calculation_surface() ->
 
     For each checked-in calculation-completeness manifest, re-run the
     off-load-path derivation — the modelo's calculation closure keyed on
-    each closure casilla's own registry ``(segmento, number)`` identity —
-    and assert the derived casilla set still equals the manifest's
-    enumerated set. A divergence means the calculation surface changed
-    without a manifest refresh, or the manifest was hand-edited away from
-    the registry — both are CI failures.
+    canonical ``casilla.id`` and carrying reviewed ``(segmento, number)``
+    metadata — and assert the derived casilla set still equals the
+    manifest's enumerated set. A divergence means the calculation surface
+    changed without a manifest refresh, or the manifest was hand-edited
+    away from the registry — both are CI failures.
 
     The derivation is *vocabulary-agnostic*: only Modelo 200's casilla
     numbers are five-digit AEAT Diseño tags, so the manifest is derived
-    from the modelo's calculation surface keyed on the registry identity
-    each closure casilla declares. For a multi-segment modelo the derived
+    from the modelo's calculation surface keyed on canonical
+    ``casilla.id`` and carrying the registry metadata each closure casilla
+    declares. For a multi-segment modelo the derived
     segments are additionally verified against the official AEAT Diseño
     de Registros corpus — the Diseño remains authoritative on which
     record segment carries each number — by passing the corpus path to
@@ -356,7 +357,7 @@ def test_calculation_completeness_manifests_match_their_calculation_surface() ->
                 )
                 diseno_path = bundled_path() / catalogues.sources[record_design_refs[0]].corpus_path
             derived = frozenset(
-                (casilla.segmento, casilla.number)
+                (casilla.casilla_id, casilla.segmento, casilla.number)
                 for casilla in derive_calculation_completeness_casillas(
                     revision,
                     modelo.id,
@@ -364,13 +365,18 @@ def test_calculation_completeness_manifests_match_their_calculation_surface() ->
                     diseno_path=diseno_path,
                 )
             )
-            assert derived == manifest.identities(), (
+            missing_ids = sorted(casilla for casilla in derived if casilla[0] is None)
+            assert not missing_ids, (
+                f"modelo {modelo.id} revision {revision.id}: derived manifest rows "
+                f"lack canonical casilla ids: {missing_ids!r}"
+            )
+            assert derived == manifest.manifest_keys(), (
                 f"modelo {modelo.id} revision {revision.id}: calculation-completeness "
                 "manifest has drifted from the registry calculation surface; "
                 "manifest-only casillas: "
-                f"{sorted(manifest.identities() - derived, key=lambda pair: (pair[0] or '', pair[1]))}; "
+                f"{sorted(manifest.manifest_keys() - derived, key=lambda item: (item[0], item[1] or '', item[2]))}; "
                 "closure-only casillas: "
-                f"{sorted(derived - manifest.identities(), key=lambda pair: (pair[0] or '', pair[1]))}"
+                f"{sorted(derived - manifest.manifest_keys(), key=lambda item: (item[0], item[1] or '', item[2]))}"
             )
             checked += 1
 
@@ -401,7 +407,7 @@ def test_calculation_completeness_gate_is_live_for_every_calculation_bearing_mod
     dormant = 0
     for modelo in modelos:
         for revision in modelo.revisions.values():
-            closure = calculation_closure_identities(revision, modelo.id)
+            closure = calculation_closure_record_design_metadata(revision, modelo.id)
             manifest = revision.completeness_manifest
             if closure:
                 assert manifest is not None, (
@@ -500,10 +506,10 @@ def test_calculation_closure_bounds_the_full_diseno_coverage() -> None:
     # before asserting the bound, so the gate's claim remains "every
     # *exported* closure casilla appears in the Diseño" rather than the
     # over-extended "every closure casilla appears in the Diseño".
-    internal_only_identities = frozenset(
+    internal_only_metadata = frozenset(
         (casilla.segmento, casilla.number) for casilla in revision.casillas if casilla.internal_only
     )
-    exported_closure = closure - internal_only_identities
+    exported_closure = closure - internal_only_metadata
     closure_only = exported_closure - coverage
     assert exported_closure <= coverage, (
         "the calculation-completeness casilla set (minus internal_only ceilings) "
@@ -821,7 +827,7 @@ def test_modelo_131_export_records_derive_fields_from_reviewed_bindings(filing_y
             for binding in bindings.values()
             if binding.selector.get("record") == record.binding_record
         }
-        derived = {field.binding: field for field in record.fields if field.kind == "binding"}
+        derived = {field.binding: field for field in record.fields if field.kind is CasillaFieldKind.BINDING}
 
         assert expected
         assert set(derived) == set(expected)
@@ -852,10 +858,10 @@ def test_modelo_131_submitted_file_profiles_target_exported_casillas(filing_year
     )
 
     exported_casillas = {
-        field.casilla
+        field.casilla_id
         for record in layout.records
         for field in record.fields
-        if field.kind == "casilla" and field.casilla is not None
+        if field.kind is CasillaFieldKind.CASILLA and field.casilla_id is not None
     }
 
     assert {t.casilla_id for t in profile.target_casillas} <= exported_casillas

@@ -26,6 +26,7 @@ from ._carry_forward import (
 )
 from ._errors import (
     IvaCompensationCarryForwardPolicyError,
+    IvaCompensationCasillaReferenceError,
     IvaCompensationDecimalParseError,
     IvaCompensationReconciliationInputError,
     IvaCompensationSeedConflictError,
@@ -39,6 +40,7 @@ __all__ = [
     "IvaCompensationCarryForwardLot",
     "IvaCompensationCarryForwardPolicyError",
     "IvaCompensationCarryForwardReport",
+    "IvaCompensationCasillaReferenceError",
     "IvaCompensationDecimalParseError",
     "IvaCompensationExpiryReviewState",
     "IvaCompensationOverride",

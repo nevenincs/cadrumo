@@ -8,9 +8,9 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import bundled_path
+from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
-    CasillaObservation,
-    RegistryModeloObservation,
+    CasillaId,
     RegistryValidationError,
     RegistryValidator,
     build_snapshot,
@@ -18,11 +18,25 @@ from .. import (
     load_registry_tree,
     relation_source_requirements,
     resolve_relation_values_from_observations,
+    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"Modelo 180 registry fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M115_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
+_M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
+_M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
+_M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
 
 
 def _load_modelo(modelo_id: str):
@@ -84,8 +98,8 @@ def test_modelo_180_relations_resolve_against_modelo_115_registry() -> None:
     )
 
     modelo_115_outputs = {casilla.id for casilla in snapshot_115.revision.casillas}
-    relation_source_outputs = {relation.source_output for relation in snapshot.revision.relations}
-    assert relation_source_outputs <= modelo_115_outputs
+    relation_source_casilla_ids = {relation.source_casilla_id for relation in snapshot.revision.relations}
+    assert relation_source_casilla_ids <= modelo_115_outputs
     assert {tuple(relation.source_periods) for relation in snapshot.revision.relations} == {("1T", "2T", "3T", "4T")}
 
 
@@ -106,20 +120,20 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
         filing_year=2025,
         period="1T",
     )
-    source_casillas = {casilla.id: casilla for casilla in snapshot_115.revision.casillas}
+    source_casilla_ids = {casilla.id: casilla for casilla in snapshot_115.revision.casillas}
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
-    observed_by_period: dict[str, dict[str, Decimal]] = {}
+    observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}
     for requirement in requirements:
-        source_casilla = source_casillas[requirement.source_output]
+        source_casilla = source_casilla_ids[requirement.source_casilla_id]
         for index, period in enumerate(requirement.periods):
             value = _value_for(source_casilla.data_type, index)
-            observed_by_period.setdefault(period, {})[requirement.source_output] = value
+            observed_by_period.setdefault(period, {})[requirement.source_casilla_id] = value
     observations = tuple(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="115",
             filing_year=2025,
             period=period,
-            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
+            casilla_values=casilla_values,
         )
         for period, casilla_values in sorted(observed_by_period.items())
     )
@@ -136,10 +150,10 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
         relation_values=relation_values,
     )
 
-    entries_by_target = {entry.target: entry for entry in result.entries}
-    assert "modelo-180-rel-115-perceptores-anual" in entries_by_target["decl.total-perceptores"].operand_refs
-    assert "modelo-180-rel-115-base-anual" in entries_by_target["decl.base-total"].operand_refs
-    assert "modelo-180-rel-115-retenciones-anual" in entries_by_target["decl.retenciones-total"].operand_refs
+    entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
+    assert "modelo-180-rel-115-perceptores-anual" in entries_by_target[_M180_TOTAL_PERCEPTORES_CASILLA].operand_refs
+    assert "modelo-180-rel-115-base-anual" in entries_by_target[_M180_BASE_TOTAL_CASILLA].operand_refs
+    assert "modelo-180-rel-115-retenciones-anual" in entries_by_target[_M180_RETENCIONES_TOTAL_CASILLA].operand_refs
 
 
 def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:
@@ -152,11 +166,11 @@ def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:
         period="0A",
     )
     incomplete_observations = (
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="115",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("1")),),
+            casilla_values={_M115_PERCEPTORES_CASILLA: Decimal("1")},
         ),
     )
 

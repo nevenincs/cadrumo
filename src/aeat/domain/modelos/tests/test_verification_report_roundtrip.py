@@ -18,6 +18,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage import SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations.registry import CasillaId, validated_casilla_id
 from .._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -40,6 +41,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _BUCKET_ID = "modelo-runtime"
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"verification-report fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.devengado")
+_IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
+_IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_IVA_RESOLVED_CASILLA_IDS = (_IVA_DEDUCIBLE_CASILLA, _IVA_RESULTADO_CASILLA)
+_IVA_MISSING_REQUIRED_CASILLA_IDS = (_IVA_DEVENGADO_CASILLA,)
+
+
 def _populated_report() -> VerificationReport:
     """Build a VerificationReport with every defaultable field non-default."""
 
@@ -60,7 +75,7 @@ def _populated_report() -> VerificationReport:
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
                 severity=ModeloVerificationFindingSeverity.BLOCKING,
-                casilla_id="iva.devengado",
+                casilla_id=_IVA_DEVENGADO_CASILLA,
                 message="iva.devengado is required but unresolved",
                 next_action="aeat app modelo work calculate <id> --casilla iva.devengado=...",
             ),
@@ -68,12 +83,12 @@ def _populated_report() -> VerificationReport:
                 kind=ModeloVerificationFindingKind.UNRESOLVED_BINDING,
                 severity=ModeloVerificationFindingSeverity.WARNING,
                 casilla_id=None,
-                expectation_id="ivaSourceRequired",
+                expectation_id="iva-source-required",
                 message="prior-period source not yet pulled",
             ),
         ),
-        resolved_casillas=("iva.deducible", "iva.resultado"),
-        missing_required_casillas=("iva.devengado",),
+        resolved_casilla_ids=_IVA_RESOLVED_CASILLA_IDS,
+        missing_required_casilla_ids=_IVA_MISSING_REQUIRED_CASILLA_IDS,
         run_at=now,
         verified_by=verified_by,
         # Non-default lifecycle bit: granted_verificado_completo defaults
@@ -107,16 +122,48 @@ def test_verification_report_catalogue_survives_encrypted_storage(
     f0 = loaded_report.findings[0]
     assert f0.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
     assert f0.severity is ModeloVerificationFindingSeverity.BLOCKING
-    assert f0.casilla_id == "iva.devengado"
+    assert f0.casilla_id == _IVA_DEVENGADO_CASILLA
     assert f0.next_action is not None
     f1 = loaded_report.findings[1]
     assert f1.kind is ModeloVerificationFindingKind.UNRESOLVED_BINDING
     assert f1.severity is ModeloVerificationFindingSeverity.WARNING
-    assert f1.expectation_id == "ivaSourceRequired"
-    # Resolved + missing casillas tuples preserve order and content.
-    assert loaded_report.resolved_casillas == ("iva.deducible", "iva.resultado")
-    assert loaded_report.missing_required_casillas == ("iva.devengado",)
+    assert f1.expectation_id == "iva-source-required"
+    # Resolved + missing casilla-id tuples preserve order and content.
+    assert loaded_report.resolved_casilla_ids == _IVA_RESOLVED_CASILLA_IDS
+    assert loaded_report.missing_required_casilla_ids == _IVA_MISSING_REQUIRED_CASILLA_IDS
     assert (profile.paths.db_dir / "aeat.db").is_file()
+
+
+def test_verification_report_rejects_legacy_casilla_list_keys() -> None:
+    """VerificationReport must not accept pre-canonical casilla list field names."""
+
+    now = datetime.now(UTC).replace(microsecond=0)
+    revision_id = "b" * 64
+    verified_by = "cli/aeat"
+    report_id = derive_verification_report_id(
+        calculation_revision_id=revision_id,
+        run_at=now,
+        verified_by=verified_by,
+    )
+
+    with pytest.raises(ValidationError) as raised:
+        VerificationReport.model_validate(
+            {
+                "verification_report_id": report_id,
+                "calculation_revision_id": revision_id,
+                "completeness_status": VerificationCompletenessStatus.BLOCKED,
+                "findings": (),
+                "resolved_casillas": _IVA_RESOLVED_CASILLA_IDS,
+                "missing_required_casillas": _IVA_MISSING_REQUIRED_CASILLA_IDS,
+                "run_at": now,
+                "verified_by": verified_by,
+                "granted_verificado_completo": False,
+            },
+        )
+
+    message = str(raised.value)
+    assert "resolved_casillas" in message
+    assert "missing_required_casillas" in message
 
 
 def test_verification_report_flipped_grant_invariant_surfaces_at_load(

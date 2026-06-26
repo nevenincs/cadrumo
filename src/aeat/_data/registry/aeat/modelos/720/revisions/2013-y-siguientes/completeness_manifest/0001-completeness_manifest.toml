@@ -4,7 +4,9 @@ legal_refs = ["ley-58-2003:art-93", "orden-hap-72-2013:art-1", "orden-hap-72-201
 source_refs = ["aeat-dr-720"]
 
 [[revisions."2013-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.ejercicio"
 number = "ejercicio"
 
 [[revisions."2013-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.tipo-declaracion"
 number = "tipo-declaracion"

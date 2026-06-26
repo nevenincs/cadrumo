@@ -4,7 +4,7 @@ kind = "cross_model_output"
 dependency_role = "instalment_to_final_settlement"
 source_modelo = "130"
 source_revision_selector = { year = 2025 }
-source_output = "19"
+source_casilla_id = "19"
 target_binding = "renta-2025-modelo-130-pagos-fraccionados"
 period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]

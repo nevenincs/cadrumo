@@ -9,15 +9,39 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import (
+    CasillaId,
+    InputKind,
     ModeloDefinition,
     RegistryCatalogues,
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
     load_registry_tree,
+    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_PATRIMONIO_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.base-imponible",
+    surface="_PATRIMONIO_BASE_IMPONIBLE_CASILLA",
+)
+_PATRIMONIO_BASE_LIQUIDABLE_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.base-liquidable",
+    surface="_PATRIMONIO_BASE_LIQUIDABLE_CASILLA",
+)
+_PATRIMONIO_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.cuota-integra",
+    surface="_PATRIMONIO_CUOTA_INTEGRA_CASILLA",
+)
+_PATRIMONIO_REDUCCION_LIMITE_80_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.reduccion-limite-80",
+    surface="_PATRIMONIO_REDUCCION_LIMITE_80_CASILLA",
+)
+_PATRIMONIO_CUOTA_A_INGRESAR_CASILLA: CasillaId = validated_casilla_id(
+    "patrimonio.cuota-a-ingresar",
+    surface="_PATRIMONIO_CUOTA_A_INGRESAR_CASILLA",
+)
 
 
 def _load_modelo_714() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -50,10 +74,10 @@ def test_modelo_714_cuota_integra_escala_matches_boe_table(base_liquidable: str,
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={"patrimonio.base-liquidable": Decimal(base_liquidable)},
+        inputs={_PATRIMONIO_BASE_LIQUIDABLE_CASILLA: Decimal(base_liquidable)},
         date_context={"filing_period": date(2024, 12, 31)},
     )
-    assert result.values.get("patrimonio.cuota-integra") == Decimal(expected_cuota)
+    assert result.values[_PATRIMONIO_CUOTA_INTEGRA_CASILLA] == Decimal(expected_cuota)
 
 
 def test_modelo_714_validator_accepts_committed_definition() -> None:
@@ -82,20 +106,22 @@ def test_modelo_714_revision_2021_cuota_integra_computed_via_grounded_escala() -
     modelo, _ = _load_modelo_714()
     revision = modelo.revisions["2021-y-siguientes"]
     # The sole cuota-íntegra formula is the real, art.30-grounded escala — not a placeholder.
-    escala_formula = next(f for f in revision.formulas if f.target == "patrimonio.cuota-integra")
+    escala_formula = next(f for f in revision.formulas if f.target_casilla_id == _PATRIMONIO_CUOTA_INTEGRA_CASILLA)
     assert escala_formula.id == "patrimonio-cuota-integra-escala-estatal"
     assert "ley-19-1991:art-30" in escala_formula.legal_refs
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     # The escala output casilla is computed via that formula.
-    assert casillas["patrimonio.cuota-integra"].input_kind == "computed"
-    assert casillas["patrimonio.cuota-integra"].formula == "patrimonio-cuota-integra-escala-estatal"
+    assert casillas[_PATRIMONIO_CUOTA_INTEGRA_CASILLA].input_kind is InputKind.COMPUTED
+    assert (
+        casillas[_PATRIMONIO_CUOTA_INTEGRA_CASILLA].formula == "patrimonio-cuota-integra-escala-estatal"
+    )
     # The manual foundation (inputs + not-yet-modelled downstream) is unchanged.
     for casilla_id in (
-        "patrimonio.base-imponible",
-        "patrimonio.base-liquidable",
-        "patrimonio.cuota-a-ingresar",
+        _PATRIMONIO_BASE_IMPONIBLE_CASILLA,
+        _PATRIMONIO_BASE_LIQUIDABLE_CASILLA,
+        _PATRIMONIO_CUOTA_A_INGRESAR_CASILLA,
     ):
-        assert casillas[casilla_id].input_kind == "manual"
+        assert casillas[casilla_id].input_kind is InputKind.MANUAL
 
 
 def test_modelo_714_snapshot_builds_for_2021_event_period() -> None:
@@ -128,8 +154,8 @@ def test_modelo_714_reduccion_limite_80_is_80pct_of_cuota_integra(
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={"patrimonio.base-liquidable": Decimal(base_liquidable)},
+        inputs={_PATRIMONIO_BASE_LIQUIDABLE_CASILLA: Decimal(base_liquidable)},
         date_context={"filing_period": date(2024, 12, 31)},
     )
-    assert result.values.get("patrimonio.cuota-integra") == Decimal(expected_cuota)
-    assert result.values.get("patrimonio.reduccion-limite-80") == Decimal(expected_suelo_80)
+    assert result.values[_PATRIMONIO_CUOTA_INTEGRA_CASILLA] == Decimal(expected_cuota)
+    assert result.values[_PATRIMONIO_REDUCCION_LIMITE_80_CASILLA] == Decimal(expected_suelo_80)

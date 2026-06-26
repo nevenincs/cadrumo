@@ -1,6 +1,6 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-matrimonio-mes-inicio"
-target = "0246"
+target_casilla_id = "0246"
 # Casilla 0246: Primer mes en que estuvo vigente el matrimonio en 2025.
 # Resolves to the month integer (1-12) when marriage_date is in 2025,
 # or 1 when the marriage predates 2025.  The binding is absent when no

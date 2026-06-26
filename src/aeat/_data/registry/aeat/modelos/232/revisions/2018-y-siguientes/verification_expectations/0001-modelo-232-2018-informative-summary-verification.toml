@@ -1,6 +1,6 @@
 [[revisions."2018-y-siguientes".verification_expectations]]
 id = "modelo-232-2018-informative-summary-verification"
-computed_casillas = ["decl.ejercicio", "decl.tipo-ejercicio", "decl.cnae"]
+computed_casilla_ids = ["decl.ejercicio", "decl.tipo-ejercicio", "decl.cnae"]
 tolerance = "0.00"
 rounding = "none"
 min_coverage = "1.0"

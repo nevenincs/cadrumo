@@ -1,6 +1,6 @@
 [[revisions."2013-y-siguientes".verification_expectations]]
 id = "modelo-720-informative-summary-verification"
-computed_casillas = ["decl.ejercicio", "decl.tipo-declaracion"]
+computed_casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
 tolerance = "0.00"
 rounding = "none"
 min_coverage = "1.0"

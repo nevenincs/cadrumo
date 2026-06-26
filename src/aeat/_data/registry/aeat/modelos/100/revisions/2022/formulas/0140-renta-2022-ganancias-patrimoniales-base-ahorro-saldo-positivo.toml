@@ -1,10 +1,10 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-ganancias-patrimoniales-base-ahorro-saldo-positivo"
-target = "0424"
+target_casilla_id = "0424"
 expression = { op = "max", args = [
     { op = "subtract", args = [
-        { casilla = "0422" },
-        { casilla = "0423" },
+        { casilla_id = "0422" },
+        { casilla_id = "0423" },
     ] },
     { literal = "0" },
 ] }

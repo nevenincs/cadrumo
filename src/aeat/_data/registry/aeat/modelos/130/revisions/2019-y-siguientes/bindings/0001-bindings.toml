@@ -10,7 +10,7 @@
 [[revisions."2019-y-siguientes".bindings]]
 id = "modelo-130-resultados-negativos-anteriores"
 source = "previous_filing"
-selector = { source_modelo = "130", source_output = "saldo-negativo-fin-periodo", source_period_offset_from_target = -1, max_year_delta = 0 }
+selector = { source_modelo = "130", source_casilla_id = "saldo-negativo-fin-periodo", source_period_offset_from_target = -1, max_year_delta = 0 }
 aggregation = { op = "copy" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions"]
@@ -37,7 +37,7 @@ required_text = ["Resultados negativos"]
 [[revisions."2019-y-siguientes".bindings]]
 id = "modelo-130-pagos-fraccionados-anteriores"
 source = "previous_filing"
-selector = { source_modelo = "130", source_casillas = ["07", "16"], prior_quarter_expanding_span = true, max_year_delta = 0 }
+selector = { source_modelo = "130", source_casilla_ids = ["07", "16"], prior_quarter_expanding_span = true, max_year_delta = 0 }
 aggregation = { op = "prior_pagos_fraccionados" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions"]

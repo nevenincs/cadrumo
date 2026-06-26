@@ -5,7 +5,7 @@
 [[revisions."2024".bindings]]
 id = "renta-2024-ledger-expense-0199-deductible"
 source = "ledger_renta_expense_aggregation"
-selector = { modelo = "100", period = "0A", target_casilla = "0199", fact = "deductible_amount_sum" }
+selector = { modelo = "100", period = "0A", target_casilla_id = "0199", fact = "deductible_amount_sum" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["lirpf-cuota-chain-authority"]

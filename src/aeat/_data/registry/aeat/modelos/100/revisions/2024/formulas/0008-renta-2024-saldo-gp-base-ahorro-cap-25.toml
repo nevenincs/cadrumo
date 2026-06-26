@@ -1,9 +1,9 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-saldo-gp-base-ahorro-cap-25"
-target = "0446"
+target_casilla_id = "0446"
 expression = { op = "min", args = [
-    { casilla = "0425" },
-    { op = "percent", args = [{ casilla = "0429" }, { literal = "25" }] },
+    { casilla_id = "0425" },
+    { op = "percent", args = [{ casilla_id = "0429" }, { literal = "25" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-49"]

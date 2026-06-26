@@ -11,6 +11,7 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .. import (
+    CasillaFieldKind,
     DataBindingDefinition,
     ExportRecordDefinition,
     InputKind,
@@ -168,7 +169,7 @@ def test_committed_modelo_232_verification_expectation_is_informative_strict() -
             assert expectation.tolerance == 0, (revision.id, expectation.id)
             assert expectation.rounding == "none"
             assert expectation.discrepancy_causes == ("extraction_unreliable",)
-            assert set(expectation.computed_casillas) <= casilla_ids
+            assert set(expectation.computed_casilla_ids) <= casilla_ids
 
 
 def test_committed_modelo_232_construct_includes_profile_and_expectation_and_extractor_link() -> None:
@@ -266,20 +267,20 @@ def test_committed_modelo_232_construct_includes_deadline_and_schedule_members()
         assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
 
 
-_EXPECTED_ENVELOPE_FIELD_POSITIONS: dict[str, tuple[int, int, str]] = {
-    "envelope-open": (1, 2, "literal"),
-    "envelope-modelo": (3, 3, "literal"),
-    "envelope-discriminante": (6, 1, "literal"),
-    "envelope-year": (7, 4, "draft"),
-    "envelope-period": (11, 2, "literal"),
-    "envelope-marker": (13, 5, "literal"),
-    "envelope-aux-open": (18, 5, "literal"),
-    "envelope-reserved-1": (23, 70, "filler"),
-    "envelope-program-version": (93, 4, "header"),
-    "envelope-reserved-2": (97, 4, "filler"),
-    "envelope-presenter-nif": (101, 9, "header"),
-    "envelope-reserved-3": (110, 213, "filler"),
-    "envelope-aux-close": (323, 6, "literal"),
+_EXPECTED_ENVELOPE_FIELD_POSITIONS: dict[str, tuple[int, int, CasillaFieldKind]] = {
+    "envelope-open": (1, 2, CasillaFieldKind.LITERAL),
+    "envelope-modelo": (3, 3, CasillaFieldKind.LITERAL),
+    "envelope-discriminante": (6, 1, CasillaFieldKind.LITERAL),
+    "envelope-year": (7, 4, CasillaFieldKind.DRAFT),
+    "envelope-period": (11, 2, CasillaFieldKind.LITERAL),
+    "envelope-marker": (13, 5, CasillaFieldKind.LITERAL),
+    "envelope-aux-open": (18, 5, CasillaFieldKind.LITERAL),
+    "envelope-reserved-1": (23, 70, CasillaFieldKind.FILLER),
+    "envelope-program-version": (93, 4, CasillaFieldKind.HEADER),
+    "envelope-reserved-2": (97, 4, CasillaFieldKind.FILLER),
+    "envelope-presenter-nif": (101, 9, CasillaFieldKind.HEADER),
+    "envelope-reserved-3": (110, 213, CasillaFieldKind.FILLER),
+    "envelope-aux-close": (323, 6, CasillaFieldKind.LITERAL),
 }
 
 
@@ -333,7 +334,7 @@ def test_committed_modelo_232_envelope_footer_emits_single_closing_tag_field() -
         footer_record = _envelope_footer(revision)
         assert len(footer_record.fields) == 1, revision.id
         close_field = footer_record.fields[0]
-        assert close_field.kind == "computed", revision.id
+        assert close_field.kind is CasillaFieldKind.COMPUTED, revision.id
         assert close_field.computed_key == "envelope_closing_tag", revision.id
         assert close_field.length == 18, revision.id
 
@@ -370,7 +371,9 @@ def test_committed_modelo_232_page_01_record_matches_official_layout() -> None:
         )
         # Closing tag fragments must appear in order at the end of the record.
         closing_literals = [
-            field.literal for field in page_01.fields[-4:] if field.kind == "literal" and field.literal is not None
+            field.literal
+            for field in page_01.fields[-4:]
+            if field.kind is CasillaFieldKind.LITERAL and field.literal is not None
         ]
         assert closing_literals == ["</T", "232", "01", "000>"], closing_literals
 
@@ -385,11 +388,15 @@ def test_committed_modelo_232_page_02_record_matches_official_layout() -> None:
             f"page_02 must extend to official position 3500 (got {last_field.offset + last_field.length - 1})"
         )
         opening_literals = [
-            field.literal for field in page_02.fields[:4] if field.kind == "literal" and field.literal is not None
+            field.literal
+            for field in page_02.fields[:4]
+            if field.kind is CasillaFieldKind.LITERAL and field.literal is not None
         ]
         assert opening_literals == ["<T", "232", "02", "000>"], opening_literals
         closing_literals = [
-            field.literal for field in page_02.fields[-4:] if field.kind == "literal" and field.literal is not None
+            field.literal
+            for field in page_02.fields[-4:]
+            if field.kind is CasillaFieldKind.LITERAL and field.literal is not None
         ]
         assert closing_literals == ["</T", "232", "02", "000>"], closing_literals
 

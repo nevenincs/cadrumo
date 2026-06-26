@@ -1,6 +1,6 @@
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-193-total-perceptores"
-target = "decl.total-perceptores"
+target_casilla_id = "decl.total-perceptores"
 expression = { op = "copy", args = [{ relation = "modelo-193-rel-123-perceptores-anual" }] }
 rounding = "integer"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
@@ -12,7 +12,7 @@ required_text = ["NÚMERO TOTAL DE PERCEPTORES", "número de registros de tipo 2
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-193-base-total"
-target = "decl.base-total"
+target_casilla_id = "decl.base-total"
 expression = { op = "copy", args = [{ relation = "modelo-193-rel-123-base-anual" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
@@ -24,7 +24,7 @@ required_text = ["BASE RETENCIONES E INGRESOS A CUENTA", "posiciones 152 a 164"]
 
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-193-retenciones-total"
-target = "decl.retenciones-total"
+target_casilla_id = "decl.retenciones-total"
 expression = { op = "copy", args = [{ relation = "modelo-193-rel-123-retenciones-anual" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]

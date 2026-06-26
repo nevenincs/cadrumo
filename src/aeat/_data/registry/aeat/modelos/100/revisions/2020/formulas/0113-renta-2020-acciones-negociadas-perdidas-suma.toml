@@ -1,8 +1,8 @@
 [[revisions."2020".formulas]]
 id = "renta-2020-acciones-negociadas-perdidas-suma"
-target = "0340"
+target_casilla_id = "0340"
 expression = { op = "sum", args = [
-    { casilla = "0338" },
+    { casilla_id = "0338" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

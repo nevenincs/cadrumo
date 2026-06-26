@@ -1,12 +1,12 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-trabajo-rendimiento-neto-previo"
-target = "0017"
+target_casilla_id = "0017"
 expression = { op = "sum", args = [
-    { casilla = "0012" },
-    { op = "negate", args = [{ casilla = "0013" }] },
-    { op = "negate", args = [{ casilla = "0014" }] },
-    { op = "negate", args = [{ casilla = "0015" }] },
-    { op = "negate", args = [{ casilla = "0016" }] },
+    { casilla_id = "0012" },
+    { op = "negate", args = [{ casilla_id = "0013" }] },
+    { op = "negate", args = [{ casilla_id = "0014" }] },
+    { op = "negate", args = [{ casilla_id = "0015" }] },
+    { op = "negate", args = [{ casilla_id = "0016" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-19", "orden-hac-277-2026:art-3"]

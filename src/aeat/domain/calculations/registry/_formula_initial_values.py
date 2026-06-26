@@ -11,7 +11,9 @@ from decimal import Decimal
 from ._binding_selector_utils import selector_as_dict as _binding_selector_as_dict
 from ._bindings import CasillaObservation
 from ._bindings_previous_filing import _PreviousModeloSelector
+from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
+from ._ids import BindingId, CasillaId
 from ._schema import CasillaDefinition, DataBindingDefinition, InputKind, ModeloRevision
 
 _ZERO = Decimal("0")
@@ -19,10 +21,10 @@ _ZERO = Decimal("0")
 
 def materialise_observations(
     *,
-    values: Mapping[str, Decimal],
-    computed_provenance: Mapping[str, CasillaObservation],
-    casillas_by_id: Mapping[str, CasillaDefinition],
-    absent_by_design_casillas: frozenset[str] = frozenset(),
+    values: Mapping[CasillaId, Decimal],
+    computed_provenance: Mapping[CasillaId, CasillaObservation],
+    casillas_by_id: Mapping[CasillaId, CasillaDefinition],
+    absent_by_design_casilla_ids: frozenset[CasillaId] = frozenset(),
 ) -> tuple[CasillaObservation, ...]:
     """Project per-casilla runtime state into the canonical observation tuple.
 
@@ -35,15 +37,25 @@ def materialise_observations(
             materialised.append(computed)
             continue
         registry_casilla = casillas_by_id.get(casilla_id)
-        legal_refs = tuple(registry_casilla.legal_refs) if registry_casilla is not None else ()
-        source_refs = tuple(registry_casilla.source_refs) if registry_casilla is not None else ()
+        if registry_casilla is None:
+            raise RegistryValidationError(
+                f"cannot materialise CasillaObservation for casilla {casilla_id!r}; "
+                "missing registry casilla definition would erase legal_refs/source_refs provenance",
+            )
+        legal_refs = tuple(registry_casilla.legal_refs)
+        source_refs = tuple(registry_casilla.source_refs)
+        if not legal_refs or not source_refs:
+            raise RegistryValidationError(
+                f"cannot materialise CasillaObservation for casilla {casilla_id!r}; "
+                "registry casilla definition is missing legal_refs/source_refs provenance",
+            )
         materialised.append(
             CasillaObservation(
                 casilla_id=casilla_id,
                 value=values[casilla_id],
                 legal_refs=legal_refs,
                 source_refs=source_refs,
-                absent_by_design=casilla_id in absent_by_design_casillas,
+                absent_by_design=casilla_id in absent_by_design_casilla_ids,
             ),
         )
     return tuple(materialised)
@@ -51,18 +63,18 @@ def materialise_observations(
 
 def initial_values(
     revision: ModeloRevision,
-    inputs: Mapping[str, Decimal],
+    inputs: Mapping[CasillaId, Decimal],
     *,
-    binding_values: Mapping[str, Decimal],
+    binding_values: Mapping[BindingId, Decimal],
     target_period: str,
-) -> tuple[dict[str, Decimal], frozenset[str]]:
+) -> tuple[dict[CasillaId, Decimal], frozenset[CasillaId]]:
     """Build initial numeric casilla values and absent-by-design markers.
 
     Use of :class:`ModeloRevision` for compliance.
     """
-    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    casillas = casillas_by_id(revision)
     _reject_unknown_inputs(inputs, casillas)
-    _reject_computed_inputs(inputs, casillas, {formula.target for formula in revision.formulas})
+    _reject_computed_inputs(inputs, casillas, {formula.target_casilla_id for formula in revision.formulas})
 
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     _reject_smuggled_previous_filing_inputs(
@@ -88,8 +100,8 @@ def initial_values(
 
 
 def _reject_unknown_inputs(
-    inputs: Mapping[str, Decimal],
-    casillas: Mapping[str, CasillaDefinition],
+    inputs: Mapping[CasillaId, Decimal],
+    casillas: Mapping[CasillaId, CasillaDefinition],
 ) -> None:
     unknown = sorted(set(inputs).difference(casillas))
     if unknown:
@@ -101,9 +113,9 @@ def _reject_unknown_inputs(
 
 
 def _reject_computed_inputs(
-    inputs: Mapping[str, Decimal],
-    casillas: Mapping[str, CasillaDefinition],
-    formula_targets: set[str],
+    inputs: Mapping[CasillaId, Decimal],
+    casillas: Mapping[CasillaId, CasillaDefinition],
+    formula_targets: set[CasillaId],
 ) -> None:
     computed = sorted(
         casilla_id
@@ -129,7 +141,7 @@ _OBSERVATION_BACKED_SLOT_SOURCES: frozenset[str] = frozenset({"previous_filing",
 
 def _previous_filing_binding_for_bound_casilla(
     casilla: CasillaDefinition,
-    bindings_by_id: Mapping[str, DataBindingDefinition],
+    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
 ) -> DataBindingDefinition | None:
     if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
         return None
@@ -140,11 +152,11 @@ def _previous_filing_binding_for_bound_casilla(
 
 
 def _reject_smuggled_previous_filing_inputs(
-    inputs: Mapping[str, Decimal],
+    inputs: Mapping[CasillaId, Decimal],
     *,
-    casillas: Mapping[str, CasillaDefinition],
-    bindings_by_id: Mapping[str, DataBindingDefinition],
-    binding_values: Mapping[str, Decimal],
+    casillas: Mapping[CasillaId, CasillaDefinition],
+    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
+    binding_values: Mapping[BindingId, Decimal],
 ) -> None:
     smuggled_previous_filing_bound = sorted(
         casilla_id
@@ -156,7 +168,7 @@ def _reject_smuggled_previous_filing_inputs(
         raise RegistryValidationError(
             "previous-filing bound registry casillas cannot be supplied via inputs "
             "without the matching binding_values entry; the projection from "
-            "resolve_bound_casilla_inputs must include the binding value as the "
+            "resolve_bound_inputs_by_casilla_id must include the binding value as the "
             f"source of truth: {smuggled_previous_filing_bound!r}",
             translated_message="errors.calc.bound_input_smuggled_without_binding_value",
             context={"casilla_ids": ",".join(smuggled_previous_filing_bound)},
@@ -164,11 +176,11 @@ def _reject_smuggled_previous_filing_inputs(
 
 
 def _reject_inconsistent_previous_filing_projections(
-    inputs: Mapping[str, Decimal],
+    inputs: Mapping[CasillaId, Decimal],
     *,
-    casillas: Mapping[str, CasillaDefinition],
-    bindings_by_id: Mapping[str, DataBindingDefinition],
-    binding_values: Mapping[str, Decimal],
+    casillas: Mapping[CasillaId, CasillaDefinition],
+    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
+    binding_values: Mapping[BindingId, Decimal],
 ) -> None:
     inconsistent: list[tuple[str, str]] = []
     for casilla_id, input_value in inputs.items():
@@ -199,13 +211,13 @@ def _reject_inconsistent_previous_filing_projections(
 def _initial_values_for_casillas(
     casillas: tuple[CasillaDefinition, ...],
     *,
-    inputs: Mapping[str, Decimal],
-    bindings_by_id: Mapping[str, DataBindingDefinition],
-    binding_values: Mapping[str, Decimal],
+    inputs: Mapping[CasillaId, Decimal],
+    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
+    binding_values: Mapping[BindingId, Decimal],
     target_period: str,
-) -> tuple[dict[str, Decimal], frozenset[str]]:
-    values: dict[str, Decimal] = {}
-    absent_by_design: set[str] = set()
+) -> tuple[dict[CasillaId, Decimal], frozenset[CasillaId]]:
+    values: dict[CasillaId, Decimal] = {}
+    absent_by_design: set[CasillaId] = set()
     for casilla in casillas:
         if casilla.input_kind == InputKind.COMPUTED:
             continue
@@ -225,9 +237,9 @@ def _initial_values_for_casillas(
 def _initial_value_for_casilla(
     casilla: CasillaDefinition,
     *,
-    inputs: Mapping[str, Decimal],
-    bindings_by_id: Mapping[str, DataBindingDefinition],
-    binding_values: Mapping[str, Decimal],
+    inputs: Mapping[CasillaId, Decimal],
+    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
+    binding_values: Mapping[BindingId, Decimal],
     target_period: str,
 ) -> tuple[Decimal, bool]:
     binding = _previous_filing_binding_for_bound_casilla(casilla, bindings_by_id)

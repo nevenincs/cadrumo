@@ -9,7 +9,7 @@
 [[revisions."2025".bindings]]
 id = "renta-2025-ledger-income-0171"
 source = "ledger_renta_income_aggregation"
-selector = { modelo = "100", target_casilla = "0171", fact = "ingresos_integros_sum" }
+selector = { modelo = "100", target_casilla_id = "0171", fact = "ingresos_integros_sum" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
 source_refs = ["aeat-renta-2025-manual-parte1"]

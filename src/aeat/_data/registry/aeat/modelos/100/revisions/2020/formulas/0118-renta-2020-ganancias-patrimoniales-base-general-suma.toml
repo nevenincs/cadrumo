@@ -1,12 +1,12 @@
 [[revisions."2020".formulas]]
 id = "renta-2020-ganancias-patrimoniales-base-general-suma"
-target = "0418"
+target_casilla_id = "0418"
 expression = { op = "sum", args = [
-    { casilla = "1606" },
-    { casilla = "0290" },
-    { casilla = "0297" },
-    { casilla = "0306" },
-    { casilla = "0400" },
+    { casilla_id = "1606" },
+    { casilla_id = "0290" },
+    { casilla_id = "0297" },
+    { casilla_id = "0306" },
+    { casilla_id = "0400" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-50"]

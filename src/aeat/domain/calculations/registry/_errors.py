@@ -17,6 +17,7 @@ from collections.abc import Iterable, Sequence
 from typing import Self
 
 from ....core.errors import AeatError, CoreValidationError
+from ._ids import BindingId, CasillaId, RelationId
 
 
 class RegistryError(AeatError, ValueError):
@@ -88,7 +89,7 @@ class RegistryValidationError(RegistryError, CoreValidationError):
         cls,
         *,
         op: str,
-        binding_id: str,
+        binding_id: BindingId,
         dispatch_key: str,
         available_keys: Sequence[str],
     ) -> Self:
@@ -155,7 +156,7 @@ class RegistryValidationError(RegistryError, CoreValidationError):
         )
 
     @classmethod
-    def for_enum_binding_value_missing(cls, *, binding_id: str, op: str) -> Self:
+    def for_enum_binding_value_missing(cls, *, binding_id: BindingId, op: str) -> Self:
         """A required enum binding has no supplied value at evaluation time.
 
         Canonical keys: ``binding_id``, ``op``.
@@ -167,7 +168,7 @@ class RegistryValidationError(RegistryError, CoreValidationError):
         )
 
     @classmethod
-    def for_binding_value_missing(cls, *, binding_id: str) -> Self:
+    def for_binding_value_missing(cls, *, binding_id: BindingId) -> Self:
         """A required binding has no supplied value at evaluation time."""
         return cls(
             f"binding {binding_id!r} has no supplied value",
@@ -176,7 +177,7 @@ class RegistryValidationError(RegistryError, CoreValidationError):
         )
 
     @classmethod
-    def for_relation_value_missing(cls, *, relation_id: str) -> Self:
+    def for_relation_value_missing(cls, *, relation_id: RelationId) -> Self:
         """A required relation has no supplied value at evaluation time."""
         return cls(
             f"relation {relation_id!r} has no supplied value",
@@ -185,7 +186,7 @@ class RegistryValidationError(RegistryError, CoreValidationError):
         )
 
     @classmethod
-    def for_casilla_referenced_before_evaluation(cls, *, casilla_id: str) -> Self:
+    def for_casilla_referenced_before_evaluation(cls, *, casilla_id: CasillaId) -> Self:
         """A formula referenced a casilla that hasn't been evaluated yet."""
         return cls(
             f"casilla {casilla_id!r} referenced before evaluation",
@@ -194,7 +195,7 @@ class RegistryValidationError(RegistryError, CoreValidationError):
         )
 
     @classmethod
-    def for_unknown_input_casillas(cls, *, casilla_ids: Sequence[str]) -> Self:
+    def for_unknown_input_casilla_ids(cls, *, casilla_ids: Sequence[CasillaId]) -> Self:
         """Inputs to the runtime referenced casilla ids absent from the revision."""
         ids = sorted(casilla_ids)
         return cls(
@@ -204,7 +205,7 @@ class RegistryValidationError(RegistryError, CoreValidationError):
         )
 
     @classmethod
-    def for_computed_supplied_as_input(cls, *, casilla_ids: Sequence[str]) -> Self:
+    def for_computed_supplied_as_input(cls, *, casilla_ids: Sequence[CasillaId]) -> Self:
         """Inputs to the runtime supplied values for computed casillas."""
         ids = sorted(casilla_ids)
         return cls(
