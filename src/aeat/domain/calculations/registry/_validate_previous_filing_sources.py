@@ -12,7 +12,7 @@ from collections.abc import Iterable, Mapping
 from ._bindings_previous_filing import previous_filing_source_reference
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloDefinition
-from ._validate_source_casilla_ids import revision_output_ids
+from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 
 
 def validate_previous_filing_binding_closure(
@@ -72,12 +72,15 @@ def _validate_previous_filing_binding(
         return failures
 
     for source_revision in matching_revisions:
-        revision_outputs = revision_output_ids(source_revision)
         for source_casilla_id in source_reference.source_casilla_ids:
-            if source_casilla_id in revision_outputs:
-                continue
-            failures.append(
-                f"{binding_scope} source casilla id {source_casilla_id!r} is not defined by any "
-                f"period-compatible {source_modelo.id} revision {source_revision.id!r}",
-            )
+            if failure := source_casilla_id_reference_failure(
+                source_revision,
+                source_casilla_id,
+                source_scope=f"{binding_scope} source revision {source_revision.id!r}",
+                missing_failure=(
+                    f"{binding_scope} source casilla id {source_casilla_id!r} is not defined by any "
+                    f"period-compatible {source_modelo.id} revision {source_revision.id!r}"
+                ),
+            ):
+                failures.append(failure)
     return failures
