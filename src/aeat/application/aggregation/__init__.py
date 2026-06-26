@@ -148,6 +148,7 @@ from ._source_mesh import (
     ModeloSourceResolver,
     collect_unhandled_source_diagnostics,
     merge_source_resolutions,
+    merge_source_resolutions_by_precedence,
     storage_degradation_resolution,
 )
 from ._source_profile import ProfileSourceResolver
@@ -251,6 +252,7 @@ __all__ = [
     "get_per_modelo_aggregation_contract",
     "iva_ledger_missing_fact_reasons",
     "merge_source_resolutions",
+    "merge_source_resolutions_by_precedence",
     "missing_evidence_advisory_observations",
     "oss_ioss_candidates_from_repositories",
     "persist_retencion_observations",

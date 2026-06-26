@@ -372,6 +372,71 @@ def merge_source_resolutions(
     )
 
 
+def merge_source_resolutions_by_precedence(
+    tiers: Sequence[CalculationSourceResolution],
+    *,
+    resolver_id: str = "source_mesh_precedence",
+) -> CalculationSourceResolution:
+    """Overlay ordered resolution tiers by precedence: later tiers win on collision.
+
+    Unlike :func:`merge_source_resolutions` (which is EXCLUSIVE: a binding claimed
+    by two resolvers in one tier is a hard ``AggregationValidationError``), this
+    merge is a precedence OVERLAY: the binding / enum / date channels dict-merge in
+    tier order so a higher-precedence tier silently overrides a lower one. It is the
+    explicit form of the historical ``{**profile, **backend, **borrador, **caller}``
+    ladder: each tier is itself an intra-tier-exclusive
+    :func:`merge_source_resolutions` output, and the tiers are layered lowest -> highest.
+
+    The non-channel fields (relations, bound-casilla inputs, source transaction ids,
+    unresolved relations, diagnostics, provenance, owned_sources) accumulate across
+    tiers; ``borrador_provenance`` is carried from whichever tier supplies it
+    (exactly one does).
+    """
+    binding_values: dict[BindingId, Decimal] = {}
+    enum_binding_values: dict[BindingId, str] = {}
+    date_binding_values: dict[BindingId, date] = {}
+    relation_values: dict[RelationId, Decimal] = {}
+    unresolved_relation_ids: set[RelationId] = set()
+    bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = {}
+    source_transaction_ids: set[str] = set()
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    provenance: list[CalculationSourceProvenance] = []
+    owned_sources: set[BindingSourceKind] = set()
+    borrador_provenance: BorradorSourceProvenance | None = None
+
+    for tier in tiers:
+        owned_sources.update(tier.owned_sources)
+        diagnostics.extend(tier.diagnostics)
+        provenance.extend(tier.provenance)
+        source_transaction_ids.update(tier.source_transaction_ids)
+        unresolved_relation_ids.update(tier.unresolved_relation_ids)
+        if tier.borrador_provenance is not None:
+            borrador_provenance = tier.borrador_provenance
+        # Precedence overlay: later tier wins (dict update), no exclusive claim.
+        binding_values.update(tier.binding_values)
+        enum_binding_values.update(tier.enum_binding_values)
+        date_binding_values.update(tier.date_binding_values)
+        bound_inputs_by_casilla_id.update(tier.bound_inputs_by_casilla_id)
+        for relation_id, value in tier.relation_values.items():
+            relation_values[relation_id] = value
+            unresolved_relation_ids.discard(relation_id)
+
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=tuple(sorted(owned_sources)),
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        date_binding_values=date_binding_values,
+        relation_values=relation_values,
+        unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
+        bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
+        source_transaction_ids=tuple(sorted(source_transaction_ids)),
+        borrador_provenance=borrador_provenance,
+        diagnostics=tuple(diagnostics),
+        provenance=tuple(provenance),
+    )
+
+
 def collect_unhandled_source_diagnostics(
     revision: ModeloRevision,
     *,
@@ -476,5 +541,6 @@ __all__ = [
     "ModeloSourceResolver",
     "collect_unhandled_source_diagnostics",
     "merge_source_resolutions",
+    "merge_source_resolutions_by_precedence",
     "storage_degradation_resolution",
 ]
