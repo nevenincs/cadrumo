@@ -105,3 +105,15 @@ The end-to-end verification (`test_verify_salaried_taxpayer_m100_has_no_cross_pe
 - A **first-time** salaried filer (no prior M100, nothing to carry) is still blocked by the self-carry, because no "first IRPF/M100 filing year" signal exists for non-activity taxpayers to drive the first-filer suppression.
 
 This is the first-filer *mechanism* (NoPriorObligationProvenance), not C3's registry-classification withholding-dep mechanism, and needs its own grounding (when is a prior-year M100 self-carry genuinely not-applicable, and what profile signal proves "first M100 year" for a salaried taxpayer). Recorded here so it routes to an owner rather than scope-creeping into C3; the C3 withholding/pagos fix is complete and verified independently of it.
+
+## Update 4 — drift remediation (threading coverage, grounding verification, standardisation)
+
+A post-landing self-audit surfaced and closed three drift items:
+
+1. **Threading coverage (functional gap).** The `taxpayer_files_economic_activity` signal was threaded into verify and file but NOT into the EXPORT cross-period gate (`_export.py`) nor the CLI verification-preview path — so a salaried filer's *export* (the C3 reachability finish line) was still blocked by 130/131, and the CLI preview was inconsistent with verify. Both now thread the signal (`e9515a2bc`, `67339e0d1`); all six production cross-period callers are covered.
+
+2. **Standardisation.** The signal-derivation helper was promoted from the private `_taxpayer_files_economic_activity` (in `_verification_actions.py`) to the public `derive_taxpayer_files_economic_activity`, re-exported through `aeat.application.modelo` (`service-imports-via-top-level-reexports`), so the entrypoints layer consumes it via the package surface rather than dotting into a private module. It checks `IrpfIncomeCategory.ACTIVIDAD_ECONOMICA in profile.irpf_income_categories` — the same canonical signal `registry/_applicability.py` uses for `required_income_categories`, so the two cannot diverge.
+
+3. **Grounding verification (regulated-data risk).** The four 2024 `renta-2024-ledger-expense-0186/0192/0199/0203-deductible` bindings authored to unblock the registry were verified against the bundled LIRPF corpus: art-28 and art-30 both define the net rendimiento as *ingresos computables menos gastos deducibles* and reference *gasto deducible*, confirming the `legal_refs` are corpus-correct and match the reviewed 2025 template; `source_refs`/`required_text` are consistent with the established 2024 income binding.
+
+Still open and out of this ADR's scope: the first-filer M100 self-carry (separate first-filer mechanism, recorded above) and the broader generalisation of the two classification axes to non-M100 modelos (the schema default is fail-closed, so absence is safe; the authoring convention is documented in the `cross-period-suppression-grounded-in-registry-classification` rule).
