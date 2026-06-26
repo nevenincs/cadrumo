@@ -106,6 +106,92 @@ fact = "iva_amount_sum"
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
+# Domestic régimen-general base-imponible aggregation bindings (casillas 07/04/01
+# repercutido base, casilla 28 soportado base). The cuota of these rows is already
+# ledger-aggregated (the *-cuota bindings above, fact = iva_amount_sum); the base
+# imponible casillas were input_kind = "manual" with no binding, so a ledger-driven
+# M303 left the base at 0 while the cuota resolved correctly — a structurally
+# inconsistent "cuota without base" (#15 IVA-3). These bindings close that gap by
+# summing the base_amount of the matching domestic observations, mirroring the 2023
+# revision's domestic-base bindings exactly (same selectors / fact / aggregation).
+# legal_refs are a subset of each target casilla's refs so the bound-casilla
+# coverage check holds without authoring a new legal entry.
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-iva-repercutido-general-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["domestic_general_21"]
+rate_kinds = ["general"]
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-iva-repercutido-reducido-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["domestic_reduced_10"]
+rate_kinds = ["reduced"]
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-iva-repercutido-super-reducido-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["domestic_super_reduced_4"]
+rate_kinds = ["super_reduced"]
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-iva-soportado-interiores-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "soportado"
+fact = "base_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
 [[revisions.2009-y-siguientes.bindings]]
 id = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
@@ -725,6 +811,10 @@ bindings = [
     "modelo-303-iva-autorepercutido-interior-devengado-cuota",
     "modelo-303-iva-autorepercutido-interior-deducible-cuota",
     "modelo-303-compensacion-pendiente-anteriores",
+    "modelo-303-iva-repercutido-general-base",
+    "modelo-303-iva-repercutido-reducido-base",
+    "modelo-303-iva-repercutido-super-reducido-base",
+    "modelo-303-iva-soportado-interiores-base",
 ]
 relations = ["modelo-303-rel-self-compensacion-anteriores"]
 dependency_classifications = ["modelo-303-dep-self-prior-quarter"]
@@ -738,6 +828,26 @@ filing_schedules = ["modelo-303-trimestral"]
 source_ref = "aeat-dr-303-2025"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3786-2008:art-1", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+# Regimen-general per-tier base casillas (01 super-reducido 4%, 04 reducido 10%,
+# 07 general 21%) and the deducible soportado-interiores base (28) join the
+# calculation closure once their ledger_iva_aggregation base_amount_sum bindings
+# landed (LIVA art. 88 repercutido base / art. 92 soportado base).
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "01"
+number = "01"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "04"
+number = "04"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "07"
+number = "07"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "28"
+number = "28"
 
 [[revisions.2009-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "iva.compensacion-pendiente-periodos-anteriores"

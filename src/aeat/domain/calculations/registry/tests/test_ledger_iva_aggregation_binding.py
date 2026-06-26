@@ -938,6 +938,61 @@ def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
     assert result.values[_M303_REPERCUTIDO_REDUCIDO_BASE_CASILLA] == Decimal("0")
 
 
+def test_modelo_303_2009_revision_domestic_base_aggregates_from_ledger() -> None:
+    """#15 regression: the 2009-y-siguientes revision (filing years 2009-2022)
+    now aggregates the domestic base imponible from the ledger.
+
+    The 2009 revision (inline-declared) carried the cuota ledger bindings (and the
+    compensación carry + verification) but lacked the domestic-base bindings that
+    the 2023-y-siguientes revision has, so casillas 01/04/07/28 were
+    ``input_kind = "manual"`` and a ledger-driven 2009-2022 M303 left the base at 0
+    while the cuota resolved — a "cuota without base" under-declaration. This fixes
+    that by back-filling the four base bindings (``fact = "base_amount_sum"``,
+    selectors mirroring the 2023 revision). filing_year=2022 resolves to the
+    2009-y-siguientes revision; this test fails loudly if the base regresses to the
+    unbound manual state (0). Expected values are the seeded observation base sums
+    (ground truth from inputs, not a re-run of the registry formula).
+    """
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2022, period="2T")
+    assert snapshot.revision.id == "2009-y-siguientes"  # filing_year 2022 resolves to the older revision
+    observations = (
+        _observation(
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            rate_kind=IvaRateKind.GENERAL,
+            flow=IvaFlowDirection.REPERCUTIDO,
+            base=Decimal("6500"),
+            iva=Decimal("1365"),
+        ),
+        _observation(
+            category=IvaCategory.DOMESTIC_GENERAL_21,
+            rate_kind=IvaRateKind.GENERAL,
+            flow=IvaFlowDirection.SOPORTADO,
+            base=Decimal("300"),
+            iva=Decimal("63"),
+        ),
+    )
+    values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations)
+    binding_values = {
+        "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        **values,
+    }
+    # The back-filled base bindings now aggregate the ledger base on the 2009
+    # revision (the #15 regression target). Before the fix these binding ids did
+    # not exist, so the base never resolved and the numbered boxes stayed 0.
+    assert values["modelo-303-iva-repercutido-general-base"] == Decimal("6500")
+    assert values["modelo-303-iva-soportado-interiores-base"] == Decimal("300")
+    assert values["modelo-303-iva-repercutido-super-reducido-base"] == Decimal("0")
+    assert values["modelo-303-iva-repercutido-reducido-base"] == Decimal("0")
+    # The pre-existing cuota bindings still aggregate — base and cuota coexist, no
+    # regression on the 2009 revision's existing capability.
+    assert values["modelo-303-iva-repercutido-general-cuota"] == Decimal("1365")
+    assert values["modelo-303-iva-soportado-interiores-cuota"] == Decimal("63")
+    # The new base bindings map to the numbered base casillas (01/04/07/28).
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    assert inputs[_M303_REPERCUTIDO_GENERAL_BASE_CASILLA] == Decimal("6500")
+    assert inputs[_M303_SOPORTADO_INTERIORES_BASE_CASILLA] == Decimal("300")
+
+
 def test_iva_ledger_observation_is_strict_and_frozen() -> None:
     obs = _observation()
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
