@@ -229,7 +229,7 @@ class BindingSourceKind(StrEnum):
     # dedicated per-perceptor retención store (RETENCION_OBSERVATIONS_NAMESPACE,
     # operator-supplied — NOT the bucket ledger, so deliberately NOT in
     # LEDGER_BINDING_SOURCE_KINDS and NOT carrying the ``ledger_`` prefix) and
-    # materialises the Modelo 180/190/193 "número total de perceptores" count via
+    # materialises the Modelo 180/193 "número total de perceptores" count via
     # the validated distinct-NIF primitive (aggregate_retenciones_180.
     # total_perceptors) — replacing the wrong sum-of-quarterly-M115-counts relation
     # (RET-1, ADR 2026-06-24-retenciones-perceptor-count-adr).

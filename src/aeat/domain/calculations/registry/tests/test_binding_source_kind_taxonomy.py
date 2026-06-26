@@ -72,12 +72,6 @@ _RESERVED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
         BindingSourceKind.LEDGER_TRANSACTION,
-        # RET-1 P02: the calc-mesh per-perceptor resolver lands (enum + resolver +
-        # enrollment) before the M180 perceptor-count binding is re-stamped from
-        # ``relation_prefill`` to this source (P03). Reserved until that cutover;
-        # P03 re-points the binding and removes this entry (the
-        # ``spuriously_reserved`` assertion below then forces its removal).
-        BindingSourceKind.RETENCIONES_AGGREGATION,
     },
 )
 
