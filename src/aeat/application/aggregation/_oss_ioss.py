@@ -32,7 +32,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
 from ...domain.calculations.registry import (
     BindingId,
     ModeloRevision,
@@ -325,7 +325,7 @@ class OssIossLedgerSourceResolver:
     """Source mesh resolver for Modelo 369 OSS / IOSS ledger candidates."""
 
     resolver_id = "ledger_oss_aggregation"
-    owned_sources = ("ledger_oss_aggregation",)
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_OSS_AGGREGATION,)
 
     def __init__(
         self,
