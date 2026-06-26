@@ -288,3 +288,15 @@ reconciliation, constants centralization, or related Modelo 130 coupling must
 first name its governing plan row and the ADR(s) above. If no governing ADR
 exists for the intended behavior, the slice is blocked until research and an
 accepted ADR amendment or new ADR exists.
+
+## Status
+
+Accepted and in force, scoped to the wallet / profile-bucket / repository LAYER and
+HIERARCHY vocabulary. Its claim to be "the binding reconciler" is SUPERSEDED (conflict
+C2): the canonical authority for the SOURCE-KIND vocabulary and the cross-source
+data-sourcing interface is the bindings-architecture-unification PHASE ADRs (the
+phase-2.1 `binding-source-kind-taxonomy-unification` ADR for source-kind; the future
+phase-2.2/2.3 ADRs for the resolver contract and the compensación carry), NOT this ADR.
+This ADR remains authoritative for the layer/repository hierarchy it governs; only the
+binding-reconciler over-claim is superseded. Those phase ADRs — not a central apex doc
+— are the canonical direction.
