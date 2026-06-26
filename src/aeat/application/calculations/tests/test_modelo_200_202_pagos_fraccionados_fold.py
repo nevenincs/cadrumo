@@ -18,32 +18,49 @@ from pathlib import Path
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    RelationId,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_REL_40_2 = "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
-_REL_40_3 = "modelo-200-2024-rel-202-pagos-fraccionados"
+_REL_40_2: RelationId = "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
+_REL_40_3: RelationId = "modelo-200-2024-rel-202-pagos-fraccionados"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M200/M202 pagos fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M202_MODALIDAD_CUOTA_PAGO_CASILLA: CasillaId = _casilla_id("03")
+_M202_MODALIDAD_BASE_PAGO_CASILLA: CasillaId = _casilla_id("34")
 
 
 def _m202_observation(
     *, filing_year: int, period: str, casilla_03: Decimal, casilla_34: Decimal
 ) -> RegistryModeloObservation:
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo="202",
         filing_year=filing_year,
         period=period,
-        observations=(
-            CasillaObservation(casilla_id="03", value=casilla_03),
-            CasillaObservation(casilla_id="34", value=casilla_34),
-        ),
+        casilla_values={
+            _M202_MODALIDAD_CUOTA_PAGO_CASILLA: casilla_03,
+            _M202_MODALIDAD_BASE_PAGO_CASILLA: casilla_34,
+        },
     )
 
 
-def _resolve_m200_pagos_fraccionados(repository: CalculationObservationRepository) -> dict[str, Decimal]:
+def _resolve_m200_pagos_fraccionados(repository: CalculationObservationRepository) -> dict[RelationId, Decimal]:
     snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period="0A")
     relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
     return {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
@@ -88,7 +105,7 @@ def _all_m202_relation_values(
     repository: CalculationObservationRepository,
     *,
     first_year_cuota: bool,
-) -> dict[str, Decimal | None]:
+) -> dict[RelationId, Decimal | None]:
     snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period="0A")
     relation_vals = resolve_relations_from_local_store(
         snapshot,
@@ -101,7 +118,7 @@ def _all_m202_relation_values(
 def test_is3_first_year_cuota_resolves_unfiled_m202_relations_to_zero(tmp_path: Path) -> None:
     """IS-3: a first-year modalidad-cuota filer (no M202 filed) resolves the M202 fold-in
     relations to 0 instead of None, so the cuota-diferencial formula computes (no draft-build
-    crash) rather than refusing on an unsupplied relation. ADR 2026-06-19-m202-first-period."""
+    crash) rather than refusing on an unsupplied relation. decision record 2026-06-19-m202-first-period."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()  # no M202 observations persisted
         values = _all_m202_relation_values(repository, first_year_cuota=True)

@@ -1,6 +1,6 @@
 """E2E: a Modelo 303 refund export with no refund account on file is refused.
 
-P03 S11 — the no-account refusal end-to-end. Distinct from the component-level
+the no-account refusal end-to-end. Distinct from the component-level
 unit coverage in ``test_export.py`` (which drives ``_compose_export_headers`` +
 ``_render_layout`` directly): this case drives the FULL public
 ``export_modelo_revision`` path against a real registry-backed, engine-computed,
@@ -43,6 +43,7 @@ import pytest
 
 from ....core import Period, ResultDisposition
 from ....domain.buckets import BucketEventHistoryRepository
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, ModeloIVAProfile, TaxpayerProfile
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
@@ -80,7 +81,7 @@ _NEGATIVE_CREDIT_ENGINE_INPUTS = {
     "modelo-303-profile-state-attribution-ratio": Decimal("100"),
 }
 
-_M303_RESULTADO_CASILLA = "iva.resultado"
+_M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado", surface="_M303_RESULTADO_CASILLA")
 
 
 @contextmanager

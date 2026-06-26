@@ -40,6 +40,7 @@ import pytest
 
 from .......core import Period
 from .......core.external_constants import ISO_8859_1_ENCODING
+from .......domain.calculations.registry import CasillaId, validated_casilla_id
 from ..._errors import AeatExportFormatError
 from .._deserialise import deserialise
 from .._record_spec import (
@@ -53,6 +54,19 @@ from .._record_spec import (
 from .._serialise import serialise
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_AMOUNT_CASILLA: CasillaId = validated_casilla_id("01", surface="_AMOUNT_CASILLA")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_PAGOS_FRACCIONADOS_CASILLA")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
+_M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
+_M303_BASE_GENERAL_CASILLA: CasillaId = validated_casilla_id("07", surface="_M303_BASE_GENERAL_CASILLA")
+_M303_CUOTA_GENERAL_CASILLA: CasillaId = validated_casilla_id(
+    "iva.repercutido.general", surface="_M303_CUOTA_GENERAL_CASILLA"
+)
 
 
 def test_currency_inline_sign_round_trips_negative_value() -> None:
@@ -70,7 +84,7 @@ def test_currency_inline_sign_round_trips_negative_value() -> None:
             offset=1,
             length=12,
             field_id="AMOUNT_SIGNED",
-            casilla_id="01",
+            casilla_id=_AMOUNT_CASILLA,
             kind=FieldKind.CURRENCY,
             signed_mode=SignedMode.INLINE_SIGN,
         ),
@@ -78,7 +92,7 @@ def test_currency_inline_sign_round_trips_negative_value() -> None:
     validate_record_specs(specs, total_length=specs[-1].offset - 1 + specs[-1].length)
 
     payload = serialise(
-        casilla_values={"01": Decimal("-12345.67")},
+        casilla_values={_AMOUNT_CASILLA: Decimal("-12345.67")},
         headers={},
         specs=specs,
         encoding=ISO_8859_1_ENCODING,
@@ -90,7 +104,7 @@ def test_currency_inline_sign_round_trips_negative_value() -> None:
     assert body[0:1] == b"N", f"INLINE_SIGN negative value should emit 'N' in byte 0; got {body[0:1]!r}"
 
     parsed = deserialise(payload, specs=specs, encoding=ISO_8859_1_ENCODING, total_length=12)
-    assert parsed.casilla_values["01"] == Decimal("-12345.67")
+    assert parsed.casilla_values[_AMOUNT_CASILLA] == Decimal("-12345.67")
 
 
 def test_currency_inline_sign_round_trips_positive_value() -> None:
@@ -101,7 +115,7 @@ def test_currency_inline_sign_round_trips_positive_value() -> None:
             offset=1,
             length=12,
             field_id="AMOUNT_SIGNED",
-            casilla_id="01",
+            casilla_id=_AMOUNT_CASILLA,
             kind=FieldKind.CURRENCY,
             signed_mode=SignedMode.INLINE_SIGN,
         ),
@@ -109,7 +123,7 @@ def test_currency_inline_sign_round_trips_positive_value() -> None:
     validate_record_specs(specs, total_length=specs[-1].offset - 1 + specs[-1].length)
 
     payload = serialise(
-        casilla_values={"01": Decimal("42.00")},
+        casilla_values={_AMOUNT_CASILLA: Decimal("42.00")},
         headers={},
         specs=specs,
         encoding=ISO_8859_1_ENCODING,
@@ -120,7 +134,7 @@ def test_currency_inline_sign_round_trips_positive_value() -> None:
     assert body[0:1] == b" ", f"INLINE_SIGN non-negative value should emit space in byte 0; got {body[0:1]!r}"
 
     parsed = deserialise(payload, specs=specs, encoding=ISO_8859_1_ENCODING, total_length=12)
-    assert parsed.casilla_values["01"] == Decimal("42.00")
+    assert parsed.casilla_values[_AMOUNT_CASILLA] == Decimal("42.00")
 
 
 def test_date_field_yyyymmdd_round_trips() -> None:
@@ -231,7 +245,7 @@ def test_currency_blank_input_rejected_at_decode() -> None:
             offset=1,
             length=12,
             field_id="AMOUNT",
-            casilla_id="01",
+            casilla_id=_AMOUNT_CASILLA,
             kind=FieldKind.CURRENCY,
         ),
     )
@@ -259,7 +273,7 @@ def test_currency_inline_sign_blank_magnitude_rejected_at_decode() -> None:
             offset=1,
             length=12,
             field_id="AMOUNT",
-            casilla_id="01",
+            casilla_id=_AMOUNT_CASILLA,
             kind=FieldKind.CURRENCY,
             signed_mode=SignedMode.INLINE_SIGN,
         ),
@@ -279,7 +293,7 @@ def test_currency_invalid_wire_bytes_raise_redacted_export_format_error() -> Non
             offset=1,
             length=12,
             field_id="AMOUNT",
-            casilla_id="01",
+            casilla_id=_AMOUNT_CASILLA,
             kind=FieldKind.CURRENCY,
         ),
     )
@@ -473,17 +487,17 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
             display_name="Golden test",
         ),
         inputs={
-            "01": Decimal("10000.00"),
-            "02": Decimal("4000.00"),
-            "05": Decimal("0"),
-            "06": Decimal("0"),
-            "08": Decimal("0"),
-            "10": Decimal("0"),
+            _M130_INGRESOS_CASILLA: Decimal("10000.00"),
+            _M130_GASTOS_CASILLA: Decimal("4000.00"),
+            _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
+            _M130_RETENCIONES_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         schema_provider=provider,
     )
@@ -719,8 +733,8 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
             display_name="Golden test IVA",
         ),
         inputs={
-            "07": Decimal("10000.00"),
-            "iva.repercutido.general": Decimal("2100.00"),
+            _M303_BASE_GENERAL_CASILLA: Decimal("10000.00"),
+            _M303_CUOTA_GENERAL_CASILLA: Decimal("2100.00"),
             # Compensation carry-over binding required by the
             # iva.compensacion-pendiente-periodos-anteriores bound casilla
             # (registry change made this a mandatory input for export
@@ -861,7 +875,7 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
     # the DID open tag and the "DID00" page identifier must be ABSENT from the
     # whole payload — a non-refund filing has no refund account to declare, so
     # emitting an empty 823-byte DID record would file a devolución AEAT cannot
-    # pay. This is the disposition-keyed guard (P02 S09) asserted at byte level.
+    # pay. This is the disposition-keyed guard asserted at byte level.
     assert b"<T303DID00>" not in payload, "DID page must be suppressed on a non-refund filing"
     assert b"DID00" not in payload, "the DID00 page identifier must not appear on a non-refund filing"
 
@@ -927,8 +941,8 @@ def test_modelo_303_refund_golden_sha_fichero_boe(tmp_path: Path) -> None:
             display_name="Golden test IVA",
         ),
         inputs={
-            "07": Decimal("10000.00"),
-            "iva.repercutido.general": Decimal("2100.00"),
+            _M303_BASE_GENERAL_CASILLA: Decimal("10000.00"),
+            _M303_CUOTA_GENERAL_CASILLA: Decimal("2100.00"),
             "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         },
         schema_provider=provider,
@@ -1077,8 +1091,8 @@ def test_modelo_303_refund_non_sepa_golden_sha_fichero_boe(tmp_path: Path) -> No
             display_name="Golden test IVA",
         ),
         inputs={
-            "07": Decimal("10000.00"),
-            "iva.repercutido.general": Decimal("2100.00"),
+            _M303_BASE_GENERAL_CASILLA: Decimal("10000.00"),
+            _M303_CUOTA_GENERAL_CASILLA: Decimal("2100.00"),
             "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         },
         schema_provider=provider,
