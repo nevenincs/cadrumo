@@ -15,6 +15,8 @@ The concept and casilla records come from the real projections.
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from aeat.core import Modelo
@@ -24,6 +26,7 @@ from dev.docs.terminology._cli_projection import CliOptionRecord, CliSurfaceReco
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _FOUR_LANGUAGES = frozenset(OutputLanguage)
+_PARSEABLE_CASILLA_RECORD_ID_RE = re.compile(r"^casilla:[^:]+:.+")
 
 
 def _cli_command_record() -> CliSurfaceRecord:
@@ -90,11 +93,49 @@ def test_casilla_funnels_to_a_search_record_with_provenance() -> None:
     record = to_search_record(records[0])
 
     assert record.kind is SearchRecordKind.CASILLA
-    assert record.id.startswith("casilla:303:")
+    assert record.id.startswith("casilla-record:")
+    assert re.fullmatch(r"casilla-record:[0-9a-f]{24}", record.id)
+    assert not _PARSEABLE_CASILLA_RECORD_ID_RE.fullmatch(record.id)
     assert record.metadata.modelo == "303"
+    assert record.metadata.casilla_id == records[0].casilla_id  # type: ignore[attr-defined]
     assert record.metadata.legal_refs  # provenance survived the funnel
     assert record.metadata.source_refs
     assert OutputLanguage.ES in record.descriptions
+
+
+def test_segmented_casilla_funnels_with_opaque_id_and_canonical_metadata() -> None:
+    """A segmented M200 casilla keeps ``casilla.id`` only in typed metadata."""
+    from dev.docs.terminology._casilla_projection import project_modelo_casillas
+    from dev.docs.terminology._unified_record import to_search_record
+
+    projected = project_modelo_casillas(Modelo.M200)
+    segmented = next(record for record in projected if record.casilla_id == "DP200014:00562")  # type: ignore[attr-defined]
+    record = to_search_record(segmented)
+
+    assert record.id.startswith("casilla-record:")
+    assert not _PARSEABLE_CASILLA_RECORD_ID_RE.fullmatch(record.id)
+    assert "DP200014:00562" not in record.id
+    assert record.title == "Modelo 200 · casilla DP200014:00562"
+    assert record.target == "search.html?q=200+DP200014:00562"
+    assert record.metadata.modelo == "200"
+    assert record.metadata.casilla_id == "DP200014:00562"
+    assert record.metadata.number == "00562"
+    assert record.metadata.segmento == "DP200014"
+
+
+def test_casilla_search_record_ids_are_opaque_and_unique() -> None:
+    """Every projected casilla has a unique non-parseable search record id."""
+    from dev.docs.terminology._casilla_projection import project_casilla_search_records
+    from dev.docs.terminology._unified_record import to_search_record
+
+    records, stats = project_casilla_search_records()
+    unified = tuple(to_search_record(record) for record in records)
+    ids = [record.id for record in unified]
+
+    assert stats.deduplicated_records > 1000
+    assert len(ids) == len(set(ids))
+    assert all(re.fullmatch(r"casilla-record:[0-9a-f]{24}", record.id) for record in unified)
+    assert all(not record.id.startswith("casilla:") for record in unified)
 
 
 def test_cli_command_and_option_funnel_to_search_records() -> None:
