@@ -45,6 +45,12 @@ from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 from ...domain.period import period_end_date
 from ...domain.transactions import TransactionCatalogueRepository
 from ..aggregation._source_mesh import DEFERRED_SOURCE_KINDS as _DEFERRED_SOURCE_KINDS
+from ..aggregation._source_mesh import (
+    BindingSourceDisposition as _BindingSourceDisposition,
+)
+from ..aggregation._source_mesh import (
+    build_binding_source_dispositions as _build_binding_source_dispositions,
+)
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
 from ..live import Borrador100SnapshotRepository
 from . import _iva_wallet_gate
@@ -152,7 +158,14 @@ resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva
 #
 # DEFERRED — no resolver yet; emit advisory instead of silently blanking (S10):
 #   atribucion_member, related_party_operation, foreign_asset, refund_operation
-_BUCKET_AGGREGATION_OWNED_SOURCES: frozenset[BindingSourceKind] = frozenset(
+#
+# LIVE ENROLLED SET — the source kinds routed on the live calculate path, read at
+# module load from the resolvers actually enrolled in `_resolve_bucket_source_mesh`
+# plus the precedence tiers (profile, borrador, iva_wallet_decision) and the
+# operator `manual_input` allowlist. This is the single declaration the disposition
+# registry below is built from; the owned / deferred / reserved views are DERIVED
+# from that one mapping, replacing the four formerly-scattered enrollment structures.
+_ENROLLED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
         BindingSourceKind.LEDGER_IVA_AGGREGATION,
         BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
@@ -170,6 +183,21 @@ _BUCKET_AGGREGATION_OWNED_SOURCES: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.IVA_WALLET_DECISION,
         BindingSourceKind.MANUAL_INPUT,
     },
+)
+
+# The ONE disposition registry: where every BindingSourceKind member resolves on
+# the live calculate mesh (enrolled / deferred / reserved). Built from the live
+# enrolled set above plus the deferred and reserved sets in the source-mesh module;
+# no disposition is hard-coded, so a newly-enrolled source flows through here.
+_BINDING_SOURCE_DISPOSITIONS = _build_binding_source_dispositions(_ENROLLED_SOURCE_KINDS)
+
+# Owned-source view DERIVED from the disposition registry (the ENROLLED members):
+# the enrolled resolvers + pre-mesh tiers + manual_input. Consumed by the
+# novel-source boundary gate and the caller-override guard.
+_BUCKET_AGGREGATION_OWNED_SOURCES: frozenset[BindingSourceKind] = frozenset(
+    source
+    for source, disposition in _BINDING_SOURCE_DISPOSITIONS.items()
+    if disposition is _BindingSourceDisposition.ENROLLED
 )
 
 # Caller-override lock set — the subset of OWNED sources whose resolvers are
