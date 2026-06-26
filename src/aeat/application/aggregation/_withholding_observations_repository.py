@@ -204,7 +204,7 @@ class WithholdingObservationRepository(SecureBoundRepository[_WithholdingObserva
         modelo: str,
         period: Period,
     ) -> tuple[WithholdingObservation, ...]:
-        """Return every persisted per-perceptor-clave observation for one (modelo, filing_year, period).
+        """Return every persisted per-perceptor-clave :class:`WithholdingObservation` for one (modelo, filing_year, period).
 
         The calc-mesh percepciones-count resolver (P03) folds these through the
         validated distinct-count primitive. An empty tuple means no per-perceptor
