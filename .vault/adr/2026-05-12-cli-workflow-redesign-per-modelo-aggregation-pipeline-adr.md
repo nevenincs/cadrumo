@@ -64,3 +64,17 @@ invoice-domain-decoupling decision.
 Retenciones, counterpart, asset, rental, OSS/IOSS, and future aggregation
 pipelines can share one application-layer pattern. The registry binding schema
 must be hardened so bare `invoice` cannot be declared or emitted.
+
+## Status
+
+Accepted, but its source/sourcing design is SUPERSEDED by the
+bindings-architecture-unification sweep. This ADR's `AggregationSourceKind` closed set
+is superseded by the phase-2.1 `binding-source-kind-taxonomy-unification` ADR, which
+deletes `AggregationSourceKind` in favour of the one canonical `BindingSourceKind`
+(code-removal in phase 2.1); and its per-modelo aggregation service (the third
+sourcing-contract shape, never enrolled in the live calculate mesh) is superseded by
+the future phase-2.2 (resolver-contract) ADR, which folds it into the one resolver
+contract or formally documents it as a separate gated surface (code-removal in phase
+2.2). The shared application-layer pattern this ADR introduced is retained; the
+duplicate source-kind enum and the orphaned third shape are the superseded parts.
+Those phase ADRs — not a central apex doc — are the canonical direction.
