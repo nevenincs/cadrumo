@@ -117,3 +117,11 @@ unevidenced local chain past the filing gate.
   `source_kind` and must never be added to the official-evidence set that satisfies the
   cross-period clean-state gate; auto-carry may feed calculate/draft but never substitute
   for external filing evidence.
+
+## Status
+
+Accepted and in force. The IVA routing + cross-period carry-enrollment + `app_filing`
+non-official-evidence decisions in this ADR stand and align to the canonical direction
+in the PHASE ADRs (not a central apex doc): source-kind under the phase-2.1
+`binding-source-kind-taxonomy-unification` ADR; the carry mechanism under the
+foundational `live-iva-compensation-wallet-adr` anchor + the future phase-2.3 ADR.
