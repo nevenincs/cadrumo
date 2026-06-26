@@ -21,6 +21,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, Modelo, Period
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
 from ...core.logging import get_logger
+from ...domain.calculations.registry import WithholdingObservation
 from ._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
@@ -168,6 +169,7 @@ class PerModeloAggregationCommand(BaseModel):
     retencion_observations: tuple[RetencionObservation, ...] = Field(default_factory=tuple)
     counterpart_observations: tuple[CounterpartObservation, ...] = Field(default_factory=tuple)
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = Field(default_factory=tuple)
+    withholding_observations: tuple[WithholdingObservation, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
     def _only_matching_observation_family_is_populated(self) -> PerModeloAggregationCommand:

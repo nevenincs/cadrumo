@@ -330,6 +330,11 @@ aggregation:
         szükséges (pl. 2024Q1).
       unsupported_period: A Modelo 100 bevétel-összesítéshez éves időszak szükséges
         (pl. 2024-0A).
+  retenciones:
+    errors:
+      filing_year_out_of_range: 'A(z) %{filing_year} bevallasi ev a tamogatott %{min_year}-%{max_year} tartomanyon kivul van.'
+      perceptor_nif_blank: 'A perceptor NIF nem lehet ures.'
+      perceptor_observations_missing: 'Nincsenek perceptoronkenti retencion megfigyelesek a(z) %{modelo} %{filing_year} %{period} modellhez; a(z) %{source_kind} forras nem oldhato fel.'
   service:
     errors:
       envelope_modelo_mismatch: aggregation.service.errors.envelope_modelo_mismatch
@@ -680,13 +685,7 @@ application:
         felel meg ebben a revizioban. Elfogadott binding azonositok: %{accepted}.
         Hasznalja a `aeat app modelo bindings list <MODELO>` parancsot az ervenyes
         azonositok listazasahoz.'
-      calculate_relation_unknown: '--relation %{key} egyik relation azonositonak
-        sem felel meg ebben a revizioban. Elfogadott relation azonositok: %{accepted}.'
-      calculate_casilla_alias_refused: 'A --casilla %{key} nyomtatott mezőszám vagy
-        űrlapszám, nem kanonikus casilla.id. Használja ezt a kanonikus casilla.id
-        értéket: %{accepted}.'
-      calculate_casilla_non_numeric: 'A --casilla %{casilla_id} nem numerikus adattipusra
-        mutat: %{data_type} (%{label}); hasznaljon --binding opciot vagy profilforrast.'
+      calculate_casilla_noncanonical_refused: 'A --casilla %{key} nem kanonikus casilla.id vagy ketertelmu. Hasznalja a pontos kanonikus casilla.id erteket: %{accepted}.'
       calculate_casilla_unknown: 'A --casilla %{key} nem kanonikus casilla.id ebben
         a revízióban. Érvényes casilla.id értékekhez futtassa: `aeat app modelo casillas
         <MODELO>`.'
@@ -698,6 +697,8 @@ application:
         ez nem haladja meg az RD 1065/2007 31.1 cikk szerinti %{threshold} EUR kuszobot.
       calculate_pension_inputs_incomplete: A nyugdijterv kivaltasi adatait egyutt
         kell megadni.
+      calculate_relation_unknown: '--relation %{key} egyik relation azonositonak sem
+        felel meg ebben a revizioban. Elfogadott relation azonositok: %{accepted}.'
       calculate_sal_inputs_incomplete: A SAL/SLL kulonleges tartalek adatait egyutt
         kell megadni.
       calculate_semantic_role_ambiguous: 'A modell revíziója egynél több casillát
@@ -844,8 +845,15 @@ application:
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
       cross_period_non_official_local_chain:
-        message: 'az idoszakok kozotti atvitel egy ugyanabban az adoevben helyileg benyujtott korabbi idoszakot hasznalt kulso AEAT-bizonyitek nelkul: modelo=%{source_modelo} ev=%{filing_year} idoszak=%{period} forras=%{origin}. Az adoeven beluli lanc helyi exportalasra elfogadott, de az atvitt ertek helyileg igazolt (app_filing), nem az AEAT altal igazolt; nyujtsa be minden idoszakot az AEAT-nal kulsoleg.'
-        next_action: 'Exportalja es nyujtsa be minden idoszakot az AEAT-nal kulsoleg, majd importalja a hivatalos justificante/CSV/elo bizonyitekot a helyi lanc frissitesehez, amint elerheto.'
+        message: 'az idoszakok kozotti atvitel egy ugyanabban az adoevben helyileg
+          benyujtott korabbi idoszakot hasznalt kulso AEAT-bizonyitek nelkul: modelo=%{source_modelo}
+          ev=%{filing_year} idoszak=%{period} forras=%{origin}. Az adoeven beluli
+          lanc helyi exportalasra elfogadott, de az atvitt ertek helyileg igazolt
+          (app_filing), nem az AEAT altal igazolt; nyujtsa be minden idoszakot az
+          AEAT-nal kulsoleg.'
+        next_action: Exportalja es nyujtsa be minden idoszakot az AEAT-nal kulsoleg,
+          majd importalja a hivatalos justificante/CSV/elo bizonyitekot a helyi lanc
+          frissitesehez, amint elerheto.
       dt12a_reduccion_next_action: Adja meg a --rescate-plan-pensiones-capital ÖSSZEG
         --rescate-plan-pensiones-aportaciones-pre-2007 ÖSSZEG --rescate-plan-pensiones-aportaciones-totales
         ÖSSZEG paramétereket a számításhoz a DT 12a csökkentés automatikus beillesztéséhez
@@ -1433,6 +1441,7 @@ cli:
         retencion_observation_help: JSON RetencionObservation objektum. A source_kind
           értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
           collectible_invoice lehet. Több megfigyeléshez ismételje meg.
+        withholding_observation_help: 'Kifizetőnkénti-kulcsonkénti visszatartási megfigyelés (JSON) a 190-es modell juttatásszámlálásához; ismételhető.'
       aggregate_help: 'A háttér nyomtatványonkénti aggregálási szolgáltatás futtatása
         explicit kanonikus megfigyelésekből. Elfogadott source_kind értékek: ledger_transaction,
         purchase_invoice_evidence, payable_invoice és collectible_invoice.'
@@ -1592,16 +1601,16 @@ cli:
         correct_reason_required: 'Adja meg a --reason értéket: rögzítse, miért javítja
           a nyitó egyenleget; nem lehet üres.'
         group_help: Local IVA compensation wallet balance commands.
-        override_amount_help: cli.app.modelo.iva_wallet.override_amount_help
-        override_confirm_help: cli.app.modelo.iva_wallet.override_confirm_help
-        override_confirm_required: cli.app.modelo.iva_wallet.override_confirm_required
-        override_evidence_locator_help: cli.app.modelo.iva_wallet.override_evidence_locator_help
-        override_evidence_locator_required: cli.app.modelo.iva_wallet.override_evidence_locator_required
-        override_filing_year_help: cli.app.modelo.iva_wallet.override_filing_year_help
-        override_help: cli.app.modelo.iva_wallet.override_help
-        override_period_help: cli.app.modelo.iva_wallet.override_period_help
-        override_reason_help: cli.app.modelo.iva_wallet.override_reason_help
-        override_reason_required: cli.app.modelo.iva_wallet.override_reason_required
+        override_amount_help: 'Felulirt elozo kompenzacios osszeg EUR-ban az iva.compensacion-pendiente-periodos-anteriores mezore, AEAT 110-es casilla; decimalis, peldaul 420.00.'
+        override_confirm_help: 'Kotelezo megerosito jelzo. Elismeri, hogy a feluliras megvaltoztatja a benyujtott elozo kompenzacios erteket, es a bevallas pontossaga a megadott ertektol fugg.'
+        override_confirm_required: 'Adja meg a --confirm kapcsolot annak elismeresere, hogy ez M303 elozo kompenzacios atviteli felulirast rogzit. A bevallas pontossaga a megadott ertektol fugg.'
+        override_evidence_locator_help: 'A felulirast alatamaszto bizonyitek kotelezo hivatkozasa, peldaul korabbi justificante referencia.'
+        override_evidence_locator_required: 'Adja meg a --evidence-locator erteket a felulirast alatamaszto bizonyitek hivatkozasaval.'
+        override_filing_year_help: 'Annak a Modelo 303 idoszaknak a bevallasi eve, amelynek elozo kompenzacios atvitele felulirasra kerul.'
+        override_help: 'Rogzit egy adozoi felulirast a Modelo 303 elozo kompenzacios atvitelehez a helyi tarcan kivuli bizonyitek alapjan. Csak a szamitast oldja fel, es nem teljesiti a hivatalos bizonyiteki ellenorzest. --confirm szukseges.'
+        override_period_help: 'A fuggo Modelo 303 bevallasi idoszak, amely megkapja az atvitelt, peldaul 2T vagy 3T.'
+        override_reason_help: 'A feluliras kotelezo indoka, auditolhato eredetkent rogzitve.'
+        override_reason_required: 'Adja meg a --reason erteket, amely megindokolja az elozo kompenzacios atvitel felulirasat; nem lehet ures.'
         seed_amount_help: Az IVA-kompenzáció kezdő összege decimálisban.
         seed_confirm_help: Erősítse meg a vetőösszeg műveletet.
         seed_confirm_required: Adja meg a --confirm kapcsolót a vetőösszeg-művelet
@@ -1825,6 +1834,7 @@ cli:
           kisbetűs hex-karakterláncnak kell lennie (SHA-256 kivonat).
         invalid_casilla_key: 'A --casilla kulcsa nem érvényes CasillaId (alfanumerikus,
           plusz . _ : - elválasztók, max. 64 karakter).'
+        invalid_relation_key: 'A --relation kulcs nem ervenyes RelationId. Hasznaljon kisbetus, kotojeles vagy pontozott relation azonosítot.'
         invalid_revision_selector: 'Ismeretlen revizio valaszto {value}; valasszon
           ezek kozul: {choices}.'
         invalid_work_unit_id: A work_unit_id értékének 64 karakteres kisbetűs hex-karakterláncnak
@@ -4212,6 +4222,7 @@ errors:
       kell kitenniük.
     modelo_347_threshold: A Modelo 347 jelentési küszöb feletti ügyleteihez kifejezett
       bevallási lefedettség szükséges.
+    modelo_ambiguous_semantic_role_casilla: 'Tobb casilla hasznalja a(z) %{semantic_role} szemantikus szerepet; hasznalja a pontos kanonikus casilla.id erteket.'
     modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input

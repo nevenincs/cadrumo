@@ -320,6 +320,11 @@ aggregation:
         (e.g. 2024Q1).
       unsupported_period: Annual period is required for Modelo 100 income aggregation
         (e.g. 2024-0A).
+  retenciones:
+    errors:
+      filing_year_out_of_range: 'Filing year %{filing_year} is outside the supported range %{min_year}-%{max_year}.'
+      perceptor_nif_blank: 'Perceptor NIF must not be blank.'
+      perceptor_observations_missing: 'No per-perceptor retention observations exist for modelo %{modelo} %{filing_year} %{period}; source %{source_kind} cannot resolve.'
   service:
     errors:
       envelope_modelo_mismatch: Aggregation modelo does not match result modelo.
@@ -667,13 +672,7 @@ application:
       calculate_binding_unknown: '--binding %{key} does not match any binding id in
         this revision. Accepted binding ids: %{accepted}. Use `aeat app modelo bindings
         list <MODELO>` to list valid binding ids.'
-      calculate_relation_unknown: '--relation %{key} does not match any relation
-        id in this revision. Accepted relation ids: %{accepted}.'
-      calculate_casilla_alias_refused: '--casilla %{key} is a printed casilla number
-        or form number, not a canonical casilla.id. Use the canonical casilla.id instead:
-        %{accepted}.'
-      calculate_casilla_non_numeric: --casilla %{casilla_id} targets non-numeric data
-        type %{data_type} (%{label}); use --binding or profile sources instead.
+      calculate_casilla_noncanonical_refused: '--casilla %{key} is not a canonical casilla.id or is ambiguous. Use the exact canonical casilla.id: %{accepted}.'
       calculate_casilla_unknown: --casilla %{key} is not a canonical casilla.id in
         this revision. Use `aeat app modelo casillas <MODELO>` to list valid casilla.id
         values.
@@ -686,6 +685,8 @@ application:
         31.1.
       calculate_pension_inputs_incomplete: The plan-pension rescue inputs must all
         be supplied together.
+      calculate_relation_unknown: '--relation %{key} does not match any relation id
+        in this revision. Accepted relation ids: %{accepted}.'
       calculate_sal_inputs_incomplete: The SAL/SLL reserve-special inputs must all
         be supplied together.
       calculate_semantic_role_ambiguous: The modelo revision has more than one casilla
@@ -826,8 +827,14 @@ application:
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
       cross_period_non_official_local_chain:
-        message: 'cross-period carry used a same-year locally-filed prior period with no external AEAT evidence: modelo=%{source_modelo} year=%{filing_year} period=%{period} origin=%{origin}. The within-year chain is admitted for local export, but the carried value is locally evidenced (app_filing), not AEAT-evidenced; file every period with AEAT externally.'
-        next_action: 'Export and file each period with AEAT externally, then import the official justificante/CSV/live evidence to upgrade the local chain when available.'
+        message: 'cross-period carry used a same-year locally-filed prior period with
+          no external AEAT evidence: modelo=%{source_modelo} year=%{filing_year} period=%{period}
+          origin=%{origin}. The within-year chain is admitted for local export, but
+          the carried value is locally evidenced (app_filing), not AEAT-evidenced;
+          file every period with AEAT externally.'
+        next_action: Export and file each period with AEAT externally, then import
+          the official justificante/CSV/live evidence to upgrade the local chain when
+          available.
       dt12a_reduccion_next_action: Supply --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE to aeat app modelo work calculate to auto-inject the DT 12a reduccion
@@ -1399,6 +1406,7 @@ cli:
         retencion_observation_help: JSON RetencionObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
+        withholding_observation_help: 'Per-perceptor-clave withholding observation (JSON) for the Modelo 190 percepciones count; repeatable.'
       aggregate_help: Run the backend per-modelo aggregation service from explicit
         canonical observations. Accepted source_kind values are ledger_transaction,
         purchase_invoice_evidence, payable_invoice, and collectible_invoice.
@@ -1546,16 +1554,16 @@ cli:
         correct_reason_required: 'Provide --reason: record why the opening balance
           is being corrected; it must not be blank.'
         group_help: Local IVA compensation wallet balance commands.
-        override_amount_help: cli.app.modelo.iva_wallet.override_amount_help
-        override_confirm_help: cli.app.modelo.iva_wallet.override_confirm_help
-        override_confirm_required: cli.app.modelo.iva_wallet.override_confirm_required
-        override_evidence_locator_help: cli.app.modelo.iva_wallet.override_evidence_locator_help
-        override_evidence_locator_required: cli.app.modelo.iva_wallet.override_evidence_locator_required
-        override_filing_year_help: cli.app.modelo.iva_wallet.override_filing_year_help
-        override_help: cli.app.modelo.iva_wallet.override_help
-        override_period_help: cli.app.modelo.iva_wallet.override_period_help
-        override_reason_help: cli.app.modelo.iva_wallet.override_reason_help
-        override_reason_required: cli.app.modelo.iva_wallet.override_reason_required
+        override_amount_help: 'Overridden prior-compensation amount in EUR applied to iva.compensacion-pendiente-periodos-anteriores, AEAT box 110; decimal, for example 420.00.'
+        override_confirm_help: 'Required confirmation flag. Acknowledge that the override changes the filed prior-compensation figure and filing accuracy depends on the supplied value.'
+        override_confirm_required: 'Pass --confirm to acknowledge that this records a taxpayer override of the M303 prior-compensation carry. Filing accuracy depends on the value supplied.'
+        override_evidence_locator_help: 'Required locator for the evidence supporting the override, for example a prior justificante reference.'
+        override_evidence_locator_required: 'Provide --evidence-locator with the evidence reference supporting this override.'
+        override_filing_year_help: 'Filing year of the Modelo 303 period whose prior-compensation carry is overridden.'
+        override_help: 'Record a taxpayer override for the Modelo 303 prior-compensation carry from evidence held outside the local wallet. It unblocks calculation only and does not satisfy the official-evidence verification gate. Requires --confirm.'
+        override_period_help: 'Period of the dependent Modelo 303 filing receiving the carry, for example 2T or 3T.'
+        override_reason_help: 'Required basis for the override, recorded as auditable provenance.'
+        override_reason_required: 'Provide --reason explaining why the prior-compensation carry is being overridden; it must not be blank.'
         seed_amount_help: Carry-forward balance amount in EUR (decimal, e.g. 1200.50).
           This is the compensación pendiente de periodos anteriores for the NEXT period
           after the seeded one.
@@ -1780,6 +1788,7 @@ cli:
           lowercase hex string (SHA-256 digest)
         invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric
           plus . _ : - separators, max 64 chars)'
+        invalid_relation_key: 'The --relation key is not a valid RelationId. Use a lowercase kebab or dotted relation id.'
         invalid_revision_selector: Unknown revision selector {value}; choose one of
           {choices}.
         invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
@@ -4081,6 +4090,7 @@ errors:
       100%.
     modelo_347_threshold: Modelo 347 operations above the reporting threshold require
       explicit declaration coverage.
+    modelo_ambiguous_semantic_role_casilla: 'More than one casilla uses semantic role %{semantic_role}; use the exact canonical casilla.id.'
     modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
