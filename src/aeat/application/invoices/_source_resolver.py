@@ -22,7 +22,7 @@ from ..aggregation._source_mesh import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
-from ..ledger import BusinessOperationInvoiceSourceKind
+from ..ledger import BusinessOperationInvoiceDirection
 
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -31,7 +31,7 @@ _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
-def invoice_direction_to_source_kind(kind: InvoiceKind) -> BusinessOperationInvoiceSourceKind:
+def invoice_direction_to_source_kind(kind: InvoiceKind) -> BusinessOperationInvoiceDirection:
     """Map an invoice direction to its settlement source kind.
 
     The single contractual home for the direction↔settlement relationship,
@@ -40,11 +40,11 @@ def invoice_direction_to_source_kind(kind: InvoiceKind) -> BusinessOperationInvo
     is *collectible*; a *received* invoice (a vendor billed us) is *payable*.
 
     Returns:
-        The :class:`BusinessOperationInvoiceSourceKind` settling ``kind``.
+        The :class:`BusinessOperationInvoiceDirection` settling ``kind``.
     """
     if kind is InvoiceKind.ISSUED:
-        return BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE
-    return BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE
+        return BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE
+    return BusinessOperationInvoiceDirection.PAYABLE_INVOICE
 
 
 class InvoiceCatalogueSourceResolver:

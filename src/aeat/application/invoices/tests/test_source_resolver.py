@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import StorageValidationError
-from ....application.ledger import BusinessOperationInvoiceSourceKind
+from ....application.ledger import BusinessOperationInvoiceDirection
 from ....core import Period
 from ....core.resources import resources
 from ....domain.invoices import (
@@ -36,12 +36,12 @@ class TestInvoiceDirectionToSourceKind:
     def test_issued_maps_to_collectible(self) -> None:
         assert (
             invoice_direction_to_source_kind(InvoiceKind.ISSUED)
-            is BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE
+            is BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE
         )
 
     def test_received_maps_to_payable(self) -> None:
         assert (
-            invoice_direction_to_source_kind(InvoiceKind.RECEIVED) is BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE
+            invoice_direction_to_source_kind(InvoiceKind.RECEIVED) is BusinessOperationInvoiceDirection.PAYABLE_INVOICE
         )
 
     def test_mapping_is_total_over_invoice_kind(self) -> None:
@@ -49,8 +49,8 @@ class TestInvoiceDirectionToSourceKind:
         # distinct source kind, never collapse the two directions onto one.
         resolved = {invoice_direction_to_source_kind(kind) for kind in InvoiceKind}
         assert resolved == {
-            BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE,
-            BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE,
+            BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE,
+            BusinessOperationInvoiceDirection.PAYABLE_INVOICE,
         }
 
 
