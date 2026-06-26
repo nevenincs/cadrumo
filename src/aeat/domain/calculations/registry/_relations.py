@@ -16,11 +16,13 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Period
+from ....core.aggregation import RelationAggregationOp
 from ._binding_selector_utils import unique_tuple
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, RelationId
 from ._observation_fold import gather_observed_requirement_values
 from ._period_offset_math import apply_period_offset
+from ._relation_aggregation import relation_aggregation_op
 from ._schema import ModeloRevision, RelationDefinition, filing_period_from_scope
 
 if TYPE_CHECKING:
@@ -119,7 +121,7 @@ def relation_source_requirements(
             relation.source_casilla_id,
             relation.dependency_role,
             str(classification.treatment),
-            str((relation.aggregation or {}).get("op", "copy")),
+            relation_aggregation_op(relation).value,
         )
         bucket = grouped.setdefault(key, _RelationRequirementBucket(relation_ids=set(), target_bindings=set()))
         bucket.relation_ids.add(relation.id)
@@ -183,17 +185,15 @@ def resolve_relation_values(
         if relation.id not in external_outputs:
             raise RegistryValidationError(f"missing relation value for {relation.id!r}")
         raw_value = external_outputs[relation.id]
-        op = str((relation.aggregation or {}).get("op", "copy"))
-        if op == "copy":
+        op = relation_aggregation_op(relation)
+        if op == RelationAggregationOp.COPY:
             if not isinstance(raw_value, Decimal):
                 raise RegistryValidationError(f"relation {relation.id!r} copy requires one Decimal")
             resolved[relation.id] = raw_value
-        elif op == "sum":
+        else:
             if not isinstance(raw_value, tuple) or not all(isinstance(value, Decimal) for value in raw_value):
                 raise RegistryValidationError(f"relation {relation.id!r} sum requires a tuple of Decimal values")
             resolved[relation.id] = sum(raw_value, Decimal("0"))
-        else:
-            raise RegistryValidationError(f"relation {relation.id!r} uses unsupported aggregation op {op!r}")
     return resolved
 
 

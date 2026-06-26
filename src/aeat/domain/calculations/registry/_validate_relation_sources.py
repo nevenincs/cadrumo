@@ -80,10 +80,9 @@ def _validate_single_relation(
         failures.append(f"{relation_scope} must declare source periods")
     if not relation.target_periods:
         failures.append(f"{relation_scope} must declare target periods")
-    aggregation = relation.aggregation or {"op": "copy"}
-    op = aggregation.get("op")
-    if op not in {"copy", "sum"}:
-        failures.append(f"{relation_scope} uses unsupported aggregation op {op!r}")
+    # The relation op is the strict ``RelationAggregation.op`` field; an unknown op
+    # is rejected at registry-build when the RelationDefinition is constructed,
+    # earlier than this section validator (parity with the binding op gate).
     source_revisions, selector_failures = select_relation_source_revisions(
         source_modelo,
         relation.source_revision_selector,

@@ -36,6 +36,7 @@ from typing import Final
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
 from ...core import BindingSourceKind, Modelo, Period
+from ...core.aggregation import RelationAggregationOp
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -47,6 +48,7 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
     RelationId,
     materialize_relation_binding_values,
+    relation_aggregation_op,
     relation_source_requirements,
     resolve_observed_requirement_value,
     undeclared_casilla_ids,
@@ -556,10 +558,13 @@ def _compensation_carry_binding_ids(snapshot: RegistrySnapshot) -> tuple[Binding
     for relation in snapshot.revision.relations:
         if relation.source_casilla_id != _M303_COMPENSACION_GENERADA_SOURCE:
             continue
-        op = str((relation.aggregation or {}).get("op", ""))
-        if op == "copy":
+        # The typed relation op self-documents the FIFO partition: the COPY of the
+        # last period is box 97, the SUM of the non-last periods is box 662
+        # (m390-iva-carry-boxes / #25). Both carry-box relations declare an explicit
+        # op, so the COPY default is never relied on here.
+        if relation_aggregation_op(relation) == RelationAggregationOp.COPY:
             last_period_binding_id = relation.target_binding
-        elif op == "sum":
+        else:
             generated_not_in_last_binding_id = relation.target_binding
     return last_period_binding_id, generated_not_in_last_binding_id
 

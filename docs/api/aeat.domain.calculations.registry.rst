@@ -53,6 +53,7 @@ Submodules
    aeat.domain.calculations.registry._record_design_coverage
    aeat.domain.calculations.registry._record_design_schema
    aeat.domain.calculations.registry._record_spec
+   aeat.domain.calculations.registry._relation_aggregation
    aeat.domain.calculations.registry._relations
    aeat.domain.calculations.registry._remote_state_guard
    aeat.domain.calculations.registry._renta_web_open_oracle
