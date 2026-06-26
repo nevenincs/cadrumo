@@ -257,3 +257,11 @@ Pitfalls:
   contracts need their own gate. Justification origin: this ADR,
   which surfaced a saldo-magnitude regression that the in-period
   47/47 green could not catch.
+
+## Status
+
+Accepted and in force. The cross-period carry-continuity contract this ADR defines
+aligns to the canonical compensación-carry direction in the PHASE ADRs (not a central
+apex doc): the foundational `live-iva-compensation-wallet-adr` is the carry anchor, and
+the future phase-2.3 (fold-in/carry) ADR unifies the carry mechanism. This ADR's
+gate/test contract stands.
