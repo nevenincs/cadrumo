@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from ...core import BindingSourceKind
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._errors import OperatorSurfaceContractError
@@ -19,7 +20,6 @@ from ._models import (
     RootSurface,
     RootSurfaceName,
     ServiceOwner,
-    SourceKind,
     SourceKindAlias,
 )
 
@@ -52,18 +52,18 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
     ),
 )
 
-SOURCE_KINDS: tuple[SourceKind, ...] = (
-    SourceKind.LEDGER_TRANSACTION,
-    SourceKind.PURCHASE_INVOICE_EVIDENCE,
-    SourceKind.PAYABLE_INVOICE,
-    SourceKind.COLLECTIBLE_INVOICE,
+SOURCE_KINDS: tuple[BindingSourceKind, ...] = (
+    BindingSourceKind.LEDGER_TRANSACTION,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.COLLECTIBLE_INVOICE,
 )
 
 SOURCE_KIND_ALIASES: tuple[SourceKindAlias, ...] = (
-    SourceKindAlias(alias="lt", canonical=SourceKind.LEDGER_TRANSACTION),
-    SourceKindAlias(alias="pie", canonical=SourceKind.PURCHASE_INVOICE_EVIDENCE),
-    SourceKindAlias(alias="pi", canonical=SourceKind.PAYABLE_INVOICE),
-    SourceKindAlias(alias="ci", canonical=SourceKind.COLLECTIBLE_INVOICE),
+    SourceKindAlias(alias="lt", canonical=BindingSourceKind.LEDGER_TRANSACTION),
+    SourceKindAlias(alias="pie", canonical=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE),
+    SourceKindAlias(alias="pi", canonical=BindingSourceKind.PAYABLE_INVOICE),
+    SourceKindAlias(alias="ci", canonical=BindingSourceKind.COLLECTIBLE_INVOICE),
 )
 
 MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
@@ -346,10 +346,10 @@ def require_accepted_root(name: str) -> RootSurface:
     )
 
 
-def resolve_source_kind_alias(value: str) -> SourceKind:
+def resolve_source_kind_alias(value: str) -> BindingSourceKind:
     """Resolve canonical source kinds and parser-only aliases.
 
-    Returns a :class:`SourceKind`.
+    Returns a :class:`BindingSourceKind`.
     """
     normalized = value.strip().lower()
     for source_kind in SOURCE_KINDS:

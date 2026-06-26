@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import Period
-from ....core.aggregation import AggregationSourceKind
+from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
 from .. import (
     CounterpartObservation,
@@ -37,7 +37,7 @@ def _counterpart_obs(
     operation_kind: OperationKind349,
     base: str,
     name: str,
-    source_kind: CounterpartSourceKind = AggregationSourceKind.COLLECTIBLE_INVOICE,
+    source_kind: CounterpartSourceKind = BindingSourceKind.COLLECTIBLE_INVOICE,
     groi_verified: bool = False,
     nif_iva_verified: bool = True,
 ) -> CounterpartObservation:
@@ -140,7 +140,7 @@ def test_per_modelo_registry_provider_uses_committed_source_kind_filters() -> No
                 operation_kind=OperationKind349.INTRA_DELIVERY,
                 base="1000.00",
                 name="ALEMAN GMBH",
-                source_kind=AggregationSourceKind.PAYABLE_INVOICE,
+                source_kind=BindingSourceKind.PAYABLE_INVOICE,
             ),
         ),
     )

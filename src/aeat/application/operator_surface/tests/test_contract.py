@@ -9,7 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core.aggregation import AggregationSourceKind
+from ....core import BindingSourceKind
+from ....core.aggregation import COUNTERPART_SOURCE_KINDS
 from ....core.config import override_settings
 from ....core.errors import get_registered_error_code
 from ... import operator_surface
@@ -20,7 +21,6 @@ from .. import (
     OperatorMutability,
     OperatorSurfaceContractError,
     RootSurfaceName,
-    SourceKind,
     build_help_document,
     build_root_landing_report,
     get_operator_surface_contract,
@@ -88,11 +88,11 @@ def test_contract_lifecycle_forbids_live_submission() -> None:
 
 
 def test_contract_source_kind_aliases_are_parser_only() -> None:
-    assert resolve_source_kind_alias("ledger_transaction") is SourceKind.LEDGER_TRANSACTION
-    assert resolve_source_kind_alias("lt") is SourceKind.LEDGER_TRANSACTION
-    assert resolve_source_kind_alias("pie") is SourceKind.PURCHASE_INVOICE_EVIDENCE
-    assert resolve_source_kind_alias("pi") is SourceKind.PAYABLE_INVOICE
-    assert resolve_source_kind_alias("ci") is SourceKind.COLLECTIBLE_INVOICE
+    assert resolve_source_kind_alias("ledger_transaction") is BindingSourceKind.LEDGER_TRANSACTION
+    assert resolve_source_kind_alias("lt") is BindingSourceKind.LEDGER_TRANSACTION
+    assert resolve_source_kind_alias("pie") is BindingSourceKind.PURCHASE_INVOICE_EVIDENCE
+    assert resolve_source_kind_alias("pi") is BindingSourceKind.PAYABLE_INVOICE
+    assert resolve_source_kind_alias("ci") is BindingSourceKind.COLLECTIBLE_INVOICE
 
 
 def test_require_accepted_root_uses_registered_application_error() -> None:
@@ -285,19 +285,24 @@ def test_filing_status_has_no_token_shim_module() -> None:
     assert not (Path(operator_surface.__path__[0]) / "_filing_status_token.py").exists()
 
 
-def test_source_kind_is_a_constrained_slice_of_aggregation_source_kind() -> None:
-    """operator-surface SourceKind must stay a subset of core AggregationSourceKind.
+def test_operator_source_kinds_mirror_the_counterpart_subset_of_binding_source_kind() -> None:
+    """The operator-surface source kinds are exactly the counterpart subset of the core enum.
 
-    DB-10: SourceKind is the operator-facing source-kind taxonomy. It is a
-    canonical :class:`AggregationSourceKind`. The retired bare invoice alias is
-    gone, so the operator surface and core aggregation taxonomy must now match
-    exactly.
+    Phase-2.1 taxonomy unification: the duplicate ``operator_surface.SourceKind``
+    enum was deleted and the operator surface now declares its source kinds
+    directly as :class:`BindingSourceKind` members. They must equal the canonical
+    counterpart subset (:data:`COUNTERPART_SOURCE_KINDS`) — the four
+    transaction/invoice settlement kinds — so the operator surface and the core
+    taxonomy can never drift.
     """
-    operator_values = {member.value for member in SourceKind}
-    canonical_values = {member.value for member in AggregationSourceKind}
+    contract = get_operator_surface_contract()
+    operator_kinds = set(contract.source_kinds)
 
-    assert operator_values == canonical_values, (
-        "operator SourceKind must exactly mirror AggregationSourceKind; "
-        f"unexpected operator-only={sorted(operator_values - canonical_values)} "
-        f"core-only={sorted(canonical_values - operator_values)}"
+    assert all(isinstance(kind, BindingSourceKind) for kind in operator_kinds), (
+        "operator surface source kinds must be BindingSourceKind members"
+    )
+    assert operator_kinds == set(COUNTERPART_SOURCE_KINDS), (
+        "operator surface source kinds must exactly mirror the counterpart subset of "
+        f"BindingSourceKind; unexpected operator-only={sorted(operator_kinds - set(COUNTERPART_SOURCE_KINDS))} "
+        f"subset-only={sorted(set(COUNTERPART_SOURCE_KINDS) - operator_kinds)}"
     )

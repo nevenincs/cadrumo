@@ -9,7 +9,7 @@ from types import MappingProxyType
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.aggregation import AggregationSourceKind
+from ...core import BindingSourceKind
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.identity import BucketId
@@ -59,10 +59,10 @@ class ReviewQueueReport(BaseModel):
 
 _ACCEPTED_KIND_TO_INTERNAL: Mapping[str, frozenset[ReviewItemKind]] = MappingProxyType(
     {
-        AggregationSourceKind.LEDGER_TRANSACTION: frozenset({ReviewItemKind.TRANSACTION}),
-        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE: frozenset({ReviewItemKind.INVOICE}),
-        AggregationSourceKind.PAYABLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
-        AggregationSourceKind.COLLECTIBLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
+        BindingSourceKind.LEDGER_TRANSACTION: frozenset({ReviewItemKind.TRANSACTION}),
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: frozenset({ReviewItemKind.INVOICE}),
+        BindingSourceKind.PAYABLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
+        BindingSourceKind.COLLECTIBLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
         "modelo_finding": frozenset({ReviewItemKind.FINDING}),
         "live_notification": frozenset(),
         "sync_divergence": frozenset(),
@@ -75,9 +75,7 @@ _ACCEPTED_KIND_TO_INTERNAL: Mapping[str, frozenset[ReviewItemKind]] = MappingPro
 # parseable but emit nothing, so they are not advertised in the instructive
 # refusal — surfacing them would invite an operator to filter on a kind that can
 # never produce a row.
-ACCEPTED_KINDS: tuple[str, ...] = tuple(
-    str(kind) for kind, internal in _ACCEPTED_KIND_TO_INTERNAL.items() if internal
-)
+ACCEPTED_KINDS: tuple[str, ...] = tuple(str(kind) for kind, internal in _ACCEPTED_KIND_TO_INTERNAL.items() if internal)
 
 
 def project_review_queue(
@@ -164,8 +162,8 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
     if isinstance(item, TransactionReviewItem):
         return ReviewQueueRow(
             item_id=item.item_id,
-            kind=AggregationSourceKind.LEDGER_TRANSACTION,
-            source_kind=AggregationSourceKind.LEDGER_TRANSACTION,
+            kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
             affected_object_id=item.source.transaction_id,
             bucket_id=bucket_id,
             modelo=item.modelo,
@@ -181,9 +179,9 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
         )
     if isinstance(item, InvoiceReviewItem):
         source_kind = (
-            AggregationSourceKind.COLLECTIBLE_INVOICE
+            BindingSourceKind.COLLECTIBLE_INVOICE
             if item.source.kind.value == "ISSUED"
-            else AggregationSourceKind.PAYABLE_INVOICE
+            else BindingSourceKind.PAYABLE_INVOICE
         )
         return ReviewQueueRow(
             item_id=item.item_id,

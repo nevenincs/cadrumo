@@ -9,7 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Period
-from ....core.aggregation import AggregationSourceKind, BindingAggregationOp, CounterpartSourceKind, RowSetGroupingKind
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind, RowSetGroupingKind
 from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from ._binding_selector_utils import selector_against_model, selector_as_dict
 from ._bindings_previous_filing import (
@@ -635,10 +635,10 @@ _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     # ``_InvoiceSelector``. The ``_validated_counterpart_selector``
     # helper adds counterpart-specific fact / op invariants on top
     # of the shared schema at handler-call time.
-    AggregationSourceKind.LEDGER_TRANSACTION: _InvoiceSelector,
-    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE: _InvoiceSelector,
-    AggregationSourceKind.PAYABLE_INVOICE: _InvoiceSelector,
-    AggregationSourceKind.COLLECTIBLE_INVOICE: _InvoiceSelector,
+    BindingSourceKind.LEDGER_TRANSACTION: _InvoiceSelector,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: _InvoiceSelector,
+    BindingSourceKind.PAYABLE_INVOICE: _InvoiceSelector,
+    BindingSourceKind.COLLECTIBLE_INVOICE: _InvoiceSelector,
     "ledger_oss_aggregation": _OssIossLedgerSelector,
     "ledger_iva_aggregation": _IvaLedgerSelector,
     "ledger_renta_expense_aggregation": _RentaLedgerExpenseSelector,
@@ -692,10 +692,10 @@ _BINDING_VALIDATOR_REGISTRY: dict[str, _BindingFamilyValidator] = {
     # invariants + the two invoice-only scalar-shape guards). ledger_transaction
     # is a counterpart-only source (never an invoice source) and keeps the
     # counterpart validator.
-    AggregationSourceKind.LEDGER_TRANSACTION: validate_counterpart_binding,
-    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE: validate_invoice_binding,
-    AggregationSourceKind.PAYABLE_INVOICE: validate_invoice_binding,
-    AggregationSourceKind.COLLECTIBLE_INVOICE: validate_invoice_binding,
+    BindingSourceKind.LEDGER_TRANSACTION: validate_counterpart_binding,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: validate_invoice_binding,
+    BindingSourceKind.PAYABLE_INVOICE: validate_invoice_binding,
+    BindingSourceKind.COLLECTIBLE_INVOICE: validate_invoice_binding,
     "ledger_oss_aggregation": validate_ledger_oss_aggregation_binding,
     "ledger_iva_aggregation": validate_ledger_iva_aggregation_binding,
     "ledger_renta_expense_aggregation": validate_ledger_renta_expense_aggregation_binding,

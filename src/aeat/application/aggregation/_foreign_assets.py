@@ -18,16 +18,16 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, Modelo, Period
-from ...core.aggregation import AggregationSourceKind, ForeignAssetClass
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Modelo, Period
+from ...core.aggregation import ForeignAssetClass
 from ...core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 
-_CANONICAL_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
+_CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
-        AggregationSourceKind.LEDGER_TRANSACTION,
-        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        AggregationSourceKind.PAYABLE_INVOICE,
-        AggregationSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.LEDGER_TRANSACTION,
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.COLLECTIBLE_INVOICE,
     },
 )
 

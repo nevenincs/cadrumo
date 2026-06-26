@@ -18,8 +18,7 @@ from functools import lru_cache
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period
-from ...core.aggregation import AggregationSourceKind
+from ...core import BindingSourceKind, Modelo, Period
 from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
 from ...core.logging import get_logger
 from ._counterpart import (
@@ -52,11 +51,11 @@ class PerModeloAggregationProvider(StrEnum):
     FOREIGN_ASSETS = "foreign_assets"
 
 
-ACCEPTED_SOURCE_KINDS: tuple[AggregationSourceKind, ...] = (
-    AggregationSourceKind.LEDGER_TRANSACTION,
-    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-    AggregationSourceKind.PAYABLE_INVOICE,
-    AggregationSourceKind.COLLECTIBLE_INVOICE,
+ACCEPTED_SOURCE_KINDS: tuple[BindingSourceKind, ...] = (
+    BindingSourceKind.LEDGER_TRANSACTION,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.COLLECTIBLE_INVOICE,
 )
 
 AggregationErrorCodes: tuple[str, ...] = (
@@ -78,7 +77,7 @@ class PerModeloAggregationProviderContract(BaseModel):
     provider: PerModeloAggregationProvider
     modelos: tuple[str, ...] = Field(min_length=1)
     service_owner: str = Field(pattern=r"^aeat\.application\.aggregation$")
-    accepted_source_kinds: tuple[AggregationSourceKind, ...] = Field(min_length=1)
+    accepted_source_kinds: tuple[BindingSourceKind, ...] = Field(min_length=1)
 
     @field_validator("modelos")
     @classmethod
@@ -125,7 +124,7 @@ class PerModeloAggregationContract(BaseModel):
     schema_version: str = "1"
     service_owner: str = "aeat.application.aggregation"
     providers: tuple[PerModeloAggregationProviderContract, ...]
-    accepted_source_kinds: tuple[AggregationSourceKind, ...]
+    accepted_source_kinds: tuple[BindingSourceKind, ...]
     error_codes: tuple[str, ...]
 
     @field_validator("providers")
@@ -150,7 +149,7 @@ class PerModeloAggregationContract(BaseModel):
 
     @field_validator("accepted_source_kinds")
     @classmethod
-    def _source_kinds_are_exact(cls, value: tuple[AggregationSourceKind, ...]) -> tuple[AggregationSourceKind, ...]:
+    def _source_kinds_are_exact(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
         if value != ACCEPTED_SOURCE_KINDS:
             raise AggregationConfigError(
                 "source kinds must match the accepted four-kind taxonomy",
@@ -212,12 +211,12 @@ class PerModeloAggregationResult(BaseModel):
     period: Period
     provider: PerModeloAggregationProvider
     aggregation: PerModeloAggregationPayload
-    source_kinds: tuple[AggregationSourceKind, ...]
+    source_kinds: tuple[BindingSourceKind, ...]
     log_fields: PerModeloAggregationLogFields
 
     @field_validator("source_kinds")
     @classmethod
-    def _source_kinds_are_unique(cls, value: tuple[AggregationSourceKind, ...]) -> tuple[AggregationSourceKind, ...]:
+    def _source_kinds_are_unique(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
         if len(value) != len(set(value)):
             raise AggregationConfigError(
                 "result source_kinds must be unique",
@@ -389,9 +388,9 @@ def _aggregate_counterpart(
     return aggregate_counterpart_349(observations, period=period)
 
 
-def _source_kinds_for_payload(payload: PerModeloAggregationPayload) -> tuple[AggregationSourceKind, ...]:
+def _source_kinds_for_payload(payload: PerModeloAggregationPayload) -> tuple[BindingSourceKind, ...]:
     source_kind_values = sorted({row.source_kind for row in payload.rollups})
-    return tuple(AggregationSourceKind(value) for value in source_kind_values)
+    return tuple(BindingSourceKind(value) for value in source_kind_values)
 
 
 def _observation_count_for_command(
@@ -408,7 +407,6 @@ def _observation_count_for_command(
 __all__ = [
     "ACCEPTED_SOURCE_KINDS",
     "AggregationErrorCodes",
-    "AggregationSourceKind",
     "PerModeloAggregationCommand",
     "PerModeloAggregationContract",
     "PerModeloAggregationLogFields",
