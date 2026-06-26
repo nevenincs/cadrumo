@@ -919,6 +919,8 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
+      modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: 'Az általános adóköteles alap (C500) pozitív, de az önadózás eredő kvótája (C595) nulla; erősítse meg, hogy ez jogszerű nulla (a személyi és családi minimum alatti alap, vagy levonásokkal teljesen ellentételezve), nem pedig modellezetlen hiányosság.'
+      modelo_100_2025_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: 'Az általános adóköteles alap (C500) pozitív, de az önadózás eredő kvótája (C595) nulla; erősítse meg, hogy ez jogszerű nulla (a személyi és családi minimum alatti alap, vagy levonásokkal teljesen ellentételezve), nem pedig modellezetlen hiányosság.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás
