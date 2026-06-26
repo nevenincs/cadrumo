@@ -54,3 +54,12 @@ Profile-sourced manual transcription is simpler to author (one binding entry, no
 ## Dispatch
 
 Hand registry-authoring to coder1-2 (full M303↔M390 context). Single commit, ~5-7 TOML edits + 1 anti-tautology test.
+
+## Status
+
+Accepted and in force. The `previous_filing`-over-quarterly-M303 annual fold-in this
+ADR establishes aligns to the canonical carry/fold-in direction in the PHASE ADRs (not
+a central apex doc): the future phase-2.3 (fold-in/carry) ADR unifies it with the one
+compensación-carry mechanism anchored on the foundational
+`live-iva-compensation-wallet-adr`. This ADR's arithmetic stands; phase 2.3 is the
+canonical direction.
