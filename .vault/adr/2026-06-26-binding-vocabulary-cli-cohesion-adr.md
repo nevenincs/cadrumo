@@ -13,13 +13,20 @@ related:
 
 
 
-# `binding-vocabulary-cli-cohesion` adr: `vocabulary and CLI cohesion: retire the binding homonyms and reconcile the source-pull verb surface` | (**status:** `proposed`)
+# `binding-vocabulary-cli-cohesion` adr: `vocabulary and CLI cohesion: retire the binding homonyms and reconcile the source-pull verb surface` | (**status:** `accepted`)
 
-> PROPOSED — design-ahead for coordinator review, authored while the code phases are
-> gated. NOT self-accepted, NOT a code-execution request; EXECUTION sequences last,
-> after phases 2.1-2.3 (it renames symbols those phases introduce/settle). Phase 2.4
-> of the bindings-architecture-unification sweep; canonical direction = the phase +
-> foundational ADRs (no apex).
+> ACCEPTED — phase 2.4 is delivered and on origin. The vocabulary pass (F6 homonyms +
+> false-friend re-homes, F7 CLI verb-fork reconciliation, F8 selector typing) landed
+> across W01-W04 plus the F8 schema-typing increment (`071438bd6`) and the G2
+> transport/compute split (`03ddcff73`, sanctioned by the Amendment below); a
+> campaign-close honesty-review passed both landings as merge-quality. Phase 2.4 of the
+> bindings-architecture-unification sweep; canonical direction = the phase +
+> foundational ADRs (no apex). Two tracked follow-ups remain (not blockers to
+> acceptance): the F8 explicit-union member publication for the ledger/retenciones
+> selector families (#45, gated on those modules clearing peer WIP — the dispatch-table
+> validator already types them at construction), and the F8-absorbed
+> `casilla_noncanonical_reference` `__init__.py` collection repair (recorded for the
+> CasillaId-migration campaign's double-ownership check).
 
 ## Problem Statement
 
