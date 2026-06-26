@@ -63,7 +63,7 @@ from ...core.errors import AeatError
 from ...core.external_constants import RETENCIONES_MODELOS, OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
-from ...domain.calculations.registry import CasillaId, RegistryValidationError
+from ...domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
 from ._common import activate_subcommand_output_language
 from ._modelo_audit_cli import audit_app as audit_app
 from ._modelo_audit_cli import register_audit_commands
@@ -989,14 +989,16 @@ def _parse_amendment_casilla(spec: str) -> tuple[CasillaId, Decimal]:
         except (InvalidOperation, ValueError) as exc:
             raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=value)) from exc
 
-    return _parse_kv_spec(
+    key, value = _parse_kv_spec(
         spec,
         flag="--set",
         key_label="CASILLA",
         value_label="DECIMAL",
         transform=_to_decimal,
         key_validator=_validate_casilla_key,
+        strip_key=False,
     )
+    return validated_casilla_id(key, surface="--set casilla"), value
 
 
 def _required_amendment_inputs(

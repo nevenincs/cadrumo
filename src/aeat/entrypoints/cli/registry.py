@@ -273,7 +273,7 @@ def verify_filed_state_cmd(
             help=tr("cli.registry.verify_source_root_help"),
         ),
     ] = None,
-    required_casillas: Annotated[
+    required_casilla_refs: Annotated[
         list[str] | None,
         typer.Option("--casilla", help=tr("cli.registry.casilla_help")),
     ] = None,
@@ -284,16 +284,16 @@ def verify_filed_state_cmd(
         source_observation_paths=tuple(source_observation_paths or ()),
         registry_root=_resolve_registry_root(registry_root),
         source_root=_resolve_source_root(source_root),
-        required_casillas=tuple(required_casillas or ()),
+        required_casilla_ids=tuple(required_casilla_refs or ()),
     )
     comparison = report.comparison
     lines = [
         _metric_line("status", comparison.status),
         _metric_line("modelo", comparison.modelo),
         _metric_line("revision", comparison.revision),
-        _metric_line("compared_casillas", ",".join(comparison.compared_casillas)),
-        _metric_line("missing_local_casillas", ",".join(comparison.missing_local_casillas)),
-        _metric_line("missing_filed_casillas", ",".join(comparison.missing_filed_casillas)),
+        _metric_line("compared_casilla_ids", ",".join(comparison.compared_casilla_ids)),
+        _metric_line("missing_local_casilla_ids", ",".join(comparison.missing_local_casilla_ids)),
+        _metric_line("missing_filed_casilla_ids", ",".join(comparison.missing_filed_casilla_ids)),
         _metric_line("drift_count", len(comparison.drifts)),
     ]
     for drift in comparison.drifts:

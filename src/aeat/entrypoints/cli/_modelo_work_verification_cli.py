@@ -303,7 +303,7 @@ def _dependency_inventory_item_payload(
                 source_modelo=requirement.source_modelo,
                 filing_year=requirement.filing_year,
                 period=requirement.period,
-                source_casillas=requirement.source_casillas,
+                source_casilla_ids=requirement.source_casilla_ids,
                 origin=requirement.origin.value,
                 origin_ids=requirement.origin_ids,
                 requires_member_fan_in=requirement.requires_member_fan_in,

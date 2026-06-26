@@ -29,12 +29,21 @@ from ....application.user_profile._orchestration import profile_create_storage_s
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import ModeloDraftRepository
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
+_M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
 
 
 @pytest.fixture(autouse=True)
@@ -133,18 +142,18 @@ def test_retired_deadlines_noun_group_is_unknown(
     )
 
 
-def _valid_modelo_130_inputs() -> dict[str, Decimal]:
+def _valid_modelo_130_inputs() -> dict[CasillaId, Decimal]:
     return {
-        "01": Decimal("10000"),
-        "02": Decimal("4000"),
+        _M130_INGRESOS_CASILLA: Decimal("10000"),
+        _M130_GASTOS_CASILLA: Decimal("4000"),
         # Casilla 05 (pagos fraccionados anteriores) is previous-filing-bound; its
         # value flows through the matching binding id in _valid_modelo_130_bindings,
         # not as a raw casilla input (which the smuggling guard now rejects).
-        "06": Decimal("100"),
-        "08": Decimal("2000"),
-        "10": Decimal("10"),
-        "16": Decimal("0"),
-        "18": Decimal("0"),
+        _M130_RETENCIONES_CASILLA: Decimal("100"),
+        _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
+        _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
+        _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+        _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
     }
 
 

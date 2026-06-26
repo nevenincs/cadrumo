@@ -14,6 +14,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 import typer
+from typer.core import TyperGroup
 
 from ...application.ledger import get_transaction_participation
 from ...application.modelo import rebuild_participation_index
@@ -66,7 +67,12 @@ def register_participation_commands(
         # ``participation <id>`` keeps its documented lookup UX.
         if transaction_id in _reserved_subcommand_names(participation):
             command = typer.main.get_command(participation)
-            ctx.invoke(command.commands[transaction_id].callback)
+            if not isinstance(command, TyperGroup):
+                raise typer.Exit(code=2)
+            subcommand = command.get_command(typer.Context(command), transaction_id)
+            if subcommand is None or subcommand.callback is None:
+                raise typer.Exit(code=2)
+            ctx.invoke(subcommand.callback)
             return
         _emit_participation_lookup(
             ctx,
@@ -86,10 +92,15 @@ def _reserved_subcommand_names(participation: typer.Typer) -> frozenset[str]:
     so the callback can forward them to their command instead of treating them
     as a transaction id.
     """
-    return frozenset(
-        info.name or (info.callback.__name__ if info.callback is not None else "")
-        for info in participation.registered_commands
-    )
+    names: set[str] = set()
+    for info in participation.registered_commands:
+        if info.name:
+            names.add(info.name)
+            continue
+        callback_name = getattr(info.callback, "__name__", "") if info.callback is not None else ""
+        if callback_name:
+            names.add(callback_name)
+    return frozenset(names)
 
 
 def _emit_participation_lookup(

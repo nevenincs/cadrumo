@@ -298,7 +298,9 @@ def _manual_rules_lines(report: RegistryManualRulesReport) -> list[str]:
         f"topic_count\t{report.topic_count}",
     ]
     for rule in report.rules:
-        lines.append("\t".join(("rule", rule.rule_id, rule.kind, rule.section_id, ",".join(rule.references_casillas))))
+        lines.append("\t".join(("rule", rule.rule_id, rule.kind, rule.section_id)))
+        for reference in rule.references_casillas:
+            lines.append("\t".join(("rule_casilla", rule.rule_id, reference.modelo_id, reference.casilla_id)))
     return lines
 
 
