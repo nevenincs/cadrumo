@@ -125,6 +125,34 @@ steps; this is the shape):
    `PerModeloAggregationResult` shape is retired or reduced to a thin CLI projection of
    the one envelope.
 
+   **Execution refinement (recorded 2026-06-26): counterpart 347/349 + foreign-assets
+   720 fold SCOPED OUT of phase-2.2 to a grounded follow-up (task #36).** Execution
+   found the counterpart/720 fold is NOT mechanical: `aggregate_counterpart_347/349` /
+   `aggregate_foreign_assets_720` are reached only via the CLI `aggregate` path (shape
+   C) and are NOT dormant mesh resolvers, AND M349's counterpart binding is ALREADY
+   live on the calculate path via `InvoiceCatalogueSourceResolver` (a different
+   mechanism, `resolve_invoice_binding_values` from `InvoiceObservation`). The
+   standalone `CounterpartObservation`s that `aggregate_counterpart_*` consumes have NO
+   context-reachable source on the calculate path (operator-supplied via the CLI
+   payload only). So authoring a counterpart/720 mesh resolver requires DECIDING where
+   those observations originate on the calculate path — either inventing a new
+   counterpart-observation source (scope beyond mechanical delegation) or delegating
+   over the invoice resolver's counterpart path (a `one-aggregation-path` parallel-path
+   violation) — both of which this ADR's own rationale forbids. Because shape-C
+   counterpart/720 are CLI-reachable (not dormant mesh resolvers) and M349 is already
+   live, deferring them leaves NO dormant-mesh-resolver invariant breach. The follow-up
+   (#36) grounds each of M347/M349/M720 per-modelo and acts per class: (a) already-live
+   via an enrolled resolver (M349 = invoice) → no action; (b) genuinely UNROUTED on the
+   calculate path = a silent-blank correctness finding → track + fix grounded; (c)
+   served only by the redundant shape-C aggregate → retire shape-C, route to the
+   canonical source. This is mini-research + a possible ADR amendment, not a phase-2.2
+   step. The phase-2.2 plan Steps S10/S11/S12 (counterpart/720 author + enroll) and the
+   S20/S21 correctness gates are deferred to #36; the **retenciones collapse (S13) + its
+   correctness gate (S19) are KEPT** in phase-2.2 — retenciones is already canonical
+   (the enrolled `RetencionesAggregationSourceResolver`, #6), so collapsing the
+   redundant shape-C `aggregate_retenciones` to that one enrolled path IS mechanical and
+   behaviour-preserving.
+
 4. **One disposition registry + parity gate (closes F5).** A single declared mapping
    answers "where does source X resolve" for every `BindingSourceKind` member —
    enrolled-in-mesh / pre-mesh-documented-exception / deferred / reserved — replacing
