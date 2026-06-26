@@ -22,11 +22,11 @@ through the abstract Protocol without naming ``renta``.
 from __future__ import annotations
 
 from ...core import Modelo
-from ..calculations.registry import register_cross_domain_snapshot_check
+from ..calculations.registry import CasillaId, register_cross_domain_snapshot_check
 from ._first_slice_routing import first_slice_target_casillas
 
 
-def check_first_slice_routing(modelo_id: str, casilla_ids: frozenset[str]) -> list[str]:
+def check_first_slice_routing(modelo_id: str, casilla_ids: frozenset[CasillaId]) -> list[str]:
     """Assert every first-slice routing target exists on a modelo-100 snapshot.
 
     Returns a list of failure strings (empty when consistent). The

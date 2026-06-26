@@ -2,22 +2,29 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from .. import (
+    CasillaId,
     calculate_registry_snapshot,
     parse_export_payload,
     resolve_export_layout,
     resolve_relation_values,
+    validated_casilla_id,
+    validated_casilla_id_map,
 )
 from .._authority import ValidatedRegistryAuthority
 from .._schema import RegistrySnapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
+    return validated_casilla_id_map(values, surface="committed registry input casillas")
 
 
 def test_committed_modelo_130_registry_snapshot_is_calculable(
@@ -26,15 +33,17 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
     snapshot = registry_snapshot("130", 2026, "1T")
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={
-            "01": Decimal("10000"),
-            "02": Decimal("4000"),
-            "06": Decimal("100"),
-            "08": Decimal("2000"),
-            "10": Decimal("10"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
-        },
+        inputs=_inputs(
+            {
+                "01": Decimal("10000"),
+                "02": Decimal("4000"),
+                "06": Decimal("100"),
+                "08": Decimal("2000"),
+                "10": Decimal("10"),
+                "16": Decimal("0"),
+                "18": Decimal("0"),
+            },
+        ),
         date_context={"filing_period": date(2026, 3, 31)},
         binding_values={
             "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("6000"),
@@ -45,7 +54,7 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
 
     assert snapshot.revision.id == "2019-y-siguientes"
     assert snapshot.revision.period_selector.year_from == 2019
-    assert {entry.target for entry in result.entries} == {
+    assert {entry.target_casilla_id for entry in result.entries} == {
         "03",
         "04",
         "07",
@@ -68,23 +77,25 @@ def test_committed_modelo_111_registry_snapshot_calculates_liquidacion_from_rete
     snapshot = registry_snapshot("111", 2026, "1T")
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={
-            "03": Decimal("180.25"),
-            "06": Decimal("12.10"),
-            "09": Decimal("300.00"),
-            "12": Decimal("14.40"),
-            "15": Decimal("25.00"),
-            "18": Decimal("0.50"),
-            "21": Decimal("7.00"),
-            "24": Decimal("8.00"),
-            "27": Decimal("9.00"),
-            "29": Decimal("40.00"),
-        },
+        inputs=_inputs(
+            {
+                "03": Decimal("180.25"),
+                "06": Decimal("12.10"),
+                "09": Decimal("300.00"),
+                "12": Decimal("14.40"),
+                "15": Decimal("25.00"),
+                "18": Decimal("0.50"),
+                "21": Decimal("7.00"),
+                "24": Decimal("8.00"),
+                "27": Decimal("9.00"),
+                "29": Decimal("40.00"),
+            },
+        ),
         date_context={"filing_period": date(2026, 3, 31)},
     )
 
-    assert {entry.target for entry in result.entries} == {"28", "30"}
-    entries = {entry.target: entry for entry in result.entries}
+    assert {entry.target_casilla_id for entry in result.entries} == {"28", "30"}
+    entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert entries["28"].operand_refs == ("03", "06", "09", "12", "15", "18", "21", "24", "27")
     assert {"ley-35-2006:art-99", "rd-439-2007:art-109"} <= set(entries["28"].legal_refs)
     assert {"aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"} <= set(entries["28"].source_refs)
@@ -101,19 +112,23 @@ def test_committed_modelo_115_registry_snapshot_calculates_rental_withholding(
     snapshot = registry_snapshot("115", 2026, "1T")
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={
-            "01": Decimal("1"),
-            "02": Decimal("1250.50"),
-            "04": Decimal("10.00"),
-        },
+        inputs=_inputs(
+            {
+                "01": Decimal("1"),
+                "02": Decimal("1250.50"),
+                "04": Decimal("10.00"),
+            },
+        ),
         date_context={"filing_period": date(2026, 3, 31)},
     )
 
-    entries = {entry.target: entry for entry in result.entries}
+    entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert entries["03"].operand_refs == ("02", "irpf.urban_rental_withholding_rate")
+    assert entries["03"].operand_casilla_refs == ("02",)
     assert {"rd-439-2007:art-100"} <= set(entries["03"].legal_refs)
     assert {"aeat-modelo-115-180-folleto-actividades"} <= set(entries["03"].source_refs)
     assert entries["05"].operand_refs == ("03", "04")
+    assert entries["05"].operand_casilla_refs == ("03", "04")
     assert {"ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"} <= set(entries["05"].legal_refs)
     assert {"aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"} <= set(entries["05"].source_refs)
 
@@ -124,21 +139,23 @@ def test_committed_modelo_123_registry_snapshot_calculates_current_totals(
     snapshot = registry_snapshot("123", 2026, "1T")
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={
-            "01": Decimal("2"),
-            "02": Decimal("3"),
-            "04": Decimal("1000.25"),
-            "05": Decimal("200.75"),
-            "07": Decimal("190.05"),
-            "08": Decimal("38.14"),
-            "10": Decimal("0"),
-            "11": Decimal("7.50"),
-            "13": Decimal("12.25"),
-        },
+        inputs=_inputs(
+            {
+                "01": Decimal("2"),
+                "02": Decimal("3"),
+                "04": Decimal("1000.25"),
+                "05": Decimal("200.75"),
+                "07": Decimal("190.05"),
+                "08": Decimal("38.14"),
+                "10": Decimal("0"),
+                "11": Decimal("7.50"),
+                "13": Decimal("12.25"),
+            },
+        ),
         date_context={"filing_period": date(2026, 3, 31)},
     )
 
-    entries = {entry.target: entry for entry in result.entries}
+    entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert set(entries) == {"03", "06", "09", "12", "14"}
     assert entries["03"].operand_refs == ("01", "02")
     assert entries["06"].operand_refs == ("04", "05")
@@ -153,14 +170,16 @@ def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape(
     snapshot = registry_snapshot("123", 2023, "4T")
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={
-            "01-legacy": Decimal("2"),
-            "02-legacy": Decimal("1201.00"),
-            "03-legacy": Decimal("228.19"),
-            "04-legacy": Decimal("0"),
-            "05-legacy": Decimal("7.50"),
-            "07-legacy": Decimal("12.25"),
-        },
+        inputs=_inputs(
+            {
+                "01-legacy": Decimal("2"),
+                "02-legacy": Decimal("1201.00"),
+                "03-legacy": Decimal("228.19"),
+                "04-legacy": Decimal("0"),
+                "05-legacy": Decimal("7.50"),
+                "07-legacy": Decimal("12.25"),
+            },
+        ),
         date_context={"filing_period": date(2023, 12, 31)},
     )
 
@@ -175,7 +194,7 @@ def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape(
         "07-legacy",
         "08-legacy",
     )
-    assert {entry.target for entry in result.entries} == {"06-legacy", "08-legacy"}
+    assert {entry.target_casilla_id for entry in result.entries} == {"06-legacy", "08-legacy"}
 
 
 @pytest.mark.parametrize(
@@ -199,22 +218,24 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     snapshot = registry_snapshot("131", filing_year, "1T")
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={
-            "01": Decimal("10000"),
-            "02": Decimal("300"),
-            "03": Decimal("2000"),
-            "05": Decimal("4000"),
-            "08": Decimal("50"),
-            "09": Decimal("25"),
-            "12": Decimal("15"),
-            "14": Decimal("20"),
-        },
+        inputs=_inputs(
+            {
+                "01": Decimal("10000"),
+                "02": Decimal("300"),
+                "03": Decimal("2000"),
+                "05": Decimal("4000"),
+                "08": Decimal("50"),
+                "09": Decimal("25"),
+                "12": Decimal("15"),
+                "14": Decimal("20"),
+            },
+        ),
         date_context={"filing_period": filing_period},
         binding_values={f"modelo-131-{revision_id}-resultados-negativos-anteriores": Decimal("10")},
     )
 
     assert snapshot.revision.id == revision_id
-    entries = {entry.target: entry for entry in result.entries}
+    entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert set(entries) == {
         "04",
         "06",
@@ -268,7 +289,7 @@ def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_m
         relation_values=relation_values,
     )
 
-    entries = {entry.target: entry for entry in result.entries}
+    entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert set(entries) == {"decl.total-perceptores", "decl.base-total", "decl.retenciones-total"}
     assert entries["decl.total-perceptores"].operand_refs == ("modelo-180-rel-115-perceptores-anual",)
     assert entries["decl.base-total"].operand_refs == ("modelo-180-rel-115-base-anual",)
@@ -319,44 +340,52 @@ _MODELO_180_PERCEPTOR_FIELDS: dict[tuple[int, int], str] = {
     (323, 327): "28013",
 }
 
-_MODELO_180_EXPECTED_CASILLAS: tuple[tuple[str, object], ...] = (
-    ("decl.total-perceptores", Decimal("2")),
-    ("decl.base-total", Decimal("1000.50")),
-    ("decl.retenciones-total", Decimal("190.10")),
-    ("perc.nif", "12345678Z"),
-    ("perc.nif-representante-legal", "87654321X"),
-    ("perc.nombre", "ARRENDADOR EJEMPLO"),
-    ("perc.provincia", "28"),
-    ("perc.modalidad", "1"),
-    ("perc.base", Decimal("-25.00")),
-    ("perc.porcentaje-retencion", "0000"),
-    ("perc.retenciones", Decimal("4.75")),
-    ("perc.ejercicio-devengo", Decimal("2025")),
-    ("perc.situacion-inmueble", "1"),
-    ("perc.referencia-catastral", "1234567VK4713C0001XY"),
-    ("perc.inmueble-tipo-via", "CL"),
-    ("perc.inmueble-nombre-via", "CALLE MAYOR"),
-    ("perc.inmueble-tipo-numeracion", "NUM"),
-    ("perc.inmueble-numero-casa", "12"),
-    ("perc.inmueble-calificador-numero", "BIS"),
-    ("perc.inmueble-bloque", "A"),
-    ("perc.inmueble-portal", "1"),
-    ("perc.inmueble-escalera", "2"),
-    ("perc.inmueble-planta", "03"),
-    ("perc.inmueble-puerta", "B"),
-    ("perc.inmueble-complemento", "EDIFICIO CENTRAL"),
-    ("perc.inmueble-localidad", "MADRID"),
-    ("perc.inmueble-municipio", "MADRID"),
-    ("perc.inmueble-codigo-municipio", "28079"),
-    ("perc.inmueble-provincia", "28"),
-    ("perc.inmueble-codigo-postal", "28013"),
+
+def _expected_casilla_value(casilla_id: object, value: object) -> tuple[CasillaId, object]:
+    return (
+        validated_casilla_id(casilla_id, surface="_MODELO_180_EXPECTED_CASILLAS"),
+        value,
+    )
+
+
+_MODELO_180_EXPECTED_CASILLAS: tuple[tuple[CasillaId, object], ...] = (
+    _expected_casilla_value("decl.total-perceptores", Decimal("2")),
+    _expected_casilla_value("decl.base-total", Decimal("1000.50")),
+    _expected_casilla_value("decl.retenciones-total", Decimal("190.10")),
+    _expected_casilla_value("perc.nif", "12345678Z"),
+    _expected_casilla_value("perc.nif-representante-legal", "87654321X"),
+    _expected_casilla_value("perc.nombre", "ARRENDADOR EJEMPLO"),
+    _expected_casilla_value("perc.provincia", "28"),
+    _expected_casilla_value("perc.modalidad", "1"),
+    _expected_casilla_value("perc.base", Decimal("-25.00")),
+    _expected_casilla_value("perc.porcentaje-retencion", "0000"),
+    _expected_casilla_value("perc.retenciones", Decimal("4.75")),
+    _expected_casilla_value("perc.ejercicio-devengo", Decimal("2025")),
+    _expected_casilla_value("perc.situacion-inmueble", "1"),
+    _expected_casilla_value("perc.referencia-catastral", "1234567VK4713C0001XY"),
+    _expected_casilla_value("perc.inmueble-tipo-via", "CL"),
+    _expected_casilla_value("perc.inmueble-nombre-via", "CALLE MAYOR"),
+    _expected_casilla_value("perc.inmueble-tipo-numeracion", "NUM"),
+    _expected_casilla_value("perc.inmueble-numero-casa", "12"),
+    _expected_casilla_value("perc.inmueble-calificador-numero", "BIS"),
+    _expected_casilla_value("perc.inmueble-bloque", "A"),
+    _expected_casilla_value("perc.inmueble-portal", "1"),
+    _expected_casilla_value("perc.inmueble-escalera", "2"),
+    _expected_casilla_value("perc.inmueble-planta", "03"),
+    _expected_casilla_value("perc.inmueble-puerta", "B"),
+    _expected_casilla_value("perc.inmueble-complemento", "EDIFICIO CENTRAL"),
+    _expected_casilla_value("perc.inmueble-localidad", "MADRID"),
+    _expected_casilla_value("perc.inmueble-municipio", "MADRID"),
+    _expected_casilla_value("perc.inmueble-codigo-municipio", "28079"),
+    _expected_casilla_value("perc.inmueble-provincia", "28"),
+    _expected_casilla_value("perc.inmueble-codigo-postal", "28013"),
 )
 
 
 @pytest.fixture(scope="module")
 def _modelo_180_parsed_casillas(
     registry_authority: ValidatedRegistryAuthority,
-) -> dict[str, object]:
+) -> dict[CasillaId, object]:
     """Parse the synthetic Modelo 180 declarante + perceptor record bundle once.
 
     Module-scoped so the record-design parse runs a single time and
@@ -379,8 +408,8 @@ def _modelo_180_parsed_casillas(
 
 @pytest.mark.parametrize(("casilla_id", "expected_value"), _MODELO_180_EXPECTED_CASILLAS)
 def test_committed_modelo_180_record_design_parses_casilla(
-    _modelo_180_parsed_casillas: dict[str, object],
-    casilla_id: str,
+    _modelo_180_parsed_casillas: dict[CasillaId, object],
+    casilla_id: CasillaId,
     expected_value: object,
 ) -> None:
     """Modelo 180 fixed-width record-design parser yields the expected casilla value.

@@ -150,7 +150,7 @@ def test_committed_modelo_720_verification_expectation_is_informative_strict() -
             assert expectation.tolerance == 0
             assert expectation.rounding == "none"
             assert expectation.discrepancy_causes == ("extraction_unreliable",)
-            assert set(expectation.computed_casillas) <= casilla_ids
+            assert set(expectation.computed_casilla_ids) <= casilla_ids
 
 
 def test_committed_modelo_720_filing_schedule_is_annual() -> None:
@@ -240,7 +240,7 @@ def test_committed_modelo_720_construct_includes_revision_members() -> None:
     for revision in modelo.revisions.values():
         assert len(revision.constructs) == 1, revision.id
         construct = revision.constructs[0]
-        assert construct.casillas == tuple(c.id for c in revision.casillas)
+        assert construct.casilla_ids == tuple(c.id for c in revision.casillas)
         assert construct.extraction_profiles == tuple(p.id for p in revision.extraction_profiles)
         assert construct.verification_expectations == tuple(e.id for e in revision.verification_expectations)
         assert construct.workbook_parity_refs == tuple(w.id for w in revision.workbook_parity_refs)

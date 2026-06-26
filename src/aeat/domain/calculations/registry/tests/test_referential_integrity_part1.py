@@ -8,6 +8,8 @@ import pytest
 
 from .....core import BindingSourceKind, Period
 from ..._export_field_kind import CasillaFieldKind
+from .. import CasillaId, validated_casilla_id
+from .._schema_input_kind import InputKind
 from ._referential_integrity_support import (
     _DUMMY_LEGAL_ID,
     _DUMMY_SOURCE_ID,
@@ -51,6 +53,30 @@ from ._referential_integrity_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+_NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", surface="_NONEXISTENT_CASILLA")
+_TEXT_CASILLA: CasillaId = validated_casilla_id("text-casilla", surface="_TEXT_CASILLA")
+_NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
+_NUMERIC_CASILLA_02: CasillaId = validated_casilla_id("02", surface="_NUMERIC_CASILLA_02")
+_SEGMENTED_LIQUIDACION_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00562",
+    surface="_SEGMENTED_LIQUIDACION_CASILLA",
+)
+_SEGMENTED_ECPN_CASILLA: CasillaId = validated_casilla_id("DP200032:00562", surface="_SEGMENTED_ECPN_CASILLA")
+_SEGMENTED_TARGET_CASILLA: CasillaId = validated_casilla_id("DP200014:00999", surface="_SEGMENTED_TARGET_CASILLA")
+_BARE_REUSED_NUMBER_CASILLA: CasillaId = validated_casilla_id("00562", surface="_BARE_REUSED_NUMBER_CASILLA")
+_BARE_REUSED_NUMBER_ALT_CASILLA: CasillaId = validated_casilla_id(
+    "00562-alt",
+    surface="_BARE_REUSED_NUMBER_ALT_CASILLA",
+)
+_SEGMENTED_LIQUIDACION_ALT_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00562-alt",
+    surface="_SEGMENTED_LIQUIDACION_ALT_CASILLA",
+)
+_SEGMENTED_EXPORT_oIELD_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00592",
+    surface="_SEGMENTED_EXPORT_oIELD_CASILLA",
+)
+_BARE_EXPORT_oIELD_CASILLA: CasillaId = validated_casilla_id("00592", surface="_BARE_EXPORT_oIELD_CASILLA")
 
 
 def test_committed_registry_passes_referential_integrity(
@@ -84,7 +110,9 @@ def test_committed_registry_passes_referential_integrity(
 
 def test_dangling_casilla_formula_reference() -> None:
     """casilla.formula pointing at nonexistent FormulaId raises."""
-    casilla = _minimal_casilla("01").model_copy(update={"input_kind": "computed", "formula": "nonexistent.formula"})
+    casilla = _minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
+        update={"input_kind": InputKind.COMPUTED, "formula": "nonexistent.formula"},
+    )
     revision = _minimal_revision(casillas=(casilla,))
     with pytest.raises(RegistryValidationError, match=r"casilla 01.formula"):
         _build_minimal_snapshot(revision)
@@ -92,7 +120,9 @@ def test_dangling_casilla_formula_reference() -> None:
 
 def test_dangling_casilla_binding_reference() -> None:
     """casilla.binding pointing at nonexistent BindingId raises."""
-    casilla = _minimal_casilla("01").model_copy(update={"input_kind": "bound", "binding": "nonexistent.binding"})
+    casilla = _minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
+        update={"input_kind": InputKind.BOUND, "binding": "nonexistent.binding"},
+    )
     revision = _minimal_revision(casillas=(casilla,))
     with pytest.raises(RegistryValidationError, match=r"casilla 01.binding"):
         _build_minimal_snapshot(revision)
@@ -100,8 +130,10 @@ def test_dangling_casilla_binding_reference() -> None:
 
 def test_bound_casilla_without_binding_definition_fails_snapshot_integrity() -> None:
     """A bound casilla cannot defer missing binding coverage to formula runtime."""
-    casilla = _minimal_casilla("01").model_copy(update={"input_kind": "bound"})
-    revision = _minimal_revision(casillas=(_minimal_casilla("01"),)).model_copy(update={"casillas": (casilla,)})
+    casilla = _minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"input_kind": InputKind.BOUND})
+    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+        update={"casillas": (casilla,)},
+    )
     with pytest.raises(
         RegistryValidationError,
         match=r"casilla 01.binding has no binding definition for input_kind='bound'",
@@ -111,7 +143,7 @@ def test_bound_casilla_without_binding_definition_fails_snapshot_integrity() -> 
 
 def test_dangling_casilla_export_refs() -> None:
     """casilla.export_refs pointing at nonexistent ExportFieldId raises."""
-    casilla = _minimal_casilla("01").model_copy(update={"export_refs": ("nonexistent.export.field",)})
+    casilla = _minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"export_refs": ("nonexistent.export.field",)})
     revision = _minimal_revision(casillas=(casilla,))
     with pytest.raises(RegistryValidationError, match=r"casilla 01.export_refs"):
         _build_minimal_snapshot(revision)
@@ -120,7 +152,7 @@ def test_dangling_casilla_export_refs() -> None:
 def test_dangling_casilla_legal_refs() -> None:
     """casilla.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
     _extra = "lirpf:art-99"
-    casilla = _minimal_casilla("01").model_copy(update={"legal_refs": (_DUMMY_LEGAL_ID, _extra)})
+    casilla = _minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"legal_refs": (_DUMMY_LEGAL_ID, _extra)})
     revision = _minimal_revision(casillas=(casilla,))
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
     with pytest.raises(RegistryValidationError, match=r"casilla 01.legal_refs"):
@@ -130,7 +162,7 @@ def test_dangling_casilla_legal_refs() -> None:
 def test_dangling_casilla_source_refs() -> None:
     """casilla.source_refs referencing a SourceRefId absent from snapshot.sources raises."""
     _extra = "aeat-dr-extra-v1"
-    casilla = _minimal_casilla("01").model_copy(update={"source_refs": (_DUMMY_SOURCE_ID, _extra)})
+    casilla = _minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"source_refs": (_DUMMY_SOURCE_ID, _extra)})
     revision = _minimal_revision(casillas=(casilla,))
     snapshot = _build_snapshot_with_missing_source(revision, _extra)
     with pytest.raises(RegistryValidationError, match=r"casilla 01.source_refs"):
@@ -138,31 +170,31 @@ def test_dangling_casilla_source_refs() -> None:
 
 
 def test_dangling_formula_target() -> None:
-    """formula.target pointing at nonexistent CasillaId raises."""
+    """formula.target_casilla_id pointing at nonexistent CasillaId raises."""
     formula = FormulaDefinition(
         id="test.formula",
-        target="nonexistent-casilla",
+        target_casilla_id=_NONEXISTENT_CASILLA,
         expression=FormulaExpression(literal=Decimal("0")),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     revision = _minimal_revision(formulas=(formula,))
-    with pytest.raises(RegistryValidationError, match=r"formula test.formula.target"):
+    with pytest.raises(RegistryValidationError, match=r"formula test.formula.target_casilla_id"):
         _build_minimal_snapshot(revision)
 
 
 def test_dangling_formula_legal_refs() -> None:
     """formula.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
     _extra = "lirpf:art-99"
-    casilla = _minimal_casilla("01")
+    casilla = _minimal_casilla(_NUMERIC_CASILLA_01)
     formula = FormulaDefinition(
         id="test.formula",
-        target="01",
+        target_casilla_id=_NUMERIC_CASILLA_01,
         expression=FormulaExpression(literal=Decimal("0")),
         legal_refs=(_DUMMY_LEGAL_ID, _extra),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
-    casilla_computed = casilla.model_copy(update={"input_kind": "computed", "formula": "test.formula"})
+    casilla_computed = casilla.model_copy(update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"})
     revision = _minimal_revision(casillas=(casilla_computed,), formulas=(formula,))
     snapshot = _build_snapshot_with_missing_legal(revision, _extra)
     with pytest.raises(RegistryValidationError, match=r"formula test.formula.legal_refs"):
@@ -215,7 +247,7 @@ def test_dangling_relation_target_binding() -> None:
         dependency_role="factual_evidence",
         source_modelo="100",
         source_revision_selector={"year_from": 2024},
-        source_output="01",
+        source_casilla_id=_NUMERIC_CASILLA_01,
         target_binding="nonexistent.binding",
         period_alignment={},
         source_periods=("0A",),
@@ -238,7 +270,7 @@ def test_dangling_extraction_profile_target_casilla() -> None:
         parser="aeat.domain.calculations.registry._validate.RegistryValidator",
         target_casillas=(
             ExtractionTargetDefinition(
-                casilla_id="nonexistent-casilla",
+                casilla_id=_NONEXISTENT_CASILLA,
                 match_strategy="numeric_casilla",
                 value_kind="amount",
             ),
@@ -261,7 +293,7 @@ def test_text_casilla_without_named_label_strategy_fails_gate() -> None:
     loading green: any profile where a target casilla has data_type='text' but
     uses match_strategy='numeric_casilla' must surface a hard error.
     """
-    text_casilla = _minimal_casilla("text-casilla").model_copy(update={"data_type": "text"})
+    text_casilla = _minimal_casilla(_TEXT_CASILLA).model_copy(update={"data_type": "text"})
     profile = ExtractionProfileDefinition(
         id="test.profile",
         surface="declaracion_pdf",
@@ -270,7 +302,7 @@ def test_text_casilla_without_named_label_strategy_fails_gate() -> None:
         parser="aeat.adapters.inbound.declaracion.parse_declaracion",
         target_casillas=(
             ExtractionTargetDefinition(
-                casilla_id="text-casilla",
+                casilla_id=_TEXT_CASILLA,
                 match_strategy="numeric_casilla",
                 value_kind="text",
             ),
@@ -291,7 +323,7 @@ def test_text_casilla_without_named_label_strategy_fails_gate() -> None:
 
 def test_text_casilla_with_named_label_strategy_passes_gate() -> None:
     """A declaracion_pdf profile targeting a text-typed casilla with named_label passes."""
-    text_casilla = _minimal_casilla("text-casilla").model_copy(update={"data_type": "text"})
+    text_casilla = _minimal_casilla(_TEXT_CASILLA).model_copy(update={"data_type": "text"})
     profile = ExtractionProfileDefinition(
         id="test.profile",
         surface="declaracion_pdf",
@@ -300,7 +332,7 @@ def test_text_casilla_with_named_label_strategy_passes_gate() -> None:
         parser="aeat.adapters.inbound.declaracion.parse_declaracion",
         target_casillas=(
             ExtractionTargetDefinition(
-                casilla_id="text-casilla",
+                casilla_id=_TEXT_CASILLA,
                 match_strategy="named_label",
                 value_kind="text",
                 label_pattern=r"Mi etiqueta",
@@ -356,19 +388,22 @@ def test_dangling_workbook_parity_workbook_source() -> None:
 
 
 def test_dangling_verification_expectation_computed_casillas() -> None:
-    """verification_expectation.computed_casillas pointing at nonexistent CasillaId raises."""
+    """verification_expectation.computed_casilla_ids pointing at nonexistent CasillaId raises."""
     expectation = VerificationExpectationDefinition(
         id="test.expectation",
-        computed_casillas=("nonexistent-casilla",),
+        computed_casilla_ids=(_NONEXISTENT_CASILLA,),
         tolerance=Decimal("0"),
-        rounding="ROUND_HALF_UP",
+        rounding="ROUND_HALo_UP",
         min_coverage=Decimal("1"),
         discrepancy_causes=("rounding",),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     revision = _minimal_revision(verification_expectations=(expectation,))
-    with pytest.raises(RegistryValidationError, match=r"verification_expectation test.expectation.computed_casillas"):
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"verification_expectation test.expectation.computed_casilla_ids",
+    ):
         _build_minimal_snapshot(revision)
 
 
@@ -432,16 +467,16 @@ def test_dangling_support_removal_decision_legal_refs() -> None:
 
 
 def test_dangling_construct_casilla_ref() -> None:
-    """construct.casillas pointing at nonexistent CasillaId raises."""
+    """construct.casilla_ids pointing at nonexistent CasillaId raises."""
     construct = ConstructDefinition(
         id="ct.test",
         title="Test construct",
-        casillas=("nonexistent-casilla",),
+        casilla_ids=(_NONEXISTENT_CASILLA,),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     revision = _minimal_revision(constructs=(construct,))
-    with pytest.raises(RegistryValidationError, match=r"construct ct.test.casillas"):
+    with pytest.raises(RegistryValidationError, match=r"construct ct.test.casilla_ids"):
         _build_minimal_snapshot(revision)
 
 
@@ -475,12 +510,12 @@ def test_dangling_export_layout_legal_refs() -> None:
 
 
 def test_dangling_export_field_casilla_ref() -> None:
-    """export_field.casilla pointing at nonexistent CasillaId raises."""
-    casilla = _minimal_casilla("01")
+    """export_field.casilla_id pointing at nonexistent CasillaId raises."""
+    casilla = _minimal_casilla(_NUMERIC_CASILLA_01)
     field = ExportFieldDefinition(
         id="el.test.field-01",
         kind=CasillaFieldKind.CASILLA,
-        casilla="nonexistent-casilla",
+        casilla_id=_NONEXISTENT_CASILLA,
         data_type="money",
         required=True,
         padding="left_zero",
@@ -504,7 +539,7 @@ def test_dangling_export_field_casilla_ref() -> None:
         records=(record,),
     )
     revision = _minimal_revision(casillas=(casilla,), export_layouts=(layout,))
-    with pytest.raises(RegistryValidationError, match=r"field el.test.field-01.casilla"):
+    with pytest.raises(RegistryValidationError, match=r"field el.test.field-01.casilla_id"):
         _build_minimal_snapshot(revision)
 
 
@@ -567,12 +602,14 @@ def test_informative_modelo_with_formula_fails_validation() -> None:
 
     formula = FormulaDefinition(
         id="test.formula",
-        target="01",
-        expression=FormulaExpression(casilla="01"),
+        target_casilla_id=_NUMERIC_CASILLA_01,
+        expression=FormulaExpression(casilla_id=_NUMERIC_CASILLA_01),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
-    computed_casilla = _minimal_casilla("01").model_copy(update={"input_kind": "computed", "formula": "test.formula"})
+    computed_casilla = _minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
+        update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
+    )
     revision = _minimal_revision(
         casillas=(computed_casilla,),
         formulas=(formula,),
@@ -594,7 +631,7 @@ def test_informative_modelo_with_relation_fails_validation() -> None:
         dependency_role="factual_evidence",
         source_modelo="100",
         source_revision_selector={"year_from": 2024},
-        source_output="01",
+        source_casilla_id=_NUMERIC_CASILLA_01,
         target_binding="test.binding",
         period_alignment={},
         source_periods=("0A",),
@@ -616,17 +653,17 @@ def test_same_number_distinct_segmento_casillas_validate() -> None:
     This is the multi-segment AEAT shape (e.g. Modelo 200 casilla 00562
     appearing in both the Liquidacion and ECPN record segments). The
     casillas carry distinct ids and distinct segmento codes, so the
-    (segmento, number) identity pairs (DP200014, 00562) and
+    (segmento, number) metadata pairs (DP200014, 00562) and
     (DP200032, 00562) are unique and the validator must accept them.
     """
     from .. import RegistryValidator
 
-    liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
-    ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
+    liquidacion = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    ecpn = _segmented_casilla(_SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
     revision = _minimal_revision(casillas=(liquidacion, ecpn))
     modelo = _minimal_modelo(revision)
     # validate_modelo raises iff any failure is collected; a clean return
-    # proves the (segmento, number) pairs are accepted as distinct.
+    # proves the (segmento, number) metadata pairs are accepted as distinct.
     RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
 
 
@@ -634,15 +671,15 @@ def test_single_segment_duplicate_number_collision_fails() -> None:
     """Two segmento-unset casillas sharing a number hard-fail on (None, number).
 
     The casillas carry distinct ids, so the per-kind duplicate-id check
-    does NOT fire. Only the generalised (segmento, number) identity
-    invariant catches the collision: with segmento unset on both, the
+    does NOT fire. Only the generalised (segmento, number) metadata
+    uniqueness invariant catches the collision: with segmento unset on both, the
     pair degrades to (None, '00562') and the duplicate is reported with
     the bare-number message, exactly as the prior duplicate-id check did.
     """
     from .. import RegistryValidator
 
-    first = _segmented_casilla("00562", "00562", None)
-    second = _segmented_casilla("00562-alt", "00562", None)
+    first = _segmented_casilla(_BARE_REUSED_NUMBER_CASILLA, "00562", None)
+    second = _segmented_casilla(_BARE_REUSED_NUMBER_ALT_CASILLA, "00562", None)
     revision = _minimal_revision(casillas=(first, second))
     modelo = _minimal_modelo(revision)
     with pytest.raises(RegistryValidationError, match=r"duplicate casilla number '00562'"):
@@ -658,8 +695,8 @@ def test_same_segmento_duplicate_number_collision_fails() -> None:
     """
     from .. import RegistryValidator
 
-    first = _segmented_casilla("DP200014:00562", "00562", "DP200014")
-    second = _segmented_casilla("DP200014:00562-alt", "00562", "DP200014")
+    first = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    second = _segmented_casilla(_SEGMENTED_LIQUIDACION_ALT_CASILLA, "00562", "DP200014")
     revision = _minimal_revision(casillas=(first, second))
     modelo = _minimal_modelo(revision)
     with pytest.raises(
@@ -669,25 +706,25 @@ def test_same_segmento_duplicate_number_collision_fails() -> None:
         RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
 
 
-def test_single_segment_bare_number_reference_resolves() -> None:
-    """A formula referencing a casilla by its bare number resolves single-segment.
+def test_single_segment_numeric_casilla_id_reference_resolves() -> None:
+    """A formula may reference a numeric token only when it is the casilla id.
 
-    The casilla sets id == number with segmento unset, so the bare
-    number is the unambiguous reference token. A formula whose
-    expression reads that casilla and whose target is a computed casilla
-    must validate with no unknown-casilla failure.
+    The casilla sets ``id == number`` with ``segmento`` unset, so ``01``
+    is the canonical ``casilla.id``. A formula whose expression reads
+    that id and whose target is a computed casilla must validate with no
+    unknown-casilla failure.
     """
     from .._schema import FormulaDefinition, FormulaExpression
     from .._validate import RegistryValidator
 
-    input_casilla = _segmented_casilla("01", "01", None)
-    computed_casilla = _segmented_casilla("02", "02", None).model_copy(
-        update={"input_kind": "computed", "formula": "test.formula"},
+    input_casilla = _segmented_casilla(_NUMERIC_CASILLA_01, "01", None)
+    computed_casilla = _segmented_casilla(_NUMERIC_CASILLA_02, "02", None).model_copy(
+        update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
-        target="02",
-        expression=FormulaExpression(casilla="01"),
+        target_casilla_id=_NUMERIC_CASILLA_02,
+        expression=FormulaExpression(casilla_id=_NUMERIC_CASILLA_01),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
@@ -698,7 +735,7 @@ def test_single_segment_bare_number_reference_resolves() -> None:
     )
     casilla_resolution_failures = [f for f in failures if "unknown casilla" in f]
     assert casilla_resolution_failures == [], (
-        f"single-segment bare-number reference must resolve; got: {casilla_resolution_failures}"
+        f"single-segment numeric casilla id reference must resolve; got: {casilla_resolution_failures}"
     )
 
 
@@ -714,20 +751,20 @@ def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> Non
     from .._schema import FormulaDefinition, FormulaExpression
     from .._validate import RegistryValidator
 
-    liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
-    ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
-    target_casilla = _segmented_casilla("DP200014:00999", "00999", "DP200014").model_copy(
-        update={"input_kind": "computed", "formula": "test.formula"},
+    liquidacion = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    ecpn = _segmented_casilla(_SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
+    target_casilla_def = _segmented_casilla(_SEGMENTED_TARGET_CASILLA, "00999", "DP200014").model_copy(
+        update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
-        target="DP200014:00999",
-        expression=FormulaExpression(casilla="00562"),
+        target_casilla_id=_SEGMENTED_TARGET_CASILLA,
+        expression=FormulaExpression(casilla_id=_BARE_REUSED_NUMBER_CASILLA),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     revision = _minimal_revision(
-        casillas=(liquidacion, ecpn, target_casilla),
+        casillas=(liquidacion, ecpn, target_casilla_def),
         formulas=(formula,),
     )
     failures = RegistryValidator(_minimal_catalogues())._validate_revision(
@@ -740,41 +777,132 @@ def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> Non
     )
 
 
-def test_bare_number_reference_resolves_when_id_is_segment_qualified() -> None:
-    """A bare-number reference resolves to a casilla whose id is segment-qualified.
+def test_reused_number_with_bare_canonical_id_fails() -> None:
+    """A reused printed number cannot leave one casilla addressable by the bare number."""
+    from .._validate import RegistryValidator
 
-    This is the decisive segment-aware-resolution case. The casilla
-    number 00562 occurs exactly once on the revision but its id is the
-    segment-qualified 'DP200014:00562' — id is no longer equal to
-    number. A formula expression that references the bare number '00562'
-    must still resolve to that single occurrence: the bare number is
-    unambiguous within the revision, so it resolves within its segment
-    context without the formula having to repeat the segment qualifier.
+    ecpn = _segmented_casilla(_BARE_REUSED_NUMBER_CASILLA, "00562", None)
+    liquidacion = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    revision = _minimal_revision(casillas=(ecpn, liquidacion))
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
+        _minimal_modelo(revision),
+        revision,
+    )
+    assert any("ambiguous bare casilla ids ['00562']" in failure for failure in failures), (
+        f"a reused printed number must not keep a bare canonical casilla id; got failures: {failures}"
+    )
+
+
+def test_casilla_id_cannot_equal_another_casilla_display_token() -> None:
+    """A token cannot be one casilla's id and another casilla's display metadata."""
+    from .._validate import RegistryValidator
+
+    canonical_owner = _segmented_casilla(_BARE_REUSED_NUMBER_CASILLA, "00563", None)
+    display_owner = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    revision = _minimal_revision(casillas=(canonical_owner, display_owner))
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
+        _minimal_modelo(revision),
+        revision,
+    )
+    assert any("casilla reference token '00562' is ambiguous" in failure for failure in failures), (
+        f"a casilla.id/display-token collision must fail; got failures: {failures}"
+    )
+
+
+def test_casilla_display_token_cannot_equal_binding_id() -> None:
+    """Casilla metadata tokens cannot collide with non-casilla registry ids."""
+    from .._validate import RegistryValidator
+
+    display_owner = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    binding = DataBindingDefinition(
+        id="00562",
+        source=BindingSourceKind.MANUAL_INPUT,
+        selector={
+            "record": "DPA",
+            "field": "test",
+            "offset": 1,
+            "length": 1,
+            "data_type": "integer",
+        },
+        legal_refs=(_DUMMY_LEGAL_ID,),
+        source_refs=(_DUMMY_SOURCE_ID,),
+    )
+    revision = _minimal_revision(casillas=(display_owner,), bindings=(binding,))
+
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
+        _minimal_modelo(revision),
+        revision,
+    )
+
+    assert any(
+        "casilla reference token '00562' is ambiguous; it is binding id '00562'" in failure
+        for failure in failures
+    ), f"a casilla metadata/binding-id collision must fail; got failures: {failures}"
+
+
+def test_snapshot_builder_rejects_ambiguous_selected_revision_identity() -> None:
+    """Even direct snapshot construction must fail before publishing ambiguous casilla refs."""
+
+    canonical_owner = _segmented_casilla(_BARE_REUSED_NUMBER_CASILLA, "00563", None)
+    display_owner = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    revision = _minimal_revision(casillas=(canonical_owner, display_owner))
+
+    with pytest.raises(RegistryValidationError, match="casilla reference token '00562' is ambiguous"):
+        _build_minimal_snapshot(revision)
+
+
+def test_bare_number_reference_does_not_resolve_when_id_is_segment_qualified() -> None:
+    """A bare number is not a reference shorthand for a segment-qualified casilla.
+
+    ``CasillaDefinition.number`` is AEAT/display metadata, not a
+    foreign key. Even when a printed number occurs exactly once in the
+    revision, a reference to a segment-qualified casilla must name the
+    canonical ``casilla.id``.
     """
     from .._schema import FormulaDefinition, FormulaExpression
     from .._validate import RegistryValidator
 
-    sole_occurrence = _segmented_casilla("DP200014:00562", "00562", "DP200014")
-    target_casilla = _segmented_casilla("DP200014:00999", "00999", "DP200014").model_copy(
-        update={"input_kind": "computed", "formula": "test.formula"},
+    sole_occurrence = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    target_casilla_def = _segmented_casilla(_SEGMENTED_TARGET_CASILLA, "00999", "DP200014").model_copy(
+        update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
-        target="DP200014:00999",
-        expression=FormulaExpression(casilla="00562"),
+        target_casilla_id=_SEGMENTED_TARGET_CASILLA,
+        expression=FormulaExpression(casilla_id=_BARE_REUSED_NUMBER_CASILLA),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     revision = _minimal_revision(
-        casillas=(sole_occurrence, target_casilla),
+        casillas=(sole_occurrence, target_casilla_def),
         formulas=(formula,),
     )
     failures = RegistryValidator(_minimal_catalogues())._validate_revision(
         _minimal_modelo(revision),
         revision,
     )
-    unknown_casilla_failures = [f for f in failures if "unknown casilla" in f]
-    assert unknown_casilla_failures == [], (
-        "an unambiguous bare-number reference must resolve to a casilla whose id "
-        f"is segment-qualified; got: {unknown_casilla_failures}"
+    unknown_casilla_failures = [f for f in failures if "unknown casilla '00562'" in f]
+    assert unknown_casilla_failures, (
+        "a printed number must not resolve to a segment-qualified casilla id; "
+        f"got failures: {failures}"
+    )
+
+
+def test_duplicate_export_field_ownership_fails() -> None:
+    """An export field can be declared by exactly one casilla."""
+    from .._validate import RegistryValidator
+
+    first = _segmented_casilla(_SEGMENTED_EXPORT_oIELD_CASILLA, "00592", "DP200014").model_copy(
+        update={"export_refs": ("modelo-200-page-014b-casilla-00592",)},
+    )
+    second = _segmented_casilla(_BARE_EXPORT_oIELD_CASILLA, "00592", None).model_copy(
+        update={"export_refs": ("modelo-200-page-014b-casilla-00592",)},
+    )
+    revision = _minimal_revision(casillas=(first, second))
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
+        _minimal_modelo(revision),
+        revision,
+    )
+    assert any("is declared by multiple casillas" in failure for failure in failures), (
+        f"duplicate export field ownership must fail; got: {failures}"
     )

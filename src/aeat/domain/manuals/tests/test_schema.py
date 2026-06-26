@@ -7,12 +7,14 @@ from datetime import UTC, date, datetime
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.aeat_literal_fixtures import manual_practicos_url
 from .. import (
     Chapter,
     FetchedManualPart,
     LLMProvenance,
     Manual,
+    ManualCasillaReference,
     ManualId,
     ManualPart,
     Paragraph,
@@ -29,6 +31,7 @@ from .._errors import ManualValidationError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _RENTA_2025_MANUAL_URL = manual_practicos_url("IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf")
+_M130_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M130_CASILLA_01")
 
 
 def _llm_provenance() -> LLMProvenance:
@@ -67,7 +70,7 @@ def _rule(rule_id: str = "renta-2025-part1-cap5-sec2-rule0001", kind: RuleKind =
         kind=kind,
         statement="Statement in Spanish.",
         applies_when=None,
-        references_casillas=("MODELO_130:01",),
+        references_casillas=(ManualCasillaReference(modelo_id="130", casilla_id=_M130_CASILLA_01),),
         references_sections=(),
         references_legal_acts=("LEY_35_2006|art. 32",),
         source=_rule_source(),
@@ -150,26 +153,28 @@ class TestStrictSchema:
                 definition_reviewed_at=date(2026, 4, 12),
             )
 
-    def test_rule_rejects_invalid_casilla_reference(self) -> None:
-        """Casilla references must match the MODELO_NNN[:CODE] pattern."""
+    def test_rule_rejects_legacy_scalar_casilla_reference(self) -> None:
+        """Manual casilla references must be structured, not MODELO:CASILLA strings."""
         with pytest.raises(ValidationError, match=r"references_casillas"):
-            Rule(
-                rule_id="renta-2025-part1-cap5-sec2-rule0003",
-                manual_id=ManualId.RENTA,
-                year=2025,
-                part=ManualPart.PARTE_1,
-                chapter_id="cap5",
-                section_id="sec2",
-                kind="computation",
-                statement="Statement.",
-                applies_when=None,
-                references_casillas=("not-a-modelo-id",),
-                references_sections=(),
-                references_legal_acts=(),
-                source=_rule_source(),
-                extracted_by=_llm_provenance(),
-                definition_reviewed_by="gw",
-                definition_reviewed_at=date(2026, 4, 12),
+            Rule.model_validate(
+                {
+                    "rule_id": "renta-2025-part1-cap5-sec2-rule0003",
+                    "manual_id": ManualId.RENTA,
+                    "year": 2025,
+                    "part": ManualPart.PARTE_1,
+                    "chapter_id": "cap5",
+                    "section_id": "sec2",
+                    "kind": "computation",
+                    "statement": "Statement.",
+                    "applies_when": None,
+                    "references_casillas": ("not-a-structured-casilla",),
+                    "references_sections": (),
+                    "references_legal_acts": (),
+                    "source": _rule_source(),
+                    "extracted_by": _llm_provenance(),
+                    "definition_reviewed_by": "gw",
+                    "definition_reviewed_at": date(2026, 4, 12),
+                },
             )
 
     def test_rule_rejects_empty_reviewer(self) -> None:

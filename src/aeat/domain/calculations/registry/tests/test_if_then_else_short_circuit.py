@@ -14,19 +14,21 @@ predicate explicitly guarded against.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from .._formula_runtime import _evaluate_expression
-from .._schema import FormulaExpression
+from .._schema import CasillaId, FormulaExpression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _evaluate(expression: FormulaExpression, values: dict[str, Decimal]) -> Decimal:
+def _evaluate(expression: FormulaExpression, values: Mapping[CasillaId, Decimal]) -> Decimal:
     operand_refs: list[str] = []
+    operand_casilla_refs: list[CasillaId] = []
     operand_values: list[Decimal] = []
     return _evaluate_expression(
         expression,
@@ -36,9 +38,10 @@ def _evaluate(expression: FormulaExpression, values: dict[str, Decimal]) -> Deci
         date_context={"filing_period": date(2025, 12, 31)},
         relation_values={},
         operand_refs=operand_refs,
+        operand_casilla_refs=operand_casilla_refs,
         operand_values=operand_values,
         unresolved_relation_ids=frozenset(),
-        unresolved_casillas=set(),
+        unresolved_casilla_ids=set(),
     )
 
 

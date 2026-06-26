@@ -20,6 +20,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .. import CasillaId, validated_casilla_id
 from .._bindings_previous_filing import (
     _aggregate_previous_filing_binding,
     _is_direct_previous_filing_binding,
@@ -32,26 +33,31 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DUMMY_LEGAL_ID = "rd-439-2007:art-110"
 _DUMMY_SOURCE_ID = "aeat-modelo-130-instructions"
+_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id(
+    "07",
+    surface="_M130_PAGO_FRACCIONADO_CASILLA",
+)
+_M130_MINORACION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_MINORACION_CASILLA")
 
 
 def _span_selector() -> _PreviousModeloSelector:
     return _PreviousModeloSelector.model_validate(
         {
             "source_modelo": "130",
-            "source_casillas": ("07",),
+            "source_casilla_ids": ("07",),
             "prior_quarter_expanding_span": True,
             "max_year_delta": 0,
         },
     )
 
 
-def _span_binding(*, source_casillas: tuple[str, ...]) -> DataBindingDefinition:
+def _span_binding(*, source_casilla_ids: tuple[CasillaId, ...]) -> DataBindingDefinition:
     return DataBindingDefinition(
         id="modelo-130-test-span-binding",
         source=BindingSourceKind.PREVIOUS_FILING,
         selector={
             "source_modelo": "130",
-            "source_casillas": tuple(source_casillas),
+            "source_casilla_ids": tuple(source_casilla_ids),
             "prior_quarter_expanding_span": True,
             "max_year_delta": 0,
         },
@@ -84,13 +90,13 @@ def test_expanding_span_first_quarter_is_empty() -> None:
 
 
 def test_expanding_span_classified_direct_previous_filing_binding() -> None:
-    """The span carry stays a DIRECT previous_filing binding (source_casillas anchor).
+    """The span carry stays a DIRECT previous_filing binding (source_casilla_ids anchor).
 
     The relation-source collision gate (validate_slot_source_hygiene) and the
     requirement-derivation path both route through this predicate; the span mode
     must classify direct so it needs no carve-out.
     """
-    binding = _span_binding(source_casillas=("07",))
+    binding = _span_binding(source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,))
     assert _is_direct_previous_filing_binding(binding) is True
 
 
@@ -99,7 +105,7 @@ def test_expanding_span_mutually_exclusive_with_offset() -> None:
         _PreviousModeloSelector.model_validate(
             {
                 "source_modelo": "130",
-                "source_casillas": ("07",),
+                "source_casilla_ids": ("07",),
                 "prior_quarter_expanding_span": True,
                 "source_period_offset_from_target": -1,
             },
@@ -111,7 +117,7 @@ def test_expanding_span_mutually_exclusive_with_source_periods() -> None:
         _PreviousModeloSelector.model_validate(
             {
                 "source_modelo": "130",
-                "source_casillas": ("07",),
+                "source_casilla_ids": ("07",),
                 "prior_quarter_expanding_span": True,
                 "source_periods": ("1T", "2T"),
             },
@@ -129,7 +135,7 @@ def _prior_pagos_binding() -> DataBindingDefinition:
         source=BindingSourceKind.PREVIOUS_FILING,
         selector={
             "source_modelo": "130",
-            "source_casillas": ("07", "16"),
+            "source_casilla_ids": ("07", "16"),
             "prior_quarter_expanding_span": True,
             "max_year_delta": 0,
         },
@@ -164,7 +170,11 @@ def test_prior_pagos_fraccionados_op_computes_positive_07_minus_16() -> None:
     raw_07_sum = sum((c07 for c07, _c16 in quarters), Decimal("0"))
     assert expected != raw_07_sum, "fixture must make the identity differ from a raw-07 sum"
 
-    result = _aggregate_previous_filing_binding(binding, flat_values, source_casillas=("07", "16"))
+    result = _aggregate_previous_filing_binding(
+        binding,
+        flat_values,
+        source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
+    )
     assert result == expected
 
 
@@ -178,7 +188,7 @@ def test_prior_pagos_fraccionados_op_negative_07_contributes_zero_not_value() ->
     result = _aggregate_previous_filing_binding(
         binding,
         [Decimal("-500"), Decimal("0")],
-        source_casillas=("07", "16"),
+        source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
     )
     assert result == Decimal("0")
 
@@ -192,12 +202,16 @@ def test_prior_pagos_fraccionados_op_subtracts_nonzero_minoracion() -> None:
     result = _aggregate_previous_filing_binding(
         binding,
         [Decimal("700"), Decimal("120")],
-        source_casillas=("07", "16"),
+        source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
     )
     assert result == Decimal("580")
 
 
-def test_prior_pagos_fraccionados_op_requires_two_source_casillas() -> None:
+def test_prior_pagos_fraccionados_op_requires_two_source_casilla_ids() -> None:
     binding = _prior_pagos_binding()
     with pytest.raises(RegistryValidationError, match="requires exactly two source casillas"):
-        _aggregate_previous_filing_binding(binding, [Decimal("100")], source_casillas=("07",))
+        _aggregate_previous_filing_binding(
+            binding,
+            [Decimal("100")],
+            source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,),
+        )

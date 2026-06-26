@@ -12,7 +12,7 @@ from ._schema import LegalReference, ModeloRevision, SourceReference
 from ._validate_helpers import _missing_refs
 
 _CONSTRUCT_MEMBER_ATTRS = {
-    "casilla": "casillas",
+    "casilla": "casilla_ids",
     "formula": "formulas",
     "parameter": "parameters",
     "binding": "bindings",

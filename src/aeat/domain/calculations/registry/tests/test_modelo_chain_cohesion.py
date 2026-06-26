@@ -25,6 +25,7 @@ import pytest
 from .....core.resources import bundled_path
 from .._loader import load_registry_tree
 from .._schema import ModeloDefinition
+from .._validate_relation_periods import select_relation_source_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -169,7 +170,7 @@ def _chain_role_offences(*, summary, feeder_id: str, summary_id: str) -> tuple[s
 
 def test_every_declared_relation_resolves_to_a_real_source_casilla() -> None:
     """For every cross_model_output / annual_summary relation, the source modelo's
-    revision must declare the named ``source_output`` as a casilla. The registry
+    revision must declare the named ``source_casilla_id`` as a casilla. The registry
     validator already asserts this; this test makes the cohesion contract visible
     at the chain level so a regression is named in chain-cohesion terms.
     """
@@ -194,23 +195,35 @@ def _relation_source_offence(relation, *, modelo_id: str, registry) -> str | Non
     Only ``cross_model_output`` and ``annual_summary`` relations
     participate in this gate; other relation kinds are noise here
     and short-circuit to ``None``. Two failure modes are reported:
-    a relation citing a non-existent source modelo, and a relation
-    whose declared ``source_output`` is not declared as a casilla
-    on any revision of the named source modelo.
+    a relation citing a non-existent source modelo, a selector that matches no
+    source revision, and a relation whose declared ``source_casilla_id`` is not
+    declared as a casilla on every selected source revision.
     """
     if relation.kind not in _CROSS_MODEL_RELATION_KINDS:
         return None
     source_modelo = registry.get(relation.source_modelo)
     if source_modelo is None:
         return f"modelo {modelo_id} relation {relation.id!r} cites unknown source modelo {relation.source_modelo!r}"
-    source_casilla_ids = {
-        c.id for source_revision in source_modelo.revisions.values() for c in source_revision.casillas
-    }
-    if relation.source_output not in source_casilla_ids:
+    source_revisions, selector_failures = select_relation_source_revisions(
+        source_modelo,
+        relation.source_revision_selector,
+    )
+    if selector_failures:
+        return f"modelo {modelo_id} relation {relation.id!r} source selector errors: {selector_failures!r}"
+    if not source_revisions:
+        return (
+            f"modelo {modelo_id} relation {relation.id!r} selector "
+            f"{dict(relation.source_revision_selector)!r} matches no source revisions on modelo "
+            f"{relation.source_modelo!r}"
+        )
+    for source_revision in source_revisions:
+        source_casilla_ids = {casilla.id for casilla in source_revision.casillas}
+        if relation.source_casilla_id in source_casilla_ids:
+            continue
         return (
             f"modelo {modelo_id} relation {relation.id!r} expects "
-            f"source casilla {relation.source_output!r} on modelo "
-            f"{relation.source_modelo!r}, but no revision of that modelo "
-            f"declares it"
+            f"source casilla {relation.source_casilla_id!r} on modelo "
+            f"{relation.source_modelo!r} revision {source_revision.id!r}, but that revision "
+            f"does not declare it"
         )
     return None

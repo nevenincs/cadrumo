@@ -12,12 +12,13 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal, cast
+from typing import Literal, cast, get_origin
 
 from pydantic import BaseModel, Field, ValidationError
 
 from ....core import freeze_toml, read_toml
 from ._errors import RegistryLoadError, RegistryValidationError
+from ._ids import CasillaId, validated_casilla_id
 from ._schema import (
     LegalParameter,
     LegalReference,
@@ -26,42 +27,23 @@ from ._schema import (
     RegistryCatalogues,
     SourceReference,
 )
+from ._validate_revision_identity import revision_reference_identity_failures
 
-# Registry TOML fragments are an authoring layout only; this loader compiles
-# them into complete runtime ModeloRevision objects before validation.
-# Continuity evolution records are generic revision append records, not
-# modelo-specific loader behaviour.
-_REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
-    {
-        "orden_aplicabilidad",
-        "parameters",
-        "casillas",
-        "formulas",
-        "bindings",
-        "algorithm_providers",
-        "algorithm_bindings",
-        "relations",
-        "extraction_profiles",
-        "live_cross_references",
-        "workbook_parity_refs",
-        "verification_expectations",
-        "verification_predicates",
-        "application_links",
-        "casilla_continuidad_evolutions",
-        "deadline_windows",
-        "filing_schedules",
-        "support_removal_decisions",
-        "constructs",
-        "dependency_classifications",
-    },
-)
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"
 _REVISION_COMPLETENESS_MANIFEST = "completeness_manifest"
+_REVISION_SPECIAL_MERGE_FIELDS = frozenset({_REVISION_EXPORT_LAYOUTS, _REVISION_CONSTRUCTS})
+_REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
+    field_name
+    for field_name, field in ModeloRevision.model_fields.items()
+    if field.default == ()
+    and get_origin(field.annotation) is tuple
+    and field_name not in _REVISION_SPECIAL_MERGE_FIELDS
+)
 _COMPLETENESS_MANIFEST_APPEND_ARRAYS: frozenset[str] = frozenset({"casillas"})
 _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
     {
-        "casillas",
+        "casilla_ids",
         "formulas",
         "parameters",
         "bindings",
@@ -162,6 +144,11 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
     _reject_local_catalogues(source_path, data)
     if "modelo" not in data:
         raise RegistryLoadError(f"{source_path}: missing [modelo] table")
+    modelo_table = data["modelo"]
+    if not isinstance(modelo_table, dict):
+        raise RegistryLoadError(f"{source_path}: [modelo] must be a table")
+    modelo_id = modelo_table.get("id")
+    modelo_id_for_context = modelo_id if isinstance(modelo_id, str) else source_path.as_posix()
     raw_revisions = data.get("revisions")
     if not isinstance(raw_revisions, dict) or not raw_revisions:
         raise RegistryLoadError(f"{source_path}: missing [revisions.<id>] tables")
@@ -173,16 +160,35 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
             raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
         payload = {"id": revision_id, **raw_revision}
         try:
-            revisions[revision_id] = ModeloRevision.model_validate(payload)
+            revision = ModeloRevision.model_validate(payload)
         except ValidationError as exc:
             raise RegistryLoadError(f"{source_path}: invalid revision {revision_id!r}: {exc}") from exc
-    modelo_table = data["modelo"]
-    if not isinstance(modelo_table, dict):
-        raise RegistryLoadError(f"{source_path}: [modelo] must be a table")
+        _raise_on_ambiguous_revision_identity(
+            source_path,
+            modelo_id=modelo_id_for_context,
+            revision_id=revision_id,
+            revision=revision,
+        )
+        revisions[revision_id] = revision
     try:
         return ModeloDefinition.model_validate({**modelo_table, "revisions": revisions})
     except ValidationError as exc:
         raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
+
+
+def _raise_on_ambiguous_revision_identity(
+    source_path: Path,
+    *,
+    modelo_id: str,
+    revision_id: str,
+    revision: ModeloRevision,
+) -> None:
+    prefix = f"{source_path}: modelo {modelo_id} revision {revision_id}"
+    failures = revision_reference_identity_failures(prefix, revision)
+    if failures:
+        raise RegistryValidationError(
+            "registry revision identity is ambiguous:\n" + "\n".join(f" - {failure}" for failure in failures),
+        )
 
 
 def load_modelo_directory(directory: Path) -> ModeloDefinition:
@@ -332,8 +338,8 @@ def _load_revision_translations(
 
 def _collect_valid_locale_ids(
     merged_revisions: dict[str, object],
-) -> tuple[dict[str, set[str]], set[str]]:
-    valid_casilla_ids: dict[str, set[str]] = {}
+) -> tuple[dict[str, set[CasillaId]], set[str]]:
+    valid_casilla_ids: dict[str, set[CasillaId]] = {}
     valid_continuidad_ids: set[str] = set()
     for revision_id, raw_rev in merged_revisions.items():
         raw_rev_table = _as_toml_table(raw_rev)
@@ -342,14 +348,19 @@ def _collect_valid_locale_ids(
         casillas_list = raw_rev_table.get("casillas", ())
         if not isinstance(casillas_list, (list, tuple)):
             continue
-        rev_casilla_ids: set[str] = set()
+        rev_casilla_ids: set[CasillaId] = set()
         for casilla in casillas_list:
             casilla_table = _as_toml_table(casilla)
             if casilla_table is None:
                 continue
             c_id = casilla_table.get("id")
             if isinstance(c_id, str):
-                rev_casilla_ids.add(c_id)
+                try:
+                    rev_casilla_ids.add(validated_casilla_id(c_id, surface=f"revision {revision_id!r} casilla id"))
+                except ValueError as exc:
+                    raise RegistryValidationError(
+                        f"Invalid casilla id {c_id!r} in revision {revision_id!r}: expected canonical casilla.id",
+                    ) from exc
             cont_id = casilla_table.get("continuidad_id")
             if isinstance(cont_id, str):
                 valid_continuidad_ids.add(cont_id)
@@ -359,7 +370,7 @@ def _collect_valid_locale_ids(
 
 def _validate_translation_keys(
     trans: RegistryLocaleTranslation,
-    valid_ids: set[str],
+    valid_ids: set[str] | set[CasillaId],
     locale: str,
     *,
     context: str,
@@ -376,7 +387,7 @@ def _validate_translation_keys(
 def _check_locale_referential_integrity(
     modelo_translations: dict[str, RegistryLocaleTranslation],
     revision_translations: dict[str, dict[str, RegistryLocaleTranslation]],
-    valid_casilla_ids: dict[str, set[str]],
+    valid_casilla_ids: dict[str, set[CasillaId]],
     valid_continuidad_ids: set[str],
 ) -> None:
     for locale, trans in modelo_translations.items():

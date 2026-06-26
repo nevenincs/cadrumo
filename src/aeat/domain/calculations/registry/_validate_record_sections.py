@@ -9,6 +9,7 @@ from ._bindings import (
     is_layout_binding_selector,
     validate_binding_selector_shape,
 )
+from ._ids import BindingId, CasillaId, RelationId
 from ._schema import DataBindingDefinition, FormulaDefinition, LegalReference, ModeloRevision, SourceReference
 from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
@@ -30,7 +31,7 @@ def validate_casilla_section(
     prefix: str,
     revision: ModeloRevision,
     formulas: Mapping[str, FormulaDefinition],
-    bindings: set[str],
+    bindings: set[BindingId],
     export_field_ids: set[str],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
@@ -43,11 +44,11 @@ def validate_casilla_section(
         if (
             casilla.formula is not None
             and casilla.formula in formulas
-            and formulas[casilla.formula].target != casilla.id
+            and formulas[casilla.formula].target_casilla_id != casilla.id
         ):
             failures.append(
                 f"{prefix}: casilla {casilla.id!r} references formula {casilla.formula!r} "
-                f"targeting {formulas[casilla.formula].target!r}",
+                f"targeting {formulas[casilla.formula].target_casilla_id!r}",
             )
         if casilla.binding is not None and casilla.binding not in bindings:
             failures.append(f"{prefix}: casilla {casilla.id!r} references unknown binding {casilla.binding!r}")
@@ -61,10 +62,10 @@ def validate_formula_section(
     *,
     prefix: str,
     revision: ModeloRevision,
-    casillas: set[str],
-    bindings: set[str],
+    casillas: set[CasillaId],
+    bindings: set[BindingId],
     parameters: set[str],
-    relations: set[str],
+    relations: set[RelationId],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
@@ -84,8 +85,8 @@ def validate_formula_section(
                 "official_source_guidance",
             ),
         )
-        if formula.target not in casillas:
-            failures.append(f"{prefix}: formula {formula.id!r} targets unknown casilla {formula.target!r}")
+        if formula.target_casilla_id not in casillas:
+            failures.append(f"{prefix}: formula {formula.id!r} targets unknown casilla {formula.target_casilla_id!r}")
         failures.extend(
             validate_formula_expression(
                 prefix,
@@ -98,7 +99,7 @@ def validate_formula_section(
             ),
         )
 
-    for target in sorted(_duplicates([formula.target for formula in revision.formulas])):
+    for target in sorted(_duplicates([formula.target_casilla_id for formula in revision.formulas])):
         failures.append(f"{prefix}: duplicate formula target {target!r}")
 
 
@@ -178,8 +179,8 @@ def validate_extraction_profile_section(
     prefix: str,
     modelo_id: str,
     revision: ModeloRevision,
-    casillas: set[str],
-    exported_casillas: set[str],
+    casillas: set[CasillaId],
+    exported_casillas: set[CasillaId],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     corpus_root: Path | None = None,

@@ -5,7 +5,7 @@ from collections.abc import Iterable, Mapping
 import pytest
 
 from .....core.resources import bundled_path
-from .. import load_registry_tree
+from .. import load_registry_tree, previous_filing_source_reference
 from .._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision, RelationDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -78,10 +78,10 @@ def _source_revision_consistency_errors(
 ) -> list[str]:
     """Three checks against one source-revision candidate: outputs, periods, offset-derived periods."""
     errors: list[str] = []
-    source_outputs = {casilla.id for casilla in source_revision.casillas}
-    if relation.source_output not in source_outputs:
+    source_casilla_ids = {casilla.id for casilla in source_revision.casillas}
+    if relation.source_casilla_id not in source_casilla_ids:
         errors.append(
-            f"{modelo.id}/{revision.id}/{relation.id}: source output {relation.source_output} "
+            f"{modelo.id}/{revision.id}/{relation.id}: source casilla id {relation.source_casilla_id} "
             f"not defined by {source_modelo.id}/{source_revision.id}",
         )
     revision_periods = set(source_revision.period_selector.periods)
@@ -163,16 +163,15 @@ def test_previous_filing_bindings_reference_existing_source_modelo_outputs_and_p
 
     errors: list[str] = []
     for modelo, revision, binding in _previous_filing_bindings(modelos):
-        source_modelo_id = binding.selector.get("source_modelo")
-        if not isinstance(source_modelo_id, str):
-            continue
+        source_reference = previous_filing_source_reference(binding)
+        source_modelo_id = source_reference.source_modelo
 
         source_modelo = by_id.get(source_modelo_id)
         if source_modelo is None:
             errors.append(f"{modelo.id}/{revision.id}/{binding.id}: unknown source modelo {source_modelo_id}")
             continue
 
-        source_periods = _binding_source_periods(binding)
+        source_periods = source_reference.required_periods
         matching_revisions = tuple(
             source_revision
             for source_revision in source_modelo.revisions.values()
@@ -185,19 +184,18 @@ def test_previous_filing_bindings_reference_existing_source_modelo_outputs_and_p
             )
             continue
 
-        source_outputs = _binding_source_outputs(binding)
-        if not source_outputs:
+        source_casilla_ids = source_reference.source_casilla_ids
+        if not source_casilla_ids:
             continue
 
-        source_outputs_by_revision = {
-            source_revision.id: {casilla.id for casilla in source_revision.casillas}
-            for source_revision in matching_revisions
-        }
-        for source_output in source_outputs:
-            if not any(source_output in outputs for outputs in source_outputs_by_revision.values()):
+        for source_revision in matching_revisions:
+            revision_outputs = {casilla.id for casilla in source_revision.casillas}
+            for source_casilla_id in source_casilla_ids:
+                if source_casilla_id in revision_outputs:
+                    continue
                 errors.append(
-                    f"{modelo.id}/{revision.id}/{binding.id}: source output {source_output} "
-                    f"not defined by any period-compatible {source_modelo.id} revision",
+                    f"{modelo.id}/{revision.id}/{binding.id}: source casilla id {source_casilla_id} "
+                    f"not defined by period-compatible {source_modelo.id}/{source_revision.id}",
                 )
 
     assert not errors
@@ -220,26 +218,6 @@ def _previous_filing_bindings(
             for binding in revision.bindings:
                 if binding.source == "previous_filing":
                     yield modelo, revision, binding
-
-
-def _binding_source_periods(binding: DataBindingDefinition) -> tuple[str, ...]:
-    source_periods = binding.selector.get("source_periods")
-    if isinstance(source_periods, tuple):
-        return source_periods
-    period = binding.selector.get("period")
-    if isinstance(period, str):
-        return (period,)
-    return ()
-
-
-def _binding_source_outputs(binding: DataBindingDefinition) -> tuple[str, ...]:
-    source_casillas = binding.selector.get("source_casillas")
-    if isinstance(source_casillas, tuple):
-        return source_casillas
-    source_output = binding.selector.get("source_output")
-    if isinstance(source_output, str):
-        return (source_output,)
-    return ()
 
 
 def _matching_source_revisions(

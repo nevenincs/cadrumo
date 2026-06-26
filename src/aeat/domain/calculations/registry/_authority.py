@@ -8,7 +8,6 @@ produces :class:`RegistrySnapshot` instances on demand for each filing context.
 
 from __future__ import annotations
 
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date
 from functools import lru_cache
@@ -20,7 +19,6 @@ from ....core.access_gate import (
     derive_modelo_authorization,
     load_authorization_manifest,
 )
-from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import bundled_path as _bundled_path
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._loader import _collect_registry_tree_fingerprints, load_registry_tree
@@ -30,7 +28,6 @@ from ._validate import RegistryValidator
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
-_AUTHORITY_CACHE_SCHEMA_VERSION = "period-value-object-v1"
 
 
 @dataclass(slots=True)
@@ -234,36 +231,7 @@ def _load_authority(
     source_root: Path,
     _fingerprint: tuple[tuple[str, int, int], ...],
 ) -> ValidatedRegistryAuthority:
-    import hashlib
-    import tempfile
-
-    hasher = hashlib.sha256()
-    hasher.update(_AUTHORITY_CACHE_SCHEMA_VERSION.encode("utf-8"))
-    hasher.update(str(root.resolve()).encode("utf-8"))
-    hasher.update(str(source_root.resolve()).encode("utf-8"))
-    for item in _fingerprint:
-        hasher.update(item[0].encode("utf-8"))
-        hasher.update(str(item[1]).encode("utf-8"))
-        hasher.update(str(item[2]).encode("utf-8"))
-    val_key_hash = hasher.hexdigest()
-    validated_cache_path = Path(tempfile.gettempdir()) / f"aeat_registry_{val_key_hash}_validated.tmp"
-
     modelos, catalogues = load_registry_tree(root)
-
-    if validated_cache_path.is_file():
-        authority = ValidatedRegistryAuthority(
-            root=root,
-            source_root=source_root,
-            modelos=modelos,
-            catalogues=catalogues,
-            _modelos_by_id={modelo.id: modelo for modelo in modelos},
-            _validator=RegistryValidator(catalogues, source_root=source_root, catalogue_corpus_strict=False),
-            _registry_validated=True,
-            _validated_modelos={modelo.id for modelo in modelos},
-            _snapshots={},
-            _authorization_manifest=load_authorization_manifest(root),
-        )
-        return authority
 
     authority = ValidatedRegistryAuthority(
         root=root,
@@ -286,6 +254,4 @@ def _load_authority(
         _authorization_manifest=load_authorization_manifest(root),
     )
     authority.validate_registry()
-    with suppress(Exception):
-        validated_cache_path.write_text("validated", encoding=UTF_8_ENCODING)
     return authority

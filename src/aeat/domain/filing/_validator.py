@@ -10,6 +10,7 @@ behaviour is the caller's responsibility via
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
@@ -26,6 +27,9 @@ from ._schema import (
     ModeloValidationFinding,
     ModeloValueKind,
 )
+
+if TYPE_CHECKING:  # pragma: no cover - type-only import
+    from ..calculations.registry import CasillaId
 
 _logger = get_logger(__name__)
 
@@ -70,6 +74,7 @@ class ModeloValidator:
         collection = self._schema_provider.get_collection(draft.modelo)
         findings: list[ModeloValidationFinding] = []
         findings.extend(self._validate_schema_version(draft, collection))
+        findings.extend(self._validate_declared_casillas(draft, collection))
         findings.extend(self._validate_required(draft, collection))
         findings.extend(self._validate_ranges(draft, collection))
         findings.extend(self._validate_formula_traces(draft, collection))
@@ -104,17 +109,35 @@ class ModeloValidator:
             ),
         ]
 
+    def _validate_declared_casillas(
+        self,
+        draft: ModeloDraft,
+        collection: CasillaCollection,
+    ) -> list[ModeloValidationFinding]:
+        known_ids = {casilla.casilla_id for casilla in collection.all()}
+        return [
+            ModeloValidationFinding(
+                casilla_id=value.casilla_id,
+                severity=BaseSeverity.ERROR,
+                code="casilla-unknown",
+                message=tr("filing.validation.schema_mismatch"),
+                references_rules=(),
+            )
+            for value in draft.values
+            if value.casilla_id not in known_ids
+        ]
+
     def _validate_required(self, draft: ModeloDraft, collection: CasillaCollection) -> list[ModeloValidationFinding]:
         by_id = {v.casilla_id: v for v in draft.values}
         out: list[ModeloValidationFinding] = []
         for casilla in collection.all():
             if not casilla.required:
                 continue
-            value = by_id.get(casilla.id)
+            value = by_id.get(casilla.casilla_id)
             if value is None or value.kind is ModeloValueKind.EMPTY or value.value is None:
                 out.append(
                     ModeloValidationFinding(
-                        casilla_id=casilla.id,
+                        casilla_id=casilla.casilla_id,
                         severity=BaseSeverity.ERROR,
                         code="casilla-required-missing",
                         message=tr("filing.validation.required_missing"),
@@ -139,7 +162,7 @@ class ModeloValidator:
         return out
 
     @staticmethod
-    def _range_finding(casilla_id: str, direction: str) -> ModeloValidationFinding:
+    def _range_finding(casilla_id: CasillaId, direction: str) -> ModeloValidationFinding:
         return ModeloValidationFinding(
             casilla_id=casilla_id,
             severity=BaseSeverity.ERROR,
@@ -158,25 +181,28 @@ class ModeloValidator:
             casilla = collection.get(value.casilla_id)
             if casilla is None:
                 _logger.debug(
-                    "formula trace check: casilla=%s in draft=%s not found in collection schema_version=%s; skipping",
+                    "formula trace check: casilla=%s in draft=%s not found in collection schema_version=%s; "
+                    "casilla-unknown finding already emitted",
                     value.casilla_id,
                     draft.draft_id,
                     collection.schema_version,
                 )
                 continue
-            if not casilla.formula_inputs:
-                if value.formula_trace:
+            if not casilla.formula_input_casilla_ids:
+                if value.formula_trace_casilla_ids:
                     out.append(self._divergence(value.casilla_id))
                 continue
             if value.kind is not ModeloValueKind.COMPUTED:
                 out.append(self._divergence(value.casilla_id))
                 continue
-            if value.formula_trace is None or set(value.formula_trace) != set(casilla.formula_inputs):
+            if value.formula_trace_casilla_ids is None or set(value.formula_trace_casilla_ids) != set(
+                casilla.formula_input_casilla_ids,
+            ):
                 out.append(self._divergence(value.casilla_id))
         return out
 
     @staticmethod
-    def _divergence(casilla_id: str) -> ModeloValidationFinding:
+    def _divergence(casilla_id: CasillaId) -> ModeloValidationFinding:
         return ModeloValidationFinding(
             casilla_id=casilla_id,
             severity=BaseSeverity.ERROR,

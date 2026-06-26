@@ -27,6 +27,7 @@ from pydantic import BaseModel
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .. import (
+    CasillaId,
     DataBindingDefinition,
     RegistryValidationError,
     build_snapshot,
@@ -34,11 +35,17 @@ from .. import (
     resolve_ledger_renta_income_aggregation_binding_values,
     unsupported_ledger_renta_income_observations,
     validate_ledger_renta_income_aggregation_binding_definition,
+    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
+    "03",
+    surface="_M130_RENDIMIENTO_NETO_CASILLA",
+)
 
 
 def _modelo_130_snapshot():
@@ -57,7 +64,7 @@ class _IncomeObservation(BaseModel):
     """Minimal structural stand-in satisfying RentaIncomeObservationProtocol."""
 
     transaction_id: str
-    target_casilla: str
+    target_casilla_id: CasillaId
     gross_amount: Decimal
     taxable_base_amount: Decimal | None
     filing_date: date
@@ -67,7 +74,7 @@ def test_committed_m130_casilla_01_binds_ingresos_integros_fact() -> None:
     """The committed registry routes casilla 01 through ingresos_integros_sum."""
     revision = _modelo_130_snapshot().revision
 
-    casilla_01 = next(casilla for casilla in revision.casillas if casilla.id == "01")
+    casilla_01 = next(casilla for casilla in revision.casillas if casilla.id == _M130_INGRESOS_CASILLA)
     assert casilla_01.binding == _INGRESOS_BINDING
 
     binding = next(binding for binding in revision.bindings if binding.id == _INGRESOS_BINDING)
@@ -88,14 +95,14 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
     revision = _modelo_130_snapshot().revision
     tagged = _IncomeObservation(
         transaction_id="inv-tagged",
-        target_casilla="01",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
         filing_date=date(2026, 2, 10),
     )
     untagged = _IncomeObservation(
         transaction_id="receipt-untagged",
-        target_casilla="01",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),
@@ -119,7 +126,7 @@ def test_income_binding_validator_rejects_unknown_fact() -> None:
     binding = DataBindingDefinition(
         id="m130-income-bad-fact",
         source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        selector={"modelo": "130", "target_casilla": "01", "fact": "net_income_sum"},
+        selector={"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "net_income_sum"},
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=("rd-439-2007:art-110",),
         source_refs=("aeat-modelo-130-instructions",),
@@ -128,8 +135,25 @@ def test_income_binding_validator_rejects_unknown_fact() -> None:
         validate_ledger_renta_income_aggregation_binding_definition(binding)
 
 
+def test_income_binding_validator_rejects_legacy_target_casilla_key() -> None:
+    binding = DataBindingDefinition(
+        id="m130-income-legacy-target-key",
+        source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        selector={"modelo": "130", "target_casilla": _M130_INGRESOS_CASILLA, "fact": "gross_income_sum"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+        legal_refs=("rd-439-2007:art-110",),
+        source_refs=("aeat-modelo-130-instructions",),
+    )
+    with pytest.raises(RegistryValidationError) as exc_info:
+        validate_ledger_renta_income_aggregation_binding_definition(binding)
+
+    detail = str(exc_info.value)
+    assert "target_casilla_id" in detail
+    assert "target_casilla" in detail
+
+
 def test_unsupported_renta_income_flags_observation_routed_to_no_binding() -> None:
-    """A non-zero income whose target_casilla matches no binding is surfaced.
+    """A non-zero income whose target_casilla_id matches no binding is surfaced.
 
     Every committed M130 income binding selects casilla 01; an observation
     routed to casilla 03 reaches no binding and would silently vanish, so the
@@ -139,14 +163,14 @@ def test_unsupported_renta_income_flags_observation_routed_to_no_binding() -> No
 
     routed = _IncomeObservation(
         transaction_id="inv-routed",
-        target_casilla="01",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1000.00"),
         taxable_base_amount=None,
         filing_date=date(2026, 2, 10),
     )
     unrouted = _IncomeObservation(
         transaction_id="inv-unrouted",
-        target_casilla="03",
+        target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),
@@ -160,13 +184,13 @@ def test_unsupported_renta_income_does_not_flag_zero_income() -> None:
     """A zero-income observation routed to no binding must NOT false-fire.
 
     A zero declarable income contributes nothing whether or not it is routed, so
-    the false-fire guard excludes it even when its target_casilla is unbound.
+    the false-fire guard excludes it even when its target_casilla_id is unbound.
     """
     revision = _modelo_130_snapshot().revision
 
     zero_unrouted = _IncomeObservation(
         transaction_id="inv-zero",
-        target_casilla="03",
+        target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
         gross_amount=Decimal("0.00"),
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),

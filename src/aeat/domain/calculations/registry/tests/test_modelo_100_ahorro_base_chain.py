@@ -37,7 +37,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import RegistrySnapshot, calculate_registry_snapshot
+from .. import CasillaId, RegistrySnapshot, calculate_registry_snapshot, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
 from .._relations import resolve_relation_values
 
@@ -86,6 +86,20 @@ _RELATION_VALUES_2024: dict[str, Decimal] = {
 }
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test_modelo_100_ahorro_base_chain.casilla")
+    except ValueError as exc:
+        raise AssertionError(f"M100 ahorro-base test casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_CAPITAL_MOBILIARIO_INTERESES_CASILLA: CasillaId = _casilla_id("0027")
+_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("0029")
+_CAPITAL_MOBILIARIO_TOTAL_INGRESOS_CASILLA: CasillaId = _casilla_id("0036")
+_CAPITAL_MOBILIARIO_RENDIMIENTOS_REDUCIDOS_CASILLA: CasillaId = _casilla_id("0041")
+_BASE_IMPONIBLE_AHORRO_CASILLA: CasillaId = _casilla_id("0460")
+
+
 @pytest.fixture
 def m100_2024_snapshot(registry_authority: ValidatedRegistryAuthority):
     return registry_authority.snapshot("100", filing_year=2024, period="0A")
@@ -99,7 +113,7 @@ def m100_2025_snapshot(registry_authority: ValidatedRegistryAuthority):
 # ── helper ────────────────────────────────────────────────────────────────────
 
 
-def _run_2024(snapshot: RegistrySnapshot, inputs: dict[str, Decimal]) -> dict[str, Decimal]:
+def _run_2024(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> dict[CasillaId, Decimal]:
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -128,19 +142,21 @@ def test_sergio_0029_dividends_20000_populates_0460(m100_2024_snapshot: Registry
 
     Chain: 0029→0036→0038→0040→0041→0460.
     """
-    values = _run_2024(m100_2024_snapshot, {"0029": Decimal("20000")})
+    values = _run_2024(m100_2024_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("20000")})
 
     # The chain must propagate through: 0036=20000, 0038=20000, 0040=20000, 0041=20000.
-    assert values.get("0036") == Decimal("20000"), (
-        f"0036 (total ingresos) = {values.get('0036')!r}; expected 20000.  Chain 0029→0036 is broken."
+    assert values[_CAPITAL_MOBILIARIO_TOTAL_INGRESOS_CASILLA] == Decimal("20000"), (
+        f"0036 (total ingresos) = {values[_CAPITAL_MOBILIARIO_TOTAL_INGRESOS_CASILLA]!r}; "
+        "expected 20000.  Chain 0029→0036 is broken."
     )
-    assert values.get("0041") == Decimal("20000"), (
-        f"0041 (suma rendimientos reducidos) = {values.get('0041')!r}; expected 20000.  "
+    assert values[_CAPITAL_MOBILIARIO_RENDIMIENTOS_REDUCIDOS_CASILLA] == Decimal("20000"), (
+        "0041 (suma rendimientos reducidos) = "
+        f"{values[_CAPITAL_MOBILIARIO_RENDIMIENTOS_REDUCIDOS_CASILLA]!r}; expected 20000.  "
         "Chain 0036→0038→0040→0041 is broken."
     )
     # Primary regression guard: before the fix, 0460 = 0 even when 0041 = 20 000.
-    assert values.get("0460", Decimal("0")) >= Decimal("20000"), (
-        f"casilla 0460 (base imponible del ahorro) = {values.get('0460')!r}; "
+    assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] >= Decimal("20000"), (
+        f"casilla 0460 (base imponible del ahorro) = {values[_BASE_IMPONIBLE_AHORRO_CASILLA]!r}; "
         "expected ≥ 20 000.  Defect #181 regression: 0041 is not included in "
         "formula renta-2024-base-imponible-del-ahorro.  "
         "Fix: add { casilla = '0041' } to the expression in "
@@ -155,11 +171,11 @@ def test_sergio_0460_equals_0029_when_no_losses_or_gp(m100_2024_snapshot: Regist
     component is 0041 (capital mobiliario).  Art. 49.1.a → 0460 = net rendimiento
     del capital mobiliario = 0029 (when 0037 and 0039 are zero).
     """
-    values = _run_2024(m100_2024_snapshot, {"0029": Decimal("20000")})
+    values = _run_2024(m100_2024_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("20000")})
 
     expected = Decimal("20000")
-    assert values.get("0460") == expected, (
-        f"casilla 0460 = {values.get('0460')!r}; expected {expected}.  "
+    assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] == expected, (
+        f"casilla 0460 = {values[_BASE_IMPONIBLE_AHORRO_CASILLA]!r}; expected {expected}.  "
         "Art. 49.1.a LIRPF: 0460 must equal the net capital-mobiliario rendimiento "
         "when no ganancias or compensations apply."
     )
@@ -175,13 +191,14 @@ def test_carla_0027_intereses_1200_propagates_to_0460(m100_2024_snapshot: Regist
 
     Chain: 0027→0036→0038→0040→0041→0460.
     """
-    values = _run_2024(m100_2024_snapshot, {"0027": Decimal("1200")})
+    values = _run_2024(m100_2024_snapshot, {_CAPITAL_MOBILIARIO_INTERESES_CASILLA: Decimal("1200")})
 
-    assert values.get("0041") == Decimal("1200"), (
-        f"0041 = {values.get('0041')!r}; expected 1200.  Chain 0027→…→0041 broken."
+    assert values[_CAPITAL_MOBILIARIO_RENDIMIENTOS_REDUCIDOS_CASILLA] == Decimal("1200"), (
+        f"0041 = {values[_CAPITAL_MOBILIARIO_RENDIMIENTOS_REDUCIDOS_CASILLA]!r}; "
+        "expected 1200.  Chain 0027→…→0041 broken."
     )
-    assert values.get("0460") == Decimal("1200"), (
-        f"casilla 0460 = {values.get('0460')!r}; expected 1200.  "
+    assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] == Decimal("1200"), (
+        f"casilla 0460 = {values[_BASE_IMPONIBLE_AHORRO_CASILLA]!r}; expected 1200.  "
         "Art. 49.1.a LIRPF oracle: net capital-mobiliario = 1200 → 0460 = 1200.  "
         "Check 2024/formulas/0145-renta-2024-base-imponible-del-ahorro.toml "
         "— 0041 must be included."
@@ -196,10 +213,10 @@ def test_aitor_0029_dividends_6000_populates_0460(m100_2024_snapshot: RegistrySn
 
     Oracle (Art. 49.1.a LIRPF): 0460 = 6 000 EUR.
     """
-    values = _run_2024(m100_2024_snapshot, {"0029": Decimal("6000")})
+    values = _run_2024(m100_2024_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("6000")})
 
-    assert values.get("0460") == Decimal("6000"), (
-        f"casilla 0460 = {values.get('0460')!r}; expected 6000.  "
+    assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] == Decimal("6000"), (
+        f"casilla 0460 = {values[_BASE_IMPONIBLE_AHORRO_CASILLA]!r}; expected 6000.  "
         "Art. 49.1.a LIRPF oracle: dividends 6000 → 0460 = 6000."
     )
 
@@ -213,11 +230,11 @@ def test_0460_scales_proportionally_with_capital_mobiliario_input(m100_2024_snap
     This test cannot pass against a formula that always returns 0 or any
     constant — it verifies that 0460 is strictly coupled to 0029.
     """
-    v_small = _run_2024(m100_2024_snapshot, {"0029": Decimal("5000")})
-    v_large = _run_2024(m100_2024_snapshot, {"0029": Decimal("10000")})
+    v_small = _run_2024(m100_2024_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("5000")})
+    v_large = _run_2024(m100_2024_snapshot, {_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("10000")})
 
-    small = v_small.get("0460", Decimal("0"))
-    large = v_large.get("0460", Decimal("0"))
+    small = v_small[_BASE_IMPONIBLE_AHORRO_CASILLA]
+    large = v_large[_BASE_IMPONIBLE_AHORRO_CASILLA]
 
     assert large == small * 2, (
         f"0460 at 10000 input = {large!r}; at 5000 = {small!r}.  "
@@ -260,7 +277,7 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
     )
     result = calculate_registry_snapshot(
         m100_2025_snapshot,
-        inputs={"0029": Decimal("20000")},
+        inputs={_CAPITAL_MOBILIARIO_DIVIDENDOS_CASILLA: Decimal("20000")},
         date_context=_DATE_2025,
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         binding_values=_bindings_2025,
@@ -269,8 +286,8 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
     )
     values = dict(result.values)
 
-    assert values.get("0460", Decimal("0")) >= Decimal("20000"), (
-        f"2025: casilla 0460 = {values.get('0460')!r}; expected ≥ 20000.  "
+    assert values[_BASE_IMPONIBLE_AHORRO_CASILLA] >= Decimal("20000"), (
+        f"2025: casilla 0460 = {values[_BASE_IMPONIBLE_AHORRO_CASILLA]!r}; expected ≥ 20000.  "
         "Defect #181 also affects the 2025 revision.  "
         "Check 2025/formulas/0168-renta-2025-base-imponible-del-ahorro.toml."
     )

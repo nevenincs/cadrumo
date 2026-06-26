@@ -10,8 +10,10 @@ import pytest
 from pydantic_settings import SettingsConfigDict
 
 from ....core.config import Settings
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.aeat_literal_fixtures import manual_practicos_url
 from .. import (
+    ManualCasillaReference,
     ManualCatalogue,
     ManualId,
     ManualPart,
@@ -26,6 +28,8 @@ from .._errors import ManualNotFoundError, ManualParseError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _IVA_MANUAL_URL = manual_practicos_url("iva.pdf")
+_M303_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_CASILLA_01")
+_M130_CASILLA_07: CasillaId = validated_casilla_id("07", surface="_M130_CASILLA_07")
 
 
 class _IsolatedSettings(Settings):
@@ -66,7 +70,7 @@ def _seed_iva(tmp_path: Path) -> Settings:
                 "kind": "formal_obligation",
                 "statement": "Regla IVA",
                 "applies_when": None,
-                "references_casillas": ["MODELO_303:01"],
+                "references_casillas": [{"modelo_id": "303", "casilla_id": _M303_CASILLA_01}],
                 "references_sections": [],
                 "references_legal_acts": ["LEY_37_1992|art. 1"],
                 "source": {
@@ -228,9 +232,21 @@ class TestLoader:
         """Casilla filter skips rules without the referenced casilla."""
         settings = _seed_iva(tmp_path)
         catalogue = load_catalogue([(ManualId.IVA, 2025, ManualPart.SINGLE)], settings=settings)
-        matches = list(find_rules(catalogue, casilla_id="MODELO_303:01", settings=settings))
+        matches = list(
+            find_rules(
+                catalogue,
+                casilla_reference=ManualCasillaReference(modelo_id="303", casilla_id=_M303_CASILLA_01),
+                settings=settings,
+            ),
+        )
         assert len(matches) == 1
-        misses = list(find_rules(catalogue, casilla_id="MODELO_130:07", settings=settings))
+        misses = list(
+            find_rules(
+                catalogue,
+                casilla_reference=ManualCasillaReference(modelo_id="130", casilla_id=_M130_CASILLA_07),
+                settings=settings,
+            ),
+        )
         assert misses == []
 
     def test_fetched_at_precision_round_trips(self, tmp_path: Path) -> None:

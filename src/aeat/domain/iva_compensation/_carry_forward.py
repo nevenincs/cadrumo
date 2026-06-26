@@ -126,10 +126,10 @@ def derive_303_compensation_available(
 ) -> Decimal:
     """Modelo 303 end-of-period available compensation carry-forward.
 
-    available = casilla 87 (compensación pendiente de periodos posteriores)
-    plus generated, where generated = max(0, -casilla 69 (resultado)). A
-    negative result (a quota a compensar) generates new carry-forward; a
-    positive result generates none.
+    ``available`` equals ``iva.compensacion-pendiente-periodos-posteriores``
+    (AEAT box 87) plus generated, where generated is
+    ``max(0, -iva.resultado)`` (AEAT box 69). A negative result (a quota a
+    compensar) generates new carry-forward; a positive result generates none.
 
     When ``refunded`` is ``True`` the period's negative result is filed as a
     refund (devolución, fichero "Tipo de declaración" ``D``) rather than carried
@@ -226,23 +226,25 @@ def build_iva_compensation_carry_forward_report(
 
 
 class IvaCompensationYearEndCarryPartition(BaseModel):
-    """Modelo 390 year-end carry boxes 97 and 662 as one FIFO partition.
+    """Modelo 390 year-end carry fields as one FIFO partition.
 
     The two AEAT annual carry-forward boxes partition the year's pending
     compensation credit governed by FIFO application netting across the whole
     ejercicio; they are NOT two independent per-period sums:
 
-    - ``last_period_amount`` (box 97, "Resultado de la última autoliquidación.
-      A compensar") is the saldo the LAST filed period carries forward — the
-      year-generated remaining credit still pending at the end of the last
-      period's autoliquidación (its disponible, net of any prior-year credit
-      still pending).
-    - ``generated_not_in_last_amount`` (box 662, "Cuotas a compensar generadas
-      en el ejercicio, distintas a las incluidas en la casilla 97") is the
+    - ``last_period_amount`` (``iva.anual.compensacion-ultimo-periodo-97``,
+      AEAT box 97, "Resultado de la última autoliquidación. A compensar") is
+      the saldo the LAST filed period carries forward — the year-generated
+      remaining credit still pending at the end of the last period's
+      autoliquidación (its disponible, net of any prior-year credit still
+      pending).
+    - ``generated_not_in_last_amount`` (``iva.anual.compensacion-generada-ejercicio-no-97``,
+      AEAT box 662, "Cuotas a compensar generadas en el ejercicio, distintas a
+      las incluidas en [97]") is the
       remaining of credits GENERATED in the ejercicio that did NOT carry into
       the last period's autoliquidación (e.g. a credit refunded in an
       intervening period, so it left the carry chain) — explicitly the year's
-      pending credit "cuando NO esté incluida en la casilla 97".
+      pending credit not included in AEAT box 97.
 
     Applied credits appear in NEITHER box. The AEAT annual identity
     ``[86] = [95] − [97] − [98] − [662]`` binds the pair: box 97 + box 662 must
@@ -271,27 +273,32 @@ def derive_iva_compensation_year_end_carry_partition(
     *,
     filing_year: int,
 ) -> IvaCompensationYearEndCarryPartition:
-    """Partition the year's pending compensation credit into Modelo 390 boxes 97 and 662.
+    """Partition the year's pending compensation credit into the Modelo 390 annual carry ids.
 
     Drives BOTH year-end carry boxes from the single FIFO projection
     (``report``) plus the year's filed period states, so they partition the
     year's pending credit with no double-count and no drop (the AEAT identity).
 
-    The discriminator between box 97 (carried into the last period) and box 662
-    (generated-but-not-carried) is the last filed period's available
-    carry-forward saldo (``available_end_amount`` = casilla 87 + generated):
+    The discriminator between ``iva.anual.compensacion-ultimo-periodo-97``
+    (AEAT box 97, carried into the last period) and
+    ``iva.anual.compensacion-generada-ejercicio-no-97`` (AEAT box 662,
+    generated-but-not-carried) is the last filed period's available
+    carry-forward saldo (``available_end_amount`` =
+    ``iva.compensacion-pendiente-periodos-posteriores`` + generated):
 
-    - ``box 97`` = the year-generated credit carried into the last period —
-      the last filed period's disponible (``available_end_amount``) capped at
-      the year's total remaining (the disponible may also carry prior-YEAR
-      credit, which box 97 must not double-count, hence the cap).
-    - ``box 662`` = the rest of the year's remaining credit (generated in the
+    - ``iva.anual.compensacion-ultimo-periodo-97`` = the year-generated credit
+      carried into the last period — the last filed period's disponible
+      (``available_end_amount``) capped at the year's total remaining (the
+      disponible may also carry prior-YEAR credit, which AEAT box 97 must not
+      double-count, hence the cap).
+    - ``iva.anual.compensacion-generada-ejercicio-no-97`` = the rest of the year's remaining credit (generated in the
       ejercicio but not carried into the last period's autoliquidación).
 
     In the common always-carry case every pending credit flows forward into the
-    last period, so box 97 collapses to the whole year's remaining and box 662
+    last period, so ``iva.anual.compensacion-ultimo-periodo-97`` collapses to the
+    whole year's remaining and ``iva.anual.compensacion-generada-ejercicio-no-97``
     is zero. When a period's credit does NOT carry into the last period (it left
-    the chain), that remaining lands in box 662.
+    the chain), that remaining lands in ``iva.anual.compensacion-generada-ejercicio-no-97``.
 
     Returns an :class:`IvaCompensationYearEndCarryPartition`.
     """
@@ -309,11 +316,12 @@ def derive_iva_compensation_year_end_carry_partition(
         key=lambda state: _period_sort_key(state.period),
     )
     last_disponible = year_states[-1].available_end_amount if year_states else _ZERO
-    # The last period's disponible is the year credit it carries forward (box
-    # 97); it may ALSO carry prior-YEAR credit still pending, which box 97 must
-    # not double-count, so cap at the year's own total remaining. Everything the
+    # The last period's disponible is the year credit it carries forward
+    # (iva.anual.compensacion-ultimo-periodo-97, AEAT box 97); it may ALSO carry
+    # prior-YEAR credit still pending, which that annual carry id must not
+    # double-count, so cap at the year's own total remaining. Everything the
     # year generated but the last period did not carry (it left the chain) is
-    # box 662 — the remainder of the partition.
+    # iva.anual.compensacion-generada-ejercicio-no-97 — the remainder of the partition.
     last_period = min(last_disponible, total_year_remaining)
     generated_not_in_last = total_year_remaining - last_period
     return IvaCompensationYearEndCarryPartition(

@@ -19,7 +19,7 @@ def _relation(**overrides: object) -> RelationDefinition:
         "dependency_role": "direct_calculation",
         "source_modelo": "303",
         "source_revision_selector": {"filing_year_delta": 0},
-        "source_output": "iva.resultado",
+        "source_casilla_id": "iva.resultado",
         "target_binding": "iva.previo",
         "period_alignment": {"mode": "previous_quarter"},
         "legal_refs": ("ley-37-1992:art-99",),

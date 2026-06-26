@@ -9,6 +9,7 @@ calculated.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
@@ -16,6 +17,7 @@ from pydantic import BaseModel, Field
 from ....core import STRICT_FROZEN_CONFIG, Period
 from ._bindings import RegistryModeloObservation
 from ._errors import RegistryValidationError
+from ._ids import BindingId, CasillaId, RelationId
 from ._period_offset_math import apply_period_offset
 from ._schema import ModeloRevision, RelationDefinition, filing_period_from_scope
 
@@ -37,12 +39,18 @@ class RegistryRelationSourceRequirement(BaseModel):
     filing_year: int = Field(ge=2000, le=2099)
     filing_periods: tuple[Period, ...] = ()
     periods: tuple[str, ...] = Field(min_length=1)
-    source_output: str = Field(min_length=1)
-    relation_ids: tuple[str, ...] = Field(min_length=1)
-    target_bindings: tuple[str, ...] = Field(min_length=1)
+    source_casilla_id: CasillaId = Field(min_length=1)
+    relation_ids: tuple[RelationId, ...] = Field(min_length=1)
+    target_bindings: tuple[BindingId, ...] = Field(min_length=1)
     dependency_role: str = Field(min_length=1)
     dependency_treatment: str = Field(min_length=1)
     aggregation_op: str = Field(min_length=1)
+
+
+@dataclass(slots=True)
+class _RelationRequirementBucket:
+    relation_ids: set[RelationId]
+    target_bindings: set[BindingId]
 
 
 def relation_source_requirements(
@@ -63,7 +71,10 @@ def relation_source_requirements(
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
     }
-    grouped: dict[tuple[str, int, tuple[str, ...], str, str, str, str], dict[str, set[str]]] = {}
+    grouped: dict[
+        tuple[str, int, tuple[str, ...], CasillaId, str, str, str],
+        _RelationRequirementBucket,
+    ] = {}
     for relation in revision.relations:
         if relation.target_periods and period not in relation.target_periods:
             continue
@@ -86,14 +97,14 @@ def relation_source_requirements(
             relation.source_modelo,
             source_year,
             tuple(source_periods),
-            relation.source_output,
+            relation.source_casilla_id,
             relation.dependency_role,
             str(classification.treatment),
             str((relation.aggregation or {}).get("op", "copy")),
         )
-        bucket = grouped.setdefault(key, {"relation_ids": set(), "target_bindings": set()})
-        bucket["relation_ids"].add(str(relation.id))
-        bucket["target_bindings"].add(str(relation.target_binding))
+        bucket = grouped.setdefault(key, _RelationRequirementBucket(relation_ids=set(), target_bindings=set()))
+        bucket.relation_ids.add(relation.id)
+        bucket.target_bindings.add(relation.target_binding)
     return tuple(
         RegistryRelationSourceRequirement(
             source_modelo=source_modelo,
@@ -104,9 +115,9 @@ def relation_source_requirements(
                 if (filing_period := filing_period_from_scope(source_year, source_period)) is not None
             ),
             periods=source_periods,
-            source_output=source_output,
-            relation_ids=tuple(sorted(values["relation_ids"])),
-            target_bindings=tuple(sorted(values["target_bindings"])),
+            source_casilla_id=source_casilla_id,
+            relation_ids=tuple(sorted(values.relation_ids)),
+            target_bindings=tuple(sorted(values.target_bindings)),
             dependency_role=dependency_role,
             dependency_treatment=dependency_treatment,
             aggregation_op=aggregation_op,
@@ -115,7 +126,7 @@ def relation_source_requirements(
             source_modelo,
             source_year,
             source_periods,
-            source_output,
+            source_casilla_id,
             dependency_role,
             dependency_treatment,
             aggregation_op,
@@ -125,10 +136,10 @@ def relation_source_requirements(
 
 def resolve_relation_values(
     revision: ModeloRevision,
-    external_outputs: Mapping[str, Decimal | tuple[Decimal, ...]],
+    external_outputs: Mapping[RelationId, Decimal | tuple[Decimal, ...]],
     *,
     period: str | None = None,
-) -> dict[str, Decimal]:
+) -> dict[RelationId, Decimal]:
     """Resolve typed relation values from caller-supplied external outputs.
 
     ``external_outputs`` is keyed by relation id. Aggregation defaults to copy;
@@ -148,7 +159,7 @@ def resolve_relation_values(
     unknown = sorted(set(external_outputs).difference(relation_ids))
     if unknown:
         raise RegistryValidationError(f"unknown relation ids: {unknown!r}")
-    resolved: dict[str, Decimal] = {}
+    resolved: dict[RelationId, Decimal] = {}
     for relation in relations:
         if relation.id not in external_outputs:
             raise RegistryValidationError(f"missing relation value for {relation.id!r}")
@@ -173,7 +184,7 @@ def resolve_relation_values_from_observations(
     *,
     filing_year: int,
     period: str,
-) -> dict[str, Decimal]:
+) -> dict[RelationId, Decimal]:
     """Resolve relation values from normalized filed-declaration observations.
 
     Args:
@@ -186,7 +197,7 @@ def resolve_relation_values_from_observations(
             observation matching.
     """
     available = tuple(observations)
-    external_outputs: dict[str, Decimal | tuple[Decimal, ...]] = {}
+    external_outputs: dict[RelationId, Decimal | tuple[Decimal, ...]] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
         values = tuple(_observed_requirement_values(requirement, available))
         raw_value: Decimal | tuple[Decimal, ...]
@@ -205,10 +216,10 @@ def resolve_relation_values_from_observations(
 
 def materialize_relation_binding_values(
     revision: ModeloRevision,
-    relation_values: Mapping[str, Decimal],
+    relation_values: Mapping[RelationId, Decimal],
     *,
     period: str | None = None,
-) -> dict[str, Decimal]:
+) -> dict[BindingId, Decimal]:
     """Copy resolved relation values into their declared target bindings.
 
     Relation ids remain the canonical formula-runtime keys. This helper is an
@@ -223,7 +234,7 @@ def materialize_relation_binding_values(
         period: Optional period token; restricts active relations to those
             whose ``target_periods`` set contains it.
     """
-    values: dict[str, Decimal] = {}
+    values: dict[BindingId, Decimal] = {}
     for relation in _active_relations(revision, period=period):
         if relation.id not in relation_values:
             continue
@@ -303,11 +314,11 @@ def _observed_requirement_values(
                 f"relation requirement {requirement.relation_ids!r} expected one observed filing "
                 f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, found {len(matches)}",
             )
-        value = matches[0].casilla_values.get(requirement.source_output)
+        value = matches[0].casilla_values.get(requirement.source_casilla_id)
         if value is None:
             raise RegistryValidationError(
-                f"relation requirement {requirement.relation_ids!r} requires observed output "
-                f"{requirement.source_output!r} from "
+                f"relation requirement {requirement.relation_ids!r} requires observed source casilla id "
+                f"{requirement.source_casilla_id!r} from "
                 f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
             )
         values.append(value)

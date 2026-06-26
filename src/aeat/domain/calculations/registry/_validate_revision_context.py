@@ -10,6 +10,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from ._casilla_membership import casillas_by_id
+from ._ids import BindingId, CasillaId, RelationId
 from ._schema import (
     AlgorithmBindingDefinition,
     AlgorithmProviderDefinition,
@@ -45,10 +47,10 @@ class RevisionValidationContext:
     application_link_ids: list[str]
     deadline_window_ids: list[str]
     filing_schedule_ids: list[str]
-    casilla_by_id: dict[str, CasillaDefinition]
+    casilla_by_id: dict[CasillaId, CasillaDefinition]
     formula_by_id: dict[str, FormulaDefinition]
-    binding_by_id: dict[str, DataBindingDefinition]
-    relation_by_id: dict[str, RelationDefinition]
+    binding_by_id: dict[BindingId, DataBindingDefinition]
+    relation_by_id: dict[RelationId, RelationDefinition]
     parameter_by_id: dict[str, ParameterDefinition]
     provider_by_id: dict[str, AlgorithmProviderDefinition]
     algorithm_binding_by_id: dict[str, AlgorithmBindingDefinition]
@@ -63,15 +65,15 @@ class RevisionValidationContext:
     support_removal_decision_by_id: dict[str, SupportRemovalDecisionDefinition]
     construct_by_id: dict[str, ConstructDefinition]
     dependency_classification_by_id: dict[str, DependencyClassificationDefinition]
-    casillas: set[str]
+    casillas: set[CasillaId]
     formulas: dict[str, FormulaDefinition]
-    bindings: set[str]
-    relations: set[str]
+    bindings: set[BindingId]
+    relations: set[RelationId]
     parameters: set[str]
     providers: set[str]
-    resolvable_values: set[str]
+    resolvable_values: set[BindingId | CasillaId | RelationId | str]
     export_field_ids: set[str]
-    exported_casillas: set[str]
+    exported_casillas: set[CasillaId]
 
     @property
     def construct_member_objects(
@@ -142,7 +144,7 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
         application_link_ids=ids_by_kind["application link"],
         deadline_window_ids=ids_by_kind["deadline window"],
         filing_schedule_ids=ids_by_kind["filing schedule"],
-        casilla_by_id={casilla.id: casilla for casilla in revision.casillas},
+        casilla_by_id=casillas_by_id(revision),
         formula_by_id=formula_by_id,
         binding_by_id=binding_by_id,
         relation_by_id=relation_by_id,
@@ -177,10 +179,10 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
             field.id for layout in revision.export_layouts for record in layout.records for field in record.fields
         },
         exported_casillas={
-            field.casilla
+            field.casilla_id
             for layout in revision.export_layouts
             for record in layout.records
             for field in record.fields
-            if field.casilla is not None
+            if field.casilla_id is not None
         },
     )

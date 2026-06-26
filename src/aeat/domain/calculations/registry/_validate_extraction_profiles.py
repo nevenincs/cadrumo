@@ -8,6 +8,7 @@ from pathlib import Path
 from ._schema import ExtractionProfileDefinition, ExtractionTargetDefinition
 
 _ALLOWED_EXTRACTION_PARSER_MODULE_PREFIXES: tuple[str, ...] = (
+    "aeat.adapters.inbound.borrador",
     "aeat.adapters.inbound.declaracion",
     "aeat.domain.calculations.registry",
 )

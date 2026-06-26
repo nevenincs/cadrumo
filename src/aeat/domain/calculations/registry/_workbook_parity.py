@@ -35,8 +35,10 @@ from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.hashing import hash_file as _hash_file
 from ....core.logging import get_logger
+from ._casilla_membership import declared_casilla_ids
 from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
+from ._ids import BindingId, CasillaId, RelationId, WorkbookOutputId, is_registry_id
 from ._schema import EvidenceTier, RegistrySnapshot
 from ._workbook_parity_models import (
     SyntheticInputSet,
@@ -380,10 +382,11 @@ def run_workbook_with_libreoffice(
     workbook_path: Path,
     *,
     inputs: Mapping[WorkbookCellRef, Decimal | int | str | bool],
-    outputs: Mapping[str, WorkbookCellRef],
+    outputs: Mapping[WorkbookOutputId, WorkbookCellRef],
     executable: str | None = None,
-) -> Mapping[str, Decimal | int | str | bool | None]:
+) -> Mapping[WorkbookOutputId, Decimal | int | str | bool | None]:
     """Run a local XLSX workbook with LibreOffice headless and return outputs."""
+    _workbook_output_id_set("workbook output cells", outputs)
     runner = _resolve_libreoffice_runner(executable)
     resolved = workbook_path.resolve()
     if not resolved.is_file():
@@ -594,10 +597,10 @@ def run_registry_workbook_parity(
     synthetic_input: SyntheticInputSet,
     workbook_path: Path,
     workbook: WorkbookArtefactReport,
-    output_cells: Mapping[str, WorkbookCellRef],
-    registry_outputs: Mapping[str, str],
+    output_cells: Mapping[WorkbookOutputId, WorkbookCellRef],
+    registry_outputs: Mapping[WorkbookOutputId, CasillaId],
     date_context: Mapping[str, date],
-    relation_values: Mapping[str, Decimal] | None = None,
+    relation_values: Mapping[RelationId, Decimal] | None = None,
     tolerance: Decimal = Decimal("0"),
     executable: str | None = None,
 ) -> WorkbookParityRunReport:
@@ -627,10 +630,11 @@ def run_registry_workbook_parity(
         raise RegistryValidationError(
             f"workbook {workbook.path!r} is {workbook.workbook_kind!r}, not an executable calculation oracle",
         )
+    _require_matching_output_ids("workbook output_cells", output_cells, "registry_outputs", registry_outputs)
     workbook_inputs: dict[WorkbookCellRef, Decimal | int | str | bool] = {}
-    registry_inputs: dict[str, Decimal] = {}
-    registry_binding_values: dict[str, Decimal] = {}
-    casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
+    registry_inputs: dict[CasillaId, Decimal] = {}
+    registry_binding_values: dict[BindingId, Decimal] = {}
+    casilla_ids = declared_casilla_ids(snapshot.revision)
     binding_ids = {binding.id for binding in snapshot.revision.bindings}
     for value in synthetic_input.values:
         if value.workbook_cell is not None:
@@ -663,12 +667,12 @@ def run_registry_workbook_parity(
     missing_outputs = sorted(set(registry_outputs.values()).difference(registry_result.values))
     if missing_outputs:
         raise RegistryValidationError(f"registry parity outputs are missing calculated casillas: {missing_outputs!r}")
-    registry_values = {
+    registry_values: dict[WorkbookOutputId, Decimal | int | str | bool | None] = {
         output_id: registry_result.values[casilla_id] for output_id, casilla_id in registry_outputs.items()
     }
-    formulas_by_target = {formula.target: formula for formula in snapshot.revision.formulas}
-    legal_refs: dict[str, tuple[str, ...]] = {}
-    source_refs: dict[str, tuple[str, ...]] = {}
+    formulas_by_target = {formula.target_casilla_id: formula for formula in snapshot.revision.formulas}
+    legal_refs: dict[WorkbookOutputId, tuple[str, ...]] = {}
+    source_refs: dict[WorkbookOutputId, tuple[str, ...]] = {}
     for output_id, casilla_id in registry_outputs.items():
         formula = formulas_by_target.get(casilla_id)
         if formula is not None:
@@ -745,13 +749,14 @@ def run_workbook_with_excel_com(
     workbook_path: Path,
     *,
     inputs: Mapping[WorkbookCellRef, Decimal | int | str | bool],
-    outputs: Mapping[str, WorkbookCellRef],
-) -> Mapping[str, Decimal | int | str | bool | None]:
+    outputs: Mapping[WorkbookOutputId, WorkbookCellRef],
+) -> Mapping[WorkbookOutputId, Decimal | int | str | bool | None]:
     """Run a local XLSX workbook with Excel COM and return selected output values.
 
     The workbook is opened read-only, link updates are disabled, alerts are
     disabled, and it is closed with ``SaveChanges=False``.
     """
+    _workbook_output_id_set("workbook output cells", outputs)
     if _detect_excel_com_clsid() is None:
         raise RegistryValidationError("Excel COM automation is not registered")
     resolved = workbook_path.resolve()
@@ -774,7 +779,7 @@ def run_workbook_with_excel_com(
         for cell, value in inputs.items():
             workbook.Worksheets(cell.sheet).Range(cell.coordinate).Value = _excel_value(value)
         excel.CalculateFullRebuild()
-        result: dict[str, Decimal | int | str | bool | None] = {}
+        result: dict[WorkbookOutputId, Decimal | int | str | bool | None] = {}
         for output_id, cell in outputs.items():
             result[output_id] = _coerce_excel_result(workbook.Worksheets(cell.sheet).Range(cell.coordinate).Value)
         return result
@@ -790,12 +795,12 @@ def compare_registry_to_workbook(
     synthetic_input: SyntheticInputSet,
     workbook: WorkbookArtefactReport,
     runner: WorkbookRunnerAvailability,
-    expected_workbook_values: Mapping[str, Decimal | int | str | bool | None],
-    actual_registry_values: Mapping[str, Decimal | int | str | bool | None],
-    output_cells: Mapping[str, WorkbookCellRef],
+    expected_workbook_values: Mapping[WorkbookOutputId, Decimal | int | str | bool | None],
+    actual_registry_values: Mapping[WorkbookOutputId, Decimal | int | str | bool | None],
+    output_cells: Mapping[WorkbookOutputId, WorkbookCellRef],
     registry_snapshot_id: str | None = None,
-    legal_refs: Mapping[str, tuple[str, ...]] | None = None,
-    source_refs: Mapping[str, tuple[str, ...]] | None = None,
+    legal_refs: Mapping[WorkbookOutputId, tuple[str, ...]] | None = None,
+    source_refs: Mapping[WorkbookOutputId, tuple[str, ...]] | None = None,
     tolerance: Decimal = Decimal("0"),
 ) -> WorkbookParityRunReport:
     """Build a deterministic parity comparison report from already-computed values.
@@ -803,10 +808,22 @@ def compare_registry_to_workbook(
     Returns:
         A :class:`WorkbookParityRunReport` comparing registry output to workbook cells.
     """
+    expected_ids = _workbook_output_id_set("expected workbook values", expected_workbook_values)
+    actual_ids = _workbook_output_id_set("actual registry values", actual_registry_values)
+    if expected_ids != actual_ids:
+        _raise_output_id_mismatch(
+            "expected workbook values",
+            expected_ids,
+            "actual registry values",
+            actual_ids,
+        )
+    cell_ids = _workbook_output_id_set("workbook output cells", output_cells)
+    if cell_ids != expected_ids:
+        _raise_output_id_mismatch("workbook output cells", cell_ids, "compared output values", expected_ids)
     comparisons: list[WorkbookParityComparison] = []
-    for output_id in sorted(set(expected_workbook_values) | set(actual_registry_values)):
-        expected = expected_workbook_values.get(output_id)
-        actual = actual_registry_values.get(output_id)
+    for output_id in sorted(expected_ids):
+        expected = expected_workbook_values[output_id]
+        actual = actual_registry_values[output_id]
         cell = output_cells.get(output_id)
         if cell is None:
             raise RegistryValidationError(f"missing workbook output cell for {output_id!r}")
@@ -832,6 +849,47 @@ def compare_registry_to_workbook(
         runner=runner,
         comparisons=tuple(comparisons),
         status=run_status,
+    )
+
+
+def _workbook_output_id_set(
+    surface: str,
+    values: Mapping[WorkbookOutputId, object],
+) -> frozenset[WorkbookOutputId]:
+    invalid = sorted(
+        repr(output_id)
+        for output_id in values
+        if not isinstance(output_id, str) or not is_registry_id(output_id)
+    )
+    if invalid:
+        raise RegistryValidationError(f"{surface} contains invalid workbook output ids: {invalid!r}")
+    return frozenset(values)
+
+
+def _require_matching_output_ids(
+    left_name: str,
+    left: Mapping[WorkbookOutputId, object],
+    right_name: str,
+    right: Mapping[WorkbookOutputId, object],
+) -> None:
+    left_ids = _workbook_output_id_set(left_name, left)
+    right_ids = _workbook_output_id_set(right_name, right)
+    if left_ids != right_ids:
+        _raise_output_id_mismatch(left_name, left_ids, right_name, right_ids)
+
+
+def _raise_output_id_mismatch(
+    left_name: str,
+    left_ids: frozenset[WorkbookOutputId],
+    right_name: str,
+    right_ids: frozenset[WorkbookOutputId],
+) -> None:
+    missing_from_left = sorted(right_ids.difference(left_ids))
+    missing_from_right = sorted(left_ids.difference(right_ids))
+    raise RegistryValidationError(
+        "workbook parity output ids must match exactly; "
+        f"{left_name} missing {missing_from_left!r}; "
+        f"{right_name} missing {missing_from_right!r}",
     )
 
 

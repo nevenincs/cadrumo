@@ -14,6 +14,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import CasillaId, validated_casilla_id
 from .._calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -41,6 +42,10 @@ def _hex(seed: str) -> str:
 _TX_A = _hex("a")
 _TX_B = _hex("b")
 _FP = _hex("f")
+_EVIDENCE_INPUT_CASILLA: CasillaId = validated_casilla_id(
+    "0001",
+    surface="snapshot evidence coverage input casilla",
+)
 
 
 def _evidence_row(transaction_id: str) -> LedgerEvidenceRow:
@@ -68,7 +73,7 @@ def _revision(*, snapshot_ids: tuple[str, ...], evidence_ids: tuple[str, ...]) -
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={"x": "1"},
+        input_values_by_casilla_id={_EVIDENCE_INPUT_CASILLA: "1"},
         binding_overrides={},
         casilla_values={},
         source_transaction_ids=snapshot_ids,
@@ -77,7 +82,7 @@ def _revision(*, snapshot_ids: tuple[str, ...], evidence_ids: tuple[str, ...]) -
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        inputs_snapshot={"x": "1"},
+        input_values_by_casilla_id={_EVIDENCE_INPUT_CASILLA: "1"},
         source_transaction_ids=snapshot_ids,
         ledger_filing_snapshot=snapshot,
         ledger_filing_evidence=evidence,
@@ -117,7 +122,7 @@ def test_non_ledger_revision_passes_trivially() -> None:
     work_unit_id = _hex("9")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={"x": "1"},
+        input_values_by_casilla_id={_EVIDENCE_INPUT_CASILLA: "1"},
         binding_overrides={},
         casilla_values={},
         source_transaction_ids=(),
@@ -126,7 +131,7 @@ def test_non_ledger_revision_passes_trivially() -> None:
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.BORRADOR,
-        inputs_snapshot={"x": "1"},
+        input_values_by_casilla_id={_EVIDENCE_INPUT_CASILLA: "1"},
         created_at=_T0,
         updated_at=_T0,
     )

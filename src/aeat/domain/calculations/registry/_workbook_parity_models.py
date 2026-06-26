@@ -11,6 +11,7 @@ from ....core import STRICT_FROZEN_CONFIG
 from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ._errors import RegistryValidationError
+from ._ids import BindingId, CasillaId, WorkbookOutputId
 from ._schema import EvidenceTier
 from ._workbook_parity_types import (
     ParityStatus,
@@ -124,7 +125,7 @@ class SyntheticInputValue(WorkbookParityModel):
     id: str
     value: Decimal | int | str | bool
     workbook_cell: WorkbookCellRef | None = None
-    registry_binding: str | None = None
+    registry_binding: BindingId | CasillaId | None = None
 
     @model_validator(mode="after")
     def _validate_target(self) -> SyntheticInputValue:
@@ -154,7 +155,7 @@ class WorkbookRunnerAvailability(WorkbookParityModel):
 class WorkbookParityComparison(WorkbookParityModel):
     """One registry-vs-workbook output comparison."""
 
-    output_id: str
+    output_id: WorkbookOutputId
     workbook_cell: WorkbookCellRef
     expected_workbook_value: Decimal | int | str | bool | None
     actual_registry_value: Decimal | int | str | bool | None

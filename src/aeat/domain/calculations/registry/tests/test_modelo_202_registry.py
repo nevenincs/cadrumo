@@ -71,7 +71,7 @@ def test_committed_modelo_202_cuota_base_relation_periods_and_year_offsets_are_d
 
     one_p = relations["modelo-202-2025-y-siguientes-rel-cuota-base-1p"]
     assert one_p.source_modelo == "200"
-    assert one_p.source_output == "DP200014B:00592"
+    assert one_p.source_casilla_id == "DP200014B:00592"
     assert one_p.target_binding == "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
     assert one_p.source_revision_selector["filing_year_delta"] == -2
     assert one_p.period_alignment["filing_year_delta"] == -2
@@ -80,7 +80,7 @@ def test_committed_modelo_202_cuota_base_relation_periods_and_year_offsets_are_d
 
     two_p_three_p = relations["modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p"]
     assert two_p_three_p.source_modelo == "200"
-    assert two_p_three_p.source_output == "DP200014B:00592"
+    assert two_p_three_p.source_casilla_id == "DP200014B:00592"
     assert two_p_three_p.target_binding == "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
     assert two_p_three_p.source_revision_selector["filing_year_delta"] == -1
     assert two_p_three_p.period_alignment["filing_year_delta"] == -1

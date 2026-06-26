@@ -12,7 +12,7 @@ is invisible unless a roundtrip fixture populates it with real
 
 The fixture below populates EVERY defaultable field with a non-default
 value: a non-default lifecycle state (``VERIFICADO_COMPLETO`` with the
-required audit triple), populated ``inputs_snapshot`` / ``binding_overrides``
+required audit triple), populated ``input_values_by_casilla_id`` / ``binding_overrides``
 / ``casilla_values``, populated ``source_transaction_ids``, and a populated
 ``observations`` tuple. The anti-tautology proof mutates the on-disk
 encrypted JSON to drop the ``observations`` field and asserts the boundary
@@ -27,10 +27,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.storage import SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations.registry._bindings import CasillaObservation
+from ...calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
 from .._calculation_repository import (
     _CALCULATION_CATALOGUE_VERSION,
     _CALCULATION_NAMESPACE,
@@ -48,6 +49,12 @@ from .._calculation_revision import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "modelo-runtime"
+_IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.base-imponible",
+    surface="_IVA_BASE_IMPONIBLE_CASILLA",
+)
+_CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01")
+_CASILLA_12: CasillaId = validated_casilla_id("casilla-12", surface="_CASILLA_12")
 
 
 def _hex(seed: str) -> str:
@@ -71,14 +78,14 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
     created_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
     verified_at = created_at + timedelta(hours=3)
 
-    inputs_snapshot = {"iva.base-imponible": "1000.00"}
+    input_values_by_casilla_id = {_IVA_BASE_IMPONIBLE_CASILLA: "1000.00"}
     binding_overrides = {"modelo-303-compensacion-pendiente-anteriores": "50.00"}
-    casilla_values = {"casilla-01": Decimal("1000.00"), "casilla-12": Decimal("210.00")}
+    casilla_values = {_CASILLA_01: Decimal("1000.00"), _CASILLA_12: Decimal("210.00")}
     source_transaction_ids = (_hex("d"), _hex("e"))
 
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot=inputs_snapshot,
+        input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
@@ -86,21 +93,23 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
 
     observations = (
         CasillaObservation(
-            casilla_id="casilla-01",
+            casilla_id=_CASILLA_01,
             value=Decimal("1000.00"),
             formula_id=None,
             operand_refs=(),
+            operand_casilla_refs=(),
             operand_values=(),
-            legal_refs=("Ley 37/1992 art. 78",),
+            legal_refs=("ley-37-1992:art-78",),
             source_refs=("aeat-modelo-303-instrucciones-2024",),
         ),
         CasillaObservation(
-            casilla_id="casilla-12",
+            casilla_id=_CASILLA_12,
             value=Decimal("210.00"),
             formula_id="iva-cuota-devengada-general",
-            operand_refs=("casilla-01",),
+            operand_refs=(_CASILLA_01,),
+            operand_casilla_refs=(_CASILLA_01,),
             operand_values=(Decimal("1000.00"),),
-            legal_refs=("Ley 37/1992 art. 90",),
+            legal_refs=("ley-37-1992:art-90",),
             source_refs=("aeat-modelo-303-instrucciones-2024",),
         ),
     )
@@ -109,7 +118,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        inputs_snapshot=inputs_snapshot,
+        input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
         source_transaction_ids=source_transaction_ids,
         casilla_values=casilla_values,
@@ -142,8 +151,9 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert len(revision.observations) == 2
     computed = next(o for o in revision.observations if o.formula_id is not None)
     assert computed.formula_id == "iva-cuota-devengada-general"
-    assert computed.operand_refs == ("casilla-01",)
-    assert computed.legal_refs == ("Ley 37/1992 art. 90",)
+    assert computed.operand_refs == (_CASILLA_01,)
+    assert computed.operand_casilla_refs == (_CASILLA_01,)
+    assert computed.legal_refs == ("ley-37-1992:art-90",)
     assert computed.source_refs == ("aeat-modelo-303-instrucciones-2024",)
     assert (profile.paths.db_dir / "aeat.db").is_file()
 
@@ -195,14 +205,8 @@ def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
             payload=_json.dumps(envelope).encode("utf-8"),
         )
 
-        mutated = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
-
-    assert mutated != original, (
-        "anti-tautology proof failed: dropping the observations "
-        "envelope did NOT surface on load. The calculation-revision "
-        "boundary is tautological and every roundtrip in the suite "
-        "is suspect."
-    )
+        with pytest.raises(ValidationError, match="must carry typed observations"):
+            CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
 
 def test_calculation_revision_catalogue_wrong_inner_classification_is_localized(

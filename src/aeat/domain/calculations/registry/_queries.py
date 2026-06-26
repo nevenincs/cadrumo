@@ -19,8 +19,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ....core import Period
 from ._authority import ValidatedRegistryAuthority
-from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, FormulaId
+from ._errors import AmbiguousRevisionSelectionError, RegistryValidationError
+from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, ParameterId, RelationId, SourceRefId
 from ._runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -155,8 +155,8 @@ class ModeloDescribeReport(BaseModel):
     computed_casilla_count: int
     binding_count: int
     formula_count: int
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
 
 
 class ModeloCasillaRow(BaseModel):
@@ -203,7 +203,7 @@ class ModeloCasillaRow(BaseModel):
     input_kind: InputKind
     required: bool
     formula: str | None
-    binding: str | None
+    binding: BindingId | None
     form_number: str | None
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
@@ -337,9 +337,9 @@ class ModeloFormulaRow(BaseModel):
 
     Attributes:
         formula_id: Unique registry identifier for this formula.
-        target: Identifier of the casilla this formula writes its result
-            into.
-        input_casillas: Casilla identifiers referenced in the formula
+        target_casilla_id: Identifier of the casilla this formula writes its
+            result into.
+        input_casilla_ids: Casilla identifiers referenced in the formula
             expression, deduplicated in order of first appearance.
         input_bindings: Binding identifiers referenced in the expression,
             deduplicated in order of first appearance.
@@ -357,24 +357,24 @@ class ModeloFormulaRow(BaseModel):
             publications or working documents.
     """
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     formula_id: FormulaId
-    target: str
-    input_casillas: tuple[str, ...]
-    input_bindings: tuple[str, ...]
-    input_parameters: tuple[str, ...]
-    input_relations: tuple[str, ...]
+    target_casilla_id: CasillaId
+    input_casilla_ids: tuple[CasillaId, ...]
+    input_bindings: tuple[BindingId, ...]
+    input_parameters: tuple[ParameterId, ...]
+    input_relations: tuple[RelationId, ...]
     expression: Mapping[str, object]
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
 
 
 class ModeloFormulasReport(BaseModel):
     """Full formula listing for a single resolved modelo revision.
 
     Returned by ``RegistryQueryService.formulas``. Each row exposes one
-    formula's target casilla and its complete input dependency set.
+    formula's target_casilla_id and its complete input dependency set.
 
     Attributes:
         code: Modelo identifier (e.g. ``"200"``).
@@ -581,7 +581,7 @@ class RegistryQueryService:
         definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
         rows = [
             ModeloCasillaRow(
-                casilla_id=str(casilla.id),
+                casilla_id=casilla.id,
                 number=casilla.number,
                 label=casilla.label,
                 section=tuple(casilla.section),
@@ -630,7 +630,7 @@ class RegistryQueryService:
         )
         rows = [
             ModeloCasillaRow(
-                casilla_id=str(casilla.id),
+                casilla_id=casilla.id,
                 number=casilla.number,
                 label=casilla.label,
                 section=tuple(casilla.section),
@@ -711,8 +711,8 @@ class RegistryQueryService:
         rows = tuple(
             ModeloFormulaRow(
                 formula_id=str(formula.id),
-                target=str(formula.target),
-                input_casillas=tuple(dict.fromkeys(expression_casilla_refs(formula.expression))),
+                target_casilla_id=formula.target_casilla_id,
+                input_casilla_ids=tuple(dict.fromkeys(expression_casilla_refs(formula.expression))),
                 input_bindings=tuple(dict.fromkeys(expression_binding_refs(formula.expression))),
                 input_parameters=tuple(dict.fromkeys(expression_parameter_refs(formula.expression))),
                 input_relations=tuple(dict.fromkeys(expression_relation_refs(formula.expression))),
@@ -761,7 +761,12 @@ class RegistryQueryService:
         ]
         if not covering:
             raise RegistryValidationError(f"modelo {definition.id} has no revision covering filing year {filing_year}")
-        revision = max(covering, key=lambda item: (item.valid_from, str(item.id)))
+        if len(covering) > 1:
+            raise AmbiguousRevisionSelectionError(
+                modelo_id=str(definition.id),
+                candidate_ids=tuple(revision.id for revision in covering),
+            )
+        revision = covering[0]
         return ModeloBindingsReport(
             code=str(definition.id),
             revision=str(revision.id),
@@ -818,7 +823,7 @@ class RegistryQueryService:
     ) -> ModeloFormulasReport:
         """Return the full formula listing for a resolved modelo revision.
 
-        Each row exposes one formula's target casilla and its complete input
+        Each row exposes one formula's target_casilla_id and its complete input
         dependency set (casillas, bindings, parameters, and relation
         references), letting contributors inspect what drives a computed
         casilla without reading the raw registry TOML.
@@ -840,8 +845,8 @@ class RegistryQueryService:
         rows = tuple(
             ModeloFormulaRow(
                 formula_id=str(formula.id),
-                target=str(formula.target),
-                input_casillas=tuple(dict.fromkeys(expression_casilla_refs(formula.expression))),
+                target_casilla_id=formula.target_casilla_id,
+                input_casilla_ids=tuple(dict.fromkeys(expression_casilla_refs(formula.expression))),
                 input_bindings=tuple(dict.fromkeys(expression_binding_refs(formula.expression))),
                 input_parameters=tuple(dict.fromkeys(expression_parameter_refs(formula.expression))),
                 input_relations=tuple(dict.fromkeys(expression_relation_refs(formula.expression))),
@@ -940,14 +945,14 @@ def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingRow, ...]:
     enum_consumed = enum_consumed_binding_ids(revision)
     return tuple(
         ModeloBindingRow(
-            binding_id=str(binding.id),
+            binding_id=binding.id,
             source=binding.source,
             typed_enum=binding.typed_enum,
-            input_channel="enum" if str(binding.id) in enum_consumed else "decimal",
+            input_channel="enum" if binding.id in enum_consumed else "decimal",
             selector=_public_mapping(binding.selector),
             aggregation={"op": binding.aggregation.op.value} if binding.aggregation is not None else None,
-            legal_refs=tuple(str(ref) for ref in binding.legal_refs),
-            source_refs=tuple(str(ref) for ref in binding.source_refs),
+            legal_refs=tuple(binding.legal_refs),
+            source_refs=tuple(binding.source_refs),
             borrador_capable=binding.aeat_prefilled is True,
         )
         for binding in revision.bindings

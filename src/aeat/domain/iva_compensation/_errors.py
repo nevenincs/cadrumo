@@ -41,6 +41,10 @@ class IvaCompensationDecimalParseError(AeatError, ValueError):
     """
 
 
+class IvaCompensationCasillaReferenceError(AeatError, ValueError):
+    """Raised when IVA compensation input uses a noncanonical casilla reference."""
+
+
 class IvaCompensationReconciliationInputError(AeatError, ValueError):
     """Raised when IVA compensation wallet reconciliation inputs are invalid."""
 

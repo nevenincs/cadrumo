@@ -15,6 +15,7 @@ from decimal import Decimal
 
 import pytest
 
+from .._ids import CasillaId, validated_casilla_id
 from .._runtime_graph import (
     expression_binding_refs,
     expression_casilla_refs,
@@ -24,6 +25,11 @@ from .._runtime_graph import (
 from .._schema import FormulaExpression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_CASILLA_0001: CasillaId = validated_casilla_id("0001", surface="_CASILLA_0001")
+_CASILLA_0002: CasillaId = validated_casilla_id("0002", surface="_CASILLA_0002")
+_CASILLA_0003: CasillaId = validated_casilla_id("0003", surface="_CASILLA_0003")
+_CASILLA_0505: CasillaId = validated_casilla_id("0505", surface="_CASILLA_0505")
 
 
 def _leaf(**kwargs: object) -> FormulaExpression:
@@ -39,17 +45,17 @@ def _operator(op: str, *args: FormulaExpression) -> FormulaExpression:
 
 
 def test_expression_casilla_refs_returns_direct_leaf() -> None:
-    assert expression_casilla_refs(_leaf(casilla="0001")) == ("0001",)
+    assert expression_casilla_refs(_leaf(casilla_id=_CASILLA_0001)) == (_CASILLA_0001,)
 
 
 def test_expression_casilla_refs_walks_nested_args_in_order() -> None:
     expression = _operator(
         "add",
-        _leaf(casilla="0001"),
-        _operator("subtract", _leaf(casilla="0002"), _leaf(casilla="0003")),
+        _leaf(casilla_id=_CASILLA_0001),
+        _operator("subtract", _leaf(casilla_id=_CASILLA_0002), _leaf(casilla_id=_CASILLA_0003)),
     )
 
-    assert expression_casilla_refs(expression) == ("0001", "0002", "0003")
+    assert expression_casilla_refs(expression) == (_CASILLA_0001, _CASILLA_0002, _CASILLA_0003)
 
 
 def test_expression_binding_refs_walks_nested_args() -> None:
@@ -80,7 +86,7 @@ def test_expression_parameter_refs_walks_dispatch_table_values() -> None:
     """
     expression = _operator(
         "lookup_bracket_by_ccaa",
-        _leaf(casilla="0505"),
+        _leaf(casilla_id=_CASILLA_0505),
         _leaf(binding="renta-2025-profile-tax-residence-ccaa"),
         _leaf(
             dispatch_table={
@@ -105,7 +111,7 @@ def test_expression_parameter_refs_walks_dispatch_table_inside_nested_args() -> 
         _leaf(parameter="renta-2025-deduccion-rate"),
         _operator(
             "lookup_bracket_by_ccaa",
-            _leaf(casilla="0505"),
+            _leaf(casilla_id=_CASILLA_0505),
             _leaf(binding="renta-2025-profile-tax-residence-ccaa"),
             _leaf(dispatch_table={"madrid": "renta-2025-escala-autonomica-madrid-base-general"}),
         ),

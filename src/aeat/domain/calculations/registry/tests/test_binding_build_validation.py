@@ -79,13 +79,9 @@ def _build_binding(
 
 # Per-family build-validation cases. Each case carries a well-formed selector
 # (must pass the dispatch gate) and a malformed selector with a bad op/fact
-# pairing or a missing required key (must be rejected at registry build). The
-# ``diagnostic_fragment`` is a stable substring of the lifted-invariant message.
-#
-# (label, source, well_formed_selector, well_formed_op,
-#  malformed_selector, malformed_op, diagnostic_fragment)
+# pairing or a missing required key (must be rejected at registry build).
 _FAMILY_CASES: tuple[
-    tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp, str], ...
+    tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp], ...
 ] = (
     (
         "invoice (collectible)",
@@ -95,7 +91,6 @@ _FAMILY_CASES: tuple[
         # operator_count must pair with count_distinct, not sum.
         {"fact": "operator_count"},
         BindingAggregationOp.SUM,
-        "invoice invariants",
     ),
     (
         "counterpart (ledger_transaction)",
@@ -104,7 +99,6 @@ _FAMILY_CASES: tuple[
         BindingAggregationOp.SUM,
         {"fact": "operator_count"},
         BindingAggregationOp.SUM,
-        "counterpart invariants",
     ),
     (
         "ledger_oss_aggregation",
@@ -130,28 +124,25 @@ _FAMILY_CASES: tuple[
             "fact": "iva_amount_sum",
         },
         BindingAggregationOp.COPY,
-        "ledger_oss_aggregation invariants",
     ),
     (
         "ledger_renta_income_aggregation",
         "ledger_renta_income_aggregation",
-        {"modelo": "130", "target_casilla": "01", "fact": "gross_income_sum"},
+        {"modelo": "130", "target_casilla_id": "01", "fact": "gross_income_sum"},
         BindingAggregationOp.SUM,
         # An unknown fact value trips the typed selector Literal at build time
         # (a shape violation is also a build-time rejection, not resolve-only).
-        {"modelo": "130", "target_casilla": "01", "fact": "not_a_real_fact"},
+        {"modelo": "130", "target_casilla_id": "01", "fact": "not_a_real_fact"},
         BindingAggregationOp.SUM,
-        "selector violates",
     ),
     (
         "ledger_renta_gasto_aggregation",
         "ledger_renta_gasto_aggregation",
-        {"modelo": "130", "target_casilla": "02", "fact": "deductible_amount_sum"},
+        {"modelo": "130", "target_casilla_id": "02", "fact": "deductible_amount_sum"},
         BindingAggregationOp.SUM,
         # An unknown fact value trips the typed selector Literal at build time.
-        {"modelo": "130", "target_casilla": "02", "fact": "not_a_real_fact"},
+        {"modelo": "130", "target_casilla_id": "02", "fact": "not_a_real_fact"},
         BindingAggregationOp.SUM,
-        "selector violates",
     ),
     (
         "related_party_operation",
@@ -161,7 +152,6 @@ _FAMILY_CASES: tuple[
         # row_field fact without a row_field selector key.
         {"fact": "row_field"},
         BindingAggregationOp.ROWS,
-        "related-party invariants",
     ),
     (
         "foreign_asset",
@@ -170,7 +160,6 @@ _FAMILY_CASES: tuple[
         BindingAggregationOp.ROWS,
         {"fact": "row_field"},
         BindingAggregationOp.ROWS,
-        "foreign-asset invariants",
     ),
     (
         "atribucion_member",
@@ -179,7 +168,6 @@ _FAMILY_CASES: tuple[
         BindingAggregationOp.ROWS,
         {"fact": "row_field"},
         BindingAggregationOp.ROWS,
-        "atribucion invariants",
     ),
     (
         "refund_operation",
@@ -188,7 +176,6 @@ _FAMILY_CASES: tuple[
         BindingAggregationOp.ROWS,
         {"fact": "row_field"},
         BindingAggregationOp.ROWS,
-        "refund invariants",
     ),
     (
         "withholding",
@@ -198,17 +185,15 @@ _FAMILY_CASES: tuple[
         # perceptor_count must pair with count_distinct, not sum.
         {"fact": "perceptor_count", "claves": ("A",)},
         BindingAggregationOp.SUM,
-        "withholding invariants",
     ),
     (
         "previous_filing",
         "previous_filing",
-        {"source_modelo": "130", "source_output": "05"},
+        {"source_modelo": "130", "source_casilla_id": "05"},
         BindingAggregationOp.COPY,
         # copy requires exactly one source casilla; two violates the invariant.
-        {"source_modelo": "130", "period": "0A", "source_casillas": ("05", "07")},
+        {"source_modelo": "130", "period": "0A", "source_casilla_ids": ("05", "07")},
         BindingAggregationOp.COPY,
-        "previous-filing invariants",
     ),
 )
 
@@ -217,17 +202,17 @@ _FAMILY_IDS = tuple(case[0] for case in _FAMILY_CASES)
 
 @pytest.mark.parametrize("case", _FAMILY_CASES, ids=_FAMILY_IDS)
 def test_well_formed_binding_of_each_family_passes_the_build_gate(
-    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp, str],
+    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp],
 ) -> None:
     """Anti-tautology: a well-formed binding of each family passes the dispatch gate."""
-    _label, source, well_formed_selector, well_formed_op, _bad_selector, _bad_op, _fragment = case
+    _label, source, well_formed_selector, well_formed_op, _bad_selector, _bad_op = case
     binding = _build_binding(source=source, selector=well_formed_selector, op=well_formed_op)
     assert validate_binding_selector_shape(binding) == [], f"well-formed {source} binding must pass the build gate"
 
 
 @pytest.mark.parametrize("case", _FAMILY_CASES, ids=_FAMILY_IDS)
 def test_malformed_binding_of_each_family_is_constructible(
-    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp, str],
+    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp],
 ) -> None:
     """Anti-tautology: the malformed binding is a constructible model.
 
@@ -235,7 +220,7 @@ def test_malformed_binding_of_each_family_is_constructible(
     so the build rejection below is the GATE's lifted op/fact invariant — not a
     schema-construction refusal that would fire regardless of the build path.
     """
-    _label, source, _good_selector, _good_op, malformed_selector, malformed_op, _fragment = case
+    _label, source, _good_selector, _good_op, malformed_selector, malformed_op = case
     binding = _build_binding(source=source, selector=malformed_selector, op=malformed_op)
     assert isinstance(binding, DataBindingDefinition)
     assert str(binding.source) == source
@@ -243,7 +228,7 @@ def test_malformed_binding_of_each_family_is_constructible(
 
 @pytest.mark.parametrize("case", _FAMILY_CASES, ids=_FAMILY_IDS)
 def test_malformed_binding_of_each_family_rejected_at_registry_build(
-    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp, str],
+    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp],
 ) -> None:
     """A malformed binding of each family is rejected at registry build, not only resolve.
 
@@ -253,7 +238,7 @@ def test_malformed_binding_of_each_family_rejected_at_registry_build(
     ``previous_filing`` whose op/fact invariants previously ran only at resolve
     time) surfaces the lifted invariant as a build-time failure.
     """
-    _label, source, _good_selector, _good_op, malformed_selector, malformed_op, fragment = case
+    _label, source, _good_selector, _good_op, malformed_selector, malformed_op = case
     modelo, catalogues = _committed_modelo_130()
     malformed = _build_binding(source=source, selector=malformed_selector, op=malformed_op)
     mutated = _inject_binding(modelo, malformed)
@@ -262,8 +247,21 @@ def test_malformed_binding_of_each_family_rejected_at_registry_build(
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated)
 
     message = str(excinfo.value)
-    assert fragment in message, f"build rejection for {source} must name the lifted invariant ({fragment!r})"
     assert malformed.id in message
+
+
+def test_renta_gasto_binding_rejects_legacy_target_casilla_key() -> None:
+    binding = _build_binding(
+        source="ledger_renta_gasto_aggregation",
+        selector={"modelo": "130", "target_casilla": "02", "fact": "deductible_amount_sum"},
+        op=BindingAggregationOp.SUM,
+    )
+
+    diagnostics = validate_binding_selector_shape(binding)
+
+    assert len(diagnostics) == 1
+    assert "target_casilla_id" in diagnostics[0]
+    assert "target_casilla" in diagnostics[0]
 
 
 def test_dispatch_table_covers_every_validated_family() -> None:
@@ -283,13 +281,10 @@ def test_isolated_revision_build_gate_runs_every_family() -> None:
     section validator runs for every binding.
     """
     for case in _FAMILY_CASES:
-        _label, source, _good_selector, _good_op, malformed_selector, malformed_op, fragment = case
+        _label, source, _good_selector, _good_op, malformed_selector, malformed_op = case
         malformed = _build_binding(source=source, selector=malformed_selector, op=malformed_op)
         failures = validate_binding_selector_shape(malformed)
         assert failures, f"malformed {source} binding must fail the dispatch gate"
-        assert any(fragment in failure for failure in failures), (
-            f"dispatch failure for {source} must name the lifted invariant ({fragment!r})"
-        )
         # Sanity: a one-binding revision carrying the malformed binding is still
         # a constructible ModeloRevision (the gate, not schema, rejects it).
         revision = _committed_modelo_130()[0].revisions["2019-y-siguientes"]

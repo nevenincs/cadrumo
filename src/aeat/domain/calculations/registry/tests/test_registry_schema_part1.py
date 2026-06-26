@@ -7,7 +7,8 @@ from collections.abc import Callable
 import pytest
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .. import RegistrySnapshot
+from ..._export_field_kind import CasillaFieldKind
+from .. import CasillaId, RegistrySnapshot, validated_casilla_id
 from ._registry_schema_support import (
     _EXPECTED_DEADLINE_WINDOWS,
     _EXPECTED_LIVE_CROSS_REFERENCES,
@@ -42,6 +43,10 @@ from ._registry_schema_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+_MISSING_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_CASILLA")
+_NAMED_LABEL_CASILLA: CasillaId = validated_casilla_id("my-label", surface="_NAMED_LABEL_CASILLA")
+_NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
+_DECL_CNAE_CASILLA: CasillaId = validated_casilla_id("decl.cnae", surface="_DECL_CNAE_CASILLA")
 
 
 @pytest.fixture
@@ -277,6 +282,48 @@ def test_modelo_file_rejects_empty_filing_grade_evidence(tmp_path: Path) -> None
         load_modelo_file(path)
 
 
+def test_modelo_file_rejects_casilla_binding_id_collision(tmp_path: Path) -> None:
+    path = tmp_path / "999.toml"
+    path.write_text(
+        """
+[modelo]
+id = "999"
+title = "Collision fixture"
+official_name = "Collision fixture"
+tax_domain = "iva"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casillas]]
+id = "01"
+number = "01"
+label = "Canonical owner"
+section = ["test"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".bindings]]
+id = "01"
+source = "manual_input"
+selector = { record = "DPA", field = "test", offset = 1, length = 1, data_type = "integer" }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryValidationError, match="duplicate registry id '01' shared by casilla, binding"):
+        load_modelo_file(path)
+
+
 def test_snapshot_requires_source_integrity(tmp_path: Path) -> None:
     modelo, catalogues = _committed_registry()
 
@@ -298,15 +345,31 @@ def test_validator_rejects_formula_id_matching_casilla_id() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
     formula = revision.formulas[0]
-    renamed_formula = formula.model_copy(update={"id": formula.target})
+    renamed_formula = formula.model_copy(update={"id": formula.target_casilla_id})
     casillas = tuple(
-        casilla.model_copy(update={"formula": renamed_formula.id}) if casilla.id == formula.target else casilla
+        casilla.model_copy(update={"formula": renamed_formula.id})
+        if casilla.id == formula.target_casilla_id
+        else casilla
         for casilla in revision.casillas
     )
     formulas = (renamed_formula, *revision.formulas[1:])
     mutated = revision.model_copy(update={"casillas": casillas, "formulas": formulas})
 
-    with pytest.raises(RegistryValidationError, match=f"duplicate registry id '{formula.target}'"):
+    with pytest.raises(RegistryValidationError, match=f"duplicate registry id '{formula.target_casilla_id}'"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_reports_casilla_binding_id_collision_owners() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    collision_id = revision.casillas[0].id
+    collision_binding = revision.bindings[0].model_copy(update={"id": collision_id})
+    mutated = revision.model_copy(update={"bindings": (*revision.bindings, collision_binding)})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=rf"duplicate registry id '{re.escape(collision_id)}' shared by casilla, binding",
+    ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
@@ -314,7 +377,7 @@ def test_validator_rejects_formula_target_mismatch() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
     formula = revision.formulas[0]
-    mismatched_formula = formula.model_copy(update={"target": "01"})
+    mismatched_formula = formula.model_copy(update={"target_casilla_id": "01"})
     mutated = revision.model_copy(update={"formulas": (mismatched_formula, *revision.formulas[1:])})
 
     with pytest.raises(RegistryValidationError, match="targeting '01'"):
@@ -556,7 +619,7 @@ def test_export_fields_can_reference_structured_bindings() -> None:
                 "id": "modelo-130-export-bound-net-income",
                 "kind": "binding",
                 "binding": revision.bindings[0].id,
-                "casilla": None,
+                "casilla_id": None,
                 "literal": None,
                 "header_key": None,
                 "draft_attribute": None,
@@ -570,7 +633,7 @@ def test_export_fields_can_reference_structured_bindings() -> None:
     )
 
     new_field = bound_revision.export_layouts[0].records[0].fields[0]
-    assert new_field.kind == "binding"
+    assert new_field.kind is CasillaFieldKind.BINDING
     assert new_field.binding == revision.bindings[0].id
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, bound_revision))
 
@@ -586,7 +649,7 @@ def test_validator_rejects_export_field_with_unknown_binding() -> None:
                 "id": "modelo-130-export-bound-missing",
                 "kind": "binding",
                 "binding": "missing.export.binding",
-                "casilla": None,
+                "casilla_id": None,
                 "literal": None,
                 "header_key": None,
                 "draft_attribute": None,
@@ -691,7 +754,7 @@ def test_validator_rejects_extraction_profile_unknown_casilla() -> None:
         update={
             "target_casillas": (
                 ExtractionTargetDefinition(
-                    casilla_id="missing",
+                    casilla_id=_MISSING_CASILLA,
                     match_strategy="numeric_casilla",
                     value_kind="amount",
                 ),
@@ -717,7 +780,7 @@ def test_validator_rejects_extraction_profile_artefact_surface_mismatch() -> Non
 def test_extraction_target_definition_roundtrip() -> None:
     """ExtractionTargetDefinition strict-frozen roundtrip with non-default fields."""
     target = ExtractionTargetDefinition(
-        casilla_id="my-label",
+        casilla_id=_NAMED_LABEL_CASILLA,
         match_strategy="named_label",
         value_kind="text",
         label_pattern=r"Mi etiqueta especial",
@@ -725,7 +788,7 @@ def test_extraction_target_definition_roundtrip() -> None:
     raw = target.model_dump()
     restored = ExtractionTargetDefinition.model_validate(raw)
     assert restored == target
-    assert restored.casilla_id == "my-label"
+    assert restored.casilla_id == _NAMED_LABEL_CASILLA
     assert restored.match_strategy == "named_label"
     assert restored.value_kind == "text"
     assert restored.label_pattern == r"Mi etiqueta especial"
@@ -734,7 +797,7 @@ def test_extraction_target_definition_roundtrip() -> None:
 def test_extraction_target_definition_anti_tautology() -> None:
     """Mutating the serialised payload surfaces inequality after reload."""
     target = ExtractionTargetDefinition(
-        casilla_id="01",
+        casilla_id=_NUMERIC_CASILLA_01,
         match_strategy="numeric_casilla",
         value_kind="amount",
     )
@@ -748,7 +811,7 @@ def test_extraction_target_definition_anti_tautology() -> None:
 def test_extraction_target_named_label_requires_label_pattern() -> None:
     with pytest.raises(ValidationError, match="named_label extraction targets require label_pattern"):
         ExtractionTargetDefinition(
-            casilla_id="decl.cnae",
+            casilla_id=_DECL_CNAE_CASILLA,
             match_strategy="named_label",
             value_kind="text",
         )
@@ -757,7 +820,7 @@ def test_extraction_target_named_label_requires_label_pattern() -> None:
 def test_extraction_target_numeric_casilla_rejects_label_pattern() -> None:
     with pytest.raises(ValidationError, match="numeric_casilla extraction targets must not define label_pattern"):
         ExtractionTargetDefinition(
-            casilla_id="01",
+            casilla_id=_NUMERIC_CASILLA_01,
             match_strategy="numeric_casilla",
             value_kind="amount",
             label_pattern="Retenciones",

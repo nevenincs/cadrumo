@@ -14,6 +14,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
+from ._ids import CasillaId
 from ._schema import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
@@ -38,7 +39,7 @@ class CrossRevisionCasillaDivergence:
     """One field-level difference for a repeated casilla id."""
 
     modelo_id: str
-    casilla_id: str
+    casilla_id: CasillaId
     left_revision_id: str
     right_revision_id: str
     field: str
@@ -85,8 +86,8 @@ def _revisions_overlap(left: object, right: object) -> bool:
 
 def _group_casillas_by_id(
     modelo: ModeloDefinition,
-) -> dict[str, list[tuple[ModeloRevision, CasillaDefinition]]]:
-    by_id: dict[str, list[tuple[ModeloRevision, CasillaDefinition]]] = defaultdict(list)
+) -> dict[CasillaId, list[tuple[ModeloRevision, CasillaDefinition]]]:
+    by_id: dict[CasillaId, list[tuple[ModeloRevision, CasillaDefinition]]] = defaultdict(list)
     for revision in modelo.revisions.values():
         for casilla in revision.casillas:
             by_id[casilla.id].append((revision, casilla))
@@ -95,7 +96,7 @@ def _group_casillas_by_id(
 
 def _pair_field_divergences(
     modelo: ModeloDefinition,
-    casilla_id: str,
+    casilla_id: CasillaId,
     left_revision: ModeloRevision,
     left_casilla: CasillaDefinition,
     left_sig: tuple[object, ...],
@@ -132,7 +133,7 @@ def _pair_field_divergences(
 
 def _casilla_divergences_for_occurrences(
     modelo: ModeloDefinition,
-    casilla_id: str,
+    casilla_id: CasillaId,
     occurrences: list[tuple[ModeloRevision, CasillaDefinition]],
 ) -> Iterator[CrossRevisionCasillaDivergence]:
     for index, (left_revision, left_casilla) in enumerate(occurrences[:-1]):

@@ -13,6 +13,7 @@ from typing import Literal, TypeGuard
 
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
+from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
 from ._ids import CasillaId, ExportFieldId
 from ._schema import (
@@ -162,11 +163,11 @@ def _export_field_from_row_binding(
     row_field = binding.selector.get("row_field")
     if not isinstance(row_field, str):
         return None
-    casilla = record.row_field_casillas.get(row_field)
-    if casilla is None:
+    casilla_id = record.row_field_casilla_ids.get(row_field)
+    if casilla_id is None:
         raise RegistryValidationError(
             f"export record {record.id!r} binding {binding.id!r} row_field {row_field!r}"
-            " has no casilla mapping in row_field_casillas",
+            " has no casilla mapping in row_field_casilla_ids",
         )
     # Pattern A: the record already hand-authors a kind="binding" field pinned
     # to this binding id — trust the operator-pinned offset/length and skip
@@ -176,19 +177,19 @@ def _export_field_from_row_binding(
     # Pattern B: a kind="casilla" template field exists for this casilla — derive
     # a binding-kind field by copying the template's offset/length/data_type.
     template = next(
-        (field for field in record.fields if field.kind == CasillaFieldKind.CASILLA and field.casilla == casilla),
+        (field for field in record.fields if field.kind == CasillaFieldKind.CASILLA and field.casilla_id == casilla_id),
         None,
     )
     if template is None:
         raise RegistryValidationError(
-            f"export record {record.id!r} binding {binding.id!r} casilla {casilla!r}"
+            f"export record {record.id!r} binding {binding.id!r} casilla {casilla_id!r}"
             " has no matching template field in the record",
         )
     return template.model_copy(
         update={
             "id": f"{record.id}.{binding.id}",
             "kind": CasillaFieldKind.BINDING,
-            "casilla": None,
+            "casilla_id": None,
             "binding": binding.id,
             "legal_refs": binding.legal_refs,
             "source_refs": binding.source_refs,
@@ -249,7 +250,10 @@ def _justification_for_binding_data_type(data_type: _BindingExportDataType) -> _
     return "left"
 
 
-def export_fields_for_casilla(resolved: ResolvedExportLayout, casilla_id: str) -> tuple[ExportFieldDefinition, ...]:
+def export_fields_for_casilla(
+    resolved: ResolvedExportLayout,
+    casilla_id: CasillaId,
+) -> tuple[ExportFieldDefinition, ...]:
     """Return all :class:`ExportFieldDefinition` entries mapped to ``casilla_id``."""
     return resolved.fields_by_casilla.get(casilla_id, ())
 
@@ -285,21 +289,23 @@ def _index_fields(
 def _index_fields_by_casilla(
     snapshot: RegistrySnapshot,
     fields: tuple[ExportFieldDefinition, ...],
-) -> dict[str, tuple[ExportFieldDefinition, ...]]:
-    casillas = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    grouped: dict[str, list[ExportFieldDefinition]] = {}
+) -> dict[CasillaId, tuple[ExportFieldDefinition, ...]]:
+    casillas = casillas_by_id(snapshot.revision)
+    grouped: dict[CasillaId, list[ExportFieldDefinition]] = {}
     for field in fields:
-        if field.casilla is None:
+        if field.casilla_id is None:
             continue
-        if field.casilla not in casillas:
-            raise RegistryValidationError(f"export field {field.id!r} references unknown casilla {field.casilla!r}")
-        casilla = casillas[field.casilla]
+        if field.casilla_id not in casillas:
+            raise RegistryValidationError(
+                f"export field {field.id!r} references unknown casilla {field.casilla_id!r}",
+            )
+        casilla = casillas[field.casilla_id]
         if field.id not in casilla.export_refs:
             raise RegistryValidationError(
-                f"export field {field.id!r} points to casilla {field.casilla!r}, "
+                f"export field {field.id!r} points to casilla {field.casilla_id!r}, "
                 "but the casilla does not declare the export ref",
             )
-        grouped.setdefault(field.casilla, []).append(field)
+        grouped.setdefault(field.casilla_id, []).append(field)
     return {casilla_id: tuple(casilla_fields) for casilla_id, casilla_fields in grouped.items()}
 
 

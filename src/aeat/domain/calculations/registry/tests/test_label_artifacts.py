@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from .....core.resources import bundled_path
-from .. import load_registry_tree
+from .. import CasillaId, load_registry_tree, validated_casilla_id
 from .._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from .._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
 from .._validate_registry_scope import validate_registry_scope
@@ -15,12 +15,13 @@ from .._validate_registry_scope import validate_registry_scope
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SAMPLE_UNRESOLVED_PLACEHOLDER = "{" + "0" + "}"
+_TEST_CASILLA_ID: CasillaId = validated_casilla_id("0001", surface="_TEST_CASILLA_ID")
 
 
 def _modelo_with_label(label: str) -> ModeloDefinition:
     casilla = CasillaDefinition.model_validate(
         {
-            "id": "0001",
+            "id": _TEST_CASILLA_ID,
             "number": "0001",
             "label": label,
             "section": ("test",),
@@ -63,7 +64,7 @@ def test_label_artifact_inventory_reports_unresolved_format_placeholder() -> Non
     finding = findings[0]
     assert finding.modelo_id == "999"
     assert finding.revision_id == "2025"
-    assert finding.casilla_id == "0001"
+    assert finding.casilla_id == _TEST_CASILLA_ID
     assert finding.artifact == "unresolved_format_placeholder"
     assert finding.placeholder_token == _SAMPLE_UNRESOLVED_PLACEHOLDER
 

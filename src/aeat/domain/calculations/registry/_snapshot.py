@@ -12,11 +12,13 @@ import importlib
 from datetime import date
 from pathlib import Path
 
+from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
 from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot, filing_period_from_scope
 from ._temporal import select_revision
 from ._validate import RegistryValidator
 from ._validate_references import _check_all_id_references
+from ._validate_revision_identity import revision_reference_identity_failures
 
 _SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None]
 _SnapshotCacheValue = tuple[ModeloDefinition, RegistryCatalogues, RegistrySnapshot]
@@ -127,6 +129,15 @@ def _build_validated_snapshot(
     """Return a selected snapshot after the caller has validated ``modelo``."""
     _install_cross_domain_snapshot_checks()
     revision = select_revision(modelo, filing_year=filing_year, period=period, on=on, revision_id=revision_id)
+    identity_failures = revision_reference_identity_failures(
+        f"snapshot modelo {modelo.id} revision {revision.id}",
+        revision,
+    )
+    if identity_failures:
+        raise RegistryValidationError(
+            "registry snapshot revision identity is ambiguous:\n"
+            + "\n".join(f" - {failure}" for failure in identity_failures),
+        )
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
     legal_ids, source_ids = _collect_snapshot_ref_ids(modelo, revision)
     snapshot = RegistrySnapshot(

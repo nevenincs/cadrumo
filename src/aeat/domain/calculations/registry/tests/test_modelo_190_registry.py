@@ -9,22 +9,35 @@ import pytest
 
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
+from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
-    CasillaObservation,
+    CasillaId,
     InputKind,
-    RegistryModeloObservation,
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
     load_registry_tree,
     relation_source_requirements,
     resolve_relation_values_from_observations,
+    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _WWW6_HOST = aeat_host("www6")
+_DECL_TOTAL_PERCEPCIONES_CASILLA: CasillaId = validated_casilla_id(
+    "decl.total-percepciones",
+    surface="_DECL_TOTAL_PERCEPCIONES_CASILLA",
+)
+_DECL_PERCEPCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "decl.percepciones-total",
+    surface="_DECL_PERCEPCIONES_TOTAL_CASILLA",
+)
+_DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "decl.retenciones-total",
+    surface="_DECL_RETENCIONES_TOTAL_CASILLA",
+)
 
 
 def _load_modelo(modelo_id: str):
@@ -94,8 +107,8 @@ def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
     )
 
     modelo_111_outputs = {casilla.id for casilla in snapshot_111.revision.casillas}
-    relation_source_outputs = {relation.source_output for relation in snapshot.revision.relations}
-    assert relation_source_outputs <= modelo_111_outputs
+    relation_source_casilla_ids = {relation.source_casilla_id for relation in snapshot.revision.relations}
+    assert relation_source_casilla_ids <= modelo_111_outputs
     assert {tuple(relation.source_periods) for relation in snapshot.revision.relations} == {("1T", "2T", "3T", "4T")}
 
 
@@ -116,20 +129,20 @@ def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -
         filing_year=2025,
         period="1T",
     )
-    source_casillas = {casilla.id: casilla for casilla in snapshot_111.revision.casillas}
+    source_casilla_ids = {casilla.id: casilla for casilla in snapshot_111.revision.casillas}
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
-    observed_by_period: dict[str, dict[str, Decimal]] = {}
+    observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}
     for requirement in requirements:
-        source_casilla = source_casillas[requirement.source_output]
+        source_casilla = source_casilla_ids[requirement.source_casilla_id]
         for index, period in enumerate(requirement.periods):
             value = _value_for(source_casilla.data_type, source_casilla.input_kind, index)
-            observed_by_period.setdefault(period, {})[requirement.source_output] = value
+            observed_by_period.setdefault(period, {})[requirement.source_casilla_id] = value
     observations = tuple(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="111",
             filing_year=2025,
             period=period,
-            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
+            casilla_values=casilla_values,
         )
         for period, casilla_values in sorted(observed_by_period.items())
     )
@@ -154,17 +167,17 @@ def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -
     # Assert structural wiring: expected aggregation casillas must be present
     # in the engine result. Values are not asserted here because the expected_*
     # accumulators above re-apply the same classification logic the registry
-    # uses (data_type == "integer" → perceptors, input_kind == "computed" →
+    # uses (data_type == "integer" → perceptors, input_kind == InputKind.COMPUTED →
     # retenciones, else → perceptions), making any numeric assertion tautological.
-    assert "decl.total-percepciones" in result.values, "perceptores aggregation casilla must be computed"
-    assert "decl.percepciones-total" in result.values, "percepciones aggregation casilla must be computed"
-    assert "decl.retenciones-total" in result.values, "retenciones aggregation casilla must be computed"
+    assert _DECL_TOTAL_PERCEPCIONES_CASILLA in result.values, "perceptores aggregation casilla must be computed"
+    assert _DECL_PERCEPCIONES_TOTAL_CASILLA in result.values, "percepciones aggregation casilla must be computed"
+    assert _DECL_RETENCIONES_TOTAL_CASILLA in result.values, "retenciones aggregation casilla must be computed"
 
     # Non-negativity is a structural constraint (modelo 190 reports accumulated
     # annual totals, which cannot be negative by definition).
-    assert result.values["decl.total-percepciones"] >= Decimal("0")
-    assert result.values["decl.percepciones-total"] >= Decimal("0")
-    assert result.values["decl.retenciones-total"] >= Decimal("0")
+    assert result.values[_DECL_TOTAL_PERCEPCIONES_CASILLA] >= Decimal("0")
+    assert result.values[_DECL_PERCEPCIONES_TOTAL_CASILLA] >= Decimal("0")
+    assert result.values[_DECL_RETENCIONES_TOTAL_CASILLA] >= Decimal("0")
 
 
 def _value_for(data_type: str, input_kind: InputKind, period_index: int) -> Decimal:

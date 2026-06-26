@@ -206,9 +206,9 @@ def test_cuota_base_liquidable_ahorro_autonomica_formula_subtracts_minimo(year: 
     """
     revision = _revision(year)
     formula = next(f for f in revision.formulas if f.id == f"renta-{year}-cuota-base-liquidable-ahorro-autonomica")
-    assert formula.target == "0541"
+    assert formula.target_casilla_id == "0541"
     assert formula.expression.op == "subtract"
-    operand_casillas = [arg.casilla for arg in formula.expression.args]
+    operand_casillas = [arg.casilla_id for arg in formula.expression.args]
     assert operand_casillas == ["0537", "0539"]
 
 
@@ -227,13 +227,13 @@ def test_escala_autonomica_formulas_target_savings_casillas(year: int) -> None:
         for f in revision.formulas
         if f.id == f"renta-{year}-cuota-escala-autonomica-sobre-minimo-personal-familiar-base-ahorro"
     )
-    assert base_formula.target == "0537"
+    assert base_formula.target_casilla_id == "0537"
     assert base_formula.expression.op == "lookup_bracket"
-    assert base_formula.expression.args[0].casilla == "0510"
+    assert base_formula.expression.args[0].casilla_id == "0510"
     assert base_formula.expression.args[1].parameter == f"renta-{year}-escala-autonomica-base-ahorro"
-    assert minimo_formula.target == "0539"
+    assert minimo_formula.target_casilla_id == "0539"
     assert minimo_formula.expression.op == "lookup_bracket"
-    assert minimo_formula.expression.args[0].casilla == "0524"
+    assert minimo_formula.expression.args[0].casilla_id == "0524"
     assert minimo_formula.expression.args[1].parameter == f"renta-{year}-escala-autonomica-base-ahorro"
 
 

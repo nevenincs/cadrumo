@@ -48,7 +48,7 @@ from decimal import Decimal
 from typing import Literal
 
 from ...core.external_constants import ART_7P_EXEMPTION_CAP_EUR, REBECA_MARITIME_EXEMPTION_FRACTION
-from ..calculations.registry import CasillaId, CasillaObservation
+from ..calculations.registry import CasillaId, CasillaObservation, LegalRefId, SourceRefId, validated_casilla_id
 from ._errors import RentaError, RentaValidationError
 
 # Casilla in Modelo 100 that receives exempt income (renta exenta section).
@@ -56,26 +56,18 @@ from ._errors import RentaError, RentaValidationError
 # for base liquidable general (0525). No new casilla identifiers exist for
 # maritime workers; the existing renta exenta casilla is the only target.
 # Source: aeat-dr-100-2024-dictionary (semantic_role irpf_rentas_exentas_base_general).
-RENTA_EXENTA_CASILLA: CasillaId = "0525"
+RENTA_EXENTA_CASILLA: CasillaId = validated_casilla_id("0525", surface="RENTA_EXENTA_CASILLA")
 
 # Legal references carried through every observation — sourced from the
 # trabajador_del_mar.toml binding entries.
-_ART_7P_LEGAL_REFS: tuple[str, ...] = ("Ley 35/2006 Art. 7.p) BOE-A-2006-20764",)
-_REBECA_LEGAL_REFS: tuple[str, ...] = (
-    "Ley 19/1994 Art. 73.2 BOE-A-1994-15794",
-    "Ley 19/1994 Art. 73.3 BOE-A-1994-15794",
-    "Ley 19/1994 Art. 75.1 BOE-A-1994-15794",
-    "Ley 19/1994 Art. 75.3 BOE-A-1994-15794",
-)
-_DA41_LEGAL_REFS: tuple[str, ...] = (
-    "Ley 35/2006 DA 41 BOE-A-2006-20764",
-    "Ley 6/2018 BOE-A-2018-9268",
-)
-_RETMAR_LEGAL_REFS: tuple[str, ...] = ("Ley 47/2015 BOE-A-2015-11346",)
+_ART_7P_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:art-7",)
+_REBECA_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-19-1994:art-75",)
+_DA41_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:da-41", "ley-6-2018")
+_RETMAR_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-47-2015",)
 
-_ART_7P_SOURCE_REFS: tuple[str, ...] = ("art-7p-foreign-work",)
-_REBECA_SOURCE_REFS: tuple[str, ...] = ("rebeca-50pct",)
-_DA41_SOURCE_REFS: tuple[str, ...] = ("da41-tuna-fleet-inactive",)
+_ART_7P_SOURCE_REFS: tuple[SourceRefId, ...] = ("art-7p-foreign-work",)
+_REBECA_SOURCE_REFS: tuple[SourceRefId, ...] = ("rebeca-50pct",)
+_DA41_SOURCE_REFS: tuple[SourceRefId, ...] = ("da41-tuna-fleet-inactive",)
 
 
 class MaritimeExemptionInactiveError(RentaError):
@@ -263,6 +255,7 @@ def calculate_art_7p_exemption(
         formula_id=None,
         op=None,
         operand_refs=(),
+        operand_casilla_refs=(),
         operand_values=(),
         legal_refs=_ART_7P_LEGAL_REFS,
         source_refs=_ART_7P_SOURCE_REFS,
@@ -311,6 +304,7 @@ def calculate_rebeca_exemption(
         formula_id=None,
         op=None,
         operand_refs=(),
+        operand_casilla_refs=(),
         operand_values=(),
         legal_refs=_REBECA_LEGAL_REFS,
         source_refs=_REBECA_SOURCE_REFS,
@@ -340,8 +334,8 @@ def guard_da41_inactive(facts: MaritimeWorkerFacts) -> None:
             "Ley 6/2018 BOE-A-2018-9268).",
             context={
                 "binding_id": "da41-tuna-fleet-inactive",
-                "legal_ref": "Ley 35/2006 DA 41 BOE-A-2006-20764",
-                "enabling_law": "Ley 6/2018 BOE-A-2018-9268",
+                "legal_ref": _DA41_LEGAL_REFS[0],
+                "enabling_law": _DA41_LEGAL_REFS[1],
             },
         )
 
@@ -370,7 +364,7 @@ def check_retmar_mandatory_filing(facts: MaritimeWorkerFacts) -> None:
             "declaration regardless of income level "
             "(Ley 47/2015 BOE-A-2015-11346).",
             context={
-                "legal_ref": "Ley 47/2015 BOE-A-2015-11346",
+                "legal_ref": _RETMAR_LEGAL_REFS[0],
             },
         )
 

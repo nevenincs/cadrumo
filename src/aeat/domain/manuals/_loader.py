@@ -38,6 +38,7 @@ from ._errors import ManualNotFoundError, ManualParseError
 from ._schema import (
     Chapter,
     Manual,
+    ManualCasillaReference,
     ManualCatalogue,
     ManualId,
     ManualPart,
@@ -289,7 +290,7 @@ def iter_sections(
 def find_rules(
     catalogue: ManualCatalogue,
     *,
-    casilla_id: str | None = None,
+    casilla_reference: ManualCasillaReference | None = None,
     kind: RuleKind | None = None,
     lang: str | None = None,
     settings: Settings | None = None,
@@ -298,10 +299,9 @@ def find_rules(
 
     Args:
         catalogue: A loaded :class:`ManualCatalogue`.
-        casilla_id: Optional modelo casilla cross-reference filter,
-            e.g. ``"MODELO:CASILLA"``. Rules whose
-            ``references_casillas`` does not contain this value are
-            skipped.
+        casilla_reference: Optional structured modelo/casilla filter.
+            Rules whose ``references_casillas`` does not contain this
+            value are skipped.
         kind: Optional ``RuleKind`` filter.
         lang: Optional :class:`str` filter. When provided, rules
             whose statement cannot be resolved into ``lang`` under the
@@ -312,7 +312,7 @@ def find_rules(
         :class:`Rule` records matching every supplied filter.
     """
     for rule in _iter_catalogue_rules(catalogue, settings=settings):
-        if _rule_matches(rule, casilla_id=casilla_id, kind=kind, lang=lang):
+        if _rule_matches(rule, casilla_reference=casilla_reference, kind=kind, lang=lang):
             yield rule
 
 
@@ -326,14 +326,14 @@ def _iter_catalogue_rules(catalogue: ManualCatalogue, *, settings: Settings | No
 def _rule_matches(
     rule: Rule,
     *,
-    casilla_id: str | None,
+    casilla_reference: ManualCasillaReference | None,
     kind: RuleKind | None,
     lang: str | None,
 ) -> bool:
     """Return True when ``rule`` satisfies every supplied filter (None == no filter)."""
     if kind is not None and rule.kind is not kind:
         return False
-    if casilla_id is not None and casilla_id not in rule.references_casillas:
+    if casilla_reference is not None and casilla_reference not in rule.references_casillas:
         return False
     return not (lang is not None and not _rule_renders_in_language(rule, lang))
 

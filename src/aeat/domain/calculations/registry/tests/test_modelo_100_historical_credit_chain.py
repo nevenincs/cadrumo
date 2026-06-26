@@ -71,8 +71,8 @@ def test_0609_is_computed_by_the_total_pagos_formula(year: str) -> None:
 
     formula = next((f for f in revision.formulas if f.id == expected_formula), None)
     assert formula is not None, f"M100 {year} formula {expected_formula!r} missing"
-    assert formula.target == "0609"
-    summed = tuple(arg.casilla for arg in formula.expression.args)
+    assert formula.target_casilla_id == "0609"
+    summed = tuple(arg.casilla_id for arg in formula.expression.args)
     assert summed == _CREDIT_SUM_CASILLAS, (
         f"M100 {year} total-pagos formula must sum the credit casillas in order; got {summed!r}"
     )

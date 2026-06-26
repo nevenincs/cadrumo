@@ -22,6 +22,7 @@ from pydantic import ValidationError
 
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations.registry import CasillaId, validated_casilla_id
 from ...calculations.registry._schema import RegistrySnapshotRef
 from .._amendment import (
     AmendmentKind,
@@ -40,6 +41,20 @@ from .._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _BUCKET_ID = "filing-runtime"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"amendment roundtrip fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.devengado")
+_IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.deducible")
+_IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_IVA_RESULTADO_OPERANDS = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
+_NONCANONICAL_IVA_DEVENGADO_CASILLA_ID = " iva.devengado "
 
 
 def _populated_amended_draft() -> ModeloDraft:
@@ -61,17 +76,17 @@ def _populated_amended_draft() -> ModeloDraft:
         status=ModeloDraftStatus.BORRADOR,
         values=(
             ModeloValue(
-                casilla_id="iva.devengado",
+                casilla_id=_IVA_DEVENGADO_CASILLA,
                 value=Decimal("20500.00"),  # corrected upward by 500
                 kind=ModeloValueKind.LITERAL,
                 source="amended literal",
             ),
             ModeloValue(
-                casilla_id="iva.resultado",
+                casilla_id=_IVA_RESULTADO_CASILLA,
                 value=Decimal("12845.67"),  # 500 higher than the original
                 kind=ModeloValueKind.COMPUTED,
                 source="recomputed after iva.devengado correction",
-                formula_trace=("iva.devengado", "iva.deducible"),
+                formula_trace_casilla_ids=_IVA_RESULTADO_OPERANDS,
             ),
         ),
         binding_values=(),
@@ -86,13 +101,13 @@ def _populated_amendment() -> ModeloComplementaria:
     submission_id = "S-2025-001"
     delta = (
         CasillaChange(
-            casilla_code="iva.devengado",
+            casilla_id=_IVA_DEVENGADO_CASILLA,
             old_value=Decimal("20000.00"),
             new_value=Decimal("20500.00"),
             reason="invoice F-2025-027 was issued at the wrong IVA rate",
         ),
         CasillaChange(
-            casilla_code="iva.resultado",
+            casilla_id=_IVA_RESULTADO_CASILLA,
             old_value=Decimal("12345.67"),
             new_value=Decimal("12845.67"),
             reason="recomputed downstream of iva.devengado",
@@ -115,6 +130,16 @@ def _populated_amendment() -> ModeloComplementaria:
     )
 
 
+def test_casilla_change_rejects_noncanonical_casilla_reference() -> None:
+    with pytest.raises(ValidationError, match="casilla_id"):
+        CasillaChange(
+            casilla_id=_NONCANONICAL_IVA_DEVENGADO_CASILLA_ID,
+            old_value=Decimal("20000.00"),
+            new_value=Decimal("20500.00"),
+            reason="noncanonical casilla id must fail before persistence",
+        )
+
+
 def test_filing_amendment_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
 ) -> None:
@@ -132,10 +157,10 @@ def test_filing_amendment_survives_encrypted_storage_roundtrip(
     # part - a save-drops-old_value regression would surface here as
     # None on load).
     assert len(loaded.delta) == 2
-    assert loaded.delta[0].casilla_code == "iva.devengado"
+    assert loaded.delta[0].casilla_id == _IVA_DEVENGADO_CASILLA
     assert loaded.delta[0].old_value == Decimal("20000.00")
     assert loaded.delta[0].new_value == Decimal("20500.00")
-    assert loaded.delta[1].casilla_code == "iva.resultado"
+    assert loaded.delta[1].casilla_id == _IVA_RESULTADO_CASILLA
     # AmendmentKind enum identity + the nested amended_draft
     # carries its own typed substructure.
     assert loaded.amendment_kind is AmendmentKind.COMPLEMENTARIA

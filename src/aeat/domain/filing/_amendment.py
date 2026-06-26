@@ -34,6 +34,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.hashing import content_hash_hex
+from ..calculations.registry import CasillaId
 from ._protocols import ModeloInputs
 from ._schema import ModeloDraft
 
@@ -58,7 +59,7 @@ class CasillaChange(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    casilla_code: str = Field(min_length=1)
+    casilla_id: CasillaId
     old_value: Decimal | None = None
     new_value: Decimal
     reason: str = Field(min_length=1)

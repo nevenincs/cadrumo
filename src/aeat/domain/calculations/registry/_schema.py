@@ -46,6 +46,7 @@ from ._ids import (
     SupportRemovalDecisionId,
     VerificationExpectationId,
     WorkbookFixtureId,
+    WorkbookOutputId,
     WorkbookParityRefId,
 )
 from ._schema_input_kind import InputKind, InputKindValue
@@ -424,8 +425,10 @@ class ExtractionTargetDefinition(RegistryModel):
     Attributes:
         casilla_id: Stable casilla identifier the parser resolves to.
         match_strategy: How the parser anchors on this target.
-            ``"numeric_casilla"`` anchors on the casilla id printed literally
-            at line start (numeric forms, e.g. ``"01"``).
+            ``"numeric_casilla"`` anchors on the target casilla's printed
+            ``number`` at line start and emits the canonical ``casilla_id``
+            (numeric forms, e.g. printed ``"01"`` -> id ``"01"`` or
+            ``"01-legacy"``).
             ``"named_label"`` anchors on the human-readable printed label
             (for text-field modelos where a slug id is never printed).
             ``"bbox_anchored"`` locates the box number in the PDF word stream
@@ -712,7 +715,7 @@ class WorkbookParityReference(RegistryModel):
     fixture_id: WorkbookFixtureId
     formula_coverage: Literal["formula_form", "static_layout", "record_design_layout", "unsupported_binary_xls"]
     runner_required: bool
-    output_cells: Mapping[str, WorkbookCellRefStr] = Field(default_factory=dict)
+    output_cells: Mapping[WorkbookOutputId, WorkbookCellRefStr] = Field(default_factory=dict)
     tolerance: DecimalValue = Decimal("0.00")
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -734,8 +737,10 @@ class WorkbookParityReference(RegistryModel):
 
 class VerificationExpectationDefinition(RegistryModel):
     id: VerificationExpectationId
-    computed_casillas: tuple[CasillaId, ...]
-    reconciliation_totals: Mapping[Literal["ingresar", "devolver"], CasillaId] = Field(default_factory=dict)
+    computed_casilla_ids: tuple[CasillaId, ...]
+    reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId] = Field(
+        default_factory=dict,
+    )
     tolerance: DecimalValue
     rounding: str
     min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
@@ -746,11 +751,11 @@ class VerificationExpectationDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
-    @field_validator("computed_casillas")
+    @field_validator("computed_casilla_ids")
     @classmethod
-    def _computed_casillas_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
+    def _computed_casilla_ids_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         if len(set(value)) != len(value):
-            raise RegistryValidationError("verification expectation computed_casillas must be unique")
+            raise RegistryValidationError("verification expectation computed_casilla_ids must be unique")
         return value
 
 
@@ -809,7 +814,7 @@ class ConstructDefinition(RegistryModel):
     title: str = Field(min_length=1, max_length=200)
     legal_refs: LegalRefs
     source_refs: SourceRefs
-    casillas: tuple[CasillaId, ...] = ()
+    casilla_ids: tuple[CasillaId, ...] = ()
     formulas: tuple[FormulaId, ...] = ()
     parameters: tuple[ParameterId, ...] = ()
     bindings: tuple[BindingId, ...] = ()
@@ -828,7 +833,7 @@ class ConstructDefinition(RegistryModel):
     dependency_classifications: tuple[DependencyClassificationId, ...] = ()
 
     @field_validator(
-        "casillas",
+        "casilla_ids",
         "formulas",
         "parameters",
         "bindings",
@@ -855,7 +860,7 @@ class ConstructDefinition(RegistryModel):
     @model_validator(mode="after")
     def _validate_membership(self) -> ConstructDefinition:
         member_groups = (
-            self.casillas,
+            self.casilla_ids,
             self.formulas,
             self.parameters,
             self.bindings,
@@ -1042,7 +1047,7 @@ class DataBindingDefinition(RegistryModel):
 
 class FormulaDefinition(RegistryModel):
     id: FormulaId
-    target: CasillaId
+    target_casilla_id: CasillaId
     expression: FormulaExpression
     rounding: RegistryRoundingCodeValue = None
     legal_refs: LegalRefs
@@ -1248,13 +1253,13 @@ class RegistryCatalogues(RegistryModel):
 class RegistryVerificationPolicy:
     """Folded verification policy across a snapshot's verification expectations.
 
-    Owns the registry-grounded projection (union of computed casillas, the
+    Owns the registry-grounded projection (union of computed casilla ids, the
     strictest tolerance, the strictest coverage floor) so the application
     verification surface consumes it rather than re-deriving the fold.
     """
 
     expectation_ids: tuple[VerificationExpectationId, ...]
-    computed_casillas: frozenset[CasillaId]
+    computed_casilla_ids: frozenset[CasillaId]
     tolerance: Decimal
     min_coverage: Decimal
 
@@ -1294,7 +1299,7 @@ class RegistrySnapshot(RegistryModel):
         """Fold this snapshot's verification expectations into one policy.
 
         Returns the registry-grounded :class:`RegistryVerificationPolicy` (union
-        of computed casillas, strictest tolerance, strictest coverage floor).
+        of computed casilla ids, strictest tolerance, strictest coverage floor).
 
         Raises:
             RegistryValidationError: When the snapshot declares no verification
@@ -1305,8 +1310,8 @@ class RegistrySnapshot(RegistryModel):
             raise RegistryValidationError("registry verification requires verification expectations")
         return RegistryVerificationPolicy(
             expectation_ids=tuple(expectation.id for expectation in expectations),
-            computed_casillas=frozenset(
-                casilla_id for expectation in expectations for casilla_id in expectation.computed_casillas
+            computed_casilla_ids=frozenset(
+                casilla_id for expectation in expectations for casilla_id in expectation.computed_casilla_ids
             ),
             tolerance=min(expectation.tolerance for expectation in expectations),
             min_coverage=max(expectation.min_coverage for expectation in expectations),

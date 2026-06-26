@@ -35,7 +35,7 @@ from ....deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from .. import build_snapshot, calculate_registry_snapshot, load_registry_tree
+from .. import CasillaId, build_snapshot, calculate_registry_snapshot, load_registry_tree, validated_casilla_id
 from ..applicability import (
     Modelo202Modality,
     derive_modelo_202_modality,
@@ -48,6 +48,38 @@ _FORM_BINDING = "modelo-200-2024-profile-legal-entity-form"
 _NEW_ENTITY_BINDING = "modelo-200-2024-profile-new-entity-flag"
 _INCN_BINDING = "modelo-200-2024-profile-incn-prior-12-months"
 _ESTADO_PCT_BINDING = "modelo-200-2024-profile-tributacion-estado-porcentaje"
+_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
+_M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
+    "DP200013:00417",
+    surface="_M200_CORRECCIONES_AUMENTO_CASILLA",
+)
+_M200_CORRECCIONES_DISMINUCION_CASILLA: CasillaId = validated_casilla_id(
+    "DP200013:00418",
+    surface="_M200_CORRECCIONES_DISMINUCION_CASILLA",
+)
+_M200_RESERVA_CAPITALIZACION_CASILLA: CasillaId = validated_casilla_id(
+    "01032",
+    surface="_M200_RESERVA_CAPITALIZACION_CASILLA",
+)
+_M200_BIN_APLICADA_CASILLA: CasillaId = validated_casilla_id("DP200014:00547", surface="_M200_BIN_APLICADA_CASILLA")
+_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:01033",
+    surface="_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA",
+)
+_M200_BONIFICACIONES_CASILLA: CasillaId = validated_casilla_id("DP200014:01034", surface="_M200_BONIFICACIONES_CASILLA")
+_M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:01766",
+    surface="_M200_CUOTA_LIQUIDA_POSITIVA_CASILLA",
+)
+_M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:01784",
+    surface="_M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA",
+)
+_M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", surface="_M200_CUOTA_INTEGRA_CASILLA")
+_M200_CUOTA_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014B:00599",
+    surface="_M200_CUOTA_EJERCICIO_CASILLA",
+)
 
 
 @lru_cache(maxsize=1)
@@ -85,15 +117,15 @@ def _cuota_for(
             # leaf operator-input casillas (00501 resultado contable + zero
             # corrections + zero reserva + zero BIN aplicada) so the chain
             # computes 00552 = base.
-            "00501": base,
-            "DP200013:00417": Decimal("0"),
-            "DP200013:00418": Decimal("0"),
-            "01032": Decimal("0"),
-            "DP200014:00547": Decimal("0"),
-            "DP200014:01033": Decimal("0"),
-            "DP200014:01034": Decimal("0"),
-            "DP200014B:01766": Decimal("0"),
-            "DP200014B:01784": Decimal("0"),
+            _M200_RESULTADO_CONTABLE_CASILLA: base,
+            _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
+            _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
+            _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
+            _M200_BIN_APLICADA_CASILLA: Decimal("0"),
+            _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
+            _M200_BONIFICACIONES_CASILLA: Decimal("0"),
+            _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
+            _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
         },
         enum_binding_values={_FORM_BINDING: form},
         binding_values={
@@ -112,7 +144,7 @@ def _cuota_for(
         },
         date_context={"filing_period": filing_period},
     )
-    return result.values["DP200014:00562"]
+    return result.values[_M200_CUOTA_INTEGRA_CASILLA]
 
 
 # ---------------------------------------------------------------------
@@ -442,15 +474,15 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
     result = calculate_registry_snapshot(
         _snapshot(),
         inputs={
-            "00501": Decimal("80000"),
-            "DP200013:00417": Decimal("0"),
-            "DP200013:00418": Decimal("0"),
-            "01032": Decimal("0"),
-            "DP200014:00547": Decimal("0"),
-            "DP200014:01033": Decimal("0"),
-            "DP200014:01034": Decimal("0"),
-            "DP200014B:01766": Decimal("0"),
-            "DP200014B:01784": Decimal("0"),
+            _M200_RESULTADO_CONTABLE_CASILLA: Decimal("80000"),
+            _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
+            _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
+            _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
+            _M200_BIN_APLICADA_CASILLA: Decimal("0"),
+            _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
+            _M200_BONIFICACIONES_CASILLA: Decimal("0"),
+            _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
+            _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
         },
         enum_binding_values={_FORM_BINDING: "sl"},
         binding_values={
@@ -468,7 +500,7 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
         },
         date_context={"filing_period": date(2024, 12, 31)},
     )
-    cuota_ejercicio = result.values["DP200014B:00599"]
+    cuota_ejercicio = result.values[_M200_CUOTA_EJERCICIO_CASILLA]
     assert cuota_ejercicio == Decimal("20000.00"), (
         "DP200014B:00599 must equal 20.000 when tributacion_estado_porcentaje = 100 "
         "and cuota_liquida 00592 = 20.000; the formula (100/100) x 20.000 = 20.000"
@@ -490,15 +522,15 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
         calculate_registry_snapshot(
             _snapshot(),
             inputs={
-                "00501": Decimal("80000"),
-                "DP200013:00417": Decimal("0"),
-                "DP200013:00418": Decimal("0"),
-                "01032": Decimal("0"),
-                "DP200014:00547": Decimal("0"),
-                "DP200014:01033": Decimal("0"),
-                "DP200014:01034": Decimal("0"),
-                "DP200014B:01766": Decimal("0"),
-                "DP200014B:01784": Decimal("0"),
+                _M200_RESULTADO_CONTABLE_CASILLA: Decimal("80000"),
+                _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
+                _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
+                _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
+                _M200_BIN_APLICADA_CASILLA: Decimal("0"),
+                _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
+                _M200_BONIFICACIONES_CASILLA: Decimal("0"),
+                _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
+                _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
             },
             enum_binding_values={_FORM_BINDING: "sl"},
             binding_values={

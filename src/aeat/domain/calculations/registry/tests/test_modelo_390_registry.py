@@ -9,9 +9,39 @@ from functools import lru_cache
 import pytest
 
 from .....core.resources import bundled_path
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
+from .....tests.registry_observations import registry_grounded_modelo_observation
+from .. import (
+    CasillaId,
+    ModeloDefinition,
+    RegistryCatalogues,
+    RegistryValidator,
+    binding_source_casilla_ids,
+    build_snapshot,
+    load_registry_tree,
+    validated_casilla_id,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"modelo 390 registry fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_M303_COMPENSACION_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
+_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.compensacion-ultimo-periodo-97",
+)
+_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.compensacion-generada-ejercicio-no-97",
+)
 
 
 @lru_cache(maxsize=1)
@@ -143,16 +173,16 @@ def test_modelo_390_declares_annual_compensation_result_fields() -> None:
     bindings = {binding.id: binding for binding in revision.bindings}
     relations = {rel.id: rel for rel in revision.relations}
 
-    assert casillas["iva.anual.compensacion-ultimo-periodo-97"].number == "97"
-    assert casillas["iva.anual.compensacion-generada-ejercicio-no-97"].number == "662"
-    # Migrated to relation_prefill: slot bindings use source_modelo + source_output.
+    assert casillas[_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA].number == "97"
+    assert casillas[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA].number == "662"
+    # Migrated to relation_prefill: slot bindings use source_modelo + source_casilla_id.
     assert bindings["modelo-390-prev-303-compensacion-ultimo-periodo"].source == "relation_prefill"
-    assert bindings["modelo-390-prev-303-compensacion-ultimo-periodo"].selector["source_output"] == (
-        "iva.compensacion-generada-periodo"
+    assert binding_source_casilla_ids(bindings["modelo-390-prev-303-compensacion-ultimo-periodo"]) == (
+        _M303_COMPENSACION_GENERADA_CASILLA,
     )
     assert bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"].source == "relation_prefill"
-    assert bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"].selector["source_output"] == (
-        "iva.compensacion-generada-periodo"
+    assert binding_source_casilla_ids(bindings["modelo-390-prev-303-compensacion-generada-ejercicio-no-97"]) == (
+        _M303_COMPENSACION_GENERADA_CASILLA,
     )
     # The canonical period sets live on the relations, not on the bindings.
     ultimo_rel = relations["modelo-390-rel-303-compensacion-ultimo-periodo"]
@@ -168,8 +198,6 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
     relation resolver (resolve_relation_values_from_observations → materialize), not
     the previous_filing path."""
     from .. import (
-        CasillaObservation,
-        RegistryModeloObservation,
         materialize_relation_binding_values,
     )
     from .._relations import resolve_relation_values_from_observations
@@ -186,49 +214,49 @@ def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations()
     _comp_no97_expected = _comp_1t + _comp_2t + _comp_3t
 
     observations = (
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(
-                CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("100")),
-                CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("90")),
-                CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("10")),
-                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=_comp_1t),
-            ),
+            casilla_values={
+                _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: Decimal("100"),
+                _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: Decimal("90"),
+                _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("10"),
+                _M303_COMPENSACION_GENERADA_CASILLA: _comp_1t,
+            },
         ),
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="303",
             filing_year=2025,
             period="2T",
-            observations=(
-                CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("200")),
-                CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("180")),
-                CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("20")),
-                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=_comp_2t),
-            ),
+            casilla_values={
+                _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: Decimal("200"),
+                _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: Decimal("180"),
+                _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("20"),
+                _M303_COMPENSACION_GENERADA_CASILLA: _comp_2t,
+            },
         ),
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="303",
             filing_year=2025,
             period="3T",
-            observations=(
-                CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("300")),
-                CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("270")),
-                CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("30")),
-                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=_comp_3t),
-            ),
+            casilla_values={
+                _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: Decimal("300"),
+                _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: Decimal("270"),
+                _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("30"),
+                _M303_COMPENSACION_GENERADA_CASILLA: _comp_3t,
+            },
         ),
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="303",
             filing_year=2025,
             period="4T",
-            observations=(
-                CasillaObservation(casilla_id="iva.cuota-devengada-total", value=Decimal("400")),
-                CasillaObservation(casilla_id="iva.cuota-deducible-total", value=Decimal("360")),
-                CasillaObservation(casilla_id="iva.resultado-regimen-general", value=Decimal("40")),
-                CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=_comp_4t),
-            ),
+            casilla_values={
+                _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: Decimal("400"),
+                _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: Decimal("360"),
+                _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("40"),
+                _M303_COMPENSACION_GENERADA_CASILLA: _comp_4t,
+            },
         ),
     )
 

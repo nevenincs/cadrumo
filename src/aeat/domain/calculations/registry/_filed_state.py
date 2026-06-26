@@ -9,7 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Period
-from ._bindings import RegistryModeloObservation
+from ._bindings import CasillaObservation, RegistryModeloObservation
 from ._errors import RegistryValidationError
 from ._formula_runtime import RegistryCalculationResult
 from ._ids import CasillaId
@@ -25,10 +25,8 @@ class RegistryFiledStateDrift(BaseModel):
     """One casilla whose local calculation does not match filed AEAT state.
 
     ``formula_id``, ``legal_refs``, and ``source_refs`` carry the
-    regulatory grounding for the casilla from the calculation engine.
-    For formula-computed casillas these are populated from the
-    :class:`RegistryCalculationEntry`; for input or bound casillas they
-    default to ``None`` / empty tuples.
+    regulatory grounding for the casilla from the typed calculation
+    observation.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -38,8 +36,8 @@ class RegistryFiledStateDrift(BaseModel):
     filed_value: Decimal
     delta: Decimal
     formula_id: str | None = None
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    source_refs: tuple[str, ...] = Field(min_length=1)
 
 
 class RegistryFiledStateComparison(BaseModel):
@@ -53,32 +51,60 @@ class RegistryFiledStateComparison(BaseModel):
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=8)
     status: Literal["satisfied", "failed"]
-    compared_casillas: tuple[str, ...]
-    missing_local_casillas: tuple[str, ...] = ()
-    missing_filed_casillas: tuple[str, ...] = ()
+    compared_casilla_ids: tuple[CasillaId, ...]
+    missing_local_casilla_ids: tuple[CasillaId, ...] = ()
+    missing_filed_casilla_ids: tuple[CasillaId, ...] = ()
     drifts: tuple[RegistryFiledStateDrift, ...] = ()
 
-    @field_validator("compared_casillas", "missing_local_casillas", "missing_filed_casillas")
+    @field_validator("compared_casilla_ids", "missing_local_casilla_ids", "missing_filed_casilla_ids")
     @classmethod
-    def _casilla_ids_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+    def _casilla_ids_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("casilla ids must be unique")
         return value
+
+
+def _drift_from_observation(
+    *,
+    casilla_id: CasillaId,
+    local_observation: CasillaObservation | None,
+    local_value: Decimal,
+    filed_value: Decimal,
+) -> RegistryFiledStateDrift:
+    if local_observation is None:
+        raise RegistryValidationError(
+            f"cannot ground filed-state drift for casilla {casilla_id!r}; "
+            "calculation.values exposed a value with no CasillaObservation provenance",
+        )
+    if not local_observation.legal_refs or not local_observation.source_refs:
+        raise RegistryValidationError(
+            f"cannot ground filed-state drift for casilla {casilla_id!r}; "
+            "CasillaObservation is missing legal_refs/source_refs provenance",
+        )
+    return RegistryFiledStateDrift(
+        casilla_id=casilla_id,
+        local_value=local_value,
+        filed_value=filed_value,
+        delta=local_value - filed_value,
+        formula_id=local_observation.formula_id,
+        legal_refs=local_observation.legal_refs,
+        source_refs=local_observation.source_refs,
+    )
 
 
 def compare_calculation_to_filed_observation(
     calculation: RegistryCalculationResult,
     observation: RegistryModeloObservation,
     *,
-    required_casillas: Iterable[str],
+    required_casilla_ids: Iterable[CasillaId],
 ) -> RegistryFiledStateComparison:
     """Compare local registry calculation values against filed AEAT casillas.
 
     Each :class:`RegistryFiledStateDrift` in the returned comparison
     carries ``formula_id``, ``legal_refs``, and ``source_refs`` from the
-    :class:`RegistryCalculationEntry` for formula-computed casillas, so
-    the regulatory grounding for every drifted casilla is preserved in
-    the comparison result and propagates to CLI / audit surfaces.
+    typed :class:`CasillaObservation` envelope, so the regulatory
+    grounding for every drifted casilla is preserved in the comparison
+    result and propagates to CLI / audit surfaces.
 
     Returns:
         A :class:`RegistryFiledStateComparison` summarising all casilla-level drift.
@@ -88,27 +114,24 @@ def compare_calculation_to_filed_observation(
             f"cannot compare calculation modelo {calculation.modelo!r} "
             f"with filed observation modelo {observation.modelo!r}",
         )
-    target_casillas = tuple(sorted(set(required_casillas)))
-    if not target_casillas:
+    target_casilla_ids = tuple(sorted(set(required_casilla_ids)))
+    if not target_casilla_ids:
         raise RegistryValidationError("filed-state comparison requires at least one casilla")
 
     local_values = calculation.values
     filed_values = observation.casilla_values
-    entries_by_target = {entry.target: entry for entry in calculation.entries}
-    missing_local = tuple(casilla_id for casilla_id in target_casillas if casilla_id not in local_values)
-    missing_filed = tuple(casilla_id for casilla_id in target_casillas if casilla_id not in filed_values)
+    observations_by_id = {obs.casilla_id: obs for obs in calculation.observations}
+    missing_local = tuple(casilla_id for casilla_id in target_casilla_ids if casilla_id not in local_values)
+    missing_filed = tuple(casilla_id for casilla_id in target_casilla_ids if casilla_id not in filed_values)
     comparable = tuple(
-        casilla_id for casilla_id in target_casillas if casilla_id in local_values and casilla_id in filed_values
+        casilla_id for casilla_id in target_casilla_ids if casilla_id in local_values and casilla_id in filed_values
     )
     drifts = tuple(
-        RegistryFiledStateDrift(
+        _drift_from_observation(
             casilla_id=casilla_id,
+            local_observation=observations_by_id.get(casilla_id),
             local_value=local_values[casilla_id],
             filed_value=filed_values[casilla_id],
-            delta=local_values[casilla_id] - filed_values[casilla_id],
-            formula_id=entries_by_target[casilla_id].formula_id if casilla_id in entries_by_target else None,
-            legal_refs=entries_by_target[casilla_id].legal_refs if casilla_id in entries_by_target else (),
-            source_refs=entries_by_target[casilla_id].source_refs if casilla_id in entries_by_target else (),
         )
         for casilla_id in comparable
         if local_values[casilla_id] != filed_values[casilla_id]
@@ -123,8 +146,8 @@ def compare_calculation_to_filed_observation(
         filing_year=observation.filing_year,
         period=observation.period,
         status=status,
-        compared_casillas=comparable,
-        missing_local_casillas=missing_local,
-        missing_filed_casillas=missing_filed,
+        compared_casilla_ids=comparable,
+        missing_local_casilla_ids=missing_local,
+        missing_filed_casilla_ids=missing_filed,
         drifts=drifts,
     )

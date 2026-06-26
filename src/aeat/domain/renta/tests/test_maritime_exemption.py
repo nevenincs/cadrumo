@@ -34,6 +34,13 @@ from .._maritime_exemption import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_ART_7P_LEGAL_REFS = ("ley-35-2006:art-7",)
+_REBECA_LEGAL_REFS = ("ley-19-1994:art-75",)
+_DA41_LEGAL_REFS = ("ley-35-2006:da-41", "ley-6-2018")
+_RETMAR_LEGAL_REFS = ("ley-47-2015",)
+_ART_7P_SOURCE_REFS = ("art-7p-foreign-work",)
+_REBECA_SOURCE_REFS = ("rebeca-50pct",)
+
 
 # ---------------------------------------------------------------------------
 # contract: selector unit tests
@@ -216,8 +223,8 @@ class TestGuardDa41Inactive:
             guard_da41_inactive(facts)
         err = exc_info.value
         assert err.context is not None
-        assert err.context.get("legal_ref") == "Ley 35/2006 DA 41 BOE-A-2006-20764"
-        assert err.context.get("enabling_law") == "Ley 6/2018 BOE-A-2018-9268"
+        assert err.context.get("legal_ref") == _DA41_LEGAL_REFS[0]
+        assert err.context.get("enabling_law") == _DA41_LEGAL_REFS[1]
 
 
 # ---------------------------------------------------------------------------
@@ -245,7 +252,7 @@ class TestCheckRetmarMandatoryFiling:
             check_retmar_mandatory_filing(facts)
         err = exc_info.value
         assert err.context is not None
-        assert err.context.get("legal_ref") == "Ley 47/2015 BOE-A-2015-11346"
+        assert err.context.get("legal_ref") == _RETMAR_LEGAL_REFS[0]
 
     def test_retmar_warning_is_renta_error_subclass(self) -> None:
         from .._errors import RentaError
@@ -320,18 +327,14 @@ class TestCalculateArt7pExemption:
         assert obs.value < ART_7P_EXEMPTION_CAP_EUR
 
     def test_observation_carries_art7p_legal_refs(self) -> None:
-        # Close gate: CasillaObservation.legal_refs must carry
-        # "ley-35-2006:art-7p" per aeat-calculation-grounding rule.
-        # Registry binding is based on "Ley 35/2006 Art. 7.p)".
+        # Close gate: CasillaObservation.legal_refs must carry the canonical
+        # legal registry id, not display prose copied from BOE notes.
         obs = calculate_art_7p_exemption(
             annual_salary=Decimal("36500"),
             qualifying_days=100,
             facts=self._BASE_FACTS,
         )
-        assert any("Art. 7.p)" in ref for ref in obs.legal_refs), (
-            f"CasillaObservation.legal_refs must carry Ley 35/2006 Art. 7.p), got {obs.legal_refs!r}"
-        )
-        assert any("BOE-A-2006-20764" in ref for ref in obs.legal_refs)
+        assert obs.legal_refs == _ART_7P_LEGAL_REFS
 
     def test_observation_carries_source_refs(self) -> None:
         obs = calculate_art_7p_exemption(
@@ -339,8 +342,7 @@ class TestCalculateArt7pExemption:
             qualifying_days=100,
             facts=self._BASE_FACTS,
         )
-        assert obs.source_refs, "source_refs must not be empty"
-        assert "art-7p-foreign-work" in obs.source_refs
+        assert obs.source_refs == _ART_7P_SOURCE_REFS
 
     def test_observation_targets_renta_exenta_casilla(self) -> None:
         obs = calculate_art_7p_exemption(
@@ -460,20 +462,14 @@ class TestCalculateRebecaExemption:
             gross_navigation_income=Decimal("30000"),
             facts=self._REBECA_FACTS,
         )
-        combined = " ".join(obs.legal_refs)
-        assert "BOE-A-1994-15794" in combined, (
-            f"CasillaObservation.legal_refs must cite BOE-A-1994-15794, got {obs.legal_refs!r}"
-        )
-        assert "73" in combined, "legal_refs must reference Art. 73"
-        assert "75" in combined, "legal_refs must reference Art. 75"
+        assert obs.legal_refs == _REBECA_LEGAL_REFS
 
     def test_observation_carries_source_refs(self) -> None:
         obs = calculate_rebeca_exemption(
             gross_navigation_income=Decimal("30000"),
             facts=self._REBECA_FACTS,
         )
-        assert obs.source_refs, "source_refs must not be empty"
-        assert "rebeca-50pct" in obs.source_refs
+        assert obs.source_refs == _REBECA_SOURCE_REFS
 
     def test_observation_targets_renta_exenta_casilla(self) -> None:
         obs = calculate_rebeca_exemption(
@@ -526,12 +522,7 @@ def test_art7p_legal_refs_contain_no_wrong_provision() -> None:
         qualifying_days=100,
         facts=facts,
     )
-    # Must cite the Art. 7.p) provision only.
-    assert all("Art. 7.p)" in ref or "BOE-A-2006-20764" in ref for ref in obs.legal_refs), (
-        f"Art. 7.p) observation must only carry Art. 7.p) / BOE-A-2006-20764 refs, got {obs.legal_refs!r}"
-    )
-    # REBECA citation must not appear in Art. 7.p) output.
-    assert not any("BOE-A-1994-15794" in ref for ref in obs.legal_refs)
+    assert obs.legal_refs == _ART_7P_LEGAL_REFS
 
 
 def test_rebeca_legal_refs_contain_no_wrong_provision() -> None:
@@ -547,7 +538,4 @@ def test_rebeca_legal_refs_contain_no_wrong_provision() -> None:
         gross_navigation_income=Decimal("30000"),
         facts=facts,
     )
-    # Must cite only Ley 19/1994 BOE-A-1994-15794.
-    assert all("BOE-A-1994-15794" in ref for ref in obs.legal_refs), (
-        f"REBECA observation must only carry BOE-A-1994-15794 refs, got {obs.legal_refs!r}"
-    )
+    assert obs.legal_refs == _REBECA_LEGAL_REFS

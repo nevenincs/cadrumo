@@ -18,7 +18,10 @@ import re
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
+from ._ids import CasillaId, ModeloId, RevisionId
 from ._schema import ModeloDefinition
+
+type SemanticRoleCasillaOccurrence = tuple[ModeloId, RevisionId, CasillaId]
 
 # Enforced semantic_role requirements: each entry is (label_pattern,
 # expected_role). A casilla whose label matches the pattern must declare
@@ -90,7 +93,7 @@ def _validate_required_role_declarations(
 
 def collect_casillas_by_semantic_role(
     modelos: Iterable[ModeloDefinition],
-) -> Mapping[str, tuple[tuple[str, str, str], ...]]:
+) -> Mapping[str, tuple[SemanticRoleCasillaOccurrence, ...]]:
     """Cross-reference accessor: role -> tuple of (modelo_id, revision_id, casilla_id).
 
     Used by downstream consumers that need to walk every casilla
@@ -104,7 +107,7 @@ def collect_casillas_by_semantic_role(
         modelos: Iterable of :class:`ModeloDefinition` instances to index
             by the semantic roles declared on their casillas.
     """
-    grouped: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
+    grouped: dict[str, list[SemanticRoleCasillaOccurrence]] = defaultdict(list)
     for modelo in modelos:
         for revision in modelo.revisions.values():
             for casilla in revision.casillas:
