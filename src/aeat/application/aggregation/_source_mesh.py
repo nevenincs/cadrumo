@@ -103,7 +103,7 @@ class BindingSourceDisposition(StrEnum):
 def build_binding_source_dispositions(
     enrolled_sources: frozenset[BindingSourceKind],
 ) -> Mapping[BindingSourceKind, BindingSourceDisposition]:
-    """Classify every :class:`BindingSourceKind` member by its live mesh disposition.
+    """Classify every :class:`BindingSourceKind` member by its live mesh :class:`BindingSourceDisposition`.
 
     ``enrolled_sources`` is the LIVE enrolled set read at execution time -- the
     union of every active resolver's ``owned_sources`` plus the pre-mesh tiers and
@@ -351,7 +351,7 @@ class ModeloSourceResolver(Protocol):
 
     @property
     def owned_sources(self) -> tuple[BindingSourceKind, ...]:
-        """Registry binding source kinds this resolver owns."""
+        """Registry :class:`BindingSourceKind` this resolver owns."""
         ...
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
@@ -437,7 +437,7 @@ def merge_source_resolutions_by_precedence(
     *,
     resolver_id: str = "source_mesh_precedence",
 ) -> CalculationSourceResolution:
-    """Overlay ordered resolution tiers by precedence: later tiers win on collision.
+    """Overlay ordered resolution tiers into one :class:`CalculationSourceResolution` by precedence: later tiers win on collision.
 
     Unlike :func:`merge_source_resolutions` (which is EXCLUSIVE: a binding claimed
     by two resolvers in one tier is a hard ``AggregationValidationError``), this
