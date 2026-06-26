@@ -458,7 +458,7 @@ def test_casillas_form_number_filter_no_match_returns_empty_table() -> None:
 
 
 # ---------------------------------------------------------------------------
-# bindings list / preview surface
+# bindings list / resolve surface
 # ---------------------------------------------------------------------------
 
 
@@ -513,7 +513,7 @@ def test_bindings_list_missing_filter_excludes_constant_value_bindings() -> None
     assert "missing_filter\tTrue" in result.output
 
 
-def test_bindings_preview_echoes_override_for_known_key() -> None:
+def test_bindings_resolve_echoes_override_for_known_key() -> None:
     """An override targeting a known binding id surfaces in the
     payload's ``override`` column."""
 
@@ -522,7 +522,7 @@ def test_bindings_preview_echoes_override_for_known_key() -> None:
             "app",
             "modelo",
             "bindings",
-            "preview",
+            "resolve",
             "--modelo",
             "303",
             "--year",
@@ -534,7 +534,7 @@ def test_bindings_preview_echoes_override_for_known_key() -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    assert "operation\tregistry.modelo.bindings.preview" in result.output
+    assert "operation\tregistry.modelo.bindings.resolve" in result.output
     assert "override_count\t1" in result.output
     assert "1234.56" in result.output
 
@@ -545,7 +545,7 @@ def test_bindings_preview_echoes_override_for_known_key() -> None:
             "app",
             "modelo",
             "bindings",
-            "preview",
+            "resolve",
             "--modelo",
             "303",
             "--year",
@@ -564,7 +564,7 @@ def test_bindings_preview_echoes_override_for_known_key() -> None:
     assert row["override"] == "1234.56"
 
 
-def test_bindings_preview_rejects_unknown_binding_with_suggestion_list() -> None:
+def test_bindings_resolve_rejects_unknown_binding_with_suggestion_list() -> None:
     """Unknown override keys fail with a suggestion list sourced
     from the registry's binding catalogue for the active modelo /
     year / period."""
@@ -574,7 +574,7 @@ def test_bindings_preview_rejects_unknown_binding_with_suggestion_list() -> None
             "app",
             "modelo",
             "bindings",
-            "preview",
+            "resolve",
             "--modelo",
             "303",
             "--year",
@@ -592,7 +592,7 @@ def test_bindings_preview_rejects_unknown_binding_with_suggestion_list() -> None
     assert "modelo-303-iva-" in result.output
 
 
-def test_bindings_preview_rejects_malformed_override_syntax() -> None:
+def test_bindings_resolve_rejects_malformed_override_syntax() -> None:
     """``--binding`` without an ``=`` separator fails at the CLI
     boundary with a typer.BadParameter."""
 
@@ -601,7 +601,7 @@ def test_bindings_preview_rejects_malformed_override_syntax() -> None:
             "app",
             "modelo",
             "bindings",
-            "preview",
+            "resolve",
             "--modelo",
             "303",
             "--year",
@@ -649,8 +649,8 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
     assert offenders == [], f"Parallel bindings Typer outside the canonical _modelo.py: {[str(p) for p in offenders]}"
 
 
-def test_bindings_list_and_preview_emit_no_bucket_event() -> None:
-    """``bindings list`` and ``bindings preview`` are read-only —
+def test_bindings_list_and_resolve_emit_no_bucket_event() -> None:
+    """``bindings list`` and ``bindings resolve`` are read-only —
     they must not trigger any bucket event.
 
     The boundary check inspects the canonical module's source for
@@ -668,7 +668,7 @@ def test_bindings_list_and_preview_emit_no_bucket_event() -> None:
     for needle in forbidden_emitters:
         assert needle not in canonical_text, (
             f"Forbidden bucket-event emission pattern {needle!r} found in "
-            "_modelo.py; bindings list/preview must remain read-only."
+            "_modelo.py; bindings list/resolve must remain read-only."
         )
 
 

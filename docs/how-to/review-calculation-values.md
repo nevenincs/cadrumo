@@ -135,7 +135,7 @@ aeat app modelo bindings list --modelo 130 --year 2026 --period 1T --missing
 Preview what a value would produce — without saving anything:
 
 ```bash
-aeat app modelo bindings preview --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
+aeat app modelo bindings resolve --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
 ```
 
 Supply the value during calculation when the list shows the field cannot be

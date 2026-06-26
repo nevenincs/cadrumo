@@ -345,6 +345,7 @@ aggregation:
       source_kinds_mismatch: aggregation.service.errors.source_kinds_mismatch
   source_mesh:
     errors:
+      ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
       duplicate_binding_owner: 'Belső hiba: ismétlődő kötési tulajdonos a forráshálon.'
       duplicate_bound_casilla_owner: 'Belső hiba: ismétlődő mező-kötési tulajdonos
         a forráshálon.'
@@ -357,7 +358,6 @@ aggregation:
         kell lenniük.
       unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
       unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
-      ambiguous_source_disposition: 'aggregation.source_mesh.errors.ambiguous_source_disposition'
 application:
   auth:
     acquisition_lock:
@@ -875,6 +875,16 @@ application:
           nyisson korpusz-blokkolt nyomon követési feladatot a Convenio cikkének megadásával.
       missing_required_casilla: A kötelező %{casilla_id} casilla hiányzik a számítási
         revízió bemeneti adataiból.
+      modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: Az
+        általános adóköteles alap (C500) pozitív, de az önadózás eredő kvótája (C595)
+        nulla; erősítse meg, hogy ez jogszerű nulla (a személyi és családi minimum
+        alatti alap, vagy levonásokkal teljesen ellentételezve), nem pedig modellezetlen
+        hiányosság.
+      modelo_100_2025_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: Az
+        általános adóköteles alap (C500) pozitív, de az önadózás eredő kvótája (C595)
+        nulla; erősítse meg, hogy ez jogszerű nulla (a személyi és családi minimum
+        alatti alap, vagy levonásokkal teljesen ellentételezve), nem pedig modellezetlen
+        hiányosság.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: mentesülön
         az M130 benyújtása alól ebben a negyedévben, mert az évben felhalmozott forrásadó-előleg
         és számla előleg a bruttó bevétel legalább 70%-át teszi ki.'
@@ -919,8 +929,6 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
-      modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: 'Az általános adóköteles alap (C500) pozitív, de az önadózás eredő kvótája (C595) nulla; erősítse meg, hogy ez jogszerű nulla (a személyi és családi minimum alatti alap, vagy levonásokkal teljesen ellentételezve), nem pedig modellezetlen hiányosság.'
-      modelo_100_2025_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: 'Az általános adóköteles alap (C500) pozitív, de az önadózás eredő kvótája (C595) nulla; erősítse meg, hogy ez jogszerű nulla (a személyi és családi minimum alatti alap, vagy levonásokkal teljesen ellentételezve), nem pedig modellezetlen hiányosság.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás
@@ -1469,8 +1477,8 @@ cli:
         override_help: Ideiglenes kötési felülbírálat KEY=VALUE szintaxissal (ismételhető).
         period_help: 'Időszaktokent: 0A éves, 1T-4T negyedévek, 01-12 hónapok; nyilvántartási
           nyomtatványokhoz (036) használja: alta, modificacion vagy baja.'
-        preview_help: Kötések előnézete ideiglenes felülbírálással az állapot megváltoztatása
-          nélkül.
+        resolve_help: Feloldja a kötéseket és megjeleníti az értékeiket opcionális
+          ideiglenes felülbírálással, az állapot megváltoztatása nélkül
         unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések a(z)
           {code}@{revision} ({period}) számára: {suggestion}.'
         year_help: A nyomtatvány adóéve (pl. 2026).

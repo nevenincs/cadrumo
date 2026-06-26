@@ -83,7 +83,7 @@ def register_discovery_commands(
     _register_describe_command(app, deps)
     _register_casillas_command(app, deps)
     _register_bindings_list_command(bindings_app, deps)
-    _register_bindings_preview_command(bindings_app, deps)
+    _register_bindings_resolve_command(bindings_app, deps)
     _register_formulas_command(app, deps)
 
 
@@ -526,9 +526,9 @@ def _require_binding_scope(*, modelo: str | None, year: int | None, period: str 
         raise typer.BadParameter(tr("cli.app.modelo.bindings.missing_required_options", options=", ".join(missing)))
 
 
-def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @bindings_app.command("preview", help=tr("cli.app.modelo.bindings.preview_help"))
-    def bindings_preview(
+def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _DiscoveryDeps) -> None:
+    @bindings_app.command("resolve", help=tr("cli.app.modelo.bindings.resolve_help"))
+    def bindings_resolve(
         ctx: typer.Context,
         modelo: Annotated[
             str | None,
@@ -604,7 +604,7 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
             ],
         )
         lines = [
-            "operation\tregistry.modelo.bindings.preview",
+            "operation\tregistry.modelo.bindings.resolve",
             f"modelo\t{report.code}",
             f"revision\t{report.revision}",
             f"filing_year\t{report.filing_year}",
@@ -624,7 +624,7 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
             )
             for row in report.rows
         )
-        _emit_envelope(ctx, command="modelo.bindings.preview", result=result, lines=lines)
+        _emit_envelope(ctx, command="modelo.bindings.resolve", result=result, lines=lines)
 
 
 def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
