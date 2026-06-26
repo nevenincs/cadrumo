@@ -673,8 +673,8 @@ def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             rows=tuple(
                 FormulaPayload(
                     formula_id=row.formula_id,
-                    target=row.target,
-                    input_casillas=tuple(row.input_casillas),
+                    target_casilla_id=row.target_casilla_id,
+                    input_casilla_ids=tuple(row.input_casilla_ids),
                     input_bindings=tuple(row.input_bindings),
                     input_parameters=tuple(row.input_parameters),
                     input_relations=tuple(row.input_relations),
@@ -691,20 +691,20 @@ def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
 def _formula_lines(report, *, explain: bool) -> list[str]:
     if explain:
         return [
-            "formula_id\ttarget\tinputs\tlegal_refs\tsource_refs",
+            "formula_id\ttarget_casilla_id\tinputs\tlegal_refs\tsource_refs",
             *[
-                f"{row.formula_id}\t{row.target}\t"
-                f"{', '.join((*row.input_casillas, *row.input_bindings, *row.input_parameters))}\t"
+                f"{row.formula_id}\t{row.target_casilla_id}\t"
+                f"{', '.join((*row.input_casilla_ids, *row.input_bindings, *row.input_parameters))}\t"
                 f"{', '.join(row.legal_refs)}\t"
                 f"{', '.join(row.source_refs)}"
                 for row in report.rows
             ],
         ]
     return [
-        "formula_id\ttarget\tinputs",
+        "formula_id\ttarget_casilla_id\tinputs",
         *[
-            f"{row.formula_id}\t{row.target}\t"
-            f"{', '.join((*row.input_casillas, *row.input_bindings, *row.input_parameters))}"
+            f"{row.formula_id}\t{row.target_casilla_id}\t"
+            f"{', '.join((*row.input_casilla_ids, *row.input_bindings, *row.input_parameters))}"
             for row in report.rows
         ],
     ]

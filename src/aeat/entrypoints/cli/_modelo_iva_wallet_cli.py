@@ -423,11 +423,13 @@ def _register_iva_wallet_override_command(iva_wallet_app: typer.Typer, *, active
             "cli.app.modelo.iva_wallet.override_help",
             default=(
                 "Record an explicit taxpayer override for the Modelo 303 prior-period "
-                "compensación carry (casilla 110). The reconciliation refuses to auto-apply a "
+                "compensación carry (`iva.compensacion-pendiente-periodos-anteriores`, AEAT box 110). "
+                "The reconciliation refuses to auto-apply a "
                 "seeded/local carry without live AEAT wallet evidence; this verb records the "
                 "operator-asserted amount with mandatory --reason and --evidence-locator "
                 "provenance, persisting a non-blocking taxpayer_override decision so the next "
-                "'work calculate' applies it to casilla 110. It unblocks the carry CALCULATION "
+                "'work calculate' applies it to `iva.compensacion-pendiente-periodos-anteriores`. "
+                "It unblocks the carry CALCULATION "
                 "only — it does NOT satisfy the dependent period's official-evidence verify gate, "
                 "and contacts AEAT zero times. Requires --confirm."
             ),
@@ -463,7 +465,11 @@ def _register_iva_wallet_override_command(iva_wallet_app: typer.Typer, *, active
                 "--amount",
                 help=tr(
                     "cli.app.modelo.iva_wallet.override_amount_help",
-                    default="Overridden prior-compensación amount in EUR applied to casilla 110 (decimal, e.g. 420.00).",
+                    default=(
+                        "Overridden prior-compensación amount in EUR applied to "
+                        "`iva.compensacion-pendiente-periodos-anteriores` "
+                        "(AEAT box 110; decimal, e.g. 420.00)."
+                    ),
                 ),
             ),
         ],
@@ -483,7 +489,10 @@ def _register_iva_wallet_override_command(iva_wallet_app: typer.Typer, *, active
                 "--evidence-locator",
                 help=tr(
                     "cli.app.modelo.iva_wallet.override_evidence_locator_help",
-                    default="Required locator of the evidence supporting the override (e.g. prior justificante reference).",
+                    default=(
+                        "Required locator of the evidence supporting the override "
+                        "(e.g. prior justificante reference)."
+                    ),
                 ),
             ),
         ],
@@ -496,7 +505,8 @@ def _register_iva_wallet_override_command(iva_wallet_app: typer.Typer, *, active
                     "cli.app.modelo.iva_wallet.override_confirm_help",
                     default=(
                         "Required confirmation flag. Acknowledge that this override changes the filed "
-                        "casilla 110 figure and filing accuracy depends on the value supplied."
+                        "`iva.compensacion-pendiente-periodos-anteriores` figure and filing accuracy depends "
+                        "on the value supplied."
                     ),
                 ),
             ),

@@ -31,6 +31,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from .envelope_helpers import unwrap_envelope_notices
@@ -44,6 +45,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _T0 = datetime(2026, 1, 15, 9, 0, 0, tzinfo=UTC)
 _T1 = _T0 + timedelta(hours=2)
+_IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.base-imponible",
+    surface="_IVA_BASE_IMPONIBLE_CASILLA",
+)
+_CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01")
+_CASILLA_12: CasillaId = validated_casilla_id("casilla-12", surface="_CASILLA_12")
 
 
 @pytest.fixture(autouse=True)
@@ -66,7 +73,6 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     from ....application.modelo import create_work_unit
     from ....core import Period, resolve_active_bucket_id
     from ....core.config import override_settings
-    from ....domain.calculations.registry import CasillaObservation
     from ....domain.modelos._calculation_repository import (
         CalculationRevisionCatalogueRepository,
         upsert_calculation_revision,
@@ -140,28 +146,29 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
         wu_id = work_unit.work_unit_id
 
         # Calculation revision with typed CasillaObservation carrying legal_refs.
-        inputs_snapshot = {"iva.base-imponible": "1000.00"}
+        input_values_by_casilla_id = {_IVA_BASE_IMPONIBLE_CASILLA: "1000.00"}
         binding_overrides: dict[str, str] = {}
-        casilla_values = {"casilla-01": Decimal("1000.00"), "casilla-12": Decimal("210.00")}
+        casilla_values = {_CASILLA_01: Decimal("1000.00"), _CASILLA_12: Decimal("210.00")}
         revision_id = derive_calculation_revision_id(
             work_unit_id=wu_id,
-            inputs_snapshot=inputs_snapshot,
+            input_values_by_casilla_id=input_values_by_casilla_id,
             binding_overrides=binding_overrides,
             casilla_values=casilla_values,
         )
         observations = (
             CasillaObservation(
-                casilla_id="casilla-01",
+                casilla_id=_CASILLA_01,
                 value=Decimal("1000.00"),
                 formula_id=None,
                 legal_refs=("Ley 37/1992 art. 78",),
                 source_refs=("aeat-modelo-303-instrucciones-2026",),
             ),
             CasillaObservation(
-                casilla_id="casilla-12",
+                casilla_id=_CASILLA_12,
                 value=Decimal("210.00"),
                 formula_id="iva-cuota-devengada-general",
-                operand_refs=("casilla-01",),
+                operand_refs=(_CASILLA_01,),
+                operand_casilla_refs=(_CASILLA_01,),
                 operand_values=(Decimal("1000.00"),),
                 legal_refs=("Ley 37/1992 art. 90",),
                 source_refs=("aeat-modelo-303-instrucciones-2026",),
@@ -171,7 +178,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
             calculation_revision_id=revision_id,
             work_unit_id=wu_id,
             state=CalculationRevisionState.VERIFICADO_COMPLETO,
-            inputs_snapshot=inputs_snapshot,
+            input_values_by_casilla_id=input_values_by_casilla_id,
             binding_overrides=binding_overrides,
             casilla_values=casilla_values,
             observations=observations,

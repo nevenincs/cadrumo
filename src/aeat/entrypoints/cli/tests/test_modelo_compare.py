@@ -39,7 +39,12 @@ import pytest
 
 from ....application.user_profile._repository import UserProfileLifecycleRepository
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation, calculate_registry_snapshot
+from ....domain.calculations.registry import (
+    CasillaId,
+    CasillaObservation,
+    calculate_registry_snapshot,
+    validated_casilla_id,
+)
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
@@ -70,10 +75,29 @@ _PREV_YEAR_INCOME = "13000.00"
 
 # Key output casillas to assert against the oracle.
 # 03 = rendimiento neto, 04 = pago fraccionado, 07 = resultado I, 19 = final.
-_RESULT_CASILLAS = ("03", "04", "07", "19")
+_RESULT_CASILLAS: tuple[CasillaId, ...] = (
+    validated_casilla_id("03", surface="_RESULT_CASILLAS"),
+    validated_casilla_id("04", surface="_RESULT_CASILLAS"),
+    validated_casilla_id("07", surface="_RESULT_CASILLAS"),
+    validated_casilla_id("19", surface="_RESULT_CASILLAS"),
+)
 
 # Anti-tautology: casilla 02 (gastos) is identical across both years.
-_TAUTOLOGY_CASILLA = "02"
+_TAUTOLOGY_CASILLA: CasillaId = validated_casilla_id("02", surface="_TAUTOLOGY_CASILLA")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M130_GASTOS_CASILLA: CasillaId = _TAUTOLOGY_CASILLA
+_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
+_M130_PAGOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_PAGOS_PREVIOS_CASILLA")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
+_M130_RESULTADO_PARCIAL_CASILLA: CasillaId = validated_casilla_id(
+    "07",
+    surface="_M130_RESULTADO_PARCIAL_CASILLA",
+)
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
+_M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
+_M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_FINAL_CASILLA")
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -142,7 +166,12 @@ def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str
     return _payload(result.output)["work_unit_id"]
 
 
-def _calculate_m130(work_unit_id: str, *, filing_year: int, ingresos: Decimal, gastos: str) -> dict[str, str]:
+def _casilla_id_from_payload(value: object) -> CasillaId:
+    """Validate one JSON payload key against the canonical CasillaId contract."""
+    return validated_casilla_id(value, surface="test casilla id")
+
+
+def _calculate_m130(work_unit_id: str, *, filing_year: int, ingresos: Decimal, gastos: str) -> dict[CasillaId, str]:
     """Calculate M130 and return casilla_values dict.
 
     Oracle inputs (AEAT DR 130 Instrucciones):
@@ -168,15 +197,17 @@ def _calculate_m130(work_unit_id: str, *, filing_year: int, ingresos: Decimal, g
         [
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "05=0.00",
-            "--casilla", "06=0.00",
+            "--casilla", f"{_M130_PAGOS_PREVIOS_CASILLA}=0.00",
+            "--casilla", f"{_M130_RETENCIONES_CASILLA}=0.00",
             "--binding", f"irpf.previous_year_economic_activity_net_income={_PREV_YEAR_INCOME}",
             "--binding", "modelo-130-resultados-negativos-anteriores=0",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    return dict(_payload(result.output)["casilla_values"])
+    raw_values = _payload(result.output)["casilla_values"]
+    assert isinstance(raw_values, dict), f"casilla_values must be an object, got {type(raw_values).__name__}"
+    return {_casilla_id_from_payload(key): str(value) for key, value in raw_values.items()}
 
 
 # ---------------------------------------------------------------------------
@@ -235,11 +266,11 @@ def test_modelo_compare_m130_two_year_delta_rows(
     # Verify oracle values are non-zero and materially different.
     # Oracle: casilla 07 = max(0, 20% x (01 - 02)) - 05 - 06
     # 2025: 20% x (12000 - 4000) = 1600; 2026: 20% x (20000 - 4000) = 3200.
-    assert Decimal(values_2025["07"]) == Decimal("1600.00"), (
-        f"2025 oracle casilla 07: expected 1600.00, got {values_2025['07']!r}"
+    assert Decimal(values_2025[_M130_RESULTADO_PARCIAL_CASILLA]) == Decimal("1600.00"), (
+        f"2025 oracle casilla 07: expected 1600.00, got {values_2025[_M130_RESULTADO_PARCIAL_CASILLA]!r}"
     )
-    assert Decimal(values_2026["07"]) == Decimal("3200.00"), (
-        f"2026 oracle casilla 07: expected 3200.00, got {values_2026['07']!r}"
+    assert Decimal(values_2026[_M130_RESULTADO_PARCIAL_CASILLA]) == Decimal("3200.00"), (
+        f"2026 oracle casilla 07: expected 3200.00, got {values_2026[_M130_RESULTADO_PARCIAL_CASILLA]!r}"
     )
 
     # -- Run compare verb ---------------------------------------------------
@@ -261,7 +292,9 @@ def test_modelo_compare_m130_two_year_delta_rows(
     assert payload["modelo"] == "130"
 
     # Build casilla_id → row lookup from delta_rows.
-    delta_by_casilla: dict[str, dict[str, object]] = {str(row["casilla_id"]): row for row in payload["delta_rows"]}
+    delta_by_casilla: dict[CasillaId, dict[str, object]] = {
+        _casilla_id_from_payload(row["casilla_id"]): row for row in payload["delta_rows"]
+    }
 
     # -- Assert result casilla deltas match oracle (year_b - year_a) --------
     for casilla_id in _RESULT_CASILLAS:
@@ -317,17 +350,17 @@ def test_compare_delta_rows_carry_provenance() -> None:
     engine_result = calculate_registry_snapshot(
         snap,
         inputs={
-            "01": Decimal("10000"),
-            "02": Decimal("4000"),
+            _M130_INGRESOS_CASILLA: Decimal("10000"),
+            _M130_GASTOS_CASILLA: Decimal("4000"),
             # Casilla 05 (pagos fraccionados anteriores) is a previous-filing-bound
             # carry; at 1T its expanding span is empty so the engine materialises it
             # as the absent-by-design zero. Supplying it as a raw input is now
             # smuggling past the previous-filing binding and is rejected by the guard.
-            "06": Decimal("0"),
-            "08": Decimal("0"),
-            "10": Decimal("0"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_RETENCIONES_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         date_context={"filing_period": date(2026, 3, 31)},
         binding_values={
@@ -337,10 +370,16 @@ def test_compare_delta_rows_carry_provenance() -> None:
     )
 
     # Simulate the obs_by_id lookup from modelo_compare.
-    obs_by_id: dict[str, CasillaObservation] = {obs.casilla_id: obs for obs in engine_result.observations}
+    obs_by_id: dict[CasillaId, CasillaObservation] = {
+        obs.casilla_id: obs for obs in engine_result.observations
+    }
 
     # Computed casillas (03, 07, 19) must carry non-empty provenance.
-    for casilla_id in ("03", "07", "19"):
+    for casilla_id in (
+        _M130_RENDIMIENTO_NETO_CASILLA,
+        _M130_RESULTADO_PARCIAL_CASILLA,
+        _M130_RESULTADO_FINAL_CASILLA,
+    ):
         obs = obs_by_id.get(casilla_id)
         assert obs is not None, f"Casilla {casilla_id!r} absent from engine_result.observations"
         assert obs.formula_id, f"Computed casilla {casilla_id!r}: formula_id must be non-empty in compare delta_rows"
@@ -348,6 +387,6 @@ def test_compare_delta_rows_carry_provenance() -> None:
         assert obs.source_refs, f"Computed casilla {casilla_id!r}: source_refs must be non-empty in compare delta_rows"
 
     # Input casilla (01) must have empty formula_id (not formula-computed).
-    input_obs = obs_by_id.get("01")
+    input_obs = obs_by_id.get(_M130_INGRESOS_CASILLA)
     assert input_obs is not None, "Casilla '01' (ingresos) must appear in observations"
     assert input_obs.formula_id is None, "Input casilla '01' must have formula_id=None (not formula-computed)"
