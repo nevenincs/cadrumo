@@ -22,6 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from aeat.core import Modelo
 from aeat.core.external_constants import OutputLanguage
+from aeat.domain.calculations.registry import CasillaId
 
 __all__ = [
     "CasillaSearchRecord",
@@ -67,8 +68,9 @@ class SearchRecordBase(BaseModel):
 class CasillaSearchRecord(SearchRecordBase):
     """A machine-projected search record for one AEAT casilla (ADR D4).
 
-    Built from registry snapshots, never hand-curated. Identity is the
-    ``(modelo, number, segmento)`` triple, deduplicated across revisions.
+    Built from registry snapshots, never hand-curated. Identity is
+    ``(modelo, casilla_id)``, deduplicated across revisions. ``number`` and
+    ``segmento`` are retained only as reviewed AEAT display/export metadata.
     The localised descriptions are the registry casilla ``label`` (es
     invariant) plus per-revision ``localized_labels`` (en / ca / hu) where
     authored -- conforming to the official casilla descriptions. The
@@ -78,6 +80,7 @@ class CasillaSearchRecord(SearchRecordBase):
 
     kind: SearchRecordKind = SearchRecordKind.CASILLA
     modelo: Modelo
+    casilla_id: CasillaId
     number: str = Field(min_length=1, max_length=160)
     segmento: str | None = Field(default=None, min_length=1, max_length=32)
     section: tuple[str, ...] = ()
@@ -88,6 +91,6 @@ class CasillaSearchRecord(SearchRecordBase):
     source_revisions: tuple[str, ...] = Field(min_length=1)
 
     @property
-    def dedup_key(self) -> tuple[str, str, str]:
-        """The cross-revision dedup identity ``(modelo, number, segmento)``."""
-        return (self.modelo.value, self.number, self.segmento or "")
+    def dedup_key(self) -> tuple[str, CasillaId]:
+        """The cross-revision dedup identity ``(modelo, casilla_id)``."""
+        return (self.modelo.value, self.casilla_id)

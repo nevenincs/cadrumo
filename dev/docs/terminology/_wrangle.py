@@ -15,8 +15,9 @@ The four corrections, in composition order:
    (:data:`STRONG_SIGNAL_SCORE_FLOOR`, the research's ~0.5 convention), and
    drop low-value navigation / TOC / index pages that pollute the tail.
 2. **casilla-revision dedupe** -- collapse multiple hits landing on the SAME
-   casilla record id (``casilla:<modelo>:<number>:<segmento>``) to one target,
-   keeping the highest-scored hit.
+   opaque casilla search-record id to one target, keeping the highest-scored
+   hit. The canonical casilla identity remains typed metadata on the record,
+   not a parseable id token.
 3. **locale-quadruplet collapse** -- collapse the research's documented 4x
    locale crowding: several near-identical hits resolving to the same record
    ``id`` collapse to one, keeping the best score.

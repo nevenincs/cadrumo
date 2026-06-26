@@ -17,7 +17,9 @@ from pathlib import Path
 
 import pytest
 
+from aeat.core import Modelo
 from aeat.core.external_constants import OutputLanguage
+from aeat.domain.calculations.registry import CasillaId, validated_casilla_id
 
 from .. import (
     ConceptDomain,
@@ -40,7 +42,7 @@ _FULL_FRAGMENT = """
 concept_id = "recargo-equivalencia"
 domain = "regimen"
 lifecycle = "deprecated"
-domain_refs = ["modelo:303", "casilla:303:00029"]
+domain_refs = ["modelo:303", "modelo:390"]
 legal_refs = ["ley-37-1992:art-148", "ley-37-1992:art-154"]
 broader = ["iva"]
 related = ["modulos"]
@@ -122,7 +124,7 @@ def test_full_fragment_round_trips_with_every_field_preserved(tmp_path: Path) ->
     assert record.concept_id == "recargo-equivalencia"
     assert record.domain is ConceptDomain.REGIMEN
     assert record.lifecycle is ConceptLifecycle.DEPRECATED
-    assert record.domain_refs == ("modelo:303", "casilla:303:00029")
+    assert record.domain_refs == ("modelo:303", "modelo:390")
     assert record.legal_refs == ("ley-37-1992:art-148", "ley-37-1992:art-154")
     assert record.broader == ("iva",)
     assert record.related == ("modulos",)
@@ -160,6 +162,20 @@ def test_record_is_frozen(tmp_path: Path) -> None:
     record = handbook.concept("iva")
     with pytest.raises((TypeError, ValueError)):
         record.lifecycle = ConceptLifecycle.RETIRED  # type: ignore[misc]
+
+
+def test_scalar_casilla_domain_ref_is_rejected(tmp_path: Path) -> None:
+    """Casilla domain refs must not reintroduce a combined scalar notation."""
+    casilla_id: CasillaId = validated_casilla_id("00029", surface="terminology handbook fixture")
+    legacy_ref = ":".join(("casilla", Modelo.M303.value, casilla_id))
+    fragment = _BROADER_PARENT.replace(
+        'domain = "concepto"',
+        f'domain = "concepto"\ndomain_refs = ["{legacy_ref}"]',
+    )
+    concepts = _write(tmp_path, "iva.toml", fragment)
+
+    with pytest.raises(TerminologyValidationError, match="scalar casilla references"):
+        load_terminology_handbook(concepts)
 
 
 def test_narrower_is_derived_from_broader_inverse(tmp_path: Path) -> None:

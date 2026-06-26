@@ -3,7 +3,8 @@
 The compiler projects every casilla of every modelo revision -- read through
 the validated registry authority (never raw TOML) -- into a strict
 :class:`~dev.docs.terminology._search_record.CasillaSearchRecord`,
-deduplicated across revisions by the ``(modelo, number, segmento)`` identity.
+deduplicated across revisions by the canonical ``(modelo, casilla.id)``
+identity.
 These gates bind it to the calculation-grounding contract (every casilla
 emitted, ``legal_refs`` / ``source_refs`` carried, none dropped) and to the
 registry-authority-flow rule (the projection reads snapshots through the
@@ -74,8 +75,8 @@ def test_projection_walks_every_casilla_row(
     )
 
 
-def test_m303_emits_every_distinct_casilla_identity() -> None:
-    """Every distinct ``(number, segmento)`` identity in any M303 revision is emitted.
+def test_m303_emits_every_distinct_casilla_id() -> None:
+    """Every distinct ``casilla.id`` identity in any M303 revision is emitted.
 
     Per-modelo parity: the dedup collapses cross-revision duplicates but must
     never lose an identity. The identity set across all M303 revisions equals
@@ -85,13 +86,13 @@ def test_m303_emits_every_distinct_casilla_identity() -> None:
 
     authority = bundled_authority()
     definition = authority.modelo(Modelo.M303.value)
-    identities: set[tuple[str, str]] = set()
+    identities: set[str] = set()
     for _revision_id, revision in definition.revisions.items():
         for casilla in revision.casillas:
-            identities.add((casilla.number, casilla.segmento or ""))
+            identities.add(casilla.id)
 
     records = project_modelo_casillas(Modelo.M303)
-    projected = {(record.number, record.segmento or "") for record in records}  # type: ignore[attr-defined]
+    projected = {record.casilla_id for record in records}  # type: ignore[attr-defined]
 
     assert projected == identities, (
         "M303 projected identities diverge from the registry:\n"
@@ -123,7 +124,7 @@ def test_dedup_collapses_cross_revision_duplicates(
 def test_dedup_key_is_unique_across_records(
     full_projection: tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats],
 ) -> None:
-    """Each ``(modelo, number, segmento)`` identity yields exactly one record."""
+    """Each canonical ``(modelo, casilla.id)`` identity yields exactly one record."""
     records, _stats = full_projection
     keys = [record.dedup_key for record in records]
     assert len(keys) == len(set(keys)), "duplicate dedup_key -- cross-revision collapse failed"
@@ -163,8 +164,8 @@ def test_every_record_carries_legal_and_source_refs(
     """
     records, _stats = full_projection
     for record in records:
-        assert record.legal_refs, f"casilla {record.number} has empty legal_refs"
-        assert record.source_refs, f"casilla {record.number} has empty source_refs"
+        assert record.legal_refs, f"casilla {record.casilla_id} has empty legal_refs"
+        assert record.source_refs, f"casilla {record.casilla_id} has empty source_refs"
 
 
 def test_all_legal_refs_resolve_in_the_catalogue(
@@ -186,10 +187,10 @@ def test_all_legal_refs_resolve_in_the_catalogue(
 
 
 def test_m303_record_has_correct_identity_and_spanish_label() -> None:
-    """An M303 casilla projects with the right modelo, number, and es label.
+    """An M303 casilla projects with the right modelo, casilla id, and es label.
 
     Concrete identity assertion drawn from the live registry: the record's
-    modelo is M303, its number matches the registry casilla, and its es
+    modelo is M303, its ``casilla_id`` matches the registry casilla, and its es
     description is the registry ``label`` verbatim.
     """
     from dev.docs.terminology._casilla_projection import project_modelo_casillas
@@ -201,18 +202,33 @@ def test_m303_record_has_correct_identity_and_spanish_label() -> None:
     sample_casilla = latest_revision.casillas[0]
 
     records = project_modelo_casillas(Modelo.M303)
-    target_segmento = sample_casilla.segmento or ""
     match = next(
         (
             record
             for record in records
-            if record.number == sample_casilla.number and (record.segmento or "") == target_segmento  # type: ignore[attr-defined]
+            if record.casilla_id == sample_casilla.id  # type: ignore[attr-defined]
         ),
         None,
     )
-    assert match is not None, f"M303 casilla {sample_casilla.number} not projected"
+    assert match is not None, f"M303 casilla {sample_casilla.id} not projected"
     assert match.modelo is Modelo.M303  # type: ignore[attr-defined]
+    assert match.number == sample_casilla.number  # type: ignore[attr-defined]
+    assert match.segmento == sample_casilla.segmento  # type: ignore[attr-defined]
     assert match.descriptions[OutputLanguage.ES] == sample_casilla.label  # type: ignore[attr-defined]
+
+
+def test_segmented_modelo_200_projection_uses_canonical_casilla_id() -> None:
+    """Segment-qualified M200 casillas project by ``casilla.id``, not by bare number."""
+    from dev.docs.terminology._casilla_projection import project_modelo_casillas
+
+    records = project_modelo_casillas(Modelo.M200)
+    by_id = {record.casilla_id: record for record in records}  # type: ignore[attr-defined]
+
+    assert "DP200014:00562" in by_id
+    record = by_id["DP200014:00562"]
+    assert record.dedup_key == ("200", "DP200014:00562")  # type: ignore[attr-defined]
+    assert record.number == "00562"  # type: ignore[attr-defined]
+    assert record.segmento == "DP200014"  # type: ignore[attr-defined]
 
 
 def test_m303_has_multilingual_casilla_labels() -> None:

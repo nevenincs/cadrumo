@@ -195,7 +195,7 @@
       "src/aeat/domain/calculations/registry/_relations.py::resolve_relation_values": 12,
       "src/aeat/domain/calculations/registry/_remote_state_guard.py::RemoteStateGuardPolicy._validate_synthetic_data_consistency": 11,
       "src/aeat/domain/calculations/registry/_remote_state_guard.py::_evaluate_http": 12,
-      "src/aeat/domain/calculations/registry/_runtime_graph.py::input_casilla_alias_map": 11,
+      "src/aeat/domain/calculations/registry/_runtime_graph.py::input_casilla_id_map": 11,
       "src/aeat/domain/calculations/registry/_scenarios.py::_compare_expected_output": 14,
       "src/aeat/domain/calculations/registry/_schedules.py::_resolve_profile_fact": 15,
       "src/aeat/domain/calculations/registry/_schema.py::LiveCrossReferenceDecision._validate_authentication_constraints": 11,
