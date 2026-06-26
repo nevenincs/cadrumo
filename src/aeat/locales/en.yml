@@ -294,12 +294,6 @@ aggregation:
   per_modelo:
     errors:
       unsupported_modelo: Unsupported modelo for per-modelo aggregation
-    registry:
-      errors:
-        invalid_accrued_on: 'Invalid accrual date for observation %{source_object_id}:
-          %{accrued_on}'
-        unsupported_provider: 'Unsupported aggregation provider for modelo %{modelo}:
-          %{provider}'
   prorrata:
     errors:
       current_year_not_after_prior: current_year must be strictly greater than prior_year.
@@ -322,9 +316,12 @@ aggregation:
         (e.g. 2024-0A).
   retenciones:
     errors:
-      filing_year_out_of_range: 'Filing year %{filing_year} is outside the supported range %{min_year}-%{max_year}.'
-      perceptor_nif_blank: 'Perceptor NIF must not be blank.'
-      perceptor_observations_missing: 'No per-perceptor retention observations exist for modelo %{modelo} %{filing_year} %{period}; source %{source_kind} cannot resolve.'
+      filing_year_out_of_range: Filing year %{filing_year} is outside the supported
+        range %{min_year}-%{max_year}.
+      perceptor_nif_blank: Perceptor NIF must not be blank.
+      perceptor_observations_missing: No per-perceptor retention observations exist
+        for modelo %{modelo} %{filing_year} %{period}; source %{source_kind} cannot
+        resolve.
   service:
     errors:
       envelope_modelo_mismatch: Aggregation modelo does not match result modelo.
@@ -353,6 +350,7 @@ aggregation:
       source_transaction_ids_duplicate: Source mesh transaction ids must be unique.
       unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
       unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
+      ambiguous_source_disposition: 'aggregation.source_mesh.errors.ambiguous_source_disposition'
 application:
   auth:
     acquisition_lock:
@@ -644,12 +642,10 @@ application:
           year=%{filing_year} period=%{period}.'
         snapshot_bucket_mismatch: The borrador snapshot does not belong to the active
           bucket.
-        snapshot_id_required: Borrador-sourced values require a borrador_snapshot_id.
         snapshot_load_failed: Cannot load the selected borrador snapshot; list active
           snapshots with aeat app live borrador 100 list.
         snapshot_not_active: Borrador snapshot is not active; list active snapshots
           with `aeat app live borrador 100 list`.
-        source_trace_mismatch: Borrador source trace must match resolved binding ids.
         unsupported_modelo: Borrador binding is not supported for modelo %{modelo};
           the registry manifest must declare the borrador capability.
     errors:
@@ -672,7 +668,8 @@ application:
       calculate_binding_unknown: '--binding %{key} does not match any binding id in
         this revision. Accepted binding ids: %{accepted}. Use `aeat app modelo bindings
         list <MODELO>` to list valid binding ids.'
-      calculate_casilla_noncanonical_refused: '--casilla %{key} is not a canonical casilla.id or is ambiguous. Use the exact canonical casilla.id: %{accepted}.'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} is not a canonical
+        casilla.id or is ambiguous. Use the exact canonical casilla.id: %{accepted}.'
       calculate_casilla_unknown: --casilla %{key} is not a canonical casilla.id in
         this revision. Use `aeat app modelo casillas <MODELO>` to list valid casilla.id
         values.
@@ -929,8 +926,6 @@ application:
           has unsupported value type %{value_type}.
         enum_boolean_invalid: Profile fact for enum-channel binding %{binding_id}
           resolved to a boolean; boolean facts are not valid enum dispatch keys.
-        source_trace_mismatch: Profile-sourced binding trace does not match the resolved
-          binding keys.
   overview:
     explain:
       errors:
@@ -1406,7 +1401,8 @@ cli:
         retencion_observation_help: JSON RetencionObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
-        withholding_observation_help: 'Per-perceptor-clave withholding observation (JSON) for the Modelo 190 percepciones count; repeatable.'
+        withholding_observation_help: Per-perceptor-clave withholding observation
+          (JSON) for the Modelo 190 percepciones count; repeatable.
       aggregate_help: Run the backend per-modelo aggregation service from explicit
         canonical observations. Accepted source_kind values are ledger_transaction,
         purchase_invoice_evidence, payable_invoice, and collectible_invoice.
@@ -1554,16 +1550,31 @@ cli:
         correct_reason_required: 'Provide --reason: record why the opening balance
           is being corrected; it must not be blank.'
         group_help: Local IVA compensation wallet balance commands.
-        override_amount_help: 'Overridden prior-compensation amount in EUR applied to iva.compensacion-pendiente-periodos-anteriores, AEAT box 110; decimal, for example 420.00.'
-        override_confirm_help: 'Required confirmation flag. Acknowledge that the override changes the filed prior-compensation figure and filing accuracy depends on the supplied value.'
-        override_confirm_required: 'Pass --confirm to acknowledge that this records a taxpayer override of the M303 prior-compensation carry. Filing accuracy depends on the value supplied.'
-        override_evidence_locator_help: 'Required locator for the evidence supporting the override, for example a prior justificante reference.'
-        override_evidence_locator_required: 'Provide --evidence-locator with the evidence reference supporting this override.'
-        override_filing_year_help: 'Filing year of the Modelo 303 period whose prior-compensation carry is overridden.'
-        override_help: 'Record a taxpayer override for the Modelo 303 prior-compensation carry from evidence held outside the local wallet. It unblocks calculation only and does not satisfy the official-evidence verification gate. Requires --confirm.'
-        override_period_help: 'Period of the dependent Modelo 303 filing receiving the carry, for example 2T or 3T.'
-        override_reason_help: 'Required basis for the override, recorded as auditable provenance.'
-        override_reason_required: 'Provide --reason explaining why the prior-compensation carry is being overridden; it must not be blank.'
+        override_amount_help: Overridden prior-compensation amount in EUR applied
+          to iva.compensacion-pendiente-periodos-anteriores, AEAT box 110; decimal,
+          for example 420.00.
+        override_confirm_help: Required confirmation flag. Acknowledge that the override
+          changes the filed prior-compensation figure and filing accuracy depends
+          on the supplied value.
+        override_confirm_required: Pass --confirm to acknowledge that this records
+          a taxpayer override of the M303 prior-compensation carry. Filing accuracy
+          depends on the value supplied.
+        override_evidence_locator_help: Required locator for the evidence supporting
+          the override, for example a prior justificante reference.
+        override_evidence_locator_required: Provide --evidence-locator with the evidence
+          reference supporting this override.
+        override_filing_year_help: Filing year of the Modelo 303 period whose prior-compensation
+          carry is overridden.
+        override_help: Record a taxpayer override for the Modelo 303 prior-compensation
+          carry from evidence held outside the local wallet. It unblocks calculation
+          only and does not satisfy the official-evidence verification gate. Requires
+          --confirm.
+        override_period_help: Period of the dependent Modelo 303 filing receiving
+          the carry, for example 2T or 3T.
+        override_reason_help: Required basis for the override, recorded as auditable
+          provenance.
+        override_reason_required: Provide --reason explaining why the prior-compensation
+          carry is being overridden; it must not be blank.
         seed_amount_help: Carry-forward balance amount in EUR (decimal, e.g. 1200.50).
           This is the compensación pendiente de periodos anteriores for the NEXT period
           after the seeded one.
@@ -1788,7 +1799,8 @@ cli:
           lowercase hex string (SHA-256 digest)
         invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric
           plus . _ : - separators, max 64 chars)'
-        invalid_relation_key: 'The --relation key is not a valid RelationId. Use a lowercase kebab or dotted relation id.'
+        invalid_relation_key: The --relation key is not a valid RelationId. Use a
+          lowercase kebab or dotted relation id.
         invalid_revision_selector: Unknown revision selector {value}; choose one of
           {choices}.
         invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
@@ -4090,7 +4102,8 @@ errors:
       100%.
     modelo_347_threshold: Modelo 347 operations above the reporting threshold require
       explicit declaration coverage.
-    modelo_ambiguous_semantic_role_casilla: 'More than one casilla uses semantic role %{semantic_role}; use the exact canonical casilla.id.'
+    modelo_ambiguous_semantic_role_casilla: More than one casilla uses semantic role
+      %{semantic_role}; use the exact canonical casilla.id.
     modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input

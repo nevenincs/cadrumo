@@ -21,8 +21,15 @@ from __future__ import annotations
 import pytest
 
 from ....core import BindingSourceKind
-from ...aggregation import DEFERRED_SOURCE_KINDS
-from .._calculation_actions import _BUCKET_AGGREGATION_OWNED_SOURCES
+from ...aggregation import (
+    DEFERRED_SOURCE_KINDS,
+    RESERVED_SOURCE_KINDS,
+    BindingSourceDisposition,
+)
+from .._calculation_actions import (
+    _BINDING_SOURCE_DISPOSITIONS,
+    _BUCKET_AGGREGATION_OWNED_SOURCES,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,12 +47,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #     differ from the enum member VALUE only for the three `_operation` / `_member`
 #     suffixed members (see ROW_SET_GROUPING_FOR_BINDING_SOURCE); the deferred set is
 #     asserted to map onto the enum directly below.
-_MESH_UNROUTED_RESERVED: frozenset[BindingSourceKind] = frozenset(
-    {
-        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        BindingSourceKind.LEDGER_TRANSACTION,
-    },
-)
+# The reserved-undeclared carve-out is now the canonical RESERVED_SOURCE_KINDS in
+# the source-mesh module (single declaration); the test consumes it rather than
+# re-listing the members.
+_MESH_UNROUTED_RESERVED: frozenset[BindingSourceKind] = RESERVED_SOURCE_KINDS
 
 
 def test_owned_mesh_sources_are_all_binding_source_kind_members() -> None:
@@ -113,3 +118,74 @@ def test_reserved_mesh_members_are_not_routed_or_deferred() -> None:
     routed_or_deferred = _BUCKET_AGGREGATION_OWNED_SOURCES | DEFERRED_SOURCE_KINDS
     leaked = sorted(member.value for member in _MESH_UNROUTED_RESERVED if member.value in routed_or_deferred)
     assert not leaked, f"Reserved-undeclared member(s) unexpectedly routed/deferred on the mesh: {leaked}"
+
+
+# ---------------------------------------------------------------------------
+# Phase-2.2 P04: the ONE disposition registry parity gate.
+#
+# The disposition registry (_BINDING_SOURCE_DISPOSITIONS) is the single mapping
+# answering "where does source X resolve" for every BindingSourceKind member,
+# built from the LIVE enrolled set (no hard-coded dispositions). These assertions
+# bind it to the enum and to the owned / deferred / reserved sets, making
+# no-dormant-source-resolvers enforceable across the union.
+
+
+def test_disposition_registry_covers_every_enum_member() -> None:
+    """Every BindingSourceKind member has exactly one declared disposition.
+
+    A member missing from the registry is an unaccounted source kind; the registry
+    builder raises on a member in zero or two states, so this pins full coverage.
+    """
+    assert set(_BINDING_SOURCE_DISPOSITIONS) == set(BindingSourceKind)
+
+
+def test_disposition_enrolled_partition_equals_owned_mesh_set() -> None:
+    """The ENROLLED disposition partition equals the owned mesh set EXACTLY.
+
+    This is the union the ADR mandates: the disposition registry's enrolled members
+    are precisely the live enrolled resolver / pre-mesh / manual owned_sources. A
+    drift between the registry and the owned set (a newly-enrolled source not
+    reflected, or an owned source not enrolled) fails here.
+    """
+    enrolled = frozenset(
+        source
+        for source, disposition in _BINDING_SOURCE_DISPOSITIONS.items()
+        if disposition is BindingSourceDisposition.ENROLLED
+    )
+    assert enrolled == _BUCKET_AGGREGATION_OWNED_SOURCES
+
+
+def test_disposition_deferred_partition_equals_deferred_set() -> None:
+    """The DEFERRED disposition partition equals DEFERRED_SOURCE_KINDS exactly."""
+    deferred = frozenset(
+        source
+        for source, disposition in _BINDING_SOURCE_DISPOSITIONS.items()
+        if disposition is BindingSourceDisposition.DEFERRED
+    )
+    assert deferred == DEFERRED_SOURCE_KINDS
+
+
+def test_disposition_reserved_partition_equals_reserved_set() -> None:
+    """The RESERVED disposition partition equals RESERVED_SOURCE_KINDS exactly."""
+    reserved = frozenset(
+        source
+        for source, disposition in _BINDING_SOURCE_DISPOSITIONS.items()
+        if disposition is BindingSourceDisposition.RESERVED
+    )
+    assert reserved == RESERVED_SOURCE_KINDS
+
+
+def test_disposition_partitions_are_a_total_disjoint_cover() -> None:
+    """The three dispositions partition the enum: total, disjoint, no member double-counted.
+
+    This is the structural guarantee that replaces the four scattered enrollment
+    structures with one mapping: every member is enrolled, deferred, or reserved,
+    and never two at once.
+    """
+    enrolled = {s for s, d in _BINDING_SOURCE_DISPOSITIONS.items() if d is BindingSourceDisposition.ENROLLED}
+    deferred = {s for s, d in _BINDING_SOURCE_DISPOSITIONS.items() if d is BindingSourceDisposition.DEFERRED}
+    reserved = {s for s, d in _BINDING_SOURCE_DISPOSITIONS.items() if d is BindingSourceDisposition.RESERVED}
+    assert enrolled.isdisjoint(deferred)
+    assert enrolled.isdisjoint(reserved)
+    assert deferred.isdisjoint(reserved)
+    assert enrolled | deferred | reserved == set(BindingSourceKind)

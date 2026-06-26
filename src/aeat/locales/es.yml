@@ -328,12 +328,6 @@ aggregation:
   per_modelo:
     errors:
       unsupported_modelo: Modelo no soportado para la agregación por modelo
-    registry:
-      errors:
-        invalid_accrued_on: 'Fecha de devengo no válida para la observación %{source_object_id}:
-          %{accrued_on}'
-        unsupported_provider: 'Proveedor de agregación no soportado para el modelo
-          %{modelo}: %{provider}'
   prorrata:
     errors:
       current_year_not_after_prior: El año actual debe ser estrictamente mayor que
@@ -360,9 +354,12 @@ aggregation:
         del Modelo 100 (p.ej. 2024-0A).
   retenciones:
     errors:
-      filing_year_out_of_range: 'El ejercicio %{filing_year} esta fuera del rango admitido %{min_year}-%{max_year}.'
-      perceptor_nif_blank: 'El NIF del perceptor no puede estar vacio.'
-      perceptor_observations_missing: 'No existen observaciones de retenciones por perceptor para el modelo %{modelo} %{filing_year} %{period}; la fuente %{source_kind} no puede resolverse.'
+      filing_year_out_of_range: El ejercicio %{filing_year} esta fuera del rango admitido
+        %{min_year}-%{max_year}.
+      perceptor_nif_blank: El NIF del perceptor no puede estar vacio.
+      perceptor_observations_missing: No existen observaciones de retenciones por
+        perceptor para el modelo %{modelo} %{filing_year} %{period}; la fuente %{source_kind}
+        no puede resolverse.
   service:
     errors:
       envelope_modelo_mismatch: El modelo del envoltorio no coincide con el modelo
@@ -395,6 +392,7 @@ aggregation:
         de fuentes deben ser únicos.
       unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
       unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
+      ambiguous_source_disposition: 'aggregation.source_mesh.errors.ambiguous_source_disposition'
 application:
   auth:
     acquisition_lock:
@@ -717,13 +715,10 @@ application:
           calculo: anio del snapshot=%{snapshot_year} periodo=%{snapshot_period};
           anio del calculo=%{filing_year} periodo=%{period}.'
         snapshot_bucket_mismatch: El snapshot de borrador no pertenece al bucket activo.
-        snapshot_id_required: Los valores procedentes del borrador requieren un borrador_snapshot_id.
         snapshot_load_failed: No se puede cargar el snapshot de borrador seleccionado;
           lista los snapshots activos con aeat app live borrador 100 list.
         snapshot_not_active: El snapshot de borrador no está activo; lista los snapshots
           activos con `aeat app live borrador 100 list`.
-        source_trace_mismatch: La traza de origen del borrador debe coincidir con
-          los identificadores de binding resueltos.
         unsupported_modelo: El binding de borrador no está soportado para el modelo
           %{modelo}; el manifiesto del registro debe declarar la capacidad de borrador.
     errors:
@@ -747,7 +742,8 @@ application:
       calculate_binding_unknown: '--binding %{key} no coincide con ningun binding
         de esta revision. Bindings aceptados: %{accepted}. Use `aeat app modelo bindings
         list <MODELO>` para listar los bindings validos.'
-      calculate_casilla_noncanonical_refused: '--casilla %{key} no es un casilla.id canonico o es ambiguo. Usa el casilla.id canonico exacto: %{accepted}.'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} no es un casilla.id
+        canonico o es ambiguo. Usa el casilla.id canonico exacto: %{accepted}.'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonico de
         esta revision. Usa `aeat app modelo casillas <MODELO>` para listar los casilla.id
         validos.
@@ -1013,8 +1009,6 @@ application:
           %{binding_id} tiene un tipo no soportado: %{value_type}.'
         enum_boolean_invalid: El dato de perfil para el binding enum %{binding_id}
           resolvio a booleano; los booleanos no son claves validas de despacho enum.
-        source_trace_mismatch: La traza de bindings del perfil no coincide con los
-          bindings resueltos.
   overview:
     explain:
       errors:
@@ -1515,7 +1509,8 @@ cli:
         retencion_observation_help: Objeto JSON RetencionObservation. El valor source_kind
           debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.
-        withholding_observation_help: 'Observación de retención por perceptor y clave (JSON) para el recuento de percepciones del Modelo 190; repetible.'
+        withholding_observation_help: Observación de retención por perceptor y clave
+          (JSON) para el recuento de percepciones del Modelo 190; repetible.
       aggregate_help: Ejecuta el servicio backend de agregacion por modelo con observaciones
         canonicas explicitas. Los valores source_kind aceptados son ledger_transaction,
         purchase_invoice_evidence, payable_invoice y collectible_invoice.
@@ -1680,16 +1675,31 @@ cli:
         correct_reason_required: 'Indica --reason: registra por qué se corrige el
           saldo inicial; no puede estar vacío.'
         group_help: Comandos de saldo local de la cartera de compensación IVA.
-        override_amount_help: 'Importe sobrescrito de compensacion previa en EUR aplicado a iva.compensacion-pendiente-periodos-anteriores, casilla AEAT 110; decimal, por ejemplo 420.00.'
-        override_confirm_help: 'Indicador de confirmacion obligatorio. Reconoce que la sobrescritura cambia la cifra de compensacion previa presentada y que la exactitud de la declaracion depende del valor aportado.'
-        override_confirm_required: 'Pasa --confirm para reconocer que esto registra una sobrescritura del arrastre de compensacion previa del M303. La exactitud de la declaracion depende del valor aportado.'
-        override_evidence_locator_help: 'Localizador obligatorio de la evidencia que respalda la sobrescritura, por ejemplo una referencia de justificante previo.'
-        override_evidence_locator_required: 'Indica --evidence-locator con la referencia de evidencia que respalda esta sobrescritura.'
-        override_filing_year_help: 'Ejercicio del periodo del Modelo 303 cuyo arrastre de compensacion previa se sobrescribe.'
-        override_help: 'Registra una sobrescritura del arrastre de compensacion previa del Modelo 303 desde evidencia externa al monedero local. Solo desbloquea el calculo y no satisface la verificacion de evidencia oficial. Requiere --confirm.'
-        override_period_help: 'Periodo de la declaracion dependiente del Modelo 303 que recibe el arrastre, por ejemplo 2T o 3T.'
-        override_reason_help: 'Base obligatoria de la sobrescritura, registrada como procedencia auditable.'
-        override_reason_required: 'Indica --reason explicando por que se sobrescribe el arrastre de compensacion previa; no puede estar vacio.'
+        override_amount_help: Importe sobrescrito de compensacion previa en EUR aplicado
+          a iva.compensacion-pendiente-periodos-anteriores, casilla AEAT 110; decimal,
+          por ejemplo 420.00.
+        override_confirm_help: Indicador de confirmacion obligatorio. Reconoce que
+          la sobrescritura cambia la cifra de compensacion previa presentada y que
+          la exactitud de la declaracion depende del valor aportado.
+        override_confirm_required: Pasa --confirm para reconocer que esto registra
+          una sobrescritura del arrastre de compensacion previa del M303. La exactitud
+          de la declaracion depende del valor aportado.
+        override_evidence_locator_help: Localizador obligatorio de la evidencia que
+          respalda la sobrescritura, por ejemplo una referencia de justificante previo.
+        override_evidence_locator_required: Indica --evidence-locator con la referencia
+          de evidencia que respalda esta sobrescritura.
+        override_filing_year_help: Ejercicio del periodo del Modelo 303 cuyo arrastre
+          de compensacion previa se sobrescribe.
+        override_help: Registra una sobrescritura del arrastre de compensacion previa
+          del Modelo 303 desde evidencia externa al monedero local. Solo desbloquea
+          el calculo y no satisface la verificacion de evidencia oficial. Requiere
+          --confirm.
+        override_period_help: Periodo de la declaracion dependiente del Modelo 303
+          que recibe el arrastre, por ejemplo 2T o 3T.
+        override_reason_help: Base obligatoria de la sobrescritura, registrada como
+          procedencia auditable.
+        override_reason_required: Indica --reason explicando por que se sobrescribe
+          el arrastre de compensacion previa; no puede estar vacio.
         seed_amount_help: Importe inicial de la compensación de IVA en decimal.
         seed_confirm_help: Confirme la operación de importe inicial.
         seed_confirm_required: Proporcione el modificador --confirm para confirmar
@@ -1926,7 +1936,8 @@ cli:
           hex en minúsculas de 64 caracteres (resumen SHA-256)
         invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
           más separadores . _ : -, máx. 64 caracteres)'
-        invalid_relation_key: 'La clave --relation no es un RelationId valido. Usa un id de relation en minusculas con guiones o puntos.'
+        invalid_relation_key: La clave --relation no es un RelationId valido. Usa
+          un id de relation en minusculas con guiones o puntos.
         invalid_revision_selector: Selector de revision desconocido {value}; elija
           uno de {choices}.
         invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
@@ -4364,7 +4375,8 @@ errors:
       184 deben sumar exactamente el 100 %.
     modelo_347_threshold: Las operaciones del Modelo 347 por encima del umbral informativo
       requieren cobertura declarativa explícita.
-    modelo_ambiguous_semantic_role_casilla: 'Mas de una casilla usa el rol semantico %{semantic_role}; usa el casilla.id canonico exacto.'
+    modelo_ambiguous_semantic_role_casilla: Mas de una casilla usa el rol semantico
+      %{semantic_role}; usa el casilla.id canonico exacto.
     modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input

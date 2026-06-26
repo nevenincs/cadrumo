@@ -322,12 +322,6 @@ aggregation:
   per_modelo:
     errors:
       unsupported_modelo: Model no admès per a l'agregació per model
-    registry:
-      errors:
-        invalid_accrued_on: 'Data de meritació no vàlida per a l''observació %{source_object_id}:
-          %{accrued_on}'
-        unsupported_provider: 'Proveïdor d''agregació no admès per al model %{modelo}:
-          %{provider}'
   prorrata:
     errors:
       current_year_not_after_prior: L'any actual ha de ser estrictament major que
@@ -353,9 +347,12 @@ aggregation:
         del Model 100 (p.ex. 2024-0A).
   retenciones:
     errors:
-      filing_year_out_of_range: 'El exercici %{filing_year} queda fora del rang admes %{min_year}-%{max_year}.'
-      perceptor_nif_blank: 'El NIF del perceptor no pot estar buit.'
-      perceptor_observations_missing: 'No hi ha observacions de retencions per perceptor per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no es pot resoldre.'
+      filing_year_out_of_range: El exercici %{filing_year} queda fora del rang admes
+        %{min_year}-%{max_year}.
+      perceptor_nif_blank: El NIF del perceptor no pot estar buit.
+      perceptor_observations_missing: No hi ha observacions de retencions per perceptor
+        per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no
+        es pot resoldre.
   service:
     errors:
       envelope_modelo_mismatch: El model de l'embolcall no coincideix amb el model
@@ -388,6 +385,7 @@ aggregation:
         de fonts han de ser únics.
       unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
       unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
+      ambiguous_source_disposition: 'aggregation.source_mesh.errors.ambiguous_source_disposition'
 application:
   auth:
     acquisition_lock:
@@ -709,14 +707,10 @@ application:
           del calcul: any de l''snapshot=%{snapshot_year} periode=%{snapshot_period};
           any del calcul=%{filing_year} periode=%{period}.'
         snapshot_bucket_mismatch: L'snapshot d'esborrany no pertany al bucket actiu.
-        snapshot_id_required: Els valors procedents de l'esborrany requereixen un
-          borrador_snapshot_id.
         snapshot_load_failed: No es pot carregar l'snapshot d'esborrany seleccionat;
           llista els snapshots actius amb aeat app live borrador 100 list.
         snapshot_not_active: L'snapshot d'esborrany no està actiu; llista els snapshots
           actius amb `aeat app live borrador 100 list`.
-        source_trace_mismatch: La traça d'origen de l'esborrany ha de coincidir amb
-          els identificadors de binding resolts.
         unsupported_modelo: El binding d'esborrany no esta suportat per al model %{modelo};
           el manifest del registre ha de declarar la capacitat d'esborrany.
     errors:
@@ -739,7 +733,8 @@ application:
       calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta
         revisio. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list
         <MODELO>` per llistar els bindings valids.'
-      calculate_casilla_noncanonical_refused: '--casilla %{key} no es un casilla.id canonic o es ambigu. Usa el casilla.id canonic exacte: %{accepted}.'
+      calculate_casilla_noncanonical_refused: '--casilla %{key} no es un casilla.id
+        canonic o es ambigu. Usa el casilla.id canonic exacte: %{accepted}.'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonic d'aquesta
         revisio. Usa `aeat app modelo casillas <MODELO>` per llistar els casilla.id
         valids.
@@ -1000,8 +995,6 @@ application:
           %{binding_id} te un tipus no suportat: %{value_type}.'
         enum_boolean_invalid: La dada de perfil per al binding enum %{binding_id}
           ha resolt a boolea; els booleans no son claus valides de dispatch enum.
-        source_trace_mismatch: La traca de bindings del perfil no coincideix amb els
-          bindings resolts.
   overview:
     explain:
       errors:
@@ -1498,7 +1491,8 @@ cli:
           mesos.'
         retencion_observation_help: Objecte JSON RetencionObservation; repeteix l'opció
           per a diverses observacions
-        withholding_observation_help: 'Observació de retenció per perceptor i clau (JSON) per al recompte de percepcions del Model 190; repetible.'
+        withholding_observation_help: Observació de retenció per perceptor i clau
+          (JSON) per al recompte de percepcions del Model 190; repetible.
       aggregate_help: Executa l'agregació per model amb observacions canòniques explícites
       app_help: Inspeccionar el catàleg de models tributaris AEAT al registre
       audit:
@@ -1655,16 +1649,31 @@ cli:
         correct_reason_required: 'Indica --reason: registra per què es corregeix el
           saldo inicial; no pot estar buit.'
         group_help: Ordres de saldo local de la cartera de compensació IVA.
-        override_amount_help: 'Import sobreescrit de compensacio previa en EUR aplicat a iva.compensacion-pendiente-periodos-anteriores, casella AEAT 110; decimal, per exemple 420.00.'
-        override_confirm_help: 'Indicador de confirmacio obligatori. Reconeix que la sobreescriptura canvia la xifra de compensacio previa presentada i que l exactitud de la declaracio depen del valor aportat.'
-        override_confirm_required: 'Passa --confirm per reconeixer que aixo registra una sobreescriptura de l arrossegament de compensacio previa del M303. L exactitud de la declaracio depen del valor aportat.'
-        override_evidence_locator_help: 'Localitzador obligatori de l evidencia que dona suport a la sobreescriptura, per exemple una referencia de justificant previ.'
-        override_evidence_locator_required: 'Indica --evidence-locator amb la referencia d evidencia que dona suport a aquesta sobreescriptura.'
-        override_filing_year_help: 'Exercici del periode del Model 303 del qual se sobreescriu l arrossegament de compensacio previa.'
-        override_help: 'Registra una sobreescriptura de l arrossegament de compensacio previa del Model 303 des d evidencia externa al moneder local. Nomes desbloqueja el calcul i no satisfara la verificacio d evidencia oficial. Requereix --confirm.'
-        override_period_help: 'Periode de la declaracio dependent del Model 303 que rep l arrossegament, per exemple 2T o 3T.'
-        override_reason_help: 'Base obligatoria de la sobreescriptura, registrada com a procedencia auditable.'
-        override_reason_required: 'Indica --reason explicant per que se sobreescriu l arrossegament de compensacio previa; no pot estar buit.'
+        override_amount_help: Import sobreescrit de compensacio previa en EUR aplicat
+          a iva.compensacion-pendiente-periodos-anteriores, casella AEAT 110; decimal,
+          per exemple 420.00.
+        override_confirm_help: Indicador de confirmacio obligatori. Reconeix que la
+          sobreescriptura canvia la xifra de compensacio previa presentada i que l
+          exactitud de la declaracio depen del valor aportat.
+        override_confirm_required: Passa --confirm per reconeixer que aixo registra
+          una sobreescriptura de l arrossegament de compensacio previa del M303. L
+          exactitud de la declaracio depen del valor aportat.
+        override_evidence_locator_help: Localitzador obligatori de l evidencia que
+          dona suport a la sobreescriptura, per exemple una referencia de justificant
+          previ.
+        override_evidence_locator_required: Indica --evidence-locator amb la referencia
+          d evidencia que dona suport a aquesta sobreescriptura.
+        override_filing_year_help: Exercici del periode del Model 303 del qual se
+          sobreescriu l arrossegament de compensacio previa.
+        override_help: Registra una sobreescriptura de l arrossegament de compensacio
+          previa del Model 303 des d evidencia externa al moneder local. Nomes desbloqueja
+          el calcul i no satisfara la verificacio d evidencia oficial. Requereix --confirm.
+        override_period_help: Periode de la declaracio dependent del Model 303 que
+          rep l arrossegament, per exemple 2T o 3T.
+        override_reason_help: Base obligatoria de la sobreescriptura, registrada com
+          a procedencia auditable.
+        override_reason_required: Indica --reason explicant per que se sobreescriu
+          l arrossegament de compensacio previa; no pot estar buit.
         seed_amount_help: Import inicial de la compensació d'IVA en decimal.
         seed_confirm_help: Confirmeu l'operació d'import inicial.
         seed_confirm_required: Proporcioneu el modificador --confirm per confirmar
@@ -1893,7 +1902,8 @@ cli:
           hexadecimal en minúscules de 64 caràcters (resum SHA-256)
         invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric
           més separadors . _ : -, màx. 64 caràcters)'
-        invalid_relation_key: 'La clau --relation no es un RelationId valid. Usa un id de relation en minuscules amb guions o punts.'
+        invalid_relation_key: La clau --relation no es un RelationId valid. Usa un
+          id de relation en minuscules amb guions o punts.
         invalid_revision_selector: 'Selector de revisio desconegut {value}; trieu
           un de: {choices}.'
         invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules
@@ -4322,7 +4332,8 @@ errors:
       184 han de sumar exactament el 100 %.
     modelo_347_threshold: Les operacions del Model 347 per sobre del llindar informatiu
       requereixen cobertura declarativa explícita.
-    modelo_ambiguous_semantic_role_casilla: 'Mes d una casella usa el rol semantic %{semantic_role}; usa el casilla.id canonic exacte.'
+    modelo_ambiguous_semantic_role_casilla: Mes d una casella usa el rol semantic
+      %{semantic_role}; usa el casilla.id canonic exacte.
     modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input

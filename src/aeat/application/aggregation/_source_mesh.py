@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
+from enum import StrEnum
 from types import MappingProxyType
 from typing import Literal, Protocol, runtime_checkable
 
@@ -71,6 +72,65 @@ DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.REFUND_OPERATION,  # M360 — Sheets-pull-only
     },
 )
+
+# Source kinds reserved-undeclared: a member that exists in the closed taxonomy
+# but carries no registry binding and no resolver yet (counterpart / invoice-shaped
+# headroom). They are neither enrolled nor deferred-with-advisory; the disposition
+# registry records them RESERVED so the parity gate accounts for every member.
+RESERVED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
+    {
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        BindingSourceKind.LEDGER_TRANSACTION,
+    },
+)
+
+
+class BindingSourceDisposition(StrEnum):
+    """Where a binding source kind resolves on the live calculate mesh.
+
+    The single closed answer to "where does source X resolve" for every
+    :class:`~aeat.core.BindingSourceKind` member, replacing the four scattered
+    enrollment structures (the ``merge_source_resolutions`` resolver tuple, the
+    pre-mesh-handled set, ``DEFERRED_SOURCE_KINDS``, and the per-modelo service
+    provider enum).
+    """
+
+    ENROLLED = "enrolled"  # routed by an active resolver / pre-mesh tier on the live calculate path
+    DEFERRED = "deferred"  # known but no resolver yet; emits a standing advisory, never a silent blank
+    RESERVED = "reserved"  # in the taxonomy but no binding and no resolver yet (counterpart/invoice headroom)
+
+
+def build_binding_source_dispositions(
+    enrolled_sources: frozenset[BindingSourceKind],
+) -> Mapping[BindingSourceKind, BindingSourceDisposition]:
+    """Classify every :class:`BindingSourceKind` member by its live mesh disposition.
+
+    ``enrolled_sources`` is the LIVE enrolled set read at execution time -- the
+    union of every active resolver's ``owned_sources`` plus the pre-mesh tiers and
+    ``manual_input`` -- so no disposition is hard-coded; a newly-enrolled source
+    (e.g. withholding, or profile / borrador now folded into the mesh) is reflected
+    automatically. ``DEFERRED_SOURCE_KINDS`` and ``RESERVED_SOURCE_KINDS`` supply the
+    other two states. Raises if a member is in two states at once, or in none
+    (an unaccounted source kind -- the "neither set contains the other" defect).
+    """
+    dispositions: dict[BindingSourceKind, BindingSourceDisposition] = {}
+    for member in BindingSourceKind:
+        states = (
+            (member in enrolled_sources, BindingSourceDisposition.ENROLLED),
+            (member in DEFERRED_SOURCE_KINDS, BindingSourceDisposition.DEFERRED),
+            (member in RESERVED_SOURCE_KINDS, BindingSourceDisposition.RESERVED),
+        )
+        matched = [disposition for present, disposition in states if present]
+        if len(matched) != 1:
+            raise AggregationValidationError(
+                t("aggregation.source_mesh.errors.ambiguous_source_disposition"),
+                context={
+                    "source_kind": member.value,
+                    "matched_dispositions": [disposition.value for disposition in matched],
+                },
+            )
+        dispositions[member] = matched[0]
+    return MappingProxyType(dispositions)
 
 
 class CalculationSourceContext(BaseModel):
@@ -532,6 +592,8 @@ def _claim_relation(owners: dict[RelationId, str], relation_id: RelationId, reso
 
 __all__ = [
     "DEFERRED_SOURCE_KINDS",
+    "RESERVED_SOURCE_KINDS",
+    "BindingSourceDisposition",
     "BorradorSourceProvenance",
     "CalculationSourceContext",
     "CalculationSourceDiagnostic",
@@ -539,6 +601,7 @@ __all__ = [
     "CalculationSourceProvenance",
     "CalculationSourceResolution",
     "ModeloSourceResolver",
+    "build_binding_source_dispositions",
     "collect_unhandled_source_diagnostics",
     "merge_source_resolutions",
     "merge_source_resolutions_by_precedence",
