@@ -1013,7 +1013,7 @@ class DataBindingDefinition(RegistryModel):
     bridge a closed-membership substrate axis — ``"censo_event_kind"`` (M036),
     ``"CCAA"`` and ``"EstimacionDirectaModalidad"`` (M100), ``"LegalEntityForm"``
     (M200) — and surfaced by the operator-facing ``bindings list`` CLI table
-    (``_modelo_discovery_cli.py``), the :class:`ModeloBindingRow` query
+    (``_modelo_discovery_cli.py``), the :class:`ModeloBindingQueryRow` query
     projection, the borrador binding resolver, and the Sheets-pull edit router.
     It is the closed-set *annotation* on the binding, distinct from the
     ``input_channel`` (how a formula consumes the value); a binding may carry a
