@@ -202,6 +202,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._calculate_input.ModeloCalculateRelationInputError",
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATE_RELATION_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_calculate_relation_input",
+            default_suggestion="aeat app modelo work calculate --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._calculate_input.ModeloCalculateShortcutInputError",
         ErrorCode(
             code="REFUSED_MODELO_CALCULATE_SHORTCUT_INPUT",
@@ -433,6 +444,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.calculations._errors.ObservationCasillaReferenceError",
+        ErrorCode(
+            code="REFUSED_OBSERVATION_CASILLA_REFERENCE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_calculations_casilla_constraint",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.iva_compensation._errors.IvaWalletReconciliationError",
         ErrorCode(
             code="REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT",
@@ -460,6 +482,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_IVA_COMPENSATION_DECIMAL_PARSE",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_iva_compensation_decimal_parse",
+            default_suggestion="aeat app live iva-wallet history",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.iva_compensation._errors.IvaCompensationCasillaReferenceError",
+        ErrorCode(
+            code="REFUSED_IVA_COMPENSATION_CASILLA_REFERENCE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_calculations_casilla_constraint",
             default_suggestion="aeat app live iva-wallet history",
             retryable=False,
             runbook_id=None,

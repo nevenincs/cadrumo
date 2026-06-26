@@ -9,6 +9,7 @@ Direct exports:
 
 * :data:`STRICT_FROZEN_CONFIG` — the frozen-strict pydantic ``ConfigDict``
   shared by immutable boundary models.
+* :class:`CasillaId` — the canonical casilla identifier primitive.
 * :class:`StandardPeriodCode` — the closed set of AEAT filing-period tokens.
 * :class:`Modelo` — the closed set of AEAT modelo identifier codes.
 * :class:`AggregationSourceKind` — provenance kinds for aggregated ledger
@@ -31,6 +32,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ._capabilities import ServiceCapability
+from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._modelo import NON_REGISTRY_MODELOS, Modelo
@@ -90,6 +92,7 @@ __all__: list[str] = [
     "AggregationSourceKind",
     "BindingSourceKind",
     "BucketPointer",
+    "CasillaId",
     "LedgerSortField",
     "LedgerSortOrder",
     "MissingOptionalExtraError",
@@ -122,6 +125,8 @@ __all__: list[str] = [
     "resolve_repository_bucket_id",
     "result_disposition_is_refund",
     "to_str_keyed_dict",
+    "validated_casilla_id",
+    "validated_casilla_id_map",
     "write_pointer",
 ]
 

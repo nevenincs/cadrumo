@@ -71,7 +71,7 @@ def _build_form_fill_event(value: str) -> RunEvent:
         step_id="step-1",
         kind=RunEventKind.FORM_FILL,
         payload=RunEventPayload(
-            form_fill=FormFillPayload(form_id="aeat-130", casilla="01", value=value),
+            form_fill=FormFillPayload(form_id="aeat-130", display_number="01", value=value),
         ),
         timestamp=datetime(2026, 4, 30, 0, 0, 0, tzinfo=UTC),
         module="aeat.test",
