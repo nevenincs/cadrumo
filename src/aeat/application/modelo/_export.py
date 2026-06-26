@@ -86,7 +86,7 @@ from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 from ._verification_actions import (
     _cross_period_expected_member_sets_from_profile,
     _require_cross_period_clean_state,
-    _taxpayer_files_economic_activity,
+    derive_taxpayer_files_economic_activity,
 )
 
 #: AEAT-assigned program-identifier code stamped into the optional
@@ -702,7 +702,7 @@ def export_modelo_revision(
         taxpayer_tax_id=workflow_profile.tax_id,
         activity_start_date=workflow_profile.activity_start_date,
         modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
-        taxpayer_files_economic_activity=_taxpayer_files_economic_activity(workflow_profile),
+        taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
     )
     iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
 

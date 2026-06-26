@@ -632,7 +632,7 @@ def _cross_period_expected_member_sets_from_profile(
     return (*profile_sets, *tuple(explicit_member_sets))
 
 
-def _taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | None:
+def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | None:
     """Whether the taxpayer files actividad-económica pagos fraccionados (130/131).
 
     ``True`` when the profile declares actividad-económica income; ``False`` when it declares
@@ -1356,7 +1356,7 @@ def verify_modelo_revision(
                 taxpayer_tax_id=workflow_profile.tax_id,
                 activity_start_date=workflow_profile.activity_start_date,
                 modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
-                taxpayer_files_economic_activity=_taxpayer_files_economic_activity(workflow_profile),
+                taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
             ),
             iva_compensation_decision=iva_compensation_decision,
             activity_start_date=workflow_profile.activity_start_date,
