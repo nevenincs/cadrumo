@@ -10,8 +10,8 @@ It lives in the application layer (not beside the domain gate) because the mesh 
 (``_BUCKET_AGGREGATION_OWNED_SOURCES``, ``DEFERRED_SOURCE_KINDS``) are application
 symbols, and a domain test importing them would violate the hexagonal direction
 (domain → application is forbidden). Together the two halves close the
-"neither set contains the other" defect the phase-2.1 ADR
-(``2026-06-26-binding-source-kind-taxonomy-unification-adr``) eliminates: every mesh
+"neither set contains the other" defect the decision record
+(``2026-06-26-binding-source-kind-taxonomy-unification``) eliminates: every mesh
 source is a :class:`BindingSourceKind` member, and every member is accounted for as
 enrolled, pre-mesh-handled, deferred, or explicitly reserved-undeclared.
 """
@@ -85,7 +85,7 @@ def test_every_enum_member_is_routed_deferred_or_reserved() -> None:
     (``DEFERRED_SOURCE_KINDS``), or one of the documented reserved-undeclared
     counterpart/invoice sources. A member that drifts out of all three is an
     unaccounted source kind — exactly the "neither set contains the other" gap the
-    phase-2.1 ADR eliminates.
+    decision record eliminates.
     """
     accounted = (
         _BUCKET_AGGREGATION_OWNED_SOURCES | DEFERRED_SOURCE_KINDS | {member.value for member in _MESH_UNROUTED_RESERVED}
@@ -102,7 +102,7 @@ def test_borrador_and_iva_wallet_decision_are_routed_owned_sources() -> None:
 
     They carry no registry binding (the domain gate exempts them via
     ``_MESH_ONLY_SOURCE_KINDS``), so this is the gate that proves they ARE accounted
-    for on the mesh half — closing the union the ADR opened.
+    for on the mesh half — closing the union the decision record opened.
     """
     assert BindingSourceKind.BORRADOR.value in _BUCKET_AGGREGATION_OWNED_SOURCES
     assert BindingSourceKind.IVA_WALLET_DECISION.value in _BUCKET_AGGREGATION_OWNED_SOURCES
@@ -121,7 +121,7 @@ def test_reserved_mesh_members_are_not_routed_or_deferred() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Phase-2.2 P04: the ONE disposition registry parity gate.
+# the ONE disposition registry parity gate.
 #
 # The disposition registry (_BINDING_SOURCE_DISPOSITIONS) is the single mapping
 # answering "where does source X resolve" for every BindingSourceKind member,
@@ -142,7 +142,7 @@ def test_disposition_registry_covers_every_enum_member() -> None:
 def test_disposition_enrolled_partition_equals_owned_mesh_set() -> None:
     """The ENROLLED disposition partition equals the owned mesh set EXACTLY.
 
-    This is the union the ADR mandates: the disposition registry's enrolled members
+    This is the union the decision record mandates: the disposition registry's enrolled members
     are precisely the live enrolled resolver / pre-mesh / manual owned_sources. A
     drift between the registry and the owned set (a newly-enrolled source not
     reflected, or an owned source not enrolled) fails here.
