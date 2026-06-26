@@ -56,12 +56,15 @@ from ....core import Period
 from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
 from ....domain.calculations.registry import (
+    BindingId,
     CasillaDefinition,
     CasillaId,
     InputKind,
     RegistrySnapshot,
+    RelationId,
     RevisionId,
     calculate_registry_snapshot,
+    undeclared_casilla_ids,
 )
 from ._engine import build_export_plan
 from ._errors import CalcSheetsParityError
@@ -81,7 +84,7 @@ class CasillaParity(BaseModel):
     model_config = _STRICT_FROZEN
 
     casilla_id: CasillaId
-    casilla_number: str
+    display_number: str
     label: str
     local: Decimal | None = None
     sheets: Decimal | None = None
@@ -121,20 +124,19 @@ class ParityReport(BaseModel):
 class OperatorInputScenario(BaseModel):
     """Caller-supplied scenario for the parity harness.
 
-    `inputs_by_number` maps casilla *number* (as a string, exactly as
-    AEAT writes it — leading zeros preserved) to the input Decimal.
-    `expected_by_number` mirrors that shape for AEAT-published
-    expected outputs; an empty mapping is allowed and signals "no
-    AEAT oracle available, fall back to backend↔Sheets only".
+    ``inputs_by_casilla_id`` maps canonical registry ``casilla.id`` values to
+    input Decimals. ``expected_by_casilla_id`` mirrors that shape for
+    AEAT-published expected outputs; an empty mapping is allowed and signals
+    "no AEAT oracle available, fall back to backend↔Sheets only".
     """
 
     model_config = _STRICT_FROZEN
 
-    inputs_by_number: Mapping[str, Decimal] = Field(default_factory=dict)
-    bindings: Mapping[str, Decimal] = Field(default_factory=dict)
-    enum_bindings: Mapping[str, str] = Field(default_factory=dict)
-    relation_values: Mapping[str, Decimal] = Field(default_factory=dict)
-    expected_by_number: Mapping[str, Decimal] = Field(default_factory=dict)
+    inputs_by_casilla_id: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
+    bindings: Mapping[BindingId, Decimal] = Field(default_factory=dict)
+    enum_bindings: Mapping[BindingId, str] = Field(default_factory=dict)
+    relation_values: Mapping[RelationId, Decimal] = Field(default_factory=dict)
+    expected_by_casilla_id: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     scenario_label: str = ""
 
 
@@ -142,25 +144,30 @@ def _build_operator_inputs(
     snapshot: RegistrySnapshot,
     scenario: OperatorInputScenario,
 ) -> tuple[OperatorInputs, dict[CasillaId, Decimal]]:
-    """Translate casilla-number-keyed scenario inputs into casilla-id-keyed."""
-    by_number = {casilla.number: casilla.id for casilla in snapshot.revision.casillas}
+    """Translate canonical-id-keyed scenario inputs into sheet input rows."""
+    _reject_unknown_scenario_casilla_ids(snapshot, scenario)
     operator_input_records: list[OperatorInput] = []
     inputs_by_id: dict[CasillaId, Decimal] = {}
-    unknown: list[str] = []
-    for number, value in scenario.inputs_by_number.items():
-        casilla_id = by_number.get(number)
-        if casilla_id is None:
-            unknown.append(number)
-            continue
-        operator_input_records.append(OperatorInput(casilla=casilla_id, value=value))
+    for casilla_id, value in scenario.inputs_by_casilla_id.items():
+        operator_input_records.append(OperatorInput(casilla_id=casilla_id, value=value))
         inputs_by_id[casilla_id] = value
+    return OperatorInputs(values=tuple(operator_input_records)), inputs_by_id
+
+
+def _reject_unknown_scenario_casilla_ids(
+    snapshot: RegistrySnapshot,
+    scenario: OperatorInputScenario,
+) -> None:
+    unknown = (
+        *undeclared_casilla_ids(snapshot.revision, scenario.inputs_by_casilla_id),
+        *undeclared_casilla_ids(snapshot.revision, scenario.expected_by_casilla_id),
+    )
     if unknown:
         raise CalcSheetsParityError(
-            "scenario references unknown casilla numbers",
+            "scenario references unknown casilla ids",
             context={"unknown_count": len(unknown), "modelo": snapshot.modelo.id},
-            translated_message="application.storage.calc_sheets.parity.errors.unknown_casilla_numbers",
+            translated_message="application.storage.calc_sheets.parity.errors.unknown_casilla_ids",
         )
-    return OperatorInputs(values=tuple(operator_input_records)), inputs_by_id
 
 
 def _build_relation_values(scenario: OperatorInputScenario) -> RelationValues:
@@ -180,7 +187,7 @@ def _seed_inputs_into_sheet(
 
     Three input families need explicit seeding:
 
-    - Casilla inputs (`scenario.inputs_by_number`) → `Entradas` rows.
+    - Casilla inputs (``scenario.inputs_by_casilla_id``) → `Entradas` rows.
     - Numeric bindings (`scenario.bindings`) → binding rows the engine
       reserves in `Entradas` (one row per binding referenced by the
       revision's formulas).
@@ -190,8 +197,7 @@ def _seed_inputs_into_sheet(
     Relations and tariff parameter values are pre-stamped by the
     engine on plan apply, so they need no additional write here.
     """
-    by_number = {casilla.number: casilla.id for casilla in snapshot.revision.casillas}
-    address_by_casilla = {cell.casilla: cell.address for cell in plan.value_cells if cell.casilla is not None}
+    address_by_casilla_id = {cell.casilla_id: cell.address for cell in plan.value_cells if cell.casilla_id is not None}
     # Re-derive the binding-row addresses from the layout. The plan
     # carries the addresses on its value_cells but with no back-
     # reference to the binding id; the layout planner is the canonical
@@ -201,11 +207,8 @@ def _seed_inputs_into_sheet(
 
     data: list[ValueRange] = []
 
-    for number, value in scenario.inputs_by_number.items():
-        casilla_id = by_number.get(number)
-        if casilla_id is None:
-            raise _missing_seed_anchor("casilla")
-        address = address_by_casilla.get(casilla_id)
+    for casilla_id, value in scenario.inputs_by_casilla_id.items():
+        address = address_by_casilla_id.get(casilla_id)
         if address is None:
             raise _missing_seed_anchor("casilla")
         data.append({"range": address.qualified(), "values": [[format(value, "f")]]})
@@ -282,7 +285,11 @@ def _read_sheets_computed(
             # divergence rather than silently coercing.
             continue
         row_to_value[row_number] = coerced
-    return {cell.casilla: row_to_value[cell.address.row] for cell in sorted_cells if cell.address.row in row_to_value}
+    return {
+        cell.casilla_id: row_to_value[cell.address.row]
+        for cell in sorted_cells
+        if cell.address.row in row_to_value
+    }
 
 
 def _compute_local(
@@ -382,7 +389,7 @@ def verify_modelo_parity(
     sheets_values = _read_sheets_computed(sheets_service, apply_result.spreadsheet_id, plan)
     local_values = _compute_local(snapshot, inputs_by_id, scenario)
 
-    aeat_present = bool(scenario.expected_by_number)
+    aeat_present = bool(scenario.expected_by_casilla_id)
     casillas, divergences = _collect_parity_rows(
         snapshot=snapshot,
         scenario=scenario,
@@ -422,7 +429,7 @@ def _collect_parity_rows(
             continue
         local = local_values.get(casilla.id)
         sheets_v = sheets_values.get(casilla.id)
-        aeat_v = scenario.expected_by_number.get(casilla.number)
+        aeat_v = scenario.expected_by_casilla_id.get(casilla.id)
         row = _build_casilla_parity_row(casilla, local=local, sheets_v=sheets_v, aeat_v=aeat_v)
         casillas.append(row)
         if _is_parity_divergent(row, sheets_v=sheets_v, local=local, inputs_by_id=inputs_by_id):
@@ -443,7 +450,7 @@ def _build_casilla_parity_row(
     sheets_vs_aeat = sheets_v == aeat_v if aeat_v is not None and sheets_v is not None else None
     return CasillaParity(
         casilla_id=casilla.id,
-        casilla_number=casilla.number,
+        display_number=casilla.number,
         label=casilla.label,
         local=local,
         sheets=sheets_v,

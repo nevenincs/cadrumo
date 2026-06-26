@@ -26,9 +26,12 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
+    CasillaId,
     CasillaObservation,
     RegistryCalculationResult,
     RegistrySnapshot,
+    expression_casilla_refs,
+    validated_casilla_id,
 )
 from ....domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -42,6 +45,7 @@ from .._actions import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_ORPHAN_CASILLA: CasillaId = validated_casilla_id("9999999", surface="_ORPHAN_CASILLA")
 
 _YEAR = 2025
 _PERIOD = "0A"
@@ -62,18 +66,22 @@ def _engine_result(snapshot: RegistrySnapshot) -> RegistryCalculationResult:
     ``entries`` views remain faithful to a real engine run.
     """
     revision = snapshot.revision
-    formulas_by_target = {formula.target: formula for formula in revision.formulas}
+    formulas_by_target = {formula.target_casilla_id: formula for formula in revision.formulas}
     observations: list[CasillaObservation] = []
     for casilla in revision.casillas:
-        casilla_id = str(casilla.id)
+        casilla_id: CasillaId = casilla.id
         formula = formulas_by_target.get(casilla_id)
         if formula is not None:
+            operand_casilla_refs = expression_casilla_refs(formula.expression)
             observations.append(
                 CasillaObservation(
                     casilla_id=casilla_id,
                     value=Decimal("0"),
-                    formula_id=str(formula.id),
+                    formula_id=formula.id,
                     op="literal",
+                    operand_refs=operand_casilla_refs,
+                    operand_casilla_refs=operand_casilla_refs,
+                    operand_values=tuple(Decimal("0") for _ in operand_casilla_refs),
                     legal_refs=formula.legal_refs,
                     source_refs=formula.source_refs,
                 ),
@@ -119,12 +127,13 @@ def test_unknown_casilla_raises_instead_of_emitting_empty_provenance() -> None:
     engine_result = _engine_result(snapshot)
 
     casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
-    orphan_casilla = "9999999"
+    orphan_casilla = _ORPHAN_CASILLA
     assert orphan_casilla not in casilla_ids
 
+    template_observation = next(obs for obs in engine_result.observations if obs.formula_id is None)
     polluted_observations = (
         *engine_result.observations,
-        CasillaObservation(casilla_id=orphan_casilla, value=Decimal("123")),
+        template_observation.model_copy(update={"casilla_id": orphan_casilla, "value": Decimal("123")}),
     )
     polluted_result = engine_result.model_copy(update={"observations": polluted_observations})
 
@@ -132,17 +141,15 @@ def test_unknown_casilla_raises_instead_of_emitting_empty_provenance() -> None:
         _build_typed_observations(engine_result=polluted_result, snapshot=snapshot)
 
 
-def _baseline_revision(casilla_values: dict[str, Decimal]) -> CalculationRevision:
-    """A minimal baseline CalculationRevision with no observations.
-
-    An externally-imported baseline carries no typed observations, so
-    a non-overridden casilla absent from the registry snapshot has no
-    provenance source at all — exactly the orphan path under test.
-    """
+def _baseline_revision(
+    casilla_values: dict[CasillaId, Decimal],
+    observations: tuple[CasillaObservation, ...],
+) -> CalculationRevision:
+    """A minimal complete baseline CalculationRevision for amendment tests."""
     work_unit_id = "a" * 64
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
     )
@@ -152,35 +159,44 @@ def _baseline_revision(casilla_values: dict[str, Decimal]) -> CalculationRevisio
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.BORRADOR,
         casilla_values=casilla_values,
+        observations=observations,
         created_at=moment,
         updated_at=moment,
     )
 
 
-def test_amendment_orphan_casilla_raises_instead_of_emitting_empty_provenance() -> None:
+def test_amendment_override_orphan_casilla_raises_instead_of_emitting_empty_provenance() -> None:
     """``_amendment_observations`` hard-fails on an orphan casilla.
 
-    A non-overridden casilla that is absent from BOTH the baseline
-    revision's observations AND the registry snapshot revision has no
-    provenance source. Projecting it would emit empty legal_refs /
-    source_refs and silently erase legal grounding from the persisted
-    amendment. The guard must raise instead.
+    An overridden casilla that is absent from the registry snapshot revision
+    has no provenance source. Projecting it would emit empty legal_refs /
+    source_refs and silently erase legal grounding from the persisted amendment.
+    The guard must raise instead.
     """
     snapshot = _modelo_100_snapshot()
     casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
-    orphan_casilla = "9999999"
+    orphan_casilla = _ORPHAN_CASILLA
     assert orphan_casilla not in casilla_ids
 
-    # The orphan appears in corrected_values but NOT in overrides, and
-    # the baseline revision carries no observations to inherit from.
-    corrected_values = {orphan_casilla: Decimal("123")}
-    baseline = _baseline_revision(corrected_values)
-    assert baseline.observations == ()
+    registry_casilla = snapshot.revision.casillas[0]
+    baseline_value = Decimal("0")
+    baseline = _baseline_revision(
+        {registry_casilla.id: baseline_value},
+        (
+            CasillaObservation(
+                casilla_id=registry_casilla.id,
+                value=baseline_value,
+                legal_refs=registry_casilla.legal_refs,
+                source_refs=registry_casilla.source_refs,
+            ),
+        ),
+    )
+    corrected_values = {registry_casilla.id: baseline_value, orphan_casilla: Decimal("123")}
 
     with pytest.raises(CasillaProvenanceMissingError, match=orphan_casilla):
         _amendment_observations(
             corrected_values=corrected_values,
-            overrides={},
+            overrides={orphan_casilla: Decimal("123")},
             baseline_revision=baseline,
             snapshot=snapshot,
         )

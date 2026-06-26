@@ -21,7 +21,7 @@ from ...core.errors import CoreValidationError
 from ...core.i18n import tr
 from ...core.identity import BucketId
 from ...core.logging import get_logger
-from ...domain.calculations.registry import ModeloRevision
+from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision, RelationId
 from ._errors import AggregationValidationError, t
 
 
@@ -103,9 +103,9 @@ class CalculationSourceDiagnostic(BaseModel):
     source_kind: str = Field(min_length=1, max_length=64)
     message: str = Field(min_length=1, max_length=512)
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
-    binding_id: str | None = Field(default=None, min_length=1, max_length=256)
-    relation_id: str | None = Field(default=None, min_length=1, max_length=256)
-    casilla_id: str | None = Field(default=None, min_length=1, max_length=256)
+    binding_id: BindingId | None = None
+    relation_id: RelationId | None = None
+    casilla_id: CasillaId | None = None
 
 
 class CalculationSourceProvenance(BaseModel):
@@ -125,12 +125,12 @@ class CalculationSourceResolution(BaseModel):
 
     resolver_id: str = Field(min_length=1, max_length=128)
     owned_sources: tuple[str, ...] = Field(default_factory=tuple)
-    binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
-    enum_binding_values: Mapping[str, str] = Field(default_factory=dict)
-    date_binding_values: Mapping[str, date] = Field(default_factory=dict)
-    relation_values: Mapping[str, Decimal] = Field(default_factory=dict)
-    unresolved_relation_ids: tuple[str, ...] = Field(default_factory=tuple)
-    bound_casilla_inputs: Mapping[str, Decimal] = Field(default_factory=dict)
+    binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
+    enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
+    date_binding_values: Mapping[BindingId, date] = Field(default_factory=dict)
+    relation_values: Mapping[RelationId, Decimal] = Field(default_factory=dict)
+    unresolved_relation_ids: tuple[RelationId, ...] = Field(default_factory=tuple)
+    bound_inputs_by_casilla_id: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = Field(default_factory=tuple)
     provenance: tuple[CalculationSourceProvenance, ...] = Field(default_factory=tuple)
@@ -147,22 +147,27 @@ class CalculationSourceResolution(BaseModel):
 
     @field_validator("binding_values")
     @classmethod
-    def _freeze_binding_values(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
+    def _freeze_binding_values(cls, value: Mapping[BindingId, Decimal]) -> Mapping[BindingId, Decimal]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("enum_binding_values")
     @classmethod
-    def _freeze_enum_binding_values(cls, value: Mapping[str, str]) -> Mapping[str, str]:
+    def _freeze_enum_binding_values(cls, value: Mapping[BindingId, str]) -> Mapping[BindingId, str]:
+        return MappingProxyType(dict(sorted(value.items())))
+
+    @field_validator("date_binding_values")
+    @classmethod
+    def _freeze_date_binding_values(cls, value: Mapping[BindingId, date]) -> Mapping[BindingId, date]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("relation_values")
     @classmethod
-    def _freeze_relation_values(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
+    def _freeze_relation_values(cls, value: Mapping[RelationId, Decimal]) -> Mapping[RelationId, Decimal]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("unresolved_relation_ids")
     @classmethod
-    def _freeze_unresolved_relation_ids(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+    def _freeze_unresolved_relation_ids(cls, value: tuple[RelationId, ...]) -> tuple[RelationId, ...]:
         normalized = tuple(item.strip() for item in value)
         if any(not item for item in normalized):
             raise SourceMeshError("aggregation.source_mesh.errors.unresolved_relation_ids_blank")
@@ -170,9 +175,9 @@ class CalculationSourceResolution(BaseModel):
             raise SourceMeshError("aggregation.source_mesh.errors.unresolved_relation_ids_duplicate")
         return tuple(sorted(normalized))
 
-    @field_validator("bound_casilla_inputs")
+    @field_validator("bound_inputs_by_casilla_id")
     @classmethod
-    def _freeze_bound_casilla_inputs(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
+    def _freeze_bound_inputs_by_casilla_id(cls, value: Mapping[CasillaId, Decimal]) -> Mapping[CasillaId, Decimal]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("source_transaction_ids")
@@ -186,23 +191,27 @@ class CalculationSourceResolution(BaseModel):
         return tuple(sorted(normalized))
 
     @field_serializer("binding_values")
-    def _serialize_binding_values(self, value: Mapping[str, Decimal]) -> dict[str, Decimal]:
+    def _serialize_binding_values(self, value: Mapping[BindingId, Decimal]) -> dict[BindingId, Decimal]:
         return dict(value)
 
     @field_serializer("enum_binding_values")
-    def _serialize_enum_binding_values(self, value: Mapping[str, str]) -> dict[str, str]:
+    def _serialize_enum_binding_values(self, value: Mapping[BindingId, str]) -> dict[BindingId, str]:
+        return dict(value)
+
+    @field_serializer("date_binding_values")
+    def _serialize_date_binding_values(self, value: Mapping[BindingId, date]) -> dict[BindingId, date]:
         return dict(value)
 
     @field_serializer("relation_values")
-    def _serialize_relation_values(self, value: Mapping[str, Decimal]) -> dict[str, Decimal]:
+    def _serialize_relation_values(self, value: Mapping[RelationId, Decimal]) -> dict[RelationId, Decimal]:
         return dict(value)
 
     @field_serializer("unresolved_relation_ids")
-    def _serialize_unresolved_relation_ids(self, value: tuple[str, ...]) -> tuple[str, ...]:
+    def _serialize_unresolved_relation_ids(self, value: tuple[RelationId, ...]) -> tuple[RelationId, ...]:
         return tuple(value)
 
-    @field_serializer("bound_casilla_inputs")
-    def _serialize_bound_casilla_inputs(self, value: Mapping[str, Decimal]) -> dict[str, Decimal]:
+    @field_serializer("bound_inputs_by_casilla_id")
+    def _serialize_bound_inputs_by_casilla_id(self, value: Mapping[CasillaId, Decimal]) -> dict[CasillaId, Decimal]:
         return dict(value)
 
     @field_serializer("source_transaction_ids")
@@ -242,18 +251,19 @@ def merge_source_resolutions(
 
     Returns a :class:`CalculationSourceResolution`.
     """
-    binding_values: dict[str, Decimal] = {}
-    enum_binding_values: dict[str, str] = {}
-    relation_values: dict[str, Decimal] = {}
-    unresolved_relation_ids: set[str] = set()
-    bound_casilla_inputs: dict[str, Decimal] = {}
+    binding_values: dict[BindingId, Decimal] = {}
+    enum_binding_values: dict[BindingId, str] = {}
+    date_binding_values: dict[BindingId, date] = {}
+    relation_values: dict[RelationId, Decimal] = {}
+    unresolved_relation_ids: set[RelationId] = set()
+    bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = {}
     source_transaction_ids: set[str] = set()
     diagnostics: list[CalculationSourceDiagnostic] = []
     provenance: list[CalculationSourceProvenance] = []
     owned_sources: set[str] = set()
-    binding_owners: dict[str, str] = {}
-    relation_owners: dict[str, str] = {}
-    casilla_owners: dict[str, str] = {}
+    binding_owners: dict[BindingId, str] = {}
+    relation_owners: dict[RelationId, str] = {}
+    casilla_owners: dict[CasillaId, str] = {}
 
     for resolution in resolutions:
         owned_sources.update(resolution.owned_sources)
@@ -267,22 +277,26 @@ def merge_source_resolutions(
         for binding_id, value in resolution.enum_binding_values.items():
             _claim_binding(binding_owners, binding_id, resolution.resolver_id)
             enum_binding_values[binding_id] = value
+        for binding_id, value in resolution.date_binding_values.items():
+            _claim_binding(binding_owners, binding_id, resolution.resolver_id)
+            date_binding_values[binding_id] = value
         for relation_id, value in resolution.relation_values.items():
             _claim_relation(relation_owners, relation_id, resolution.resolver_id)
             relation_values[relation_id] = value
             unresolved_relation_ids.discard(relation_id)
-        for casilla_id, value in resolution.bound_casilla_inputs.items():
+        for casilla_id, value in resolution.bound_inputs_by_casilla_id.items():
             _claim_bound_casilla(casilla_owners, casilla_id, resolution.resolver_id)
-            bound_casilla_inputs[casilla_id] = value
+            bound_inputs_by_casilla_id[casilla_id] = value
 
     return CalculationSourceResolution(
         resolver_id=resolver_id,
         owned_sources=tuple(sorted(owned_sources)),
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
+        date_binding_values=date_binding_values,
         relation_values=relation_values,
         unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
-        bound_casilla_inputs=bound_casilla_inputs,
+        bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
         source_transaction_ids=tuple(sorted(source_transaction_ids)),
         diagnostics=tuple(diagnostics),
         provenance=tuple(provenance),
@@ -349,7 +363,7 @@ def storage_degradation_resolution(
     )
 
 
-def _claim_binding(owners: dict[str, str], binding_id: str, resolver_id: str) -> None:
+def _claim_binding(owners: dict[BindingId, str], binding_id: BindingId, resolver_id: str) -> None:
     existing = owners.get(binding_id)
     if existing is None:
         owners[binding_id] = resolver_id
@@ -360,7 +374,7 @@ def _claim_binding(owners: dict[str, str], binding_id: str, resolver_id: str) ->
     )
 
 
-def _claim_bound_casilla(owners: dict[str, str], casilla_id: str, resolver_id: str) -> None:
+def _claim_bound_casilla(owners: dict[CasillaId, str], casilla_id: CasillaId, resolver_id: str) -> None:
     existing = owners.get(casilla_id)
     if existing is None:
         owners[casilla_id] = resolver_id
@@ -371,7 +385,7 @@ def _claim_bound_casilla(owners: dict[str, str], casilla_id: str, resolver_id: s
     )
 
 
-def _claim_relation(owners: dict[str, str], relation_id: str, resolver_id: str) -> None:
+def _claim_relation(owners: dict[RelationId, str], relation_id: RelationId, resolver_id: str) -> None:
     existing = owners.get(relation_id)
     if existing is None:
         owners[relation_id] = resolver_id

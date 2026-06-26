@@ -18,15 +18,18 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
+    BindingId,
     DataBindingDefinition,
     FormulaDefinition,
     FormulaExpression,
     RegistrySnapshot,
+    RelationId,
 )
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
@@ -47,9 +50,9 @@ _BUCKET_ID = "operator"
 _YEAR = 2025
 _PERIOD = "0A"
 _TYPED_PERIOD = Period.from_year_and_code(_YEAR, _PERIOD)
-_CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
-_ESTIMACION_BINDING = "renta-2025-modelo-100-estimacion-directa-es-normal"
-_SYNTHETIC_DECIMAL_PROFILE_BINDING = "test-profile-business-ratio-decimal-binding"
+_CCAA_BINDING: BindingId = "renta-2025-profile-tax-residence-ccaa"
+_ESTIMACION_BINDING: BindingId = "renta-2025-modelo-100-estimacion-directa-es-normal"
+_SYNTHETIC_DECIMAL_PROFILE_BINDING: BindingId = "test-profile-business-ratio-decimal-binding"
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 
 
@@ -214,7 +217,7 @@ def _snapshot_with_decimal_profile_binding(snapshot: RegistrySnapshot) -> Regist
     )
     formula = FormulaDefinition(
         id="test-profile-business-ratio-decimal-formula",
-        target=snapshot.revision.casillas[0].id,
+        target_casilla_id=snapshot.revision.casillas[0].id,
         expression=FormulaExpression(binding=_SYNTHETIC_DECIMAL_PROFILE_BINDING),
         legal_refs=snapshot.revision.legal_refs,
         source_refs=snapshot.revision.source_refs,
@@ -228,7 +231,7 @@ def _snapshot_with_decimal_profile_binding(snapshot: RegistrySnapshot) -> Regist
     return snapshot.model_copy(update={"revision": revision})
 
 
-def _non_ccaa_decimal_binding_values(snapshot: RegistrySnapshot) -> dict[str, Decimal]:
+def _non_ccaa_decimal_binding_values(snapshot: RegistrySnapshot) -> dict[BindingId, Decimal]:
     """Supply every non-CCAA, non-profile binding through the Decimal channel as zero.
 
     The CCAA binding is deliberately omitted: the calculation under test
@@ -239,14 +242,14 @@ def _non_ccaa_decimal_binding_values(snapshot: RegistrySnapshot) -> dict[str, De
     :class:`UserProfileRecord`.
     """
     return {
-        str(binding.id): Decimal("0")
+        binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
-        if str(binding.id) != _CCAA_BINDING and binding.source != "profile"
+        if binding.id != _CCAA_BINDING and binding.source != "profile"
     }
 
 
-def _zero_relation_values(snapshot: RegistrySnapshot) -> dict[str, Decimal]:
-    return {str(relation.id): Decimal("0") for relation in snapshot.revision.relations}
+def _zero_relation_values(snapshot: RegistrySnapshot) -> dict[RelationId, Decimal]:
+    return {relation.id: Decimal("0") for relation in snapshot.revision.relations}
 
 
 def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_input(
@@ -293,7 +296,7 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
 # contract regression: bool-typed profile facts preserved and routed correctly
 # ---------------------------------------------------------------------------
 
-_SYNTHETIC_BOOL_PROFILE_BINDING = "test-profile-new-entity-bool-binding"
+_SYNTHETIC_BOOL_PROFILE_BINDING: BindingId = "test-profile-new-entity-bool-binding"
 
 
 def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistrySnapshot:
@@ -312,7 +315,7 @@ def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistryS
     )
     formula = FormulaDefinition(
         id="test-profile-new-entity-bool-formula",
-        target=snapshot.revision.casillas[0].id,
+        target_casilla_id=snapshot.revision.casillas[0].id,
         expression=FormulaExpression(binding=_SYNTHETIC_BOOL_PROFILE_BINDING),
         legal_refs=snapshot.revision.legal_refs,
         source_refs=snapshot.revision.source_refs,
@@ -476,7 +479,7 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
             repository=work_repo,
             clock=_CLOCK,
         )
-        decimal_bindings = {str(binding.id): Decimal("0") for binding in snapshot.revision.bindings}
+        decimal_bindings = {binding.id: Decimal("0") for binding in snapshot.revision.bindings}
         with pytest.raises(ModeloError, match="enum dispatch keys"):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
@@ -583,3 +586,26 @@ def test_profile_sourced_binding_result_rejects_inconsistent_trace() -> None:
         "resolved_bindings": (_CCAA_BINDING,),
         "trace_bindings": (),
     }
+
+
+def test_profile_sourced_binding_result_rejects_noncanonical_binding_keys() -> None:
+    with pytest.raises(ValidationError) as decimal_exc:
+        ProfileSourcedBindingResult(
+            binding_values={"Bad Binding": Decimal("1")},
+            bindings_sourced_from_profile=("Bad Binding",),
+        )
+    assert decimal_exc.value.errors()[0]["loc"][0] == "binding_values"
+
+    with pytest.raises(ValidationError) as enum_exc:
+        ProfileSourcedBindingResult(
+            enum_binding_values={"Bad Binding": "madrid"},
+            bindings_sourced_from_profile=("Bad Binding",),
+        )
+    assert enum_exc.value.errors()[0]["loc"][0] == "enum_binding_values"
+
+    with pytest.raises(ValidationError) as date_exc:
+        ProfileSourcedBindingResult(
+            date_binding_values={"Bad Binding": date(1980, 1, 31)},
+            bindings_sourced_from_profile=("Bad Binding",),
+        )
+    assert date_exc.value.errors()[0]["loc"][0] == "date_binding_values"

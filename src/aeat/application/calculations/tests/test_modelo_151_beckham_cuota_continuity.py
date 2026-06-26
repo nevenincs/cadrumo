@@ -43,7 +43,12 @@ from pathlib import Path
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistryCalculationResult, calculate_registry_snapshot
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryCalculationResult,
+    calculate_registry_snapshot,
+    validated_casilla_id,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 
@@ -60,6 +65,22 @@ _RENTA_YEARS = (2024, 2025)
 _THRESHOLD = Decimal("600000")
 _RATE_LOW = Decimal("0.24")
 _RATE_HIGH = Decimal("0.47")
+_BASE_LIQUIDABLE_GENERAL_CASILLA: CasillaId = validated_casilla_id(
+    "impatriado.base-liquidable-general",
+    surface="_BASE_LIQUIDABLE_GENERAL_CASILLA",
+)
+_RETENCIONES_CASILLA: CasillaId = validated_casilla_id(
+    "impatriado.retenciones",
+    surface="_RETENCIONES_CASILLA",
+)
+_CUOTA_INTEGRA_GENERAL_CASILLA: CasillaId = validated_casilla_id(
+    "impatriado.cuota-integra-general",
+    surface="_CUOTA_INTEGRA_GENERAL_CASILLA",
+)
+_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id(
+    "impatriado.cuota-diferencial",
+    surface="_CUOTA_DIFERENCIAL_CASILLA",
+)
 
 
 def _expected_cuota_from_boe_escala(base_liquidable: Decimal) -> Decimal:
@@ -94,8 +115,8 @@ def _calculate_151(*, filing_year: int) -> tuple[RegistryCalculationResult, int]
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
-            "impatriado.base-liquidable-general": _BASE_BY_YEAR[filing_year],
-            "impatriado.retenciones": _RETENCIONES_BY_YEAR[filing_year],
+            _BASE_LIQUIDABLE_GENERAL_CASILLA: _BASE_BY_YEAR[filing_year],
+            _RETENCIONES_CASILLA: _RETENCIONES_BY_YEAR[filing_year],
         },
         binding_values={},
         date_context={"filing_period": date(filing_year, 12, 31)},
@@ -116,9 +137,9 @@ def test_cuota_matches_boe_escala_at_threshold_crossing(tmp_path: Path) -> None:
     assert produced > 0
     expected = _expected_cuota_from_boe_escala(_BASE_BY_YEAR[2024])
     assert expected == Decimal("191000.00")
-    assert result.values["impatriado.cuota-integra-general"] == expected
+    assert result.values[_CUOTA_INTEGRA_GENERAL_CASILLA] == expected
     # cuota diferencial = cuota − retenciones (art.93.2.f withholding is a pago a cuenta).
-    assert result.values["impatriado.cuota-diferencial"] == expected - _RETENCIONES_BY_YEAR[2024]
+    assert result.values[_CUOTA_DIFERENCIAL_CASILLA] == expected - _RETENCIONES_BY_YEAR[2024]
 
 
 def test_modelo_151_beckham_enrolls_two_renta_years(tmp_path: Path) -> None:
@@ -136,7 +157,7 @@ def test_modelo_151_beckham_enrolls_two_renta_years(tmp_path: Path) -> None:
         for filing_year in _RENTA_YEARS:
             result, produced = _calculate_151(filing_year=filing_year)
             expected = _expected_cuota_from_boe_escala(_BASE_BY_YEAR[filing_year])
-            assert result.values["impatriado.cuota-integra-general"] == expected, (
+            assert result.values[_CUOTA_INTEGRA_GENERAL_CASILLA] == expected, (
                 f"151 cuota for {filing_year} drifted from the BOE art.93.2.e.1º escala"
             )
             recorder.record_calculation_year(filing_year=filing_year, produced_value_count=produced)

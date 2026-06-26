@@ -50,10 +50,15 @@ import pytest
 from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    validated_casilla_id,
+)
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit
 from .._binding_prefill import resolve_bindings_from_local_store
@@ -82,9 +87,30 @@ _REVISION = "2019-y-siguientes"
 
 #: The prior-year minoración binding (M100 net income, filing_year_delta -1)
 #: and the casilla it drives.
-_PREV_YEAR_BINDING = "irpf.previous_year_economic_activity_net_income"
-_CARRY_FORWARD_BINDING = "modelo-130-resultados-negativos-anteriores"
-_MINORACION_CASILLA = "13"
+_PREV_YEAR_BINDING: BindingId = "irpf.previous_year_economic_activity_net_income"
+_CARRY_FORWARD_BINDING: BindingId = "modelo-130-resultados-negativos-anteriores"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M130 multiyear fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
+_M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
+_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = _casilla_id("05")
+_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
+_MINORACION_CASILLA: CasillaId = _casilla_id("13")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
+_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
+_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
+_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
+_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
 
 #: Prior-year (renta year N) M100 actividad-económica net income, seeded as a
 #: real annual observation. €8000 falls in the ≤9000 minoración band, so renta
@@ -100,15 +126,15 @@ _CLOCK = datetime(2026, 5, 1, 9, 0, 0, tzinfo=UTC)
 #: renta years: a modest actividad-económica result. The numeric result is
 #: produced by the real engine; the test asserts the cross-renta minoración
 #: wiring, not a hand-computed liquidation.
-_Q1_INPUTS = {
-    "01": Decimal("6000"),
-    "02": Decimal("2000"),
-    "05": Decimal("0"),
-    "06": Decimal("0"),
-    "08": Decimal("0"),
-    "10": Decimal("0"),
-    "16": Decimal("0"),
-    "18": Decimal("0"),
+_Q1_INPUTS: dict[CasillaId, Decimal] = {
+    _M130_INGRESOS_CASILLA: Decimal("6000"),
+    _M130_GASTOS_CASILLA: Decimal("2000"),
+    _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
+    _M130_RETENCIONES_CASILLA: Decimal("0"),
+    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+    _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+    _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
 
 
@@ -130,8 +156,8 @@ def _calculate_quarter(
     *,
     filing_year: int,
     period: str,
-    casilla_inputs: Mapping[str, Decimal],
-    binding_values: Mapping[str, Decimal],
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    binding_values: Mapping[BindingId, Decimal],
 ) -> CalculationRevision:
     """Run the REAL M130 calculation for one renta year quarter.
 
@@ -169,16 +195,16 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository, *, filing_
     pure-actividad-económica filer.
     """
     obs_repo.save_observation(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="100",
             filing_year=filing_year,
             period="0A",
-            observations=(
-                CasillaObservation(casilla_id="0224", value=_PRIOR_YEAR_NET_INCOME),
-                CasillaObservation(casilla_id="1479", value=Decimal("0")),
-                CasillaObservation(casilla_id="1553", value=Decimal("0")),
-                CasillaObservation(casilla_id="1577", value=Decimal("0")),
-            ),
+            casilla_values={
+                _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+            },
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,

@@ -8,13 +8,18 @@ import pytest
 from pydantic import ValidationError
 
 from .....core import Period
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .._errors import CalcSheetsRecordError
 from .._records import (
+    OperatorInput,
+    OperatorInputs,
     SheetCellAddress,
+    SheetCellConstraint,
     SheetExportMetadata,
     SheetExportPlan,
     SheetFormulaCell,
     SheetGuideContent,
+    SheetNumberFormat,
     SheetProtectedRange,
     SheetValueCell,
     TabName,
@@ -22,6 +27,11 @@ from .._records import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_IVA_DEVENGADO_BASE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.devengado.base",
+    surface="_IVA_DEVENGADO_BASE_CASILLA",
+)
 
 
 def _metadata() -> SheetExportMetadata:
@@ -91,6 +101,65 @@ def test_malformed_protected_range_validator_uses_typed_record_error() -> None:
     assert error.translated_message == "application.storage.calc_sheets.records.errors.range_malformed"
 
 
+def test_operator_inputs_are_keyed_by_canonical_casilla_id() -> None:
+    operator_input = OperatorInput(casilla_id=_IVA_DEVENGADO_BASE_CASILLA, value="100.00")
+    inputs = OperatorInputs(values=(operator_input,))
+
+    assert inputs.by_casilla_id() == {_IVA_DEVENGADO_BASE_CASILLA: operator_input}
+
+
+def test_operator_input_rejects_generic_casilla_key() -> None:
+    with pytest.raises(ValidationError):
+        OperatorInput.model_validate(
+            {
+                "casilla": _IVA_DEVENGADO_BASE_CASILLA,
+                "value": "100.00",
+            },
+        )
+
+
+def test_sheet_plan_records_reject_generic_casilla_key() -> None:
+    value_address = SheetCellAddress.at(TabName.ENTRADAS, row=2, column=4)
+    formula_address = SheetCellAddress.at(TabName.CALCULOS, row=2, column=4)
+
+    with pytest.raises(ValidationError):
+        SheetValueCell.model_validate(
+            {
+                "address": value_address,
+                "value": "100.00",
+                "role": "operator_input",
+                "casilla": _IVA_DEVENGADO_BASE_CASILLA,
+            },
+        )
+    with pytest.raises(ValidationError):
+        SheetFormulaCell.model_validate(
+            {
+                "address": formula_address,
+                "formula": "'Entradas'!D2*0.21",
+                "rounding_rule": "money",
+                "casilla": _IVA_DEVENGADO_BASE_CASILLA,
+            },
+        )
+    with pytest.raises(ValidationError):
+        SheetCellConstraint.model_validate(
+            {
+                "address": value_address,
+                "sign": "non_negative",
+                "legal_refs": ("ley-x:art-1",),
+                "casilla": _IVA_DEVENGADO_BASE_CASILLA,
+            },
+        )
+    with pytest.raises(ValidationError):
+        SheetNumberFormat.model_validate(
+            {
+                "address": formula_address,
+                "data_type": "money",
+                "pattern": "#,##0.00",
+                "casilla": _IVA_DEVENGADO_BASE_CASILLA,
+            },
+        )
+
+
 def test_export_plan_rejects_duplicate_writable_cell_addresses() -> None:
     address = SheetCellAddress.at(TabName.ENTRADAS, row=2, column=3)
 
@@ -103,14 +172,14 @@ def test_export_plan_rejects_duplicate_writable_cell_addresses() -> None:
                     address=address,
                     value="operator value",
                     role="operator_input",
-                    casilla="iva.devengado.base",
+                    casilla_id=_IVA_DEVENGADO_BASE_CASILLA,
                 ),
             ),
             formula_cells=(
                 SheetFormulaCell(
                     address=address,
                     formula="A1+B1",
-                    casilla="iva.devengado.base",
+                    casilla_id=_IVA_DEVENGADO_BASE_CASILLA,
                     rounding_rule="money",
                 ),
             ),

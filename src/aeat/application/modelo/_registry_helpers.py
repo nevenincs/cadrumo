@@ -10,11 +10,15 @@ from decimal import Decimal
 
 from ...core import Period
 from ...domain.calculations.registry import (
+    CasillaId,
     InputKind,
     ModeloRevision,
     RegistrySnapshot,
+    RegistryValidationError,
     VerificationPredicateDefinition,
-    input_casilla_alias_map,
+    casillas_by_id,
+    undeclared_casilla_ids,
+    validated_casilla_id,
 )
 from ...domain.modelos._calculation_revision import CalculationRevision, derive_calculation_revision_id
 from ._action_errors import (
@@ -30,16 +34,18 @@ from ._registry_resources import (
     reject_unknown_revision,
 )
 
+_NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset({"decimal", "money", "integer", "ratio"})
+
 
 def reject_incomplete_amendment_casillas(
     *,
     modelo: str,
     filing_year: int,
     period: Period,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
 ) -> None:
     """Mirror the verify-modelo-revision required-manual gate on amend."""
-    required_optional = required_input_casillas_for_revision(modelo=modelo, filing_year=filing_year, period=period)
+    required_optional = required_input_casilla_ids_for_revision(modelo=modelo, filing_year=filing_year, period=period)
     if required_optional is None:
         raise AmendmentVerificationRefusedError(
             f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
@@ -57,30 +63,86 @@ def reject_incomplete_amendment_casillas(
         )
 
 
-def normalize_casilla_input_aliases(
+def validate_casilla_input_ids[CasillaKey, CasillaValue](
     revision: ModeloRevision,
-    casilla_inputs: Mapping[str, Decimal],
-) -> dict[str, Decimal]:
-    """Resolve operator-supplied ``--casilla`` keys to canonical casilla ids.
+    casilla_inputs: Mapping[CasillaKey, CasillaValue],
+) -> dict[CasillaId, Decimal]:
+    """Validate operator-supplied numeric input casillas against the revision.
 
     Use of :class:`ModeloRevision` for compliance.
     """
     if not casilla_inputs:
-        return dict(casilla_inputs)
-    alias_map = input_casilla_alias_map(revision)
-    return {alias_map.get(key, key): value for key, value in casilla_inputs.items()}
+        return {}
+    revision_casillas_by_id = casillas_by_id(revision)
+    canonical_inputs: dict[CasillaId, CasillaValue] = {}
+    malformed: list[str] = []
+    for key, value in casilla_inputs.items():
+        try:
+            canonical_key = validated_casilla_id(key, surface="casilla input key")
+        except ValueError:
+            malformed.append(repr(key))
+            continue
+        canonical_inputs[canonical_key] = value
+    if malformed:
+        raise RegistryValidationError(
+            f"casilla input keys must be canonical casilla.id values for revision {revision.id!r}; "
+            f"malformed keys: {sorted(malformed)!r}",
+            context={"casilla_ids": ",".join(sorted(malformed)), "revision_id": revision.id},
+        )
+    unknown = undeclared_casilla_ids(revision, canonical_inputs)
+    if unknown:
+        raise RegistryValidationError(
+            f"casilla input keys must be canonical casilla.id values for revision {revision.id!r}; "
+            f"unknown or alias keys: {unknown!r}",
+            context={"casilla_ids": ",".join(unknown), "revision_id": revision.id},
+        )
+    non_decimal = sorted(
+        casilla_id
+        for casilla_id, value in canonical_inputs.items()
+        if isinstance(value, bool) or not isinstance(value, Decimal)
+    )
+    if non_decimal:
+        raise RegistryValidationError(
+            f"casilla input values must be Decimal instances for revision {revision.id!r}; "
+            f"non-Decimal casillas: {non_decimal!r}",
+            context={
+                "casilla_ids": ",".join(non_decimal),
+                "revision_id": revision.id,
+                "value_types": ",".join(type(canonical_inputs[casilla_id]).__name__ for casilla_id in non_decimal),
+            },
+        )
+    non_numeric = sorted(
+        casilla_id
+        for casilla_id in canonical_inputs
+        if revision_casillas_by_id[casilla_id].data_type not in _NUMERIC_CASILLA_DATA_TYPES
+    )
+    if non_numeric:
+        details = "; ".join(
+            f"{casilla_id}: data_type={revision_casillas_by_id[casilla_id].data_type!r} "
+            f"({revision_casillas_by_id[casilla_id].label})"
+            for casilla_id in non_numeric
+        )
+        raise RegistryValidationError(
+            f"casilla inputs must target numeric casillas for revision {revision.id!r}; {details}",
+            context={
+                "casilla_ids": ",".join(non_numeric),
+                "revision_id": revision.id,
+                "data_types": ",".join(revision_casillas_by_id[casilla_id].data_type for casilla_id in non_numeric),
+            },
+        )
+    return {casilla_id: value for casilla_id, value in canonical_inputs.items() if isinstance(value, Decimal)}
 
 
-def reject_unknown_override_casillas(
+def reject_unknown_override_casillas[CasillaKey](
     *,
     modelo: str,
     filing_year: int,
     period: Period,
-    overrides: Mapping[str, Decimal],
-) -> None:
+    overrides: Mapping[CasillaKey, Decimal],
+) -> dict[CasillaId, Decimal]:
     """Refuse override casilla ids the registry does not declare for the modelo / year / period."""
     if not overrides:
-        return
+        return {}
 
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -100,8 +162,24 @@ def reject_unknown_override_casillas(
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
         ) from exc
 
-    known = {str(casilla.id) for casilla in snapshot.revision.casillas}
-    unknown = sorted(casilla_id for casilla_id in overrides if casilla_id not in known)
+    malformed: list[str] = []
+    canonical_overrides: dict[CasillaId, Decimal] = {}
+    for casilla_id, value in overrides.items():
+        try:
+            canonical_overrides[validated_casilla_id(casilla_id, surface="amendment override casilla")] = value
+        except ValueError:
+            malformed.append(repr(casilla_id))
+    if malformed:
+        raise AmendmentOverrideCasillaError(
+            translated_message="application.modelo.errors.amendment_unknown_casillas",
+            context={
+                "modelo": modelo,
+                "filing_year": filing_year,
+                "period": period.registry_token,
+                "casillas": sorted(malformed),
+            },
+        )
+    unknown = undeclared_casilla_ids(snapshot.revision, canonical_overrides)
     if unknown:
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_unknown_casillas",
@@ -112,15 +190,16 @@ def reject_unknown_override_casillas(
                 "casillas": unknown,
             },
         )
+    return canonical_overrides
 
 
-def reject_unknown_import_casillas(
+def reject_unknown_import_casillas[CasillaKey](
     *,
     modelo: str,
     filing_year: int,
     period: Period,
-    casilla_values: Mapping[str, Decimal],
-) -> RegistrySnapshot:
+    casilla_values: Mapping[CasillaKey, Decimal],
+) -> tuple[RegistrySnapshot, dict[CasillaId, Decimal]]:
     """Refuse imported casilla ids the registry does not declare and return the resolved :class:`RegistrySnapshot`."""
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -140,8 +219,24 @@ def reject_unknown_import_casillas(
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
         ) from exc
 
-    known = {str(casilla.id) for casilla in snapshot.revision.casillas}
-    unknown = sorted(casilla_id for casilla_id in casilla_values if casilla_id not in known)
+    malformed: list[str] = []
+    canonical_values: dict[CasillaId, Decimal] = {}
+    for casilla_id, value in casilla_values.items():
+        try:
+            canonical_values[validated_casilla_id(casilla_id, surface="external import casilla")] = value
+        except ValueError:
+            malformed.append(repr(casilla_id))
+    if malformed:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_unknown_casillas",
+            context={
+                "modelo": modelo,
+                "filing_year": filing_year,
+                "period": period.registry_token,
+                "casillas": sorted(malformed),
+            },
+        )
+    unknown = undeclared_casilla_ids(snapshot.revision, canonical_values)
     if unknown:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_unknown_casillas",
@@ -152,16 +247,16 @@ def reject_unknown_import_casillas(
                 "casillas": unknown,
             },
         )
-    return snapshot
+    return snapshot, canonical_values
 
 
-def required_input_casillas_for_revision(
+def required_input_casilla_ids_for_revision(
     *,
     modelo: str,
     filing_year: int,
     period: Period,
-) -> tuple[tuple[str, ...], tuple[str, ...]] | None:
-    """Resolve the registry's required and informational input casillas."""
+) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]] | None:
+    """Resolve the registry's required and informational input casilla ids."""
     from ...domain.calculations.registry import RegistrySnapshotError
 
     try:
@@ -174,10 +269,10 @@ def required_input_casillas_for_revision(
     except RegistrySnapshotError:
         return None
 
-    required: list[str] = []
-    optional: list[str] = []
+    required: list[CasillaId] = []
+    optional: list[CasillaId] = []
     for casilla in snapshot.revision.casillas:
-        casilla_id = str(casilla.id)
+        casilla_id = casilla.id
         if casilla.input_kind == InputKind.MANUAL and casilla.required:
             required.append(casilla_id)
         elif casilla.input_kind in (InputKind.MANUAL, InputKind.BOUND, InputKind.COMPUTED):
@@ -214,8 +309,9 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
     """
     expected = derive_calculation_revision_id(
         work_unit_id=revision.work_unit_id,
-        inputs_snapshot=revision.inputs_snapshot,
+        input_values_by_casilla_id=revision.input_values_by_casilla_id,
         binding_overrides=revision.binding_overrides,
+        relation_overrides=revision.relation_overrides,
         casilla_values=revision.casilla_values,
         source_transaction_ids=revision.source_transaction_ids,
         borrador_snapshot_id=revision.borrador_snapshot_id,
@@ -248,13 +344,13 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
 __all__ = [
     "assert_revision_content_integrity",
     "authority_via_resources",
-    "normalize_casilla_input_aliases",
     "registry_root",
     "reject_incomplete_amendment_casillas",
     "reject_unknown_import_casillas",
     "reject_unknown_override_casillas",
     "reject_unknown_period_for_revision",
     "reject_unknown_revision",
-    "required_input_casillas_for_revision",
+    "required_input_casilla_ids_for_revision",
+    "validate_casilla_input_ids",
     "verification_predicates_for_revision",
 ]

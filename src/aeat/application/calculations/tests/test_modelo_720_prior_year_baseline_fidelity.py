@@ -47,7 +47,12 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -97,6 +102,21 @@ _CLOCK_N = datetime(2024, 3, 15, 10, 0, 0, tzinfo=UTC)  # M720 deadline: 1-Mar t
 _CLOCK_N_PLUS_1 = datetime(2025, 3, 15, 10, 0, 0, tzinfo=UTC)
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M720 prior-year baseline fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_TIPO_DECLARACION_CASILLA: CasillaId = _casilla_id("decl.tipo-declaracion")
+_CUENTAS_CODIGO_DE_CUENTA_CASILLA: CasillaId = _casilla_id("cuentas.codigo-de-cuenta")
+_CUENTAS_VALORACION_CASILLA: CasillaId = _casilla_id("cuentas.valoracion")
+_VALORES_IDENTIFICACION_CASILLA: CasillaId = _casilla_id("valores.identificacion")
+_VALORES_VALORACION_CASILLA: CasillaId = _casilla_id("valores.valoracion")
+
+
 def _find_observation(
     repo: CalculationObservationRepository,
     *,
@@ -125,21 +145,21 @@ def _year_n_observation() -> RegistryModeloObservation:
     All casilla values are non-default so a save-drops-field regression surfaces
     as strict inequality on reload. Both valuations exceed the €50k initial threshold.
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=(
+        casilla_values={
             # Declarante level (completeness-manifest casillas per the registry)
-            CasillaObservation(casilla_id="ejercicio", value=Decimal(str(_YEAR_N))),
-            CasillaObservation(casilla_id="tipo-declaracion", value=Decimal("1")),
+            _EJERCICIO_CASILLA: Decimal(str(_YEAR_N)),
+            _TIPO_DECLARACION_CASILLA: Decimal("1"),
             # Cuentas row (asset class C per Orden HAP/72/2013 anexo)
-            CasillaObservation(casilla_id="cuentas.codigo-de-cuenta", value=_CUENTAS_IDENTIFIER),
-            CasillaObservation(casilla_id="cuentas.valoracion", value=_CUENTAS_N),
+            _CUENTAS_CODIGO_DE_CUENTA_CASILLA: _CUENTAS_IDENTIFIER,
+            _CUENTAS_VALORACION_CASILLA: _CUENTAS_N,
             # Valores row (asset class V per Orden HAP/72/2013 anexo)
-            CasillaObservation(casilla_id="valores.identificacion", value=_VALORES_IDENTIFIER),
-            CasillaObservation(casilla_id="valores.valoracion", value=_VALORES_N),
-        ),
+            _VALORES_IDENTIFICACION_CASILLA: _VALORES_IDENTIFIER,
+            _VALORES_VALORACION_CASILLA: _VALORES_N,
+        },
     )
 
 
@@ -152,20 +172,20 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
     re-declaration trigger condition per art. 42-bis.5; valores delta (+€10k ≤ €20k)
     does not.
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,
         period="0A",
-        observations=(
-            CasillaObservation(casilla_id="ejercicio", value=Decimal(str(_YEAR_N_PLUS_1))),
-            CasillaObservation(casilla_id="tipo-declaracion", value=Decimal("1")),
+        casilla_values={
+            _EJERCICIO_CASILLA: Decimal(str(_YEAR_N_PLUS_1)),
+            _TIPO_DECLARACION_CASILLA: Decimal("1"),
             # Cuentas row — same identifier, grown valuation (+€25k)
-            CasillaObservation(casilla_id="cuentas.codigo-de-cuenta", value=_CUENTAS_IDENTIFIER),
-            CasillaObservation(casilla_id="cuentas.valoracion", value=_CUENTAS_N1),
+            _CUENTAS_CODIGO_DE_CUENTA_CASILLA: _CUENTAS_IDENTIFIER,
+            _CUENTAS_VALORACION_CASILLA: _CUENTAS_N1,
             # Valores row — same identifier, grown valuation (+€10k)
-            CasillaObservation(casilla_id="valores.identificacion", value=_VALORES_IDENTIFIER),
-            CasillaObservation(casilla_id="valores.valoracion", value=_VALORES_N1),
-        ),
+            _VALORES_IDENTIFICACION_CASILLA: _VALORES_IDENTIFIER,
+            _VALORES_VALORACION_CASILLA: _VALORES_N1,
+        },
     )
 
 
@@ -235,11 +255,11 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
         n1_vals = loaded_n1.observation.casilla_values
 
         # The declarante ejercicio casilla correctly encodes the filing year.
-        assert n_vals["ejercicio"] == Decimal(str(_YEAR_N)), (
-            f"year-N ejercicio should be {_YEAR_N}; got {n_vals['ejercicio']}"
+        assert n_vals[_EJERCICIO_CASILLA] == Decimal(str(_YEAR_N)), (
+            f"year-N ejercicio should be {_YEAR_N}; got {n_vals[_EJERCICIO_CASILLA]}"
         )
-        assert n1_vals["ejercicio"] == Decimal(str(_YEAR_N_PLUS_1)), (
-            f"year-N+1 ejercicio should be {_YEAR_N_PLUS_1}; got {n1_vals['ejercicio']}"
+        assert n1_vals[_EJERCICIO_CASILLA] == Decimal(str(_YEAR_N_PLUS_1)), (
+            f"year-N+1 ejercicio should be {_YEAR_N_PLUS_1}; got {n1_vals[_EJERCICIO_CASILLA]}"
         )
 
         # Provenance timestamps are epoch-distinct.
@@ -269,8 +289,8 @@ def test_asset_identifier_identity_persists_across_both_annual_cycles(tmp_path: 
         assert loaded_n1 is not None
 
         # Cuentas identifier: Decimal("12345678901234") must survive unchanged.
-        ident_cuentas_n = loaded_n.observation.casilla_values.get("cuentas.codigo-de-cuenta")
-        ident_cuentas_n1 = loaded_n1.observation.casilla_values.get("cuentas.codigo-de-cuenta")
+        ident_cuentas_n = loaded_n.observation.casilla_values.get(_CUENTAS_CODIGO_DE_CUENTA_CASILLA)
+        ident_cuentas_n1 = loaded_n1.observation.casilla_values.get(_CUENTAS_CODIGO_DE_CUENTA_CASILLA)
         assert ident_cuentas_n is not None, "year-N missing cuentas.codigo-de-cuenta"
         assert ident_cuentas_n1 is not None, "year-N+1 missing cuentas.codigo-de-cuenta"
         assert ident_cuentas_n == _CUENTAS_IDENTIFIER, (
@@ -300,8 +320,8 @@ def test_both_year_n_valuations_exceed_initial_threshold(tmp_path: Path) -> None
         vals = loaded.observation.casilla_values
 
         # Both valuations must be above the €50k initial threshold.
-        val_cuentas = vals.get("cuentas.valoracion")
-        val_valores = vals.get("valores.valoracion")
+        val_cuentas = vals.get(_CUENTAS_VALORACION_CASILLA)
+        val_valores = vals.get(_VALORES_VALORACION_CASILLA)
         assert val_cuentas is not None, "missing cuentas.valoracion casilla in year-N observation"
         assert val_valores is not None, "missing valores.valoracion casilla in year-N observation"
         assert val_cuentas >= _INITIAL_THRESHOLD_EUR, (
@@ -339,8 +359,8 @@ def test_year_n_plus_1_cuentas_delta_exceeds_redeclaration_threshold(tmp_path: P
         assert loaded_n1 is not None
 
         # Use cuentas.valoracion to measure the cuentas-class delta specifically.
-        val_n = loaded_n.observation.casilla_values.get("cuentas.valoracion")
-        val_n1 = loaded_n1.observation.casilla_values.get("cuentas.valoracion")
+        val_n = loaded_n.observation.casilla_values.get(_CUENTAS_VALORACION_CASILLA)
+        val_n1 = loaded_n1.observation.casilla_values.get(_CUENTAS_VALORACION_CASILLA)
         assert val_n is not None
         assert val_n1 is not None
 
@@ -359,7 +379,9 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         filing_year=_YEAR_N,
         period="0A",
         observations=tuple(
-            o for o in obs_n.observations if o.casilla_id not in ("cuentas.valoracion", "valores.valoracion")
+            o
+            for o in obs_n.observations
+            if o.casilla_id not in (_CUENTAS_VALORACION_CASILLA, _VALORES_VALORACION_CASILLA)
         ),
     )
 

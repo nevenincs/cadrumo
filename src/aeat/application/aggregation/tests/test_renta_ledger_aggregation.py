@@ -2,7 +2,7 @@
 
 `_casilla_aggregation` aggregates `RentaDeductibleExpenseObservation`
 records into a `CasillaAggregation` payload, grouping by
-``(target_casilla, category)`` and producing:
+``(target_casilla_id, category)`` and producing:
 
 - Per-casilla totals dict: ``casilla → sum(deductible_amount)``.
 - Per-(casilla, category) provenance rows with sorted transaction
@@ -28,6 +28,7 @@ import pytest
 
 from ....core import Period
 from ....core.resources import resources
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.categories import SpendingCategory
 from ....domain.renta import (
     RentaDeductibilityContext,
@@ -73,6 +74,17 @@ def _period(year: int, code: str) -> Period:
 _PERIOD_2025 = _period(2025, "0A")
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"renta ledger aggregation fixture key {value!r} is not a CasillaId") from exc
+
+
+_M100_AUTONOMOS_SS_CASILLA: CasillaId = _casilla_id("0186")
+_M100_ASESORIA_CASILLA: CasillaId = _casilla_id("0199")
+
+
 # ---------------------------------------------------------------------------
 # Output structural contract
 # ---------------------------------------------------------------------------
@@ -115,9 +127,9 @@ def test_casilla_aggregation_single_observation_produces_one_total_and_one_prove
 
     result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
 
-    assert set(result.casilla_values.keys()) == {"0186"}
+    assert set(result.casilla_values.keys()) == {_M100_AUTONOMOS_SS_CASILLA}
     assert len(result.provenance) == 1
-    assert result.provenance[0].casilla == "0186"
+    assert result.provenance[0].casilla_id == _M100_AUTONOMOS_SS_CASILLA
     assert result.provenance[0].category_id == SpendingCategory.CUOTAS_AUTONOMOS_SS.value
     assert result.provenance[0].transaction_ids == ("tx-1",)
 
@@ -131,9 +143,9 @@ def test_casilla_aggregation_groups_observations_same_casilla_same_category_into
     result = _casilla_aggregation(_PERIOD_2025, [obs_a, obs_b], modelo="100")
 
     assert len(result.provenance) == 1
-    assert result.provenance[0].casilla == "0186"
+    assert result.provenance[0].casilla_id == _M100_AUTONOMOS_SS_CASILLA
     assert result.provenance[0].transaction_ids == ("tx-a", "tx-b")
-    assert set(result.casilla_values.keys()) == {"0186"}
+    assert set(result.casilla_values.keys()) == {_M100_AUTONOMOS_SS_CASILLA}
 
 
 def test_casilla_aggregation_groups_same_casilla_different_categories_into_separate_rows() -> None:
@@ -150,9 +162,9 @@ def test_casilla_aggregation_groups_same_casilla_different_categories_into_separ
     result = _casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal], modelo="100")
 
     # Both observations contribute to the same casilla key.
-    assert set(result.casilla_values.keys()) == {"0199"}
+    assert set(result.casilla_values.keys()) == {_M100_ASESORIA_CASILLA}
     # But provenance preserves the per-category split.
-    provenance_categories = {row.category_id for row in result.provenance if row.casilla == "0199"}
+    provenance_categories = {row.category_id for row in result.provenance if row.casilla_id == _M100_ASESORIA_CASILLA}
     assert provenance_categories == {
         SpendingCategory.ASESORIA_CONTABLE.value,
         SpendingCategory.ASESORIA_FISCAL.value,
@@ -174,7 +186,7 @@ def test_casilla_aggregation_provenance_rows_are_sorted_by_casilla_then_category
     # Feed observations in random-ish order.
     result = _casilla_aggregation(_PERIOD_2025, [obs_192, obs_199, obs_186], modelo="100")
 
-    keys = [(row.casilla, row.category_id) for row in result.provenance]
+    keys = [(row.casilla_id, row.category_id) for row in result.provenance]
     assert keys == sorted(keys)
 
 
@@ -229,7 +241,7 @@ def test_casilla_aggregation_casilla_total_equals_sum_of_observations_for_that_c
     result = _casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal], modelo="100")
 
     expected_total = obs_contable.deductible_amount + obs_fiscal.deductible_amount
-    assert result.casilla_values["0199"] == expected_total
+    assert result.casilla_values[_M100_ASESORIA_CASILLA] == expected_total
 
 
 # ---------------------------------------------------------------------------

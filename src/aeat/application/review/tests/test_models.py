@@ -11,6 +11,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.invoices import (
     Invoice,
     InvoiceLine,
@@ -40,6 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _REVIEW_ITEM_ADAPTER: TypeAdapter[ReviewItem] = TypeAdapter(ReviewItem)
+_REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")
 
 
 def _summary(text: str = "demo") -> tr:
@@ -111,7 +113,7 @@ def _invoice() -> Invoice:
 
 def _finding() -> ModeloValidationFinding:
     return ModeloValidationFinding(
-        casilla_id="03",
+        casilla_id=_REVIEW_FINDING_CASILLA,
         severity=BaseSeverity.ERROR,
         code="casilla-out-of-range",
         message=_summary("range error"),

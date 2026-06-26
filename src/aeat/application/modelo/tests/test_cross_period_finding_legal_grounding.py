@@ -14,6 +14,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos import ModeloVerificationFindingKind
 from ...calculations import (
     CrossPeriodCleanStateBlocker,
@@ -31,6 +32,8 @@ from .._verification_actions import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
+
 
 def _unclean_evidence(*, origin_ids: tuple[str, ...]) -> CrossPeriodDependencyEvidence:
     return CrossPeriodDependencyEvidence(
@@ -38,7 +41,7 @@ def _unclean_evidence(*, origin_ids: tuple[str, ...]) -> CrossPeriodDependencyEv
             source_modelo="303",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "4T"),
-            source_casillas=("01",),
+            source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=origin_ids,
         ),

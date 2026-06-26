@@ -32,7 +32,6 @@ from ._adapters import (
 )
 from ._aggregator import ReviewQueue
 from ._edit import (
-    DeclaracionEditSpec,
     EditClause,
     EditParseError,
     InvoiceEditKey,
@@ -84,7 +83,6 @@ from ._operator import (
 
 __all__ = [
     "ACCEPTED_KINDS",
-    "DeclaracionEditSpec",
     "DeclaracionReviewFilterKey",
     "DeclaracionReviewFilterSpec",
     "DeclaracionReviewStatus",

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos._errors import ModeloValidationError
 from ....domain.modelos._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot, ManualFactBasisEntry
 from ....domain.transactions import (
@@ -32,6 +33,18 @@ from .._ledger_filing_snapshot import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CAPTURED = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00501")
+_SKIPPED_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00502")
+_EMPTY_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00503")
 
 
 def _tx(
@@ -123,7 +136,11 @@ def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
         catalogue=catalogue,
         captured_at=_CAPTURED,
     )
-    manual_entry = ManualFactBasisEntry(casilla="00501", value="140000.00", note="resultado contable")
+    manual_entry = ManualFactBasisEntry(
+        casilla_id=_MANUAL_FACT_CASILLA,
+        value="140000.00",
+        note="resultado contable",
+    )
 
     evidence = compute_ledger_filing_evidence(
         source_transaction_ids=[tx.transaction_id, tx.transaction_id, "missing-row"],
@@ -155,13 +172,13 @@ def test_evidence_capture_projects_tax_facts_and_manual_basis() -> None:
 def test_manual_fact_basis_projection_skips_blank_inputs() -> None:
     entries = project_manual_fact_basis_entries(
         {
-            "00501": "140000.00",
-            "00502": " ",
-            "00503": "",
+            _MANUAL_FACT_CASILLA: "140000.00",
+            _SKIPPED_MANUAL_FACT_CASILLA: " ",
+            _EMPTY_MANUAL_FACT_CASILLA: "",
         },
     )
 
-    assert entries == (ManualFactBasisEntry(casilla="00501", value="140000.00"),)
+    assert entries == (ManualFactBasisEntry(casilla_id=_MANUAL_FACT_CASILLA, value="140000.00"),)
 
 
 def test_evidence_coverage_guard_refuses_missing_contributor() -> None:

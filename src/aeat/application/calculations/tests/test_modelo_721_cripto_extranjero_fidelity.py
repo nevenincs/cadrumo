@@ -54,7 +54,12 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_observation_rows
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -101,6 +106,28 @@ _CLOCK_N = datetime(2024, 2, 15, 10, 0, 0, tzinfo=UTC)  # filed for ejercicio 20
 _CLOCK_N_PLUS_1 = datetime(2025, 2, 15, 10, 0, 0, tzinfo=UTC)  # filed for ejercicio 2024
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M721 cripto extranjero fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_EJERCICIO_CASILLA: CasillaId = _casilla_id("ejercicio")
+_TIPO_DECLARACION_CASILLA: CasillaId = _casilla_id("tipo-declaracion")
+_CUSTODIO_NOMBRE_CASILLA: CasillaId = _casilla_id("custodio.nombre-razon-social")
+_CUSTODIO_CODIGO_PAIS_CASILLA: CasillaId = _casilla_id("custodio.codigo-pais")
+_MONEDA_CLAVE_TOKEN_CASILLA: CasillaId = _casilla_id("moneda.clave-token")
+_MONEDA_SALDO_CASILLA: CasillaId = _casilla_id("moneda.saldo-31-diciembre")
+_SALDO_31_DICIEMBRE_CASILLAS: tuple[CasillaId, ...] = (
+    _MONEDA_SALDO_CASILLA,
+)
+
+
+def _values_for(observation: RegistryModeloObservation, casilla_id: CasillaId) -> tuple[Decimal, ...]:
+    return tuple(obs.value for obs in observation.observations if obs.casilla_id == casilla_id)
+
+
 def _find_observation(
     repo: CalculationObservationRepository,
     *,
@@ -123,29 +150,34 @@ def _find_observation(
 def _year_n_observation() -> RegistryModeloObservation:
     """Build the year-N (2023) M721 observation: BTC €60k + ETH €55k at 31 Dec.
 
-    Per-token casilla IDs are prefixed with the token ticker (``btc.*`` / ``eth.*``)
-    to give each token row a distinct casilla namespace, avoiding dict-key collisions
-    in the casilla_values property. Both valuations exceed the €50,000 initial threshold
-    per art. 42-quater / RD 1065/2007. All casilla values are non-default so a
-    save-drops-field regression surfaces as strict inequality on reload.
+    Per-token rows reuse the canonical registry row casillas; the ordered
+    observation tuple preserves row multiplicity that ``casilla_values`` cannot
+    represent. Both valuations exceed the €50,000 initial threshold per art.
+    42-quater / RD 1065/2007. All values are non-default so a save-drops-field
+    regression surfaces as strict inequality on reload.
     """
     return RegistryModeloObservation(
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=(
-            # Declarante header casillas (completeness-manifest anchors)
-            CasillaObservation(casilla_id="ejercicio", value=Decimal(str(_YEAR_N))),
-            CasillaObservation(casilla_id="tipo-declaracion", value=Decimal("1")),
-            # Custodian identity (shared across both token rows)
-            CasillaObservation(casilla_id="custodio.nombre-razon-social", value=_CUSTODIO_NOMBRE),
-            CasillaObservation(casilla_id="custodio.codigo-pais", value=_CUSTODIO_PAIS),
-            # BTC row — token identity + 31-December valuation
-            CasillaObservation(casilla_id="btc.moneda.clave-token", value=Decimal("1")),  # BTC=1
-            CasillaObservation(casilla_id="btc.moneda.saldo-31-diciembre", value=_BTC_N),
-            # ETH row — token identity + 31-December valuation
-            CasillaObservation(casilla_id="eth.moneda.clave-token", value=Decimal("2")),  # ETH=2
-            CasillaObservation(casilla_id="eth.moneda.saldo-31-diciembre", value=_ETH_N),
+        observations=registry_grounded_observation_rows(
+            modelo=_MODELO,
+            filing_year=_YEAR_N,
+            period="0A",
+            casilla_values=(
+                # Declarante header casillas (completeness-manifest anchors)
+                (_EJERCICIO_CASILLA, Decimal(str(_YEAR_N))),
+                (_TIPO_DECLARACION_CASILLA, Decimal("1")),
+                # Custodian identity (shared across both token rows)
+                (_CUSTODIO_NOMBRE_CASILLA, _CUSTODIO_NOMBRE),
+                (_CUSTODIO_CODIGO_PAIS_CASILLA, _CUSTODIO_PAIS),
+                # BTC row — token identity + 31-December valuation
+                (_MONEDA_CLAVE_TOKEN_CASILLA, Decimal("1")),  # BTC=1
+                (_MONEDA_SALDO_CASILLA, _BTC_N),
+                # ETH row — token identity + 31-December valuation
+                (_MONEDA_CLAVE_TOKEN_CASILLA, Decimal("2")),  # ETH=2
+                (_MONEDA_SALDO_CASILLA, _ETH_N),
+            ),
         ),
     )
 
@@ -162,17 +194,22 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,
         period="0A",
-        observations=(
-            CasillaObservation(casilla_id="ejercicio", value=Decimal(str(_YEAR_N_PLUS_1))),
-            CasillaObservation(casilla_id="tipo-declaracion", value=Decimal("1")),
-            CasillaObservation(casilla_id="custodio.nombre-razon-social", value=_CUSTODIO_NOMBRE),
-            CasillaObservation(casilla_id="custodio.codigo-pais", value=_CUSTODIO_PAIS),
-            # BTC row — same token identity, grown valuation (+€27k)
-            CasillaObservation(casilla_id="btc.moneda.clave-token", value=Decimal("1")),
-            CasillaObservation(casilla_id="btc.moneda.saldo-31-diciembre", value=_BTC_N1),
-            # ETH row — same token identity, grown valuation (+€8k)
-            CasillaObservation(casilla_id="eth.moneda.clave-token", value=Decimal("2")),
-            CasillaObservation(casilla_id="eth.moneda.saldo-31-diciembre", value=_ETH_N1),
+        observations=registry_grounded_observation_rows(
+            modelo=_MODELO,
+            filing_year=_YEAR_N_PLUS_1,
+            period="0A",
+            casilla_values=(
+                (_EJERCICIO_CASILLA, Decimal(str(_YEAR_N_PLUS_1))),
+                (_TIPO_DECLARACION_CASILLA, Decimal("1")),
+                (_CUSTODIO_NOMBRE_CASILLA, _CUSTODIO_NOMBRE),
+                (_CUSTODIO_CODIGO_PAIS_CASILLA, _CUSTODIO_PAIS),
+                # BTC row — same token identity, grown valuation (+€27k)
+                (_MONEDA_CLAVE_TOKEN_CASILLA, Decimal("1")),
+                (_MONEDA_SALDO_CASILLA, _BTC_N1),
+                # ETH row — same token identity, grown valuation (+€8k)
+                (_MONEDA_CLAVE_TOKEN_CASILLA, Decimal("2")),
+                (_MONEDA_SALDO_CASILLA, _ETH_N1),
+            ),
         ),
     )
 
@@ -242,12 +279,12 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
         n_vals = loaded_n.observation.casilla_values
         n1_vals = loaded_n1.observation.casilla_values
 
-        assert n_vals["ejercicio"] == Decimal(str(_YEAR_N))
-        assert n1_vals["ejercicio"] == Decimal(str(_YEAR_N_PLUS_1))
+        assert n_vals[_EJERCICIO_CASILLA] == Decimal(str(_YEAR_N))
+        assert n1_vals[_EJERCICIO_CASILLA] == Decimal(str(_YEAR_N_PLUS_1))
 
         # BTC saldo does not bleed between cycles.
-        btc_n = n_vals.get("btc.moneda.saldo-31-diciembre")
-        btc_n1 = n1_vals.get("btc.moneda.saldo-31-diciembre")
+        btc_n = _values_for(loaded_n.observation, _MONEDA_SALDO_CASILLA)[0]
+        btc_n1 = _values_for(loaded_n1.observation, _MONEDA_SALDO_CASILLA)[0]
         assert btc_n == _BTC_N, f"year-N BTC saldo should be {_BTC_N}; got {btc_n}"
         assert btc_n1 == _BTC_N1, f"year-N+1 BTC saldo should be {_BTC_N1}; got {btc_n1}"
         assert btc_n != btc_n1, "BTC saldo bled between year-N and year-N+1"
@@ -278,17 +315,15 @@ def test_token_identity_persists_across_both_annual_cycles(tmp_path: Path) -> No
         assert loaded_n1 is not None
 
         # BTC token identity: clave-token=1 must survive unchanged in both cycles.
-        btc_token_n = loaded_n.observation.casilla_values.get("btc.moneda.clave-token")
-        btc_token_n1 = loaded_n1.observation.casilla_values.get("btc.moneda.clave-token")
-        assert btc_token_n is not None, "year-N missing btc.moneda.clave-token"
-        assert btc_token_n1 is not None, "year-N+1 missing btc.moneda.clave-token"
-        assert btc_token_n == Decimal("1"), f"BTC token round-trip failed in year N: got {btc_token_n}"
-        assert btc_token_n1 == Decimal("1"), f"BTC token round-trip failed in year N+1: got {btc_token_n1}"
-        assert btc_token_n == btc_token_n1, "BTC clave-token drifted between year N and year N+1"
+        token_ids_n = _values_for(loaded_n.observation, _MONEDA_CLAVE_TOKEN_CASILLA)
+        token_ids_n1 = _values_for(loaded_n1.observation, _MONEDA_CLAVE_TOKEN_CASILLA)
+        assert token_ids_n == (Decimal("1"), Decimal("2")), f"token round-trip failed in year N: {token_ids_n}"
+        assert token_ids_n1 == (Decimal("1"), Decimal("2")), f"token round-trip failed in year N+1: {token_ids_n1}"
+        assert token_ids_n == token_ids_n1, "moneda.clave-token ordering drifted between year N and year N+1"
 
         # Custodian country identity: codigo-pais=840 (US) must survive unchanged.
-        pais_n = loaded_n.observation.casilla_values.get("custodio.codigo-pais")
-        pais_n1 = loaded_n1.observation.casilla_values.get("custodio.codigo-pais")
+        pais_n = loaded_n.observation.casilla_values.get(_CUSTODIO_CODIGO_PAIS_CASILLA)
+        pais_n1 = loaded_n1.observation.casilla_values.get(_CUSTODIO_CODIGO_PAIS_CASILLA)
         assert pais_n == _CUSTODIO_PAIS, f"custodio.codigo-pais round-trip failed year N: got {pais_n}"
         assert pais_n1 == _CUSTODIO_PAIS, f"custodio.codigo-pais round-trip failed year N+1: got {pais_n1}"
         assert pais_n == pais_n1, "custodio.codigo-pais drifted between year N and year N+1"
@@ -307,12 +342,7 @@ def test_both_year_n_valuations_exceed_initial_threshold(tmp_path: Path) -> None
         loaded = _find_observation(repo, filing_year=_YEAR_N, period="0A")
 
         assert loaded is not None
-        vals = loaded.observation.casilla_values
-
-        val_btc = vals.get("btc.moneda.saldo-31-diciembre")
-        val_eth = vals.get("eth.moneda.saldo-31-diciembre")
-        assert val_btc is not None, "missing btc.moneda.saldo-31-diciembre in year-N observation"
-        assert val_eth is not None, "missing eth.moneda.saldo-31-diciembre in year-N observation"
+        val_btc, val_eth = _values_for(loaded.observation, _MONEDA_SALDO_CASILLA)
         assert val_btc >= _INITIAL_THRESHOLD_EUR, (
             f"year-N BTC saldo {val_btc} must be >= {_INITIAL_THRESHOLD_EUR} initial threshold"
         )
@@ -346,10 +376,8 @@ def test_year_n_plus_1_btc_delta_exceeds_redeclaration_threshold(tmp_path: Path)
         assert loaded_n is not None
         assert loaded_n1 is not None
 
-        val_n = loaded_n.observation.casilla_values.get("btc.moneda.saldo-31-diciembre")
-        val_n1 = loaded_n1.observation.casilla_values.get("btc.moneda.saldo-31-diciembre")
-        assert val_n is not None
-        assert val_n1 is not None
+        val_n = _values_for(loaded_n.observation, _MONEDA_SALDO_CASILLA)[0]
+        val_n1 = _values_for(loaded_n1.observation, _MONEDA_SALDO_CASILLA)[0]
 
         delta = val_n1 - val_n
         assert delta > _REDECLARATION_DELTA_EUR, (
@@ -365,7 +393,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=tuple(o for o in obs_n.observations if "saldo-31-diciembre" not in o.casilla_id),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id not in _SALDO_31_DICIEMBRE_CASILLAS),
     )
 
     assert obs_n != obs_n_no_saldo, "the full observation and the saldo-omitted observation must be strictly unequal"

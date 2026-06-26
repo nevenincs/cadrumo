@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, PeriodKind
 from ...core.resources import resources
+from ...domain.calculations.registry import CasillaId
 from ...domain.categories import CategoryProfile, SpendingCategory
 from ...domain.invoices import (
     InvoiceCatalogue,
@@ -152,7 +153,7 @@ class RentaLedgerExpenseAggregation(BaseModel):
         return self
 
     @property
-    def casilla_values(self) -> Mapping[str, Decimal]:
+    def casilla_values(self) -> Mapping[CasillaId, Decimal]:
         """Return the frozen mapping of binding-ready casilla totals."""
         return self.casilla_aggregation.casilla_values
 
@@ -568,18 +569,18 @@ def _casilla_aggregation(
     *,
     modelo: str,
 ) -> CasillaAggregation:
-    totals: dict[str, Decimal] = {}
+    totals: dict[CasillaId, Decimal] = {}
     provenance_rows: list[CasillaProvenance] = []
-    grouped: dict[tuple[str, SpendingCategory], list[RentaDeductibleExpenseObservation]] = {}
+    grouped: dict[tuple[CasillaId, SpendingCategory], list[RentaDeductibleExpenseObservation]] = {}
     for observation in observations:
-        totals[observation.target_casilla] = (
-            totals.get(observation.target_casilla, Decimal("0")) + observation.deductible_amount
+        totals[observation.target_casilla_id] = (
+            totals.get(observation.target_casilla_id, Decimal("0")) + observation.deductible_amount
         )
-        grouped.setdefault((observation.target_casilla, observation.category), []).append(observation)
+        grouped.setdefault((observation.target_casilla_id, observation.category), []).append(observation)
     for (casilla, category), rows in sorted(grouped.items()):
         provenance_rows.append(
             CasillaProvenance(
-                casilla=casilla,
+                casilla_id=casilla,
                 category_id=category,
                 transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
                 subtotal=sum((row.deductible_amount for row in rows), start=Decimal("0")),

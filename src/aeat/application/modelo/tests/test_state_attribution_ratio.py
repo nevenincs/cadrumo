@@ -24,9 +24,9 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....domain.user_profile import UserProfileFact, UserProfileFactValue, UserProfileRecord
 from .._profile_binding import (
-    _inject_derived_state_attribution_facts,  # pyright: ignore[reportPrivateUsage]
+    _inject_derived_state_attribution_facts,
     resolve_profile_sourced_bindings,
 )
 
@@ -39,26 +39,26 @@ _CLOCK = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
 
 
 def test_injector_defaults_absent_scope_to_one_hundred() -> None:
-    fact_index: dict[str, object] = {}
-    _inject_derived_state_attribution_facts(fact_index)  # type: ignore[arg-type]
+    fact_index: dict[str, UserProfileFactValue] = {}
+    _inject_derived_state_attribution_facts(fact_index)
     assert fact_index[_RATIO_KEY] == Decimal("100")
 
 
 def test_injector_common_regime_resolves_to_one_hundred() -> None:
-    fact_index: dict[str, object] = {_SCOPE_KEY: "common_regime"}
-    _inject_derived_state_attribution_facts(fact_index)  # type: ignore[arg-type]
+    fact_index: dict[str, UserProfileFactValue] = {_SCOPE_KEY: "common_regime"}
+    _inject_derived_state_attribution_facts(fact_index)
     assert fact_index[_RATIO_KEY] == Decimal("100")
 
 
 def test_injector_explicit_foral_resolves_to_zero() -> None:
-    fact_index: dict[str, object] = {_SCOPE_KEY: "foral_unsupported"}
-    _inject_derived_state_attribution_facts(fact_index)  # type: ignore[arg-type]
+    fact_index: dict[str, UserProfileFactValue] = {_SCOPE_KEY: "foral_unsupported"}
+    _inject_derived_state_attribution_facts(fact_index)
     assert fact_index[_RATIO_KEY] == Decimal("0")
 
 
 def test_injector_is_idempotent_when_ratio_already_present() -> None:
-    fact_index: dict[str, object] = {_RATIO_KEY: Decimal("50")}
-    _inject_derived_state_attribution_facts(fact_index)  # type: ignore[arg-type]
+    fact_index: dict[str, UserProfileFactValue] = {_RATIO_KEY: Decimal("50")}
+    _inject_derived_state_attribution_facts(fact_index)
     assert fact_index[_RATIO_KEY] == Decimal("50")
 
 

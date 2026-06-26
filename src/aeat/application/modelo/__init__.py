@@ -25,7 +25,7 @@ Verification boundary
 
 2. **Per-casilla required-input gate (Layer 1)** -- every casilla
    declared ``required = true`` and ``input_kind = "manual"`` in the
-   registry must be present in the revision's ``inputs_snapshot``.
+   registry must be present in the revision's ``input_values_by_casilla_id``.
    Absent casillas produce :attr:`ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA`
    findings and set ``completeness_status`` to ``INCOMPLETE``.
 
@@ -80,6 +80,7 @@ from ._action_errors import (
     ModeloAggregationBindingError,
     ModeloCrossPeriodCleanStateError,
     ModeloRecordNotFoundError,
+    ModeloRefundElectionNotEligibleError,
     ModeloWorkflowGateError,
     StoredCalculationDriftError,
     VerificationReportNotFoundError,
@@ -408,6 +409,7 @@ __all__ = [
     "ModeloReconciliationVerdict",
     "ModeloRecordNotFoundError",
     "ModeloRecordStatus",
+    "ModeloRefundElectionNotEligibleError",
     "ModeloResolvedRevisionProjection",
     "ModeloResolvedWorkProjection",
     "ModeloRevisionPick",

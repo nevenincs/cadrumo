@@ -29,6 +29,8 @@ from ....domain.calculations.registry import BindingId, CasillaId, FormulaExpres
 from ._errors import CalcSheetsEngineError
 from ._layout import SheetLayout
 
+type SheetA1Reference = str
+
 
 class TranslationError(AeatError):
     """A registry expression has no closed-form Sheets equivalent."""
@@ -197,8 +199,8 @@ _ARG_OP_BUILDERS: Mapping[str, Callable[[str, list[str]], str]] = {
 def _translate_leaf(expression: FormulaExpression, *, layout: SheetLayout) -> str:
     if expression.literal is not None:
         return format_decimal(expression.literal)
-    if expression.casilla is not None:
-        return _casilla_reference(expression.casilla, layout=layout)
+    if expression.casilla_id is not None:
+        return _casilla_cell_reference(expression.casilla_id, layout=layout)
     if expression.parameter is not None:
         return _parameter_reference(expression.parameter, layout=layout)
     if expression.binding is not None:
@@ -385,9 +387,10 @@ def _translate_age_at_year_end(expression: FormulaExpression, *, layout: SheetLa
     return f"({layout.filing_year}-YEAR({cell.qualified()}))"
 
 
-def _casilla_reference(casilla: CasillaId, *, layout: SheetLayout) -> str:
+def _casilla_cell_reference(casilla_id: CasillaId, *, layout: SheetLayout) -> SheetA1Reference:
+    """Return the Sheets A1 cell reference for a canonical ``casilla.id``."""
     try:
-        address = layout.address_for(casilla)
+        address = layout.address_for(casilla_id)
     except CalcSheetsEngineError as exc:
         raise TranslationError(
             "casilla reference has no anchor cell in the layout",

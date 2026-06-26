@@ -57,8 +57,11 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
+    BindingId,
+    CasillaId,
     calculate_registry_snapshot,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -86,13 +89,29 @@ _BASE_YEAR_N_PLUS_1 = Decimal("19500.00")  # 2026 rental income (slightly higher
 
 # Profile-binding id for country_of_fiscal_residence (enum/text channel).
 _COUNTRY_BINDING = "m210-2025-profile-country-of-fiscal-residence"
+_TIPO_RENTA_CASILLA: CasillaId = validated_casilla_id("tipo_renta", surface="_TIPO_RENTA_CASILLA")
+_RENDIMIENTOS_INTEGROS_CASILLA: CasillaId = validated_casilla_id(
+    "rendimientos_integros",
+    surface="_RENDIMIENTOS_INTEGROS_CASILLA",
+)
+_GASTOS_DEDUCIBLES_CASILLA: CasillaId = validated_casilla_id(
+    "gastos_deducibles",
+    surface="_GASTOS_DEDUCIBLES_CASILLA",
+)
+_RETENCION_PRACTICADA_CASILLA: CasillaId = validated_casilla_id(
+    "retencion_practicada",
+    surface="_RETENCION_PRACTICADA_CASILLA",
+)
+_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id("base_imponible", surface="_BASE_IMPONIBLE_CASILLA")
+_TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("tipo_gravamen", surface="_TIPO_GRAVAMEN_CASILLA")
+_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("cuota_integra", surface="_CUOTA_INTEGRA_CASILLA")
 
 
 def _calculate_210(
     *,
     filing_year: int,
     base: Decimal,
-) -> tuple[Mapping[str, object], int]:
+) -> tuple[Mapping[CasillaId, object], int]:
     """Run the REAL M210 primary engine for a FR EU-resident landlord.
 
     Supplies:
@@ -107,17 +126,17 @@ def _calculate_210(
     # Text casillas (tipo_renta) and enum bindings (country_of_fiscal_residence)
     # are supplied through text_inputs and enum_binding_values respectively.
     # Numeric manual casillas go through casilla_inputs.
-    binding_values: dict[str, Decimal] = {}
-    enum_binding_values = {_COUNTRY_BINDING: _COUNTRY_GB}
-    text_inputs = {"tipo_renta": _TIPO_RENTA}
+    binding_values: dict[BindingId, Decimal] = {}
+    enum_binding_values: dict[BindingId, str] = {_COUNTRY_BINDING: _COUNTRY_GB}
+    text_inputs = {_TIPO_RENTA_CASILLA: _TIPO_RENTA}
     casilla_inputs = {
-        "rendimientos_integros": base,
-        "gastos_deducibles": Decimal("0"),
-        "retencion_practicada": Decimal("0"),
+        _RENDIMIENTOS_INTEGROS_CASILLA: base,
+        _GASTOS_DEDUCIBLES_CASILLA: Decimal("0"),
+        _RETENCION_PRACTICADA_CASILLA: Decimal("0"),
     }
-    # resolve_bound_casilla_inputs handles bound casillas that the engine requires;
+    # resolve_bound_inputs_by_casilla_id handles bound casillas that the engine requires;
     # M210 primary has no previous_filing bindings, so this is a no-op here.
-    bound = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     inputs = {**bound, **casilla_inputs}
     result = calculate_registry_snapshot(
         snapshot,
@@ -141,9 +160,9 @@ def test_year_n_gb_general_tipo_gravamen_is_24pct(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         values, _ = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
 
-    assert values["tipo_gravamen"] == _TIPO_GRAVAMEN_CONVENIO
-    assert values["base_imponible"] == _BASE_YEAR_N
-    assert values["cuota_integra"] == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
+    assert values[_TIPO_GRAVAMEN_CASILLA] == _TIPO_GRAVAMEN_CONVENIO
+    assert values[_BASE_IMPONIBLE_CASILLA] == _BASE_YEAR_N
+    assert values[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
 
 
 def test_year_n_plus_1_gb_general_tipo_gravamen_is_24pct(tmp_path: Path) -> None:
@@ -155,9 +174,11 @@ def test_year_n_plus_1_gb_general_tipo_gravamen_is_24pct(tmp_path: Path) -> None
     with isolated_runtime_profile(tmp_path=tmp_path):
         values, _ = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
 
-    assert values["tipo_gravamen"] == _TIPO_GRAVAMEN_CONVENIO
-    assert values["base_imponible"] == _BASE_YEAR_N_PLUS_1
-    assert values["cuota_integra"] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
+    assert values[_TIPO_GRAVAMEN_CASILLA] == _TIPO_GRAVAMEN_CONVENIO
+    assert values[_BASE_IMPONIBLE_CASILLA] == _BASE_YEAR_N_PLUS_1
+    assert values[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(
+        Decimal("0.01")
+    )
 
 
 def test_cuota_integra_differs_between_years_due_to_distinct_bases(tmp_path: Path) -> None:
@@ -172,8 +193,8 @@ def test_cuota_integra_differs_between_years_due_to_distinct_bases(tmp_path: Pat
         values_n, _ = _calculate_210(filing_year=_YEAR_N, base=_BASE_YEAR_N)
         values_n1, _ = _calculate_210(filing_year=_YEAR_N_PLUS_1, base=_BASE_YEAR_N_PLUS_1)
 
-    cuota_n = values_n["cuota_integra"]
-    cuota_n1 = values_n1["cuota_integra"]
+    cuota_n = values_n[_CUOTA_INTEGRA_CASILLA]
+    cuota_n1 = values_n1[_CUOTA_INTEGRA_CASILLA]
     assert cuota_n != cuota_n1, (
         f"cuota_integra must differ between years (distinct bases); "
         f"got {cuota_n} for both — cross-year base contamination"
@@ -212,15 +233,19 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
         recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Treaty-rate determinism: GB/general Convenio rate 0.24 in both years.
-    assert values_n["tipo_gravamen"] == _TIPO_GRAVAMEN_CONVENIO
-    assert values_n1["tipo_gravamen"] == _TIPO_GRAVAMEN_CONVENIO
+    assert values_n[_TIPO_GRAVAMEN_CASILLA] == _TIPO_GRAVAMEN_CONVENIO
+    assert values_n1[_TIPO_GRAVAMEN_CASILLA] == _TIPO_GRAVAMEN_CONVENIO
 
     # Cuota correctness from Convenio registry parameter (not hand-computed formula).
-    assert values_n["cuota_integra"] == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
-    assert values_n1["cuota_integra"] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(Decimal("0.01"))
+    assert values_n[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N * _TIPO_GRAVAMEN_CONVENIO).quantize(
+        Decimal("0.01")
+    )
+    assert values_n1[_CUOTA_INTEGRA_CASILLA] == (_BASE_YEAR_N_PLUS_1 * _TIPO_GRAVAMEN_CONVENIO).quantize(
+        Decimal("0.01")
+    )
 
     # Cross-renta isolation: distinct cuotas from distinct bases.
-    assert values_n["cuota_integra"] != values_n1["cuota_integra"]
+    assert values_n[_CUOTA_INTEGRA_CASILLA] != values_n1[_CUOTA_INTEGRA_CASILLA]
 
     # Authorization-gate enrollment.
     evidence = recorder.evidence()

@@ -32,7 +32,12 @@ from pydantic import AnyHttpUrl, TypeAdapter
 from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.calculations.registry import CasillaObservation, InputKind, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    InputKind,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante, JustificanteRepository
 from ....domain.modelos import ExternalEvidenceKind
@@ -46,6 +51,7 @@ from ....domain.modelos._verification_report import (
 from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ....domain.modelos._work_unit import WorkUnit
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, cross_period_dependency_requirements
 from .. import (
@@ -73,12 +79,24 @@ _T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
 _M130_MODELO = "130"
 _M130_FILING_YEAR = 2026
 _M130_PERIOD = "1T"
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_RENDIMIENTO_NETO_CASILLA")
+_M130_BASE_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id(
+    "06",
+    surface="_M130_BASE_PAGO_FRACCIONADO_CASILLA",
+)
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_RETENCIONES_CASILLA")
+_M130_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_PAGOS_FRACCIONADOS_CASILLA")
+_M130_A_DEDUCIR_CASILLA: CasillaId = validated_casilla_id("15", surface="_M130_A_DEDUCIR_CASILLA")
+_M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_RESULTADO_PREVIO_CASILLA")
+_M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_RESULTADO_CASILLA")
 
 
-def _required_manual_casillas_for_m130() -> tuple[str, ...]:
+def _required_manual_casillas_for_m130() -> tuple[CasillaId, ...]:
     """Read required manual casillas from the real registry — no duplication."""
     snap = resources().modelos.authority.snapshot(_M130_MODELO, filing_year=_M130_FILING_YEAR, period=_M130_PERIOD)
-    return tuple(str(c.id) for c in snap.revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
+    return tuple(c.id for c in snap.revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
 
 
 def _workflow_profile() -> TaxpayerProfile:
@@ -141,7 +159,7 @@ def _seed_clean_cross_period_sources_for_m130(
     )
     observation_repository = CalculationObservationRepository()
     for requirement in cross_period_dependency_requirements(snapshot):
-        values = {casilla_id: Decimal("0") for casilla_id in requirement.source_casillas}
+        values = {casilla_id: Decimal("0") for casilla_id in requirement.source_casilla_ids}
         source_snapshot = resources().modelos.authority.snapshot(
             requirement.source_modelo,
             filing_year=requirement.filing_year,
@@ -184,8 +202,11 @@ def _seed_clean_cross_period_sources_for_m130(
                 modelo=requirement.source_modelo,
                 filing_year=requirement.filing_year,
                 period=requirement.period.registry_token,
-                observations=tuple(
-                    CasillaObservation(casilla_id=casilla_id, value=value) for casilla_id, value in values.items()
+                observations=registry_grounded_observations(
+                    modelo=requirement.source_modelo,
+                    filing_year=requirement.filing_year,
+                    period=requirement.period.registry_token,
+                    casilla_values=values,
                 ),
             ),
             source_kind="aeat_sede_justificante",
@@ -237,12 +258,12 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs={
-            "05": Decimal("0"),
-            "06": Decimal("0"),
-            "08": Decimal("0"),
-            "10": Decimal("0"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
+            _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
+            _M130_RETENCIONES_CASILLA: Decimal("0"),
+            _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
+            _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
+            _M130_RESULTADO_CASILLA: Decimal("0"),
         },
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("0"),
@@ -272,7 +293,7 @@ def test_m130_has_no_required_manual_casilla_so_missing_required_never_blocks(re
         f"M130 has no required manual casilla, so no MISSING_REQUIRED_CASILLA finding is expected; "
         f"got {missing_finding_casillas!r}"
     )
-    assert report.missing_required_casillas == ()
+    assert report.missing_required_casilla_ids == ()
 
 
 def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> None:
@@ -290,16 +311,16 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
         clock=_T0,
     )
 
-    casilla_inputs: dict[str, Decimal] = {
-        "01": Decimal("10000"),
-        "02": Decimal("3000"),
-        "05": Decimal("0"),
-        "06": Decimal("0"),
-        "08": Decimal("0"),
-        "10": Decimal("0"),
-        "15": Decimal("0"),
-        "16": Decimal("0"),
-        "18": Decimal("0"),
+    casilla_inputs: dict[CasillaId, Decimal] = {
+        _M130_INGRESOS_CASILLA: Decimal("10000"),
+        _M130_GASTOS_CASILLA: Decimal("3000"),
+        _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
+        _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
+        _M130_RETENCIONES_CASILLA: Decimal("0"),
+        _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
+        _M130_A_DEDUCIR_CASILLA: Decimal("0"),
+        _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
+        _M130_RESULTADO_CASILLA: Decimal("0"),
     }
     # Confirm the test supplies all required casillas
     assert set(required) <= set(casilla_inputs), (
@@ -341,14 +362,14 @@ def test_verify_grants_when_required_casillas_supplied_m130(repos: _Repos) -> No
 
     assert report.granted_verificado_completo is True
     assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
-    assert report.missing_required_casillas == ()
-    assert set(report.resolved_casillas) >= set(required)
+    assert report.missing_required_casilla_ids == ()
+    assert set(report.resolved_casilla_ids) >= set(required)
     verified = cr_repo.load().get(revision.calculation_revision_id)
     assert verified is not None
     assert verified.ledger_filing_snapshot is not None
     assert verified.ledger_filing_evidence is not None
     assert verified.ledger_filing_evidence.snapshot_fingerprint == verified.ledger_filing_snapshot.snapshot_fingerprint
-    assert {entry.casilla for entry in verified.ledger_filing_evidence.manual_entries} >= set(casilla_inputs)
+    assert {entry.casilla_id for entry in verified.ledger_filing_evidence.manual_entries} >= set(casilla_inputs)
 
 
 def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
@@ -381,15 +402,15 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs={
-            "01": Decimal("10000"),
-            "02": Decimal("3000"),
-            "05": Decimal("0"),
-            "06": Decimal("0"),
-            "08": Decimal("0"),
-            "10": Decimal("0"),
-            "15": Decimal("0"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_INGRESOS_CASILLA: Decimal("10000"),
+            _M130_GASTOS_CASILLA: Decimal("3000"),
+            _M130_RENDIMIENTO_NETO_CASILLA: Decimal("0"),
+            _M130_BASE_PAGO_FRACCIONADO_CASILLA: Decimal("0"),
+            _M130_RETENCIONES_CASILLA: Decimal("0"),
+            _M130_PAGOS_FRACCIONADOS_CASILLA: Decimal("0"),
+            _M130_A_DEDUCIR_CASILLA: Decimal("0"),
+            _M130_RESULTADO_PREVIO_CASILLA: Decimal("0"),
+            _M130_RESULTADO_CASILLA: Decimal("0"),
         },
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("0"),
@@ -411,13 +432,13 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
     # was derived from the original casilla_values) but carries mutated
     # casilla_values, breaking the content-address contract.
     tampered_values = dict(original.casilla_values)
-    tampered_values["02"] = Decimal("999999")
+    tampered_values[_M130_GASTOS_CASILLA] = Decimal("999999")
 
     tampered = original.model_construct(
         calculation_revision_id=original.calculation_revision_id,
         work_unit_id=original.work_unit_id,
         state=original.state,
-        inputs_snapshot=original.inputs_snapshot,
+        input_values_by_casilla_id=original.input_values_by_casilla_id,
         binding_overrides=original.binding_overrides,
         source_transaction_ids=original.source_transaction_ids,
         borrador_snapshot_id=original.borrador_snapshot_id,

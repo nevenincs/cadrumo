@@ -12,7 +12,7 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation, Modelo202Modality, RegistryModeloObservation
+from ....domain.calculations.registry import CasillaId, Modelo202Modality
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante, JustificanteRepository
 from ....domain.modelos import (
@@ -33,6 +33,7 @@ from ....domain.modelos import (
     derive_filing_record_id,
 )
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
+from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import (
     create_work_unit,
@@ -87,27 +88,25 @@ def _m390_first_quarter_evidence(verdict: CrossPeriodCleanStateVerdict) -> Cross
     return next(evidence for evidence in verdict.dependencies if evidence.requirement.period == _M390_FIRST_QUARTER)
 
 
-def _source_values(period: str, source_casillas: tuple[str, ...]) -> dict[str, Decimal]:
+def _source_values(period: str, source_casilla_ids: tuple[CasillaId, ...]) -> dict[CasillaId, Decimal]:
     period_ordinal = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}[period]
-    return {casilla_id: Decimal(period_ordinal * (index + 1)) for index, casilla_id in enumerate(source_casillas)}
+    return {casilla_id: Decimal(period_ordinal * (index + 1)) for index, casilla_id in enumerate(source_casilla_ids)}
 
 
 def _save_source_observation(
     repository: CalculationObservationRepository,
     *,
     period: str,
-    source_values: dict[str, Decimal],
+    source_values: dict[CasillaId, Decimal],
     source_kind: str = "aeat_sede_justificante",
     source_metadata: dict[str, str] | None = None,
 ) -> None:
     repository.save_observation(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="303",
             filing_year=_M390_YEAR,
             period=period,
-            observations=tuple(
-                CasillaObservation(casilla_id=casilla_id, value=value) for casilla_id, value in source_values.items()
-            ),
+            casilla_values=source_values,
         ),
         source_kind=source_kind,
         captured_at=_CLOCK,
@@ -127,31 +126,28 @@ def _member_fan_in_requirement():
     )
 
 
-def _member_source_values(member_nif: str, source_casillas: tuple[str, ...]) -> dict[str, Decimal]:
+def _member_source_values(member_nif: str, source_casilla_ids: tuple[CasillaId, ...]) -> dict[CasillaId, Decimal]:
     member_ordinal = {
         _GROUP_MEMBER_A: Decimal("1"),
         _GROUP_MEMBER_B: Decimal("10"),
         _GROUP_MEMBER_C: Decimal("100"),
     }[member_nif]
-    return {casilla_id: member_ordinal * Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
+    return {casilla_id: member_ordinal * Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)}
 
 
 def _save_member_322_observation(
     repository: CalculationObservationRepository,
     *,
     member_nif: str,
-    source_casillas: tuple[str, ...],
+    source_casilla_ids: tuple[CasillaId, ...],
     source_metadata: dict[str, str] | None = None,
 ) -> None:
     repository.save_observation(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="322",
             filing_year=_M353_YEAR,
             period=_M353_PERIOD,
-            observations=tuple(
-                CasillaObservation(casilla_id=casilla_id, value=value)
-                for casilla_id, value in _member_source_values(member_nif, source_casillas).items()
-            ),
+            casilla_values=_member_source_values(member_nif, source_casilla_ids),
         ),
         source_kind="aeat_sede_justificante",
         captured_at=_CLOCK,
@@ -164,7 +160,7 @@ def _seed_member_322_filing(
     observation_repository: CalculationObservationRepository,
     *,
     member_nif: str,
-    source_casillas: tuple[str, ...],
+    source_casilla_ids: tuple[CasillaId, ...],
     justificante_tax_id: str | None = None,
     source_metadata: dict[str, str] | None = None,
 ) -> None:
@@ -175,11 +171,11 @@ def _seed_member_322_filing(
             "authenticated_identity": member_nif,
             "aeat_justificante_csv": f"JUST-322-{member_nif}",
         }
-    values = _member_source_values(member_nif, source_casillas)
+    values = _member_source_values(member_nif, source_casilla_ids)
     work_unit_id = hashlib.sha256(f"322:{_M353_YEAR}:{_M353_PERIOD}:{member_nif}".encode()).hexdigest()
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=values,
     )
@@ -188,9 +184,12 @@ def _seed_member_322_filing(
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=values,
-        observations=tuple(
-            CasillaObservation(casilla_id=casilla_id, value=value) for casilla_id, value in values.items()
-        ),
+        observations=registry_grounded_modelo_observation(
+            modelo="322",
+            filing_year=_M353_YEAR,
+            period=_M353_PERIOD,
+            casilla_values=values,
+        ).observations,
         created_at=_CLOCK,
         updated_at=_CLOCK,
         verified_at=_CLOCK,
@@ -249,7 +248,7 @@ def _seed_member_322_filing(
     _save_member_322_observation(
         observation_repository,
         member_nif=member_nif,
-        source_casillas=source_casillas,
+        source_casilla_ids=source_casilla_ids,
         source_metadata=source_metadata,
     )
 
@@ -619,14 +618,14 @@ def _seed_official_303_source_filings(
     skip_justificante_metadata_periods = skip_justificante_metadata_periods or set()
     source_kind_by_period = source_kind_by_period or {}
     source_metadata_by_period = source_metadata_by_period or {}
-    source_casillas_by_period: dict[str, set[str]] = {}
+    source_casilla_ids_by_period: dict[str, set[CasillaId]] = {}
     for requirement in cross_period_dependency_requirements(_snapshot_390()):
-        source_casillas_by_period.setdefault(
+        source_casilla_ids_by_period.setdefault(
             requirement.period.registry_token,
             set(),
-        ).update(requirement.source_casillas)
+        ).update(requirement.source_casilla_ids)
 
-    for period, source_casillas in sorted(source_casillas_by_period.items()):
+    for period, source_casilla_ids in sorted(source_casilla_ids_by_period.items()):
         evidence_kind = evidence_kind_by_period.get(period, ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
         evidence_reference_id = f"JUST-{period}"
         if (
@@ -647,7 +646,7 @@ def _seed_official_303_source_filings(
             revision_id=_M303_REVISION,
             clock=_CLOCK,
         )
-        values = _source_values(period, tuple(sorted(source_casillas)))
+        values = _source_values(period, tuple(sorted(source_casilla_ids)))
         if (
             evidence_kind
             in {
@@ -700,13 +699,13 @@ def _seed_official_303_source_filings(
 def _seed_legacy_source_filing_record(
     *,
     work_unit: WorkUnit,
-    casilla_values: dict[str, Decimal],
+    casilla_values: dict[CasillaId, Decimal],
     evidence_kind: ExternalEvidenceKind,
     evidence_reference_id: str,
 ) -> None:
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
     )
@@ -715,6 +714,12 @@ def _seed_legacy_source_filing_record(
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=casilla_values,
+        observations=registry_grounded_observations(
+            modelo=str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+            casilla_values=casilla_values,
+        ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
         verified_at=_CLOCK,
@@ -782,7 +787,7 @@ def test_cross_period_clean_state_blocks_missing_required_prior_filings(tmp_path
 
 
 def test_m100_suffered_retencion_deps_scoped_out_self_filed_enforced(tmp_path: Path) -> None:
-    """M100 deps on suffered retenciones (111/115/123/193) scope out as not-applicable; self-filed (130/131) still block.
+    """M100 suffered-retencion deps scope out; self-filed deps still block.
 
     The grounded payee/payer distinction (``taxpayer_files_source = false`` on the suffered
     classifications) lets a salaried taxpayer reach export, while pagos-fraccionados the taxpayer
@@ -810,20 +815,27 @@ def test_m100_suffered_retencion_deps_scoped_out_self_filed_enforced(tmp_path: P
 
 
 def test_m100_pagos_fraccionados_conditional_on_economic_activity(tmp_path: Path) -> None:
-    """130/131 pagos fraccionados scope out for a DECLARED employee; stay enforced for an autónomo and (fail-closed) when undeclared."""
+    """130/131 scope out for a declared employee and stay enforced otherwise."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         snap = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
-        common = {
-            "bucket_id": _BUCKET_ID,
-            "observation_repository": CalculationObservationRepository(),
-            "filing_repository": ModeloRecordCatalogueRepository(),
-            "calculation_repository": CalculationRevisionCatalogueRepository(),
-            "verification_repository": VerificationReportCatalogueRepository(),
-            "taxpayer_tax_id": "X1234567L",
-        }
-        employee = evaluate_cross_period_clean_state(snap, taxpayer_files_economic_activity=False, **common)
-        autonomo = evaluate_cross_period_clean_state(snap, taxpayer_files_economic_activity=True, **common)
-        undeclared = evaluate_cross_period_clean_state(snap, taxpayer_files_economic_activity=None, **common)
+
+        def evaluate_activity_state(
+            taxpayer_files_economic_activity: bool | None,
+        ) -> CrossPeriodCleanStateVerdict:
+            return evaluate_cross_period_clean_state(
+                snap,
+                bucket_id=_BUCKET_ID,
+                observation_repository=CalculationObservationRepository(),
+                filing_repository=ModeloRecordCatalogueRepository(),
+                calculation_repository=CalculationRevisionCatalogueRepository(),
+                verification_repository=VerificationReportCatalogueRepository(),
+                taxpayer_tax_id="X1234567L",
+                taxpayer_files_economic_activity=taxpayer_files_economic_activity,
+            )
+
+        employee = evaluate_activity_state(False)
+        autonomo = evaluate_activity_state(True)
+        undeclared = evaluate_activity_state(None)
 
     def scoped(verdict: CrossPeriodCleanStateVerdict) -> set[str]:
         return {item.requirement.source_modelo for item in verdict.dependencies if item.modelo_not_applicable_advisory}
@@ -965,7 +977,7 @@ def test_cross_period_clean_state_blocks_group_member_fan_in_without_expected_ro
         _save_member_322_observation(
             observation_repository,
             member_nif=_GROUP_MEMBER_A,
-            source_casillas=requirement.source_casillas,
+            source_casilla_ids=requirement.source_casilla_ids,
         )
 
         verdict = evaluate_cross_period_clean_state(
@@ -994,7 +1006,7 @@ def test_cross_period_clean_state_blocks_incomplete_expected_group_member_fan_in
         _save_member_322_observation(
             observation_repository,
             member_nif=_GROUP_MEMBER_A,
-            source_casillas=requirement.source_casillas,
+            source_casilla_ids=requirement.source_casilla_ids,
         )
 
         verdict = evaluate_cross_period_clean_state(
@@ -1033,7 +1045,7 @@ def test_cross_period_clean_state_blocks_unexpected_group_member_fan_in(
             _save_member_322_observation(
                 observation_repository,
                 member_nif=member_nif,
-                source_casillas=requirement.source_casillas,
+                source_casilla_ids=requirement.source_casilla_ids,
             )
 
         verdict = evaluate_cross_period_clean_state(
@@ -1071,7 +1083,7 @@ def test_cross_period_clean_state_accepts_member_scoped_group_filing_records(
             _seed_member_322_filing(
                 observation_repository,
                 member_nif=member_nif,
-                source_casillas=requirement.source_casillas,
+                source_casilla_ids=requirement.source_casilla_ids,
             )
 
         verdict = evaluate_cross_period_clean_state(
@@ -1111,7 +1123,7 @@ def test_cross_period_clean_state_blocks_member_filing_with_wrong_tax_id_justifi
             observation_repository,
             member_nif=_GROUP_MEMBER_A,
             justificante_tax_id=_GROUP_MEMBER_B,
-            source_casillas=requirement.source_casillas,
+            source_casilla_ids=requirement.source_casilla_ids,
         )
 
         verdict = evaluate_cross_period_clean_state(

@@ -12,19 +12,24 @@ from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     IvaLedgerObservation,
     RegistryCalculationResult,
     RegistryModeloObservation,
+    RegistrySnapshot,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
+    validated_casilla_id,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
+from ....domain.iva_compensation._errors import IvaCompensationCasillaReferenceError
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import (
+    _iva_compensation_history_observation,
+    _observation_from_iva_compensation_history,
     _selector_periods,
     _selector_year_delta,
     extract_modelo_303_local_iva_compensation_recurrence,
@@ -35,6 +40,36 @@ from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"binding prefill fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-devengada-total")
+_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-deducible-total")
+_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.anual.resultado-regimen-general")
+_M390_RECONCILIACION_DEVENGADA_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.devengada-303",
+)
+_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.deducible-303",
+)
+_M390_RECONCILIACION_RESULTADO_303_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.reconciliacion.resultado-303",
+)
+_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
+_M303_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
+_M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 
 def _observation(
@@ -72,7 +107,7 @@ def _calculate_303_from_observations(
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
     }
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -91,7 +126,7 @@ def _registry_observation(
         modelo="303",
         filing_year=filing_year,
         period=period,
-        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+        observations=result.observations,
     )
 
 
@@ -180,20 +215,22 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         binding_values = {**annual_ledger_values, **relation_binding_values}
         result = calculate_registry_snapshot(
             snapshot,
-            inputs=resolve_bound_casilla_inputs(snapshot.revision, binding_values),
+            inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
             binding_values=binding_values,
             date_context={"filing_period": date(2025, 12, 31)},
         )
 
         assert (
-            result.values["iva.anual.cuota-devengada-total"] == result.values["iva.anual.reconciliacion.devengada-303"]
+            result.values[_M390_CUOTA_DEVENGADA_TOTAL_CASILLA]
+            == result.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA]
         )
         assert (
-            result.values["iva.anual.cuota-deducible-total"] == result.values["iva.anual.reconciliacion.deducible-303"]
+            result.values[_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+            == result.values[_M390_RECONCILIACION_DEDUCIBLE_303_CASILLA]
         )
         assert (
-            result.values["iva.anual.resultado-regimen-general"]
-            == result.values["iva.anual.reconciliacion.resultado-303"]
+            result.values[_M390_RESULTADO_REGIMEN_GENERAL_CASILLA]
+            == result.values[_M390_RECONCILIACION_RESULTADO_303_CASILLA]
         )
 
 
@@ -237,6 +274,85 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
     assert recurrence.source_periods == (Period.from_year_and_code(2025, "4T"),)
     assert report.prefilled
     assert {item.source_kind for item in report.prefilled} == {"aeat_sede_iva_compensation_history"}
+
+
+def test_iva_history_observation_refuses_missing_registry_casilla_provenance() -> None:
+    """Secure IVA history must not emit an ungrounded casilla observation."""
+    snapshot: RegistrySnapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="4T")
+    casillas = {item.id: item for item in snapshot.revision.casillas}
+    assert _M303_RESULTADO_CASILLA in casillas, "real M303 registry must declare the oracle casilla"
+    casillas_without_resultado = {
+        casilla_id: casilla for casilla_id, casilla in casillas.items() if casilla_id != _M303_RESULTADO_CASILLA
+    }
+    formulas = {item.target_casilla_id: item for item in snapshot.revision.formulas}
+
+    with pytest.raises(IvaCompensationCasillaReferenceError, match=r"without legal_refs/source_refs"):
+        _iva_compensation_history_observation(
+            snapshot=snapshot,
+            casillas=casillas_without_resultado,
+            formulas=formulas,
+            casilla_id=_M303_RESULTADO_CASILLA,
+            value=Decimal("1.00"),
+        )
+
+
+def test_iva_history_observation_only_claims_formula_provenance_for_exact_casilla_projection() -> None:
+    state = IvaCompensationPeriodState(
+        taxpayer_nif="12345678Z",
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "4T"),
+        expediente_id="30320254T0000000000",
+        status="presentada",
+        presented_at=datetime(2026, 1, 20, 10, 0, tzinfo=UTC),
+        prior_pending_amount=Decimal("100.00"),
+        applied_amount=Decimal("25.00"),
+        pending_for_later_amount=Decimal("75.00"),
+        period_result_amount=Decimal("-75.00"),
+        final_result_amount=Decimal("0.00"),
+        generated_amount=Decimal("75.00"),
+        available_end_amount=Decimal("150.00"),
+        source_observation_key="303:2025:4T:history-source",
+    )
+
+    observation = _observation_from_iva_compensation_history(state)
+    by_id = {item.casilla_id: item for item in observation.observations}
+
+    posterior = by_id[_M303_POSTERIOR_CASILLA]
+    assert posterior.formula_id == "modelo-303-compensacion-pendiente-periodos-posteriores"
+    assert posterior.operand_casilla_refs == (
+        _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+        _M303_COMPENSACION_APLICADA_CASILLA,
+    )
+    assert posterior.operand_values == (Decimal("100.00"), Decimal("25.00"))
+
+    generated = by_id[_M303_GENERADA_CASILLA]
+    assert generated.formula_id == "modelo-303-compensacion-generada-periodo"
+    assert generated.operand_casilla_refs == (_M303_RESULTADO_CASILLA,)
+    assert generated.operand_values == (Decimal("-75.00"),)
+
+    available = by_id[_M303_DISPONIBLE_CASILLA]
+    assert available.formula_id == "modelo-303-compensacion-disponible-fin-periodo"
+    assert available.operand_casilla_refs == (_M303_POSTERIOR_CASILLA, _M303_GENERADA_CASILLA)
+    assert available.operand_values == (Decimal("75.00"), Decimal("75.00"))
+
+    assert by_id[_M303_COMPENSACION_APLICADA_CASILLA].formula_id is None
+
+
+def test_iva_history_observation_rejects_mismatched_formula_operand_projection() -> None:
+    snapshot: RegistrySnapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="4T")
+    casillas = {item.id: item for item in snapshot.revision.casillas}
+    formulas = {item.target_casilla_id: item for item in snapshot.revision.formulas}
+
+    with pytest.raises(IvaCompensationCasillaReferenceError, match=r"projects to"):
+        _iva_compensation_history_observation(
+            snapshot=snapshot,
+            casillas=casillas,
+            formulas=formulas,
+            casilla_id=_M303_DISPONIBLE_CASILLA,
+            value=Decimal("150.00"),
+            operand_refs=(_M303_POSTERIOR_CASILLA, _M303_RESULTADO_CASILLA),
+            operand_values=(Decimal("75.00"), Decimal("75.00")),
+        )
 
 
 def test_binding_prefill_type_error_is_registered_in_error_registry() -> None:

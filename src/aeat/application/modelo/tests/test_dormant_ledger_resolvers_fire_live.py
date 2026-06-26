@@ -64,7 +64,12 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation, ModeloRevision, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    ModeloRevision,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
 from ....domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -95,6 +100,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     CalculationSourceContext,
@@ -116,6 +122,13 @@ _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"dormant resolver fixture casilla key {value!r} is not a CasillaId") from exc
+
+
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
     modelo_def = next(item for item in resources().modelos.all() if item.id == modelo)
     return modelo_def.revisions[revision_id]
@@ -128,8 +141,18 @@ def _revision(modelo: str, revision_id: str) -> ModeloRevision:
 _M130_BUCKET = "bucket-m130-income-fold"
 _M130_REVISION = "2019-y-siguientes"
 _M130_YEAR = 2026
-_M130_INGRESOS_CASILLA = "01"
+_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
 _M130_INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
+_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = _casilla_id("05")
+_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
+_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
+_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
+_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
+_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
 
 # Three DISTINCT non-equal income receipts inside the M130 1T cumulative window
 # (Jan 1 - Mar 31). Distinct values make the fold unmistakable: a single-receipt
@@ -157,13 +180,13 @@ _M130_PRIOR_YEAR_NET_INCOME = Decimal("8000")
 # source), so it is NOT supplied here: with no OUTGOING transactions seeded the
 # gasto resolver returns 0, leaving rendimiento neto == ingresos so a wrong
 # income fold would still surface.
-_M130_MANUAL_INPUTS: dict[str, Decimal] = {
-    "05": Decimal("0"),
-    "06": Decimal("0"),
-    "08": Decimal("0"),
-    "10": Decimal("0"),
-    "16": Decimal("0"),
-    "18": Decimal("0"),
+_M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
+    _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
+    _M130_RETENCIONES_CASILLA: Decimal("0"),
+    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+    _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+    _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
 
 
@@ -240,11 +263,16 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
             modelo="100",
             filing_year=_M130_PRIOR_YEAR,
             period="0A",
-            observations=(
-                CasillaObservation(casilla_id="0224", value=_M130_PRIOR_YEAR_NET_INCOME),
-                CasillaObservation(casilla_id="1479", value=Decimal("0")),
-                CasillaObservation(casilla_id="1553", value=Decimal("0")),
-                CasillaObservation(casilla_id="1577", value=Decimal("0")),
+            observations=registry_grounded_observations(
+                modelo="100",
+                filing_year=_M130_PRIOR_YEAR,
+                period="0A",
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                },
             ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
@@ -301,9 +329,9 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
 _M349_BUCKET = "bucket-m349-invoice-fold"
 _M349_REVISION = "2020-y-siguientes"
 _M349_YEAR = 2026
-_M349_IMPORTE_CASILLA = "decl.importe-operaciones"
+_M349_IMPORTE_CASILLA: CasillaId = _casilla_id("decl.importe-operaciones")
 _M349_IMPORTE_BINDING = "iva-349-declarante-importe-operaciones"
-_M349_OPERADORES_CASILLA = "decl.numero-operadores"
+_M349_OPERADORES_CASILLA: CasillaId = _casilla_id("decl.numero-operadores")
 
 # Three DISTINCT non-equal ISSUED intra-community supply bases (clave E) to three
 # distinct EU operators, all issued inside 1T (Jan-Mar). decl.importe-operaciones
@@ -490,11 +518,11 @@ _M369_DE_GOODS = OssIossLedgerCandidate(
 _M369_DE_SERVICES_BINDING = "modelo-369-union-de-services-21pct"
 _M369_FR_SERVICES_BINDING = "modelo-369-union-fr-services-21pct"
 _M369_DE_GOODS_BINDING = "modelo-369-union-de-goods-distance-21pct"
-_M369_CUOTA_TOTAL_CASILLA = "iva.union.cuota-total"
+_M369_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.union.cuota-total")
 # Casilla bound to the DE-services OSS binding (used by the carve-out test).
-_M369_DE_SERVICES_BINDING_CASILLA = "iva.union.de.services-cuota"
-_M369_FR_SERVICES_BINDING_CASILLA = "iva.union.fr.services-cuota"
-_M369_DE_GOODS_BINDING_CASILLA = "iva.union.de.goods-distance-cuota"
+_M369_DE_SERVICES_BINDING_CASILLA: CasillaId = _casilla_id("iva.union.de.services-cuota")
+_M369_FR_SERVICES_BINDING_CASILLA: CasillaId = _casilla_id("iva.union.fr.services-cuota")
+_M369_DE_GOODS_BINDING_CASILLA: CasillaId = _casilla_id("iva.union.de.goods-distance-cuota")
 
 
 @pytest.fixture

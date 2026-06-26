@@ -31,11 +31,13 @@ import pytest
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryCalculationResult,
+    RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
 from ....domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -60,9 +62,18 @@ _BUCKET_ID = "bucket-m303-refund"
 #: stamp would silently drop the carry).
 _REVISION = "2023-y-siguientes"
 
-_CARRY_RELATION = "modelo-303-rel-self-compensacion-anteriores"
+_CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
 _CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
-_SALDO_CASILLA = "iva.compensacion-disponible-fin-periodo"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_M303_SALDO_COMPENSACION_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 #: Profile-gap workaround bindings (mirror the carry-continuity contract module;
 #: the direct-calculate path does not run the profile resolver).
@@ -108,7 +119,7 @@ def _calculate_303(
     filing_year: int,
     period: str,
     cuota_binding_overrides: Mapping[str, Decimal],
-    relation_values: Mapping[str, Decimal],
+    relation_values: Mapping[RelationId, Decimal],
 ) -> RegistryCalculationResult:
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=period)
     relation_binding_values = materialize_relation_binding_values(
@@ -124,7 +135,7 @@ def _calculate_303(
         **cuota_binding_overrides,
         **relation_binding_values,
     }
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -146,7 +157,7 @@ def _revision_from_result(result: RegistryCalculationResult) -> CalculationRevis
     values = dict(result.values)
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=values,
     )
@@ -155,9 +166,7 @@ def _revision_from_result(result: RegistryCalculationResult) -> CalculationRevis
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=values,
-        observations=tuple(
-            CasillaObservation(casilla_id=cid, value=val) for cid, val in values.items()
-        ),
+        observations=result.observations,
         created_at=_CLOCK,
         updated_at=_CLOCK,
         verified_at=_CLOCK,
@@ -199,7 +208,9 @@ def _carry_in_for_year_n_plus_1(obs_repo: CalculationObservationRepository) -> D
     """Resolve year N+1 1T casilla 110 from whatever year-N 4T carry is persisted."""
     snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
     relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
-    resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
+    resolved: dict[RelationId, Decimal] = {
+        item.relation: item.value for item in relation_values.values if item.value is not None
+    }
     return resolved.get(_CARRY_RELATION)
 
 
@@ -219,7 +230,7 @@ def test_refunded_4t_period_carries_zero_into_next_period(tmp_path: Path) -> Non
             relation_values={},
         )
         # The scenario genuinely generated a credit; refunding it must zero the carry.
-        assert result_n.values[_SALDO_CASILLA] > Decimal("0")
+        assert result_n.values[_M303_SALDO_COMPENSACION_CASILLA] > Decimal("0")
 
         obs_repo = CalculationObservationRepository()
         persist_filed_revision_observation(
@@ -249,7 +260,7 @@ def test_carried_4t_period_carries_the_credit_forward_control(tmp_path: Path) ->
             cuota_binding_overrides=_YEAR_N_4T_CREDIT_INPUTS,
             relation_values={},
         )
-        carried_saldo = result_n.values[_SALDO_CASILLA]
+        carried_saldo = result_n.values[_M303_SALDO_COMPENSACION_CASILLA]
         assert carried_saldo > Decimal("0")
 
         obs_repo = CalculationObservationRepository()

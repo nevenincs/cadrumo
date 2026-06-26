@@ -8,17 +8,17 @@ quarterly source filings (1T-4T) through the enrolled
 :class:`RelationPrefillSourceResolver`:
 
 * **Modelo 180** (revision ``2023-y-siguientes``) folds **Modelo 115** quarterly
-  retención-de-alquileres filings. Source outputs ``01`` (perceptores),
+  retención-de-alquileres filings. Source casilla ids ``01`` (perceptores),
   ``02`` (base), ``03`` (retenciones) → target casillas
   ``decl.total-perceptores`` / ``decl.base-total`` / ``decl.retenciones-total``
   via the ``copy``-from-relation formulas.
 * **Modelo 190** (revision ``2024-y-siguientes``) folds **Modelo 111** quarterly
   retención-rendimientos-del-trabajo filings. Nine percepciones-count source
-  outputs sum into ``decl.total-percepciones``, nine importe outputs into
+  casilla ids sum into ``decl.total-percepciones``, nine importe casilla ids into
   ``decl.percepciones-total``, and output ``28`` copies into
   ``decl.retenciones-total``.
 * **Modelo 193** (revision ``2024-y-siguientes``) folds **Modelo 123** quarterly
-  retención-capital-mobiliario filings. Source outputs ``03`` (perceptores),
+  retención-capital-mobiliario filings. Source casilla ids ``03`` (perceptores),
   ``06`` (base), ``09`` (retenciones) → the same three declarante casillas.
 
 Each source quarter is seeded as a filed observation through the production
@@ -58,13 +58,15 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryModeloObservation,
+    validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations._observations_repository import CalculationObservationRepository
 from .. import (
@@ -87,12 +89,24 @@ _WITHHOLDING_SOURCE = "withholding"
 
 # Declarante summary casilla ids shared by the M180 / M193 copy-from-relation
 # reconciliations (M180 2023 and M193 2024 both expose these three).
-_DECL_PERCEPTORES = "decl.total-perceptores"
-_DECL_BASE = "decl.base-total"
-_DECL_RETENCIONES = "decl.retenciones-total"
+_DECL_PERCEPTORES: CasillaId = validated_casilla_id("decl.total-perceptores", surface="_DECL_PERCEPTORES")
+_DECL_BASE: CasillaId = validated_casilla_id("decl.base-total", surface="_DECL_BASE")
+_DECL_RETENCIONES: CasillaId = validated_casilla_id("decl.retenciones-total", surface="_DECL_RETENCIONES")
 # M190 declarante summary casilla ids (percepciones rather than perceptores).
-_DECL_PERCEPCIONES_COUNT = "decl.total-percepciones"
-_DECL_PERCEPCIONES_AMOUNT = "decl.percepciones-total"
+_DECL_PERCEPCIONES_COUNT: CasillaId = validated_casilla_id(
+    "decl.total-percepciones",
+    surface="_DECL_PERCEPCIONES_COUNT",
+)
+_DECL_PERCEPCIONES_AMOUNT: CasillaId = validated_casilla_id(
+    "decl.percepciones-total",
+    surface="_DECL_PERCEPCIONES_AMOUNT",
+)
+_M115_PERCEPTORES_OUTPUT: CasillaId = validated_casilla_id("01", surface="_M115_PERCEPTORES_OUTPUT")
+_M115_BASE_OUTPUT: CasillaId = validated_casilla_id("02", surface="_M115_BASE_OUTPUT")
+_M115_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("03", surface="_M115_RETENCIONES_OUTPUT")
+_M123_PERCEPTORES_OUTPUT: CasillaId = validated_casilla_id("03", surface="_M123_PERCEPTORES_OUTPUT")
+_M123_BASE_OUTPUT: CasillaId = validated_casilla_id("06", surface="_M123_BASE_OUTPUT")
+_M123_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("09", surface="_M123_RETENCIONES_OUTPUT")
 
 
 @pytest.fixture
@@ -107,12 +121,12 @@ def _seed_quarterly_filing(
     obs_repo: CalculationObservationRepository,
     source_modelo: str,
     period: str,
-    casilla_values: dict[str, Decimal],
+    casilla_values: dict[CasillaId, Decimal],
 ) -> None:
-    """Persist one filed source-modelo quarter carrying every needed source output.
+    """Persist one filed source-modelo quarter carrying every needed source casilla id.
 
     The relation resolver requires exactly ONE observation per
-    ``(source_modelo, filing_year, period)`` carrying every source output the
+    ``(source_modelo, filing_year, period)`` carrying every source casilla id the
     annual relations consume, so each quarter is written as a single
     :class:`RegistryModeloObservation` whose ``observations`` tuple covers all
     outputs. Persisted through the production
@@ -124,8 +138,11 @@ def _seed_quarterly_filing(
             modelo=source_modelo,
             filing_year=_YEAR,
             period=period,
-            observations=tuple(
-                CasillaObservation(casilla_id=cid, value=value) for cid, value in casilla_values.items()
+            observations=registry_grounded_observations(
+                modelo=source_modelo,
+                filing_year=_YEAR,
+                period=period,
+                casilla_values=casilla_values,
             ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
@@ -225,9 +242,9 @@ def test_m180_folds_in_four_m115_quarters_on_live_calculate(secure_objects: Secu
             source_modelo="115",
             period=period,
             casilla_values={
-                "01": _M115_C01_PERCEPTORES[period],
-                "02": _M115_C02_BASE[period],
-                "03": _M115_C03_RETENCIONES[period],
+                _M115_PERCEPTORES_OUTPUT: _M115_C01_PERCEPTORES[period],
+                _M115_BASE_OUTPUT: _M115_C02_BASE[period],
+                _M115_RETENCIONES_OUTPUT: _M115_C03_RETENCIONES[period],
             },
         )
 
@@ -259,19 +276,25 @@ def test_m180_folds_in_four_m115_quarters_on_live_calculate(secure_objects: Secu
 # relation fold + deferred withholding detalle advisory.
 # ---------------------------------------------------------------------------
 
-# The nine percepciones-count source outputs (M111 c01,04,07,10,13,16,19,22,25)
+# The nine percepciones-count source casilla ids (M111 c01,04,07,10,13,16,19,22,25)
 # sum into decl.total-percepciones. Distinct integers across outputs AND
 # quarters so the 36-term fold is unmistakable.
-_M190_PERCEPCION_OUTPUTS: tuple[str, ...] = ("01", "04", "07", "10", "13", "16", "19", "22", "25")
-# The nine importe source outputs (M111 c02,05,08,11,14,17,20,23,26) sum into
+_M190_PERCEPCION_OUTPUTS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(value, surface="_M190_PERCEPCION_OUTPUTS")
+    for value in ("01", "04", "07", "10", "13", "16", "19", "22", "25")
+)
+# The nine importe source casilla ids (M111 c02,05,08,11,14,17,20,23,26) sum into
 # decl.percepciones-total.
-_M190_IMPORTE_OUTPUTS: tuple[str, ...] = ("02", "05", "08", "11", "14", "17", "20", "23", "26")
+_M190_IMPORTE_OUTPUTS: tuple[CasillaId, ...] = tuple(
+    validated_casilla_id(value, surface="_M190_IMPORTE_OUTPUTS")
+    for value in ("02", "05", "08", "11", "14", "17", "20", "23", "26")
+)
 # Output 28 (M111 retenciones total) copies into decl.retenciones-total via the
 # retenciones relation (still summed over the four quarters per the binding).
-_M190_RETENCIONES_OUTPUT = "28"
+_M190_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("28", surface="_M190_RETENCIONES_OUTPUT")
 
 
-def _m190_seed_value(output: str, period: str) -> Decimal:
+def _m190_seed_value(output: CasillaId, period: str) -> Decimal:
     """Return a distinct seed for one M111 output in one quarter.
 
     Encodes the output index and the quarter index into the integer/decimal so
@@ -409,9 +432,9 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
             source_modelo="123",
             period=period,
             casilla_values={
-                "03": _M123_C03_PERCEPTORES[period],
-                "06": _M123_C06_BASE[period],
-                "09": _M123_C09_RETENCIONES[period],
+                _M123_PERCEPTORES_OUTPUT: _M123_C03_PERCEPTORES[period],
+                _M123_BASE_OUTPUT: _M123_C06_BASE[period],
+                _M123_RETENCIONES_OUTPUT: _M123_C09_RETENCIONES[period],
             },
         )
 

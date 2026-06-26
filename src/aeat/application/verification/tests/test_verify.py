@@ -15,7 +15,7 @@ from ....adapters.inbound.declaracion import (
     TemplateRevision,
 )
 from ....adapters.inbound.pdf._shared import ExtractedCasilla
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.errors import render_error_json, render_error_text
 from .. import (
     VerificationError,
@@ -25,11 +25,19 @@ from .. import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_CASILLA")
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="verification test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"verification fixture casilla key {value!r} is not a canonical casilla.id") from exc
 
 
 def _build_filing(
     *,
-    values: tuple[tuple[str, Decimal], ...],
+    values: tuple[tuple[object, Decimal], ...],
     warnings: tuple[ExtractionWarning, ...] = (),
     modelo: str = "130",
     period: str = "1T",
@@ -38,7 +46,7 @@ def _build_filing(
     """Build a parsed declaration boundary object for verification."""
     extracted = tuple(
         ExtractedCasilla(
-            casilla_id=casilla_id,
+            casilla_id=_casilla_id(casilla_id),
             printed_value=value,
             source_page=1,
             source_bbox=None,
@@ -127,7 +135,7 @@ def test_verify_declaracion_classifies_registry_divergence() -> None:
     )
 
     assert verdict.status is VerificationStatus.NEEDS_REVIEW
-    assert verdict.discrepancies[0].casilla_id == "19"
+    assert verdict.discrepancies[0].casilla_id == _M130_RESULTADO_CASILLA
 
 
 def test_verify_declaracion_uses_modelo_115_registry_snapshot() -> None:

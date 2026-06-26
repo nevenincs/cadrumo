@@ -97,7 +97,7 @@ def _revision(
     wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period=_P_2026_1T, revision_id="r1")
     rid = derive_calculation_revision_id(
         work_unit_id=wid,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
         source_transaction_ids=source_ids,
@@ -166,7 +166,7 @@ def _verified_revision(
     wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period=_P_2026_1T, revision_id="r1")
     rid = derive_calculation_revision_id(
         work_unit_id=wid,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
         source_transaction_ids=source_ids,

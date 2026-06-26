@@ -13,7 +13,11 @@ from pydantic import AnyHttpUrl, TypeAdapter
 from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante, JustificanteRepository
 from ....domain.modelos import (
@@ -37,6 +41,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
     CalculationObservationRepository,
@@ -55,6 +60,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "cross-period-clean-state-gates"
 _CLOCK = datetime(2026, 6, 5, 11, 0, 0, tzinfo=UTC)
 _M303_REVISION = "2023-y-siguientes"
+_M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
 
 
 def _workflow_profile() -> TaxpayerProfile:
@@ -88,10 +94,10 @@ def _persist_390_draft(
         updated_at=_CLOCK,
     )
     work_unit_repository.save(upsert_work_unit(work_unit_repository.load(), work_unit))
-    casilla_values: dict[str, Decimal] = {}
+    casilla_values: dict[CasillaId, Decimal] = {}
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
     )
@@ -107,9 +113,9 @@ def _persist_390_draft(
     return revision_id
 
 
-def _source_values(period: str, source_casillas: tuple[str, ...]) -> dict[str, Decimal]:
+def _source_values(period: str, source_casilla_ids: tuple[CasillaId, ...]) -> dict[CasillaId, Decimal]:
     period_ordinal = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}[period]
-    return {casilla_id: Decimal(period_ordinal * (index + 1)) for index, casilla_id in enumerate(source_casillas)}
+    return {casilla_id: Decimal(period_ordinal * (index + 1)) for index, casilla_id in enumerate(source_casilla_ids)}
 
 
 def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing_year: int) -> None:
@@ -143,14 +149,14 @@ def _seed_303_cross_period_sources(
     csv_periods: set[str],
 ) -> None:
     snapshot = resources().modelos.authority.snapshot("390", filing_year=2025, period="0A")
-    source_casillas_by_period: dict[str, set[str]] = {}
+    source_casilla_ids_by_period: dict[str, set[CasillaId]] = {}
     for requirement in cross_period_dependency_requirements(snapshot):
-        source_casillas_by_period.setdefault(
+        source_casilla_ids_by_period.setdefault(
             requirement.period.registry_token,
             set(),
-        ).update(requirement.source_casillas)
+        ).update(requirement.source_casilla_ids)
 
-    for period, source_casillas in sorted(source_casillas_by_period.items()):
+    for period, source_casilla_ids in sorted(source_casilla_ids_by_period.items()):
         evidence_kind = (
             ExternalEvidenceKind.AEAT_CSV_REGISTER
             if period in csv_periods
@@ -170,7 +176,7 @@ def _seed_303_cross_period_sources(
             bucket_event_repository=bucket_event_repository,
             clock=_CLOCK,
         )
-        values = _source_values(period, tuple(sorted(source_casillas)))
+        values = _source_values(period, tuple(sorted(source_casilla_ids)))
         if evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER:
             _seed_legacy_source_filing_record(
                 work_unit=work_unit,
@@ -198,8 +204,11 @@ def _seed_303_cross_period_sources(
                 modelo="303",
                 filing_year=2025,
                 period=period,
-                observations=tuple(
-                    CasillaObservation(casilla_id=casilla_id, value=value) for casilla_id, value in values.items()
+                observations=registry_grounded_observations(
+                    modelo="303",
+                    filing_year=2025,
+                    period=period,
+                    casilla_values=values,
                 ),
             ),
             source_kind="aeat_sede_justificante",
@@ -217,7 +226,7 @@ def _seed_303_cross_period_sources(
 def _seed_legacy_source_filing_record(
     *,
     work_unit: WorkUnit,
-    casilla_values: dict[str, Decimal],
+    casilla_values: dict[CasillaId, Decimal],
     evidence_kind: ExternalEvidenceKind,
     evidence_reference_id: str,
     calculation_repository: CalculationRevisionCatalogueRepository,
@@ -225,7 +234,7 @@ def _seed_legacy_source_filing_record(
 ) -> None:
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
     )
@@ -238,6 +247,12 @@ def _seed_legacy_source_filing_record(
                 work_unit_id=work_unit.work_unit_id,
                 state=CalculationRevisionState.PRESENTADO,
                 casilla_values=casilla_values,
+                observations=registry_grounded_observations(
+                    modelo=str(work_unit.modelo),
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                    casilla_values=casilla_values,
+                ),
                 created_at=_CLOCK,
                 updated_at=_CLOCK,
                 verified_at=_CLOCK,
@@ -290,7 +305,7 @@ def _clean_state_repair_evidence(
             source_modelo="303",
             filing_year=2025,
             period=Period.from_year_and_code(2025, "1T"),
-            source_casillas=("01",),
+            source_casilla_ids=(_M303_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=("binding-303-casilla-01",),
         ),
@@ -313,13 +328,14 @@ def _clean_state_repair_verdict(
 
 
 @pytest.mark.parametrize(
-    ("blockers", "expected_fragments", "missing_member_nifs", "unexpected_member_nifs"),
+    ("blockers", "expected_next_action", "missing_member_nifs", "unexpected_member_nifs"),
     (
         (
             (CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER,),
             (
-                "Configure the expected grupo member roster",
-                "aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A",
+                "Configure the expected grupo member roster for source modelo=303 year=2025 period=1T, "
+                "then run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A` "
+                "and rerun verification."
             ),
             (),
             (),
@@ -327,8 +343,9 @@ def _clean_state_repair_verdict(
         (
             (CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE,),
             (
-                "Capture every expected grupo member filing",
-                "Missing members: B00000001",
+                "Capture every expected grupo member filing for source modelo=303 year=2025 period=1T. "
+                "Missing members: B00000001. "
+                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A`."
             ),
             ("B00000001",),
             (),
@@ -336,39 +353,57 @@ def _clean_state_repair_verdict(
         (
             (CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE,),
             (
-                "Review the grupo roster",
-                "unexpected captured members: C00000002",
+                "Review the grupo roster for source modelo=303 year=2025 period=1T; "
+                "unexpected captured members: C00000002. Then rerun verification."
             ),
             (),
             ("C00000002",),
         ),
         (
             (CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE,),
-            ("aeat app registry verify-filed-state --observation PATH",),
+            (
+                "Reconcile the captured filed observation against the local calculation with "
+                "`aeat app registry verify-filed-state --observation PATH`, "
+                "then refresh the upstream filing evidence."
+            ),
             (),
             (),
         ),
         (
             (CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE,),
-            ("Use AEAT evidence for upstream values",),
+            (
+                "Use AEAT evidence for upstream values in source modelo=303 year=2025 period=1T. "
+                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A`."
+            ),
             (),
             (),
         ),
         (
             (CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION,),
-            ("aeat app modelo reconcile file WORK_UNIT_ID --file PATH",),
+            (
+                "Capture or import AEAT justificante evidence for source modelo=303 year=2025 period=1T. "
+                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A` or "
+                "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`, then rerun verification."
+            ),
             (),
             (),
         ),
         (
             (CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,),
-            ("aeat app modelo reconcile file WORK_UNIT_ID --file PATH",),
+            (
+                "Capture or import AEAT justificante evidence for source modelo=303 year=2025 period=1T. "
+                "Run `aeat app live filed pull-sources --modelo 390 --year 2025 --period 0A` or "
+                "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`, then rerun verification."
+            ),
             (),
             (),
         ),
         (
             (CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION,),
-            ("Recalculate and verify the upstream work unit",),
+            (
+                "Recalculate and verify the upstream work unit for source modelo=303 year=2025 period=1T, "
+                "then attach AEAT evidence and rerun the target verification."
+            ),
             (),
             (),
         ),
@@ -376,7 +411,7 @@ def _clean_state_repair_verdict(
 )
 def test_cross_period_clean_state_repair_diagnostics_map_blockers_to_operator_actions(
     blockers: tuple[CrossPeriodCleanStateBlocker, ...],
-    expected_fragments: tuple[str, ...],
+    expected_next_action: str,
     missing_member_nifs: tuple[str, ...],
     unexpected_member_nifs: tuple[str, ...],
 ) -> None:
@@ -391,7 +426,7 @@ def test_cross_period_clean_state_repair_diagnostics_map_blockers_to_operator_ac
         evidence,
     )
 
-    assert all(fragment in next_action for fragment in expected_fragments)
+    assert next_action == expected_next_action
 
 
 def test_verify_modelo_390_persists_cross_period_clean_state_blockers_when_prior_filings_are_missing(

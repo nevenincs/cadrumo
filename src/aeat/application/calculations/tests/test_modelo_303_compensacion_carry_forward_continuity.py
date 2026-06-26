@@ -13,7 +13,7 @@ de periodos anteriores") and is applied there.
 The registry models this as the self-relation
 ``modelo-303-rel-self-compensacion-anteriores``: a ``previous_period``
 relation with ``source_period_offset_from_target = -1`` whose
-``source_output`` (``iva.compensacion-disponible-fin-periodo``) feeds the
+``source_casilla_id`` (``iva.compensacion-disponible-fin-periodo``) feeds the
 ``target_binding`` ``modelo-303-compensacion-pendiente-anteriores`` (casilla
 110). For the 4T → 1T boundary the offset wraps the source year back by one
 (1T ordinal 1, offset -1 → prior-year 4T), so the carry is genuinely
@@ -53,12 +53,14 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
+    RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -76,10 +78,22 @@ _YEAR_N_PLUS_1 = 2026
 
 #: The relation that carries the prior-period saldo into casilla 110, and the
 #: binding/casilla it targets. Declared in the 303 2023+ revision.
-_CARRY_RELATION = "modelo-303-rel-self-compensacion-anteriores"
+_CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
 _CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
-_CASILLA_110 = "iva.compensacion-pendiente-periodos-anteriores"
-_SALDO_CASILLA = "iva.compensacion-disponible-fin-periodo"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M303_COMPENSACION_PENDIENTE_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
+_M303_SALDO_COMPENSACION_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 #: WORKAROUND R2 — the 303 2023+ revision carries a ``source = "profile"``
 #: binding ``modelo-303-autoconsumo-promotor-base`` (LIVA art. 9.1.c / 79.4
@@ -148,7 +162,7 @@ def _calculate_303(
     filing_year: int,
     period: str,
     cuota_binding_overrides: Mapping[str, Decimal],
-    relation_values: Mapping[str, Decimal],
+    relation_values: Mapping[RelationId, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL registry 303 calculation; return result + produced-value count.
 
@@ -181,7 +195,7 @@ def _calculate_303(
         **cuota_binding_overrides,
         **relation_binding_values,
     }
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -202,7 +216,7 @@ def _registry_observation(
         modelo=_MODELO,
         filing_year=filing_year,
         period=period,
-        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+        observations=result.observations,
     )
 
 
@@ -240,10 +254,10 @@ def test_year_n_4t_credit_produces_carry_forward_saldo(tmp_path: Path) -> None:
             period="4T",
             cuota_binding_overrides=_YEAR_N_4T_INPUTS,
             relation_values={},
-        )
+    )
     assert produced > 0
-    assert result.values["iva.resultado"] < Decimal("0")
-    assert result.values[_SALDO_CASILLA] > Decimal("0")
+    assert result.values[_M303_RESULTADO_CASILLA] < Decimal("0")
+    assert result.values[_M303_SALDO_COMPENSACION_CASILLA] > Decimal("0")
 
 
 def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path: Path) -> None:
@@ -264,7 +278,7 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
             cuota_binding_overrides=_YEAR_N_4T_INPUTS,
             relation_values={},
         )
-        carried_saldo = result_n.values[_SALDO_CASILLA]
+        carried_saldo = result_n.values[_M303_SALDO_COMPENSACION_CASILLA]
         obs_repo.save_observation(
             _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
             source_kind="app_filing",
@@ -273,7 +287,9 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
 
         snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
-        resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
+        resolved: dict[RelationId, Decimal] = {
+            item.relation: item.value for item in relation_values.values if item.value is not None
+        }
 
     assert resolved.get(_CARRY_RELATION) == carried_saldo
     assert carried_saldo > Decimal("0")
@@ -301,7 +317,7 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
             relation_values={},
         )
         recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
-        carried_saldo = result_n.values[_SALDO_CASILLA]
+        carried_saldo = result_n.values[_M303_SALDO_COMPENSACION_CASILLA]
         obs_repo.save_observation(
             _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
             source_kind="app_filing",
@@ -312,7 +328,9 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
         # wrap), lands in casilla 110, and a real calculation runs with it.
         snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
         relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
-        resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
+        resolved: dict[RelationId, Decimal] = {
+            item.relation: item.value for item in relation_values.values if item.value is not None
+        }
         result_n1, produced_n1 = _calculate_303(
             filing_year=_YEAR_N_PLUS_1,
             period="1T",
@@ -322,7 +340,7 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
         recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Cross-renta wiring invariant: 1T/N+1 casilla 110 == 4T/N persisted saldo.
-    assert result_n1.values[_CASILLA_110] == carried_saldo
+    assert result_n1.values[_M303_COMPENSACION_PENDIENTE_CASILLA] == carried_saldo
     assert carried_saldo > Decimal("0")
 
     # Authorization-gate enrollment: the recorded two-year set is cross-checked

@@ -51,13 +51,16 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
+    RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -75,6 +78,22 @@ _YEAR_N_PLUS_1 = 2026
 
 _CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M180/115 reconciliation fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M115_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
+_M115_BASE_CASILLA: CasillaId = _casilla_id("02")
+_M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
+_M115_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("04")
+_M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
+_M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
+_M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+
 # ---------------------------------------------------------------------------
 # 115 quarterly scenarios — distinct values per quarter and per year so any
 # cross-contamination between years or periods surfaces as a mismatch.
@@ -91,18 +110,50 @@ _CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 # distinct retenciones and the sum is unambiguous.
 # ---------------------------------------------------------------------------
 
-_YEAR_N_QUARTERS: dict[str, dict[str, Decimal]] = {
-    "1T": {"01": Decimal("2"), "02": Decimal("1200.00"), "04": Decimal("0")},
-    "2T": {"01": Decimal("2"), "02": Decimal("1350.00"), "04": Decimal("0")},
-    "3T": {"01": Decimal("3"), "02": Decimal("900.00"), "04": Decimal("0")},
-    "4T": {"01": Decimal("2"), "02": Decimal("1100.00"), "04": Decimal("0")},
+_YEAR_N_QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
+    "1T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("2"),
+        _M115_BASE_CASILLA: Decimal("1200.00"),
+        _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+    },
+    "2T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("2"),
+        _M115_BASE_CASILLA: Decimal("1350.00"),
+        _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+    },
+    "3T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("3"),
+        _M115_BASE_CASILLA: Decimal("900.00"),
+        _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+    },
+    "4T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("2"),
+        _M115_BASE_CASILLA: Decimal("1100.00"),
+        _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+    },
 }
 
-_YEAR_N_PLUS_1_QUARTERS: dict[str, dict[str, Decimal]] = {
-    "1T": {"01": Decimal("1"), "02": Decimal("750.00"), "04": Decimal("0")},
-    "2T": {"01": Decimal("2"), "02": Decimal("2000.00"), "04": Decimal("0")},
-    "3T": {"01": Decimal("2"), "02": Decimal("1800.00"), "04": Decimal("0")},
-    "4T": {"01": Decimal("3"), "02": Decimal("1600.00"), "04": Decimal("0")},
+_YEAR_N_PLUS_1_QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
+    "1T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("1"),
+        _M115_BASE_CASILLA: Decimal("750.00"),
+        _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+    },
+    "2T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("2"),
+        _M115_BASE_CASILLA: Decimal("2000.00"),
+        _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+    },
+    "3T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("2"),
+        _M115_BASE_CASILLA: Decimal("1800.00"),
+        _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+    },
+    "4T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("3"),
+        _M115_BASE_CASILLA: Decimal("1600.00"),
+        _M115_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+    },
 }
 
 
@@ -110,12 +161,12 @@ def _calculate_115(
     *,
     filing_year: int,
     period: str,
-    casilla_inputs: dict[str, Decimal],
+    casilla_inputs: dict[CasillaId, Decimal],
 ) -> RegistryCalculationResult:
     """Run the REAL 115 quarterly calculation and return the engine result."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_115, filing_year=filing_year, period=period)
     inputs = {
-        **resolve_bound_casilla_inputs(snapshot.revision, {}),
+        **resolve_bound_inputs_by_casilla_id(snapshot.revision, {}),
         **casilla_inputs,
     }
     return calculate_registry_snapshot(
@@ -127,25 +178,25 @@ def _calculate_115(
 
 
 def _115_observation(*, filing_year: int, period: str, result: RegistryCalculationResult) -> RegistryModeloObservation:
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO_115,
         filing_year=filing_year,
         period=period,
-        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+        casilla_values=result.values,
     )
 
 
 def _calculate_180(
     *,
     filing_year: int,
-    relation_values: dict[str, Decimal],
+    relation_values: dict[RelationId, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL 180 annual calculation from resolved relations; return result + count."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_180, filing_year=filing_year, period="0A")
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     binding_values = {**relation_binding_values}
     inputs = {
-        **resolve_bound_casilla_inputs(snapshot.revision, binding_values),
+        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
     }
     result = calculate_registry_snapshot(
         snapshot,
@@ -158,17 +209,21 @@ def _calculate_180(
 
 
 def _compute_year_115_totals(
-    quarters: dict[str, dict[str, Decimal]],
+    quarters: dict[str, dict[CasillaId, Decimal]],
     *,
     filing_year: int,
     obs_repo: CalculationObservationRepository,
-) -> dict[str, Decimal]:
+) -> dict[CasillaId, Decimal]:
     """Calculate all four 115 quarters for a year, persist observations, return casilla sums.
 
     The returned dict holds ``{casilla_id: sum_over_1T_2T_3T_4T}`` for the
     casilla ids the 180 relations aggregate (01, 02, 03).
     """
-    totals: dict[str, Decimal] = {"01": Decimal("0"), "02": Decimal("0"), "03": Decimal("0")}
+    totals: dict[CasillaId, Decimal] = {
+        _M115_PERCEPTORES_CASILLA: Decimal("0"),
+        _M115_BASE_CASILLA: Decimal("0"),
+        _M115_RETENCIONES_CASILLA: Decimal("0"),
+    }
     for period, inputs in quarters.items():
         result = _calculate_115(filing_year=filing_year, period=period, casilla_inputs=inputs)
         obs_repo.save_observation(
@@ -194,8 +249,8 @@ def test_modelo_115_quarterly_engine_produces_retenciones_casilla(tmp_path: Path
             period="1T",
             casilla_inputs=_YEAR_N_QUARTERS["1T"],
         )
-    assert result.values["03"] > Decimal("0")
-    assert result.values["01"] == _YEAR_N_QUARTERS["1T"]["01"]
+    assert result.values[_M115_RETENCIONES_CASILLA] > Decimal("0")
+    assert result.values[_M115_PERCEPTORES_CASILLA] == _YEAR_N_QUARTERS["1T"][_M115_PERCEPTORES_CASILLA]
 
 
 def test_modelo_180_relation_prefill_aggregates_115_quarters(tmp_path: Path) -> None:
@@ -212,10 +267,12 @@ def test_modelo_180_relation_prefill_aggregates_115_quarters(tmp_path: Path) -> 
         snapshot_180 = resources().modelos.authority.snapshot(_MODELO_180, filing_year=_YEAR_N, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_180, repository=obs_repo)
 
-    resolved = {item.relation: item.value for item in prefill.values if item.value is not None}
-    assert resolved["modelo-180-rel-115-perceptores-anual"] == expected["01"]
-    assert resolved["modelo-180-rel-115-base-anual"] == expected["02"]
-    assert resolved["modelo-180-rel-115-retenciones-anual"] == expected["03"]
+    resolved: dict[RelationId, Decimal] = {
+        item.relation: item.value for item in prefill.values if item.value is not None
+    }
+    assert resolved["modelo-180-rel-115-perceptores-anual"] == expected[_M115_PERCEPTORES_CASILLA]
+    assert resolved["modelo-180-rel-115-base-anual"] == expected[_M115_BASE_CASILLA]
+    assert resolved["modelo-180-rel-115-retenciones-anual"] == expected[_M115_RETENCIONES_CASILLA]
 
 
 def test_modelo_180_year_isolation_ignores_prior_year_observations(tmp_path: Path) -> None:
@@ -233,10 +290,12 @@ def test_modelo_180_year_isolation_ignores_prior_year_observations(tmp_path: Pat
         snapshot_180_n1 = resources().modelos.authority.snapshot(_MODELO_180, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_180_n1, repository=obs_repo)
 
-    resolved = {item.relation: item.value for item in prefill.values if item.value is not None}
-    assert resolved["modelo-180-rel-115-perceptores-anual"] == expected_n1["01"]
-    assert resolved["modelo-180-rel-115-base-anual"] == expected_n1["02"]
-    assert resolved["modelo-180-rel-115-retenciones-anual"] == expected_n1["03"]
+    resolved: dict[RelationId, Decimal] = {
+        item.relation: item.value for item in prefill.values if item.value is not None
+    }
+    assert resolved["modelo-180-rel-115-perceptores-anual"] == expected_n1[_M115_PERCEPTORES_CASILLA]
+    assert resolved["modelo-180-rel-115-base-anual"] == expected_n1[_M115_BASE_CASILLA]
+    assert resolved["modelo-180-rel-115-retenciones-anual"] == expected_n1[_M115_RETENCIONES_CASILLA]
 
 
 def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> None:
@@ -295,14 +354,14 @@ def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         recorder_180.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Wiring invariant Year N: each 180 output casilla == summed 115 quarters.
-    assert result_n.values["decl.total-perceptores"] == expected_n["01"]
-    assert result_n.values["decl.base-total"] == expected_n["02"]
-    assert result_n.values["decl.retenciones-total"] == expected_n["03"]
+    assert result_n.values[_M180_TOTAL_PERCEPTORES_CASILLA] == expected_n[_M115_PERCEPTORES_CASILLA]
+    assert result_n.values[_M180_BASE_TOTAL_CASILLA] == expected_n[_M115_BASE_CASILLA]
+    assert result_n.values[_M180_RETENCIONES_TOTAL_CASILLA] == expected_n[_M115_RETENCIONES_CASILLA]
 
     # Wiring invariant Year N+1: year-isolated, correct aggregate.
-    assert result_n1.values["decl.total-perceptores"] == expected_n1["01"]
-    assert result_n1.values["decl.base-total"] == expected_n1["02"]
-    assert result_n1.values["decl.retenciones-total"] == expected_n1["03"]
+    assert result_n1.values[_M180_TOTAL_PERCEPTORES_CASILLA] == expected_n1[_M115_PERCEPTORES_CASILLA]
+    assert result_n1.values[_M180_BASE_TOTAL_CASILLA] == expected_n1[_M115_BASE_CASILLA]
+    assert result_n1.values[_M180_RETENCIONES_TOTAL_CASILLA] == expected_n1[_M115_RETENCIONES_CASILLA]
 
     # Authorization-gate enrollment for the 180 resumen.
     evidence_180 = recorder_180.evidence()

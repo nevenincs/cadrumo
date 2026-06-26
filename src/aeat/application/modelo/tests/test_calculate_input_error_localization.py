@@ -5,7 +5,13 @@ from __future__ import annotations
 import pytest
 
 from ....core.errors import AeatError, build_error_envelope, resolve_error_message
-from .._calculate_input import ModeloCalculateDecimalInputError, _decimal
+from ....core.resources import resources
+from .._calculate_input import (
+    ModeloCalculateDecimalInputError,
+    ModeloCalculateRelationInputError,
+    _decimal,
+    _validated_relation_id,
+)
 from .._selectors import ModeloCalculationRevisionSelector
 from .._work_addressing import ModeloRevisionPick, ModeloRevisionPickError
 
@@ -22,6 +28,24 @@ def test_decimal_override_error_is_typed_registered_and_localized() -> None:
     assert error.context == {"flag": "--relation", "key": "iva_base", "value": "not-decimal"}
     assert build_error_envelope(error).code
     assert "iva_base" in resolve_error_message(error)
+
+
+def test_unknown_relation_override_error_names_revision_relation_ids() -> None:
+    revision = resources().modelos.authority.validate_modelo("200").revisions["2024-y-siguientes"]
+    relation_ids = {relation.id for relation in revision.relations}
+    accepted_relation = "modelo-200-2024-rel-202-pagos-fraccionados"
+    assert accepted_relation in relation_ids
+
+    with pytest.raises(ModeloCalculateRelationInputError) as exc_info:
+        _validated_relation_id("Bad Relation", relation_ids)
+
+    error = exc_info.value
+    assert isinstance(error, AeatError)
+    assert error.translated_message == "application.modelo.errors.calculate_relation_unknown"
+    assert error.context is not None
+    assert error.context["key"] == "Bad Relation"
+    assert accepted_relation in str(error.context["accepted"])
+    assert "Bad Relation" in str(error)
 
 
 def test_revision_pick_error_is_typed_registered_and_localized() -> None:

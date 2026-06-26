@@ -7,10 +7,16 @@ from decimal import Decimal
 
 from ...core.external_constants import MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR
 from ...core.i18n import tr
+from ...domain.calculations.registry import CasillaId
+from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
+)
+from ._semantic_role_resolution import (
+    AmbiguousSemanticRoleCasillaError,
+    casilla_id_for_unique_revision_semantic_role,
 )
 
 _ART20_RNT_ROLE = "irpf_rendimiento_trabajo_rendimiento_neto"
@@ -19,7 +25,7 @@ _ART20_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion_gastos_generales"
 
 def _art20_reduccion_advisory_finding(
     revision: object,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
 ) -> ModeloVerificationFinding | None:
     """Warn when RNT is within the art. 20 band but no general reduction is declared.
 
@@ -35,14 +41,11 @@ def _art20_reduccion_advisory_finding(
     reduction (otras rentas above the gate) must remain permissible
     (``no-silent-under-declaration``).
     """
-    rnt_id: str | None = None
-    reduccion_id: str | None = None
-    for casilla in getattr(revision, "casillas", ()):
-        role = getattr(casilla, "semantic_role", None)
-        if role == _ART20_RNT_ROLE:
-            rnt_id = str(casilla.id)
-        elif role == _ART20_REDUCCION_ROLE:
-            reduccion_id = str(casilla.id)
+    try:
+        rnt_id = casilla_id_for_unique_revision_semantic_role(revision, _ART20_RNT_ROLE)
+        reduccion_id = casilla_id_for_unique_revision_semantic_role(revision, _ART20_REDUCCION_ROLE)
+    except AmbiguousSemanticRoleCasillaError as exc:
+        raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
 
     if rnt_id is None or reduccion_id is None:
         return None

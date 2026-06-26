@@ -55,6 +55,12 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
+from ....domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
@@ -72,6 +78,7 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations._observations_repository import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
@@ -91,8 +98,30 @@ _FILE_AT = datetime(2024, 4, 6, 12, 0, tzinfo=UTC)
 
 _M130_REVISION = "2019-y-siguientes"
 _M100_ANNUAL_PERIOD = "0A"
-_M100_PAGOS_CASILLA = "0604"
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M130/M100 vertical fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
+_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
+_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
+_M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
+_M100_PAGOS_CASILLA: CasillaId = _casilla_id("0604")
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
+_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
+_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
+_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
+_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = _casilla_id("1391")
+_M131_SOURCE_CASILLA_ID: CasillaId = _casilla_id("15")
 
 # Prior-year (2023) actividad-económica net income. M130's casilla-13 minoración
 # reads ``irpf.previous_year_economic_activity_net_income`` — a previous_filing
@@ -129,19 +158,17 @@ _EXPECTED_CUMULATIVE_C01: dict[str, Decimal] = {
 # (Gastos) is a source-owned bound casilla (ledger renta gasto aggregation) and is
 # NOT supplied here: with no expense transactions seeded its resolver returns 0,
 # so casilla 03 == casilla 01 as before.
-_M130_MANUAL_INPUTS: dict[str, Decimal] = {
-    "06": Decimal("0"),
-    "08": Decimal("0"),
-    "10": Decimal("0"),
-    "16": Decimal("0"),
-    "18": Decimal("0"),
+_M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
+    _M130_RETENCIONES_CASILLA: Decimal("0"),
+    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+    _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+    _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
 
 # The M100 0604 formula sums BOTH the M130 and M131 pagos relations; this persona
 # files no estimación-objetiva, so its four M131 c15 quarters are a true zero and
 # fold as 0, leaving 0604 == the M130 sum.
-_M131_SOURCE_OUTPUT = "15"
-
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
@@ -177,9 +204,13 @@ def _income_transaction(period: str) -> Transaction:
             "business_pct": None,
             "purchase_invoice_evidence_id": None,
             "category_id": None,
-            "taxable_base": None,
-            "iva_rate": None,
-            "iva_amount": None,
+            # IVA-exempt income receipt: taxable_base == gross, zero IVA. Carrying
+            # the fiscal facts satisfies the ledger preflight that the M100 expense
+            # aggregation binding now triggers, while leaving casilla 01 (gross ==
+            # taxable_base under ingresos_integros_sum) unchanged.
+            "taxable_base": amount,
+            "iva_rate": Decimal("0"),
+            "iva_amount": Decimal("0"),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _T0,
             "classified_by": "manual",
@@ -212,7 +243,7 @@ def _calculate_and_file_m130_quarter(
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="130",
@@ -242,8 +273,6 @@ def _calculate_and_file_m130_quarter(
 
 def _seed_m131_zero_quarters(secure_objects: SecureObjectRepository) -> None:
     """File the four M131/2024 c15 quarters as a true zero (no módulos activity)."""
-    from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-
     obs_repo = CalculationObservationRepository(objects=secure_objects)
     for period in _QUARTER_ORDER:
         obs_repo.save_observation(
@@ -251,7 +280,12 @@ def _seed_m131_zero_quarters(secure_objects: SecureObjectRepository) -> None:
                 modelo="131",
                 filing_year=_YEAR,
                 period=period,
-                observations=(CasillaObservation(casilla_id=_M131_SOURCE_OUTPUT, value=Decimal("0")),),
+                observations=registry_grounded_observations(
+                    modelo="131",
+                    filing_year=_YEAR,
+                    period=period,
+                    casilla_values={_M131_SOURCE_CASILLA_ID: Decimal("0")},
+                ),
             ),
             source_kind="app_filing",
             captured_at=_FILE_AT,
@@ -268,19 +302,22 @@ def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
     zero). Net income is set above the minoración ceiling so the minoración
     resolves to zero.
     """
-    from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-
     CalculationObservationRepository(objects=secure_objects).save_observation(
         RegistryModeloObservation(
             modelo="100",
             filing_year=_PRIOR_YEAR,
             period=_M100_ANNUAL_PERIOD,
-            observations=(
-                CasillaObservation(casilla_id="0224", value=_PRIOR_YEAR_NET_INCOME),
-                CasillaObservation(casilla_id="1479", value=Decimal("0")),
-                CasillaObservation(casilla_id="1553", value=Decimal("0")),
-                CasillaObservation(casilla_id="1577", value=Decimal("0")),
-                CasillaObservation(casilla_id="1391", value=Decimal("0")),
+            observations=registry_grounded_observations(
+                modelo="100",
+                filing_year=_PRIOR_YEAR,
+                period=_M100_ANNUAL_PERIOD,
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                    _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                },
             ),
         ),
         source_kind="app_filing",
@@ -320,11 +357,11 @@ def _seed_taxpayer_profile() -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
 
 
-def _m100_non_relation_zero_bindings() -> dict[str, Decimal]:
+def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100/2024 binding that is neither profile- nor relation-sourced."""
     snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     return {
-        str(binding.id): Decimal("0")
+        binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
         if binding.source
         not in (
@@ -346,7 +383,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> Calculatio
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
@@ -383,11 +420,11 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
         # Transport invariant #1: the FULL bucket-aggregation calc action draws
         # casilla 01 from the persisted ledger (cumulative YTD), not from any
         # manual input — the operator never re-keyed income.
-        assert Decimal(revision.casilla_values["01"]) == _EXPECTED_CUMULATIVE_C01[period], (
+        assert Decimal(revision.casilla_values[_M130_INGRESOS_CASILLA]) == _EXPECTED_CUMULATIVE_C01[period], (
             f"{period}: casilla 01 must equal cumulative ledger income "
-            f"{_EXPECTED_CUMULATIVE_C01[period]}; got {revision.casilla_values.get('01')}"
+            f"{_EXPECTED_CUMULATIVE_C01[period]}; got {revision.casilla_values.get(_M130_INGRESOS_CASILLA)}"
         )
-        computed_c19[period] = Decimal(revision.casilla_values["19"])
+        computed_c19[period] = Decimal(revision.casilla_values[_M130_RESULTADO_FINAL_CASILLA])
 
     # The four engine-computed quarterly resultado-final values are distinct and
     # strictly positive — a coincidental sum or a single-quarter copy cannot then

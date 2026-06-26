@@ -26,7 +26,8 @@ aggregation enumerates; member-row persistence for the local filing flow is out
 of scope (ADR ``2026-06-09-modelo-iva-routing-carry`` ruling D4) and remains a
 live-capture concern.
 
-Uses :class:`CalculationRevision` for the source revision and
+Uses :class:`CalculationRevision` for the source revision,
+:class:`CasillaObservation` for the carried values, and
 :class:`RegistryModeloObservation` as the persisted record.
 """
 
@@ -37,24 +38,36 @@ from decimal import Decimal
 from typing import Final
 
 from ...core import Modelo
-from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ...domain.calculations.registry import (
+    CasillaId,
+    CasillaObservation,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._work_unit import WorkUnit
 from ..calculations import CalculationObservationRepository, observation_key
 
 APP_FILING_SOURCE_KIND: Final = "app_filing"
 
-#: The Modelo 303 end-of-period available compensation carry-forward casilla. A
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="filed-revision observation casilla constant")
+    except ValueError as exc:
+        raise RuntimeError(f"filed-revision observation casilla constant {value!r} is not a CasillaId") from exc
+
+#: Canonical id for the Modelo 303 end-of-period available compensation carry-forward casilla. A
 #: refunded (devolución) period must carry ZERO generated credit forward, so when
 #: the filed revision is refunded this casilla is re-stamped to its posterior-only
 #: value before the cross-period observation is persisted (RD 1624/1992 art. 30 /
 #: Ley 37/1992 art. 116).
-_M303_DISPONIBLE_CASILLA: Final = "iva.compensacion-disponible-fin-periodo"
-#: The Modelo 303 compensación pendiente de periodos posteriores casilla (box 87):
+_M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
+#: Canonical id for Modelo 303 compensación pendiente de periodos posteriores (AEAT box 87):
 #: the posterior-only component that survives a refund.
-_M303_POSTERIOR_CASILLA: Final = "iva.compensacion-pendiente-periodos-posteriores"
+_M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
 #: The per-period generated-credit casilla, zeroed on a refunded period.
-_M303_GENERADA_CASILLA: Final = "iva.compensacion-generada-periodo"
+_M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
 _ZERO: Final = Decimal("0")
 """Non-official ``source_kind`` stamped on locally-filed observations.
 
@@ -74,10 +87,11 @@ def _refunded_303_observations(
     A refunded (devolución) period returns its credit rather than carrying it
     forward, so the persisted cross-period carry must drop the generated credit:
     ``iva.compensacion-disponible-fin-periodo`` is re-stamped to its
-    posterior-only value (box 87) and ``iva.compensacion-generada-periodo`` to
-    zero. Every other casilla is preserved verbatim — including its provenance —
-    so the carried observation stays a faithful projection of the filed revision
-    except for the one disposition-determined correction.
+    posterior-only value from ``iva.compensacion-pendiente-periodos-posteriores``
+    (AEAT box 87) and ``iva.compensacion-generada-periodo`` to zero. Every other
+    casilla is preserved verbatim — including its provenance — so the carried
+    observation stays a faithful projection of the filed revision except for the
+    one disposition-determined correction.
     """
     by_id = {item.casilla_id: item for item in observations}
     posterior = by_id.get(_M303_POSTERIOR_CASILLA)

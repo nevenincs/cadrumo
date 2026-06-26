@@ -17,6 +17,7 @@ import pytest
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing._amendment import CasillaChange, ModeloComplementaria
 from ....domain.filing._complementaria_repository import (
     ModeloAmendmentRepository,
@@ -30,13 +31,14 @@ from ....domain.filing._schema import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01", surface="_AMENDMENT_CASILLA")
 
 
 def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
     now = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     values = (
         ModeloValue(
-            casilla_id="01",
+            casilla_id=_AMENDMENT_CASILLA,
             value=Decimal("13000"),
             kind=ModeloValueKind.LITERAL,
             source="test correction",
@@ -68,7 +70,7 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
         original_period=_period,
         delta=(
             CasillaChange(
-                casilla_code="01",
+                casilla_id=_AMENDMENT_CASILLA,
                 old_value=Decimal("12500"),
                 new_value=Decimal("13000"),
                 reason="Test correction.",

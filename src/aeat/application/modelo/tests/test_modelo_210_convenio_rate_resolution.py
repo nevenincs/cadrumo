@@ -36,6 +36,7 @@ from ....domain.calculations.registry import (
     M210_CONVENIO_MISSING_SENTINEL,
     M210_DEFERRED_TIPO_SENTINEL,
     M210_NOT_YET_AUTHORED_SENTINEL,
+    CasillaId,
     CasillaObservation,
     RegistrySnapshot,
 )
@@ -254,7 +255,7 @@ def test_resident_pension_deferred_baseline_emits_blocking_finding(
     assert "pension" in message_lower
 
 
-def _observation(casilla_id: str, value: Decimal) -> CasillaObservation:
+def _observation(casilla_id: CasillaId, value: Decimal) -> CasillaObservation:
     """Build a minimal CasillaObservation carrying just a casilla_id + value."""
 
     return CasillaObservation(

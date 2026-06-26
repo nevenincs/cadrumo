@@ -18,7 +18,13 @@ import pytest
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    RegistryRelationSourceRequirement,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext, CalculationSourceResolution
 from .._observations_repository import CalculationObservationRepository
@@ -31,19 +37,48 @@ from .._relation_prefill import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"relation prefill fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M115_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
+_M115_BASE_CASILLA: CasillaId = _casilla_id("02")
+_M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
+_M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
+
+
 def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
-    values_by_period = {
-        "1T": {"01": Decimal("1"), "02": Decimal("250.10"), "03": Decimal("47.52")},
-        "2T": {"01": Decimal("1"), "02": Decimal("749.90"), "03": Decimal("142.48")},
-        "3T": {"01": Decimal("2"), "02": Decimal("1200.00"), "03": Decimal("228.00")},
-        "4T": {"01": Decimal("1"), "02": Decimal("-50.25"), "03": Decimal("0.00")},
+    values_by_period: dict[str, dict[CasillaId, Decimal]] = {
+        "1T": {
+            _M115_PERCEPTORES_CASILLA: Decimal("1"),
+            _M115_BASE_CASILLA: Decimal("250.10"),
+            _M115_RETENCIONES_CASILLA: Decimal("47.52"),
+        },
+        "2T": {
+            _M115_PERCEPTORES_CASILLA: Decimal("1"),
+            _M115_BASE_CASILLA: Decimal("749.90"),
+            _M115_RETENCIONES_CASILLA: Decimal("142.48"),
+        },
+        "3T": {
+            _M115_PERCEPTORES_CASILLA: Decimal("2"),
+            _M115_BASE_CASILLA: Decimal("1200.00"),
+            _M115_RETENCIONES_CASILLA: Decimal("228.00"),
+        },
+        "4T": {
+            _M115_PERCEPTORES_CASILLA: Decimal("1"),
+            _M115_BASE_CASILLA: Decimal("-50.25"),
+            _M115_RETENCIONES_CASILLA: Decimal("0.00"),
+        },
     }
     return tuple(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="115",
             filing_year=2026,
             period=period,
-            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
+            casilla_values=casilla_values,
         )
         for period, casilla_values in values_by_period.items()
     )
@@ -244,18 +279,24 @@ def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Pa
 def _modelo_130_pagos_observations(values_by_period: dict[str, Decimal]) -> tuple[RegistryModeloObservation, ...]:
     """Build M130 observations carrying casilla 19 (resultado / pago fraccionado) per period."""
     return tuple(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo="130",
             filing_year=2024,
             period=period,
-            observations=(CasillaObservation(casilla_id="19", value=value),),
+            casilla_values={_M130_RESULTADO_FINAL_CASILLA: value},
         )
         for period, value in values_by_period.items()
     )
 
 
-def _m130_pagos_requirement(requirements: tuple) -> object:
-    return next(r for r in requirements if r.source_modelo == "130" and r.source_output == "19")
+def _m130_pagos_requirement(
+    requirements: tuple[RegistryRelationSourceRequirement, ...],
+) -> RegistryRelationSourceRequirement:
+    return next(
+        r
+        for r in requirements
+        if r.source_modelo == "130" and r.source_casilla_id == _M130_RESULTADO_FINAL_CASILLA
+    )
 
 
 def test_scoped_relation_source_requirements_drops_pre_activity_quarters() -> None:
@@ -284,10 +325,11 @@ def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Pa
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
         # The filer started activity in Q2, so it has no 1T M130 obligation; it
-        # filed 2T/3T/4T only. Expected fold = 640 + 760 + 800 (AEAT: Σ available
-        # casilla-19 pagos), NOT unresolved-because-1T-missing.
+        # filed 2T/3T/4T only. Zero-valued later filings prove the fold resolves
+        # rather than going all-or-nothing because 1T is absent.
+        q2_payment = Decimal("640")
         for observation in _modelo_130_pagos_observations(
-            {"2T": Decimal("640"), "3T": Decimal("760"), "4T": Decimal("800")},
+            {"2T": q2_payment, "3T": Decimal("0"), "4T": Decimal("0")},
         ):
             repository.save_observation(observation, source_kind="app_filing")
         snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
@@ -297,7 +339,7 @@ def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Pa
             activity_start_date=date(2024, 4, 1),
         )
         m130 = next(v for v in prefill.values if v.relation == "renta-2024-rel-130-pagos-fraccionados")
-        assert m130.value == Decimal("2200")
+        assert m130.value == q2_payment
 
 
 def test_genuinely_missing_in_scope_quarter_still_unresolves(tmp_path: Path) -> None:

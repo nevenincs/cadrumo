@@ -45,14 +45,17 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
-    CasillaObservation,
-    RegistryModeloObservation,
+    BindingId,
+    CasillaId,
+    RelationId,
+    validated_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.modelos._verification_report import ModeloVerificationFindingKind
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit
 from ...modelo._actions import _evaluate_verification_predicates
@@ -72,18 +75,26 @@ _BUCKET_ID = "operator"
 _PERIOD = "0A"
 _FILING_YEAR = 2025
 
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M100 base negativa fixture casilla key {value!r} is not a CasillaId") from exc
+
 #: Anexo-C base-liquidable-general-negativa casillas (ejercicio-2024 origin).
-_PENDIENTE_INICIO = "1388"  # opening pending (bound from prior 1391)
-_APLICADO = "1389"  # operator-elective applied amount
-_PENDIENTE_FIN = "1390"  # remainder rolled forward = 1388 − 1389
-_APLICADA_MAXIMA = "base-liq-neg-general-2024-aplicada-maxima"  # internal art. 48 ceiling
-_BASE_IMPONIBLE_GENERAL = "0435"
-_BASE_LIQUIDABLE_GENERAL = "0500"
+_PENDIENTE_INICIO: CasillaId = _casilla_id("1388")  # opening pending (bound from prior 1391)
+_APLICADO: CasillaId = _casilla_id("1389")  # operator-elective applied amount
+_PENDIENTE_FIN: CasillaId = _casilla_id("1390")  # remainder rolled forward = 1388 − 1389
+_APLICADA_MAXIMA: CasillaId = _casilla_id("base-liq-neg-general-2024-aplicada-maxima")  # internal art. 48 ceiling
+_BASE_IMPONIBLE_GENERAL: CasillaId = _casilla_id("0435")
+_BASE_LIQUIDABLE_GENERAL: CasillaId = _casilla_id("0500")
+_PRIOR_NEGATIVE_BASE_CASILLA: CasillaId = _casilla_id("1391")
 
 #: Trabajo income leaf (Retribuciones dinerarias, importe íntegro) — a manual
 #: input that drives a positive saldo (a) / base imponible general so the art. 48
 #: headroom is positive.
-_TRABAJO_INGRESO = "0003"
+_TRABAJO_INGRESO: CasillaId = _casilla_id("0003")
 
 _CLOCK = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
@@ -124,26 +135,24 @@ def _seed_prior_negative_base(*, saldo: Decimal, obs_repo: CalculationObservatio
     opening pending (casilla 1388).
     """
     obs_repo.save_observation(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo=_MODELO,
             filing_year=_FILING_YEAR - 1,
             period=_PERIOD,
-            observations=(CasillaObservation(casilla_id="1391", value=saldo),),
+            casilla_values={_PRIOR_NEGATIVE_BASE_CASILLA: saldo},
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,
     )
 
 
-def _zeroed_channels(snapshot) -> tuple[dict[str, Decimal], dict[str, Decimal]]:
-    binding_values = {
-        str(binding.id): Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"
-    }
-    relation_values = {str(relation.id): Decimal("0") for relation in snapshot.revision.relations}
+def _zeroed_channels(snapshot) -> tuple[dict[BindingId, Decimal], dict[RelationId, Decimal]]:
+    binding_values = {binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"}
+    relation_values = {relation.id: Decimal("0") for relation in snapshot.revision.relations}
     return binding_values, relation_values
 
 
-def _calculate(*, casilla_inputs: dict[str, Decimal], obs_repo: CalculationObservationRepository):
+def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: CalculationObservationRepository):
     """Run the REAL M100 ``calculate_modelo_revision`` for filing year 2025."""
     snapshot = _snapshot()
     from .._binding_prefill import resolve_bindings_from_local_store
@@ -182,7 +191,7 @@ def _snapshot():
     return resources().modelos.authority.snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD)
 
 
-def _v(revision, casilla: str) -> Decimal:
+def _v(revision, casilla: CasillaId) -> Decimal:
     return Decimal(revision.casilla_values[casilla])
 
 

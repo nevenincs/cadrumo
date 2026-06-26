@@ -35,7 +35,12 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -67,6 +72,20 @@ _CLOCK_N = datetime(2025, 1, 25, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2026, 1, 25, 10, 0, 0, tzinfo=UTC)
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M232 operaciones vinculadas fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_DECL_TIPO_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.tipo-ejercicio")
+_VINCULADA_NIF_CASILLA: CasillaId = _casilla_id("vinculada-1-nif")
+_VINCULADA_TIPO_VINCULACION_CASILLA: CasillaId = _casilla_id("vinculada-1-tipo-vinculacion")
+_VINCULADA_IMPORTE_CASILLA: CasillaId = _casilla_id("vinculada-1-importe")
+
+
 def _find_observation(
     repo: CalculationObservationRepository,
     *,
@@ -94,20 +113,17 @@ def _year_n_observation() -> RegistryModeloObservation:
     All values are non-default. The NIF and tipo-vinculacion survive the roundtrip
     as Decimal-encoded (NIF numeric part) and Decimal-encoded (enum ordinal).
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N))),
-            CasillaObservation(casilla_id="decl.tipo-ejercicio", value=Decimal("1")),
-            # NIF encoded as numeric part: NIF "33333333C" → 33333333
-            CasillaObservation(casilla_id="vinculada-1-nif", value=Decimal("33333333")),
-            # tipo-vinculacion: 1 = tipo-A (matriz/filial, LIS art. 18.2.a)
-            CasillaObservation(casilla_id="vinculada-1-tipo-vinculacion", value=Decimal("1")),
-            # importe above threshold (year N)
-            CasillaObservation(casilla_id="vinculada-1-importe", value=_IMPORTE_N),
-        ),
+        casilla_values={
+            _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N)),
+            _DECL_TIPO_EJERCICIO_CASILLA: Decimal("1"),
+            _VINCULADA_NIF_CASILLA: Decimal("33333333"),
+            _VINCULADA_TIPO_VINCULACION_CASILLA: Decimal("1"),
+            _VINCULADA_IMPORTE_CASILLA: _IMPORTE_N,
+        },
     )
 
 
@@ -117,19 +133,17 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
     Same NIF and tipo-vinculacion (identity continuity), distinct importe
     (field-bleeding regression would surface as strict inequality).
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,
         period="0A",
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N_PLUS_1))),
-            CasillaObservation(casilla_id="decl.tipo-ejercicio", value=Decimal("1")),
-            # Same NIF as year N — identity continuity.
-            CasillaObservation(casilla_id="vinculada-1-nif", value=Decimal("33333333")),
-            CasillaObservation(casilla_id="vinculada-1-tipo-vinculacion", value=Decimal("1")),
-            # Different importe (year N+1)
-            CasillaObservation(casilla_id="vinculada-1-importe", value=_IMPORTE_N1),
-        ),
+        casilla_values={
+            _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N_PLUS_1)),
+            _DECL_TIPO_EJERCICIO_CASILLA: Decimal("1"),
+            _VINCULADA_NIF_CASILLA: Decimal("33333333"),
+            _VINCULADA_TIPO_VINCULACION_CASILLA: Decimal("1"),
+            _VINCULADA_IMPORTE_CASILLA: _IMPORTE_N1,
+        },
     )
 
 
@@ -187,8 +201,8 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
         assert loaded_n.observation == obs_n
         assert loaded_n1.observation == obs_n1
 
-        imp_n = loaded_n.observation.casilla_values["vinculada-1-importe"]
-        imp_n1 = loaded_n1.observation.casilla_values["vinculada-1-importe"]
+        imp_n = loaded_n.observation.casilla_values[_VINCULADA_IMPORTE_CASILLA]
+        imp_n1 = loaded_n1.observation.casilla_values[_VINCULADA_IMPORTE_CASILLA]
         assert imp_n == _IMPORTE_N, f"year-N importe should be {_IMPORTE_N}; got {imp_n}"
         assert imp_n1 == _IMPORTE_N1, f"year-N+1 importe should be {_IMPORTE_N1}; got {imp_n1}"
 
@@ -215,8 +229,8 @@ def test_related_party_nif_identity_persists_across_both_exercises(tmp_path: Pat
         assert loaded_n is not None
         assert loaded_n1 is not None
 
-        nif_n = loaded_n.observation.casilla_values.get("vinculada-1-nif")
-        nif_n1 = loaded_n1.observation.casilla_values.get("vinculada-1-nif")
+        nif_n = loaded_n.observation.casilla_values.get(_VINCULADA_NIF_CASILLA)
+        nif_n1 = loaded_n1.observation.casilla_values.get(_VINCULADA_NIF_CASILLA)
         assert nif_n is not None, "year-N observation missing vinculada-1-nif"
         assert nif_n1 is not None, "year-N+1 observation missing vinculada-1-nif"
         assert nif_n == Decimal("33333333"), f"NIF round-trip failed in year N: got {nif_n}"
@@ -241,8 +255,8 @@ def test_importe_exceeds_threshold_in_both_years(tmp_path: Path) -> None:
 
         assert loaded_n is not None
         assert loaded_n1 is not None
-        imp_n = loaded_n.observation.casilla_values.get("vinculada-1-importe")
-        imp_n1 = loaded_n1.observation.casilla_values.get("vinculada-1-importe")
+        imp_n = loaded_n.observation.casilla_values.get(_VINCULADA_IMPORTE_CASILLA)
+        imp_n1 = loaded_n1.observation.casilla_values.get(_VINCULADA_IMPORTE_CASILLA)
         assert imp_n is not None and imp_n > _THRESHOLD_EUR, (
             f"year-N importe {imp_n} must exceed threshold {_THRESHOLD_EUR}"
         )
@@ -263,7 +277,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != "vinculada-1-importe"),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != _VINCULADA_IMPORTE_CASILLA),
     )
 
     assert obs_n != obs_n_no_importe, (

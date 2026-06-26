@@ -41,10 +41,11 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryModeloObservation,
     calculate_registry_snapshot,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
@@ -71,14 +72,46 @@ _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 _YEAR = 2025
 
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"relation fold-in fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M115_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
+_M115_BASE_CASILLA: CasillaId = _casilla_id("02")
+_M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
+_M115_ANTERIORES_CASILLA: CasillaId = _casilla_id("04")
+_M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
+_M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
+_M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+
 # Distinct per-quarter bases so a cross-quarter contamination surfaces as a
 # mismatch. Casilla 01 = perceptores (manual int), 02 = base (manual money),
 # 03 = retenciones (computed 19% of 02), 04 = anteriores (manual zero).
-_QUARTERS: dict[str, dict[str, Decimal]] = {
-    "1T": {"01": Decimal("2"), "02": Decimal("1200.00"), "04": Decimal("0")},
-    "2T": {"01": Decimal("2"), "02": Decimal("1350.00"), "04": Decimal("0")},
-    "3T": {"01": Decimal("3"), "02": Decimal("900.00"), "04": Decimal("0")},
-    "4T": {"01": Decimal("2"), "02": Decimal("1100.00"), "04": Decimal("0")},
+_QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
+    "1T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("2"),
+        _M115_BASE_CASILLA: Decimal("1200.00"),
+        _M115_ANTERIORES_CASILLA: Decimal("0"),
+    },
+    "2T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("2"),
+        _M115_BASE_CASILLA: Decimal("1350.00"),
+        _M115_ANTERIORES_CASILLA: Decimal("0"),
+    },
+    "3T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("3"),
+        _M115_BASE_CASILLA: Decimal("900.00"),
+        _M115_ANTERIORES_CASILLA: Decimal("0"),
+    },
+    "4T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("2"),
+        _M115_BASE_CASILLA: Decimal("1100.00"),
+        _M115_ANTERIORES_CASILLA: Decimal("0"),
+    },
 }
 
 
@@ -88,13 +121,17 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         yield profile.repository
 
 
-def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[str, Decimal]:
+def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[CasillaId, Decimal]:
     """Calculate + persist the four 115 quarters; return the summed 01/02/03 totals."""
     auth = resources().modelos.authority
-    totals = {"01": Decimal("0"), "02": Decimal("0"), "03": Decimal("0")}
+    totals: dict[CasillaId, Decimal] = {
+        _M115_PERCEPTORES_CASILLA: Decimal("0"),
+        _M115_BASE_CASILLA: Decimal("0"),
+        _M115_RETENCIONES_CASILLA: Decimal("0"),
+    }
     for period, casilla_inputs in _QUARTERS.items():
         snapshot = auth.snapshot("115", filing_year=_YEAR, period=period)
-        inputs = {**resolve_bound_casilla_inputs(snapshot.revision, {}), **casilla_inputs}
+        inputs = {**resolve_bound_inputs_by_casilla_id(snapshot.revision, {}), **casilla_inputs}
         result = calculate_registry_snapshot(
             snapshot,
             inputs=inputs,
@@ -106,7 +143,7 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[st
                 modelo="115",
                 filing_year=_YEAR,
                 period=period,
-                observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+                observations=result.observations,
             ),
             source_kind="app_filing",
             captured_at=_T0,
@@ -154,12 +191,12 @@ def test_modelo_180_115_fold_in_fires_on_live_calculate(secure_objects: SecureOb
 
     casilla_values = result.revision.casilla_values
     # Fold-in fires: each output equals the summed 115 quarters (was blank before).
-    assert casilla_values["decl.total-perceptores"] == expected["01"]
-    assert casilla_values["decl.base-total"] == expected["02"]
-    assert casilla_values["decl.retenciones-total"] == expected["03"]
+    assert casilla_values[_M180_TOTAL_PERCEPTORES_CASILLA] == expected[_M115_PERCEPTORES_CASILLA]
+    assert casilla_values[_M180_BASE_TOTAL_CASILLA] == expected[_M115_BASE_CASILLA]
+    assert casilla_values[_M180_RETENCIONES_TOTAL_CASILLA] == expected[_M115_RETENCIONES_CASILLA]
     # Non-vacuous: the summed base must be strictly positive so a silent blank
     # (0) would fail the assertion above.
-    assert expected["02"] > Decimal("0")
+    assert expected[_M115_BASE_CASILLA] > Decimal("0")
 
 
 def test_relation_target_collision_refused_by_mesh_guard(secure_objects: SecureObjectRepository) -> None:

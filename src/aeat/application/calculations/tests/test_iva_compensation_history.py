@@ -21,9 +21,11 @@ from ....core import Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryModeloObservation,
+    RegistryValidationError,
     materialize_relation_binding_values,
+    validated_casilla_id,
 )
 from ....domain.iva_compensation._carry_forward import (
     IvaCompensationCarryForwardLot,
@@ -35,10 +37,12 @@ from ....domain.iva_compensation._carry_forward import (
 )
 from ....domain.iva_compensation._errors import (
     IvaCompensationCarryForwardPolicyError,
+    IvaCompensationCasillaReferenceError,
     IvaCompensationDecimalParseError,
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
 )
+from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import IvaCompensationModeloError
 from .._iva_compensation_history import (
@@ -56,6 +60,34 @@ from .._relation_prefill import resolve_relations_from_local_store
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TAXPAYER_REF = "taxpayeralpha"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
+_M303_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M303_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("71")
+_M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
+_M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = _casilla_id("iva.anual.compensacion-ultimo-periodo-97")
+_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.compensacion-generada-ejercicio-no-97",
+)
+_M303_PRINTED_PERIOD_RESULT_ALIAS_CASILLA: CasillaId = _casilla_id("69")
+_M303_PRINTED_COMPENSATION_ALIAS_CASILLA: CasillaId = _casilla_id("87")
+_M390_PRINTED_LAST_PERIOD_COMPENSATION_ALIAS_CASILLA: CasillaId = _casilla_id("97")
 
 
 def _state(
@@ -240,7 +272,7 @@ def test_modelo_390_annual_summary_cross_checks_multiyear_303_carry_forward() ->
     assert cross_check.difference_amount == Decimal("0.00")
     assert cross_check.last_period_difference_amount == Decimal("0.00")
     assert cross_check.generated_not_in_last_period_difference_amount == Decimal("0.00")
-    assert cross_check.mismatched_casillas == ()
+    assert cross_check.mismatched_casilla_ids == ()
     assert cross_check.matches is True
     assert cross_check.summary_source_observation_key == "390:2026:0A:200039000000001Z"
 
@@ -264,7 +296,7 @@ def test_modelo_390_annual_summary_cross_check_flags_303_390_divergence() -> Non
     assert cross_check.difference_amount == Decimal("20.00")
     assert cross_check.last_period_difference_amount == Decimal("20.00")
     assert cross_check.generated_not_in_last_period_difference_amount == Decimal("0.00")
-    assert cross_check.mismatched_casillas == ("97",)
+    assert cross_check.mismatched_casilla_ids == (_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA,)
     assert cross_check.matches is False
 
 
@@ -287,7 +319,7 @@ def test_modelo_390_cross_check_keeps_active_prior_year_lots_out_of_annual_field
     assert cross_check.carry_forward_remaining_amount == Decimal("100.00")
     assert cross_check.expected_last_period_compensation_amount == Decimal("100.00")
     assert cross_check.expected_generated_not_in_last_period_amount == Decimal("0.00")
-    assert cross_check.mismatched_casillas == ()
+    assert cross_check.mismatched_casilla_ids == ()
     assert cross_check.matches is True
 
 
@@ -311,7 +343,7 @@ def test_modelo_390_cross_check_keeps_expired_prior_year_lots_out_of_annual_fiel
     assert cross_check.modelo_390_total_pending_amount == Decimal("100.00")
     assert cross_check.expected_last_period_compensation_amount == Decimal("100.00")
     assert cross_check.expected_generated_not_in_last_period_amount == Decimal("0.00")
-    assert cross_check.mismatched_casillas == ()
+    assert cross_check.mismatched_casilla_ids == ()
     assert cross_check.matches is True
     assert "expired_review_required" in cross_check.expiry_review_states
 
@@ -411,15 +443,15 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
         observation_repo = CalculationObservationRepository()
         for period, generada, aplicada, disponible in quarter_chain:
             observation_repo.save_observation(
-                RegistryModeloObservation(
+                registry_grounded_modelo_observation(
                     modelo="303",
                     filing_year=2026,
                     period=period,
-                    observations=(
-                        CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=generada),
-                        CasillaObservation(casilla_id="iva.compensacion-aplicada-periodo", value=aplicada),
-                        CasillaObservation(casilla_id="iva.compensacion-disponible-fin-periodo", value=disponible),
-                    ),
+                    casilla_values={
+                        _M303_GENERADA_CASILLA: generada,
+                        _M303_COMPENSACION_APLICADA_CASILLA: aplicada,
+                        _M303_DISPONIBLE_CASILLA: disponible,
+                    },
                 ),
                 source_kind="app_filing",
                 captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
@@ -479,16 +511,16 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
         observation_repo = CalculationObservationRepository()
         for period, devengada, deducible, regimen_general, compensacion in quarter_data:
             observation_repo.save_observation(
-                RegistryModeloObservation(
+                registry_grounded_modelo_observation(
                     modelo="303",
                     filing_year=2026,
                     period=period,
-                    observations=(
-                        CasillaObservation(casilla_id="iva.cuota-devengada-total", value=devengada),
-                        CasillaObservation(casilla_id="iva.cuota-deducible-total", value=deducible),
-                        CasillaObservation(casilla_id="iva.resultado-regimen-general", value=regimen_general),
-                        CasillaObservation(casilla_id="iva.compensacion-generada-periodo", value=compensacion),
-                    ),
+                    casilla_values={
+                        _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: devengada,
+                        _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: deducible,
+                        _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: regimen_general,
+                        _M303_GENERADA_CASILLA: compensacion,
+                    },
                 ),
                 source_kind="app_filing",
                 captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
@@ -614,15 +646,15 @@ def _filed_303_annual_reconciliation_observation(
     deducible: Decimal,
     regimen_general: Decimal,
 ) -> RegistryModeloObservation:
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo="303",
         filing_year=filing_year,
         period=period,
-        observations=(
-            CasillaObservation(casilla_id="iva.cuota-devengada-total", value=devengada),
-            CasillaObservation(casilla_id="iva.cuota-deducible-total", value=deducible),
-            CasillaObservation(casilla_id="iva.resultado-regimen-general", value=regimen_general),
-        ),
+        casilla_values={
+            _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: devengada,
+            _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: deducible,
+            _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: regimen_general,
+        },
     )
 
 
@@ -683,35 +715,35 @@ def _filed_303_compensation_observation(
             "presented_at": datetime(filing_year + 1, 1, 20, 12, 0, tzinfo=UTC),
             "casillas": (
                 ObservedCasillaValue(
-                    casilla_id="110",
+                    casilla_id=_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
                     value=str(prior_pending),
                     source_artefact_kind="submitted_file",
                     source_locator=f"submitted-file:303:{period}:110",
                     confidence=1.0,
                 ),
                 ObservedCasillaValue(
-                    casilla_id="78",
+                    casilla_id=_M303_COMPENSACION_APLICADA_CASILLA,
                     value=str(applied),
                     source_artefact_kind="submitted_file",
                     source_locator=f"submitted-file:303:{period}:78",
                     confidence=1.0,
                 ),
                 ObservedCasillaValue(
-                    casilla_id="69",
+                    casilla_id=_M303_RESULTADO_CASILLA,
                     value=str(resultado),
                     source_artefact_kind="submitted_file",
                     source_locator=f"submitted-file:303:{period}:69",
                     confidence=1.0,
                 ),
                 ObservedCasillaValue(
-                    casilla_id="87",
+                    casilla_id=_M303_POSTERIOR_CASILLA,
                     value=str(posterior),
                     source_artefact_kind="submitted_file",
                     source_locator=f"submitted-file:303:{period}:87",
                     confidence=1.0,
                 ),
                 ObservedCasillaValue(
-                    casilla_id="71",
+                    casilla_id=_M303_RESULTADO_FINAL_CASILLA,
                     value=str(resolved_final_result),
                     source_artefact_kind="submitted_file",
                     source_locator=f"submitted-file:303:{period}:71",
@@ -747,14 +779,14 @@ def _filed_390_observation(
         ),
         casillas=(
             ObservedCasillaValue(
-                casilla_id="iva.anual.compensacion-ultimo-periodo-97",
+                casilla_id=_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA,
                 value=str(last_period_compensation),
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:390:97",
                 confidence=1.0,
             ),
             ObservedCasillaValue(
-                casilla_id="iva.anual.compensacion-generada-ejercicio-no-97",
+                casilla_id=_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
                 value=str(generated_not_in_last_period),
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:390:662",
@@ -802,7 +834,7 @@ def test_iva_compensation_state_from_filed_observation_raises_localized_decimal_
         update={
             "casillas": (
                 ObservedCasillaValue(
-                    casilla_id="69",
+                    casilla_id=_M303_RESULTADO_CASILLA,
                     value="not-decimal",
                     source_artefact_kind="submitted_file",
                     source_locator="submitted-file:casilla-69",
@@ -816,7 +848,7 @@ def test_iva_compensation_state_from_filed_observation_raises_localized_decimal_
         iva_compensation_state_from_filed_observation(observation)
 
     assert excinfo.value.translated_message == "errors.refused.refused_iva_compensation_decimal_parse"
-    assert excinfo.value.context == {"casilla_id": "69"}
+    assert excinfo.value.context == {"casilla_id": _M303_RESULTADO_CASILLA}
 
 
 def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: Path) -> None:
@@ -838,27 +870,106 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
         assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_status": "seeded"}
 
 
-def test_compensation_casilla_numbers_match_registry() -> None:
-    """`_COMPENSATION_CASILLA_NUMBERS` is pinned to the registry casilla definitions.
+def test_iva_compensation_state_from_filed_observation_refuses_printed_number_aliases() -> None:
+    observation = _filed_observation(modelo="303").model_copy(
+        update={
+            "casillas": (
+                ObservedCasillaValue(
+                    casilla_id=_M303_PRINTED_PERIOD_RESULT_ALIAS_CASILLA,
+                    value="-25.00",
+                    source_artefact_kind="submitted_file",
+                    source_locator="submitted-file:casilla-69",
+                    confidence=1.0,
+                ),
+            ),
+        },
+    )
 
-    Production code must not load the raw registry tree (the registry-orchestration
-    boundary), so the compensación box numbers live in a centralised constant. This
-    test fails the moment a registry box number drifts from that constant, keeping
-    the registry the authority without a production-side registry load.
-    """
-    from ....core.resources import bundled_path
-    from ....domain.calculations.registry import load_registry_tree
-    from .._iva_compensation_history import _COMPENSATION_CASILLA_NUMBERS
+    with pytest.raises(IvaCompensationCasillaReferenceError) as excinfo:
+        iva_compensation_state_from_filed_observation(observation)
 
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    id_to_number: dict[str, str] = {}
-    for modelo_id in ("303", "390"):
-        modelo = next(m for m in modelos if m.id == modelo_id)
-        for revision in modelo.revisions.values():
-            for casilla in revision.casillas:
-                id_to_number[casilla.id] = casilla.number
+    assert excinfo.value.context == {
+        "modelo": "303",
+        "revision": "2023-y-siguientes",
+        "period": "4T",
+        "casilla_ids": (_M303_PRINTED_PERIOD_RESULT_ALIAS_CASILLA,),
+    }
 
-    for semantic_id, number in _COMPENSATION_CASILLA_NUMBERS.items():
-        assert id_to_number.get(semantic_id) == number, (
-            f"{semantic_id!r}: registry number {id_to_number.get(semantic_id)!r} != centralised constant {number!r}"
-        )
+
+def test_iva_compensation_state_validates_ignored_justificante_casilla_ids() -> None:
+    observation = _filed_observation(modelo="303").model_copy(
+        update={
+            "casillas": (
+                ObservedCasillaValue(
+                    casilla_id=_M303_PRINTED_PERIOD_RESULT_ALIAS_CASILLA,
+                    value="-25.00",
+                    source_artefact_kind="justificante_pdf",
+                    source_locator="justificante-pdf:casilla-69",
+                    confidence=1.0,
+                ),
+            ),
+        },
+    )
+
+    with pytest.raises(IvaCompensationCasillaReferenceError) as excinfo:
+        iva_compensation_state_from_filed_observation(observation)
+
+    assert excinfo.value.context == {
+        "modelo": "303",
+        "revision": "2023-y-siguientes",
+        "period": "4T",
+        "casilla_ids": (_M303_PRINTED_PERIOD_RESULT_ALIAS_CASILLA,),
+    }
+
+
+def test_iva_compensation_annual_summary_refuses_printed_number_aliases() -> None:
+    observation = _filed_390_observation(
+        last_period_compensation=Decimal("100.00"),
+        generated_not_in_last_period=Decimal("50.00"),
+    ).model_copy(
+        update={
+            "casillas": (
+                ObservedCasillaValue(
+                    casilla_id=_M390_PRINTED_LAST_PERIOD_COMPENSATION_ALIAS_CASILLA,
+                    value="100.00",
+                    source_artefact_kind="submitted_file",
+                    source_locator="submitted-file:390:97",
+                    confidence=1.0,
+                ),
+            ),
+        },
+    )
+
+    with pytest.raises(IvaCompensationCasillaReferenceError) as excinfo:
+        iva_compensation_annual_summary_from_filed_observation(observation)
+
+    assert excinfo.value.context == {
+        "modelo": "390",
+        "revision": "2010-y-siguientes",
+        "period": "0A",
+        "casilla_ids": (_M390_PRINTED_LAST_PERIOD_COMPENSATION_ALIAS_CASILLA,),
+    }
+
+
+def test_relation_prefill_fifo_state_refuses_printed_number_compensation_aliases() -> None:
+    from .._relation_prefill import _fifo_compensation_carry_binding_values
+
+    snapshot = resources().modelos.authority.snapshot("390", filing_year=2026, period="0A")
+    generated_observation = registry_grounded_observations(
+        modelo="303",
+        filing_year=2026,
+        period="4T",
+        casilla_values={_M303_GENERADA_CASILLA: Decimal("50.00")},
+    )[0]
+    observation = RegistryModeloObservation(
+        modelo="303",
+        filing_year=2026,
+        period="4T",
+        observations=(
+            generated_observation,
+            generated_observation.model_copy(update={"casilla_id": _M303_PRINTED_COMPENSATION_ALIAS_CASILLA}),
+        ),
+    )
+
+    with pytest.raises(RegistryValidationError, match=r"canonical casilla\.id"):
+        _fifo_compensation_carry_binding_values(snapshot, (observation,))

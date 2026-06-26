@@ -11,6 +11,7 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
+from ....domain.calculations.registry import CasillaId
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
@@ -115,7 +116,7 @@ def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
     filing_year: int,
     period: str,
     revision_id: str,
-    casilla_id: str,
+    casilla_id: CasillaId,
 ) -> None:
     wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_objects)
     work_unit = _seed_work_unit(

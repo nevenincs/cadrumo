@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_serializer, fiel
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...domain.calculations.registry import (
+    BindingId,
     IvaLedgerObservation,
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
@@ -304,7 +305,7 @@ def aggregate_iva_ledger_candidate_bindings(
     candidates: Iterable[IvaLedgerCandidate],
     *,
     period: Period,
-) -> dict[str, Decimal]:
+) -> dict[BindingId, Decimal]:
     """Validate pre-classified candidates and resolve registry bindings.
 
     Args:

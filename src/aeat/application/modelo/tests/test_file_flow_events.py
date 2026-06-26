@@ -9,6 +9,8 @@ from ._file_flow_support import (
     _DEFAULT_130_BINDING_VALUES,
     _DEFAULT_180_BINDING_VALUES,
     _DEFAULT_180_RELATION_VALUES,
+    _M130_EXPENSE_CASILLA,
+    _M130_INCOME_CASILLA,
     _T1,
     _T2,
     _T3,
@@ -43,7 +45,7 @@ def test_calculate_emits_modelo_calculation_created_event(repos: _Repos) -> None
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_inputs={"01": Decimal("1000")},
+        casilla_inputs={_M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -181,7 +183,7 @@ def test_file_emits_modelo_filed_event(repos: _Repos) -> None:
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, _M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -240,7 +242,7 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: _Repos)
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1000")},
+        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, _M130_INCOME_CASILLA: Decimal("1000")},
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -275,7 +277,11 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos: _Repos)
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, "01": Decimal("1200"), "02": Decimal("100")},
+        casilla_inputs={
+            **_DEFAULT_130_BASELINE_INPUTS,
+            _M130_INCOME_CASILLA: Decimal("1200"),
+            _M130_EXPENSE_CASILLA: Decimal("100"),
+        },
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,

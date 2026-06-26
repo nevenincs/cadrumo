@@ -31,7 +31,12 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -51,6 +56,17 @@ _ESTADO_MIEMBRO_N = Decimal("276")  # claimant established in Germany in year N
 _ESTADO_MIEMBRO_N_PLUS_1 = Decimal("250")  # claimant moves to France for year N+1
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M360 ad-hoc fidelity fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_DECL_ESTADO_MIEMBRO_CASILLA: CasillaId = _casilla_id("decl.estado-miembro")
+
+
 def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):
     for payload in repo.iter_modelo(_MODELO):
         obs = payload.observation
@@ -61,14 +77,14 @@ def _find_observation(repo: CalculationObservationRepository, *, filing_year: in
 
 def _year_n_observation() -> RegistryModeloObservation:
     """Year-N 360 refund request from a Germany-established operator."""
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="AD-HOC",
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N))),
-            CasillaObservation(casilla_id="decl.estado-miembro", value=_ESTADO_MIEMBRO_N),
-        ),
+        casilla_values={
+            _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N)),
+            _DECL_ESTADO_MIEMBRO_CASILLA: _ESTADO_MIEMBRO_N,
+        },
     )
 
 
@@ -77,14 +93,14 @@ def _year_n_plus_1_observation() -> RegistryModeloObservation:
 
     Distinct estado-miembro code ensures cross-year value-bleeding fails loudly.
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=_YEAR_N_PLUS_1,
         period="AD-HOC",
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(_YEAR_N_PLUS_1))),
-            CasillaObservation(casilla_id="decl.estado-miembro", value=_ESTADO_MIEMBRO_N_PLUS_1),
-        ),
+        casilla_values={
+            _DECL_EJERCICIO_CASILLA: Decimal(str(_YEAR_N_PLUS_1)),
+            _DECL_ESTADO_MIEMBRO_CASILLA: _ESTADO_MIEMBRO_N_PLUS_1,
+        },
     )
 
 
@@ -128,8 +144,8 @@ def test_both_observations_are_independently_retrievable_no_bleed(tmp_path: Path
         assert loaded_n.observation == obs_n
         assert loaded_n1.observation == obs_n1
 
-        em_n = loaded_n.observation.casilla_values["decl.estado-miembro"]
-        em_n1 = loaded_n1.observation.casilla_values["decl.estado-miembro"]
+        em_n = loaded_n.observation.casilla_values[_DECL_ESTADO_MIEMBRO_CASILLA]
+        em_n1 = loaded_n1.observation.casilla_values[_DECL_ESTADO_MIEMBRO_CASILLA]
         assert em_n == _ESTADO_MIEMBRO_N
         assert em_n1 == _ESTADO_MIEMBRO_N_PLUS_1
         assert em_n != em_n1, "decl.estado-miembro bled between year-N and year-N+1"
@@ -144,7 +160,7 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="AD-HOC",
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != "decl.estado-miembro"),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != _DECL_ESTADO_MIEMBRO_CASILLA),
     )
     assert obs_n != obs_n_missing
 

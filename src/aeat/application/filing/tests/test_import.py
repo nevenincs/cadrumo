@@ -16,6 +16,7 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import ModeloImportError
 from ....domain.justificante import Justificante, JustificanteParseError
 from ....tests import FIXTURES_DIR
@@ -27,6 +28,15 @@ from ..runtime import RegistrySchemaProvider, build_runtime_schema_provider
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FIXTURES = FIXTURES_DIR / "justificantes"
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_PAGOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_PAGOS_PREVIOS_CASILLA")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
+_M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
+_M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_FINAL_CASILLA")
 
 
 @pytest.fixture(scope="module")
@@ -37,9 +47,9 @@ def schema_provider() -> RegistrySchemaProvider:
 def test_runtime_schema_provider_exposes_imported_modelo_schema() -> None:
     collection = build_runtime_schema_provider().get_collection("130")
 
-    casilla_19 = collection.get("19")
+    casilla_19 = collection.get(_M130_RESULTADO_FINAL_CASILLA)
     assert casilla_19 is not None
-    assert casilla_19.id == "19"
+    assert casilla_19.casilla_id == _M130_RESULTADO_FINAL_CASILLA
 
 
 def test_normalise_period_returns_supported_typed_period(
@@ -102,14 +112,14 @@ def test_submission_record_preserves_typed_draft_period(
         period=period,
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Import submission test"),
         inputs={
-            "01": Decimal("100"),
-            "02": Decimal("25"),
-            "05": Decimal("0"),
-            "06": Decimal("0"),
-            "08": Decimal("0"),
-            "10": Decimal("0"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_INGRESOS_CASILLA: Decimal("100"),
+            _M130_GASTOS_CASILLA: Decimal("25"),
+            _M130_PAGOS_PREVIOS_CASILLA: Decimal("0"),
+            _M130_RETENCIONES_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
