@@ -652,9 +652,14 @@ def resolve_bindings_from_local_store(
     is the caller's choice via the prefill report's coverage.
     """
     repo = repository if repository is not None else CalculationObservationRepository()
-    iva_repo = iva_history_repository if iva_history_repository is not None else IvaCompensationHistoryRepository()
+    # The Modelo 303 IVA-compensation-history merge is NO LONGER an implicit
+    # default: the live calculate path's compensación value is owned exclusively
+    # by the iva-wallet decision (ruling D3), so the previous_filing gather stays
+    # pure (registry observations only). Only the explicit wallet-feeding path
+    # (extract_modelo_303_local_iva_compensation_recurrence) passes the history
+    # repository to reconstruct the local recurrence the reconciliation consumes.
     when = captured_at if captured_at is not None else now()
-    observations = _gather_observations(snapshot, repository=repo, iva_history_repository=iva_repo)
+    observations = _gather_observations(snapshot, repository=repo, iva_history_repository=iva_history_repository)
 
     if not observations:
         return BindingPrefillReport(prefilled=(), binding_values={})
@@ -749,10 +754,17 @@ def extract_modelo_303_local_iva_compensation_recurrence(
         from ..modelo._actions import ModeloApplicabilityFilterError
 
         raise ModeloApplicabilityFilterError("local IVA compensation recurrence extraction only applies to Modelo 303")
+    # This is the explicit wallet-feeding path: reconstruct the local Modelo 303
+    # compensation recurrence from the secure IVA-compensation history so the
+    # iva-wallet reconciliation can compare it against live wallet evidence. The
+    # history repository is defaulted to the active bucket here (no longer
+    # implicitly inside resolve_bindings_from_local_store) so the generic
+    # previous_filing gather stays pure for every other caller.
+    iva_repo = iva_history_repository if iva_history_repository is not None else IvaCompensationHistoryRepository()
     report = resolve_bindings_from_local_store(
         snapshot,
         repository=repository,
-        iva_history_repository=iva_history_repository,
+        iva_history_repository=iva_repo,
         captured_at=captured_at,
     )
     amount = report.binding_values.get(_MODELO_303_IVA_COMPENSATION_BINDING_ID)
