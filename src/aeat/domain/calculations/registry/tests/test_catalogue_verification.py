@@ -12,12 +12,12 @@ from .....core.config import Settings
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
 from .._citation_blocklist import _KNOWN_BAD_CITATIONS, KnownBadCitation, find_known_bad
+from .._corpus_catalogue import verify_source_catalogue, verify_source_file
 from .._coverage import audit_registry_model_law_coverage
 from .._errors import RegistryValidationError
 from .._legal import verify_legal_catalogue
 from .._loader import load_registry_tree
 from .._schema import LegalReference, RegistryCatalogues, SourceReference
-from .._sources import verify_source_catalogue, verify_source_file
 from .._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

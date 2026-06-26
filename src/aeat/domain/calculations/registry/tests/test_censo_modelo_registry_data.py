@@ -7,11 +7,11 @@ import pytest
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
 from .. import build_snapshot, discover_modelo_sources, load_registry_tree
+from .._corpus_catalogue import verify_source_file
 from .._coverage import build_model_law_coverage_ledger
 from .._errors import RegistrySnapshotError
 from .._loader import load_modelo_directory
 from .._schema import InputKind, ModeloDefinition, RegistryCatalogues, RegistrySnapshot
-from .._sources import verify_source_file
 from .._temporal import select_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

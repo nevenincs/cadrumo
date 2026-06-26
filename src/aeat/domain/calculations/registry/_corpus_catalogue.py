@@ -1,4 +1,12 @@
-"""Source catalogue integrity helpers."""
+"""BOE/AEAT corpus-catalogue integrity helpers.
+
+Verifies each :class:`SourceReference` in a registry source catalogue against
+the bundled corpus filesystem: that the cited corpus file exists, stays within
+the repository root, and matches the recorded byte count and SHA-256. The
+``source`` here is a corpus file (a BOE/AEAT consolidated text or AEAT manual),
+not a binding ``BindingSourceKind``; this module is the corpus-catalogue
+verifier, not a registry binding family.
+"""
 
 from __future__ import annotations
 
