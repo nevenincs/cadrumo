@@ -38,30 +38,30 @@ the single typed source-kind authority across registry and mesh.
 
 Replace the bare-string source vocabulary across the mesh carriers, sets, and every resolver owned_sources with the BindingSourceKind enum.
 
-- [ ] `P02.S03` - Re-type owned_sources and both source_kind carriers to BindingSourceKind; `src/aeat/application/aggregation/_source_mesh.py`.
-- [ ] `P02.S04` - Re-type DEFERRED_SOURCE_KINDS and _BUCKET_AGGREGATION_OWNED_SOURCES to frozenset of BindingSourceKind; `src/aeat/application/modelo/_calculation_actions.py`.
-- [ ] `P02.S05` - Re-type the five ledger and retenciones resolver owned_sources to enum members (sequenced after #6 P03 + #28 land on this mesh surface); `src/aeat/application/aggregation/_modelo_bindings.py`.
-- [ ] `P02.S06` - Re-type the OSS/IOSS ledger resolver owned_sources to an enum member; `src/aeat/application/aggregation/_oss_ioss.py`.
-- [ ] `P02.S07` - Re-type the profile resolver owned_sources to an enum member; `src/aeat/application/aggregation/_source_profile.py`.
-- [ ] `P02.S08` - Re-type the relation-prefill resolver owned_sources to an enum member; `src/aeat/application/calculations/_relation_prefill.py`.
-- [ ] `P02.S09` - Re-type the previous-filing resolver owned_sources to an enum member; `src/aeat/application/calculations/_multi_year.py`.
-- [ ] `P02.S10` - Re-type the iva-wallet-decision resolver owned_sources to an enum member; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
-- [ ] `P02.S11` - Re-type the borrador resolver owned_sources to an enum member; `src/aeat/application/modelo/_borrador_binding.py`.
-- [ ] `P02.S12` - Re-type the invoice-catalogue resolver owned_sources to enum members; `src/aeat/application/invoices/_source_resolver.py`.
+- [x] `P02.S03` - Re-type owned_sources and both source_kind carriers to BindingSourceKind; `src/aeat/application/aggregation/_source_mesh.py`.
+- [x] `P02.S04` - Re-type DEFERRED_SOURCE_KINDS and _BUCKET_AGGREGATION_OWNED_SOURCES to frozenset of BindingSourceKind; `src/aeat/application/modelo/_calculation_actions.py`.
+- [x] `P02.S05` - Re-type the five ledger and retenciones resolver owned_sources to enum members (sequenced after #6 P03 + #28 land on this mesh surface); `src/aeat/application/aggregation/_modelo_bindings.py`.
+- [x] `P02.S06` - Re-type the OSS/IOSS ledger resolver owned_sources to an enum member; `src/aeat/application/aggregation/_oss_ioss.py`.
+- [x] `P02.S07` - Re-type the profile resolver owned_sources to an enum member; `src/aeat/application/aggregation/_source_profile.py`.
+- [x] `P02.S08` - Re-type the relation-prefill resolver owned_sources to an enum member; `src/aeat/application/calculations/_relation_prefill.py`.
+- [x] `P02.S09` - Re-type the previous-filing resolver owned_sources to an enum member; `src/aeat/application/calculations/_multi_year.py`.
+- [x] `P02.S10` - Re-type the iva-wallet-decision resolver owned_sources to an enum member; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
+- [x] `P02.S11` - Re-type the borrador resolver owned_sources to an enum member; `src/aeat/application/modelo/_borrador_binding.py`.
+- [x] `P02.S12` - Re-type the invoice-catalogue resolver owned_sources to enum members; `src/aeat/application/invoices/_source_resolver.py`.
 
 ### Phase `P03` - Delete the duplicate enums and reconcile consumers
 
 Re-express CounterpartSourceKind as a derived subset, migrate every consumer, then delete AggregationSourceKind and operator_surface.SourceKind under the retired-enum-reconciliation discipline.
 
-- [ ] `P03.S13` - Re-express CounterpartSourceKind, COUNTERPART_SOURCE_KINDS, and counterpart_source_kind as a derived subset of BindingSourceKind; `src/aeat/core/aggregation.py`.
-- [ ] `P03.S14` - Migrate the per-modelo aggregation service and registry-provider consumers off AggregationSourceKind and delete it; `src/aeat/application/aggregation/_service.py`.
-- [ ] `P03.S15` - Migrate operator_surface SourceKind consumers to BindingSourceKind and delete the duplicate; `src/aeat/application/operator_surface/_models.py`.
+- [x] `P03.S13` - Re-express CounterpartSourceKind, COUNTERPART_SOURCE_KINDS, and counterpart_source_kind as a derived subset of BindingSourceKind; `src/aeat/core/aggregation.py`.
+- [x] `P03.S14` - Migrate the per-modelo aggregation service and registry-provider consumers off AggregationSourceKind and delete it; `src/aeat/application/aggregation/_service.py`.
+- [x] `P03.S15` - Migrate operator_surface SourceKind consumers to BindingSourceKind and delete the duplicate; `src/aeat/application/operator_surface/_models.py`.
 
 ### Phase `P04` - Prove the unified gate
 
 Prove both parity halves and the full bindings surface green; RowSetGroupingKind is scoped out and left untouched.
 
-- [ ] `P04.S17` - Run the full bindings test surface and both parity halves and owner-triage the full tree; `src/aeat/domain/calculations/registry/tests/test_binding_source_kind_taxonomy.py`.
+- [x] `P04.S17` - Run the full bindings test surface and both parity halves and owner-triage the full tree; `src/aeat/domain/calculations/registry/tests/test_binding_source_kind_taxonomy.py`.
 
 ## Description
 

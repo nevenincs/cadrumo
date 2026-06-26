@@ -14,7 +14,12 @@ related:
 
 
 
-# `binding-source-kind-taxonomy-unification` adr: `source-kind taxonomy unification: one canonical core BindingSourceKind owning the registry+mesh union` | (**status:** `proposed`)
+# `binding-source-kind-taxonomy-unification` adr: `source-kind taxonomy unification: one canonical core BindingSourceKind owning the registry+mesh union` | (**status:** `accepted`)
+
+> Accepted on the operator's standing directive (the `/goal`). Phase 2.1 of the
+> accepted central bindings architecture. Execution proceeds per the phase plan under
+> the report-before-land gate; Steps touching files under active peer WIP
+> (`_modelo_bindings.py`, `core/__init__.py`) are sweep-sequenced.
 
 ## Problem Statement
 
@@ -78,16 +83,20 @@ issued/received), and `IvaCompensationAuthoritySourceKind`
 amount). These are naming-collision noise for the phase-4 vocabulary pass, not
 source-kind duplication. Folding them in would be a category error.
 
-The `RowSetGroupingKind` question (flagged for review). The breadth audit and the
-phase-2.1 brief list `RowSetGroupingKind` among the enums to "absorb," but it is NOT
-a source token — it is the **row-assembly grouping axis** (`_row_set_assembly.py`),
-a downstream concept the core docstring itself distinguishes from the binding source
-token. `BindingSourceKind` already carries the corresponding source members
-(`WITHHOLDING`, `FOREIGN_ASSET`, `RELATED_PARTY_OPERATION`, `ATRIBUCION_MEMBER`,
-`REFUND_OPERATION`), bridged to the grouping axis by `ROW_SET_GROUPING_FOR_BINDING_SOURCE`.
-This ADR therefore proposes to KEEP `RowSetGroupingKind` as a distinct axis but
-**bind it as a derived projection** of `BindingSourceKind` (the bridge map must be
-total and gated), rather than merge two semantically different axes into one enum.
+The `RowSetGroupingKind` decision (resolved at coordinator review). The breadth
+audit and the phase-2.1 brief listed `RowSetGroupingKind` among the enums to
+"absorb," but it is NOT a source token — it is the **row-assembly grouping axis**
+(`_row_set_assembly.py`), a downstream concept the core docstring itself
+distinguishes from the binding source token. The DECISION is to **scope it OUT**:
+keep `RowSetGroupingKind` as its own enum, the same category as the genuine
+homonyms scoped out above (a different semantic axis, not a member of the
+source-kind union), and DO NOT add a speculative total-and-gated derived-projection
+bridge from `BindingSourceKind` to it. Binding the grouping axis to the source axis
+as a derived projection asserts a 1:1 source-to-grouping invariant that is not
+warranted (a source does not necessarily map to exactly one grouping). If a
+concrete source-to-grouping invariant worth enforcing turns up, it is grounded and
+proposed as a SEPARATE follow-up, never baked speculatively into this taxonomy ADR.
+(This supersedes the earlier "keep-but-derive" draft of this decision.)
 This is a deliberate, flagged divergence from the brief's "absorb"; it is offered to
 the report-before-land review as the technically-correct reconciliation.
 
@@ -112,14 +121,18 @@ gate must keep every member routed-or-deferred), `retired-enum-members-need-cons
 No frontier risk: this is a typed-enum consolidation over strict pydantic and
 StrEnum surfaces, well inside the model's competence. The real constraints:
 
-- **Execution touches the active casilla-id sweep surface.** The member additions
-  land in `core/aggregation.py`; the re-typing lands in the mesh
-  (`application/aggregation/_source_mesh.py`) and the enrollment/owned-set in
-  `application/modelo/_calculation_actions.py` — both files carry concurrent sweep
-  WIP (task #18). Per the swarm-orchestration discipline, EXECUTION sequences AROUND
-  the casilla-id sweep exactly as #6 P03 and #28 do: design (this ADR + its plan) is
-  authored now; the touching edits land after the sweep commits, or via the
-  apply-cached gated drive if entangled. The ADR is design-only and lands nothing.
+- **Execution sequences after #6 P03 + #28 land (sweep is committed).** The
+  casilla-id sweep that earlier blocked these files is now committed (the
+  autonomo-130 safeguard; registry builds, suite green), so "sequence around the
+  sweep" is MOOT. The live constraint is different: phase-2.1 re-types the mesh
+  surface (`application/aggregation/_source_mesh.py`, the owned/deferred sets in
+  `application/modelo/_calculation_actions.py`) — the SAME surface the retenciones
+  re-stamp is editing RIGHT NOW for #6 P03 + #28. So phase-2.1 EXECUTION sequences
+  AFTER #6 P03 + #28 land: the unification is built ON TOP OF the landed re-stamps,
+  absorbing `RETENCIONES_AGGREGATION` and the withholding count source as existing
+  members. Design (this ADR + its plan) is authored now; code lands after the
+  re-stamps, under the report-before-land gate. The ADR is design-only and lands
+  nothing.
 - **Behaviour-preserving lift.** A `StrEnum` serialises, compares, hashes, and
   JSON-encodes identically to its string value (the `modelo-identifiers-use-core-enum`
   and the original `BindingSourceKind`-lift precedent), so re-typing the mesh's bare
@@ -152,25 +165,54 @@ sequences the steps and their sweep-coordination):
    as reserved-undeclared). After this step the canonical set IS the exact union;
    "neither contains the other" is eliminated by construction.
 
-2. **Retire the duplicates (delete, not bridge).** `AggregationSourceKind` and
-   `operator_surface.SourceKind` are removed; their four members already exist as
-   `BindingSourceKind` values, so consumers migrate to the one enum.
-   `CounterpartSourceKind` is re-expressed as a derived `Literal` subset of
-   `BindingSourceKind`. Per `no-legacy`, no alias or compatibility shim is left.
+2. **Retire the duplicates (delete, not bridge) — reconciliation PRECEDES deletion,
+   atomically.** Per `retired-enum-members-need-consumer-reconciliation`, before
+   `AggregationSourceKind` and `operator_surface.SourceKind` are deleted, ALL their
+   members and EVERY consumer are reconciled into `BindingSourceKind` in ONE atomic
+   relocation: confirm no orphan member is lost (each of the four
+   invoice/counterpart values already exists as a `BindingSourceKind` member), every
+   consumer (the per-modelo aggregation service, the registry provider, the
+   counterpart subset, the operator-surface consumers) is migrated to the one enum,
+   and the owning collection / parity gate is proven green — and only then is the
+   duplicate enum removed in the same commit. The reconciliation is NOT a separate
+   later step; it is the precondition of the deletion. `CounterpartSourceKind` is
+   re-expressed as a derived `Literal` subset of `BindingSourceKind`. Per `no-legacy`,
+   no alias or compatibility shim is left.
 
 3. **Re-type the mesh end-to-end.** `ModeloSourceResolver.owned_sources` becomes
-   `tuple[BindingSourceKind, ...]`; `CalculationSourceDiagnostic.source_kind` and
-   `CalculationSourceProvenance.source_kind` become `BindingSourceKind`;
+   `tuple[BindingSourceKind, ...]`;
    `DEFERRED_SOURCE_KINDS` and `_BUCKET_AGGREGATION_OWNED_SOURCES` become
    `frozenset[BindingSourceKind]`. Each resolver declares its owned source as an enum
    member, not a string literal. The novel-source gate and the deferred-advisory path
    operate on the typed set.
 
-4. **Bind `RowSetGroupingKind` as a derived axis** (subject to review per the
-   Considerations divergence): keep it a distinct concept, but make
-   `ROW_SET_GROUPING_FOR_BINDING_SOURCE` total over the detail-record source members
-   and gate it, so the grouping axis is a typed projection of the source set, not an
-   independently-maintained taxonomy.
+   **Execution refinement (P02.S03, recorded 2026-06-26):** the two `source_kind`
+   carriers `CalculationSourceDiagnostic.source_kind` and
+   `CalculationSourceProvenance.source_kind` are SCOPED OUT of the re-typing. The
+   draft text above re-typed them to `BindingSourceKind`; execution found those
+   fields are a deliberately-overloaded *diagnostic/provenance channel* carrying
+   non-source-kind tokens (`transaction_evidence` — documented as kept-distinct so the
+   advisory channel is never confused with a routed value — plus `local_filing`,
+   `mixed_observation_sources`, `aeat_sede_iva_compensation_history` flowing via the
+   relation-prefill path). Forcing them to `BindingSourceKind` would either break
+   runtime validation on those legitimate tokens or pollute the enum with
+   non-source-kind members — the exact category error §4 forbids for
+   `RowSetGroupingKind`. So only the PURE source-kind collections (`owned_sources`,
+   `DEFERRED_SOURCE_KINDS`, `_BUCKET_AGGREGATION_OWNED_SOURCES`, and each resolver's
+   `owned_sources`) are re-typed; the diagnostic/provenance `source_kind` stays `str`
+   (its own mixed channel, scoped out like `RowSetGroupingKind`). The cleaner future
+   split — a typed `binding_source: BindingSourceKind | None` beside the free-text
+   diagnostic `source_kind` — is deferred as a follow-up (it intersects the phase-2.2
+   resolution-envelope shape and is not required to unify the source-kind SET this
+   phase owns).
+
+4. **Scope `RowSetGroupingKind` OUT — keep its own enum, NO bridge.** It is the
+   row-assembly grouping axis, a different semantic concept from a source token, so
+   it stays its own independent enum and is NOT a member of the source-kind union and
+   NOT bound to `BindingSourceKind` by a speculative derived-projection bridge (a
+   source does not necessarily map 1:1 to one grouping). No total-and-gated map is
+   added here. A concrete source-to-grouping invariant, if found, is grounded and
+   proposed as a separate follow-up.
 
 5. **One parity gate, two halves.** Extend the existing
    `test_binding_source_kind_taxonomy.py` (today: enum↔registry parity) with an
@@ -195,9 +237,10 @@ the union — not a new enum — preserves the hardened registry decision rather
 re-deciding it, and the behaviour-preserving StrEnum lift means the consolidation is a
 type-level change with zero data or comparison-semantics shift, the same risk profile
 as the modelo-enum hardening that already shipped. Deleting the duplicates rather than
-aliasing them is mandated by `no-legacy`. Keeping `RowSetGroupingKind` distinct-but-derived
-respects a real semantic boundary (source token vs grouping axis) the core docstring
-already documents, while still ending its independent maintenance. The two-half parity
+aliasing them is mandated by `no-legacy`. Scoping `RowSetGroupingKind` OUT (its own
+enum, no bridge) respects a real semantic boundary (source token vs grouping axis) the
+core docstring already documents, without asserting an unwarranted 1:1 source-to-grouping
+coupling. The two-half parity
 gate is what converts this from a one-time cleanup into a durable invariant, which is
 the only thing that makes the RAG-cohesion goal stick: a future drift fails CI instead
 of re-fragmenting the surface.
@@ -215,12 +258,12 @@ toward the operator's goal of a RAG-cohesive, centrally-defined bindings archite
 
 Difficulties, framed honestly: the consumer blast radius is wide (every mesh resolver,
 both frozensets, the diagnostic/provenance carriers, the `operator_surface` and
-counterpart consumers) and must be reconciled in one accept-or-reject state before any
-deletion, per the retired-enum-reconciliation rule. Execution races the casilla-id
-sweep on two shared files and must sequence around it (design now, land after) exactly
-like #6/#28 — this ADR deliberately lands no code. The `RowSetGroupingKind`
-keep-but-derive choice diverges from the brief's "absorb" and is surfaced for the
-report-before-land review rather than decided unilaterally. And surfacing the
+counterpart consumers) and must be reconciled in one accept-or-reject state as the
+PRECONDITION of any deletion, per the retired-enum-reconciliation rule (decision step
+2). Execution edits the mesh source surface that the #6 P03 + #28 retenciones
+re-stamp is landing on right now, so it sequences AFTER those re-stamps (design now,
+land after) — this ADR deliberately lands no code. `RowSetGroupingKind` is scoped OUT
+(its own enum, no bridge) per the coordinator-reviewed decision. And surfacing the
 currently-unbacked members (`purchase_invoice_evidence`, `ledger_transaction`) may
 force an explicit enrolled/deferred/reserved disposition for each — which is the
 intended honesty, not new scope.
