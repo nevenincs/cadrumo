@@ -238,7 +238,7 @@ from ._parity_tapes import (
     save_parity_tape,
 )
 from ._queries import (
-    ModeloBindingRow,
+    ModeloBindingQueryRow,
     ModeloBindingsReport,
     ModeloCasillaRow,
     ModeloCasillasReport,
@@ -487,7 +487,7 @@ __all__ = [
     "Modelo720RowObservation",
     "ModeloApplicability",
     "ModeloApplicabilityRule",
-    "ModeloBindingRow",
+    "ModeloBindingQueryRow",
     "ModeloBindingsReport",
     "ModeloCasillaRow",
     "ModeloCasillasReport",
