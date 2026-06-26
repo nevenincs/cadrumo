@@ -119,10 +119,14 @@ def _field(
 
 
 def _binding(selector: dict[str, Any]) -> DataBindingDefinition:
+    # ``withholding`` is free-form at the schema level (no entry in
+    # ``_BINDING_SELECTOR_REGISTRY``), so the F8 construction-time selector gate
+    # does not constrain the arbitrary selector mappings these tests feed to the
+    # generic selector-extraction helpers (``selector_int`` / ``data_type``).
     return DataBindingDefinition.model_validate(
         {
             "id": "binding-under-test",
-            "source": "collectible_invoice",
+            "source": "withholding",
             "selector": selector,
             "legal_refs": ("ley-37-1992:art-1",),
             "source_refs": ("aeat-dr-303-2025",),

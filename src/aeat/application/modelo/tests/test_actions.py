@@ -159,10 +159,19 @@ def _art20_revision() -> ModeloRevision:
 def _source_bound_revision() -> ModeloRevision:
     return _test_revision(
         bindings=(
+            # A well-shaped ``ledger_iva_aggregation`` selector so the binding
+            # clears the F8 construction-time selector gate; the test exercises
+            # the override-error localisation against the matching owned source,
+            # not selector shape.
             DataBindingDefinition(
                 id=_SOURCE_BOUND_BINDING,
                 source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                selector={"record": "ventas", "row_field": "importe"},
+                selector={
+                    "categories": ("domestic_general_21",),
+                    "rate_kinds": ("general",),
+                    "flow_direction": "repercutido",
+                    "fact": "iva_amount_sum",
+                },
                 legal_refs=(_TEST_LEGAL_REF,),
                 source_refs=(_TEST_SOURCE_REF,),
             ),
@@ -581,7 +590,7 @@ def test_source_bound_casilla_override_error_is_localised() -> None:
     with pytest.raises(ModeloAggregationBindingError) as raised:
         _reject_caller_overrides_of_source_bindings(
             revision=revision,
-            owned_sources=frozenset({"ledger_iva_aggregation"}),
+            owned_sources=frozenset({BindingSourceKind.LEDGER_IVA_AGGREGATION}),
             caller_binding_values={},
             caller_casilla_inputs={_SOURCE_BOUND_CASILLA: Decimal("12.34")},
         )

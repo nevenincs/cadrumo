@@ -350,6 +350,45 @@ so the registry stays the single source of truth for ledger readiness.
 """
 
 
+class BindingTypedEnumKind(StrEnum):
+    """The closed set of substrate enum-class names a binding value bridges.
+
+    A :class:`~aeat.domain.calculations.registry.DataBindingDefinition` whose
+    value bridges a closed-membership substrate axis declares ``typed_enum`` =
+    one of these members. Each value is the NAME of the closed enum class a
+    consumer routes the binding value through:
+
+    - ``CENSO_EVENT_KIND`` (``"censo_event_kind"``) — Modelo 036 censo status.
+    - ``CCAA`` (``"CCAA"``) — Modelo 100 autonomic-community tax residence.
+    - ``ESTIMACION_DIRECTA_MODALIDAD`` (``"EstimacionDirectaModalidad"``) —
+      Modelo 100 estimación-directa modality.
+    - ``LEGAL_ENTITY_FORM`` (``"LegalEntityForm"``) — Modelo 200 legal form.
+
+    BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the
+    annotation token that was previously a bare ``str`` in
+    ``DataBindingDefinition.typed_enum``. Those tokens live in registry TOML and
+    flow through operator-facing surfaces (``bindings list`` table, the
+    :class:`ModeloBindingQueryRow` projection, the borrador resolver, the
+    Sheets-pull router); a :class:`~enum.StrEnum` serialises to its value, so
+    narrowing the field from ``str | None`` to this enum changes the static type
+    without changing any stored, compared, or emitted string (the
+    modelo-enum-hardening precedent). Do NOT rename a stored token.
+
+    Declared in :mod:`aeat.core` as a closed value set per the architecture
+    contract; the loader hydrates the registry TOML's raw token to its member at
+    the schema boundary (see
+    :meth:`~aeat.domain.calculations.registry.DataBindingDefinition._coerce_typed_enum`).
+    It is the closed-set *annotation* on the binding, distinct from the engine
+    ``input_channel`` (how a formula consumes the value); a binding may carry a
+    ``typed_enum`` yet still be a numeric ``decimal`` channel.
+    """
+
+    CENSO_EVENT_KIND = "censo_event_kind"
+    CCAA = "CCAA"
+    ESTIMACION_DIRECTA_MODALIDAD = "EstimacionDirectaModalidad"
+    LEGAL_ENTITY_FORM = "LegalEntityForm"
+
+
 class RetencionScheme(StrEnum):
     """Closed catalogue of retenciones schemes across the retenciones family.
 

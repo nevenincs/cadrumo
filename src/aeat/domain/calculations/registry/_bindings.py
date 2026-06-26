@@ -158,6 +158,7 @@ __all__ = [
     "resolve_retenciones_aggregation_binding_values",
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
+    "selector_model_for_source",
     "unsupported_ledger_iva_observations",
     "unsupported_ledger_oss_observations",
     "unsupported_ledger_renta_expense_observations",
@@ -649,6 +650,26 @@ _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "manual_input": _ManualInputSelector,
     "profile": _ProfileSelector,
 }
+
+
+def selector_model_for_source(source: object) -> type[BaseModel] | None:
+    """Return the strict selector model a binding ``source`` validates against.
+
+    Read-only accessor over :data:`_BINDING_SELECTOR_REGISTRY`, the
+    discriminated-union table keyed by :class:`~aeat.core.BindingSourceKind`
+    (the canonical ``DataBindingDefinition.source`` axis). Returns the
+    per-family selector model when the source carries a typed selector schema,
+    or ``None`` when the source is intentionally free-form (absent from the
+    table) — so callers can short-circuit selector-shape validation for
+    free-form sources exactly as the snapshot-build gate does.
+
+    The model-level selector validator on
+    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` consumes
+    this accessor to promote selector-shape typing to model-construction time
+    without re-deriving the table; the op/fact cross-invariants stay owned by
+    :func:`validate_binding_selector_shape` at snapshot build.
+    """
+    return _BINDING_SELECTOR_REGISTRY.get(source)
 
 
 def _validate_selector_only(selector_model: type[BaseModel]) -> _BindingFamilyValidator:

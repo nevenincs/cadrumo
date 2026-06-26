@@ -39,7 +39,7 @@ def _rows_default_detail_binding() -> DataBindingDefinition:
     return DataBindingDefinition(
         id="synthetic-detail-row",
         source=BindingSourceKind.FOREIGN_ASSET,
-        selector={"grouping": "per_foreign_asset", "row_field": "valoracion"},
+        selector={"fact": "row_field", "grouping": "per_foreign_asset", "row_field": "valuation_amount"},
         aggregation=None,
         legal_refs=("ley-7-2012:dt-18",),
         source_refs=("aeat-modelo-720",),
@@ -67,4 +67,4 @@ def test_row_field_lookup_detects_none_aggregation_rows_default_binding() -> Non
 
     lookup = _row_field_lookup(revision_with_default)
 
-    assert lookup == {"synthetic-detail-row": "valoracion"}
+    assert lookup == {"synthetic-detail-row": "valuation_amount"}
