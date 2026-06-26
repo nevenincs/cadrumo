@@ -2,6 +2,12 @@
 
 Used by: :mod:`~aeat.application.calculations._calculate` (model calculation orchestrator).
 
+One of three distinct prefill tiers, NOT to be merged: this is the
+PREVIOUS-FILING direct-carry tier. The other two are the relation tier
+(`_relation_prefill`) and the AEAT borrador pre-fill tier (the registry
+`aeat_prefilled` flag, an AEAT-live source). They share only the word
+"prefill"; each routes a different source through a different mechanism.
+
 Sister module to `_relation_prefill`. The runtime distinguishes
 `relation` leaves (cross-revision aggregations declared as
 `RelationDefinition` records) from `previous_filing` bindings

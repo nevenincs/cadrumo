@@ -1023,6 +1023,10 @@ class DataBindingDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
+    # AEAT borrador pre-fill tier: the third, AEAT-live prefill tier, distinct
+    # from the local relation prefill (`_relation_prefill`) and previous-filing
+    # direct-carry (`_binding_prefill`) tiers. The three share only the word
+    # "prefill" and must not be merged.
     aeat_prefilled: bool = False
 
     @field_validator("source", mode="before")

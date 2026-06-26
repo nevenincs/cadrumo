@@ -1,5 +1,12 @@
 """Relation prefill: resolve registry relations from prior filings.
 
+One of three distinct prefill tiers, NOT to be merged: this is the
+RELATION tier (cross-revision aggregations declared as
+`RelationDefinition`). The other two are the previous-filing direct-carry
+tier (`_binding_prefill`) and the AEAT borrador pre-fill tier (the registry
+`aeat_prefilled` flag, an AEAT-live source). Each names a different
+mechanism and source; they share only the word "prefill".
+
 Sits between the engine and the local observation store. The engine
 asks "what's the resolved value of every relation this revision
 declares?" and this module answers by consulting a :class:`RegistrySnapshot`
