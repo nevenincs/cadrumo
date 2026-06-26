@@ -1042,3 +1042,49 @@ def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> 
     assert resolved["modelo-303-recargo-equivalencia-general-cuota"] == Decimal("52.00")
     assert resolved["modelo-303-recargo-equivalencia-reducido-cuota"] == Decimal("14.00")
     assert resolved["modelo-303-recargo-equivalencia-super-reducido-cuota"] == Decimal("0")
+
+
+def test_modelo_303_2009_revision_recargo_and_intracom_export_aggregate_from_ledger() -> None:
+    """#41 regression: the 2009-y-siguientes revision also aggregates recargo de
+    equivalencia (casillas 21/24/158) and the intra-community / export base
+    (casillas 59/60) from the ledger — the rest of the 2009 coverage tail behind #15.
+
+    These casillas existed but were input_kind="manual" with no binding, so a
+    ledger-driven 2009-2022 M303 reported zero recargo (even when a supplier charged
+    it) and zero intra-community / export base. The recargo cuotas now aggregate by
+    tier via recargo_amount_sum (LIVA art. 161); 59/60 via base_amount_sum — mirroring
+    the 2023 revision. filing_year=2022 resolves to the 2009 revision; expected values
+    derive from the seeded amounts, not a formula re-run.
+    """
+    revision = resources().modelos.authority.snapshot("303", filing_year=2022, period="2T").revision
+    assert revision.id == "2009-y-siguientes"
+    rec_general = _observation(
+        category=IvaCategory.DOMESTIC_GENERAL_21, rate_kind=IvaRateKind.GENERAL,
+        flow=IvaFlowDirection.REPERCUTIDO, base=Decimal("1000"), iva=Decimal("210"), recargo=Decimal("52.00"),
+    )
+    rec_reduced = _observation(
+        category=IvaCategory.DOMESTIC_REDUCED_10, rate_kind=IvaRateKind.REDUCED,
+        flow=IvaFlowDirection.REPERCUTIDO, base=Decimal("1000"), iva=Decimal("100"), recargo=Decimal("14.00"),
+    )
+    rec_super = _observation(
+        category=IvaCategory.DOMESTIC_SUPER_REDUCED_4, rate_kind=IvaRateKind.SUPER_REDUCED,
+        flow=IvaFlowDirection.REPERCUTIDO, base=Decimal("1000"), iva=Decimal("40"), recargo=Decimal("5.00"),
+    )
+    intracom = _observation(
+        category=IvaCategory.INTRA_COMMUNITY_SUPPLY, rate_kind=IvaRateKind.ZERO,
+        flow=IvaFlowDirection.REPERCUTIDO, base=Decimal("2000"), iva=Decimal("0"),
+    )
+    export = _observation(
+        category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, rate_kind=IvaRateKind.ZERO,
+        flow=IvaFlowDirection.REPERCUTIDO, base=Decimal("3000"), iva=Decimal("0"),
+    )
+    values = resolve_ledger_iva_aggregation_binding_values(
+        revision, (rec_general, rec_reduced, rec_super, intracom, export),
+    )
+    # Recargo cuotas now aggregate by tier (0 before the back-fill).
+    assert values["modelo-303-recargo-equivalencia-general-cuota"] == Decimal("52.00")
+    assert values["modelo-303-recargo-equivalencia-reducido-cuota"] == Decimal("14.00")
+    assert values["modelo-303-recargo-equivalencia-super-reducido-cuota"] == Decimal("5.00")
+    # Intra-community / export base now aggregate (0 before the back-fill).
+    assert values["modelo-303-casilla-59-entregas-intracomunitarias-base"] == Decimal("2000")
+    assert values["modelo-303-casilla-60-exportaciones-base"] == Decimal("3000")

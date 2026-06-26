@@ -18,8 +18,9 @@ section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_24"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-recargo-equivalencia-general-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-24"]
 
@@ -461,7 +462,8 @@ section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "dr303_59"
 required = false
-input_kind = "manual"
+input_kind = "bound"
+binding = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 # Casilla 59 reports the base imponible of exempt intra-community supplies
 # (entregas intracomunitarias exentas). The substantive ground is LIVA art. 25
 # (exenciones en las entregas de bienes destinados a otro Estado miembro), not
@@ -479,7 +481,8 @@ section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "dr303_60"
 required = false
-input_kind = "manual"
+input_kind = "bound"
+binding = "modelo-303-casilla-60-exportaciones-base"
 # Casilla 60 reports the base imponible of exempt exports and operations
 # treated as exports. The substantive grounds are LIVA art. 21 (exenciones en
 # las exportaciones de bienes) for the "Exportaciones" leg and art. 22

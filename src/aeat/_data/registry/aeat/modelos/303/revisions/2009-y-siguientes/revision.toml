@@ -192,6 +192,110 @@ fact = "base_amount_sum"
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
+# Recargo de equivalencia cuotas (LIVA art. 161) and intra-community / export base
+# imponible (casillas 59/60) — the rest of the 2009 ledger-coverage tail (#41,
+# residual of #15). Like the domestic base, these casillas were input_kind="manual"
+# with no binding, so a ledger-driven 2009-2022 M303 reported zero recargo even when
+# a supplier charged it, and zero intra-community / export base — silent
+# under-declarations. Mirrors the 2023-y-siguientes recargo + intracom/export base
+# bindings exactly (same selectors / fact / aggregation). The recargo casillas
+# (21/24/158) gain ley-37-1992:art-161 in their legal_refs so the bound-casilla
+# coverage check holds (the recargo cuota's binding provision), mirroring 2023.
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-recargo-equivalencia-general-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["domestic_general_21"]
+rate_kinds = ["general"]
+flow_direction = "repercutido"
+fact = "recargo_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-recargo-equivalencia-reducido-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["domestic_reduced_10"]
+rate_kinds = ["reduced"]
+flow_direction = "repercutido"
+fact = "recargo_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-recargo-equivalencia-super-reducido-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["domestic_super_reduced_4"]
+rate_kinds = ["super_reduced"]
+flow_direction = "repercutido"
+fact = "recargo_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-casilla-59-entregas-intracomunitarias-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["intra_community_supply"]
+rate_kinds = ["zero"]
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2009-y-siguientes.bindings]]
+id = "modelo-303-casilla-60-exportaciones-base"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2009-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2009-y-siguientes.bindings.selector]
+categories = ["export_third_country_zero_rated"]
+rate_kinds = ["zero"]
+flow_direction = "repercutido"
+fact = "base_amount_sum"
+
+[revisions.2009-y-siguientes.bindings.aggregation]
+op = "sum"
+
 [[revisions.2009-y-siguientes.bindings]]
 id = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
