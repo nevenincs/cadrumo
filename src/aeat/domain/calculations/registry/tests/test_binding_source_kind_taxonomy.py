@@ -82,7 +82,7 @@ _RESERVED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 # canonical home is the application resolver mesh, not a
 # ``DataBindingDefinition.source``: ``borrador`` is the Modelo 100 borrador prefill
 # and ``iva_wallet_decision`` is the M303 IVA-wallet compensación decision. They are
-# first-class :class:`BindingSourceKind` members (phase-2.1 taxonomy unification) so
+# first-class :class:`BindingSourceKind` members (taxonomy unification) so
 # the mesh carries enum members, but they will never appear in the registry, so the
 # enum↔registry orphan gate exempts them here. The application-layer enum↔mesh parity
 # gate (``test_binding_source_kind_mesh_parity.py``) asserts they ARE accounted for
@@ -163,7 +163,7 @@ def test_counterpart_frozenset_is_a_subset_of_the_enum() -> None:
     """The counterpart source kinds are a derived subset of :class:`BindingSourceKind`.
 
     ``COUNTERPART_SOURCE_KINDS`` is declared directly over :class:`BindingSourceKind`
-    members (phase-2.1 taxonomy unification, replacing the former
+    members (taxonomy unification, replacing the former
     ``AggregationSourceKind``-derived subset); the assertion confirms every
     counterpart value is a binding-source member.
     """

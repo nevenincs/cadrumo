@@ -288,7 +288,7 @@ def test_filing_status_has_no_token_shim_module() -> None:
 def test_operator_source_kinds_mirror_the_counterpart_subset_of_binding_source_kind() -> None:
     """The operator-surface source kinds are exactly the counterpart subset of the core enum.
 
-    Phase-2.1 taxonomy unification: the duplicate ``operator_surface.SourceKind``
+    taxonomy unification: the duplicate ``operator_surface.SourceKind``
     enum was deleted and the operator surface now declares its source kinds
     directly as :class:`BindingSourceKind` members. They must equal the canonical
     counterpart subset (:data:`COUNTERPART_SOURCE_KINDS`) — the four
