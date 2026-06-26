@@ -234,6 +234,17 @@ class BindingSourceKind(StrEnum):
     # total_perceptors) — replacing the wrong sum-of-quarterly-M115-counts relation
     # (RET-1, ADR 2026-06-24-retenciones-perceptor-count-adr).
     RETENCIONES_AGGREGATION = "retenciones_aggregation"
+    # Mesh-only sourcing decisions with NO registry binding declaration. Both are
+    # resolved by a pre-mesh gate, not a registry `DataBindingDefinition.source`:
+    # `borrador` materialises the Modelo 100 borrador prefill
+    # (Modelo100BorradorSourceResolver) and `iva_wallet_decision` carries the M303
+    # IVA-wallet compensación decision (IvaWalletDecisionSourceResolver). They are
+    # first-class members of the canonical union (phase-2.1 taxonomy unification)
+    # so the mesh carries `BindingSourceKind` members rather than bare strings;
+    # because no registry binding declares them, they are accounted for as
+    # mesh-only in the enum↔registry parity gate, not as reserved-undeclared.
+    BORRADOR = "borrador"
+    IVA_WALLET_DECISION = "iva_wallet_decision"
     # Invoice / counterpart aggregation sources (value-aligned with
     # AggregationSourceKind).
     PAYABLE_INVOICE = AggregationSourceKind.PAYABLE_INVOICE.value
