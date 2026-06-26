@@ -264,6 +264,7 @@ from ._record_design import (
     extract_record_design_pdf_bytes,
     extract_record_design_workbook,
 )
+from ._relation_aggregation import relation_aggregation_op
 from ._relations import (
     RegistryFoldRequirement,
     materialize_relation_binding_values,
@@ -667,6 +668,7 @@ __all__ = [
     "profile_condition_matches",
     "read_parameter",
     "register_cross_domain_snapshot_check",
+    "relation_aggregation_op",
     "relation_source_requirements",
     "remote_state_policy_from_cross_reference",
     "replay_parity_tape",

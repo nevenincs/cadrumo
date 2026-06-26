@@ -9,6 +9,7 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
+from ....core.aggregation import RelationAggregation
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._errors import RegistryValidationError
 from ._ids import (
@@ -486,7 +487,7 @@ class RelationDefinition(RegistryModel):
     source_periods: tuple[str, ...] = ()
     target_periods: tuple[str, ...] = ()
     source_period_offset_from_target: int | None = None
-    aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
+    aggregation: RelationAggregation | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
 

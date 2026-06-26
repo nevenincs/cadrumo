@@ -64,7 +64,7 @@ _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
 )
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
-_REGISTRY_TREE_CACHE_SCHEMA_VERSION = "period-value-object-v1"
+_REGISTRY_TREE_CACHE_SCHEMA_VERSION = "relation-aggregation-typed-v2"
 
 
 @dataclass(frozen=True, slots=True)

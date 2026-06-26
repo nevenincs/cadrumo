@@ -82,6 +82,61 @@ class BindingAggregation(BaseModel):
         return value
 
 
+class RelationAggregationOp(StrEnum):
+    """Closed set of aggregation operators a registry ``RelationDefinition`` may declare.
+
+    A relation's ``aggregation.op`` selects how a cross-modelo fold-in folds its
+    matched source filings: :attr:`COPY` carries a single source value through
+    unchanged (the default when a relation declares no aggregation), and
+    :attr:`SUM` adds the matched per-period source values (annual summaries). This
+    is a deliberately separate axis from :class:`BindingAggregationOp` (which
+    governs ``DataBindingDefinition`` folds and carries the binding-only ``rows``
+    / ``count_distinct`` / ``prior_pagos_fraccionados`` members); the two are not
+    interchanged. The complete set declared across the registry relation tree is
+    ``copy`` and ``sum``.
+    """
+
+    COPY = "copy"
+    SUM = "sum"
+
+
+class RelationAggregation(BaseModel):
+    """Typed aggregation rule carried by a registry ``RelationDefinition``.
+
+    Placed in :mod:`aeat.core` (cross-layer home) because the domain registry
+    schema declares the field and the application/adapter layers read it. The
+    closed :class:`RelationAggregationOp` set is the only key real relation
+    aggregation mappings carry in the registry authoring tree (every relation
+    declares ``aggregation = {op = "copy" | "sum"}`` or none). The model is strict
+    and frozen, matching the registry schema's
+    :data:`~aeat.core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or a
+    stray extra key is rejected at registry-build validation rather than silently
+    re-parsed at resolve time. This is the relation sibling of
+    :class:`BindingAggregation`; the two op axes are deliberately separate.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    op: RelationAggregationOp
+
+    @field_validator("op", mode="before")
+    @classmethod
+    def _coerce_op(cls, value: object) -> object:
+        """Hydrate the registry TOML's raw ``op`` string into its enum member.
+
+        The authoring tree declares ``aggregation.op`` as a plain string
+        (``"copy"``, ``"sum"``). Under the strict model config a ``StrEnum`` field
+        requires the actual member, not its value, so the raw string from
+        ``model_validate`` would be rejected. Coercing the known closed-set string
+        to its :class:`RelationAggregationOp` member at the boundary keeps the TOML
+        plain while preserving strict rejection of an unknown op
+        (``RelationAggregationOp(value)`` raises on an invalid value).
+        """
+        if isinstance(value, str) and not isinstance(value, RelationAggregationOp):
+            return RelationAggregationOp(value)
+        return value
+
+
 class PeriodKind(StrEnum):
     """Authoritative period cadences shared across aggregation and deadline layers.
 
