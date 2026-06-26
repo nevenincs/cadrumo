@@ -16,7 +16,7 @@ from typing import Literal, Protocol, runtime_checkable
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core import BindingSourceKind, Period
 from ...core.errors import CoreValidationError
 from ...core.i18n import tr
 from ...core.identity import BucketId
@@ -63,13 +63,13 @@ CalculationSourceDiagnosticReason = Literal[
 # boundary gate (in _calculation_actions) can accept them without flagging
 # them as unknown-novel sources, and so the S08 safety net emits the advisory
 # while keeping them off the manual_sources allowlist (W02.P06.S10).
-DEFERRED_SOURCE_KINDS: frozenset[str] = frozenset(
+DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
-        "withholding",  # M190/M193 per-perceptor detalle — no live source; defer-with-advisory (S27)
-        "atribucion_member",  # M184 — Sheets-pull-only, no live resolver yet
-        "related_party_operation",  # M232 — Sheets-pull-only
-        "foreign_asset",  # M720 — Sheets-pull-only
-        "refund_operation",  # M360 — Sheets-pull-only
+        BindingSourceKind.WITHHOLDING,  # M190/M193 per-perceptor detalle — no live source; defer-with-advisory (S27)
+        BindingSourceKind.ATRIBUCION_MEMBER,  # M184 — Sheets-pull-only, no live resolver yet
+        BindingSourceKind.RELATED_PARTY_OPERATION,  # M232 — Sheets-pull-only
+        BindingSourceKind.FOREIGN_ASSET,  # M720 — Sheets-pull-only
+        BindingSourceKind.REFUND_OPERATION,  # M360 — Sheets-pull-only
     },
 )
 
@@ -124,7 +124,7 @@ class CalculationSourceResolution(BaseModel):
     model_config = _STRICT_FROZEN
 
     resolver_id: str = Field(min_length=1, max_length=128)
-    owned_sources: tuple[str, ...] = Field(default_factory=tuple)
+    owned_sources: tuple[BindingSourceKind, ...] = Field(default_factory=tuple)
     binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
     enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
     date_binding_values: Mapping[BindingId, date] = Field(default_factory=dict)
@@ -135,15 +135,51 @@ class CalculationSourceResolution(BaseModel):
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = Field(default_factory=tuple)
     provenance: tuple[CalculationSourceProvenance, ...] = Field(default_factory=tuple)
 
+    @field_validator("owned_sources", mode="before")
+    @classmethod
+    def _coerce_owned_sources(cls, value: object) -> object:
+        """Hydrate known bare source-token strings to their :class:`BindingSourceKind` member.
+
+        The model carries :data:`~aeat.core.STRICT_FROZEN_CONFIG` (``strict=True``),
+        which disables string→enum coercion. Resolvers declare their owned source as a
+        canonical token and may pass either the member or its bare string value; this
+        before-validator maps each KNOWN bare string to its member (the
+        ``BindingAggregation._coerce_op`` precedent in :mod:`aeat.core.aggregation`) so
+        the field stays strictly typed while a known token still validates. A blank
+        string raises :class:`SourceMeshError`; any other non-member value is left
+        untouched for the strict field to reject with its standard enum error, so a
+        genuine typo is still caught — without minting a new diagnostic locale key.
+        """
+        if not isinstance(value, (tuple, list)):
+            return value
+        coerced: list[object] = []
+        for item in value:
+            if isinstance(item, BindingSourceKind):
+                coerced.append(item)
+                continue
+            if isinstance(item, str):
+                stripped = item.strip()
+                if not stripped:
+                    raise SourceMeshError("aggregation.source_mesh.errors.owned_sources_blank")
+                try:
+                    coerced.append(BindingSourceKind(stripped))
+                except ValueError:
+                    # Unknown token: leave it for the strict typed field to reject.
+                    coerced.append(item)
+                continue
+            coerced.append(item)
+        return tuple(coerced)
+
     @field_validator("owned_sources")
     @classmethod
-    def _owned_sources_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        normalized = tuple(source.strip() for source in value)
-        if any(not source for source in normalized):
-            raise SourceMeshError("aggregation.source_mesh.errors.owned_sources_blank")
-        if len(normalized) != len(set(normalized)):
+    def _owned_sources_are_unique(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
+        # After the before-coercer, every item is a canonical BindingSourceKind member
+        # (no blank/whitespace possible). Guard uniqueness and sort by the stable string
+        # value so the carrier is deterministic, preserving members (never downgrading
+        # them to bare str).
+        if len(value) != len(set(value)):
             raise SourceMeshError("aggregation.source_mesh.errors.owned_sources_duplicate")
-        return tuple(sorted(normalized))
+        return tuple(sorted(value, key=lambda source: source.value))
 
     @field_validator("binding_values")
     @classmethod
@@ -229,7 +265,7 @@ class ModeloSourceResolver(Protocol):
         ...
 
     @property
-    def owned_sources(self) -> tuple[str, ...]:
+    def owned_sources(self) -> tuple[BindingSourceKind, ...]:
         """Registry binding source kinds this resolver owns."""
         ...
 
@@ -260,7 +296,7 @@ def merge_source_resolutions(
     source_transaction_ids: set[str] = set()
     diagnostics: list[CalculationSourceDiagnostic] = []
     provenance: list[CalculationSourceProvenance] = []
-    owned_sources: set[str] = set()
+    owned_sources: set[BindingSourceKind] = set()
     binding_owners: dict[BindingId, str] = {}
     relation_owners: dict[RelationId, str] = {}
     casilla_owners: dict[CasillaId, str] = {}
@@ -335,7 +371,7 @@ def collect_unhandled_source_diagnostics(
 def storage_degradation_resolution(
     *,
     resolver_id: str,
-    owned_sources: tuple[str, ...],
+    owned_sources: tuple[BindingSourceKind, ...],
     source_kinds: Sequence[str],
     error: BaseException,
 ) -> CalculationSourceResolution:
