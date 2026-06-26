@@ -9,39 +9,8 @@ related:
   - "[[2026-06-19-silent-zero-base-aggregation-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace silent-zero-base-aggregation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
 
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S07 and 2026-06-19-silent-zero-base-aggregation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The model recargo de equivalencia on the transaction (recargo rate + recargo cuota alongside the IVA fields, or a dedicated recargo classification) grounded in ley-37-1992:art-161 against the bundled corpus - the prerequisite domain change before any recargo binding and ## Scope
-
-- `src/aeat/domain/iva/_schema.py`
-- `src/aeat/domain/iva/_schema.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # model recargo de equivalencia on the transaction (recargo rate + recargo cuota alongside the IVA fields, or a dedicated recargo classification) grounded in ley-37-1992:art-161 against the bundled corpus - the prerequisite domain change before any recargo binding
 
