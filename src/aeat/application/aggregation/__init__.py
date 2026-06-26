@@ -101,10 +101,6 @@ from ._prorrata import (
     aggregate_prorrata_inputs,
     aggregate_provisional_prorrata,
 )
-from ._registry_provider import (
-    PerModeloRegistryBindingResolution,
-    resolve_per_modelo_registry_binding_values,
-)
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
     RentaLedgerAggregationIssueReason,
@@ -204,7 +200,6 @@ __all__ = [
     "PerModeloAggregationLogFields",
     "PerModeloAggregationProvider",
     "PerModeloAggregationResult",
-    "PerModeloRegistryBindingResolution",
     "Period",
     "PeriodKind",
     "ProfileSourceResolver",
@@ -256,7 +251,6 @@ __all__ = [
     "oss_ioss_candidates_from_repositories",
     "persist_retencion_observations",
     "persist_withholding_observations",
-    "resolve_per_modelo_registry_binding_values",
     "retencion_observation_key",
     "stale_filed_revisions",
     "storage_degradation_resolution",
