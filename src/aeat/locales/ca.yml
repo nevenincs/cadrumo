@@ -351,6 +351,11 @@ aggregation:
         d'ingressos del Model 130 (p.ex. 2024Q1).
       unsupported_period: Es requereix un període anual per a l'agregació d'ingressos
         del Model 100 (p.ex. 2024-0A).
+  retenciones:
+    errors:
+      filing_year_out_of_range: 'El exercici %{filing_year} queda fora del rang admes %{min_year}-%{max_year}.'
+      perceptor_nif_blank: 'El NIF del perceptor no pot estar buit.'
+      perceptor_observations_missing: 'No hi ha observacions de retencions per perceptor per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no es pot resoldre.'
   service:
     errors:
       envelope_modelo_mismatch: El model de l'embolcall no coincideix amb el model
@@ -734,13 +739,7 @@ application:
       calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta
         revisio. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list
         <MODELO>` per llistar els bindings valids.'
-      calculate_relation_unknown: '--relation %{key} no coincideix amb cap relation
-        d''aquesta revisio. Relations acceptades: %{accepted}.'
-      calculate_casilla_alias_refused: '--casilla %{key} es un numero impres de casella
-        o numero de formulari, no un casilla.id canonic. Usa el casilla.id canonic:
-        %{accepted}.'
-      calculate_casilla_non_numeric: --casilla %{casilla_id} apunta a un tipus no
-        numeric %{data_type} (%{label}); usa --binding o fonts de perfil.
+      calculate_casilla_noncanonical_refused: '--casilla %{key} no es un casilla.id canonic o es ambigu. Usa el casilla.id canonic exacte: %{accepted}.'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonic d'aquesta
         revisio. Usa `aeat app modelo casillas <MODELO>` per llistar els casilla.id
         valids.
@@ -754,6 +753,8 @@ application:
         31.1.
       calculate_pension_inputs_incomplete: Les dades del rescat del pla de pensions
         s'han d'indicar juntes.
+      calculate_relation_unknown: '--relation %{key} no coincideix amb cap relation
+        d''aquesta revisio. Relations acceptades: %{accepted}.'
       calculate_sal_inputs_incomplete: Les dades de la reserva especial SAL/SLL s'han
         d'indicar juntes.
       calculate_semantic_role_ambiguous: La revisio del model conte mes d'una casella
@@ -897,8 +898,15 @@ application:
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
       cross_period_non_official_local_chain:
-        message: 'l''arrossegament entre periodes va usar un periode anterior presentat localment al mateix exercici sense evidencia externa de l''AEAT: model=%{source_modelo} exercici=%{filing_year} periode=%{period} origen=%{origin}. La cadena dins del mateix exercici s''admet per a l''exportacio local, pero el valor arrossegat esta evidenciat localment (app_filing), no per l''AEAT; presenteu cada periode a l''AEAT de manera externa.'
-        next_action: 'Exporteu i presenteu cada periode a l''AEAT de manera externa, despres importeu el justificant/CSV/evidencia en viu oficial per actualitzar la cadena local quan estigui disponible.'
+        message: 'l''arrossegament entre periodes va usar un periode anterior presentat
+          localment al mateix exercici sense evidencia externa de l''AEAT: model=%{source_modelo}
+          exercici=%{filing_year} periode=%{period} origen=%{origin}. La cadena dins
+          del mateix exercici s''admet per a l''exportacio local, pero el valor arrossegat
+          esta evidenciat localment (app_filing), no per l''AEAT; presenteu cada periode
+          a l''AEAT de manera externa.'
+        next_action: Exporteu i presenteu cada periode a l'AEAT de manera externa,
+          despres importeu el justificant/CSV/evidencia en viu oficial per actualitzar
+          la cadena local quan estigui disponible.
       dt12a_reduccion_next_action: Proporcioneu --rescate-plan-pensiones-capital IMPORT
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORT --rescate-plan-pensiones-aportaciones-totales
         IMPORT per injectar automàticament la reducció DT 12a a la casella corresponent
@@ -1490,6 +1498,7 @@ cli:
           mesos.'
         retencion_observation_help: Objecte JSON RetencionObservation; repeteix l'opció
           per a diverses observacions
+        withholding_observation_help: 'Observació de retenció per perceptor i clau (JSON) per al recompte de percepcions del Model 190; repetible.'
       aggregate_help: Executa l'agregació per model amb observacions canòniques explícites
       app_help: Inspeccionar el catàleg de models tributaris AEAT al registre
       audit:
@@ -1646,16 +1655,16 @@ cli:
         correct_reason_required: 'Indica --reason: registra per què es corregeix el
           saldo inicial; no pot estar buit.'
         group_help: Ordres de saldo local de la cartera de compensació IVA.
-        override_amount_help: cli.app.modelo.iva_wallet.override_amount_help
-        override_confirm_help: cli.app.modelo.iva_wallet.override_confirm_help
-        override_confirm_required: cli.app.modelo.iva_wallet.override_confirm_required
-        override_evidence_locator_help: cli.app.modelo.iva_wallet.override_evidence_locator_help
-        override_evidence_locator_required: cli.app.modelo.iva_wallet.override_evidence_locator_required
-        override_filing_year_help: cli.app.modelo.iva_wallet.override_filing_year_help
-        override_help: cli.app.modelo.iva_wallet.override_help
-        override_period_help: cli.app.modelo.iva_wallet.override_period_help
-        override_reason_help: cli.app.modelo.iva_wallet.override_reason_help
-        override_reason_required: cli.app.modelo.iva_wallet.override_reason_required
+        override_amount_help: 'Import sobreescrit de compensacio previa en EUR aplicat a iva.compensacion-pendiente-periodos-anteriores, casella AEAT 110; decimal, per exemple 420.00.'
+        override_confirm_help: 'Indicador de confirmacio obligatori. Reconeix que la sobreescriptura canvia la xifra de compensacio previa presentada i que l exactitud de la declaracio depen del valor aportat.'
+        override_confirm_required: 'Passa --confirm per reconeixer que aixo registra una sobreescriptura de l arrossegament de compensacio previa del M303. L exactitud de la declaracio depen del valor aportat.'
+        override_evidence_locator_help: 'Localitzador obligatori de l evidencia que dona suport a la sobreescriptura, per exemple una referencia de justificant previ.'
+        override_evidence_locator_required: 'Indica --evidence-locator amb la referencia d evidencia que dona suport a aquesta sobreescriptura.'
+        override_filing_year_help: 'Exercici del periode del Model 303 del qual se sobreescriu l arrossegament de compensacio previa.'
+        override_help: 'Registra una sobreescriptura de l arrossegament de compensacio previa del Model 303 des d evidencia externa al moneder local. Nomes desbloqueja el calcul i no satisfara la verificacio d evidencia oficial. Requereix --confirm.'
+        override_period_help: 'Periode de la declaracio dependent del Model 303 que rep l arrossegament, per exemple 2T o 3T.'
+        override_reason_help: 'Base obligatoria de la sobreescriptura, registrada com a procedencia auditable.'
+        override_reason_required: 'Indica --reason explicant per que se sobreescriu l arrossegament de compensacio previa; no pot estar buit.'
         seed_amount_help: Import inicial de la compensació d'IVA en decimal.
         seed_confirm_help: Confirmeu l'operació d'import inicial.
         seed_confirm_required: Proporcioneu el modificador --confirm per confirmar
@@ -1884,6 +1893,7 @@ cli:
           hexadecimal en minúscules de 64 caràcters (resum SHA-256)
         invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric
           més separadors . _ : -, màx. 64 caràcters)'
+        invalid_relation_key: 'La clau --relation no es un RelationId valid. Usa un id de relation en minuscules amb guions o punts.'
         invalid_revision_selector: 'Selector de revisio desconegut {value}; trieu
           un de: {choices}.'
         invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules
@@ -4312,6 +4322,7 @@ errors:
       184 han de sumar exactament el 100 %.
     modelo_347_threshold: Les operacions del Model 347 per sobre del llindar informatiu
       requereixen cobertura declarativa explícita.
+    modelo_ambiguous_semantic_role_casilla: 'Mes d una casella usa el rol semantic %{semantic_role}; usa el casilla.id canonic exacte.'
     modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
