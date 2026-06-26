@@ -30,7 +30,7 @@ from ._validate_relation_periods import (
     select_relation_source_revisions,
     validate_source_year_coverage,
 )
-from ._validate_source_casilla_ids import revision_output_ids as _revision_output_ids
+from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 
 # The single iva-wallet-owned slot binding (aggregation-taxonomy ADR ruling D3):
 # the M303 compensación-pendiente binding is owned by the iva-wallet compensación
@@ -168,9 +168,13 @@ def _validate_relation_source_revision(
 ) -> list[str]:
     failures: list[str] = []
     source_scope = f"{relation_scope} source revision {source_revision.id!r}"
-    source_values = _revision_output_ids(source_revision)
-    if relation.source_casilla_id not in source_values:
-        failures.append(f"{source_scope} has no source casilla id {relation.source_casilla_id!r}")
+    if failure := source_casilla_id_reference_failure(
+        source_revision,
+        relation.source_casilla_id,
+        source_scope=source_scope,
+        missing_failure=f"{source_scope} has no source casilla id {relation.source_casilla_id!r}",
+    ):
+        failures.append(failure)
     source_periods, period_failures = _relation_source_periods_for_validation(relation)
     failures.extend(f"{source_scope} {failure}" for failure in period_failures)
     unknown_source_periods = sorted(set(source_periods).difference(source_revision.period_selector.periods))

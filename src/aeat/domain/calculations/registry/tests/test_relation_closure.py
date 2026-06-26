@@ -264,6 +264,42 @@ def test_registry_validator_rejects_relation_source_casilla_id_that_is_only_a_bi
         )
 
 
+def test_registry_validator_rejects_relation_source_casilla_display_token() -> None:
+    modelos, catalogues = _committed_tree()
+    target_modelo = _modelo(modelos, "390")
+    source_modelo = _modelo(modelos, "303")
+    revision = target_modelo.revisions["2010-y-siguientes"]
+    source_revision = source_modelo.revisions["2009-y-siguientes"]
+    relation = next(
+        item
+        for item in revision.relations
+        if item.id == "modelo-390-rel-303-compensacion-ultimo-periodo"
+    )
+    source_casilla = next(item for item in source_revision.casillas if item.id == relation.source_casilla_id)
+    assert source_casilla.number != source_casilla.id
+
+    noncanonical_source_id = validated_casilla_id(
+        source_casilla.number,
+        surface="relation display token source casilla id",
+    )
+    mutated_relation = relation.model_copy(update={"source_casilla_id": noncanonical_source_id})
+    mutated_revision = revision.model_copy(
+        update={
+            "relations": tuple(mutated_relation if item.id == relation.id else item for item in revision.relations),
+        },
+    )
+    mutated_modelo = _with_revision(target_modelo, mutated_revision)
+
+    with pytest.raises(RegistryValidationError, match=r"not a canonical casilla\.id") as exc_info:
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
+            _replace_modelo(modelos, mutated_modelo),
+        )
+
+    message = str(exc_info.value)
+    assert source_casilla.number in message
+    assert source_casilla.id in message
+
+
 def test_registry_validator_rejects_previous_filing_source_casilla_id_missing_from_matching_revision() -> None:
     modelos, catalogues = _committed_tree()
     modelo = _modelo(modelos, "130")
@@ -281,6 +317,35 @@ def test_registry_validator_rejects_previous_filing_source_casilla_id_missing_fr
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
             _replace_modelo(modelos, mutated_modelo),
         )
+
+
+def test_registry_validator_rejects_previous_filing_source_casilla_display_token() -> None:
+    modelos, catalogues = _committed_tree()
+    modelo = _modelo(modelos, "303")
+    revision = modelo.revisions["2009-y-siguientes"]
+    binding = next(item for item in revision.bindings if item.id == "modelo-303-compensacion-pendiente-anteriores")
+    source_casilla = next(item for item in revision.casillas if item.id == binding.selector["source_casilla_id"])
+    assert source_casilla.number != source_casilla.id
+
+    noncanonical_source_id = validated_casilla_id(
+        source_casilla.number,
+        surface="previous_filing display token source casilla id",
+    )
+    mutated_selector = {**binding.selector, "source_casilla_id": noncanonical_source_id}
+    mutated_binding = binding.model_copy(update={"selector": mutated_selector})
+    mutated_revision = revision.model_copy(
+        update={"bindings": tuple(mutated_binding if item.id == binding.id else item for item in revision.bindings)},
+    )
+    mutated_modelo = _with_revision(modelo, mutated_revision)
+
+    with pytest.raises(RegistryValidationError, match=r"not a canonical casilla\.id") as exc_info:
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
+            _replace_modelo(modelos, mutated_modelo),
+        )
+
+    message = str(exc_info.value)
+    assert source_casilla.number in message
+    assert source_casilla.id in message
 
 
 def test_registry_validator_rejects_nondirect_previous_filing_binding() -> None:
