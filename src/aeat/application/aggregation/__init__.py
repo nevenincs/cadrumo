@@ -83,7 +83,6 @@ from ._modelo_bindings import (
     LedgerRentaExpenseAggregationSourceResolver,
     LedgerRentaGastoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
-    ModeloLedgerBindingAggregation,
     RetencionesAggregationSourceResolver,
     aggregation_period_for_modelo,
 )
@@ -194,7 +193,6 @@ __all__ = [
     "LedgerRentaExpenseAggregationSourceResolver",
     "LedgerRentaGastoAggregationSourceResolver",
     "LedgerRentaIncomeAggregationSourceResolver",
-    "ModeloLedgerBindingAggregation",
     "ModeloSourceResolver",
     "OperationKind347",
     "OperationKind349",
