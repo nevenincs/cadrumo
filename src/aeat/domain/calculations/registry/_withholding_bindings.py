@@ -42,8 +42,16 @@ _WithholdingRowField = Literal[
     "ingreso_a_cuenta",
 ]
 _WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
-_WITHHOLDING_FACTS = frozenset({"row_field", "perceptor_count", "percibido_sum", "retencion_sum"})
-_WithholdingFact = Literal["row_field", "perceptor_count", "percibido_sum", "retencion_sum"]
+_WITHHOLDING_FACTS = frozenset(
+    {"row_field", "perceptor_count", "percepcion_count", "percibido_sum", "retencion_sum"},
+)
+_WithholdingFact = Literal[
+    "row_field",
+    "perceptor_count",
+    "percepcion_count",
+    "percibido_sum",
+    "retencion_sum",
+]
 
 
 class WithholdingObservation(BaseModel):
@@ -135,9 +143,9 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
     if selector.fact not in _WITHHOLDING_FACTS:
         raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact {selector.fact!r}")
     op = binding_aggregation_op(binding)
-    if selector.fact == "perceptor_count" and op != BindingAggregationOp.COUNT_DISTINCT:
+    if selector.fact in {"perceptor_count", "percepcion_count"} and op != BindingAggregationOp.COUNT_DISTINCT:
         raise RegistryValidationError(
-            f"binding {binding.id!r} fact 'perceptor_count' requires aggregation op 'count_distinct'",
+            f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'count_distinct'",
         )
     if selector.fact in {"percibido_sum", "retencion_sum"} and op != BindingAggregationOp.SUM:
         raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
@@ -206,6 +214,14 @@ def resolve_withholding_binding_values(
         scope_filtered = tuple(_filter_withholding_observations(available, selector))
         if selector.fact == "perceptor_count":
             resolved[binding.id] = Decimal(len({obs.perceptor_tax_id for obs in scope_filtered}))
+        elif selector.fact == "percepcion_count":
+            # Modelo 190 "número total de percepciones" = the count of DISTINCT
+            # (perceptor, clave, subclave) type-2 records (AEAT Diseño de Registros),
+            # NOT the distinct-NIF perceptor count: one perceptor paid under two
+            # claves files two percepciones. Distinct on the full clave-bearing key.
+            resolved[binding.id] = Decimal(
+                len({(obs.perceptor_tax_id, obs.clave, obs.subclave) for obs in scope_filtered}),
+            )
         elif selector.fact == "percibido_sum":
             resolved[binding.id] = sum(
                 (obs.percibido_dinerario + obs.percibido_especie for obs in scope_filtered),
