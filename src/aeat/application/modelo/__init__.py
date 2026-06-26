@@ -94,7 +94,6 @@ from ._binding_readiness import profile_resolvable_binding_ids
 from ._borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
-    Modelo100BorradorBindingResult,
     Modelo100BorradorSourceResolver,
     resolve_modelo_100_borrador_bindings,
 )
@@ -178,7 +177,6 @@ from ._participation_index_rebuild import (
 )
 from ._profile_binding import (
     ProfileBindingResolutionError,
-    ProfileSourcedBindingResult,
     resolve_profile_sourced_bindings,
 )
 from ._projection import (
@@ -204,9 +202,9 @@ from ._reconcile import (
     ModeloReconciliationBytesCommand,
     ModeloReconciliationCommand,
     ModeloReconciliationDiff,
+    ModeloReconciliationEvidenceKind,
     ModeloReconciliationHistoryEntry,
     ModeloReconciliationReport,
-    ModeloReconciliationSourceKind,
     ModeloReconciliationVerdict,
     ReconciliationCrossBucketRefusedError,
     ReconciliationDeclaracionSourceUnsupportedError,
@@ -272,6 +270,7 @@ from ._taxation_comparison import (
     compare_taxation_modes,
 )
 from ._verification_actions import (
+    derive_taxpayer_files_economic_activity,
     verify_modelo_revision,
 )
 from ._work_addressing import (
@@ -350,7 +349,6 @@ __all__ = [
     "M036DeclarationResult",
     "Modelo100BorradorBindingCommand",
     "Modelo100BorradorBindingError",
-    "Modelo100BorradorBindingResult",
     "Modelo100BorradorSourceResolver",
     "Modelo184MemberRow",
     "Modelo202ModalitySummary",
@@ -403,9 +401,9 @@ __all__ = [
     "ModeloReconciliationBytesCommand",
     "ModeloReconciliationCommand",
     "ModeloReconciliationDiff",
+    "ModeloReconciliationEvidenceKind",
     "ModeloReconciliationHistoryEntry",
     "ModeloReconciliationReport",
-    "ModeloReconciliationSourceKind",
     "ModeloReconciliationVerdict",
     "ModeloRecordNotFoundError",
     "ModeloRecordStatus",
@@ -440,7 +438,6 @@ __all__ = [
     "ModeloWorkflowGateError",
     "ParticipationRebuildStats",
     "ProfileBindingResolutionError",
-    "ProfileSourcedBindingResult",
     "ReconciliationCrossBucketRefusedError",
     "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",
@@ -548,6 +545,7 @@ __all__ = [
     "select_exportable_revision",
     "select_modelo_calculation_revision",
     "validate_m349_nif_format",
+    "derive_taxpayer_files_economic_activity",
     "verify_modelo_revision",
     "visible_target_work_units",
     "work_address_for_modelo_target",

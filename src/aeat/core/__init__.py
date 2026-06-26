@@ -12,8 +12,6 @@ Direct exports:
 * :class:`CasillaId` — the canonical casilla identifier primitive.
 * :class:`StandardPeriodCode` — the closed set of AEAT filing-period tokens.
 * :class:`Modelo` — the closed set of AEAT modelo identifier codes.
-* :class:`AggregationSourceKind` — provenance kinds for aggregated ledger
-  values, resolved lazily to avoid an import cycle.
 * :class:`BindingSourceKind` — the single canonical closed set of registry
   binding ``source`` tokens, resolved lazily to avoid an import cycle.
 
@@ -79,7 +77,7 @@ if TYPE_CHECKING:
         resolve_repository_bucket_id,
         write_pointer,
     )
-    from .aggregation import AggregationSourceKind, BindingSourceKind
+    from .aggregation import BindingSourceKind
 
 __all__: list[str] = [
     "ANTHROPIC_EXTRA",
@@ -89,7 +87,6 @@ __all__: list[str] = [
     "NON_REGISTRY_MODELOS",
     "OPTIONAL_EXTRAS",
     "STRICT_FROZEN_CONFIG",
-    "AggregationSourceKind",
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
@@ -132,10 +129,6 @@ __all__: list[str] = [
 
 
 def __getattr__(name: str) -> object:
-    if name == "AggregationSourceKind":
-        from .aggregation import AggregationSourceKind
-
-        return AggregationSourceKind
     if name == "BindingSourceKind":
         from .aggregation import BindingSourceKind
 

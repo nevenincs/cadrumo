@@ -1,5 +1,12 @@
 """Relation prefill: resolve registry relations from prior filings.
 
+One of three distinct prefill tiers, NOT to be merged: this is the
+RELATION tier (cross-revision aggregations declared as
+`RelationDefinition`). The other two are the previous-filing direct-carry
+tier (`_binding_prefill`) and the AEAT borrador pre-fill tier (the registry
+`aeat_prefilled` flag, an AEAT-live source). Each names a different
+mechanism and source; they share only the word "prefill".
+
 Sits between the engine and the local observation store. The engine
 asks "what's the resolved value of every relation this revision
 declares?" and this module answers by consulting a :class:`RegistrySnapshot`
@@ -31,23 +38,26 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
-from ...core import Modelo, Period
+from ...core import BindingSourceKind, Modelo, Period
+from ...core.aggregation import RelationAggregationOp
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
+    RegistryFoldRequirement,
     RegistryModeloObservation,
-    RegistryRelationSourceRequirement,
     RegistrySnapshot,
     RegistryValidationError,
     RelationId,
     materialize_relation_binding_values,
+    relation_aggregation_op,
     relation_source_requirements,
+    resolve_observed_requirement_value,
     undeclared_casilla_ids,
     validated_casilla_id,
 )
@@ -65,6 +75,9 @@ from ..aggregation._source_mesh import (
 )
 from ._observations_repository import CalculationObservationRepository
 from ._revision_carry_gate import revision_carry_outcome
+
+if TYPE_CHECKING:
+    from ...domain.deadlines import EntityType
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
@@ -152,79 +165,118 @@ def _provenance_note(
     )
 
 
+def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
+    """Wizard-free canonical projection of the bucket's profile, or ``None`` when absent.
+
+    Reads the operator profile through the SINGLE projection
+    (:func:`record_to_path_values`) WITHOUT building the full
+    :class:`TaxpayerProfile` (which calls ``get_setup_flow()`` and so requires
+    the wizard ``SETUP_FLOW`` catalogue). This decouples the engine's first-year
+    / activity-start derivation from the wizard catalogue, so it resolves
+    identically in a non-CLI calc context (where the catalogue may be
+    unregistered) instead of silently failing closed — matching the verify
+    gate's threaded-in ``workflow_profile.activity_start_date`` semantics.
+    Returns ``None`` only when there is genuinely no profile for the bucket.
+    """
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile._profile_repository import ProfileRepository
+    from ..user_profile._projections import record_to_path_values
+
+    try:
+        aggregate = ProfileRepository().load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+    return record_to_path_values(aggregate.record)
+
+
+def _parse_canonical_iso_date(raw: str | None) -> date | None:
+    """Parse a canonical ISO-8601 ``censo.*`` date projection value, or ``None``."""
+    if not raw:
+        return None
+    try:
+        return date.fromisoformat(raw)
+    except ValueError:
+        return None
+
+
+def _parse_canonical_decimal(raw: str | None) -> Decimal | None:
+    """Parse a canonical decimal projection value, or ``None`` when absent / malformed."""
+    if not raw:
+        return None
+    from decimal import InvalidOperation
+
+    try:
+        return Decimal(raw)
+    except (InvalidOperation, ValueError):
+        return None
+
+
+def _entity_type_from_token(raw: str | None) -> EntityType | None:
+    """Map a raw ``taxpayer_type.entity_type`` token to :class:`EntityType`, or ``None``."""
+    if not raw:
+        return None
+    from ...domain.deadlines import EntityType
+
+    try:
+        return EntityType(raw)
+    except ValueError:
+        return None
+
+
 def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> bool:
     """Engine-side counterpart of the clean-state first-year-fractional suppression (IS-3).
 
-    Reuses the SINGLE modality definition (:func:`derive_modelo_202_modality`) and
-    the SINGLE profile builder (:func:`taxpayer_profile_from_mapping`) — no
-    duplicated INCN/threshold logic. Fail-closed: a missing or unprojectable
-    profile, a missing activity-start date, or any modality other than
-    ``ART_40_2_OPTIONAL`` (i.e. ``ART_40_3_MANDATORY`` / ``INCOMPLETE``) returns
-    ``False``, so the Modelo 202 relation stays unresolved and the gate keeps
-    blocking — never a silent under-declaration. ADR
-    2026-06-19-m202-first-period-attestation.
+    Reads the modality inputs (entity type, INCN) and the activity-start date off
+    the WIZARD-FREE profile projection (:func:`_profile_path_values_for_bucket`)
+    and applies the SINGLE modality definition
+    (:func:`modelo_202_modality_from_inputs`) — no duplicated INCN/threshold
+    logic, and NO dependency on the wizard ``SETUP_FLOW`` catalogue (so a non-CLI
+    calc context resolves the first-year relaxation correctly instead of silently
+    failing closed). Fail-closed: a missing profile, an unparsable entity type, a
+    missing activity-start date, or any modality other than ``ART_40_2_OPTIONAL``
+    (i.e. ``ART_40_3_MANDATORY`` / ``INCOMPLETE``) returns ``False`` — the Modelo
+    202 relation stays unresolved and the gate keeps blocking, never a silent
+    under-declaration. ADR 2026-06-19-m202-first-period-attestation.
     """
-    from pydantic import ValidationError
+    from ...domain.calculations.registry import Modelo202Modality, modelo_202_modality_from_inputs
 
-    from ...core.wizard_catalogue import WizardCatalogueNotRegisteredError
-    from ...domain.calculations.registry import Modelo202Modality, derive_modelo_202_modality
-    from ...domain.deadlines import ProfileError, taxpayer_profile_from_mapping
-    from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile._profile_repository import ProfileRepository
-    from ..user_profile._projections import record_to_path_values
-
-    try:
-        aggregate = ProfileRepository().load(bucket_id)
-        profile = taxpayer_profile_from_mapping(
-            record_to_path_values(aggregate.record),
-            tax_id_default="",
-        )
-    except (ProfileNotFoundError, ProfileError, WizardCatalogueNotRegisteredError, ValidationError):
-        # Fail-closed: an absent / unprojectable profile, or an unregistered wizard
-        # catalogue (non-operator contexts), keeps the M202 relation unresolved and
-        # the gate blocking — never a silent under-declaration.
+    values = _profile_path_values_for_bucket(bucket_id)
+    if values is None:
         return False
-    if derive_modelo_202_modality(profile).modality is not Modelo202Modality.ART_40_2_OPTIONAL:
+    modality = modelo_202_modality_from_inputs(
+        entity_type=_entity_type_from_token(values.get("taxpayer_type.entity_type")),
+        incn_prior_12_months=_parse_canonical_decimal(values.get("taxpayer_type.incn_prior_12_months")),
+    ).modality
+    if modality is not Modelo202Modality.ART_40_2_OPTIONAL:
         return False
-    if profile.activity_start_date is None:
+    activity_start_date = _parse_canonical_iso_date(values.get("censo.activity_start_date"))
+    if activity_start_date is None:
         return False
-    return profile.activity_start_date.year >= filing_year
+    return activity_start_date.year >= filing_year
 
 
 def _activity_start_date_for_bucket(bucket_id: str) -> date | None:
-    """Load the operator-declared activity-start date for ``bucket_id``, or ``None``.
+    """Operator-declared activity-start date for ``bucket_id``, or ``None``.
 
-    Mirrors the profile load in :func:`_first_year_modalidad_cuota_no_m202` (the
-    SINGLE profile builder) so the relation fold-in scopes its source periods on
-    the SAME operator-declared ``activity_start_date`` the cross-period
-    clean-state gate partitions against. Fail-closed: a missing / unprojectable
-    profile, an unregistered wizard catalogue (non-operator contexts), or an
-    absent activity-start date returns ``None`` — no period is scoped and the
-    resolver keeps its full all-quarters behaviour (never a silent drop).
+    Reads ``censo.activity_start_date`` off the WIZARD-FREE profile projection
+    (:func:`_profile_path_values_for_bucket`) — the SAME value the cross-period
+    clean-state gate partitions against (the verify gate threads it in as
+    ``workflow_profile.activity_start_date``), so gate and engine share one
+    activity-start source with no wizard-catalogue dependency. Fail-safe: a
+    missing profile or an absent / malformed date returns ``None`` — no period is
+    scoped and the resolver keeps its full all-quarters behaviour (never a silent
+    drop).
     """
-    from pydantic import ValidationError
-
-    from ...core.wizard_catalogue import WizardCatalogueNotRegisteredError
-    from ...domain.deadlines import ProfileError, taxpayer_profile_from_mapping
-    from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile._profile_repository import ProfileRepository
-    from ..user_profile._projections import record_to_path_values
-
-    try:
-        aggregate = ProfileRepository().load(bucket_id)
-        profile = taxpayer_profile_from_mapping(
-            record_to_path_values(aggregate.record),
-            tax_id_default="",
-        )
-    except (ProfileNotFoundError, ProfileError, WizardCatalogueNotRegisteredError, ValidationError):
+    values = _profile_path_values_for_bucket(bucket_id)
+    if values is None:
         return None
-    return profile.activity_start_date
+    return _parse_canonical_iso_date(values.get("censo.activity_start_date"))
 
 
 def _scoped_relation_source_requirements(
     snapshot: RegistrySnapshot,
     activity_start_date: date | None,
-) -> tuple[RegistryRelationSourceRequirement, ...]:
+) -> tuple[RegistryFoldRequirement, ...]:
     """``relation_source_requirements`` with pre-activity-start source periods scoped out.
 
     A quarterly source period STRICTLY before the operator-declared activity
@@ -250,7 +302,7 @@ def _scoped_relation_source_requirements(
 
     from ._cross_period_clean_state import _period_strictly_before_activity_start
 
-    scoped: list[RegistryRelationSourceRequirement] = []
+    scoped: list[RegistryFoldRequirement] = []
     for requirement in requirements:
         kept = tuple(
             token
@@ -408,14 +460,14 @@ def resolve_relations_from_local_store(
 def _resolve_available_relation_values(
     observations: tuple[RegistryModeloObservation, ...],
     *,
-    requirements_by_relation: dict[RelationId, RegistryRelationSourceRequirement],
+    requirements_by_relation: dict[RelationId, RegistryFoldRequirement],
 ) -> dict[RelationId, Decimal]:
     """Resolve each relation requirement independently from available observations."""
     by_requirement = {requirement: requirement for requirement in requirements_by_relation.values()}
     resolved: dict[RelationId, Decimal] = {}
     for requirement in by_requirement:
         try:
-            value = _resolve_requirement_value(requirement, observations)
+            value = resolve_observed_requirement_value(requirement, observations)
         except RegistryValidationError as exc:
             _log.warning(
                 "relation prefill: relation requirement %s remains operator-manual: %s",
@@ -426,53 +478,6 @@ def _resolve_available_relation_values(
         for relation_id in requirement.relation_ids:
             resolved[relation_id] = value
     return resolved
-
-
-def _resolve_requirement_value(
-    requirement: RegistryRelationSourceRequirement,
-    observations: tuple[RegistryModeloObservation, ...],
-) -> Decimal:
-    values = tuple(_observed_requirement_values(requirement, observations))
-    if requirement.aggregation_op == "copy":
-        if len(values) != 1:
-            raise RegistryValidationError(
-                f"relation requirement {requirement.relation_ids!r} copy aggregation requires one observation",
-            )
-        return values[0]
-    if requirement.aggregation_op == "sum":
-        return sum(values, Decimal("0"))
-    raise RegistryValidationError(
-        f"relation requirement {requirement.relation_ids!r} uses unsupported aggregation op "
-        f"{requirement.aggregation_op!r}",
-    )
-
-
-def _observed_requirement_values(
-    requirement: RegistryRelationSourceRequirement,
-    observations: tuple[RegistryModeloObservation, ...],
-) -> tuple[Decimal, ...]:
-    values: list[Decimal] = []
-    for source_period in requirement.periods:
-        matches = tuple(
-            observation
-            for observation in observations
-            if observation.modelo == requirement.source_modelo
-            and observation.filing_year == requirement.filing_year
-            and observation.period == source_period
-        )
-        if len(matches) != 1:
-            raise RegistryValidationError(
-                f"expected one observed filing {requirement.source_modelo!r}/"
-                f"{requirement.filing_year}/{source_period!r}, found {len(matches)}",
-            )
-        value = matches[0].casilla_values.get(requirement.source_casilla_id)
-        if value is None:
-            raise RegistryValidationError(
-                f"requires observed source casilla id {requirement.source_casilla_id!r} from "
-                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
-            )
-        values.append(value)
-    return tuple(values)
 
 
 def _formula_relation_ids(snapshot: RegistrySnapshot) -> frozenset[RelationId]:
@@ -493,7 +498,7 @@ def _collect_expression_relation_ids(expression: object, relation_ids: set[Relat
 def _unresolved_relation_diagnostics(
     *,
     unresolved_relation_ids: frozenset[RelationId],
-    requirements_by_relation: Mapping[RelationId, RegistryRelationSourceRequirement],
+    requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
     resolver_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     diagnostics: list[CalculationSourceDiagnostic] = []
@@ -521,7 +526,7 @@ def _unresolved_relation_diagnostics(
                 relation_id=relation_id,
                 message=(
                     f"relation {relation_id!r} requires modelo {requirement.source_modelo} "
-                    f"{requirement.filing_year} periods {period_text} output {requirement.source_casilla_id}; "
+                    f"{requirement.filing_year} periods {period_text} output {requirement.source_casilla_ids[0]}; "
                     "the source filing is missing or incomplete"
                 ),
             ),
@@ -602,10 +607,13 @@ def _compensation_carry_binding_ids(snapshot: RegistrySnapshot) -> tuple[Binding
     for relation in snapshot.revision.relations:
         if relation.source_casilla_id != _M303_COMPENSACION_GENERADA_SOURCE:
             continue
-        op = str((relation.aggregation or {}).get("op", ""))
-        if op == "copy":
+        # The typed relation op self-documents the FIFO partition: the COPY of the
+        # last period is box 97, the SUM of the non-last periods is box 662
+        # (m390-iva-carry-boxes / #25). Both carry-box relations declare an explicit
+        # op, so the COPY default is never relied on here.
+        if relation_aggregation_op(relation) == RelationAggregationOp.COPY:
             last_period_binding_id = relation.target_binding
-        elif op == "sum":
+        else:
             generated_not_in_last_binding_id = relation.target_binding
     return last_period_binding_id, generated_not_in_last_binding_id
 
@@ -652,7 +660,7 @@ class RelationPrefillSourceResolver:
     """Source mesh adapter for local relation prefill values."""
 
     resolver_id = "relation_prefill"
-    owned_sources = ("relation_prefill",)
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.RELATION_PREFILL,)
 
     def __init__(
         self,

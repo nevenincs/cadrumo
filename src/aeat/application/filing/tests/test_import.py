@@ -23,7 +23,7 @@ from ....tests import FIXTURES_DIR
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from .. import ModeloOperatorProfile, build_draft, import_filing_from_justificante
 from .._import import RegistryImportSchemaProvider, _build_submission_record, _normalise_period
-from ..runtime import RegistrySchemaProvider, build_runtime_schema_provider
+from ..runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,7 +40,7 @@ _M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19", surface="_
 
 
 @pytest.fixture(scope="module")
-def schema_provider() -> RegistrySchemaProvider:
+def schema_provider() -> RegistrySchemaAccessor:
     return build_runtime_schema_provider()
 
 
@@ -53,7 +53,7 @@ def test_runtime_schema_provider_exposes_imported_modelo_schema() -> None:
 
 
 def test_normalise_period_returns_supported_typed_period(
-    schema_provider: RegistrySchemaProvider,
+    schema_provider: RegistrySchemaAccessor,
 ) -> None:
     expected = Period.from_year_and_code(2026, "1T")
     period = _normalise_period(
@@ -67,7 +67,7 @@ def test_normalise_period_returns_supported_typed_period(
 
 
 def test_normalise_period_rejects_typed_period_year_mismatch(
-    schema_provider: RegistrySchemaProvider,
+    schema_provider: RegistrySchemaAccessor,
 ) -> None:
     with pytest.raises(ModeloImportError, match=r"cannot canonicalise period 2025 1T"):
         _normalise_period(
@@ -79,7 +79,7 @@ def test_normalise_period_rejects_typed_period_year_mismatch(
 
 
 def test_normalise_period_rejects_period_not_declared_by_registry(
-    schema_provider: RegistrySchemaProvider,
+    schema_provider: RegistrySchemaAccessor,
 ) -> None:
     with pytest.raises(ModeloImportError, match=r"period token '1T' is not declared"):
         _normalise_period(
@@ -91,7 +91,7 @@ def test_normalise_period_rejects_period_not_declared_by_registry(
 
 
 def test_normalise_period_accepts_supported_annual_typed_period(
-    schema_provider: RegistrySchemaProvider,
+    schema_provider: RegistrySchemaAccessor,
 ) -> None:
     expected = Period.from_year_and_code(2021, "0A")
     period = _normalise_period(
@@ -104,7 +104,7 @@ def test_normalise_period_accepts_supported_annual_typed_period(
 
 
 def test_submission_record_preserves_typed_draft_period(
-    schema_provider: RegistrySchemaProvider,
+    schema_provider: RegistrySchemaAccessor,
 ) -> None:
     period = Period.from_year_and_code(2026, "1T")
     draft = build_draft(
@@ -152,13 +152,13 @@ class TestImportFromJustificante:
 
     def test_modelo_130_justificante_only_import_requires_binding_data(
         self,
-        schema_provider: RegistrySchemaProvider,
+        schema_provider: RegistrySchemaAccessor,
     ) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
         with pytest.raises(ModeloImportError, match="previous_year_economic_activity_net_income"):
             import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
 
-    def test_unsupported_modelo_raises_import_error(self, schema_provider: RegistrySchemaProvider) -> None:
+    def test_unsupported_modelo_raises_import_error(self, schema_provider: RegistrySchemaAccessor) -> None:
         pdf = _FIXTURES / "modelo_100_2025A.pdf"
         with pytest.raises(ModeloImportError, match="modelo '100'"):
             import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
@@ -166,7 +166,7 @@ class TestImportFromJustificante:
     def test_year_only_justificante_period_is_rejected_at_registry_boundary(
         self,
         tmp_path: Path,
-        schema_provider: RegistrySchemaProvider,
+        schema_provider: RegistrySchemaAccessor,
     ) -> None:
         pdf = _justificante_pdf_without_period(tmp_path, modelo="130", ejercicio="2026")
 
@@ -176,7 +176,7 @@ class TestImportFromJustificante:
     def test_missing_pdf_raises_parse_error(
         self,
         tmp_path: Path,
-        schema_provider: RegistrySchemaProvider,
+        schema_provider: RegistrySchemaAccessor,
     ) -> None:
         missing = tmp_path / "nonexistent.pdf"
         with pytest.raises(JustificanteParseError, match="not found"):

@@ -219,8 +219,8 @@ class GoogleSyncCalcPullOperatorEditPayload(OutputSchema):
     value: str | None = None
 
 
-class GoogleSyncCalcPullComputedPayload(OutputSchema):
-    """One computed casilla emitted by ``sync calc pull --compute``."""
+class GoogleSyncCalcComputeCasillaPayload(OutputSchema):
+    """One computed casilla emitted by ``sync calc compute``."""
 
     casilla_id: CasillaId
     value: str
@@ -234,9 +234,11 @@ class GoogleSyncCalcPullResult(OutputSchema):
     """JSON envelope for ``aeat config google sync calc pull``.
 
     The payload composes pull metadata, populated operator/binding/relation
-    edits, optional row-set assemblies, and an optional computed-casillas
-    block. Casilla-bearing rows are typed so the CLI cannot emit anonymous
-    string casilla references at this boundary.
+    edits, and optional row-set assemblies. Casilla-bearing rows are typed
+    so the CLI cannot emit anonymous string casilla references at this
+    boundary. Computing casilla values from the pulled edits is a separate
+    verb (``sync calc compute``); this transport payload carries no computed
+    block.
     """
 
     operation: str = "config.google.sync.calc.pull"
@@ -261,4 +263,27 @@ class GoogleSyncCalcPullResult(OutputSchema):
     assembled_groupings: list[dict[str, object]] = []
     assembled_observation_count: int
     row_set_edits: list[dict[str, object]] = []
-    computed: list[GoogleSyncCalcPullComputedPayload] = []
+
+
+@register_schema("config.google.sync.calc.compute")
+class GoogleSyncCalcComputeResult(OutputSchema):
+    """JSON envelope for ``aeat config google sync calc compute``.
+
+    Pulls operator-edited cells from a calc-sheets workbook, runs the shared
+    registry engine over them, and emits the computed casilla values. The
+    verb persists nothing; the computed block is the result surface.
+    """
+
+    operation: str = "config.google.sync.calc.compute"
+    profile: str
+    modelo: str
+    revision: str
+    period: str
+    year: int
+    spreadsheet_id: str
+    metadata_match: str
+    cells_read: int
+    operator_edits_populated: int
+    binding_edits_populated: int
+    relation_edits_populated: int
+    computed: list[GoogleSyncCalcComputeCasillaPayload] = []

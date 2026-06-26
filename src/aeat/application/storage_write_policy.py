@@ -106,6 +106,7 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "config google folder set",
     "config google sync push",
     "config google sync calc pull",
+    "config google sync calc compute",
     "config profile edit",
     "config profile censo pull",
     "config profile censo apply",

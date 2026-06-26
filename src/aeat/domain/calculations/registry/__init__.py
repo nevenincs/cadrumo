@@ -30,6 +30,7 @@ from ._applicability import (
     derive_tax_route,
     has_applicability_rule,
     iter_modelo_applicability_rules,
+    modelo_202_modality_from_inputs,
     taxpayer_model_is_declared,
 )
 from ._authority import ValidatedRegistryAuthority, bundled_authority
@@ -50,7 +51,6 @@ from ._bindings import (
     OssIossLedgerObservation,
     RefundOperationObservation,
     RegistryModeloObservation,
-    RegistryModeloObservationRequirement,
     RelatedPartyOperationObservation,
     RentaGastoObservationProtocol,
     RentaIncomeObservationProtocol,
@@ -80,6 +80,7 @@ from ._bindings import (
     resolve_retenciones_aggregation_binding_values,
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
+    selector_model_for_source,
     unsupported_ledger_iva_observations,
     unsupported_ledger_oss_observations,
     unsupported_ledger_renta_expense_observations,
@@ -95,8 +96,8 @@ from ._bindings import (
     withholding_binding_requirements,
 )
 from ._casilla_membership import (
-    casilla_metadata_alias_targets,
-    casilla_metadata_aliases,
+    casilla_noncanonical_reference_targets,
+    casilla_noncanonical_reference_tokens,
     casillas_by_id,
     declared_casilla_ids,
     undeclared_casilla_ids,
@@ -121,6 +122,7 @@ from ._censo_modelos import (
     resolve_censo_modelo_work_unit_foundation,
 )
 from ._constructs import ResolvedConstruct, ResolvedConstructMember, resolve_construct, resolve_revision_constructs
+from ._corpus_catalogue import verify_source_catalogue, verify_source_file
 from ._coverage import (
     EvidenceTierCoverageGate,
     ModelLawCoverageLedger,
@@ -220,6 +222,12 @@ from ._loader import (
     load_modelo_source,
     load_registry_tree,
 )
+from ._observation_fold import (
+    fold_observed_requirement_values,
+    fold_sum_or_copy,
+    gather_observed_requirement_values,
+    resolve_observed_requirement_value,
+)
 from ._parity_tapes import (
     ParityScenario,
     ParityTape,
@@ -233,7 +241,7 @@ from ._parity_tapes import (
     save_parity_tape,
 )
 from ._queries import (
-    ModeloBindingRow,
+    ModeloBindingQueryRow,
     ModeloBindingsReport,
     ModeloCasillaRow,
     ModeloCasillasReport,
@@ -259,8 +267,9 @@ from ._record_design import (
     extract_record_design_pdf_bytes,
     extract_record_design_workbook,
 )
+from ._relation_aggregation import relation_aggregation_op
 from ._relations import (
-    RegistryRelationSourceRequirement,
+    RegistryFoldRequirement,
     materialize_relation_binding_values,
     relation_source_requirements,
     resolve_relation_values,
@@ -347,7 +356,6 @@ from ._schema import (
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode
 from ._snapshot import build_snapshot
-from ._sources import verify_source_catalogue, verify_source_file
 from ._validate import RegistryValidator
 from ._validate_cross_revision import (
     CrossRevisionCasillaDriftSummary,
@@ -481,7 +489,7 @@ __all__ = [
     "Modelo720RowObservation",
     "ModeloApplicability",
     "ModeloApplicabilityRule",
-    "ModeloBindingRow",
+    "ModeloBindingQueryRow",
     "ModeloBindingsReport",
     "ModeloCasillaRow",
     "ModeloCasillasReport",
@@ -525,11 +533,10 @@ __all__ = [
     "RegistryCoverageAudit",
     "RegistryError",
     "RegistryFiledStateComparison",
+    "RegistryFoldRequirement",
     "RegistryLoadError",
     "RegistryModeloObservation",
-    "RegistryModeloObservationRequirement",
     "RegistryQueryService",
-    "RegistryRelationSourceRequirement",
     "RegistryRoundingCode",
     "RegistrySnapshot",
     "RegistrySnapshotError",
@@ -598,8 +605,8 @@ __all__ = [
     "calculate_registry_snapshot",
     "calculation_closure_casilla_ids",
     "calculation_closure_record_design_metadata",
-    "casilla_metadata_alias_targets",
-    "casilla_metadata_aliases",
+    "casilla_noncanonical_reference_targets",
+    "casilla_noncanonical_reference_tokens",
     "casillas_by_id",
     "censo_modelo_ownership",
     "censo_modelo_ownership_map",
@@ -633,6 +640,9 @@ __all__ = [
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",
     "extract_record_design_workbook",
+    "fold_observed_requirement_values",
+    "fold_sum_or_copy",
+    "gather_observed_requirement_values",
     "generate_parity_tape_path",
     "get_censo_modelo_foundation_contract",
     "has_applicability_rule",
@@ -652,6 +662,7 @@ __all__ = [
     "load_parity_tape",
     "load_registry_tree",
     "materialize_relation_binding_values",
+    "modelo_202_modality_from_inputs",
     "parse_export_payload",
     "parse_renta_web_open_live_payload",
     "parse_workbook_cell_ref",
@@ -660,6 +671,7 @@ __all__ = [
     "profile_condition_matches",
     "read_parameter",
     "register_cross_domain_snapshot_check",
+    "relation_aggregation_op",
     "relation_source_requirements",
     "remote_state_policy_from_cross_reference",
     "replay_parity_tape",
@@ -680,6 +692,7 @@ __all__ = [
     "resolve_ledger_renta_expense_aggregation_binding_values",
     "resolve_ledger_renta_gasto_aggregation_binding_values",
     "resolve_ledger_renta_income_aggregation_binding_values",
+    "resolve_observed_requirement_value",
     "resolve_previous_filing_binding_values",
     "resolve_refund_binding_row_values",
     "resolve_related_party_binding_row_values",
@@ -699,6 +712,7 @@ __all__ = [
     "save_parity_scenario",
     "save_parity_tape",
     "scan_workbook",
+    "selector_model_for_source",
     "summarize_non_overlapping_cross_revision_casilla_drift",
     "taxpayer_model_is_declared",
     "undeclared_casilla_ids",

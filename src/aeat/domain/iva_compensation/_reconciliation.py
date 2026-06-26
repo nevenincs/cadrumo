@@ -45,7 +45,7 @@ type IvaCompensationAuthority = Literal[
     "local_recurrence",
     "missing",
 ]
-type IvaCompensationAuthoritySourceKind = Literal[
+type IvaCompensationAuthorityKind = Literal[
     "aeat_wallet",
     "local_recurrence",
     "filed_history_observation",
@@ -81,7 +81,7 @@ class IvaCompensationAuthoritySource(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    source_kind: IvaCompensationAuthoritySourceKind
+    source_kind: IvaCompensationAuthorityKind
     amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     source_locator: str = Field(min_length=1, max_length=1024)
     captured_at: datetime | None = None
@@ -547,7 +547,7 @@ def local_recurrence_authority_source(
     source_filing_year = int(recurrence.source_filing_year)
     source_periods = tuple(recurrence.source_periods)
     resolved_at = recurrence.resolved_at
-    source_kind: IvaCompensationAuthoritySourceKind = (
+    source_kind: IvaCompensationAuthorityKind = (
         _FILED_HISTORY_OBSERVATION if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS else "local_recurrence"
     )
     return IvaCompensationAuthoritySource(
@@ -594,8 +594,8 @@ def _is_wallet_stale(
 __all__ = [
     "DEFAULT_MAX_WALLET_AGE_DAYS",
     "IvaCompensationAuthority",
+    "IvaCompensationAuthorityKind",
     "IvaCompensationAuthoritySource",
-    "IvaCompensationAuthoritySourceKind",
     "IvaCompensationDivergence",
     "IvaCompensationOverride",
     "IvaCompensationReconciliationDecision",

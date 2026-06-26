@@ -9,19 +9,19 @@ taxonomy.
 from __future__ import annotations
 
 import re
-from collections import Counter
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
+from .....core.aggregation import BindingTypedEnumKind
 from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
 from ..._export_field_kind import CasillaFieldKind
-from .. import load_registry_tree, revision_casilla_identity_failures
+from .. import load_registry_tree, revision_reference_identity_failures
 from .._ids import CasillaId, validated_casilla_id
 from .._schema import DataBindingDefinition, ModeloDefinition
-from .._validate_revision_identity import _PRIMARY_ID_KINDS, _RECORD_ID_KINDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,83 +41,8 @@ def _all_modelos() -> tuple[ModeloDefinition, ...]:
     return modelos
 
 
-def test_no_duplicate_casilla_ids_within_a_revision() -> None:
-    """Within a single modelo revision, every casilla id must be unique."""
-
-    offences: list[str] = []
-    for modelo in _all_modelos():
-        for revision_id, revision in modelo.revisions.items():
-            counts = Counter(c.id for c in revision.casillas)
-            duplicates = {casilla_id: count for casilla_id, count in counts.items() if count > 1}
-            for casilla_id, count in duplicates.items():
-                offences.append(
-                    f"modelo {modelo.id} revision {revision_id} declares casilla id {casilla_id!r} {count} times",
-                )
-    assert not offences, "duplicate casilla ids per revision:\n  " + "\n  ".join(offences)
-
-
-def test_no_duplicate_casilla_numbers_within_a_revision() -> None:
-    """Within a revision, every ``(segmento, number)`` metadata pair must be unique.
-
-    ``casilla.id`` is the canonical reference identity. The AEAT
-    record-design metadata pair is ``(segmento, number)``, not ``number``
-    alone.
-    A multi-segment modelo (e.g. Modelo 200) legitimately reuses the same
-    five-digit form-field number across distinct record segments: number
-    ``00552`` is the ECPN ``Acciones y participaciones`` field in the
-    default segment and the Liquidación III ``Base imponible`` field in
-    segment ``DP200014``. Both are real AEAT form fields with their own
-    export bindings. The duplicate this gate forbids is the same number
-    appearing twice *within one segment* — a genuine copy artifact.
-    """
-
-    offences: list[str] = []
-    for modelo in _all_modelos():
-        for revision_id, revision in modelo.revisions.items():
-            counts = Counter((c.segmento, c.number) for c in revision.casillas)
-            duplicates = {metadata: count for metadata, count in counts.items() if count > 1}
-            for (segmento, number), count in duplicates.items():
-                offences.append(
-                    f"modelo {modelo.id} revision {revision_id} declares casilla number "
-                    f"{number!r} under segmento {segmento!r} {count} times",
-                )
-    assert not offences, "duplicate casilla (segmento, number) metadata per revision:\n  " + "\n  ".join(offences)
-
-
-def test_reused_casilla_numbers_have_only_segment_qualified_ids() -> None:
-    """A reused printed number must never leave a bare casilla id owner.
-
-    When a revision reuses ``CasillaDefinition.number`` across record
-    segments, every owner must carry a segment-qualified ``casilla.id``
-    and a declared ``segmento``. Otherwise the printed number becomes a
-    second address for one owner and any reference by that token is
-    ambiguous.
-    """
-
-    offences: list[str] = []
-    for modelo in _all_modelos():
-        for revision_id, revision in modelo.revisions.items():
-            owners_by_number: dict[str, list[tuple[str, str | None]]] = {}
-            for casilla in revision.casillas:
-                owners_by_number.setdefault(casilla.number, []).append((casilla.id, casilla.segmento))
-            for number, owners in sorted(owners_by_number.items()):
-                if len(owners) <= 1:
-                    continue
-                bare_owners = sorted(
-                    casilla_id
-                    for casilla_id, segmento in owners
-                    if segmento is None or casilla_id == number
-                )
-                if bare_owners:
-                    offences.append(
-                        f"modelo {modelo.id} revision {revision_id} reuses casilla number {number!r} "
-                        f"but leaves bare casilla id owners {bare_owners!r}",
-                    )
-    assert not offences, "reused casilla numbers with bare owners:\n  " + "\n  ".join(offences)
-
-
-def test_bundled_revisions_produce_no_ambiguous_casilla_identity_failures() -> None:
-    """Every bundled modelo revision must satisfy the production casilla identity contract."""
+def test_bundled_revisions_produce_no_ambiguous_reference_identity_failures() -> None:
+    """Every bundled modelo revision must satisfy the production reference identity contract."""
 
     checked: list[str] = []
     offences: list[str] = []
@@ -125,38 +50,10 @@ def test_bundled_revisions_produce_no_ambiguous_casilla_identity_failures() -> N
         for revision_id, revision in modelo.revisions.items():
             context = f"modelo {modelo.id} revision {revision_id}"
             checked.append(context)
-            offences.extend(revision_casilla_identity_failures(context, revision))
+            offences.extend(revision_reference_identity_failures(context, revision))
 
     assert checked, "bundled registry contains no modelo revisions to validate"
-    assert not offences, "bundled revisions produce ambiguous casilla references:\n  " + "\n  ".join(offences)
-
-
-def test_primary_registry_ids_do_not_collide_with_casilla_reference_metadata() -> None:
-    """No primary registry id may also identify casilla display/export metadata."""
-
-    offences: list[str] = []
-    for modelo in _all_modelos():
-        for revision_id, revision in modelo.revisions.items():
-            primary_ids: dict[str, list[str]] = {}
-            for kind, attr in _RECORD_ID_KINDS:
-                if kind not in _PRIMARY_ID_KINDS:
-                    continue
-                for record in getattr(revision, attr):
-                    primary_ids.setdefault(record.id, []).append(kind)
-            for casilla in revision.casillas:
-                metadata_tokens = [("number", casilla.number)]
-                if casilla.form_number is not None:
-                    metadata_tokens.append(("form_number", casilla.form_number))
-                metadata_tokens.extend(("export_ref", export_ref) for export_ref in casilla.export_refs)
-                for metadata_kind, token in metadata_tokens:
-                    if token == casilla.id or token not in primary_ids:
-                        continue
-                    offences.append(
-                        f"modelo {modelo.id} revision {revision_id} casilla {casilla.id!r} "
-                        f"{metadata_kind} {token!r} collides with primary registry ids "
-                        f"{sorted(primary_ids[token])!r}",
-                    )
-    assert not offences, "ambiguous primary-id/casilla-metadata collisions:\n  " + "\n  ".join(offences)
+    assert not offences, "bundled revisions produce ambiguous reference identities:\n  " + "\n  ".join(offences)
 
 
 def test_operator_input_id_map_contains_only_casilla_ids() -> None:
@@ -409,6 +306,50 @@ _RENTA_TYPED_BINDING_BRIDGES: tuple[tuple[str, str], ...] = (
     ("tax-residence-ccaa", "CCAA"),
     ("estimacion-directa-es-normal", "EstimacionDirectaModalidad"),
 )
+
+
+def test_declared_typed_enum_hydrates_to_binding_typed_enum_kind() -> None:
+    """F8: every binding's ``typed_enum`` is the narrowed enum member, not a bare str.
+
+    The field was a stringly-typed pointer; F8 narrowed it to
+    :class:`~aeat.core.aggregation.BindingTypedEnumKind`. The loader coerces the
+    raw TOML token to its member at the boundary, so every committed binding that
+    declares a ``typed_enum`` exposes a member (which still equals its string
+    value, keeping the ``str`` consumers byte-compatible).
+    """
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    seen: set[BindingTypedEnumKind] = set()
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            for binding in revision.bindings:
+                if binding.typed_enum is None:
+                    continue
+                assert isinstance(binding.typed_enum, BindingTypedEnumKind), (
+                    f"binding {binding.id!r} typed_enum {binding.typed_enum!r} is not a BindingTypedEnumKind"
+                )
+                assert binding.typed_enum == binding.typed_enum.value
+                seen.add(binding.typed_enum)
+    # The four substrate-bridge annotations are all exercised by the committed tree.
+    assert seen == set(BindingTypedEnumKind), f"committed bindings cover only {seen!r} of the typed-enum set"
+
+
+def test_unknown_typed_enum_token_is_rejected_at_construction() -> None:
+    """Anti-tautology: an unknown ``typed_enum`` token is refused at the boundary.
+
+    If this ever passes with an arbitrary token, the F8 narrowing is broken and
+    the ``isinstance`` assertion above is vacuous.
+    """
+    with pytest.raises(ValidationError):
+        DataBindingDefinition.model_validate(
+            {
+                "id": "bad-typed-enum",
+                "source": "profile",
+                "selector": {"profile_key": "censo.status"},
+                "typed_enum": "NotARealSubstrateEnum",
+                "legal_refs": ("rd-1065-2007:art-9",),
+                "source_refs": ("aeat-modelo-036-procedure",),
+            },
+        )
 
 
 def _modelo_100_bindings(modelos: Iterable[ModeloDefinition]) -> Iterator[DataBindingDefinition]:

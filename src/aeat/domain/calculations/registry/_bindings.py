@@ -9,11 +9,10 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Period
-from ....core.aggregation import AggregationSourceKind, BindingAggregationOp, CounterpartSourceKind, RowSetGroupingKind
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind, RowSetGroupingKind
 from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from ._binding_selector_utils import selector_against_model, selector_as_dict
 from ._bindings_previous_filing import (
-    RegistryModeloObservationRequirement,
     _PreviousModeloSelector,
     previous_filing_observation_requirements,
     previous_filing_source_reference,
@@ -126,7 +125,6 @@ __all__ = [
     "OssIossLedgerObservation",
     "RefundOperationObservation",
     "RegistryModeloObservation",
-    "RegistryModeloObservationRequirement",
     "RelatedPartyOperationObservation",
     "RentaExpenseObservationProtocol",
     "RentaGastoObservationProtocol",
@@ -160,6 +158,7 @@ __all__ = [
     "resolve_retenciones_aggregation_binding_values",
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
+    "selector_model_for_source",
     "unsupported_ledger_iva_observations",
     "unsupported_ledger_oss_observations",
     "unsupported_ledger_renta_expense_observations",
@@ -635,10 +634,10 @@ _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     # ``_InvoiceSelector``. The ``_validated_counterpart_selector``
     # helper adds counterpart-specific fact / op invariants on top
     # of the shared schema at handler-call time.
-    AggregationSourceKind.LEDGER_TRANSACTION: _InvoiceSelector,
-    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE: _InvoiceSelector,
-    AggregationSourceKind.PAYABLE_INVOICE: _InvoiceSelector,
-    AggregationSourceKind.COLLECTIBLE_INVOICE: _InvoiceSelector,
+    BindingSourceKind.LEDGER_TRANSACTION: _InvoiceSelector,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: _InvoiceSelector,
+    BindingSourceKind.PAYABLE_INVOICE: _InvoiceSelector,
+    BindingSourceKind.COLLECTIBLE_INVOICE: _InvoiceSelector,
     "ledger_oss_aggregation": _OssIossLedgerSelector,
     "ledger_iva_aggregation": _IvaLedgerSelector,
     "ledger_renta_expense_aggregation": _RentaLedgerExpenseSelector,
@@ -651,6 +650,26 @@ _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "manual_input": _ManualInputSelector,
     "profile": _ProfileSelector,
 }
+
+
+def selector_model_for_source(source: object) -> type[BaseModel] | None:
+    """Return the strict selector model a binding ``source`` validates against.
+
+    Read-only accessor over :data:`_BINDING_SELECTOR_REGISTRY`, the
+    discriminated-union table keyed by :class:`~aeat.core.BindingSourceKind`
+    (the canonical ``DataBindingDefinition.source`` axis). Returns the
+    per-family selector model when the source carries a typed selector schema,
+    or ``None`` when the source is intentionally free-form (absent from the
+    table) — so callers can short-circuit selector-shape validation for
+    free-form sources exactly as the snapshot-build gate does.
+
+    The model-level selector validator on
+    :class:`~aeat.domain.calculations.registry.DataBindingDefinition` consumes
+    this accessor to promote selector-shape typing to model-construction time
+    without re-deriving the table; the op/fact cross-invariants stay owned by
+    :func:`validate_binding_selector_shape` at snapshot build.
+    """
+    return _BINDING_SELECTOR_REGISTRY.get(source)
 
 
 def _validate_selector_only(selector_model: type[BaseModel]) -> _BindingFamilyValidator:
@@ -692,10 +711,10 @@ _BINDING_VALIDATOR_REGISTRY: dict[str, _BindingFamilyValidator] = {
     # invariants + the two invoice-only scalar-shape guards). ledger_transaction
     # is a counterpart-only source (never an invoice source) and keeps the
     # counterpart validator.
-    AggregationSourceKind.LEDGER_TRANSACTION: validate_counterpart_binding,
-    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE: validate_invoice_binding,
-    AggregationSourceKind.PAYABLE_INVOICE: validate_invoice_binding,
-    AggregationSourceKind.COLLECTIBLE_INVOICE: validate_invoice_binding,
+    BindingSourceKind.LEDGER_TRANSACTION: validate_counterpart_binding,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: validate_invoice_binding,
+    BindingSourceKind.PAYABLE_INVOICE: validate_invoice_binding,
+    BindingSourceKind.COLLECTIBLE_INVOICE: validate_invoice_binding,
     "ledger_oss_aggregation": validate_ledger_oss_aggregation_binding,
     "ledger_iva_aggregation": validate_ledger_iva_aggregation_binding,
     "ledger_renta_expense_aggregation": validate_ledger_renta_expense_aggregation_binding,

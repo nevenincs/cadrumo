@@ -70,14 +70,7 @@ _ENROLLED_SOURCE_MESH_RESOLVERS = frozenset(
 # Exported ``resolve``-bearing classes that are deliberately NOT source-mesh
 # resolvers. Each carries a stated reason. This mapping must only shrink (when a
 # class is enrolled or removed); a new unclassified entry fails the gate.
-_KNOWN_NON_MESH_RESOLVERS: dict[str, str] = {
-    "aeat.application.calculations.MultiYearResolver": (
-        "Explicit multi-year scan API for the M200 base-imponible-negativa carry "
-        "and the M303 prorrata. It exposes only resolve(); it is not a source-mesh "
-        "resolver (no resolver_id / owned_sources) and is intentionally not wired "
-        "into the calculate mesh. Its dormancy is separately adjudicated and tracked."
-    ),
-}
+_KNOWN_NON_MESH_RESOLVERS: dict[str, str] = {}
 
 
 def _discover_resolve_bearing_classes() -> dict[str, bool]:

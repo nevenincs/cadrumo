@@ -22,14 +22,13 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .. import (
     CasillaId,
     DataBindingDefinition,
-    RegistryValidationError,
     build_snapshot,
     load_registry_tree,
     resolve_ledger_renta_income_aggregation_binding_values,
@@ -123,29 +122,33 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
 
 
 def test_income_binding_validator_rejects_unknown_fact() -> None:
-    binding = DataBindingDefinition(
-        id="m130-income-bad-fact",
-        source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        selector={"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "net_income_sum"},
-        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
-        legal_refs=("rd-439-2007:art-110",),
-        source_refs=("aeat-modelo-130-instructions",),
-    )
-    with pytest.raises(RegistryValidationError):
-        validate_ledger_renta_income_aggregation_binding_definition(binding)
+    # ``net_income_sum`` is outside the ``_RentaLedgerIncomeSelector`` fact
+    # Literal, a selector-SHAPE violation the F8 construction-time gate refuses
+    # the moment the binding is built.
+    with pytest.raises(ValidationError):
+        DataBindingDefinition(
+            id="m130-income-bad-fact",
+            source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+            selector={"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "net_income_sum"},
+            aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+            legal_refs=("rd-439-2007:art-110",),
+            source_refs=("aeat-modelo-130-instructions",),
+        )
 
 
 def test_income_binding_validator_rejects_legacy_target_casilla_key() -> None:
-    binding = DataBindingDefinition(
-        id="m130-income-legacy-target-key",
-        source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        selector={"modelo": "130", "target_casilla": _M130_INGRESOS_CASILLA, "fact": "gross_income_sum"},
-        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
-        legal_refs=("rd-439-2007:art-110",),
-        source_refs=("aeat-modelo-130-instructions",),
-    )
-    with pytest.raises(RegistryValidationError) as exc_info:
-        validate_ledger_renta_income_aggregation_binding_definition(binding)
+    # The legacy ``target_casilla`` key is a selector-SHAPE violation (the strict
+    # selector model forbids the extra key), refused at construction under F8;
+    # the diagnostic still names both the canonical and legacy key.
+    with pytest.raises(ValidationError) as exc_info:
+        DataBindingDefinition(
+            id="m130-income-legacy-target-key",
+            source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+            selector={"modelo": "130", "target_casilla": _M130_INGRESOS_CASILLA, "fact": "gross_income_sum"},
+            aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+            legal_refs=("rd-439-2007:art-110",),
+            source_refs=("aeat-modelo-130-instructions",),
+        )
 
     detail = str(exc_info.value)
     assert "target_casilla_id" in detail

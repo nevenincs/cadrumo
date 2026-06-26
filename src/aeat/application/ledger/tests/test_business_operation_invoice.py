@@ -14,10 +14,10 @@ from ....core.config import Settings
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._business_operation_invoice import (
+    BusinessOperationInvoiceDirection,
     BusinessOperationInvoiceInputError,
     BusinessOperationInvoiceNotFoundError,
     BusinessOperationInvoicePatch,
-    BusinessOperationInvoiceSourceKind,
     CollectibleInvoiceService,
     IntracomOperationType,
     PayableInvoiceService,
@@ -75,7 +75,7 @@ class TestPayableInvoiceCrud:
             total_amount=Decimal("1210.00"),
         )
         record = result.record
-        assert record.source_kind is BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE
+        assert record.source_kind is BusinessOperationInvoiceDirection.PAYABLE_INVOICE
         assert record.counterparty_nif == "B12345678"
         assert record.taxable_base == Decimal("1000.00")
         assert len(record.invoice_id) == 16
@@ -103,8 +103,8 @@ class TestPayableInvoiceCrud:
         collectible_records = collectible_svc.list_all(bucket_id="bucket-001")
         assert len(payable_records) == 1
         assert len(collectible_records) == 1
-        assert payable_records[0].source_kind is BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE
-        assert collectible_records[0].source_kind is BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE
+        assert payable_records[0].source_kind is BusinessOperationInvoiceDirection.PAYABLE_INVOICE
+        assert collectible_records[0].source_kind is BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE
 
     def test_view_returns_record_by_full_id(
         self,
@@ -656,9 +656,9 @@ class TestUnifiedInvoiceAddRoundtrip:
         # dropped those fields (otherwise the original would already read None
         # and the two would compare equal).
         from .._business_operation_invoice import (
+            BusinessOperationInvoiceDirection,
             BusinessOperationInvoiceDocument,
             BusinessOperationInvoiceRepository,
-            BusinessOperationInvoiceSourceKind,
         )
 
         svc = _make_collectible_svc(isolated_settings, secure_objects)
@@ -673,14 +673,14 @@ class TestUnifiedInvoiceAddRoundtrip:
         ).record
 
         repository = BusinessOperationInvoiceRepository(objects=secure_objects)
-        key = f"bucket-001:{BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE.value}"
+        key = f"bucket-001:{BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE.value}"
         document = repository.load(key)
         assert document is not None
         tampered_record = original.model_copy(update={"eu_iva_id": None, "operation_type": None})
         repository.save(
             BusinessOperationInvoiceDocument(
                 bucket_id="bucket-001",
-                source_kind=BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE,
+                source_kind=BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE,
                 records=(tampered_record,),
             ),
         )

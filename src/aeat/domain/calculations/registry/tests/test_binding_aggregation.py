@@ -26,6 +26,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .. import CasillaId, validated_casilla_id
 from .._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from .._schema import DataBindingDefinition
 
@@ -33,6 +34,50 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DUMMY_LEGAL_ID = "rd-439-2007:art-110"
 _DUMMY_SOURCE_ID = "aeat-modelo-130-instructions"
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+
+
+# Per-source well-shaped selector mappings. As of F8 the binding selector is
+# validated against its source family's schema at model CONSTRUCTION, so a test
+# that exercises only the aggregation axis must still supply a selector that
+# satisfies the registered per-family selector model (the casilla-set / op-fact
+# business rules remain a snapshot-build concern, so these minimal selectors
+# only have to clear the selector model itself). A source absent from this map
+# is free-form at the schema level and takes the opaque fallback selector.
+_WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
+    "previous_filing": {"source_modelo": "130", "source_casilla_id": _M130_INGRESOS_CASILLA},
+    "withholding": {"fact": "retencion_sum", "claves": ("A",)},
+    "payable_invoice": {"fact": "base_sum"},
+    "collectible_invoice": {"fact": "base_sum"},
+    "ledger_transaction": {"fact": "base_sum"},
+    "ledger_oss_aggregation": {
+        "regime": "external_scheme",
+        "destination_member_state": "de",
+        "rate_kind": "general",
+        "invoice_direction": "issued",
+        "transaction_kinds": ("external_scheme_services",),
+        "fact": "iva_amount_sum",
+    },
+    "ledger_iva_aggregation": {
+        "categories": ("domestic_general_21",),
+        "rate_kinds": ("general",),
+        "flow_direction": "repercutido",
+        "fact": "iva_amount_sum",
+    },
+    "ledger_renta_expense_aggregation": {
+        "target_casilla_id": _M130_INGRESOS_CASILLA,
+        "fact": "deductible_amount_sum",
+    },
+    "ledger_renta_income_aggregation": {
+        "target_casilla_id": _M130_INGRESOS_CASILLA,
+        "fact": "gross_income_sum",
+    },
+    "profile": {"profile_key": "tax.id"},
+    "related_party_operation": {"fact": "row_field", "row_field": "amount"},
+    "foreign_asset": {"fact": "row_field", "row_field": "valuation_amount"},
+    "atribucion_member": {"fact": "row_field", "row_field": "base_imponible_assigned"},
+    "refund_operation": {"fact": "row_field", "row_field": "refund_amount"},
+}
 
 
 def _binding(*, source: str, op: BindingAggregationOp | None) -> DataBindingDefinition:
@@ -40,16 +85,18 @@ def _binding(*, source: str, op: BindingAggregationOp | None) -> DataBindingDefi
 
     Constructed through ``model_validate`` (the same boundary the registry
     loader uses) so the parametrised ``source`` string is validated against the
-    schema's closed ``source`` Literal. The selector is deliberately a minimal
-    opaque mapping: these tests exercise the aggregation axis, not
-    selector-shape validation, and a binding's selector is a free-form
-    ``Mapping`` at the schema level.
+    canonical ``source`` enum AND the selector is validated against its source
+    family's selector model (the F8 construction-time selector-shape gate). The
+    selector is drawn from :data:`_WELL_SHAPED_SELECTORS` so each binding is
+    well-formed at the schema level: these tests exercise the aggregation axis,
+    not selector shape, so the minimal selector only has to clear the per-family
+    selector model.
     """
     return DataBindingDefinition.model_validate(
         {
             "id": f"test-binding-aggregation-{source}",
             "source": source,
-            "selector": {"target_casilla_id": "01"},
+            "selector": _WELL_SHAPED_SELECTORS.get(source, {"target_casilla_id": _M130_INGRESOS_CASILLA}),
             "aggregation": None if op is None else BindingAggregation(op=op),
             "legal_refs": (_DUMMY_LEGAL_ID,),
             "source_refs": (_DUMMY_SOURCE_ID,),

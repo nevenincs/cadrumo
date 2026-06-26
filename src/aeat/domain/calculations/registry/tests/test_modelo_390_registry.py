@@ -8,6 +8,7 @@ from functools import lru_cache
 
 import pytest
 
+from .....core.aggregation import RelationAggregationOp
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .. import (
@@ -18,6 +19,7 @@ from .. import (
     binding_source_casilla_ids,
     build_snapshot,
     load_registry_tree,
+    relation_aggregation_op,
     validated_casilla_id,
 )
 
@@ -188,9 +190,9 @@ def test_modelo_390_declares_annual_compensation_result_fields() -> None:
     ultimo_rel = relations["modelo-390-rel-303-compensacion-ultimo-periodo"]
     no97_rel = relations["modelo-390-rel-303-compensacion-generada-ejercicio-no-97"]
     assert ultimo_rel.source_periods == ("4T",)
-    assert ultimo_rel.aggregation == {"op": "copy"}
+    assert relation_aggregation_op(ultimo_rel) == RelationAggregationOp.COPY
     assert no97_rel.source_periods == ("1T", "2T", "3T")
-    assert no97_rel.aggregation == {"op": "sum"}
+    assert relation_aggregation_op(no97_rel) == RelationAggregationOp.SUM
 
 
 def test_modelo_390_compensation_bindings_resolve_from_modelo_303_observations() -> None:

@@ -4,15 +4,6 @@ source_modelo = "111"
 treatment = "direct_annual_settlement"
 target_constructs = ["modelo-190-annual-summary"]
 relation_refs = [
-    "modelo-190-rel-111-trabajo-dinerario-percepciones-anual",
-    "modelo-190-rel-111-trabajo-especie-percepciones-anual",
-    "modelo-190-rel-111-actividades-dinerario-percepciones-anual",
-    "modelo-190-rel-111-actividades-especie-percepciones-anual",
-    "modelo-190-rel-111-premios-dinerario-percepciones-anual",
-    "modelo-190-rel-111-premios-especie-percepciones-anual",
-    "modelo-190-rel-111-ganancias-dinerario-percepciones-anual",
-    "modelo-190-rel-111-ganancias-especie-percepciones-anual",
-    "modelo-190-rel-111-derechos-imagen-percepciones-anual",
     "modelo-190-rel-111-trabajo-dinerario-importe-anual",
     "modelo-190-rel-111-trabajo-especie-importe-anual",
     "modelo-190-rel-111-actividades-dinerario-importe-anual",

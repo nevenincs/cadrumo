@@ -18,7 +18,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
 
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
@@ -40,7 +39,6 @@ from .. import calculate_modelo_revision, create_work_unit
 from .._actions import ModeloError
 from .._profile_binding import (
     ProfileBindingResolutionError,
-    ProfileSourcedBindingResult,
     resolve_profile_sourced_bindings,
 )
 
@@ -54,6 +52,16 @@ _CCAA_BINDING: BindingId = "renta-2025-profile-tax-residence-ccaa"
 _ESTIMACION_BINDING: BindingId = "renta-2025-modelo-100-estimacion-directa-es-normal"
 _SYNTHETIC_DECIMAL_PROFILE_BINDING: BindingId = "test-profile-business-ratio-decimal-binding"
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
+
+
+def _sourced_binding_ids(result: object) -> set[BindingId]:
+    """The set of bindings the profile satisfied across the three engine channels.
+
+    ``resolve_profile_sourced_bindings`` now returns the canonical
+    :class:`CalculationSourceResolution`; the per-channel keys are the trace the
+    retired ``bindings_sourced_from_profile`` field used to materialise.
+    """
+    return set(result.binding_values) | set(result.enum_binding_values) | set(result.date_binding_values)
 
 
 @contextmanager
@@ -121,7 +129,7 @@ def test_profile_ccaa_fact_resolves_into_the_enum_binding_channel() -> None:
     )
     assert result.enum_binding_values[_CCAA_BINDING] == "cataluna"
     assert _CCAA_BINDING not in result.binding_values
-    assert _CCAA_BINDING in result.bindings_sourced_from_profile
+    assert _CCAA_BINDING in _sourced_binding_ids(result)
 
 
 def test_profile_resolution_skips_caller_supplied_bindings() -> None:
@@ -133,7 +141,7 @@ def test_profile_resolution_skips_caller_supplied_bindings() -> None:
         caller_binding_ids=frozenset({_CCAA_BINDING}),
     )
     assert _CCAA_BINDING not in result.enum_binding_values
-    assert _CCAA_BINDING not in result.bindings_sourced_from_profile
+    assert _CCAA_BINDING not in _sourced_binding_ids(result)
 
 
 def test_profile_resolution_is_empty_when_no_profile_fact_is_set() -> None:
@@ -204,7 +212,7 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> Non
 
     assert result.binding_values[_SYNTHETIC_DECIMAL_PROFILE_BINDING] == Decimal("0.37")
     assert _SYNTHETIC_DECIMAL_PROFILE_BINDING not in result.enum_binding_values
-    assert _SYNTHETIC_DECIMAL_PROFILE_BINDING in result.bindings_sourced_from_profile
+    assert _SYNTHETIC_DECIMAL_PROFILE_BINDING in _sourced_binding_ids(result)
 
 
 def _snapshot_with_decimal_profile_binding(snapshot: RegistrySnapshot) -> RegistrySnapshot:
@@ -571,41 +579,3 @@ def test_estimacion_directa_binding_rejected_through_enum_channel(
                 clock=_CLOCK,
             )
         assert calc_repo.load().revisions == {}
-
-
-def test_profile_sourced_binding_result_rejects_inconsistent_trace() -> None:
-    """The result model enforces the trace matches the resolved keys."""
-    with pytest.raises(ProfileBindingResolutionError) as exc_info:
-        ProfileSourcedBindingResult(
-            binding_values={},
-            enum_binding_values={_CCAA_BINDING: "madrid"},
-            bindings_sourced_from_profile=(),
-        )
-    assert exc_info.value.translated_message == "application.modelo.profile_binding.errors.source_trace_mismatch"
-    assert exc_info.value.context == {
-        "resolved_bindings": (_CCAA_BINDING,),
-        "trace_bindings": (),
-    }
-
-
-def test_profile_sourced_binding_result_rejects_noncanonical_binding_keys() -> None:
-    with pytest.raises(ValidationError) as decimal_exc:
-        ProfileSourcedBindingResult(
-            binding_values={"Bad Binding": Decimal("1")},
-            bindings_sourced_from_profile=("Bad Binding",),
-        )
-    assert decimal_exc.value.errors()[0]["loc"][0] == "binding_values"
-
-    with pytest.raises(ValidationError) as enum_exc:
-        ProfileSourcedBindingResult(
-            enum_binding_values={"Bad Binding": "madrid"},
-            bindings_sourced_from_profile=("Bad Binding",),
-        )
-    assert enum_exc.value.errors()[0]["loc"][0] == "enum_binding_values"
-
-    with pytest.raises(ValidationError) as date_exc:
-        ProfileSourcedBindingResult(
-            date_binding_values={"Bad Binding": date(1980, 1, 31)},
-            bindings_sourced_from_profile=("Bad Binding",),
-        )
-    assert date_exc.value.errors()[0]["loc"][0] == "date_binding_values"

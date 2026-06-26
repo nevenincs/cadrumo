@@ -23,6 +23,7 @@ Submodules
    aeat.application.modelo._calculate_input
    aeat.application.modelo._calculation_actions
    aeat.application.modelo._calculation_helpers
+   aeat.application.modelo._calculation_resolution
    aeat.application.modelo._decimal_parsing
    aeat.application.modelo._dt12_advisory
    aeat.application.modelo._export
@@ -44,9 +45,11 @@ Submodules
    aeat.application.modelo._registry_discovery
    aeat.application.modelo._registry_helpers
    aeat.application.modelo._registry_resources
+   aeat.application.modelo._result_disposition_resolution
    aeat.application.modelo._result_summary
    aeat.application.modelo._revision_persistence
    aeat.application.modelo._selectors
+   aeat.application.modelo._semantic_role_resolution
    aeat.application.modelo._taxation_comparison
    aeat.application.modelo._verification_actions
    aeat.application.modelo._work_addressing

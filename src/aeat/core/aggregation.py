@@ -82,56 +82,59 @@ class BindingAggregation(BaseModel):
         return value
 
 
-class AggregationSourceKind(StrEnum):
-    """Accepted source-kind taxonomy for per-modelo aggregation providers.
+class RelationAggregationOp(StrEnum):
+    """Closed set of aggregation operators a registry ``RelationDefinition`` may declare.
 
-    The retired bare invoice alias was removed during C4 invoice unification.
-    Registry bindings and aggregation observations must use one of the
-    load-bearing source kinds below; invoice-shaped validators route through the
-    canonical payable / collectible / purchase-evidence taxonomy rather than a
-    standalone alias.
-
-    Consumer search across ``src/aeat`` on 2026-06-11 found no remaining
-    ``AggregationSourceKind.INVOICE`` references after the migration; residual
-    ``source="invoice"`` literals are rejection tests only.
+    A relation's ``aggregation.op`` selects how a cross-modelo fold-in folds its
+    matched source filings: :attr:`COPY` carries a single source value through
+    unchanged (the default when a relation declares no aggregation), and
+    :attr:`SUM` adds the matched per-period source values (annual summaries). This
+    is a deliberately separate axis from :class:`BindingAggregationOp` (which
+    governs ``DataBindingDefinition`` folds and carries the binding-only ``rows``
+    / ``count_distinct`` / ``prior_pagos_fraccionados`` members); the two are not
+    interchanged. The complete set declared across the registry relation tree is
+    ``copy`` and ``sum``.
     """
 
-    LEDGER_TRANSACTION = "ledger_transaction"
-    PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
-    PAYABLE_INVOICE = "payable_invoice"
-    COLLECTIBLE_INVOICE = "collectible_invoice"
+    COPY = "copy"
+    SUM = "sum"
 
 
-type CounterpartSourceKind = Literal[
-    AggregationSourceKind.LEDGER_TRANSACTION,
-    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-    AggregationSourceKind.PAYABLE_INVOICE,
-    AggregationSourceKind.COLLECTIBLE_INVOICE,
-]
-"""Canonical source-kind subset accepted by counterpart aggregation."""
+class RelationAggregation(BaseModel):
+    """Typed aggregation rule carried by a registry ``RelationDefinition``.
 
-COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(
-    {
-        AggregationSourceKind.LEDGER_TRANSACTION,
-        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        AggregationSourceKind.PAYABLE_INVOICE,
-        AggregationSourceKind.COLLECTIBLE_INVOICE,
-    },
-)
+    Placed in :mod:`aeat.core` (cross-layer home) because the domain registry
+    schema declares the field and the application/adapter layers read it. The
+    closed :class:`RelationAggregationOp` set is the only key real relation
+    aggregation mappings carry in the registry authoring tree (every relation
+    declares ``aggregation = {op = "copy" | "sum"}`` or none). The model is strict
+    and frozen, matching the registry schema's
+    :data:`~aeat.core.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or a
+    stray extra key is rejected at registry-build validation rather than silently
+    re-parsed at resolve time. This is the relation sibling of
+    :class:`BindingAggregation`; the two op axes are deliberately separate.
+    """
 
+    model_config = STRICT_FROZEN_CONFIG
 
-def counterpart_source_kind(value: object) -> CounterpartSourceKind:
-    """Return ``value`` narrowed to the counterpart source-kind subset."""
-    try:
-        source_kind = value if isinstance(value, AggregationSourceKind) else AggregationSourceKind(value)
-    except ValueError as exc:
-        raise ValueError(f"unsupported source_kind {value!r}") from exc
-    if source_kind in COUNTERPART_SOURCE_KINDS:
-        return source_kind
-    raise ValueError(
-        "unsupported source_kind; use one of ledger_transaction, "
-        "purchase_invoice_evidence, payable_invoice, collectible_invoice",
-    )
+    op: RelationAggregationOp
+
+    @field_validator("op", mode="before")
+    @classmethod
+    def _coerce_op(cls, value: object) -> object:
+        """Hydrate the registry TOML's raw ``op`` string into its enum member.
+
+        The authoring tree declares ``aggregation.op`` as a plain string
+        (``"copy"``, ``"sum"``). Under the strict model config a ``StrEnum`` field
+        requires the actual member, not its value, so the raw string from
+        ``model_validate`` would be rejected. Coercing the known closed-set string
+        to its :class:`RelationAggregationOp` member at the boundary keeps the TOML
+        plain while preserving strict rejection of an unknown op
+        (``RelationAggregationOp(value)`` raises on an invalid value).
+        """
+        if isinstance(value, str) and not isinstance(value, RelationAggregationOp):
+            return RelationAggregationOp(value)
+        return value
 
 
 class PeriodKind(StrEnum):
@@ -190,17 +193,18 @@ class BindingSourceKind(StrEnum):
     token is added in exactly one place.
 
     BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the source
-    token that was previously a bare string (or an
-    :class:`AggregationSourceKind` / :class:`RowSetGroupingKind` member) in the
-    ``DataBindingDefinition.source`` Literal. Those tokens live in registry TOML
-    and may be persisted; a :class:`~enum.StrEnum` serialises to its value, so
-    folding the mixed Literal onto this enum changes the static type without
-    changing any stored or compared string (the modelo-enum-hardening
+    token that was previously a bare string (or a :class:`RowSetGroupingKind`
+    member) in the ``DataBindingDefinition.source`` Literal. Those tokens live in
+    registry TOML and may be persisted; a :class:`~enum.StrEnum` serialises to its
+    value, so folding the mixed Literal onto this enum changes the static type
+    without changing any stored or compared string (the modelo-enum-hardening
     precedent). Do NOT rename a stored token.
 
-    The four invoice/counterpart members reuse the :class:`AggregationSourceKind`
-    values and the two grouping members reuse :class:`RowSetGroupingKind` values
-    so the cross-layer aggregation taxonomy stays consistent; see
+    This enum is the single canonical source-kind authority across BOTH the
+    registry binding definitions AND the application resolver mesh (phase-2.1
+    taxonomy unification): the counterpart subset (:data:`COUNTERPART_SOURCE_KINDS`)
+    is derived from it, and the two grouping members reuse :class:`RowSetGroupingKind`
+    values so the cross-layer aggregation taxonomy stays consistent; see
     :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE` for the detail-record
     source-token ↔ grouping-axis mapping.
     """
@@ -229,17 +233,27 @@ class BindingSourceKind(StrEnum):
     # dedicated per-perceptor retención store (RETENCION_OBSERVATIONS_NAMESPACE,
     # operator-supplied — NOT the bucket ledger, so deliberately NOT in
     # LEDGER_BINDING_SOURCE_KINDS and NOT carrying the ``ledger_`` prefix) and
-    # materialises the Modelo 180/190/193 "número total de perceptores" count via
+    # materialises the Modelo 180/193 "número total de perceptores" count via
     # the validated distinct-NIF primitive (aggregate_retenciones_180.
     # total_perceptors) — replacing the wrong sum-of-quarterly-M115-counts relation
     # (RET-1, ADR 2026-06-24-retenciones-perceptor-count-adr).
     RETENCIONES_AGGREGATION = "retenciones_aggregation"
-    # Invoice / counterpart aggregation sources (value-aligned with
-    # AggregationSourceKind).
-    PAYABLE_INVOICE = AggregationSourceKind.PAYABLE_INVOICE.value
-    COLLECTIBLE_INVOICE = AggregationSourceKind.COLLECTIBLE_INVOICE.value
-    LEDGER_TRANSACTION = AggregationSourceKind.LEDGER_TRANSACTION.value
-    PURCHASE_INVOICE_EVIDENCE = AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE.value
+    # Mesh-only sourcing decisions with NO registry binding declaration. Both are
+    # resolved by a pre-mesh gate, not a registry `DataBindingDefinition.source`:
+    # `borrador` materialises the Modelo 100 borrador prefill
+    # (Modelo100BorradorSourceResolver) and `iva_wallet_decision` carries the M303
+    # IVA-wallet compensación decision (IvaWalletDecisionSourceResolver). They are
+    # first-class members of the canonical union (phase-2.1 taxonomy unification)
+    # so the mesh carries `BindingSourceKind` members rather than bare strings;
+    # because no registry binding declares them, they are accounted for as
+    # mesh-only in the enum↔registry parity gate, not as reserved-undeclared.
+    BORRADOR = "borrador"
+    IVA_WALLET_DECISION = "iva_wallet_decision"
+    # Invoice / counterpart aggregation sources.
+    PAYABLE_INVOICE = "payable_invoice"
+    COLLECTIBLE_INVOICE = "collectible_invoice"
+    LEDGER_TRANSACTION = "ledger_transaction"
+    PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
     # Detail-record families. WITHHOLDING / FOREIGN_ASSET reuse the
     # RowSetGroupingKind value; the other three carry their distinct
     # source-token value (see ROW_SET_GROUPING_FOR_BINDING_SOURCE).
@@ -279,6 +293,44 @@ INVOICE_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
 """Invoice-shaped binding source kinds, derived from :class:`BindingSourceKind`."""
 
 
+type CounterpartSourceKind = Literal[
+    BindingSourceKind.LEDGER_TRANSACTION,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.COLLECTIBLE_INVOICE,
+]
+"""Canonical source-kind subset accepted by counterpart aggregation.
+
+A derived subset of :class:`BindingSourceKind` (phase-2.1 taxonomy unification):
+the counterpart families settle against a transaction, a purchase-invoice
+evidence row, or a payable/collectible invoice. Replaces the former
+``AggregationSourceKind``-derived subset, which was deleted in the same change.
+"""
+
+COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(
+    {
+        BindingSourceKind.LEDGER_TRANSACTION,
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+    },
+)
+
+
+def counterpart_source_kind(value: object) -> CounterpartSourceKind:
+    """Return ``value`` narrowed to the counterpart source-kind subset."""
+    try:
+        source_kind = value if isinstance(value, BindingSourceKind) else BindingSourceKind(value)
+    except ValueError as exc:
+        raise ValueError(f"unsupported source_kind {value!r}") from exc
+    if source_kind in COUNTERPART_SOURCE_KINDS:
+        return source_kind
+    raise ValueError(
+        "unsupported source_kind; use one of ledger_transaction, "
+        "purchase_invoice_evidence, payable_invoice, collectible_invoice",
+    )
+
+
 LEDGER_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
     {
         BindingSourceKind.LEDGER_OSS_AGGREGATION,
@@ -296,6 +348,45 @@ first-slice income/expense aggregation, or the M130 pago-fraccionado gasto
 cumulative aggregation). Cross-domain consumers route through this frozenset
 so the registry stays the single source of truth for ledger readiness.
 """
+
+
+class BindingTypedEnumKind(StrEnum):
+    """The closed set of substrate enum-class names a binding value bridges.
+
+    A :class:`~aeat.domain.calculations.registry.DataBindingDefinition` whose
+    value bridges a closed-membership substrate axis declares ``typed_enum`` =
+    one of these members. Each value is the NAME of the closed enum class a
+    consumer routes the binding value through:
+
+    - ``CENSO_EVENT_KIND`` (``"censo_event_kind"``) — Modelo 036 censo status.
+    - ``CCAA`` (``"CCAA"``) — Modelo 100 autonomic-community tax residence.
+    - ``ESTIMACION_DIRECTA_MODALIDAD`` (``"EstimacionDirectaModalidad"``) —
+      Modelo 100 estimación-directa modality.
+    - ``LEGAL_ENTITY_FORM`` (``"LegalEntityForm"``) — Modelo 200 legal form.
+
+    BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the
+    annotation token that was previously a bare ``str`` in
+    ``DataBindingDefinition.typed_enum``. Those tokens live in registry TOML and
+    flow through operator-facing surfaces (``bindings list`` table, the
+    :class:`ModeloBindingQueryRow` projection, the borrador resolver, the
+    Sheets-pull router); a :class:`~enum.StrEnum` serialises to its value, so
+    narrowing the field from ``str | None`` to this enum changes the static type
+    without changing any stored, compared, or emitted string (the
+    modelo-enum-hardening precedent). Do NOT rename a stored token.
+
+    Declared in :mod:`aeat.core` as a closed value set per the architecture
+    contract; the loader hydrates the registry TOML's raw token to its member at
+    the schema boundary (see
+    :meth:`~aeat.domain.calculations.registry.DataBindingDefinition._coerce_typed_enum`).
+    It is the closed-set *annotation* on the binding, distinct from the engine
+    ``input_channel`` (how a formula consumes the value); a binding may carry a
+    ``typed_enum`` yet still be a numeric ``decimal`` channel.
+    """
+
+    CENSO_EVENT_KIND = "censo_event_kind"
+    CCAA = "CCAA"
+    ESTIMACION_DIRECTA_MODALIDAD = "EstimacionDirectaModalidad"
+    LEGAL_ENTITY_FORM = "LegalEntityForm"
 
 
 class RetencionScheme(StrEnum):

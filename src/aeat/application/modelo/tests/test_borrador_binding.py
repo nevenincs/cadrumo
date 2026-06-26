@@ -36,7 +36,6 @@ from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
-    Modelo100BorradorBindingResult,
     Modelo100BorradorSourceResolver,
     calculate_modelo_revision,
     create_work_unit,
@@ -293,35 +292,6 @@ def test_borrador_binding_command_rejects_noncanonical_caller_binding_keys() -> 
     assert blank_exc.value.errors()[0]["loc"][0] == "caller_binding_values"
 
 
-def test_borrador_binding_result_rejects_noncanonical_value_keys() -> None:
-    with pytest.raises(ValidationError) as decimal_exc:
-        Modelo100BorradorBindingResult(
-            borrador_snapshot_id="snap-1",
-            binding_values={"Bad Binding": Decimal("1")},
-            bindings_sourced_from_borrador=("Bad Binding",),
-        )
-    assert decimal_exc.value.errors()[0]["loc"][0] == "binding_values"
-
-    with pytest.raises(ValidationError) as enum_exc:
-        Modelo100BorradorBindingResult(
-            borrador_snapshot_id="snap-1",
-            enum_binding_values={"Bad Binding": "madrid"},
-            bindings_sourced_from_borrador=("Bad Binding",),
-        )
-    assert enum_exc.value.errors()[0]["loc"][0] == "enum_binding_values"
-
-
-def test_borrador_binding_result_requires_trace_to_match_values() -> None:
-    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
-        Modelo100BorradorBindingResult(
-            borrador_snapshot_id="snap-1",
-            binding_values={_DECIMAL_BINDING: Decimal("1")},
-            enum_binding_values={},
-            bindings_sourced_from_borrador=(),
-        )
-    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.source_trace_mismatch"
-
-
 def test_borrador_resolution_is_inert_without_named_snapshot(
     snapshot_repository: Borrador100SnapshotRepository,
 ) -> None:
@@ -331,10 +301,9 @@ def test_borrador_resolution_is_inert_without_named_snapshot(
         snapshot_repository=snapshot_repository,
     )
 
-    assert result.borrador_snapshot_id is None
+    assert result.borrador_provenance is None
     assert result.binding_values == {}
     assert result.enum_binding_values == {}
-    assert result.bindings_sourced_from_borrador == ()
 
 
 def test_committed_modelo_100_registry_declares_borrador_prefilled_bindings() -> None:
@@ -382,10 +351,11 @@ def test_borrador_resolution_consumes_only_registry_prefilled_bindings(
         snapshot_repository=snapshot_repository,
     )
 
-    assert result.borrador_snapshot_id == "borrador-100-2025-active"
+    assert result.borrador_provenance is not None
+    assert result.borrador_provenance.snapshot_id == "borrador-100-2025-active"
     assert result.binding_values == {_DECIMAL_BINDING: Decimal("125.50")}
     assert result.enum_binding_values == {_ENUM_BINDING: "madrid"}
-    assert result.bindings_sourced_from_borrador == (_DECIMAL_BINDING, _ENUM_BINDING)
+    assert result.borrador_provenance.bindings_sourced == (_DECIMAL_BINDING, _ENUM_BINDING)
 
 
 def test_borrador_source_resolver_matches_application_binding_resolution(
@@ -600,7 +570,8 @@ def test_borrador_resolution_leaves_explicit_caller_binding_in_control(
 
     assert result.binding_values == {}
     assert result.enum_binding_values == {}
-    assert result.bindings_sourced_from_borrador == ()
+    assert result.borrador_provenance is not None
+    assert result.borrador_provenance.bindings_sourced == ()
 
 
 def test_borrador_resolution_rejects_registry_unmarked_binding_values(

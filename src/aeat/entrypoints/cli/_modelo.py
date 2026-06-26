@@ -24,8 +24,10 @@ from ...application.aggregation import (
     ForeignAssetIngestObservation,
     PerModeloAggregationCommand,
     RetencionObservation,
+    WithholdingObservation,
     aggregate_per_modelo,
     persist_retencion_observations,
+    persist_withholding_observations,
 )
 from ...application.modelo import (
     AmendmentEvidenceMissingError,
@@ -57,7 +59,7 @@ from ...application.modelo import (
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
 )
-from ...core import Period, PeriodError
+from ...core import Modelo, Period, PeriodError
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
 from ...core.errors import AeatError
 from ...core.external_constants import RETENCIONES_MODELOS, OutputLanguage
@@ -489,6 +491,13 @@ def aggregate_modelo(
             help=tr("cli.app.modelo.aggregate.foreign_asset_observation_help"),
         ),
     ] = None,
+    withholding_observation: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--withholding-observation",
+            help=tr("cli.app.modelo.aggregate.withholding_observation_help"),
+        ),
+    ] = None,
 ) -> None:
     """Delegate per-modelo aggregation execution to the backend service."""
     command = PerModeloAggregationCommand(
@@ -509,7 +518,24 @@ def aggregate_modelo(
             model=ForeignAssetIngestObservation,
             flag="--foreign-asset-observation",
         ),
+        withholding_observations=_parse_typed_cli_observations(
+            withholding_observation,
+            model=WithholdingObservation,
+            flag="--withholding-observation",
+        ),
     )
+    if command.modelo == Modelo.M190.value:
+        # Persist the per-perceptor-clave set to the dedicated encrypted store so the
+        # calculate path counts percepciones (distinct perceptor+clave+subclave) from
+        # the SAME observations this pull aggregates (#28, one source for both
+        # surfaces). Set-replace semantics: a re-pull that drops a percepción clears
+        # the stale row. The entrypoint owns the write; aggregate_per_modelo stays pure.
+        persist_withholding_observations(
+            modelo=command.modelo,
+            filing_year=command.period.filing_year,
+            period=command.period,
+            observations=command.withholding_observations,
+        )
     if command.modelo in RETENCIONES_MODELOS:
         # Persist the per-perceptor set to the dedicated encrypted store so the
         # calculate path counts perceptors from the SAME observations this pull

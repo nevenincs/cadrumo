@@ -544,7 +544,7 @@ nitpick_ignore_regex = [
         r"py:.*",
         r"^(CasillaDelta|CasillaInputs|CounterpartSourceKind|FiledCaptureReport|"
         r"FiledDeclaracionArtefactSink|IvaCompensationAuthority|"
-        r"IvaCompensationAuthoritySourceKind|IvaCompensationDivergence|LocaleNode|"
+        r"IvaCompensationAuthorityKind|IvaCompensationDivergence|LocaleNode|"
         r"ModeloAmendment|ModeloCalculationRevisionDefault|ModeloCode|"
         r"ModeloInputScalar|ModeloInputValue|ModeloInputs|ModeloWorkTarget|"
         r"RegisteredSchema|UserProfileFactValue)$",

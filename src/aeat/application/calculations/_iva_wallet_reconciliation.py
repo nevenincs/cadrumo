@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core import Modelo, Period
+from ...core import BindingSourceKind, Modelo, Period
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry import RegistrySnapshot
 from ...domain.iva_compensation._errors import IvaCompensationReconciliationInputError
@@ -62,7 +62,7 @@ class IvaWalletDecisionSourceResolver:
     """Source mesh adapter for persisted Modelo 303 IVA wallet decisions."""
 
     resolver_id = "iva_wallet_decision"
-    owned_sources = ("iva_wallet_decision",)
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.IVA_WALLET_DECISION,)
     binding_id = "modelo-303-compensacion-pendiente-anteriores"
 
     def __init__(self, decision: IvaCompensationReconciliationDecision | None) -> None:

@@ -20,9 +20,9 @@ from ...application.invoices import (
     resolve_catalogue_invoice_from_repository,
 )
 from ...application.ledger import (
+    BusinessOperationInvoiceDirection,
     BusinessOperationInvoiceInputError,
     BusinessOperationInvoicePatch,
-    BusinessOperationInvoiceSourceKind,
     CollectibleInvoiceService,
     IntracomOperationType,
     PayableInvoiceService,
@@ -82,7 +82,7 @@ def _service_for_kind(
 ) -> PayableInvoiceService | CollectibleInvoiceService:
     """Select the slim CRUD service for ``kind`` via the contractual mapping."""
     source_kind = invoice_direction_to_source_kind(InvoiceKind(kind.value))
-    if source_kind is BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE:
+    if source_kind is BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE:
         return CollectibleInvoiceService()
     return PayableInvoiceService()
 

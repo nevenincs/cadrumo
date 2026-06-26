@@ -12,14 +12,16 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, Period
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import invariant_diagnostics, selector_against_model, unique_tuple
+from ._binding_selector_utils import invariant_diagnostics, selector_against_model
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId
+from ._observation_fold import fold_sum_or_copy
 from ._period_offset_math import apply_period_offset
+from ._relations import RegistryFoldRequirement
 from ._schema import DataBindingDefinition, ModeloRevision, filing_period_from_scope
 
 
@@ -31,20 +33,6 @@ class _RegistryModeloObservationLike(Protocol):
     @property
     def casilla_values(self) -> Mapping[CasillaId, Decimal]: ...
 
-
-class RegistryModeloObservationRequirement(BaseModel):
-    """Filed declaration required by one or more registry bindings."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    modelo: str = Field(min_length=1, max_length=8)
-    filing_period: Period | None = None
-    filing_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=8)
-    binding_ids: tuple[BindingId, ...] = Field(min_length=1)
-    source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
-
-    _values_unique = field_validator("binding_ids", "source_casilla_ids")(unique_tuple("observation requirement tuple"))
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,8 +59,8 @@ def previous_filing_observation_requirements(
     *,
     filing_year: int,
     period: str,
-) -> tuple[RegistryModeloObservationRequirement, ...]:
-    """Return :class:`RegistryModeloObservationRequirement` records needed by direct previous-filing bindings.
+) -> tuple[RegistryFoldRequirement, ...]:
+    """Return :class:`RegistryFoldRequirement` records needed by direct previous-filing bindings.
 
     Use of :class:`ModeloRevision` for compliance.
     """
@@ -90,11 +78,15 @@ def previous_filing_observation_requirements(
             binding_ids_by_key.setdefault(key, set()).add(binding.id)
             source_casilla_ids_by_key.setdefault(key, set()).update(_previous_filing_source_ids(selector))
     return tuple(
-        RegistryModeloObservationRequirement(
-            modelo=modelo,
-            filing_period=filing_period_from_scope(expected_year, required_period),
+        RegistryFoldRequirement(
+            source_modelo=modelo,
+            filing_periods=tuple(
+                filing_period
+                for filing_period in (filing_period_from_scope(expected_year, required_period),)
+                if filing_period is not None
+            ),
             filing_year=expected_year,
-            period=required_period,
+            periods=(required_period,),
             binding_ids=tuple(sorted(binding_ids_by_key[(modelo, expected_year, required_period)])),
             source_casilla_ids=tuple(sorted(source_casilla_ids_by_key[(modelo, expected_year, required_period)])),
         )
@@ -474,12 +466,13 @@ def _aggregate_previous_filing_binding(
     source_casilla_ids: tuple[CasillaId, ...] = (),
 ) -> Decimal:
     op = binding_aggregation_op(binding)
-    if op == BindingAggregationOp.SUM:
-        return sum(values, Decimal("0"))
-    if op == BindingAggregationOp.COPY:
-        if len(values) != 1:
-            raise RegistryValidationError(f"binding {binding.id!r} copy aggregation requires one source casilla")
-        return values[0]
+    if op in (BindingAggregationOp.SUM, BindingAggregationOp.COPY):
+        return fold_sum_or_copy(
+            op.value,
+            values,
+            subject=f"binding {binding.id!r}",
+            copy_unit="source casilla",
+        )
     if op == BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS:
         return _aggregate_prior_pagos_fraccionados(binding, values, source_casilla_ids=source_casilla_ids)
     raise RegistryValidationError(f"binding {binding.id!r} uses unsupported previous-filing aggregation {op.value!r}")

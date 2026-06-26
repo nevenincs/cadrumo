@@ -118,11 +118,11 @@ def test_source_resolution_rejects_noncanonical_relation_keys() -> None:
     ("payload", "message_key"),
     (
         (
-            {"resolver_id": "source-mesh", "owned_sources": ("ledger", " ")},
+            {"resolver_id": "source-mesh", "owned_sources": ("profile", " ")},
             "aggregation.source_mesh.errors.owned_sources_blank",
         ),
         (
-            {"resolver_id": "source-mesh", "owned_sources": ("ledger", "ledger")},
+            {"resolver_id": "source-mesh", "owned_sources": ("profile", "profile")},
             "aggregation.source_mesh.errors.owned_sources_duplicate",
         ),
         (
@@ -148,6 +148,21 @@ def test_source_resolution_validator_errors_are_localized(
     assert isinstance(error, SourceMeshError)
     assert str(error) == message_key
     assert error.translated_message == message_key
+
+
+def test_owned_sources_unknown_token_is_rejected_by_the_typed_field() -> None:
+    """Anti-tautology: a non-member source token fails strict enum validation.
+
+    The ``owned_sources`` carrier is typed ``tuple[BindingSourceKind, ...]`` and the
+    before-coercer hydrates only KNOWN tokens; an unknown token falls through to the
+    strict field, which rejects it. If this ever passes for a nonsense token, the
+    carrier has silently widened back to bare strings and the type-lift is meaningless.
+    """
+    with pytest.raises(ValidationError) as exc_info:
+        CalculationSourceResolution.model_validate(
+            {"resolver_id": "source-mesh", "owned_sources": ("not_a_real_source_kind",)},
+        )
+    assert exc_info.value.errors()[0]["loc"][0] == "owned_sources"
 
 
 def test_source_resolution_merge_rejects_duplicate_binding_ownership() -> None:
@@ -181,7 +196,7 @@ def test_source_resolution_merge_rejects_duplicate_bound_casilla_ownership() -> 
     )
     right = CalculationSourceResolution(
         resolver_id="invoice",
-        owned_sources=("invoice",),
+        owned_sources=("payable_invoice",),
         bound_inputs_by_casilla_id={_IVA_REPERCUTIDO_GENERAL_CASILLA: Decimal("99.00")},
     )
 
@@ -204,7 +219,7 @@ def test_source_resolution_merge_rejects_duplicate_relation_ownership() -> None:
     )
     right = CalculationSourceResolution(
         resolver_id="aeat-live",
-        owned_sources=("aeat_live",),
+        owned_sources=("previous_filing",),
         relation_values={"modelo-180-rel-115-base-anual": Decimal("99.00")},
     )
 

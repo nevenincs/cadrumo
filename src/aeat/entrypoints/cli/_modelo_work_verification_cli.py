@@ -16,6 +16,7 @@ from ...application.calculations import (
     evaluate_cross_period_clean_state,
 )
 from ...application.modelo import (
+    derive_taxpayer_files_economic_activity,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloCalculationRevisionSelector,
@@ -254,6 +255,7 @@ def _register_work_dependencies_command(
                     expected_member_sets=_profile_expected_member_sets(workflow_profile),
                     taxpayer_tax_id=workflow_profile.tax_id,
                     activity_start_date=workflow_profile.activity_start_date,
+                    taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
                 )
         except (FileNotFoundError, RegistrySnapshotError, ValueError) as exc:
             raise bad_parameter_from_error(exc) from exc

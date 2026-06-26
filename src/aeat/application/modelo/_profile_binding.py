@@ -34,9 +34,8 @@ from dataclasses import field as dataclass_field
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
@@ -58,48 +57,16 @@ from ...domain.user_profile import (
     load_user_profile_schema,
     profile_binding_selectors,
 )
+from ..aggregation._source_mesh import (
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+)
+
+_PROFILE_RESOLVER_ID = "profile"
 
 
 class ProfileBindingResolutionError(ModeloError):
     """Raised when a profile-sourced binding cannot be resolved for a calculation."""
-
-
-class ProfileSourcedBindingResult(BaseModel):
-    """Profile facts projected into engine binding channels.
-
-    ``binding_values`` carries Decimal-channel bindings; ``enum_binding_values``
-    carries string-channel (enum-dispatch) bindings; ``date_binding_values``
-    carries date-channel bindings consumed by ``age_at_year_end``.
-    ``bindings_sourced_from_profile`` is the union of all key sets, sorted
-    -- a trace of every binding the profile satisfied.
-
-    Fills the shared binding source-resolution role (see
-    :class:`~aeat.application.modelo._binding_resolution.BindingSourceResolution`):
-    profile facts are one source that resolves registry bindings onto the engine
-    ``binding_values`` / ``enum_binding_values`` channels.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
-    enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
-    date_binding_values: Mapping[BindingId, date] = Field(default_factory=dict)
-    bindings_sourced_from_profile: tuple[BindingId, ...] = ()
-    profile_record_fingerprint: str | None = Field(default=None, min_length=1)
-
-    @model_validator(mode="after")
-    def _enforce_trace(self) -> ProfileSourcedBindingResult:
-        resolved = set(self.binding_values) | set(self.enum_binding_values) | set(self.date_binding_values)
-        if resolved != set(self.bindings_sourced_from_profile):
-            raise ProfileBindingResolutionError(
-                "profile-sourced binding trace does not match the resolved binding keys",
-                translated_message="application.modelo.profile_binding.errors.source_trace_mismatch",
-                context={
-                    "resolved_bindings": tuple(sorted(resolved)),
-                    "trace_bindings": tuple(sorted(self.bindings_sourced_from_profile)),
-                },
-            )
-        return self
 
 
 def _profile_record_fingerprint(profile_record: object | None) -> str | None:
@@ -359,7 +326,7 @@ def resolve_profile_sourced_bindings(
     profile_record: object | None = None,
     caller_binding_ids: frozenset[BindingId] = frozenset(),
     schema: ProfileSchemaDefinition | None = None,
-) -> ProfileSourcedBindingResult:
+) -> CalculationSourceResolution:
     """Resolve every ``source = "profile"`` binding the revision declares.
 
     Args:
@@ -380,8 +347,9 @@ def resolve_profile_sourced_bindings(
     surfaces the missing-binding error only if a formula needs it.
     A bucket with no profile yields an empty result.
 
-    Returns a :class:`ProfileSourcedBindingResult` with resolved binding
-    values split across Decimal and enum channels.
+    Returns a :class:`CalculationSourceResolution` with resolved binding
+    values split across the Decimal, enum, and date engine channels and a
+    :class:`CalculationSourceProvenance` row per profile-sourced binding.
     """
     # A profile binding matters to the engine when a formula consumes it OR when
     # it feeds a ``bound`` NUMERIC input casilla (e.g. M303 casilla 65, the
@@ -415,7 +383,7 @@ def resolve_profile_sourced_bindings(
         )
     ]
     if not profile_bindings:
-        return ProfileSourcedBindingResult()
+        return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=("profile",))
 
     record = profile_record
     if record is None:
@@ -424,7 +392,7 @@ def resolve_profile_sourced_bindings(
         try:
             record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
         except ProfileNotFoundError:
-            return ProfileSourcedBindingResult()
+            return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=("profile",))
     profile_record_fingerprint = _profile_record_fingerprint(record)
 
     resolved_schema = schema if schema is not None else load_user_profile_schema()
@@ -454,12 +422,21 @@ def resolve_profile_sourced_bindings(
     enum_values = channels.enum_values
     date_values = channels.date_values
     sourced = tuple(sorted(set(decimal_values) | set(enum_values) | set(date_values)))
-    return ProfileSourcedBindingResult(
+    fingerprint = profile_record_fingerprint if sourced else None
+    return CalculationSourceResolution(
+        resolver_id=_PROFILE_RESOLVER_ID,
+        owned_sources=("profile",),
         binding_values=decimal_values,
         enum_binding_values=enum_values,
         date_binding_values=date_values,
-        bindings_sourced_from_profile=sourced,
-        profile_record_fingerprint=profile_record_fingerprint if sourced else None,
+        provenance=tuple(
+            CalculationSourceProvenance(
+                source_kind="profile",
+                source_ref=f"profile:{bucket_id}:binding:{binding_id}",
+                fingerprint=fingerprint,
+            )
+            for binding_id in sourced
+        ),
     )
 
 
@@ -482,6 +459,5 @@ def _resolve_one(
 
 __all__ = [
     "ProfileBindingResolutionError",
-    "ProfileSourcedBindingResult",
     "resolve_profile_sourced_bindings",
 ]

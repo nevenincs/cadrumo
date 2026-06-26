@@ -402,4 +402,15 @@ BindingSelectorMap = Mapping[str, BindingSelectorValue]
 Named alias rather than an inline ``Mapping[str, ...]`` so consumer
 code can express the type intent and discover the per-source typed
 companion models declared in :mod:`_bindings` via the alias name.
+
+The mapping is the as-stored READ shape, but it is no longer free-form
+at construction: ``DataBindingDefinition._validate_selector_shape``
+(F8) dispatches on the binding's ``source`` through the per-family
+selector models (``_BINDING_SELECTOR_REGISTRY``, surfaced by
+``selector_model_for_source``) and re-validates this mapping against
+the registered schema the moment a binding is built — so a misshapen
+selector for a typed source now fails at model construction, not only
+at snapshot build. The op/fact cross-invariants (which read the
+separate ``aggregation`` field) remain enforced by
+``validate_binding_selector_shape`` at snapshot build.
 """

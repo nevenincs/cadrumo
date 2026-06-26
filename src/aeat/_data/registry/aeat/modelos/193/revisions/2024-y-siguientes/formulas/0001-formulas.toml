@@ -1,16 +1,4 @@
 [[revisions."2024-y-siguientes".formulas]]
-id = "modelo-193-total-perceptores"
-target_casilla_id = "decl.total-perceptores"
-expression = { op = "copy", args = [{ relation = "modelo-193-rel-123-perceptores-anual" }] }
-rounding = "integer"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["boe-modelo-193-2011-form"]
-
-[[revisions."2024-y-siguientes".formulas.source_citations]]
-source_ref = "boe-modelo-193-2011-form"
-required_text = ["NÚMERO TOTAL DE PERCEPTORES", "número de registros de tipo 2"]
-
-[[revisions."2024-y-siguientes".formulas]]
 id = "modelo-193-base-total"
 target_casilla_id = "decl.base-total"
 expression = { op = "copy", args = [{ relation = "modelo-193-rel-123-base-anual" }] }

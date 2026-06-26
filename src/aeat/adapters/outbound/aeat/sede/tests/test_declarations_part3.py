@@ -42,10 +42,15 @@ class TestFiledObservationRelations:
             for casilla in observation.casillas
         }
         missing = [
-            (requirement.source_modelo, requirement.filing_year, period, requirement.source_casilla_id)
+            (requirement.source_modelo, requirement.filing_year, period, requirement.source_casilla_ids[0])
             for requirement in relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
             for period in requirement.periods
-            if (requirement.source_modelo, requirement.filing_year, period, requirement.source_casilla_id) not in available
+            if (
+                requirement.source_modelo,
+                requirement.filing_year,
+                period,
+                requirement.source_casilla_ids[0],
+            ) not in available
         ]
 
         assert not missing
@@ -175,9 +180,6 @@ class TestFiledObservationRelations:
 
         assert resolved == {
             "modelo-180-rel-115-base-anual": sum(values[_M115_BASE_CASILLA] for values in quarterly_values.values()),
-            "modelo-180-rel-115-perceptores-anual": sum(
-                values[_M115_PERCEPTORES_CASILLA] for values in quarterly_values.values()
-            ),
             "modelo-180-rel-115-retenciones-anual": sum(
                 values[_M115_RETENCIONES_CASILLA] for values in quarterly_values.values()
             ),
@@ -224,9 +226,6 @@ class TestFiledObservationRelations:
         )
 
         assert resolved == {
-            "modelo-193-rel-123-perceptores-anual": sum(
-                values[_M123_PERCEPTORES_CASILLA] for values in quarterly_values.values()
-            ),
             "modelo-193-rel-123-base-anual": sum(values[_M123_BASE_CASILLA] for values in quarterly_values.values()),
             "modelo-193-rel-123-retenciones-anual": sum(
                 values[_M123_RETENCIONES_CASILLA] for values in quarterly_values.values()

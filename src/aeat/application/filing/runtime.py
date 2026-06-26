@@ -189,8 +189,14 @@ class RegistryModeloSubview:
 
 
 @dataclass(frozen=True, slots=True)
-class RegistrySchemaProvider:
-    """Registry-backed filing schema provider."""
+class RegistrySchemaAccessor:
+    """Registry-backed filing schema accessor.
+
+    The concrete registry-schema accessor (it provides casilla collections
+    and modelo subviews from validated registry TOML); structurally
+    satisfies the :class:`CasillaSchemaProvider` protocol. Named an accessor
+    to stay distinct from the settled calculate-mesh resolver port.
+    """
 
     collections: dict[str, RegistryCasillaCollection]
     subviews: dict[str, RegistryModeloSubview]
@@ -291,8 +297,8 @@ def build_runtime_schema_provider(
     filing_year: int | None = None,
     period: Period | None = None,
     modelos: Sequence[str] | None = None,
-) -> RegistrySchemaProvider:
-    """Build and return the :class:`RegistrySchemaProvider` from validated registry TOML."""
+) -> RegistrySchemaAccessor:
+    """Build and return the :class:`RegistrySchemaAccessor` from validated registry TOML."""
     _validate_period_arguments(filing_year=filing_year, period=period)
     root = (registry_root or bundled_path("registry", "aeat")).resolve()
     resolved_source_root = (source_root or bundled_path()).resolve()
@@ -316,7 +322,7 @@ def _build_runtime_schema_provider_cached(
     period: Period | None,
     selected_tuple: tuple[str, ...] | None,
     _fingerprint: tuple[tuple[str, int, int], ...],
-) -> RegistrySchemaProvider:
+) -> RegistrySchemaAccessor:
     authority = ValidatedRegistryAuthority.load(root, source_root=resolved_source_root)
     loaded_modelos = authority.modelos
     if not loaded_modelos:
@@ -355,7 +361,7 @@ def _build_runtime_schema_provider_cached(
             translated_message="application.filing.runtime.errors.registry_empty_for_period",
             context={"filing_year": str(filing_year), "period": str(period)},
         )
-    return RegistrySchemaProvider(
+    return RegistrySchemaAccessor(
         collections={modelo_id: _collection_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
         subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
     )
@@ -578,7 +584,7 @@ __all__ = [
     "RegistryCasillaCollection",
     "RegistryCasillaSchema",
     "RegistryModeloSubview",
-    "RegistrySchemaProvider",
+    "RegistrySchemaAccessor",
     "build_runtime_schema_provider",
     "clear_runtime_fingerprint_cache",
     "filing_profile_from_taxpayer",

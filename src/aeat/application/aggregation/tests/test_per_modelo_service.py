@@ -8,13 +8,12 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.errors import get_registered_error_code
 from ... import aggregation
 from .. import (
     ACCEPTED_SOURCE_KINDS,
     AggregationErrorCodes,
-    AggregationSourceKind,
     AggregationUnsupportedModeloError,
     CounterpartAggregation,
     CounterpartObservation,
@@ -22,8 +21,8 @@ from .. import (
     ForeignAssetIngestObservation,
     ForeignAssetsAggregation,
     PerModeloAggregationCommand,
+    PerModeloAggregationContributor,
     PerModeloAggregationLogFields,
-    PerModeloAggregationProvider,
     PerModeloAggregationResult,
     RetencionesAggregation,
     RetencionObservation,
@@ -57,7 +56,7 @@ def _retencion_obs(*, source_kind: str = "ledger_transaction") -> RetencionObser
 def _counterpart_obs(
     *,
     nif: str = "B00000001",
-    source_kind: CounterpartSourceKind = AggregationSourceKind.LEDGER_TRANSACTION,
+    source_kind: CounterpartSourceKind = BindingSourceKind.LEDGER_TRANSACTION,
     operation_kind: str = "entregas_y_prestaciones",
     country: str = "ES",
     invoice_total: str = "2000.00",
@@ -101,9 +100,16 @@ def test_contract_maps_supported_modelos_to_application_aggregation_owner() -> N
     assert contract.accepted_source_kinds == ACCEPTED_SOURCE_KINDS
     assert contract.error_codes == AggregationErrorCodes
     by_provider = {provider.provider: provider for provider in contract.providers}
-    assert by_provider[PerModeloAggregationProvider.RETENCIONES].modelos == ("111", "115", "123", "180", "190", "193")
-    assert by_provider[PerModeloAggregationProvider.COUNTERPART].modelos == ("347", "349")
-    assert by_provider[PerModeloAggregationProvider.FOREIGN_ASSETS].modelos == ("720",)
+    assert by_provider[PerModeloAggregationContributor.RETENCIONES].modelos == (
+        "111",
+        "115",
+        "123",
+        "180",
+        "190",
+        "193",
+    )
+    assert by_provider[PerModeloAggregationContributor.COUNTERPART].modelos == ("347", "349")
+    assert by_provider[PerModeloAggregationContributor.FOREIGN_ASSETS].modelos == ("720",)
     assert all(provider.service_owner == "aeat.application.aggregation" for provider in contract.providers)
 
 
@@ -114,7 +120,7 @@ def test_command_contract_is_strict_and_immutable() -> None:
         retencion_observations=(_retencion_obs(),),
     )
 
-    assert command.provider is PerModeloAggregationProvider.RETENCIONES
+    assert command.provider is PerModeloAggregationContributor.RETENCIONES
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         PerModeloAggregationCommand.model_validate(
             {
@@ -136,7 +142,7 @@ def test_period_boundary_accepts_period_dict_for_roundtrip() -> None:
         {
             "modelo": "111",
             "period": command.model_dump()["period"],
-            "provider": PerModeloAggregationProvider.RETENCIONES,
+            "provider": PerModeloAggregationContributor.RETENCIONES,
             "observation_count": 0,
             "source_kind_count": 0,
             "result_row_count": 0,
@@ -155,7 +161,7 @@ def test_period_boundary_rejects_combined_period_string() -> None:
             {
                 "modelo": "111",
                 "period": "2026Q1",
-                "provider": PerModeloAggregationProvider.RETENCIONES,
+                "provider": PerModeloAggregationContributor.RETENCIONES,
                 "observation_count": 0,
                 "source_kind_count": 0,
                 "result_row_count": 0,
@@ -175,10 +181,10 @@ def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None
 
     result = aggregate_per_modelo(command)
 
-    assert result.provider is PerModeloAggregationProvider.RETENCIONES
+    assert result.provider is PerModeloAggregationContributor.RETENCIONES
     assert isinstance(result.aggregation, RetencionesAggregation)
     assert result.aggregation.total_retencion == Decimal("150.00")
-    assert result.source_kinds == (AggregationSourceKind.LEDGER_TRANSACTION,)
+    assert result.source_kinds == (BindingSourceKind.LEDGER_TRANSACTION,)
     assert result.log_fields.as_extra() == {
         "service_name": "per_modelo_aggregation",
         "modelo": "111",
@@ -192,8 +198,8 @@ def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None
 
 def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() -> None:
     observations = (
-        _counterpart_obs(source_kind=AggregationSourceKind.LEDGER_TRANSACTION, invoice_total="1500.00"),
-        _counterpart_obs(source_kind=AggregationSourceKind.PAYABLE_INVOICE, invoice_total="1505.07"),
+        _counterpart_obs(source_kind=BindingSourceKind.LEDGER_TRANSACTION, invoice_total="1500.00"),
+        _counterpart_obs(source_kind=BindingSourceKind.PAYABLE_INVOICE, invoice_total="1505.07"),
     )
     command = PerModeloAggregationCommand(
         modelo="347",
@@ -203,11 +209,11 @@ def test_service_routes_counterpart_modelos_and_preserves_threshold_semantics() 
 
     result = aggregate_per_modelo(command)
 
-    assert result.provider is PerModeloAggregationProvider.COUNTERPART
+    assert result.provider is PerModeloAggregationContributor.COUNTERPART
     assert isinstance(result.aggregation, CounterpartAggregation)
     assert result.source_kinds == (
-        AggregationSourceKind.LEDGER_TRANSACTION,
-        AggregationSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.LEDGER_TRANSACTION,
+        BindingSourceKind.PAYABLE_INVOICE,
     )
     assert declarable_counterparty_nifs_347(result.aggregation) == frozenset({"B00000001"})
 
@@ -225,11 +231,11 @@ def test_service_routes_foreign_asset_modelos_and_preserves_threshold_semantics(
 
     result = aggregate_per_modelo(command)
 
-    assert result.provider is PerModeloAggregationProvider.FOREIGN_ASSETS
+    assert result.provider is PerModeloAggregationContributor.FOREIGN_ASSETS
     assert isinstance(result.aggregation, ForeignAssetsAggregation)
     assert result.source_kinds == (
-        AggregationSourceKind.PAYABLE_INVOICE,
-        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
     )
     assert declarable_asset_classes_720(result.aggregation) == frozenset({ForeignAssetClass.ACCOUNT})
 
@@ -276,13 +282,13 @@ def test_result_contract_rejects_incoherent_envelope_payload() -> None:
         PerModeloAggregationResult(
             modelo="349",
             period=_P_2025_ANNUAL,
-            provider=PerModeloAggregationProvider.COUNTERPART,
+            provider=PerModeloAggregationContributor.COUNTERPART,
             aggregation=aggregation_payload,
-            source_kinds=(AggregationSourceKind.LEDGER_TRANSACTION,),
+            source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
             log_fields=PerModeloAggregationLogFields(
                 modelo="349",
                 period=_P_2025_ANNUAL,
-                provider=PerModeloAggregationProvider.COUNTERPART,
+                provider=PerModeloAggregationContributor.COUNTERPART,
                 observation_count=1,
                 source_kind_count=1,
                 result_row_count=1,
@@ -303,13 +309,13 @@ def test_result_contract_rejects_provider_payload_mismatch() -> None:
         PerModeloAggregationResult(
             modelo="111",
             period=_P_2025_Q1,
-            provider=PerModeloAggregationProvider.COUNTERPART,
+            provider=PerModeloAggregationContributor.COUNTERPART,
             aggregation=aggregation_payload,
-            source_kinds=(AggregationSourceKind.LEDGER_TRANSACTION,),
+            source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
             log_fields=PerModeloAggregationLogFields(
                 modelo="111",
                 period=_P_2025_Q1,
-                provider=PerModeloAggregationProvider.COUNTERPART,
+                provider=PerModeloAggregationContributor.COUNTERPART,
                 observation_count=1,
                 source_kind_count=1,
                 result_row_count=1,

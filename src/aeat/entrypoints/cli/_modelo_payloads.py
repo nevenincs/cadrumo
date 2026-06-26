@@ -841,7 +841,7 @@ class ModeloCasillasResult(OutputSchema):
     rows: list[CasillaRowPayload]
 
 
-class BindingRowPayload(OutputSchema):
+class BindingListRowPayload(OutputSchema):
     """One binding row in the bindings list output.
 
     Carries the binding's regulatory grounding (``legal_refs`` /
@@ -876,7 +876,7 @@ class ModeloBindingsListResult(OutputSchema):
     period_filter: str | None
     missing_filter: bool
     binding_count: int
-    bindings: tuple[BindingRowPayload, ...]
+    bindings: tuple[BindingListRowPayload, ...]
 
 
 class BindingPreviewRowPayload(OutputSchema):
@@ -897,11 +897,11 @@ class BindingPreviewRowPayload(OutputSchema):
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
-@register_schema("modelo.bindings.preview")
+@register_schema("modelo.bindings.resolve")
 class ModeloBindingsPreviewResult(OutputSchema):
-    """Bindings preview result."""
+    """Bindings resolve result."""
 
-    operation: str = "modelo.bindings.preview"
+    operation: str = "modelo.bindings.resolve"
     modelo: str
     revision: str
     filing_year: int | None
@@ -1203,8 +1203,8 @@ class WorkPreviewMaritimeExemptionResult(OutputSchema):
 
 
 __all__ = [
+    "BindingListRowPayload",
     "BindingPreviewRowPayload",
-    "BindingRowPayload",
     "CalculationRevisionPayload",
     "CasillaObservationPayload",
     "CasillaRowPayload",

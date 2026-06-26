@@ -53,9 +53,13 @@ def test_bundled_export_field_kinds_are_hydrated_enum_members() -> None:
 def test_binding_derived_export_fields_preserve_enum_kind() -> None:
     """The binding-derived export path emits CasillaFieldKind members."""
 
+    # ``withholding`` is free-form at the schema level (no entry in
+    # ``_BINDING_SELECTOR_REGISTRY``), so the F8 construction-time selector gate
+    # does not constrain this record/row_field selector that exercises the
+    # binding-derived export-field-kind path rather than selector shape.
     binding = DataBindingDefinition(
         id="binding.rows",
-        source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        source=BindingSourceKind.WITHHOLDING,
         selector={"record": "ventas", "row_field": "importe"},
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),

@@ -94,3 +94,18 @@ source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 source_ref = "aeat-modelo-190-procedure"
 required_text = ["modelo 190"]
 
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-percepciones-anual"
+# RET-1/#28: the annual "número total de percepciones" is the count of DISTINCT
+# (perceptor, clave, subclave) type-2 records (AEAT Diseño), materialised from the
+# dedicated per-perceptor-clave withholding store via the percepcion_count fact —
+# replacing the nine op=sum-of-quarterly-M111-perceptor-counts relations (which
+# double-counted a perceptor present in more than one quarter).
+source = "withholding"
+selector = { fact = "percepcion_count" }
+aggregation = { op = "count_distinct" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-190-2025-form"
+required_text = ["NÚMERO TOTAL DE PERCEPCIONES"]

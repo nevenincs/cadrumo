@@ -15,7 +15,9 @@ across all child conftests by pytest).
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
+import contextlib
+import tempfile
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
@@ -68,3 +70,35 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
         except SyntaxError:
             continue
     return cache
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _isolate_registry_caches() -> Iterator[None]:
+    """Isolate the registry loader caches per pytest session (the #44 fix).
+
+    The loader's cross-process ``/tmp`` ``aeat_registry_*.pkl`` disk pickle is
+    keyed by file mtime and shared across pytest-xdist worker processes, so a
+    parallel ``-n`` run could serve a stale/transient compiled registry from one
+    worker to another (the #44 isolation gap). The loader now skips that disk
+    pickle under pytest; this fixture additionally clears the in-process caches at
+    session start and end (the per-process ``lru_cache`` and the 1-second-TTL
+    fingerprint cache) and removes any stale ``aeat_registry_*.pkl`` left by a
+    prior non-pytest run, so the registry suite is deterministic regardless of
+    leftover state.
+    """
+    from .domain.calculations.registry._loader import (
+        _load_registry_tree_cached,
+        clear_fingerprint_cache,
+    )
+
+    def _reset(*, purge_disk: bool) -> None:
+        _load_registry_tree_cached.cache_clear()
+        clear_fingerprint_cache()
+        if purge_disk:
+            for stale in Path(tempfile.gettempdir()).glob("aeat_registry_*.pkl"):
+                with contextlib.suppress(OSError):
+                    stale.unlink()
+
+    _reset(purge_disk=True)
+    yield
+    _reset(purge_disk=False)

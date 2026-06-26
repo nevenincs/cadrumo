@@ -240,7 +240,7 @@ class ModeloCasillasReport(BaseModel):
     rows: tuple[ModeloCasillaRow, ...]
 
 
-class ModeloBindingRow(BaseModel):
+class ModeloBindingQueryRow(BaseModel):
     """One row in a binding listing for a resolved modelo revision.
 
     A *binding* maps a financial-data source (such as an aggregated ledger
@@ -325,7 +325,7 @@ class ModeloBindingsReport(BaseModel):
     filing_year: int | None
     filing_period: Period | None = None
     period: str | None
-    rows: tuple[ModeloBindingRow, ...]
+    rows: tuple[ModeloBindingQueryRow, ...]
 
 
 class ModeloFormulaRow(BaseModel):
@@ -934,7 +934,7 @@ class RegistryQueryService:
         return definition, snapshot.revision, registry_period
 
 
-def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingRow, ...]:
+def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingQueryRow, ...]:
     """Build the typed binding rows for one revision.
 
     Shared by every ``bindings*`` query so the operator-facing
@@ -944,7 +944,7 @@ def _binding_rows(revision: ModeloRevision) -> tuple[ModeloBindingRow, ...]:
     """
     enum_consumed = enum_consumed_binding_ids(revision)
     return tuple(
-        ModeloBindingRow(
+        ModeloBindingQueryRow(
             binding_id=binding.id,
             source=binding.source,
             typed_enum=binding.typed_enum,
@@ -986,7 +986,7 @@ def _public_value(value: object) -> object:
 
 
 __all__ = [
-    "ModeloBindingRow",
+    "ModeloBindingQueryRow",
     "ModeloBindingsReport",
     "ModeloCasillaRow",
     "ModeloCasillasReport",

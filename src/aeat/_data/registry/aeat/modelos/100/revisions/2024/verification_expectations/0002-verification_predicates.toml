@@ -1,0 +1,25 @@
+# Settlement-completeness soundness gate (no-silent-under-declaration). The IRPF
+# liability must be determined when the taxpayer reports a positive general
+# taxable base. casilla 0595 (cuota resultante de la autoliquidacion) is the
+# tax liability BEFORE pagos a cuenta (retenciones / pagos fraccionados); it is
+# the box that feeds the cuota diferencial (0610 = 0595 - 0609). When base
+# liquidable general (0500) is strictly positive but 0595 resolves to zero, the
+# return computes no tax on positive taxable activity -- a silent
+# under-declaration the verify gate would otherwise grant with zero findings.
+#
+# ADVISORY (non-blocking WARNING), not BLOCKING: a positive base liquidable
+# general with a legitimately zero cuota is possible (general base at or below
+# the minimo personal y familiar, or fully offset by deducciones), so this
+# surfaces an operator-facing advisory rather than refusing the draft. The
+# consequent is 0595 (the liability), NOT the cuota diferencial (0610) or the
+# resultado (0670): those legitimately resolve to zero or negative for a filer
+# whose retenciones / pagos a cuenta cover the liability (the dominant employee
+# case), so guarding them would false-fire on the majority of returns and train
+# operators to ignore the alert. implies_nonzero holds trivially when the
+# antecedent <= 0, so loss / zero-general-base / savings-only filers never fire.
+# Mirrors the M200 base-determination and M131 pago-fraccionado advisories.
+[[revisions."2024".verification_predicates]]
+predicate_id = "modelo-100-2024-cuota-resultante-determinada-cuando-base-liquidable-general-positiva"
+expression = 'implies_nonzero(["0500", "0595"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-63", "ley-35-2006:art-79"]

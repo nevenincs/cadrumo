@@ -344,7 +344,7 @@ def test_m232_binding_error_too_many_rows() -> None:
     from decimal import Decimal as _Decimal
 
     from ..domain.calculations.registry._errors import RegistryValidationError
-    from ..domain.calculations.registry._m232_row_bindings import (
+    from ..domain.modelos._m232_row_materialisation import (
         materialize_m232_related_party_rows,
     )
     from ..domain.modelos._row_models import Modelo232VinculadaRow

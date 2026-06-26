@@ -2,6 +2,12 @@
 
 Used by: :mod:`~aeat.application.calculations._calculate` (model calculation orchestrator).
 
+One of three distinct prefill tiers, NOT to be merged: this is the
+PREVIOUS-FILING direct-carry tier. The other two are the relation tier
+(`_relation_prefill`) and the AEAT borrador pre-fill tier (the registry
+`aeat_prefilled` flag, an AEAT-live source). They share only the word
+"prefill"; each routes a different source through a different mechanism.
+
 Sister module to `_relation_prefill`. The runtime distinguishes
 `relation` leaves (cross-revision aggregations declared as
 `RelationDefinition` records) from `previous_filing` bindings
@@ -351,7 +357,7 @@ def _gather_observations(
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     ):
-        req_key = (requirement.modelo, requirement.filing_year, requirement.period)
+        req_key = (requirement.source_modelo, requirement.filing_year, requirement.periods[0])
         if req_key in grouped_keys:
             _gather_grouped_member_observations(
                 req_key,
@@ -361,9 +367,9 @@ def _gather_observations(
             )
             continue
         gathered = _gather_single_key_observation(
-            requirement.modelo,
+            requirement.source_modelo,
             requirement.filing_year,
-            requirement.period,
+            requirement.periods[0],
             repository=repository,
             iva_history_repository=iva_history_repository,
         )
@@ -402,7 +408,7 @@ def _per_grupo_member_requirement_keys(revision: object, snapshot: RegistrySnaps
         period=snapshot.period,
     ):
         if any(bid in grouped_binding_ids for bid in requirement.binding_ids):
-            keys.add((requirement.modelo, requirement.filing_year, requirement.period))
+            keys.add((requirement.source_modelo, requirement.filing_year, requirement.periods[0]))
     return keys
 
 
@@ -548,8 +554,8 @@ def _requirements_by_binding(
         period=snapshot.period,
     ):
         for binding_id in requirement.binding_ids:
-            current = grouped.setdefault(binding_id, (requirement.modelo, requirement.filing_year, set()))
-            current[2].add(requirement.period)
+            current = grouped.setdefault(binding_id, (requirement.source_modelo, requirement.filing_year, set()))
+            current[2].add(requirement.periods[0])
     return {
         binding_id: (source_modelo, source_year, tuple(sorted(periods)))
         for binding_id, (source_modelo, source_year, periods) in grouped.items()
@@ -652,9 +658,14 @@ def resolve_bindings_from_local_store(
     is the caller's choice via the prefill report's coverage.
     """
     repo = repository if repository is not None else CalculationObservationRepository()
-    iva_repo = iva_history_repository if iva_history_repository is not None else IvaCompensationHistoryRepository()
+    # The Modelo 303 IVA-compensation-history merge is NO LONGER an implicit
+    # default: the live calculate path's compensación value is owned exclusively
+    # by the iva-wallet decision (ruling D3), so the previous_filing gather stays
+    # pure (registry observations only). Only the explicit wallet-feeding path
+    # (extract_modelo_303_local_iva_compensation_recurrence) passes the history
+    # repository to reconstruct the local recurrence the reconciliation consumes.
     when = captured_at if captured_at is not None else now()
-    observations = _gather_observations(snapshot, repository=repo, iva_history_repository=iva_repo)
+    observations = _gather_observations(snapshot, repository=repo, iva_history_repository=iva_history_repository)
 
     if not observations:
         return BindingPrefillReport(prefilled=(), binding_values={})
@@ -749,10 +760,17 @@ def extract_modelo_303_local_iva_compensation_recurrence(
         from ..modelo._actions import ModeloApplicabilityFilterError
 
         raise ModeloApplicabilityFilterError("local IVA compensation recurrence extraction only applies to Modelo 303")
+    # This is the explicit wallet-feeding path: reconstruct the local Modelo 303
+    # compensation recurrence from the secure IVA-compensation history so the
+    # iva-wallet reconciliation can compare it against live wallet evidence. The
+    # history repository is defaulted to the active bucket here (no longer
+    # implicitly inside resolve_bindings_from_local_store) so the generic
+    # previous_filing gather stays pure for every other caller.
+    iva_repo = iva_history_repository if iva_history_repository is not None else IvaCompensationHistoryRepository()
     report = resolve_bindings_from_local_store(
         snapshot,
         repository=repository,
-        iva_history_repository=iva_history_repository,
+        iva_history_repository=iva_repo,
         captured_at=captured_at,
     )
     amount = report.binding_values.get(_MODELO_303_IVA_COMPENSATION_BINDING_ID)

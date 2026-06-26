@@ -36,7 +36,7 @@ from ....application.ledger import (
     update_manual_transaction_fields,
 )
 from ....core import Period
-from ....core.aggregation import AggregationSourceKind
+from ....core.aggregation import BindingSourceKind
 from ....domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ....domain.buckets import (
     BucketEvent,
@@ -96,11 +96,11 @@ _REVISION_CASILLA: CasillaId = _casilla_id("01")
 
 __all__ = [
     "UTC",
-    "AggregationSourceKind",
     "Attachment",
     "AttachmentKind",
     "AttachmentSource",
     "AttachmentStore",
+    "BindingSourceKind",
     "BucketEvent",
     "BucketEventObjectType",
     "BucketEventType",
@@ -357,7 +357,7 @@ def _drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> 
 
 
 _PROVENANCE_RAW_FIELD_EXPECTATIONS = (
-    ("source_kind", AggregationSourceKind.LEDGER_TRANSACTION.value),
+    ("source_kind", BindingSourceKind.LEDGER_TRANSACTION.value),
     ("taxable_base", "100.00"),
 )
 

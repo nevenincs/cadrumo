@@ -64,6 +64,7 @@ You MUST respect these rules at all times:
 @.claude/rules/plan-closure-requires-exec-records.md
 @.claude/rules/registry-calculation-legal-grounding.md
 @.claude/rules/registry-resolver-family-extraction.md
+@.claude/rules/registry-revision-content-inline-or-fragmented.md
 @.claude/rules/relation-slot-bindings-declare-relation-source.md
 @.claude/rules/retired-enum-members-need-consumer-reconciliation.md
 @.claude/rules/revision-resolution-is-law-determined.md

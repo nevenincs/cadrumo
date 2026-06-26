@@ -35,8 +35,8 @@ from ...domain.calculations.registry import (
 from ...domain.user_profile import ProfileNotFoundError
 from ._common import _emit_envelope, _parse_iso_date
 from ._modelo_payloads import (
+    BindingListRowPayload,
     BindingPreviewRowPayload,
-    BindingRowPayload,
     CasillaRowPayload,
     FormulaPayload,
     FormulasResult,
@@ -83,7 +83,7 @@ def register_discovery_commands(
     _register_describe_command(app, deps)
     _register_casillas_command(app, deps)
     _register_bindings_list_command(bindings_app, deps)
-    _register_bindings_preview_command(bindings_app, deps)
+    _register_bindings_resolve_command(bindings_app, deps)
     _register_formulas_command(app, deps)
 
 
@@ -419,18 +419,18 @@ def _bindings_report_for_target(
     )
 
 
-def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[BindingRowPayload], list[str]]:
+def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[BindingListRowPayload], list[str]]:
     rows = report.rows
     if missing:
         profile_resolved = _profile_resolved_binding_ids(report)
         rows = tuple(row for row in rows if row.source != "constant_value" and row.binding_id not in profile_resolved)
 
-    merged_rows: list[BindingRowPayload] = []
+    merged_rows: list[BindingListRowPayload] = []
     text_rows: list[str] = []
     for row in rows:
         readiness = _readiness_for_source(row.source)
         merged_rows.append(
-            BindingRowPayload(
+            BindingListRowPayload(
                 modelo=report.code,
                 revision=report.revision,
                 filing_year=report.filing_year,
@@ -489,7 +489,7 @@ def _register_bindings_list_command(bindings_app: typer.Typer, deps: _DiscoveryD
                     raise
                 continue
             per_modelo_reports.append(report)
-        merged_rows: list[BindingRowPayload] = []
+        merged_rows: list[BindingListRowPayload] = []
         text_rows: list[str] = []
         for report in per_modelo_reports:
             report_rows, report_text_rows = _binding_list_rows_for_report(report, missing=missing)
@@ -526,9 +526,9 @@ def _require_binding_scope(*, modelo: str | None, year: int | None, period: str 
         raise typer.BadParameter(tr("cli.app.modelo.bindings.missing_required_options", options=", ".join(missing)))
 
 
-def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _DiscoveryDeps) -> None:
-    @bindings_app.command("preview", help=tr("cli.app.modelo.bindings.preview_help"))
-    def bindings_preview(
+def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _DiscoveryDeps) -> None:
+    @bindings_app.command("resolve", help=tr("cli.app.modelo.bindings.resolve_help"))
+    def bindings_resolve(
         ctx: typer.Context,
         modelo: Annotated[
             str | None,
@@ -604,7 +604,7 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
             ],
         )
         lines = [
-            "operation\tregistry.modelo.bindings.preview",
+            "operation\tregistry.modelo.bindings.resolve",
             f"modelo\t{report.code}",
             f"revision\t{report.revision}",
             f"filing_year\t{report.filing_year}",
@@ -624,7 +624,7 @@ def _register_bindings_preview_command(bindings_app: typer.Typer, deps: _Discove
             )
             for row in report.rows
         )
-        _emit_envelope(ctx, command="modelo.bindings.preview", result=result, lines=lines)
+        _emit_envelope(ctx, command="modelo.bindings.resolve", result=result, lines=lines)
 
 
 def _register_formulas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:

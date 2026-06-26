@@ -351,13 +351,13 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_c
     )
 
     binding_requirements = previous_filing_observation_requirements(revision, filing_year=2025, period="2T")
-    assert [(item.period, item.source_casilla_ids) for item in binding_requirements] == [
-        ("1T", (_M303_DISPONIBLE_CASILLA,)),
+    assert [(item.periods, item.source_casilla_ids) for item in binding_requirements] == [
+        (("1T",), (_M303_DISPONIBLE_CASILLA,)),
     ]
 
     relation_requirements = relation_source_requirements(revision, filing_year=2025, period="2T")
-    assert [(item.periods, item.source_casilla_id) for item in relation_requirements] == [
-        (("1T",), _M303_DISPONIBLE_CASILLA),
+    assert [(item.periods, item.source_casilla_ids) for item in relation_requirements] == [
+        (("1T",), (_M303_DISPONIBLE_CASILLA,)),
     ]
 
     assert resolve_previous_filing_binding_values(
@@ -400,13 +400,13 @@ def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourt
     )
 
     binding_requirements = previous_filing_observation_requirements(revision, filing_year=2026, period="1T")
-    assert [(item.filing_year, item.period, item.source_casilla_ids) for item in binding_requirements] == [
-        (2025, "4T", (_M303_DISPONIBLE_CASILLA,)),
+    assert [(item.filing_year, item.periods, item.source_casilla_ids) for item in binding_requirements] == [
+        (2025, ("4T",), (_M303_DISPONIBLE_CASILLA,)),
     ]
 
     relation_requirements = relation_source_requirements(revision, filing_year=2026, period="1T")
-    assert [(item.filing_year, item.periods, item.source_casilla_id) for item in relation_requirements] == [
-        (2025, ("4T",), _M303_DISPONIBLE_CASILLA),
+    assert [(item.filing_year, item.periods, item.source_casilla_ids) for item in relation_requirements] == [
+        (2025, ("4T",), (_M303_DISPONIBLE_CASILLA,)),
     ]
 
     assert resolve_previous_filing_binding_values(

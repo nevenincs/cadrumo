@@ -67,19 +67,25 @@ After reviewing or editing the workbook, pull typed edits back from the Sheet:
 aeat config google sync calc pull --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
 ```
 
-Add `--compute` when you want `aeat` to re-calculate casilla values from the
-edits you pulled back from the Sheet:
-
-```bash
-aeat config google sync calc pull --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id> --compute
-```
-
 Add `--assemble-observations` when you want edited row-level data saved back
 as structured observations.
 
 The pull command checks that the spreadsheet belongs to the current profile and
 matches the expected filing period. If it refuses, re-export and retry from the
 new spreadsheet.
+
+## Compute casilla values from the Sheet
+
+Run `compute` when you want `aeat` to calculate casilla values from the edits
+in the Sheet. It pulls the operator-edited cells, runs the calculation engine
+over them, and displays the result. It persists nothing.
+
+```bash
+aeat config google sync calc compute --modelo 303 --year 2026 --period 1T --spreadsheet-id <spreadsheet-id>
+```
+
+The compute command checks that the spreadsheet matches the expected filing
+period. If it refuses, re-export and retry from the new spreadsheet.
 
 ## Verify the calculation surface
 

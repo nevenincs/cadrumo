@@ -346,9 +346,9 @@ def test_previous_filing_requirements_are_declared_from_registry_binding_selecto
 
     assert len(requirements) == 1
     requirement = requirements[0]
-    assert requirement.modelo == source_reference.source_modelo
+    assert requirement.source_modelo == source_reference.source_modelo
     assert requirement.filing_year == 2025
-    assert requirement.period == source_reference.required_periods[0]
+    assert requirement.periods == (source_reference.required_periods[0],)
     assert requirement.binding_ids == (_PREVIOUS_YEAR_NET_INCOME_BINDING,)
     assert requirement.source_casilla_ids == tuple(sorted(source_reference.source_casilla_ids))
 
@@ -366,20 +366,21 @@ def test_relation_requirements_cover_all_source_periods_for_annual_summary(
         period="0A",
     )
 
-    # The three 180 annual_summary relations share one source quadruple
+    # The two monetary 180 annual_summary relations share one source quadruple
     # (115/2026/[1T-4T]) grouped per source_casilla_id; assert the periods cover all
-    # four quarters and the relation source modelo/year are correct.
+    # four quarters and the relation source modelo/year are correct. The perceptor
+    # count is a retenciones_aggregation binding, not a relation.
     assert {requirement.source_modelo for requirement in requirements} == {"115"}
     assert {requirement.filing_year for requirement in requirements} == {2026}
     assert all(tuple(requirement.periods) == ("1T", "2T", "3T", "4T") for requirement in requirements)
     target_bindings = {tb for requirement in requirements for tb in requirement.target_bindings}
     assert target_bindings == {
         "modelo-180-115-base-anual",
-        "modelo-180-115-perceptores-anual",
         "modelo-180-115-retenciones-anual",
     }
-    assert {requirement.source_casilla_id for requirement in requirements} == {
-        _M115_PERCEPTORES_CASILLA,
+    assert {
+        source_casilla_id for requirement in requirements for source_casilla_id in requirement.source_casilla_ids
+    } == {
         _M115_BASE_CASILLA,
         _M115_RETENCIONES_CASILLA,
     }
@@ -393,10 +394,8 @@ def test_relation_resolves_annual_summary_from_all_source_periods(
     # synthetic inputs; the runtime's `op = "sum"` aggregator and the author
     # would share the same arithmetic. Instead this test asserts the canonical
     # RELATION resolver (now live) produces:
-    #   1. graph-wiring: the three expected relation ids appear in result;
-    #   2. structural: perceptores = number of observations (count, not
-    #      arithmetic on input values);
-    #   3. type: the summed relations are Decimal-valued, sign-preserving.
+    #   1. graph-wiring: the two expected monetary relation ids appear in result;
+    #   2. type: the summed relations are Decimal-valued, sign-preserving.
     observations = tuple(
         registry_grounded_modelo_observation(
             modelo="115",
@@ -424,11 +423,9 @@ def test_relation_resolves_annual_summary_from_all_source_periods(
     )
 
     assert set(result.keys()) == {
-        "modelo-180-rel-115-perceptores-anual",
         "modelo-180-rel-115-base-anual",
         "modelo-180-rel-115-retenciones-anual",
     }
-    assert result["modelo-180-rel-115-perceptores-anual"] == Decimal(len(observations))
     assert isinstance(result["modelo-180-rel-115-base-anual"], Decimal)
     assert isinstance(result["modelo-180-rel-115-retenciones-anual"], Decimal)
 
@@ -524,7 +521,7 @@ def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
             "selector": {
                 "source": "previous_filing",
                 "source_modelo": "130",
-                "source_casilla_id": "saldo-negativo-fin-periodo",
+                "source_casilla_id": _M130_SALDO_NEGATIVO_CASILLA,
                 "source_period_offset_from_target": -1,
                 "max_year_delta": 0,
             },
@@ -555,9 +552,9 @@ def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
         if "test-cap-suppressed-binding" in requirement.binding_ids
     ]
     assert len(matching) == 1
-    assert matching[0].modelo == "130"
+    assert matching[0].source_modelo == "130"
     assert matching[0].filing_year == 2026
-    assert matching[0].period == "1T"
+    assert matching[0].periods == ("1T",)
 
 
 def test_previous_filing_resolver_skips_cap_suppressed_binding(
@@ -570,7 +567,7 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
             "selector": {
                 "source": "previous_filing",
                 "source_modelo": "130",
-                "source_casilla_id": "saldo-negativo-fin-periodo",
+                "source_casilla_id": _M130_SALDO_NEGATIVO_CASILLA,
                 "source_period_offset_from_target": -1,
                 "max_year_delta": 0,
             },
@@ -681,7 +678,6 @@ def test_registry_formula_runtime_rejects_unknown_relation_values(
             inputs={},
             date_context={"filing_period": date(2026, 12, 31)},
             relation_values={
-                "modelo-180-rel-115-perceptores-anual": Decimal("4"),
                 "modelo-180-rel-115-base-anual": Decimal("550.00"),
                 "modelo-180-rel-115-retenciones-anual": Decimal("114.00"),
                 "unknown-relation": Decimal("1"),

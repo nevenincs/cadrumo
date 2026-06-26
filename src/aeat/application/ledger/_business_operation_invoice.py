@@ -50,8 +50,14 @@ from ...domain.buckets import (
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 
 
-class BusinessOperationInvoiceSourceKind(StrEnum):
-    """The two source-kind variants this module covers."""
+class BusinessOperationInvoiceDirection(StrEnum):
+    """The two invoice-direction variants this module covers.
+
+    The member string values (``payable_invoice`` / ``collectible_invoice``)
+    are the load-bearing internal source-kind taxonomy per
+    ``aeat-spanish-stem-naming`` and are preserved; only the enum TYPE name
+    is the direction axis.
+    """
 
     PAYABLE_INVOICE = "payable_invoice"
     COLLECTIBLE_INVOICE = "collectible_invoice"
@@ -164,7 +170,7 @@ class BusinessOperationInvoice(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: str = Field(min_length=1, max_length=64)
-    source_kind: BusinessOperationInvoiceSourceKind
+    source_kind: BusinessOperationInvoiceDirection
     bucket_id: BucketId
     counterparty_nif: str = Field(min_length=1)
     counterparty_name: str = Field(default="", max_length=200)
@@ -235,7 +241,7 @@ class BusinessOperationInvoiceDocument(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     bucket_id: BucketId
-    source_kind: BusinessOperationInvoiceSourceKind
+    source_kind: BusinessOperationInvoiceDirection
     records: tuple[BusinessOperationInvoice, ...] = ()
 
 
@@ -315,7 +321,7 @@ def _emit_invoice_event(
 
 def _load(
     settings: Settings,
-    kind: BusinessOperationInvoiceSourceKind,
+    kind: BusinessOperationInvoiceDirection,
     bucket_id: str,
 ) -> list[BusinessOperationInvoice]:
     document = _repository(settings, bucket_id).load(_document_key(bucket_id, kind))
@@ -324,7 +330,7 @@ def _load(
 
 def _save(
     settings: Settings,
-    kind: BusinessOperationInvoiceSourceKind,
+    kind: BusinessOperationInvoiceDirection,
     bucket_id: str,
     records: list[BusinessOperationInvoice],
 ) -> None:
@@ -341,7 +347,7 @@ def _repository(settings: Settings, bucket_id: str) -> BusinessOperationInvoiceR
     return BusinessOperationInvoiceRepository(objects=secure_object_repository_for_bucket(bucket_id, settings))
 
 
-def _document_key(bucket_id: str, kind: BusinessOperationInvoiceSourceKind) -> str:
+def _document_key(bucket_id: str, kind: BusinessOperationInvoiceDirection) -> str:
     return f"{bucket_id}:{kind.value}"
 
 
@@ -368,7 +374,7 @@ class _BusinessOperationInvoiceService:
     :class:`CollectibleInvoiceService`) bind the source-kind discriminator.
     """
 
-    source_kind: BusinessOperationInvoiceSourceKind
+    source_kind: BusinessOperationInvoiceDirection
 
     def __init__(
         self,
@@ -506,24 +512,24 @@ class _BusinessOperationInvoiceService:
 class PayableInvoiceService(_BusinessOperationInvoiceService):
     """CRUD service for ``payable_invoice`` records (we owe vendor)."""
 
-    source_kind = BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE
+    source_kind = BusinessOperationInvoiceDirection.PAYABLE_INVOICE
 
 
 class CollectibleInvoiceService(_BusinessOperationInvoiceService):
     """CRUD service for ``collectible_invoice`` records (customer owes us)."""
 
-    source_kind = BusinessOperationInvoiceSourceKind.COLLECTIBLE_INVOICE
+    source_kind = BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE
 
 
 __all__ = [
     "BusinessOperationInvoice",
+    "BusinessOperationInvoiceDirection",
     "BusinessOperationInvoiceDocument",
     "BusinessOperationInvoiceInputError",
     "BusinessOperationInvoiceNotFoundError",
     "BusinessOperationInvoicePatch",
     "BusinessOperationInvoiceRepository",
     "BusinessOperationInvoiceResult",
-    "BusinessOperationInvoiceSourceKind",
     "CollectibleInvoiceService",
     "IntracomOperationType",
     "PayableInvoiceService",

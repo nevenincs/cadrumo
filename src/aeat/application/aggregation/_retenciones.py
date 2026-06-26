@@ -17,15 +17,15 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, Modelo, Period
-from ...core.aggregation import AggregationSourceKind, RetencionScheme
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Modelo, Period
+from ...core.aggregation import RetencionScheme
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
 
-_CANONICAL_SOURCE_KINDS: tuple[AggregationSourceKind, ...] = (
-    AggregationSourceKind.LEDGER_TRANSACTION,
-    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
-    AggregationSourceKind.PAYABLE_INVOICE,
-    AggregationSourceKind.COLLECTIBLE_INVOICE,
+_CANONICAL_SOURCE_KINDS: tuple[BindingSourceKind, ...] = (
+    BindingSourceKind.LEDGER_TRANSACTION,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.COLLECTIBLE_INVOICE,
 )
 
 

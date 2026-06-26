@@ -32,7 +32,7 @@ from .. import (
     export_draft,
     verify_export,
 )
-from ..runtime import RegistrySchemaProvider
+from ..runtime import RegistrySchemaAccessor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -41,7 +41,7 @@ _HEX_DIGEST = "a" * 64
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _EXPORT_PATH = Path("exports/m130-2026Q1.txt")
 _OTHER_EXPORT_PATH = Path("exports/x.txt")
-_SCHEMA_PROVIDER_CACHE: dict[tuple[int | None, str | None, tuple[str, ...]], RegistrySchemaProvider] = {}
+_SCHEMA_PROVIDER_CACHE: dict[tuple[int | None, str | None, tuple[str, ...]], RegistrySchemaAccessor] = {}
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -113,7 +113,7 @@ def _schema_provider(
     filing_year: int | None = None,
     period: str | None = None,
     modelos: tuple[str, ...] = ("130",),
-) -> RegistrySchemaProvider:
+) -> RegistrySchemaAccessor:
     """Return a real registry schema provider, cached per period selector."""
     selected_modelos = tuple(sorted(modelos))
     key = (filing_year, period, selected_modelos)
@@ -131,9 +131,9 @@ def _schema_provider(
     return provider
 
 
-def _provider_without_export_layout(provider: RegistrySchemaProvider, modelo: str) -> RegistrySchemaProvider:
+def _provider_without_export_layout(provider: RegistrySchemaAccessor, modelo: str) -> RegistrySchemaAccessor:
     subview = provider.get_subview(modelo)
-    return RegistrySchemaProvider(
+    return RegistrySchemaAccessor(
         collections=provider.collections,
         subviews={
             **provider.subviews,

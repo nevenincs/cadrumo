@@ -13,6 +13,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...core import BindingSourceKind
 from ...core.time import now as _utc_now
 from ...domain._identifiers import canonical_decimal_string as _canonical_decimal_str
 from ...domain.buckets import BucketEventHistoryRepository
@@ -44,6 +45,12 @@ from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 from ...domain.period import period_end_date
 from ...domain.transactions import TransactionCatalogueRepository
 from ..aggregation._source_mesh import DEFERRED_SOURCE_KINDS as _DEFERRED_SOURCE_KINDS
+from ..aggregation._source_mesh import (
+    BindingSourceDisposition as _BindingSourceDisposition,
+)
+from ..aggregation._source_mesh import (
+    build_binding_source_dispositions as _build_binding_source_dispositions,
+)
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
 from ..live import Borrador100SnapshotRepository
 from . import _iva_wallet_gate
@@ -58,8 +65,12 @@ from ._action_errors import (
     WorkUnitRevisionDivergenceError,
 )
 from ._binding_resolution import (
+    lift_previous_filing_casilla_overrides_to_bindings,
+    reject_binding_channel_mismatch,
     resolve_available_bound_inputs_by_casilla_id,
-    resolve_calculation_binding_inputs,
+    resolve_borrador_source_tier,
+    resolve_declaration_period_inputs,
+    resolve_profile_source_tier,
 )
 from ._calculation_helpers import (
     build_typed_observations as _build_typed_observations,
@@ -126,9 +137,13 @@ resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva
 #                                      sibling of the income resolver)
 #   ledger_oss_aggregation           — OssIossLedgerSourceResolver (S09)
 #   retenciones_aggregation          — RetencionesAggregationSourceResolver (RET-1):
-#                                      materialises the M180/190/193 distinct
+#                                      materialises the M180/M193 distinct
 #                                      perceptor-NIF count from the dedicated
 #                                      per-perceptor retención store
+#   withholding                      — WithholdingSourceResolver (#28):
+#                                      materialises the M190 distinct percepción
+#                                      count from the dedicated per-perceptor-clave
+#                                      withholding store
 #   collectible_invoice              — InvoiceCatalogueSourceResolver (S09)
 #   payable_invoice                  — InvoiceCatalogueSourceResolver (S09, declared no
 #                                      registry binding yet — live capacity headroom)
@@ -142,24 +157,47 @@ resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva
 #   manual_input                     — operator-supplied, never enrolled in resolver
 #
 # DEFERRED — no resolver yet; emit advisory instead of silently blanking (S10):
-#   withholding, atribucion_member, related_party_operation, foreign_asset, refund_operation
-_BUCKET_AGGREGATION_OWNED_SOURCES = frozenset(
+#   atribucion_member, related_party_operation, foreign_asset, refund_operation
+#
+# LIVE ENROLLED SET — the source kinds routed on the live calculate path, read at
+# module load from the resolvers actually enrolled in `_resolve_bucket_source_mesh`
+# plus the precedence tiers (profile, borrador, iva_wallet_decision) and the
+# operator `manual_input` allowlist. This is the single declaration the disposition
+# registry below is built from; the owned / deferred / reserved views are DERIVED
+# from that one mapping, replacing the four formerly-scattered enrollment structures.
+_ENROLLED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
-        "ledger_iva_aggregation",
-        "ledger_renta_expense_aggregation",
-        "ledger_renta_income_aggregation",
-        "ledger_renta_gasto_aggregation",
-        "ledger_oss_aggregation",
-        "retenciones_aggregation",
-        "collectible_invoice",
-        "payable_invoice",
-        "previous_filing",
-        "relation_prefill",
-        "profile",
-        "borrador",
-        "iva_wallet_decision",
-        "manual_input",
+        BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+        BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        BindingSourceKind.RETENCIONES_AGGREGATION,
+        BindingSourceKind.WITHHOLDING,
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.PREVIOUS_FILING,
+        BindingSourceKind.RELATION_PREFILL,
+        BindingSourceKind.PROFILE,
+        BindingSourceKind.BORRADOR,
+        BindingSourceKind.IVA_WALLET_DECISION,
+        BindingSourceKind.MANUAL_INPUT,
     },
+)
+
+# The ONE disposition registry: where every BindingSourceKind member resolves on
+# the live calculate mesh (enrolled / deferred / reserved). Built from the live
+# enrolled set above plus the deferred and reserved sets in the source-mesh module;
+# no disposition is hard-coded, so a newly-enrolled source flows through here.
+_BINDING_SOURCE_DISPOSITIONS = _build_binding_source_dispositions(_ENROLLED_SOURCE_KINDS)
+
+# Owned-source view DERIVED from the disposition registry (the ENROLLED members):
+# the enrolled resolvers + pre-mesh tiers + manual_input. Consumed by the
+# novel-source boundary gate and the caller-override guard.
+_BUCKET_AGGREGATION_OWNED_SOURCES: frozenset[BindingSourceKind] = frozenset(
+    source
+    for source, disposition in _BINDING_SOURCE_DISPOSITIONS.items()
+    if disposition is _BindingSourceDisposition.ENROLLED
 )
 
 # Caller-override lock set — the subset of OWNED sources whose resolvers are
@@ -168,15 +206,15 @@ _BUCKET_AGGREGATION_OWNED_SOURCES = frozenset(
 # subset of _BUCKET_AGGREGATION_OWNED_SOURCES; optional-return resolvers like
 # previous_filing, profile, and the OSS/invoice resolvers are intentionally absent
 # so test fixtures and carry-forward overrides remain valid.
-_BUCKET_AGGREGATION_LOCK_SOURCES = frozenset(
+_BUCKET_AGGREGATION_LOCK_SOURCES: frozenset[BindingSourceKind] = frozenset(
     {
-        "ledger_iva_aggregation",
-        "ledger_renta_expense_aggregation",
-        "ledger_renta_income_aggregation",
-        "ledger_renta_gasto_aggregation",
-        "ledger_oss_aggregation",
-        "collectible_invoice",
-        "payable_invoice",
+        BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
+        BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.PAYABLE_INVOICE,
     },
 )
 
@@ -212,7 +250,9 @@ _BUCKET_AGGREGATION_LOCK_SOURCES = frozenset(
 # is legitimate — the engine's consistency check adjudicates divergence. A caller
 # --binding for one of these reaches the engine; for every other mesh-owned
 # (ledger) source it is refused.
-_CALLER_OVERRIDABLE_CARRY_SOURCES = frozenset({"previous_filing", "relation_prefill"})
+_CALLER_OVERRIDABLE_CARRY_SOURCES: frozenset[BindingSourceKind] = frozenset(
+    {BindingSourceKind.PREVIOUS_FILING, BindingSourceKind.RELATION_PREFILL},
+)
 
 
 def calculate_modelo_revision(
@@ -317,26 +357,78 @@ def calculate_modelo_revision(
         backend_binding_values=lower_precedence_binding_values,
         decision=iva_compensation_decision,
     )
-    binding_resolution = resolve_calculation_binding_inputs(
+    from ..aggregation import CalculationSourceResolution, merge_source_resolutions_by_precedence
+
+    # Enroll the profile and borrador sources as first-class mesh resolutions and
+    # overlay the precedence ladder (lowest -> highest: profile, mesh backend,
+    # borrador, caller) through merge_source_resolutions_by_precedence. This is
+    # the explicit mesh-merge form of the historical
+    # {**profile, **backend, **borrador, **caller} dict-merge: each tier is a
+    # CalculationSourceResolution and a higher tier overrides a lower one. The
+    # backend mesh resolvers' values arrive via `lower_precedence_binding_values`
+    # (computed by _resolve_bucket_source_mesh); a caller --binding is highest.
+    borrador_resolution = resolve_borrador_source_tier(
         bucket_id=work_unit.bucket_id,
         snapshot=snapshot,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
-        casilla_inputs=casilla_inputs,
+        borrador_snapshot_id=borrador_snapshot_id,
         caller_binding_values=caller_binding_values,
         caller_enum_binding_values=caller_enum_binding_values,
-        backend_binding_values=lower_precedence_binding_values,
-        backend_casilla_inputs=backend_casilla_inputs,
-        borrador_snapshot_id=borrador_snapshot_id,
         borrador_snapshot_repository=borrador_snapshot_repository,
-        relation_values=relation_values,
     )
-    borrador_result = binding_resolution.borrador_result
-    resolved_bindings = dict(binding_resolution.resolved_bindings)
-    resolved_enum_bindings = dict(binding_resolution.resolved_enum_bindings)
-    resolved_date_bindings = dict(binding_resolution.resolved_date_bindings)
-    resolved_relations = dict(binding_resolution.resolved_relations)
-    resolved_inputs = dict(binding_resolution.resolved_inputs)
+    profile_resolution = resolve_profile_source_tier(
+        bucket_id=work_unit.bucket_id,
+        snapshot=snapshot,
+        caller_binding_values=caller_binding_values,
+        caller_enum_binding_values=caller_enum_binding_values,
+        borrador_resolution=borrador_resolution,
+        backend_binding_values=lower_precedence_binding_values,
+    )
+    backend_tier = CalculationSourceResolution(
+        resolver_id="calculate_backend_bindings",
+        binding_values=dict(lower_precedence_binding_values),
+    )
+    caller_tier = CalculationSourceResolution(
+        resolver_id="calculate_caller_bindings",
+        binding_values=dict(caller_binding_values),
+        enum_binding_values=dict(caller_enum_binding_values),
+    )
+    merged = merge_source_resolutions_by_precedence(
+        (profile_resolution, backend_tier, borrador_resolution, caller_tier),
+    )
+    borrador_provenance = merged.borrador_provenance
+    resolved_bindings = dict(sorted(merged.binding_values.items()))
+    resolved_enum_bindings = dict(sorted(merged.enum_binding_values.items()))
+    resolved_date_bindings = dict(sorted(merged.date_binding_values.items()))
+    reject_binding_channel_mismatch(snapshot.revision, resolved_bindings, resolved_enum_bindings)
+    resolved_relations = dict(relation_values or {})
+    # Promote operator casilla overrides for previous-filing-bound casillas into
+    # bindings (the relation target_binding materialisation already arrives via the
+    # backend mesh channel and is adjudicated by the mesh _claim_binding guard).
+    resolved_bindings = dict(
+        sorted(
+            lift_previous_filing_casilla_overrides_to_bindings(
+                snapshot.revision,
+                casilla_inputs,
+                resolved_bindings,
+            ).items(),
+        ),
+    )
+    resolved_inputs = dict(
+        sorted(
+            {
+                **resolve_declaration_period_inputs(
+                    snapshot.revision,
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period,
+                ),
+                **dict(backend_casilla_inputs or {}),
+                **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, resolved_bindings),
+                **casilla_inputs,
+            }.items(),
+        ),
+    )
 
     engine_result = calculate_registry_snapshot(
         snapshot,
@@ -384,8 +476,10 @@ def calculate_modelo_revision(
         relation_overrides=relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
-        borrador_snapshot_id=borrador_result.borrador_snapshot_id,
-        bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
+        borrador_snapshot_id=borrador_provenance.snapshot_id if borrador_provenance is not None else None,
+        bindings_sourced_from_borrador=(
+            borrador_provenance.bindings_sourced if borrador_provenance is not None else ()
+        ),
         observations=typed_observations,
         detail_rows=detail_rows,
         formula_count=len(engine_result.entries),
@@ -545,6 +639,7 @@ def _resolve_bucket_source_mesh(
         LedgerRentaIncomeAggregationSourceResolver,
         OssIossLedgerSourceResolver,
         RetencionesAggregationSourceResolver,
+        WithholdingSourceResolver,
         collect_unhandled_source_diagnostics,
         merge_source_resolutions,
     )
@@ -580,12 +675,17 @@ def _resolve_bucket_source_mesh(
             # pre-classified callers can still pass candidates directly through
             # the resolver constructor.
             OssIossLedgerSourceResolver(invoice_repository=invoice_repository).resolve(context),
-            # M180/190/193 distinct perceptor-NIF count (retenciones_aggregation):
+            # M180/M193 distinct perceptor-NIF count (retenciones_aggregation):
             # reads the dedicated per-perceptor retención store and materialises the
             # "número total de perceptores" box via the validated distinct-count
             # primitive — replacing the wrong sum-of-quarterly-M115-counts relation
             # (RET-1). Empty store on a declaring revision surfaces a no-silent advisory.
             RetencionesAggregationSourceResolver().resolve(context),
+            # M190 distinct percepción count (withholding): reads the dedicated
+            # per-perceptor-clave withholding store and materialises scalar
+            # withholding bindings. Empty store on a declaring revision surfaces
+            # a no-silent advisory while still materialising an explicit zero.
+            WithholdingSourceResolver().resolve(context),
             # M349 collectible / payable invoices (collectible_invoice,
             # payable_invoice).  Loads the encrypted invoice catalogue and resolves
             # binding values for intra-community transactions in scope.
@@ -941,11 +1041,15 @@ def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
         )
 
 
-def _source_owned_binding_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[BindingId]:
+def _source_owned_binding_ids(
+    revision: ModeloRevision, owned_sources: frozenset[BindingSourceKind]
+) -> frozenset[BindingId]:
     return frozenset(binding.id for binding in revision.bindings if binding.source in owned_sources)
 
 
-def _source_owned_bound_casilla_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[CasillaId]:
+def _source_owned_bound_casilla_ids(
+    revision: ModeloRevision, owned_sources: frozenset[BindingSourceKind]
+) -> frozenset[CasillaId]:
     source_owned_binding_ids = _source_owned_binding_ids(revision, owned_sources)
     return frozenset(
         casilla.id
@@ -957,7 +1061,7 @@ def _source_owned_bound_casilla_ids(revision: ModeloRevision, owned_sources: fro
 def _reject_caller_overrides_of_source_bindings(
     *,
     revision: ModeloRevision,
-    owned_sources: frozenset[str],
+    owned_sources: frozenset[BindingSourceKind],
     caller_binding_values: Mapping[BindingId, Decimal],
     caller_casilla_inputs: Mapping[CasillaId, Decimal],
 ) -> None:

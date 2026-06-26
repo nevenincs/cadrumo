@@ -26,7 +26,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import Period
-from ....core.aggregation import AggregationSourceKind
+from ....core.aggregation import BindingSourceKind
 from ....core.external_constants import M347_THRESHOLD_EUR
 from .._counterpart import (
     CounterpartObservation,
@@ -57,7 +57,7 @@ def _obs(
     source_id: str,
 ) -> CounterpartObservation:
     return CounterpartObservation(
-        source_kind=AggregationSourceKind.LEDGER_TRANSACTION,
+        source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id=source_id,
         counterparty_nif=nif,
         counterparty_name="",
