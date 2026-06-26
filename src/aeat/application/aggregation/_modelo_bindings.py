@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period, PeriodError
+from ...core import BindingSourceKind, Modelo, Period, PeriodError
 from ...domain.calculations.registry import (
     BindingId,
     ModeloRevision,
@@ -158,7 +158,7 @@ class LedgerIvaAggregationSourceResolver:
     """Source mesh resolver for repository-backed IVA ledger bindings."""
 
     resolver_id = "ledger_iva_aggregation"
-    owned_sources = ("ledger_iva_aggregation",)
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_IVA_AGGREGATION,)
 
     def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
         self._transaction_repository = transaction_repository
@@ -248,7 +248,7 @@ class LedgerRentaExpenseAggregationSourceResolver:
     """Source mesh resolver for repository-backed Renta expense bindings."""
 
     resolver_id = "ledger_renta_expense_aggregation"
-    owned_sources = ("ledger_renta_expense_aggregation",)
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_RENTA_EXPENSE_AGGREGATION,)
 
     def __init__(
         self,
@@ -335,7 +335,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
     """Source mesh resolver for repository-backed M130 actividad-económica income bindings."""
 
     resolver_id = "ledger_renta_income_aggregation"
-    owned_sources = ("ledger_renta_income_aggregation",)
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,)
 
     def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
         self._transaction_repository = transaction_repository
@@ -425,7 +425,7 @@ class LedgerRentaGastoAggregationSourceResolver:
     """
 
     resolver_id = "ledger_renta_gasto_aggregation"
-    owned_sources = ("ledger_renta_gasto_aggregation",)
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,)
 
     def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
         self._transaction_repository = transaction_repository
@@ -557,7 +557,7 @@ class RetencionesAggregationSourceResolver:
     """
 
     resolver_id = "retenciones_aggregation"
-    owned_sources = ("retenciones_aggregation",)
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.RETENCIONES_AGGREGATION,)
 
     def __init__(self, *, retencion_repository: RetencionObservationRepository | None = None) -> None:
         self._retencion_repository = retencion_repository
