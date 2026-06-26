@@ -94,7 +94,6 @@ from ._binding_readiness import profile_resolvable_binding_ids
 from ._borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
-    Modelo100BorradorBindingResult,
     Modelo100BorradorSourceResolver,
     resolve_modelo_100_borrador_bindings,
 )
@@ -178,7 +177,6 @@ from ._participation_index_rebuild import (
 )
 from ._profile_binding import (
     ProfileBindingResolutionError,
-    ProfileSourcedBindingResult,
     resolve_profile_sourced_bindings,
 )
 from ._projection import (
@@ -350,7 +348,6 @@ __all__ = [
     "M036DeclarationResult",
     "Modelo100BorradorBindingCommand",
     "Modelo100BorradorBindingError",
-    "Modelo100BorradorBindingResult",
     "Modelo100BorradorSourceResolver",
     "Modelo184MemberRow",
     "Modelo202ModalitySummary",
@@ -440,7 +437,6 @@ __all__ = [
     "ModeloWorkflowGateError",
     "ParticipationRebuildStats",
     "ProfileBindingResolutionError",
-    "ProfileSourcedBindingResult",
     "ReconciliationCrossBucketRefusedError",
     "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",

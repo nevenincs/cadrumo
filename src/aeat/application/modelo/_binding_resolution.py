@@ -9,7 +9,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import Protocol, runtime_checkable
 
 from ...core import Period as _Period
 from ...domain.calculations.registry import (
@@ -24,58 +23,32 @@ from ...domain.calculations.registry import (
     expression_binding_refs,
 )
 from ...domain.modelos._errors import ModeloError
+from ..aggregation._source_mesh import BorradorSourceProvenance, CalculationSourceResolution
 from ..live import Borrador100SnapshotRepository
-from ._borrador_binding import (
-    Modelo100BorradorBindingResult,
-    Modelo100BorradorSourceResolver,
-)
-from ._profile_binding import ProfileSourcedBindingResult
+from ._borrador_binding import Modelo100BorradorSourceResolver
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,
 )
 
 
-@runtime_checkable
-class BindingSourceResolution(Protocol):
-    """The one role every binding source-resolution result fills.
-
-    A binding source resolver answers a single question — "which registry
-    bindings does source X satisfy, and with what values" — and returns the
-    resolved values projected onto the engine's two scalar input channels:
-    ``binding_values`` (Decimal channel) and ``enum_binding_values`` (string /
-    enum-dispatch channel). :class:`ProfileSourcedBindingResult` (profile facts)
-    and :class:`Modelo100BorradorBindingResult` (AEAT borrador snapshot) both
-    satisfy this Protocol; each additionally carries its own provenance trace
-    (``bindings_sourced_from_profile`` / ``bindings_sourced_from_borrador``) and
-    source-specific metadata. The IVA-wallet compensation path feeds the same
-    ``binding_values`` channel through a distinct decision-gate mechanism (the
-    M303 carve-out) rather than a result object, so it is intentionally not a
-    member of this Protocol.
-
-    This Protocol names the shared role so the result types are recognisably one
-    contract rather than three look-alikes; it is structural (``runtime_checkable``)
-    and adds no inheritance or behaviour to the concrete results.
-    """
-
-    @property
-    def binding_values(self) -> Mapping[BindingId, Decimal]: ...
-
-    @property
-    def enum_binding_values(self) -> Mapping[BindingId, str]: ...
-
-
 @dataclass(frozen=True)
 class CalculationBindingResolution:
-    """Engine-ready inputs resolved from caller, backend, profile, and borrador sources."""
+    """Engine-ready inputs resolved from caller, backend, profile, and borrador sources.
+
+    The four source resolutions are merged through the precedence ladder
+    (profile lowest, mesh backend, borrador, caller highest) by
+    :func:`resolve_calculation_binding_inputs`; ``borrador_provenance`` carries
+    the typed borrador snapshot id + sourced-binding trace the persistence
+    boundary consumes.
+    """
 
     resolved_inputs: Mapping[CasillaId, Decimal]
     resolved_bindings: Mapping[BindingId, Decimal]
     resolved_enum_bindings: Mapping[BindingId, str]
     resolved_date_bindings: Mapping[BindingId, date]
     resolved_relations: Mapping[RelationId, Decimal]
-    borrador_result: Modelo100BorradorBindingResult
-    profile_result: ProfileSourcedBindingResult
+    borrador_provenance: BorradorSourceProvenance | None
 
 
 def resolve_calculation_binding_inputs(
@@ -100,7 +73,7 @@ def resolve_calculation_binding_inputs(
 
     Use of :class:`RegistrySnapshot` for compliance.
     """
-    borrador_result = _resolve_borrador_bindings_for_calculation(
+    borrador_resolution = _resolve_borrador_bindings_for_calculation(
         bucket_id=bucket_id,
         modelo=snapshot.modelo.id,
         filing_year=filing_year,
@@ -111,20 +84,22 @@ def resolve_calculation_binding_inputs(
         registry_snapshot=snapshot,
         snapshot_repository=borrador_snapshot_repository,
     )
-    profile_result = _resolve_profile_bindings_for_calculation(
+    profile_resolution = _resolve_profile_bindings_for_calculation(
         bucket_id=bucket_id,
         snapshot=snapshot,
         caller_binding_values=caller_binding_values,
         caller_enum_binding_values=caller_enum_binding_values,
-        borrador_result=borrador_result,
+        borrador_resolution=borrador_resolution,
         backend_binding_values=backend_binding_values,
     )
+    # Decimal-channel precedence ladder, lowest -> highest: profile, mesh backend,
+    # borrador, caller. The enum channel has no mesh backend contributor.
     resolved_bindings = dict(
         sorted(
             {
-                **profile_result.binding_values,
+                **profile_resolution.binding_values,
                 **backend_binding_values,
-                **borrador_result.binding_values,
+                **borrador_resolution.binding_values,
                 **caller_binding_values,
             }.items(),
         ),
@@ -132,13 +107,13 @@ def resolve_calculation_binding_inputs(
     resolved_enum_bindings = dict(
         sorted(
             {
-                **profile_result.enum_binding_values,
-                **borrador_result.enum_binding_values,
+                **profile_resolution.enum_binding_values,
+                **borrador_resolution.enum_binding_values,
                 **caller_enum_binding_values,
             }.items(),
         ),
     )
-    resolved_date_bindings = dict(sorted(profile_result.date_binding_values.items()))
+    resolved_date_bindings = dict(sorted(profile_resolution.date_binding_values.items()))
     _reject_binding_channel_mismatch(snapshot.revision, resolved_bindings, resolved_enum_bindings)
 
     resolved_relations = dict(relation_values or {})
@@ -182,8 +157,7 @@ def resolve_calculation_binding_inputs(
         resolved_enum_bindings=resolved_enum_bindings,
         resolved_date_bindings=resolved_date_bindings,
         resolved_relations=resolved_relations,
-        borrador_result=borrador_result,
-        profile_result=profile_result,
+        borrador_provenance=borrador_resolution.borrador_provenance,
     )
 
 
@@ -193,20 +167,25 @@ def _resolve_profile_bindings_for_calculation(
     snapshot: RegistrySnapshot,
     caller_binding_values: Mapping[BindingId, Decimal],
     caller_enum_binding_values: Mapping[BindingId, str],
-    borrador_result: Modelo100BorradorBindingResult,
+    borrador_resolution: CalculationSourceResolution,
     backend_binding_values: Mapping[BindingId, Decimal],
-) -> ProfileSourcedBindingResult:
-    """Resolve ``source = "profile"`` bindings from the bucket's user profile."""
+) -> CalculationSourceResolution:
+    """Resolve ``source = "profile"`` bindings from the bucket's user profile.
+
+    Returns the profile :class:`CalculationSourceResolution` directly (no
+    intermediate result wrap). Every binding the caller, borrador, or mesh
+    backend already supplied is excluded so profile stays lowest precedence.
+    """
     from ..aggregation import CalculationSourceContext, ProfileSourceResolver
 
     caller_owned = (
         set(caller_binding_values)
         | set(caller_enum_binding_values)
-        | set(borrador_result.binding_values)
-        | set(borrador_result.enum_binding_values)
+        | set(borrador_resolution.binding_values)
+        | set(borrador_resolution.enum_binding_values)
         | set(backend_binding_values)
     )
-    resolution = ProfileSourceResolver(
+    return ProfileSourceResolver(
         caller_binding_ids=caller_owned,
         registry_snapshot=snapshot,
     ).resolve(
@@ -216,18 +195,6 @@ def _resolve_profile_bindings_for_calculation(
             filing_year=snapshot.filing_year,
             period=_Period.from_year_and_code(snapshot.filing_year, snapshot.period),
             revision=snapshot.revision,
-        ),
-    )
-    return ProfileSourcedBindingResult(
-        binding_values=resolution.binding_values,
-        enum_binding_values=resolution.enum_binding_values,
-        date_binding_values=resolution.date_binding_values,
-        bindings_sourced_from_profile=tuple(
-            sorted(
-                set(resolution.binding_values)
-                | set(resolution.enum_binding_values)
-                | set(resolution.date_binding_values),
-            ),
         ),
     )
 
@@ -276,10 +243,16 @@ def _resolve_borrador_bindings_for_calculation(
     caller_enum_binding_values: Mapping[BindingId, str],
     registry_snapshot: RegistrySnapshot,
     snapshot_repository: Borrador100SnapshotRepository | None,
-) -> Modelo100BorradorBindingResult:
+) -> CalculationSourceResolution:
+    """Resolve the optional borrador snapshot, returning its resolution directly.
+
+    The returned :class:`CalculationSourceResolution` carries the typed
+    ``borrador_provenance`` (snapshot id + sourced-binding trace) the
+    persistence boundary consumes.
+    """
     from ..aggregation import CalculationSourceContext
 
-    resolution = Modelo100BorradorSourceResolver(
+    return Modelo100BorradorSourceResolver(
         borrador_snapshot_id=borrador_snapshot_id,
         caller_binding_values=caller_binding_values,
         caller_enum_binding_values=caller_enum_binding_values,
@@ -293,13 +266,6 @@ def _resolve_borrador_bindings_for_calculation(
             period=period,
             revision=registry_snapshot.revision,
         ),
-    )
-    sourced = tuple(sorted(set(resolution.binding_values) | set(resolution.enum_binding_values)))
-    return Modelo100BorradorBindingResult(
-        borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
-        binding_values=resolution.binding_values,
-        enum_binding_values=resolution.enum_binding_values,
-        bindings_sourced_from_borrador=sourced,
     )
 
 

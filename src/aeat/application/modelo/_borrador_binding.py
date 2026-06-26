@@ -27,6 +27,7 @@ from ...core.identity import BucketId
 from ...domain.calculations.registry import BindingId, DataBindingDefinition, RegistrySnapshot
 from ...domain.modelos._errors import ModeloError
 from ..aggregation._source_mesh import (
+    BorradorSourceProvenance,
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
@@ -72,46 +73,13 @@ class Modelo100BorradorBindingCommand(BaseModel):
         return self
 
 
-class Modelo100BorradorBindingResult(BaseModel):
-    """Values from a borrador snapshot that survived precedence checks.
-
-    Fills the shared binding source-resolution role (see
-    :class:`~aeat.application.modelo._binding_resolution.BindingSourceResolution`):
-    the AEAT borrador snapshot is one source that resolves registry bindings onto
-    the engine ``binding_values`` / ``enum_binding_values`` channels.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
-    binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
-    enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
-    bindings_sourced_from_borrador: tuple[BindingId, ...] = ()
-
-    @model_validator(mode="after")
-    def _enforce_snapshot_trace(self) -> Modelo100BorradorBindingResult:
-        if self.borrador_snapshot_id is None:
-            if self.binding_values or self.enum_binding_values or self.bindings_sourced_from_borrador:
-                raise Modelo100BorradorBindingError(
-                    translated_message="application.modelo.borrador_binding.errors.snapshot_id_required",
-                )
-            return self
-        sourced = set(self.bindings_sourced_from_borrador)
-        resolved = set(self.binding_values) | set(self.enum_binding_values)
-        if sourced != resolved:
-            raise Modelo100BorradorBindingError(
-                translated_message="application.modelo.borrador_binding.errors.source_trace_mismatch",
-            )
-        return self
-
-
 def resolve_modelo_100_borrador_bindings(
     command: Modelo100BorradorBindingCommand,
     *,
     registry_snapshot: RegistrySnapshot,
     snapshot_repository: Borrador100SnapshotRepository | None = None,
-) -> Modelo100BorradorBindingResult:
-    """Resolve eligible borrador values into a :class:`Modelo100BorradorBindingResult` for one Modelo 100 calculation.
+) -> CalculationSourceResolution:
+    """Resolve eligible borrador values into a :class:`CalculationSourceResolution` for one Modelo 100 calculation.
 
     Args:
         command: The borrador binding command carrying the modelo and bucket axes.
@@ -126,7 +94,10 @@ def resolve_modelo_100_borrador_bindings(
     registry revision passed to the service.
     """
     if command.borrador_snapshot_id is None:
-        return Modelo100BorradorBindingResult()
+        return CalculationSourceResolution(
+            resolver_id=_BORRADOR_RESOLVER_ID,
+            owned_sources=(BindingSourceKind.BORRADOR,),
+        )
 
     if not registry_snapshot.modelo.has_capability("borrador"):
         target_modelo = command.modelo.strip()
@@ -178,12 +149,28 @@ def resolve_modelo_100_borrador_bindings(
         decimal_values[key] = _decimal_value(key, raw_value)
 
     sourced = tuple(sorted(set(decimal_values) | set(enum_values)))
-    return Modelo100BorradorBindingResult(
-        borrador_snapshot_id=snapshot.snapshot_id,
+    snapshot_fingerprint = f"sha256:{sha256_hex(snapshot.snapshot_id.encode('utf-8'))}"
+    return CalculationSourceResolution(
+        resolver_id=_BORRADOR_RESOLVER_ID,
+        owned_sources=(BindingSourceKind.BORRADOR,),
         binding_values=decimal_values,
         enum_binding_values=enum_values,
-        bindings_sourced_from_borrador=sourced,
+        borrador_provenance=BorradorSourceProvenance(
+            snapshot_id=snapshot.snapshot_id,
+            bindings_sourced=sourced,
+        ),
+        provenance=tuple(
+            CalculationSourceProvenance(
+                source_kind="borrador",
+                source_ref=f"borrador:{snapshot.snapshot_id}:binding:{binding_id}",
+                fingerprint=snapshot_fingerprint,
+            )
+            for binding_id in sourced
+        ),
     )
+
+
+_BORRADOR_RESOLVER_ID = "modelo_100_borrador"
 
 
 class Modelo100BorradorSourceResolver:
@@ -218,7 +205,7 @@ class Modelo100BorradorSourceResolver:
                 period=context.period.registry_token,
             )
         try:
-            result = resolve_modelo_100_borrador_bindings(
+            return resolve_modelo_100_borrador_bindings(
                 Modelo100BorradorBindingCommand(
                     bucket_id=context.bucket_id,
                     modelo=context.modelo,
@@ -238,26 +225,6 @@ class Modelo100BorradorSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
-        fingerprint = (
-            f"sha256:{sha256_hex(result.borrador_snapshot_id.encode('utf-8'))}"
-            if result.borrador_snapshot_id is not None
-            else None
-        )
-        return CalculationSourceResolution(
-            resolver_id=self.resolver_id,
-            owned_sources=self.owned_sources,
-            binding_values=result.binding_values,
-            enum_binding_values=result.enum_binding_values,
-            provenance=tuple(
-                CalculationSourceProvenance(
-                    source_kind="borrador",
-                    source_ref=f"borrador:{result.borrador_snapshot_id}:binding:{binding_id}",
-                    fingerprint=fingerprint,
-                )
-                for binding_id in result.bindings_sourced_from_borrador
-                if result.borrador_snapshot_id is not None
-            ),
-        )
 
 
 def _assert_same_axis(
@@ -335,7 +302,6 @@ def _decimal_value(binding_id: BindingId, value: Decimal | str) -> Decimal:
 __all__ = [
     "Modelo100BorradorBindingCommand",
     "Modelo100BorradorBindingError",
-    "Modelo100BorradorBindingResult",
     "Modelo100BorradorSourceResolver",
     "resolve_modelo_100_borrador_bindings",
 ]

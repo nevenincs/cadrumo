@@ -117,6 +117,26 @@ class CalculationSourceProvenance(BaseModel):
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
 
 
+class BorradorSourceProvenance(BaseModel):
+    """Typed borrador-snapshot provenance carried on a source resolution.
+
+    The AEAT borrador snapshot is the one source whose downstream consumer
+    (``persist_calculation_revision``) needs more than the generic
+    :class:`CalculationSourceProvenance` row: it persists the originating
+    ``borrador_snapshot_id`` and the sorted ``bindings_sourced_from_borrador``
+    trace onto the :class:`CalculationRevision`. Carrying that as ONE typed
+    sub-model keeps the generic :class:`CalculationSourceResolution` envelope
+    from accreting per-source named fields while preserving the trace as typed
+    data the call site reads directly -- never by parsing the
+    ``borrador:{id}:binding:{bid}`` provenance ``source_ref`` strings.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    snapshot_id: str = Field(min_length=1, max_length=128)
+    bindings_sourced: tuple[BindingId, ...] = Field(default_factory=tuple)
+
+
 class CalculationSourceResolution(BaseModel):
     """Resolved values and provenance returned by one source resolver."""
 
@@ -131,6 +151,12 @@ class CalculationSourceResolution(BaseModel):
     unresolved_relation_ids: tuple[RelationId, ...] = Field(default_factory=tuple)
     bound_inputs_by_casilla_id: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
+    # Typed borrador provenance. Carried only by the borrador resolution
+    # (``Modelo100BorradorSourceResolver``); ``merge_source_resolutions``
+    # preserves it onto the merged result so the calculate call site reads the
+    # snapshot id and sourced-binding set as TYPED data and hands them to
+    # ``persist_calculation_revision``. ``None`` for every other resolver.
+    borrador_provenance: BorradorSourceProvenance | None = None
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = Field(default_factory=tuple)
     provenance: tuple[CalculationSourceProvenance, ...] = Field(default_factory=tuple)
 
@@ -299,6 +325,11 @@ def merge_source_resolutions(
     binding_owners: dict[BindingId, str] = {}
     relation_owners: dict[RelationId, str] = {}
     casilla_owners: dict[CasillaId, str] = {}
+    # The borrador resolution is the sole contributor of the typed borrador
+    # provenance; preserve it onto the merged result. Exactly one resolution
+    # carries a non-None borrador_provenance (the borrador resolver) so a plain
+    # last-writer-wins carry is unambiguous.
+    borrador_provenance: BorradorSourceProvenance | None = None
 
     for resolution in resolutions:
         owned_sources.update(resolution.owned_sources)
@@ -306,6 +337,8 @@ def merge_source_resolutions(
         provenance.extend(resolution.provenance)
         source_transaction_ids.update(resolution.source_transaction_ids)
         unresolved_relation_ids.update(resolution.unresolved_relation_ids)
+        if resolution.borrador_provenance is not None:
+            borrador_provenance = resolution.borrador_provenance
         for binding_id, value in resolution.binding_values.items():
             _claim_binding(binding_owners, binding_id, resolution.resolver_id)
             binding_values[binding_id] = value
@@ -333,6 +366,7 @@ def merge_source_resolutions(
         unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
         bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
         source_transaction_ids=tuple(sorted(source_transaction_ids)),
+        borrador_provenance=borrador_provenance,
         diagnostics=tuple(diagnostics),
         provenance=tuple(provenance),
     )
@@ -433,6 +467,7 @@ def _claim_relation(owners: dict[RelationId, str], relation_id: RelationId, reso
 
 __all__ = [
     "DEFERRED_SOURCE_KINDS",
+    "BorradorSourceProvenance",
     "CalculationSourceContext",
     "CalculationSourceDiagnostic",
     "CalculationSourceDiagnosticReason",

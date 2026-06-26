@@ -339,7 +339,7 @@ def calculate_modelo_revision(
         borrador_snapshot_repository=borrador_snapshot_repository,
         relation_values=relation_values,
     )
-    borrador_result = binding_resolution.borrador_result
+    borrador_provenance = binding_resolution.borrador_provenance
     resolved_bindings = dict(binding_resolution.resolved_bindings)
     resolved_enum_bindings = dict(binding_resolution.resolved_enum_bindings)
     resolved_date_bindings = dict(binding_resolution.resolved_date_bindings)
@@ -392,8 +392,10 @@ def calculate_modelo_revision(
         relation_overrides=relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
-        borrador_snapshot_id=borrador_result.borrador_snapshot_id,
-        bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
+        borrador_snapshot_id=borrador_provenance.snapshot_id if borrador_provenance is not None else None,
+        bindings_sourced_from_borrador=(
+            borrador_provenance.bindings_sourced if borrador_provenance is not None else ()
+        ),
         observations=typed_observations,
         detail_rows=detail_rows,
         formula_count=len(engine_result.entries),
