@@ -139,6 +139,7 @@ from ._service import (
 )
 from ._source_mesh import (
     DEFERRED_SOURCE_KINDS,
+    BorradorSourceProvenance,
     CalculationSourceContext,
     CalculationSourceDiagnostic,
     CalculationSourceDiagnosticReason,
@@ -169,6 +170,7 @@ __all__ = [
     "AggregationPeriodError",
     "AggregationUnsupportedModeloError",
     "AggregationValidationError",
+    "BorradorSourceProvenance",
     "CalculationSourceContext",
     "CalculationSourceDiagnostic",
     "CalculationSourceDiagnosticReason",

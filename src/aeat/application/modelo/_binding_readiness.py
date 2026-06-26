@@ -98,7 +98,9 @@ def profile_resolvable_binding_ids(
             exc,
         )
         return frozenset()
-    return frozenset(result.bindings_sourced_from_profile)
+    return frozenset(
+        set(result.binding_values) | set(result.enum_binding_values) | set(result.date_binding_values),
+    )
 
 
 def _resources_authority() -> ValidatedRegistryAuthority:
