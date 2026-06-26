@@ -116,3 +116,11 @@ art. 30 / Ley 37/1992 art. 116 (a refunded credit is returned, not carried).
   generate zero `iva.compensacion-disponible-fin-periodo`; the disposition that
   drives the fichero `D` and the disposition that drives the cross-period carry MUST
   be the one determined fact, never computed twice and never allowed to disagree.
+
+## Status
+
+`proposed`. The carry mechanism this ADR decides is a child of the canonical
+compensación-carry direction set by the PHASE ADRs (not a central apex doc): the
+foundational `live-iva-compensation-wallet-adr` is the carry anchor, and the future
+phase-2.3 (fold-in/carry) ADR unifies the carry mechanism. This ADR lands its specific
+refunded-period-zeroing mechanics under that one authority.
