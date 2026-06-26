@@ -30,6 +30,7 @@ from ._applicability import (
     derive_tax_route,
     has_applicability_rule,
     iter_modelo_applicability_rules,
+    modelo_202_modality_from_inputs,
     taxpayer_model_is_declared,
 )
 from ._authority import ValidatedRegistryAuthority, bundled_authority
@@ -661,6 +662,7 @@ __all__ = [
     "load_parity_tape",
     "load_registry_tree",
     "materialize_relation_binding_values",
+    "modelo_202_modality_from_inputs",
     "parse_export_payload",
     "parse_renta_web_open_live_payload",
     "parse_workbook_cell_ref",

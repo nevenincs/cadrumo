@@ -38,7 +38,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
@@ -75,6 +75,9 @@ from ..aggregation._source_mesh import (
 )
 from ._observations_repository import CalculationObservationRepository
 from ._revision_carry_gate import revision_carry_outcome
+
+if TYPE_CHECKING:
+    from ...domain.deadlines import EntityType
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
@@ -162,73 +165,112 @@ def _provenance_note(
     )
 
 
+def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
+    """Wizard-free canonical projection of the bucket's profile, or ``None`` when absent.
+
+    Reads the operator profile through the SINGLE projection
+    (:func:`record_to_path_values`) WITHOUT building the full
+    :class:`TaxpayerProfile` (which calls ``get_setup_flow()`` and so requires
+    the wizard ``SETUP_FLOW`` catalogue). This decouples the engine's first-year
+    / activity-start derivation from the wizard catalogue, so it resolves
+    identically in a non-CLI calc context (where the catalogue may be
+    unregistered) instead of silently failing closed — matching the verify
+    gate's threaded-in ``workflow_profile.activity_start_date`` semantics.
+    Returns ``None`` only when there is genuinely no profile for the bucket.
+    """
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile._profile_repository import ProfileRepository
+    from ..user_profile._projections import record_to_path_values
+
+    try:
+        aggregate = ProfileRepository().load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+    return record_to_path_values(aggregate.record)
+
+
+def _parse_canonical_iso_date(raw: str | None) -> date | None:
+    """Parse a canonical ISO-8601 ``censo.*`` date projection value, or ``None``."""
+    if not raw:
+        return None
+    try:
+        return date.fromisoformat(raw)
+    except ValueError:
+        return None
+
+
+def _parse_canonical_decimal(raw: str | None) -> Decimal | None:
+    """Parse a canonical decimal projection value, or ``None`` when absent / malformed."""
+    if not raw:
+        return None
+    from decimal import InvalidOperation
+
+    try:
+        return Decimal(raw)
+    except (InvalidOperation, ValueError):
+        return None
+
+
+def _entity_type_from_token(raw: str | None) -> EntityType | None:
+    """Map a raw ``taxpayer_type.entity_type`` token to :class:`EntityType`, or ``None``."""
+    if not raw:
+        return None
+    from ...domain.deadlines import EntityType
+
+    try:
+        return EntityType(raw)
+    except ValueError:
+        return None
+
+
 def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> bool:
     """Engine-side counterpart of the clean-state first-year-fractional suppression (IS-3).
 
-    Reuses the SINGLE modality definition (:func:`derive_modelo_202_modality`) and
-    the SINGLE profile builder (:func:`taxpayer_profile_from_mapping`) — no
-    duplicated INCN/threshold logic. Fail-closed: a missing or unprojectable
-    profile, a missing activity-start date, or any modality other than
-    ``ART_40_2_OPTIONAL`` (i.e. ``ART_40_3_MANDATORY`` / ``INCOMPLETE``) returns
-    ``False``, so the Modelo 202 relation stays unresolved and the gate keeps
-    blocking — never a silent under-declaration. ADR
-    2026-06-19-m202-first-period-attestation.
+    Reads the modality inputs (entity type, INCN) and the activity-start date off
+    the WIZARD-FREE profile projection (:func:`_profile_path_values_for_bucket`)
+    and applies the SINGLE modality definition
+    (:func:`modelo_202_modality_from_inputs`) — no duplicated INCN/threshold
+    logic, and NO dependency on the wizard ``SETUP_FLOW`` catalogue (so a non-CLI
+    calc context resolves the first-year relaxation correctly instead of silently
+    failing closed). Fail-closed: a missing profile, an unparsable entity type, a
+    missing activity-start date, or any modality other than ``ART_40_2_OPTIONAL``
+    (i.e. ``ART_40_3_MANDATORY`` / ``INCOMPLETE``) returns ``False`` — the Modelo
+    202 relation stays unresolved and the gate keeps blocking, never a silent
+    under-declaration. ADR 2026-06-19-m202-first-period-attestation.
     """
-    from pydantic import ValidationError
+    from ...domain.calculations.registry import Modelo202Modality, modelo_202_modality_from_inputs
 
-    from ...core.wizard_catalogue import WizardCatalogueNotRegisteredError
-    from ...domain.calculations.registry import Modelo202Modality, derive_modelo_202_modality
-    from ...domain.deadlines import ProfileError, taxpayer_profile_from_mapping
-    from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile._profile_repository import ProfileRepository
-    from ..user_profile._projections import record_to_path_values
-
-    try:
-        aggregate = ProfileRepository().load(bucket_id)
-        profile = taxpayer_profile_from_mapping(
-            record_to_path_values(aggregate.record),
-            tax_id_default="",
-        )
-    except (ProfileNotFoundError, ProfileError, WizardCatalogueNotRegisteredError, ValidationError):
-        # Fail-closed: an absent / unprojectable profile, or an unregistered wizard
-        # catalogue (non-operator contexts), keeps the M202 relation unresolved and
-        # the gate blocking — never a silent under-declaration.
+    values = _profile_path_values_for_bucket(bucket_id)
+    if values is None:
         return False
-    if derive_modelo_202_modality(profile).modality is not Modelo202Modality.ART_40_2_OPTIONAL:
+    modality = modelo_202_modality_from_inputs(
+        entity_type=_entity_type_from_token(values.get("taxpayer_type.entity_type")),
+        incn_prior_12_months=_parse_canonical_decimal(values.get("taxpayer_type.incn_prior_12_months")),
+    ).modality
+    if modality is not Modelo202Modality.ART_40_2_OPTIONAL:
         return False
-    if profile.activity_start_date is None:
+    activity_start_date = _parse_canonical_iso_date(values.get("censo.activity_start_date"))
+    if activity_start_date is None:
         return False
-    return profile.activity_start_date.year >= filing_year
+    return activity_start_date.year >= filing_year
 
 
 def _activity_start_date_for_bucket(bucket_id: str) -> date | None:
-    """Load the operator-declared activity-start date for ``bucket_id``, or ``None``.
+    """Operator-declared activity-start date for ``bucket_id``, or ``None``.
 
-    Mirrors the profile load in :func:`_first_year_modalidad_cuota_no_m202` (the
-    SINGLE profile builder) so the relation fold-in scopes its source periods on
-    the SAME operator-declared ``activity_start_date`` the cross-period
-    clean-state gate partitions against. Fail-closed: a missing / unprojectable
-    profile, an unregistered wizard catalogue (non-operator contexts), or an
-    absent activity-start date returns ``None`` — no period is scoped and the
-    resolver keeps its full all-quarters behaviour (never a silent drop).
+    Reads ``censo.activity_start_date`` off the WIZARD-FREE profile projection
+    (:func:`_profile_path_values_for_bucket`) — the SAME value the cross-period
+    clean-state gate partitions against (the verify gate threads it in as
+    ``workflow_profile.activity_start_date``), so gate and engine share one
+    activity-start source with no wizard-catalogue dependency. Fail-safe: a
+    missing profile or an absent / malformed date returns ``None`` — no period is
+    scoped and the resolver keeps its full all-quarters behaviour (never a silent
+    drop).
     """
-    from pydantic import ValidationError
-
-    from ...core.wizard_catalogue import WizardCatalogueNotRegisteredError
-    from ...domain.deadlines import ProfileError, taxpayer_profile_from_mapping
-    from ...domain.user_profile import ProfileNotFoundError
-    from ..user_profile._profile_repository import ProfileRepository
-    from ..user_profile._projections import record_to_path_values
-
-    try:
-        aggregate = ProfileRepository().load(bucket_id)
-        profile = taxpayer_profile_from_mapping(
-            record_to_path_values(aggregate.record),
-            tax_id_default="",
-        )
-    except (ProfileNotFoundError, ProfileError, WizardCatalogueNotRegisteredError, ValidationError):
+    values = _profile_path_values_for_bucket(bucket_id)
+    if values is None:
         return None
-    return profile.activity_start_date
+    return _parse_canonical_iso_date(values.get("censo.activity_start_date"))
 
 
 def _scoped_relation_source_requirements(

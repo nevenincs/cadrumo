@@ -5,6 +5,7 @@ Use of :class:`TaxpayerProfile` for compliance.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
@@ -68,25 +69,32 @@ _MODELO_202_NOT_APPLICABLE_REASON = (
 )
 
 
-def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVerdict:
-    """Derive the Modelo 202 pago-fraccionado modality and return a :class:`Modelo202ModalityVerdict`.
+def modelo_202_modality_from_inputs(
+    *,
+    entity_type: EntityType | None,
+    incn_prior_12_months: Decimal | None,
+) -> Modelo202ModalityVerdict:
+    """Derive the Modelo 202 modality from the two raw inputs (entity type + INCN).
 
-    Uses :class:`TaxpayerProfile` for entity-type classification.
+    The SINGLE modality definition, callable WITHOUT a full
+    :class:`TaxpayerProfile` so the calculation engine can evaluate it off the
+    wizard-free profile projection (``record_to_path_values``) in a non-CLI
+    context where the wizard ``SETUP_FLOW`` catalogue is not registered. No
+    fork: :func:`derive_modelo_202_modality` delegates here.
     """
-    if profile.entity_type is None or profile.entity_type is not EntityType.LEGAL_ENTITY:
+    if entity_type is None or entity_type is not EntityType.LEGAL_ENTITY:
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.INCOMPLETE,
             reason=_MODELO_202_NOT_APPLICABLE_REASON,
             legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
         )
-    incn = profile.incn_prior_12_months
-    if incn is None:
+    if incn_prior_12_months is None:
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.INCOMPLETE,
             reason=_MODELO_202_INCOMPLETE_REASON,
             legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
         )
-    if incn > MODELO_202_ART_40_3_INCN_THRESHOLD_EUR:
+    if incn_prior_12_months > MODELO_202_ART_40_3_INCN_THRESHOLD_EUR:
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.ART_40_3_MANDATORY,
             reason=_MODELO_202_ART_40_3_MANDATORY_REASON,
@@ -96,6 +104,18 @@ def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVer
         modality=Modelo202Modality.ART_40_2_OPTIONAL,
         reason=_MODELO_202_ART_40_2_OPTIONAL_REASON,
         legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
+    )
+
+
+def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVerdict:
+    """Derive the Modelo 202 pago-fraccionado modality and return a :class:`Modelo202ModalityVerdict`.
+
+    Uses :class:`TaxpayerProfile` for entity-type classification; delegates the
+    rule to :func:`modelo_202_modality_from_inputs` (the single definition).
+    """
+    return modelo_202_modality_from_inputs(
+        entity_type=profile.entity_type,
+        incn_prior_12_months=profile.incn_prior_12_months,
     )
 
 
