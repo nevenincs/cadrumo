@@ -76,6 +76,25 @@ _RESERVED_UNDECLARED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 )
 
 
+# Enum members that are resolved entirely by a pre-mesh gate and carry NO registry
+# binding declaration by design. Unlike the reserved-undeclared carve-out (members
+# awaiting a future registry binding), these are mesh-only sourcing decisions whose
+# canonical home is the application resolver mesh, not a
+# ``DataBindingDefinition.source``: ``borrador`` is the Modelo 100 borrador prefill
+# and ``iva_wallet_decision`` is the M303 IVA-wallet compensación decision. They are
+# first-class :class:`BindingSourceKind` members (phase-2.1 taxonomy unification) so
+# the mesh carries enum members, but they will never appear in the registry, so the
+# enum↔registry orphan gate exempts them here. The application-layer enum↔mesh parity
+# gate (``test_binding_source_kind_mesh_parity.py``) asserts they ARE accounted for
+# as enrolled/pre-mesh sources, closing the union so neither set is silently missing.
+_MESH_ONLY_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
+    {
+        BindingSourceKind.BORRADOR,
+        BindingSourceKind.IVA_WALLET_DECISION,
+    },
+)
+
+
 def test_enum_members_have_no_undeclared_orphans_beyond_reserved_sources() -> None:
     """No enum member sits unused beyond the design-fenced reserved carve-out.
 
@@ -90,16 +109,23 @@ def test_enum_members_have_no_undeclared_orphans_beyond_reserved_sources() -> No
     declared = _declared_source_kinds()
     enum_members = set(BindingSourceKind)
 
-    orphans = enum_members - declared - _RESERVED_UNDECLARED_SOURCE_KINDS
+    orphans = enum_members - declared - _RESERVED_UNDECLARED_SOURCE_KINDS - _MESH_ONLY_SOURCE_KINDS
     assert not orphans, (
         "BindingSourceKind member(s) declared by no registry binding and not in "
-        f"the reserved carve-out (orphan or typo): {sorted(str(kind) for kind in orphans)}"
+        f"the reserved/mesh-only carve-outs (orphan or typo): {sorted(str(kind) for kind in orphans)}"
     )
 
     spuriously_reserved = _RESERVED_UNDECLARED_SOURCE_KINDS & declared
     assert not spuriously_reserved, (
         "Reserved-undeclared source kind(s) now declared by the registry; remove "
         f"from _RESERVED_UNDECLARED_SOURCE_KINDS: {sorted(str(kind) for kind in spuriously_reserved)}"
+    )
+
+    spuriously_mesh_only = _MESH_ONLY_SOURCE_KINDS & declared
+    assert not spuriously_mesh_only, (
+        "Mesh-only source kind(s) now declared by the registry; a borrador / "
+        "iva_wallet_decision binding contradicts the pre-mesh-gate design — remove "
+        f"from _MESH_ONLY_SOURCE_KINDS: {sorted(str(kind) for kind in spuriously_mesh_only)}"
     )
 
 
