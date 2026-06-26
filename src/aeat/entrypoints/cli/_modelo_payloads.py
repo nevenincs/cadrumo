@@ -897,11 +897,11 @@ class BindingPreviewRowPayload(OutputSchema):
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
-@register_schema("modelo.bindings.preview")
+@register_schema("modelo.bindings.resolve")
 class ModeloBindingsPreviewResult(OutputSchema):
-    """Bindings preview result."""
+    """Bindings resolve result."""
 
-    operation: str = "modelo.bindings.preview"
+    operation: str = "modelo.bindings.resolve"
     modelo: str
     revision: str
     filing_year: int | None

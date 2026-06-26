@@ -369,6 +369,7 @@ aggregation:
       source_kinds_mismatch: Els tipus de font no coincideixen amb la taxonomia acceptada.
   source_mesh:
     errors:
+      ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
       duplicate_binding_owner: 'Error intern: propietari de vinculacio duplicat a
         la malla de fonts.'
       duplicate_bound_casilla_owner: 'Error intern: propietari de casella vinculada
@@ -385,7 +386,6 @@ aggregation:
         de fonts han de ser únics.
       unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
       unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
-      ambiguous_source_disposition: 'aggregation.source_mesh.errors.ambiguous_source_disposition'
 application:
   auth:
     acquisition_lock:
@@ -926,6 +926,16 @@ application:
           tasca de seguiment bloquejada per corpus citant l'article del Convenio.
       missing_required_casilla: La casella obligatòria %{casilla_id} no és present
         a les dades d'entrada del càlcul.
+      modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
+        base liquidable general (C500) és positiva però la quota resultant de l'autoliquidació
+        (C595) és zero; confirmeu que és un zero legítim (base igual o inferior al
+        mínim personal i familiar, o compensada per deduccions) i no una llacuna no
+        modelada.
+      modelo_100_2025_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
+        base liquidable general (C500) és positiva però la quota resultant de l'autoliquidació
+        (C595) és zero; confirmeu que és un zero legítim (base igual o inferior al
+        mínim personal i familiar, o compensada per deduccions) i no una llacuna no
+        modelada.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt de
         presentar M130 aquest trimestre perquè les retencions i ingressos a compte
         acumulats a l''any representen el 70% o més dels rendiments íntegres.'
@@ -971,8 +981,6 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
-      modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: 'La base liquidable general (C500) és positiva però la quota resultant de l''autoliquidació (C595) és zero; confirmeu que és un zero legítim (base igual o inferior al mínim personal i familiar, o compensada per deduccions) i no una llacuna no modelada.'
-      modelo_100_2025_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: 'La base liquidable general (C500) és positiva però la quota resultant de l''autoliquidació (C595) és zero; confirmeu que és un zero legítim (base igual o inferior al mínim personal i familiar, o compensada per deduccions) i no una llacuna no modelada.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
@@ -1524,8 +1532,8 @@ cli:
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
         period_help: 'Token de periode: 0A anual, 1T-4T trimestres, 01-12 mesos; per
           a models censals (036) usa alta, modificacion o baja.'
-        preview_help: Previsualitzar els bindings amb sobreescriptures temporals sense
-          mutar l'estat
+        resolve_help: Resol els bindings i mostra els seus valors amb sobreescriptures
+          temporals opcionals, sense mutar l'estat
         unknown_keys: 'Clau(s) de --binding desconeguda(es) {keys}; vinculacions conegudes
           per a {code}@{revision} ({period}): {suggestion}.'
         year_help: Exercici fiscal del model (p. ex. 2026)

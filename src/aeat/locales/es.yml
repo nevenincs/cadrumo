@@ -376,6 +376,7 @@ aggregation:
       source_kinds_mismatch: Los tipos de fuente no coinciden con la taxonomia aceptada.
   source_mesh:
     errors:
+      ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
       duplicate_binding_owner: 'Error interno: propietario de vinculacion duplicado
         en la malla de fuentes.'
       duplicate_bound_casilla_owner: 'Error interno: propietario de casilla vinculada
@@ -392,7 +393,6 @@ aggregation:
         de fuentes deben ser únicos.
       unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
       unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
-      ambiguous_source_disposition: 'aggregation.source_mesh.errors.ambiguous_source_disposition'
 application:
   auth:
     acquisition_lock:
@@ -940,6 +940,16 @@ application:
           seguimiento bloqueada por corpus citando el artículo del Convenio.
       missing_required_casilla: La casilla requerida %{casilla_id} no está presente
         en los datos de entrada del cálculo.
+      modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
+        base liquidable general (C500) es positiva pero la cuota resultante de la
+        autoliquidación (C595) es cero; confirme que es un cero legítimo (base igual
+        o inferior al mínimo personal y familiar, o compensada por deducciones) y
+        no una laguna no modelada.
+      modelo_100_2025_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
+        base liquidable general (C500) es positiva pero la cuota resultante de la
+        autoliquidación (C595) es cero; confirme que es un cero legítimo (base igual
+        o inferior al mínimo personal y familiar, o compensada por deducciones) y
+        no una laguna no modelada.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exento de
         presentar M130 este trimestre porque las retenciones e ingresos a cuenta acumulados
         en el año representan el 70% o más de los rendimientos íntegros.'
@@ -985,8 +995,6 @@ application:
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
-      modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: 'La base liquidable general (C500) es positiva pero la cuota resultante de la autoliquidación (C595) es cero; confirme que es un cero legítimo (base igual o inferior al mínimo personal y familiar, o compensada por deducciones) y no una laguna no modelada.'
-      modelo_100_2025_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: 'La base liquidable general (C500) es positiva pero la cuota resultante de la autoliquidación (C595) es cero; confirme que es un cero legítimo (base igual o inferior al mínimo personal y familiar, o compensada por deducciones) y no una laguna no modelada.'
     iva_wallet:
       correct_no_record: No existe ningún registro de compensación sembrado para %{filing_year}/%{period}.
         Ejecuta primero 'aeat app modelo iva-wallet seed'; la corrección sobrescribe
@@ -1546,8 +1554,8 @@ cli:
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
         period_help: 'Token de periodo: 0A anual, 1T-4T trimestres, 01-12 meses; para
           modelos censales (036) usa alta, modificacion o baja.'
-        preview_help: Previsualizar bindings con sobrescrituras temporales sin mutar
-          el estado
+        resolve_help: Resuelve los bindings y muestra sus valores con sobrescrituras
+          temporales opcionales, sin mutar el estado
         unknown_keys: 'Clave(s) de --binding desconocida(s) {keys}; vinculaciones
           conocidas para {code}@{revision} ({period}): {suggestion}.'
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)

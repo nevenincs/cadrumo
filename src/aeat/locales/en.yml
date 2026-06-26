@@ -337,6 +337,7 @@ aggregation:
       source_kinds_mismatch: Source kinds must match the accepted four-kind taxonomy.
   source_mesh:
     errors:
+      ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
       duplicate_binding_owner: 'Internal error: duplicate binding owner in source
         mesh.'
       duplicate_bound_casilla_owner: 'Internal error: duplicate bound-casilla owner
@@ -350,7 +351,6 @@ aggregation:
       source_transaction_ids_duplicate: Source mesh transaction ids must be unique.
       unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
       unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
-      ambiguous_source_disposition: 'aggregation.source_mesh.errors.ambiguous_source_disposition'
 application:
   auth:
     acquisition_lock:
@@ -858,6 +858,16 @@ application:
           task referencing the Convenio article number.
       missing_required_casilla: Required casilla %{casilla_id} is not present in the
         calculation revision inputs.
+      modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: The
+        general taxable base (C500) is positive but the cuota resultante de la autoliquidación
+        (C595) is zero; confirm this is a legitimate zero (base at or below the personal
+        and family minimum, or fully offset by deductions) rather than an unmodelled
+        gap.
+      modelo_100_2025_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: The
+        general taxable base (C500) is positive but the cuota resultante de la autoliquidación
+        (C595) is zero; confirm this is a legitimate zero (base at or below the personal
+        and family minimum, or fully offset by deductions) rather than an unmodelled
+        gap.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt from
         filing M130 this quarter because accumulated withholdings and payments on
         account for the year represent 70% or more of gross income.'
@@ -902,8 +912,6 @@ application:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
-      modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: 'The general taxable base (C500) is positive but the cuota resultante de la autoliquidación (C595) is zero; confirm this is a legitimate zero (base at or below the personal and family minimum, or fully offset by deductions) rather than an unmodelled gap.'
-      modelo_100_2025_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: 'The general taxable base (C500) is positive but the cuota resultante de la autoliquidación (C595) is zero; confirm this is a legitimate zero (base at or below the personal and family minimum, or fully offset by deductions) rather than an unmodelled gap.'
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
@@ -1434,7 +1442,8 @@ cli:
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
         period_help: 'Period token: 0A annual, 1T-4T quarters, 01-12 months; for censo
           modelos (036) use alta, modificacion, or baja.'
-        preview_help: Preview bindings with temporary overrides without mutating state
+        resolve_help: Resolve bindings and show their values with optional temporary
+          overrides, without mutating state
         unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
           ({period}): {suggestion}.'
         year_help: Tax year of the modelo (e.g. 2026)
