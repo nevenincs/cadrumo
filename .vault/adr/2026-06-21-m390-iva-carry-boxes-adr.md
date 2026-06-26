@@ -120,3 +120,11 @@ discipline, and reuses verified infrastructure.
   partition the year's pending credit with no double-count or drop, never as two
   independent per-period 303-casilla sums; the AEAT identity
   `[86]=[84]−[85]=[95]−[97]−[98]−[662]` is the regression oracle.
+
+## Status
+
+`proposed`. The FIFO carry partition this ADR decides is a child of the canonical
+compensación-carry direction set by the PHASE ADRs (not a central apex doc): the
+foundational `live-iva-compensation-wallet-adr` is the carry anchor, and the future
+phase-2.3 (fold-in/carry) ADR unifies the carry mechanism. This ADR lands its specific
+M390 box-97/662 FIFO mechanics under that one authority.
