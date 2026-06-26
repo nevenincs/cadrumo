@@ -65,7 +65,6 @@ CalculationSourceDiagnosticReason = Literal[
 # while keeping them off the manual_sources allowlist (W02.P06.S10).
 DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
-        BindingSourceKind.WITHHOLDING,  # M190/M193 per-perceptor detalle — no live source; defer-with-advisory (S27)
         BindingSourceKind.ATRIBUCION_MEMBER,  # M184 — Sheets-pull-only, no live resolver yet
         BindingSourceKind.RELATED_PARTY_OPERATION,  # M232 — Sheets-pull-only
         BindingSourceKind.FOREIGN_ASSET,  # M720 — Sheets-pull-only
