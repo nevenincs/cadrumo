@@ -75,3 +75,11 @@ Future work should add grounded formulas for the remaining Modelo 303 casilla `6
 The broader relation-runtime closure now explicitly includes the linked Modelo 130 relation-regression ADR. That follow-up is related by implementation mechanism, not tax domain: Modelo 303 IVA compensation and Modelo 130 IRPF negative-result deductions both rely on previous-period evidence materialised into current-period bindings, but their legal rules and source casillas differ.
 
 The live IVA compensation wallet ADR is the production authority extension for this ADR. The local previous-filing recurrence implemented here is not sufficient as the final backend authority for casilla `110`; it is the fallback and reconciliation path once the AEAT wallet read is implemented.
+
+## Status
+
+Accepted and in force. The compensación arithmetic this ADR establishes stands; its
+carry grounding aligns to the canonical compensación-carry direction in the PHASE ADRs
+(not a central apex doc): the foundational `live-iva-compensation-wallet-adr` is the
+carry anchor, and the future phase-2.3 (fold-in/carry) ADR unifies the carry mechanism.
+Those phase ADRs are the canonical direction.
