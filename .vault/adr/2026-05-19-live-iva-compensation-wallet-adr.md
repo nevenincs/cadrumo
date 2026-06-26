@@ -233,3 +233,13 @@ balances. The command:
 - Refuses if a state already exists for the period (`IvaCompensationSeedConflictError`).
 - Returns the persisted `status`, `filing_year`, `period`, and `amount` in the
   standard `--output` format.
+
+## Status
+
+Accepted and in force, and FOUNDATIONAL — this ADR establishes the AEAT wallet as the
+primary IVA compensación authority, which is the ANCHOR of the unified
+compensación-carry mechanism the bindings-architecture-unification sweep coalesces
+onto. The future phase-2.3 (fold-in/carry) ADR unifies the wallet decision with the
+registry `previous_filing` and FIFO carry paths around this anchor. This ADR is NOT
+superseded; it is the carry anchor the phase ADRs name. (Canonical direction = the
+phase + foundational ADRs, not a central apex doc.)
