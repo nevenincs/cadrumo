@@ -64,6 +64,7 @@ You MUST respect these rules at all times:
 @.agents/rules/plan-closure-requires-exec-records.md
 @.agents/rules/registry-calculation-legal-grounding.md
 @.agents/rules/registry-resolver-family-extraction.md
+@.agents/rules/registry-revision-content-inline-or-fragmented.md
 @.agents/rules/relation-slot-bindings-declare-relation-source.md
 @.agents/rules/retired-enum-members-need-consumer-reconciliation.md
 @.agents/rules/revision-resolution-is-law-determined.md
