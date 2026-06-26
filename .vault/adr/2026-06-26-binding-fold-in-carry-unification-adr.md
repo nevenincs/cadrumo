@@ -122,9 +122,26 @@ orphan deleted. Layering (the plan sequences the steps):
    shapes the one helper must still produce.
 
 2. **Type relation aggregation (extend `binding-aggregation-is-typed` to relations).**
-   `RelationDefinition.aggregation` becomes the typed `BindingAggregation` + `BindingAggregationOp`
-   model (phase 2.1's enum); the three inline `str(...).get("op")` re-parses are
-   replaced by the one `binding_aggregation_op` accessor, validated at registry-build.
+   `RelationDefinition.aggregation` (declared at `_schema_surfaces.py:489`) becomes a
+   typed model; the three inline `str(...).get("op")` re-parses
+   (`_relations.py:103/167`, `_relation_prefill.py:605`, `_validate_relation_sources.py:84`)
+   are replaced by one typed accessor, validated at registry-build.
+
+   **Amendment (recorded 2026-06-26, from the reference-grounding D3):** the relation
+   op uses a NEW `RelationAggregationOp` enum + a relation-specific accessor — NOT a
+   reuse of phase-2.1's `BindingAggregationOp`. The draft above assumed
+   `BindingAggregationOp` could be extended to relations; the reference-grounding found
+   `BindingAggregationOp`'s docstring EXPLICITLY excludes relation `copy`/`sum` ("a
+   separate, unrelated axis") and `binding_aggregation_op` takes a `DataBindingDefinition`
+   — consistent with `binding-aggregation-is-typed` ("the relation and formula-expression
+   op axes are separate concepts, out of scope"). Widening `BindingAggregationOp` would
+   couple two deliberately-separate axes; instead a new core `RelationAggregationOp`
+   (values enumerated from the registry relations, e.g. `copy`/`sum`) with its own
+   `relation_aggregation_op` accessor (taking a `RelationDefinition`) achieves F4 while
+   respecting the axis separation. The #25 M390-FIFO-drift fold rides this: once the
+   relation op is typed, the M390 carry-box relations declare a typed relation op that
+   self-documents the box-97/662 FIFO partition (or the misleading relations are retired
+   per the `m390-iva-carry-boxes` ADR).
 
 3. **One compensación-carry authority.** The foundational `live-iva-compensation-wallet-adr`
    wallet decision is THE carry authority; the registry `previous_filing` formula path
