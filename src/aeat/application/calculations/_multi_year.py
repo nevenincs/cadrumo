@@ -30,7 +30,6 @@ the operator, fall back to AEAT live state, or zero-fill.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from typing import TYPE_CHECKING, override
 
 from pydantic import BaseModel, Field
@@ -42,14 +41,13 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshot
+from ...domain.calculations.registry import RegistrySnapshot
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
-from ._binding_prefill import _revision_prefill_divergence
 from ._observations_repository import CalculationObservationRepository
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
@@ -360,125 +358,6 @@ def assert_enrollment_matches_manifest(
         )
 
 
-class MultiYearResolutionRequest(BaseModel):
-    """Parameters for one prior-filing observation scan.
-
-    Passed to :meth:`MultiYearResolver.resolve`. ``modelo`` and
-    ``current_year`` identify the filing being calculated;
-    ``years_back`` controls how many prior renta years the resolver
-    walks back; ``periods`` optionally restricts the scan to specific
-    period tokens (e.g. ``("1P", "2P", "3P")`` for Modelo 202 pagos
-    fraccionados).
-    """
-
-    model_config = _STRICT_FROZEN
-
-    modelo: str = Field(min_length=1, max_length=8)
-    current_year: int = Field(ge=2000, le=2099)
-    years_back: int = Field(ge=1, le=20)
-    periods: tuple[str, ...] | None = None
-
-
-class MultiYearResolutionReport(BaseModel):
-    """Outcome of one :meth:`MultiYearResolver.resolve` scan.
-
-    Carries the original ``request``, the matched
-    :class:`RegistryModeloObservation` records, and three derived
-    year-sets (``requested_years``, ``found_years``, ``missing_years``)
-    that let callers decide whether to refuse, prompt the operator, or
-    zero-fill for absent prior years without re-scanning the store.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    request: MultiYearResolutionRequest
-    observations: tuple[RegistryModeloObservation, ...]
-    requested_years: tuple[int, ...]
-    found_years: tuple[int, ...]
-    missing_years: tuple[int, ...]
-
-
-class MultiYearResolver:
-    """Reads from `CalculationObservationRepository`, returns prior observations.
-
-    Construct with `MultiYearResolver()` for default repository
-    binding; inject a custom repository in tests by passing
-    `repository=...` (the resolver does no construction beyond the
-    repository it's handed).
-
-    .. rubric:: Deferral note (W02.P04.S25)
-
-    This class has no live production caller in the current calculate path
-    (``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics``).
-    :class:`PreviousFilingSourceResolver` covers the ``previous_filing``
-    source mesh for the live path by calling
-    :func:`~aeat.application.calculations.resolve_bindings_from_local_store`
-    directly.
-
-    ``MultiYearResolver`` is the *explicit multi-year scan API* intended for
-    modelos that need structured year-set coverage reports:
-
-    - Modelo 200 IS — BIN unlimited carryforward (LIS arts. 25-26) and M202
-      pago fraccionado roll-up across prior years.
-    - Modelo 303 IVA — prorrata four-year average (LIVA art. 105) and
-      regularización inversiones five-year straight-line (LIVA art. 93).
-
-    It returns a :class:`MultiYearResolutionReport` with explicit
-    ``requested_years``, ``found_years``, and ``missing_years`` sets that
-    :class:`PreviousFilingSourceResolver` does not expose — callers can
-    decide whether to refuse, prompt the operator, or zero-fill absent years.
-
-    **Why not wired yet:** the modelos above are in DORMANT aggregation state
-    per the calculation-engine-foundations audit F6 matrix (no enrolled source
-    resolver for their multi-year inputs). This class will be wired when those
-    modelos are enrolled in W02.P06 / W03.P08.
-
-    **Follow-up:** wire ``MultiYearResolver`` as the multi-year scan back-end
-    for M200 BIN carry and M303 prorrata when the respective modelo resolvers
-    are enrolled. Reference: calculation-engine-foundations plan W02.P06 /
-    W03.P08, audit F6.
-    """
-
-    def __init__(
-        self,
-        *,
-        repository: CalculationObservationRepository | None = None,
-    ) -> None:
-        self._repository = repository if repository is not None else CalculationObservationRepository()
-
-    def resolve(self, request: MultiYearResolutionRequest) -> MultiYearResolutionReport:
-        """Scan persisted observations matching ``request`` and return a :class:`MultiYearResolutionReport`.
-
-        The returned report's ``observations`` are sorted by
-        ``(filing_year, period)`` ascending so callers that expect
-        chronological order (e.g. quarter 1T - 4T summing for an annual
-        modelo) can iterate directly.
-        """
-        requested_years = tuple(request.current_year - offset for offset in range(1, request.years_back + 1))
-        observations: list[RegistryModeloObservation] = []
-        for payload in self._repository.iter_modelo(request.modelo):
-            obs = payload.observation
-            if obs.filing_year not in requested_years:
-                continue
-            if request.periods is not None and obs.period not in request.periods:
-                continue
-            # R2 carry gate: divergent stamp → refuse (skip); missing stamp → carry proceeds.
-            # (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2)
-            if _revision_prefill_divergence(payload):
-                continue
-            observations.append(obs)
-        observations.sort(key=lambda o: (o.filing_year, o.period))
-        found_years = tuple(sorted({obs.filing_year for obs in observations}))
-        missing_years = tuple(year for year in requested_years if year not in found_years)
-        return MultiYearResolutionReport(
-            request=request,
-            observations=tuple(observations),
-            requested_years=requested_years,
-            found_years=found_years,
-            missing_years=missing_years,
-        )
-
-
 class PreviousFilingSourceResolver:
     """Source mesh resolver for ``source = "previous_filing"`` calculation bindings.
 
@@ -542,40 +421,11 @@ class PreviousFilingSourceResolver:
         )
 
 
-def resolve_prior_year_observations(
-    modelo: str,
-    current_year: int,
-    years_back: int,
-    *,
-    periods: Iterable[str] | None = None,
-    repository: CalculationObservationRepository | None = None,
-) -> MultiYearResolutionReport:
-    """Functional entry point for one-shot scans without constructing a resolver.
-
-    Equivalent to constructing `MultiYearResolver(repository=...)`
-    and calling `resolve(MultiYearResolutionRequest(...))`.
-
-    Returns a :class:`MultiYearResolutionReport`.
-    """
-    resolver = MultiYearResolver(repository=repository)
-    request = MultiYearResolutionRequest(
-        modelo=modelo,
-        current_year=current_year,
-        years_back=years_back,
-        periods=tuple(periods) if periods is not None else None,
-    )
-    return resolver.resolve(request)
-
-
 __all__ = [
     "EnrollmentEvidence",
     "EnrollmentEvidenceError",
     "EnrollmentRecorder",
     "EnrollmentYearObservation",
-    "MultiYearResolutionReport",
-    "MultiYearResolutionRequest",
-    "MultiYearResolver",
     "PreviousFilingSourceResolver",
     "assert_enrollment_matches_manifest",
-    "resolve_prior_year_observations",
 ]

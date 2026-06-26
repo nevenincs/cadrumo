@@ -15,8 +15,6 @@ Tests for the period-revision-resolution decision, Ruling 3 / R2:
   M390's five M303-sourced bindings migrated to ``relation_prefill``
   via the relation path; the stamp R2 gate tests now use the M303 self-carry
   (prior quarter compensacion carry) as subject instead.
-- R2 carry gate in ``MultiYearResolver.resolve``: a divergent stamp silently
-  drops the observation from the result, a missing stamp passes through.
 """
 
 from __future__ import annotations
@@ -38,7 +36,6 @@ from ....domain.calculations.registry import (
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
-from .._multi_year import MultiYearResolutionRequest, MultiYearResolver
 from .._observations_repository import (
     CalculationObservationRepository,
     observation_key,
@@ -383,73 +380,7 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
         )
 
 
-# ---------------------------------------------------------------------------
-# Carry-gate tests for MultiYearResolver
-# ---------------------------------------------------------------------------
-
-
-def test_multiyear_resolver_divergent_stamp_drops_observation(tmp_path: Path) -> None:
-    """R2: MultiYearResolver.resolve drops an observation with a divergent stamp."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        # Save two years: 2024 with correct stamp, 2023 with divergent stamp.
-        revision_2024 = _law_revision_id("303", 2024, "4T")
-        repo.save_observation(
-            _minimal_observation("303", 2024, "4T"),
-            source_kind=_SOURCE_KIND,
-            captured_at=_CLOCK,
-            stamped_revision_id=revision_2024,
-        )
-        repo.save_observation(
-            _minimal_observation("303", 2023, "4T"),
-            source_kind=_SOURCE_KIND,
-            captured_at=_CLOCK,
-            stamped_revision_id=_FAKE_REVISION_ID,
-        )
-
-        resolver = MultiYearResolver(repository=repo)
-        report = resolver.resolve(
-            MultiYearResolutionRequest(
-                modelo="303",
-                current_year=2025,
-                years_back=2,
-                periods=("4T",),
-            ),
-        )
-
-        # 2024 (correct stamp) must be in found_years; 2023 (divergent stamp) must be dropped.
-        assert 2024 in report.found_years, "correctly stamped 2024 observation must be found"
-        assert 2023 not in report.found_years, "divergent-stamp 2023 observation must be dropped"
-        assert 2023 in report.missing_years, "dropped 2023 must appear in missing_years"
-        assert len(report.observations) == 1
-        assert report.observations[0].filing_year == 2024
-
-
-def test_multiyear_resolver_missing_stamp_carries(tmp_path: Path) -> None:
-    """R2: MultiYearResolver.resolve passes through observations with missing (None) stamps."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        # Save two years with no stamp (legacy records).
-        for year in (2024, 2023):
-            repo.save_observation(
-                _minimal_observation("303", year, "4T"),
-                source_kind=_SOURCE_KIND,
-                captured_at=_CLOCK,
-                stamped_revision_id=None,
-            )
-
-        resolver = MultiYearResolver(repository=repo)
-        report = resolver.resolve(
-            MultiYearResolutionRequest(
-                modelo="303",
-                current_year=2025,
-                years_back=2,
-                periods=("4T",),
-            ),
-        )
-
-        # Legacy (unstamped) records carry through — advisory is the mechanism, not blocking.
-        assert 2024 in report.found_years
-        assert 2023 in report.found_years
-        assert not report.missing_years
-        assert len(report.observations) == 2
+# The R2 carry-gate coverage for ``MultiYearResolver`` was removed with the
+# orphaned resolver itself; the live-path R2 gate (``_revision_prefill_divergence``)
+# stays comprehensively covered by ``test_carry_gate_parity.py`` across the
+# matching / divergent / missing / indeterminate outcomes.
