@@ -29,8 +29,11 @@ Submodules
    aeat.application.aggregation._renta_gasto_ledger
    aeat.application.aggregation._renta_income_ledger
    aeat.application.aggregation._renta_ledger
+   aeat.application.aggregation._retencion_observations_repository
    aeat.application.aggregation._retenciones
    aeat.application.aggregation._service
    aeat.application.aggregation._shared_issue_reasons
    aeat.application.aggregation._source_mesh
    aeat.application.aggregation._source_profile
+   aeat.application.aggregation._withholding_observations_repository
+   aeat.application.aggregation._withholding_source

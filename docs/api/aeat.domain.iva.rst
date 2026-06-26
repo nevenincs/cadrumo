@@ -24,6 +24,8 @@ Submodules
    aeat.domain.iva._prorrata
    aeat.domain.iva._rates
    aeat.domain.iva._recargo_equivalencia
+   aeat.domain.iva._refund_eligibility
    aeat.domain.iva._saturation
    aeat.domain.iva._schema
+   aeat.domain.iva._sepa_marca
    aeat.domain.iva._verify
