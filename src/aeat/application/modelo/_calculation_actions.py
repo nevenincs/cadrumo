@@ -59,8 +59,12 @@ from ._action_errors import (
     WorkUnitRevisionDivergenceError,
 )
 from ._binding_resolution import (
+    lift_previous_filing_casilla_overrides_to_bindings,
+    reject_binding_channel_mismatch,
     resolve_available_bound_inputs_by_casilla_id,
-    resolve_calculation_binding_inputs,
+    resolve_borrador_source_tier,
+    resolve_declaration_period_inputs,
+    resolve_profile_source_tier,
 )
 from ._calculation_helpers import (
     build_typed_observations as _build_typed_observations,
@@ -325,26 +329,78 @@ def calculate_modelo_revision(
         backend_binding_values=lower_precedence_binding_values,
         decision=iva_compensation_decision,
     )
-    binding_resolution = resolve_calculation_binding_inputs(
+    from ..aggregation import CalculationSourceResolution, merge_source_resolutions_by_precedence
+
+    # Enroll the profile and borrador sources as first-class mesh resolutions and
+    # overlay the precedence ladder (lowest -> highest: profile, mesh backend,
+    # borrador, caller) through merge_source_resolutions_by_precedence. This is
+    # the explicit mesh-merge form of the historical
+    # {**profile, **backend, **borrador, **caller} dict-merge: each tier is a
+    # CalculationSourceResolution and a higher tier overrides a lower one. The
+    # backend mesh resolvers' values arrive via `lower_precedence_binding_values`
+    # (computed by _resolve_bucket_source_mesh); a caller --binding is highest.
+    borrador_resolution = resolve_borrador_source_tier(
         bucket_id=work_unit.bucket_id,
         snapshot=snapshot,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
-        casilla_inputs=casilla_inputs,
+        borrador_snapshot_id=borrador_snapshot_id,
         caller_binding_values=caller_binding_values,
         caller_enum_binding_values=caller_enum_binding_values,
-        backend_binding_values=lower_precedence_binding_values,
-        backend_casilla_inputs=backend_casilla_inputs,
-        borrador_snapshot_id=borrador_snapshot_id,
         borrador_snapshot_repository=borrador_snapshot_repository,
-        relation_values=relation_values,
     )
-    borrador_provenance = binding_resolution.borrador_provenance
-    resolved_bindings = dict(binding_resolution.resolved_bindings)
-    resolved_enum_bindings = dict(binding_resolution.resolved_enum_bindings)
-    resolved_date_bindings = dict(binding_resolution.resolved_date_bindings)
-    resolved_relations = dict(binding_resolution.resolved_relations)
-    resolved_inputs = dict(binding_resolution.resolved_inputs)
+    profile_resolution = resolve_profile_source_tier(
+        bucket_id=work_unit.bucket_id,
+        snapshot=snapshot,
+        caller_binding_values=caller_binding_values,
+        caller_enum_binding_values=caller_enum_binding_values,
+        borrador_resolution=borrador_resolution,
+        backend_binding_values=lower_precedence_binding_values,
+    )
+    backend_tier = CalculationSourceResolution(
+        resolver_id="calculate_backend_bindings",
+        binding_values=dict(lower_precedence_binding_values),
+    )
+    caller_tier = CalculationSourceResolution(
+        resolver_id="calculate_caller_bindings",
+        binding_values=dict(caller_binding_values),
+        enum_binding_values=dict(caller_enum_binding_values),
+    )
+    merged = merge_source_resolutions_by_precedence(
+        (profile_resolution, backend_tier, borrador_resolution, caller_tier),
+    )
+    borrador_provenance = merged.borrador_provenance
+    resolved_bindings = dict(sorted(merged.binding_values.items()))
+    resolved_enum_bindings = dict(sorted(merged.enum_binding_values.items()))
+    resolved_date_bindings = dict(sorted(merged.date_binding_values.items()))
+    reject_binding_channel_mismatch(snapshot.revision, resolved_bindings, resolved_enum_bindings)
+    resolved_relations = dict(relation_values or {})
+    # Promote operator casilla overrides for previous-filing-bound casillas into
+    # bindings (the relation target_binding materialisation already arrives via the
+    # backend mesh channel and is adjudicated by the mesh _claim_binding guard).
+    resolved_bindings = dict(
+        sorted(
+            lift_previous_filing_casilla_overrides_to_bindings(
+                snapshot.revision,
+                casilla_inputs,
+                resolved_bindings,
+            ).items(),
+        ),
+    )
+    resolved_inputs = dict(
+        sorted(
+            {
+                **resolve_declaration_period_inputs(
+                    snapshot.revision,
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period,
+                ),
+                **dict(backend_casilla_inputs or {}),
+                **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, resolved_bindings),
+                **casilla_inputs,
+            }.items(),
+        ),
+    )
 
     engine_result = calculate_registry_snapshot(
         snapshot,

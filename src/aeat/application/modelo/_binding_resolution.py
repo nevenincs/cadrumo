@@ -6,8 +6,6 @@ Use of :class:`ModeloRevision`, :class:`RegistrySnapshot` for compliance.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
-from datetime import date
 from decimal import Decimal
 
 from ...core import Period as _Period
@@ -17,13 +15,12 @@ from ...domain.calculations.registry import (
     InputKind,
     ModeloRevision,
     RegistrySnapshot,
-    RelationId,
     casillas_by_id,
     enum_consumed_binding_ids,
     expression_binding_refs,
 )
 from ...domain.modelos._errors import ModeloError
-from ..aggregation._source_mesh import BorradorSourceProvenance, CalculationSourceResolution
+from ..aggregation._source_mesh import CalculationSourceResolution
 from ..live import Borrador100SnapshotRepository
 from ._borrador_binding import Modelo100BorradorSourceResolver
 from ._semantic_role_resolution import (
@@ -32,48 +29,24 @@ from ._semantic_role_resolution import (
 )
 
 
-@dataclass(frozen=True)
-class CalculationBindingResolution:
-    """Engine-ready inputs resolved from caller, backend, profile, and borrador sources.
-
-    The four source resolutions are merged through the precedence ladder
-    (profile lowest, mesh backend, borrador, caller highest) by
-    :func:`resolve_calculation_binding_inputs`; ``borrador_provenance`` carries
-    the typed borrador snapshot id + sourced-binding trace the persistence
-    boundary consumes.
-    """
-
-    resolved_inputs: Mapping[CasillaId, Decimal]
-    resolved_bindings: Mapping[BindingId, Decimal]
-    resolved_enum_bindings: Mapping[BindingId, str]
-    resolved_date_bindings: Mapping[BindingId, date]
-    resolved_relations: Mapping[RelationId, Decimal]
-    borrador_provenance: BorradorSourceProvenance | None
-
-
-def resolve_calculation_binding_inputs(
+def resolve_borrador_source_tier(
     *,
     bucket_id: str,
     snapshot: RegistrySnapshot,
     filing_year: int,
     period: _Period,
-    casilla_inputs: Mapping[CasillaId, Decimal],
+    borrador_snapshot_id: str | None,
     caller_binding_values: Mapping[BindingId, Decimal],
     caller_enum_binding_values: Mapping[BindingId, str],
-    backend_binding_values: Mapping[BindingId, Decimal],
-    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
-    borrador_snapshot_id: str | None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
-    relation_values: Mapping[RelationId, Decimal] | None,
-) -> CalculationBindingResolution:
-    """Resolve every binding-related engine channel for one calculation.
+) -> CalculationSourceResolution:
+    """Resolve the borrador precedence tier as a :class:`CalculationSourceResolution`.
 
-    Returns:
-        :class:`CalculationBindingResolution`: The resolved binding state.
-
-    Use of :class:`RegistrySnapshot` for compliance.
+    Enrolls the borrador source through the source mesh: the returned resolution
+    carries the typed ``borrador_provenance`` (snapshot id + sourced-binding
+    trace) the persistence boundary consumes.
     """
-    borrador_resolution = _resolve_borrador_bindings_for_calculation(
+    return _resolve_borrador_bindings_for_calculation(
         bucket_id=bucket_id,
         modelo=snapshot.modelo.id,
         filing_year=filing_year,
@@ -84,84 +57,9 @@ def resolve_calculation_binding_inputs(
         registry_snapshot=snapshot,
         snapshot_repository=borrador_snapshot_repository,
     )
-    profile_resolution = _resolve_profile_bindings_for_calculation(
-        bucket_id=bucket_id,
-        snapshot=snapshot,
-        caller_binding_values=caller_binding_values,
-        caller_enum_binding_values=caller_enum_binding_values,
-        borrador_resolution=borrador_resolution,
-        backend_binding_values=backend_binding_values,
-    )
-    # Decimal-channel precedence ladder, lowest -> highest: profile, mesh backend,
-    # borrador, caller. The enum channel has no mesh backend contributor.
-    resolved_bindings = dict(
-        sorted(
-            {
-                **profile_resolution.binding_values,
-                **backend_binding_values,
-                **borrador_resolution.binding_values,
-                **caller_binding_values,
-            }.items(),
-        ),
-    )
-    resolved_enum_bindings = dict(
-        sorted(
-            {
-                **profile_resolution.enum_binding_values,
-                **borrador_resolution.enum_binding_values,
-                **caller_enum_binding_values,
-            }.items(),
-        ),
-    )
-    resolved_date_bindings = dict(sorted(profile_resolution.date_binding_values.items()))
-    _reject_binding_channel_mismatch(snapshot.revision, resolved_bindings, resolved_enum_bindings)
-
-    resolved_relations = dict(relation_values or {})
-    # Relation target_binding materialisation NO LONGER happens here. It moved
-    # INTO RelationPrefillSourceResolver (aggregation-taxonomy ADR ruling 4), so
-    # the materialised slot values arrive through the source mesh's
-    # backend_binding_values channel and are adjudicated by the mesh
-    # _claim_binding exclusive-ownership guard. The previous silent post-mesh
-    # merge ({**relation_binding_values, **resolved_bindings}) — which let every
-    # other source quietly override a relation-materialised value — is retired.
-    resolved_bindings = dict(
-        sorted(
-            _lift_previous_filing_casilla_overrides_to_bindings(
-                snapshot.revision,
-                casilla_inputs,
-                resolved_bindings,
-            ).items(),
-        ),
-    )
-    declaration_period_inputs = _resolve_declaration_period_inputs(
-        snapshot.revision,
-        filing_year=filing_year,
-        period=period,
-    )
-    resolved_inputs = dict(
-        sorted(
-            {
-                **declaration_period_inputs,
-                **dict(backend_casilla_inputs or {}),
-                **resolve_available_bound_inputs_by_casilla_id(
-                    snapshot.revision,
-                    resolved_bindings,
-                ),
-                **casilla_inputs,
-            }.items(),
-        ),
-    )
-    return CalculationBindingResolution(
-        resolved_inputs=resolved_inputs,
-        resolved_bindings=resolved_bindings,
-        resolved_enum_bindings=resolved_enum_bindings,
-        resolved_date_bindings=resolved_date_bindings,
-        resolved_relations=resolved_relations,
-        borrador_provenance=borrador_resolution.borrador_provenance,
-    )
 
 
-def _resolve_profile_bindings_for_calculation(
+def resolve_profile_source_tier(
     *,
     bucket_id: str,
     snapshot: RegistrySnapshot,
@@ -170,11 +68,12 @@ def _resolve_profile_bindings_for_calculation(
     borrador_resolution: CalculationSourceResolution,
     backend_binding_values: Mapping[BindingId, Decimal],
 ) -> CalculationSourceResolution:
-    """Resolve ``source = "profile"`` bindings from the bucket's user profile.
+    """Resolve the profile precedence tier as a :class:`CalculationSourceResolution`.
 
-    Returns the profile :class:`CalculationSourceResolution` directly (no
-    intermediate result wrap). Every binding the caller, borrador, or mesh
-    backend already supplied is excluded so profile stays lowest precedence.
+    Enrolls ``source = "profile"`` bindings through the source mesh. Profile is
+    the LOWEST precedence tier, so every binding the caller, borrador, or mesh
+    backend already supplied is excluded here (the profile resolver never
+    overrides a higher tier).
     """
     from ..aggregation import CalculationSourceContext, ProfileSourceResolver
 
@@ -197,6 +96,34 @@ def _resolve_profile_bindings_for_calculation(
             revision=snapshot.revision,
         ),
     )
+
+
+def reject_binding_channel_mismatch(
+    revision: ModeloRevision,
+    binding_values: Mapping[BindingId, Decimal],
+    enum_binding_values: Mapping[BindingId, str],
+) -> None:
+    """Public re-home of the engine-channel-mismatch refusal (see private impl)."""
+    _reject_binding_channel_mismatch(revision, binding_values, enum_binding_values)
+
+
+def lift_previous_filing_casilla_overrides_to_bindings(
+    revision: ModeloRevision,
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    resolved_bindings: Mapping[BindingId, Decimal],
+) -> dict[BindingId, Decimal]:
+    """Public re-home of the previous-filing casilla-override lift (see private impl)."""
+    return _lift_previous_filing_casilla_overrides_to_bindings(revision, casilla_inputs, resolved_bindings)
+
+
+def resolve_declaration_period_inputs(
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    period: _Period,
+) -> dict[CasillaId, Decimal]:
+    """Public re-home of the declaration-period informational-input resolution."""
+    return _resolve_declaration_period_inputs(revision, filing_year=filing_year, period=period)
 
 
 def _reject_binding_channel_mismatch(
@@ -375,7 +302,10 @@ def _informational_semantic_role_casilla_id(revision: ModeloRevision, semantic_r
 
 
 __all__ = [
-    "CalculationBindingResolution",
+    "lift_previous_filing_casilla_overrides_to_bindings",
+    "reject_binding_channel_mismatch",
     "resolve_available_bound_inputs_by_casilla_id",
-    "resolve_calculation_binding_inputs",
+    "resolve_borrador_source_tier",
+    "resolve_declaration_period_inputs",
+    "resolve_profile_source_tier",
 ]
