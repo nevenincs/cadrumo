@@ -996,13 +996,14 @@ async def capture_previous_filing_observations(
             filing_year=filing_year,
             period=period.registry_token,
         ):
-            rows = await register.walk(modelo=requirement.modelo, ejercicio=requirement.filing_year)
-            matches = tuple(row for row in rows if row.period.registry_token == requirement.period)
+            source_period = requirement.periods[0]
+            rows = await register.walk(modelo=requirement.source_modelo, ejercicio=requirement.filing_year)
+            matches = tuple(row for row in rows if row.period.registry_token == source_period)
             declaration = _select_authoritative_declaration(
                 matches,
-                modelo=requirement.modelo,
+                modelo=requirement.source_modelo,
                 ejercicio=requirement.filing_year,
-                period_token=requirement.period,
+                period_token=source_period,
                 context="previous-filing requirement",
             )
             observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
@@ -1011,8 +1012,8 @@ async def capture_previous_filing_observations(
             missing = sorted(set(requirement.source_casilla_ids).difference(observed_casillas))
             if missing:
                 raise SedeParseError(
-                    f"previous-filing requirement {requirement.modelo!r}/"
-                    f"{requirement.filing_year}/{requirement.period!r} missing observed casillas {missing!r}",
+                    f"previous-filing requirement {requirement.source_modelo!r}/"
+                    f"{requirement.filing_year}/{source_period!r} missing observed casillas {missing!r}",
                 )
             observations.append(observation)
     return tuple(observations)
@@ -1044,7 +1045,7 @@ async def capture_relation_source_observations(
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period.registry_token):
         for source_period in requirement.periods:
             key = (requirement.source_modelo, requirement.filing_year, source_period)
-            required_source_casilla_ids.setdefault(key, set()).add(requirement.source_casilla_id)
+            required_source_casilla_ids.setdefault(key, set()).update(requirement.source_casilla_ids)
 
     observations: list[FiledDeclaracionObservation] = []
     async with open_declarations_register(session, settings=settings, playwright=playwright) as register:

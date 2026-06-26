@@ -157,7 +157,6 @@ def _registry_required_manual_casillas_for(*, modelo: str, filing_year: int, per
 
 
 _DEFAULT_180_RELATION_VALUES: dict[str, Decimal] = {
-    "modelo-180-rel-115-perceptores-anual": Decimal("0"),
     "modelo-180-rel-115-base-anual": Decimal("0"),
     "modelo-180-rel-115-retenciones-anual": Decimal("0"),
 }
@@ -294,7 +293,7 @@ def _cross_period_source_groups(work_unit: WorkUnit) -> dict[tuple[str, int, str
         period=work_unit.period.registry_token,
     ):
         groups.setdefault(
-            (requirement.modelo, requirement.filing_year, requirement.period),
+            (requirement.source_modelo, requirement.filing_year, requirement.periods[0]),
             set(),
         ).update(requirement.source_casilla_ids)
     for requirement in relation_source_requirements(
@@ -306,7 +305,7 @@ def _cross_period_source_groups(work_unit: WorkUnit) -> dict[tuple[str, int, str
             groups.setdefault(
                 (requirement.source_modelo, requirement.filing_year, period),
                 set(),
-            ).add(requirement.source_casilla_id)
+            ).update(requirement.source_casilla_ids)
     return groups
 
 

@@ -17,9 +17,8 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import resources
-from .. import CasillaId, validated_casilla_id
+from .. import CasillaId, RegistryFoldRequirement, validated_casilla_id
 from .._bindings_previous_filing import (
-    RegistryModeloObservationRequirement,
     previous_filing_observation_requirements,
 )
 
@@ -31,7 +30,7 @@ _POSITIVE_PART_CASILLA: CasillaId = validated_casilla_id("07", surface="_POSITIV
 _MINORACION_CASILLA: CasillaId = validated_casilla_id("16", surface="_MINORACION_CASILLA")
 
 
-def _casilla_05_requirements(period: str) -> tuple[RegistryModeloObservationRequirement, ...]:
+def _casilla_05_requirements(period: str) -> tuple[RegistryFoldRequirement, ...]:
     snapshot = resources().modelos.authority.snapshot("130", filing_year=_FILING_YEAR, period=period)
     return tuple(
         requirement
@@ -54,9 +53,9 @@ def test_second_quarter_requires_only_the_single_prior_quarter() -> None:
     requirements = _casilla_05_requirements("2T")
     assert len(requirements) == 1
     requirement = requirements[0]
-    assert requirement.modelo == "130"
+    assert requirement.source_modelo == "130"
     assert requirement.filing_year == _FILING_YEAR
-    assert requirement.period == "1T"
+    assert requirement.periods == ("1T",)
     # The carry reads both the positive-part (07) and minoración (16) source
     # casillas; the 1T requirement also bundles the casilla-15 carry's
     # saldo-negativo-fin-periodo because both bindings share the (130, 2026, 1T) key.
@@ -66,5 +65,5 @@ def test_second_quarter_requires_only_the_single_prior_quarter() -> None:
 def test_fourth_quarter_requires_every_prior_same_ejercicio_quarter() -> None:
     """A 4T target requires the 1T, 2T, and 3T prior-quarter casilla-05 observations."""
     requirements = _casilla_05_requirements("4T")
-    required_periods = sorted(requirement.period for requirement in requirements)
+    required_periods = sorted(requirement.periods[0] for requirement in requirements)
     assert required_periods == ["1T", "2T", "3T"]

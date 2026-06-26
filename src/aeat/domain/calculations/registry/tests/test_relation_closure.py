@@ -2,32 +2,28 @@
 
 from __future__ import annotations
 
-import shutil
 from decimal import Decimal
 from functools import cache
-from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
-from .. import CasillaId, RegistryCatalogues, RegistryLoadError, RegistryValidationError, validated_casilla_id
+from .. import CasillaId, RegistryCatalogues, RegistryValidationError, validated_casilla_id
 from .._bindings import RegistryModeloObservation
-from .._loader import load_modelo_directory, load_registry_tree
+from .._loader import load_registry_tree
 from .._relations import relation_source_requirements, resolve_relation_values_from_observations
 from .._schema import ModeloDefinition, ModeloRevision
+from .._schema_surfaces import RelationDefinition
 from .._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
-_MODELO_180_DIR = _REGISTRY_ROOT / "modelos" / "180"
-_MODELO_180_FIRST_RELATION_FRAGMENT = (
-    Path("revisions") / "2023-y-siguientes" / "relations" / "0001-modelo-180-rel-115-perceptores-anual.toml"
-)
-_M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01", surface="_M115_PERCEPTORES_CASILLA")
 _M115_BASE_CASILLA: CasillaId = validated_casilla_id("02", surface="_M115_BASE_CASILLA")
 _M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03", surface="_M115_RETENCIONES_CASILLA")
+_UNKNOWN_SOURCE_CASILLA: CasillaId = validated_casilla_id("missing-output", surface="_UNKNOWN_SOURCE_CASILLA")
 
 
 @cache
@@ -50,30 +46,21 @@ def _replace_modelo(
     return tuple(updated if modelo.id == updated.id else modelo for modelo in modelos)
 
 
-def _copy_committed_modelo_180(target: Path) -> Path:
-    shutil.copytree(_MODELO_180_DIR, target)
-    return target
-
-
 def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:
     values_by_period = {
         "1T": {
-            _M115_PERCEPTORES_CASILLA: Decimal("1"),
             _M115_BASE_CASILLA: Decimal("250.10"),
             _M115_RETENCIONES_CASILLA: Decimal("47.52"),
         },
         "2T": {
-            _M115_PERCEPTORES_CASILLA: Decimal("1"),
             _M115_BASE_CASILLA: Decimal("749.90"),
             _M115_RETENCIONES_CASILLA: Decimal("142.48"),
         },
         "3T": {
-            _M115_PERCEPTORES_CASILLA: Decimal("2"),
             _M115_BASE_CASILLA: Decimal("1200.00"),
             _M115_RETENCIONES_CASILLA: Decimal("228.00"),
         },
         "4T": {
-            _M115_PERCEPTORES_CASILLA: Decimal("1"),
             _M115_BASE_CASILLA: Decimal("-50.25"),
             _M115_RETENCIONES_CASILLA: Decimal("0.00"),
         },
@@ -108,10 +95,9 @@ def test_modelo_180_relation_source_requirements_identify_source_filings() -> No
     RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
     requirements = relation_source_requirements(revision, filing_year=2026, period="0A")
 
-    assert len(requirements) == 3
-    by_output = {requirement.source_casilla_id: requirement for requirement in requirements}
+    assert len(requirements) == 2
+    by_output = {requirement.source_casilla_ids[0]: requirement for requirement in requirements}
     assert set(by_output) == {
-        _M115_PERCEPTORES_CASILLA,
         _M115_BASE_CASILLA,
         _M115_RETENCIONES_CASILLA,
     }
@@ -121,7 +107,6 @@ def test_modelo_180_relation_source_requirements_identify_source_filings() -> No
         assert requirement.periods == ("1T", "2T", "3T", "4T")
         assert requirement.dependency_role == "periodic_to_annual_summary"
         assert requirement.aggregation_op == "sum"
-    assert by_output[_M115_PERCEPTORES_CASILLA].target_bindings == ("modelo-180-115-perceptores-anual",)
     assert by_output[_M115_BASE_CASILLA].target_bindings == ("modelo-180-115-base-anual",)
     assert by_output[_M115_RETENCIONES_CASILLA].target_bindings == ("modelo-180-115-retenciones-anual",)
 
@@ -147,12 +132,13 @@ def test_relation_observation_resolution_obeys_target_periods() -> None:
 
 
 def test_modelo_180_relations_resolve_from_observed_source_filings() -> None:
-    """The resolver produces the three 180 annual bindings from four 115 quarterly filings.
+    """The resolver produces the two monetary 180 annual bindings from four 115 quarterly filings.
 
-    Asserts structural wiring (all three binding keys are populated) and
+    Asserts structural wiring (both relation binding keys are populated) and
     that each resolved value equals the sum of the corresponding casilla
-    observations across the four quarters — derived programmatically from
-    the same observations supplied to the resolver, not hand-computed.
+    observations across the four quarters. ``decl.total-perceptores`` is now a
+    retenciones_aggregation binding and is deliberately absent from this relation
+    resolver.
     """
     modelos, catalogues = _committed_tree()
     modelo = _modelo(modelos, "180")
@@ -167,16 +153,15 @@ def test_modelo_180_relations_resolve_from_observed_source_filings() -> None:
         period="0A",
     )
 
-    # Assert all three binding keys are present — wiring check.
+    # Assert both relation binding keys are present — wiring check.
     expected_keys = {
-        "modelo-180-rel-115-perceptores-anual",
         "modelo-180-rel-115-base-anual",
         "modelo-180-rel-115-retenciones-anual",
     }
-    assert expected_keys == set(values.keys()), "resolver must populate exactly the three 180 annual bindings"
+    assert expected_keys == set(values.keys()), "resolver must populate exactly the two monetary 180 annual bindings"
 
     # Derive expected sums programmatically from the observation fixtures, keyed
-    # by the casilla_id each binding sources from (01=perceptores, 02=base, 03=retenciones).
+    # by the casilla_id each binding sources from (02=base, 03=retenciones).
     casilla_sums: dict[CasillaId, Decimal] = {}
     for obs in observations:
         for casilla_obs in obs.observations:
@@ -184,7 +169,6 @@ def test_modelo_180_relations_resolve_from_observed_source_filings() -> None:
                 casilla_sums.get(casilla_obs.casilla_id, Decimal("0")) + casilla_obs.value
             )
 
-    assert values["modelo-180-rel-115-perceptores-anual"] == casilla_sums[_M115_PERCEPTORES_CASILLA]
     assert values["modelo-180-rel-115-base-anual"] == casilla_sums[_M115_BASE_CASILLA]
     assert values["modelo-180-rel-115-retenciones-anual"] == casilla_sums[_M115_RETENCIONES_CASILLA]
 
@@ -251,7 +235,7 @@ def test_registry_validator_rejects_relation_to_unknown_source_casilla_id() -> N
     modelos, catalogues = _committed_tree()
     modelo = _modelo(modelos, "180")
     revision = modelo.revisions["2023-y-siguientes"]
-    relation = revision.relations[0].model_copy(update={"source_casilla_id": "missing-output"})
+    relation = revision.relations[0].model_copy(update={"source_casilla_id": _UNKNOWN_SOURCE_CASILLA})
     mutated_revision = revision.model_copy(update={"relations": (relation, *revision.relations[1:])})
     mutated_modelo = _with_revision(modelo, mutated_revision)
 
@@ -327,7 +311,7 @@ def test_registry_validator_rejects_nondirect_previous_filing_binding() -> None:
 def test_registry_validator_rejects_relation_targeted_previous_filing_binding() -> None:
     """A binding both relation-targeted and previous_filing is rejected.
 
-    The M180 perceptores slot is relation-targeted and canonically
+    The M180 base slot is relation-targeted and canonically
     ``relation_prefill``. Re-stamping it back to ``previous_filing`` (even with
     its direct selector intact) must trip the relation-vs-previous_filing
     collision gate (aggregation-taxonomy ruling 3) — the two mechanisms must
@@ -336,7 +320,7 @@ def test_registry_validator_rejects_relation_targeted_previous_filing_binding() 
     modelos, catalogues = _committed_tree()
     modelo = _modelo(modelos, "180")
     revision = modelo.revisions["2023-y-siguientes"]
-    target_id = "modelo-180-115-perceptores-anual"
+    target_id = "modelo-180-115-base-anual"
     mutated_bindings = tuple(
         binding.model_copy(update={"source": "previous_filing"}) if binding.id == target_id else binding
         for binding in revision.bindings
@@ -350,29 +334,21 @@ def test_registry_validator_rejects_relation_targeted_previous_filing_binding() 
         )
 
 
-def test_fragmented_modelo_requires_relation_dependency_role(tmp_path: Path) -> None:
-    directory = _copy_committed_modelo_180(tmp_path / "180")
-    fragment = directory / _MODELO_180_FIRST_RELATION_FRAGMENT
-    text = fragment.read_text(encoding="utf-8").replace(
-        'dependency_role = "periodic_to_annual_summary"\n',
-        "",
-        1,
-    )
-    fragment.write_text(text, encoding="utf-8")
+def test_relation_definition_requires_dependency_role() -> None:
+    modelos, _ = _committed_tree()
+    relation = _modelo(modelos, "180").revisions["2023-y-siguientes"].relations[0]
+    raw_relation = relation.model_dump(mode="python")
+    raw_relation.pop("dependency_role")
 
-    with pytest.raises(RegistryLoadError, match="dependency_role"):
-        load_modelo_directory(directory)
+    with pytest.raises(ValidationError, match="dependency_role"):
+        RelationDefinition.model_validate(raw_relation)
 
 
-def test_fragmented_modelo_rejects_annual_summary_relation_without_summary_role(tmp_path: Path) -> None:
-    directory = _copy_committed_modelo_180(tmp_path / "180")
-    fragment = directory / _MODELO_180_FIRST_RELATION_FRAGMENT
-    text = fragment.read_text(encoding="utf-8").replace(
-        'dependency_role = "periodic_to_annual_summary"',
-        'dependency_role = "direct_calculation"',
-        1,
-    )
-    fragment.write_text(text, encoding="utf-8")
+def test_relation_definition_rejects_annual_summary_relation_without_summary_role() -> None:
+    modelos, _ = _committed_tree()
+    relation = _modelo(modelos, "180").revisions["2023-y-siguientes"].relations[0]
+    raw_relation = relation.model_dump(mode="python")
+    raw_relation["dependency_role"] = "direct_calculation"
 
-    with pytest.raises(RegistryLoadError, match="annual summary relation"):
-        load_modelo_directory(directory)
+    with pytest.raises(ValidationError, match="annual summary relation"):
+        RelationDefinition.model_validate(raw_relation)

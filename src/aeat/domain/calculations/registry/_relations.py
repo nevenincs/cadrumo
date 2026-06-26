@@ -11,18 +11,22 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Period
-from ._bindings import RegistryModeloObservation
+from ._binding_selector_utils import unique_tuple
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, RelationId
 from ._period_offset_math import apply_period_offset
 from ._schema import ModeloRevision, RelationDefinition, filing_period_from_scope
 
+if TYPE_CHECKING:
+    from ._bindings import RegistryModeloObservation
+
 __all__ = [
-    "RegistryRelationSourceRequirement",
+    "RegistryFoldRequirement",
     "RelationDefinition",
     "relation_source_requirements",
     "resolve_relation_values",
@@ -30,8 +34,19 @@ __all__ = [
 ]
 
 
-class RegistryRelationSourceRequirement(BaseModel):
-    """External source filings required by one or more registry relations."""
+class RegistryFoldRequirement(BaseModel):
+    """One source-filing requirement for a cross-filing fold-in.
+
+    The single unified requirement record for both fold-in mechanisms: a
+    cross-modelo relation fold (``relation_ids`` / ``target_bindings`` populated)
+    and a same-modelo direct ``previous_filing`` carry (``binding_ids``
+    populated). Both the source-period and source-casilla axes are PLURAL so the
+    record is a superset of the two prior shapes — a relation requirement fans
+    plural ``periods`` against a single ``source_casilla_ids`` member, while a
+    ``previous_filing`` requirement carries a single ``periods`` member against
+    plural ``source_casilla_ids``. Each producer emits a single-element tuple
+    where its cardinality is one; no value shifts, only the record TYPE unifies.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -39,12 +54,15 @@ class RegistryRelationSourceRequirement(BaseModel):
     filing_year: int = Field(ge=2000, le=2099)
     filing_periods: tuple[Period, ...] = ()
     periods: tuple[str, ...] = Field(min_length=1)
-    source_casilla_id: CasillaId = Field(min_length=1)
-    relation_ids: tuple[RelationId, ...] = Field(min_length=1)
-    target_bindings: tuple[BindingId, ...] = Field(min_length=1)
-    dependency_role: str = Field(min_length=1)
-    dependency_treatment: str = Field(min_length=1)
-    aggregation_op: str = Field(min_length=1)
+    source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
+    binding_ids: tuple[BindingId, ...] = ()
+    relation_ids: tuple[RelationId, ...] = ()
+    target_bindings: tuple[BindingId, ...] = ()
+    dependency_role: str = ""
+    dependency_treatment: str = ""
+    aggregation_op: str = ""
+
+    _values_unique = field_validator("binding_ids", "source_casilla_ids")(unique_tuple("fold requirement tuple"))
 
 
 @dataclass(slots=True)
@@ -58,8 +76,8 @@ def relation_source_requirements(
     *,
     filing_year: int,
     period: str,
-) -> tuple[RegistryRelationSourceRequirement, ...]:
-    """Return :class:`RegistryRelationSourceRequirement` items needed to resolve relations for a filing.
+) -> tuple[RegistryFoldRequirement, ...]:
+    """Return :class:`RegistryFoldRequirement` items needed to resolve relations for a filing.
 
     Args:
         revision: The :class:`ModeloRevision` whose relation declarations to inspect.
@@ -106,7 +124,7 @@ def relation_source_requirements(
         bucket.relation_ids.add(relation.id)
         bucket.target_bindings.add(relation.target_binding)
     return tuple(
-        RegistryRelationSourceRequirement(
+        RegistryFoldRequirement(
             source_modelo=source_modelo,
             filing_year=source_year,
             filing_periods=tuple(
@@ -115,7 +133,7 @@ def relation_source_requirements(
                 if (filing_period := filing_period_from_scope(source_year, source_period)) is not None
             ),
             periods=source_periods,
-            source_casilla_id=source_casilla_id,
+            source_casilla_ids=(source_casilla_id,),
             relation_ids=tuple(sorted(values.relation_ids)),
             target_bindings=tuple(sorted(values.target_bindings)),
             dependency_role=dependency_role,
@@ -297,9 +315,10 @@ def _derive_offset_source_anchor(relation: RelationDefinition, *, target_period:
 
 
 def _observed_requirement_values(
-    requirement: RegistryRelationSourceRequirement,
+    requirement: RegistryFoldRequirement,
     observations: tuple[RegistryModeloObservation, ...],
 ) -> tuple[Decimal, ...]:
+    source_casilla_id = requirement.source_casilla_ids[0]
     values: list[Decimal] = []
     for source_period in requirement.periods:
         matches = tuple(
@@ -314,11 +333,11 @@ def _observed_requirement_values(
                 f"relation requirement {requirement.relation_ids!r} expected one observed filing "
                 f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, found {len(matches)}",
             )
-        value = matches[0].casilla_values.get(requirement.source_casilla_id)
+        value = matches[0].casilla_values.get(source_casilla_id)
         if value is None:
             raise RegistryValidationError(
                 f"relation requirement {requirement.relation_ids!r} requires observed source casilla id "
-                f"{requirement.source_casilla_id!r} from "
+                f"{source_casilla_id!r} from "
                 f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
             )
         values.append(value)

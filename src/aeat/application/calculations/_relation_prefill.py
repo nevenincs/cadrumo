@@ -41,8 +41,8 @@ from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
+    RegistryFoldRequirement,
     RegistryModeloObservation,
-    RegistryRelationSourceRequirement,
     RegistrySnapshot,
     RegistryValidationError,
     RelationId,
@@ -224,7 +224,7 @@ def _activity_start_date_for_bucket(bucket_id: str) -> date | None:
 def _scoped_relation_source_requirements(
     snapshot: RegistrySnapshot,
     activity_start_date: date | None,
-) -> tuple[RegistryRelationSourceRequirement, ...]:
+) -> tuple[RegistryFoldRequirement, ...]:
     """``relation_source_requirements`` with pre-activity-start source periods scoped out.
 
     A quarterly source period STRICTLY before the operator-declared activity
@@ -250,7 +250,7 @@ def _scoped_relation_source_requirements(
 
     from ._cross_period_clean_state import _period_strictly_before_activity_start
 
-    scoped: list[RegistryRelationSourceRequirement] = []
+    scoped: list[RegistryFoldRequirement] = []
     for requirement in requirements:
         kept = tuple(
             token
@@ -408,7 +408,7 @@ def resolve_relations_from_local_store(
 def _resolve_available_relation_values(
     observations: tuple[RegistryModeloObservation, ...],
     *,
-    requirements_by_relation: dict[RelationId, RegistryRelationSourceRequirement],
+    requirements_by_relation: dict[RelationId, RegistryFoldRequirement],
 ) -> dict[RelationId, Decimal]:
     """Resolve each relation requirement independently from available observations."""
     by_requirement = {requirement: requirement for requirement in requirements_by_relation.values()}
@@ -429,7 +429,7 @@ def _resolve_available_relation_values(
 
 
 def _resolve_requirement_value(
-    requirement: RegistryRelationSourceRequirement,
+    requirement: RegistryFoldRequirement,
     observations: tuple[RegistryModeloObservation, ...],
 ) -> Decimal:
     values = tuple(_observed_requirement_values(requirement, observations))
@@ -448,9 +448,10 @@ def _resolve_requirement_value(
 
 
 def _observed_requirement_values(
-    requirement: RegistryRelationSourceRequirement,
+    requirement: RegistryFoldRequirement,
     observations: tuple[RegistryModeloObservation, ...],
 ) -> tuple[Decimal, ...]:
+    source_casilla_id = requirement.source_casilla_ids[0]
     values: list[Decimal] = []
     for source_period in requirement.periods:
         matches = tuple(
@@ -465,10 +466,10 @@ def _observed_requirement_values(
                 f"expected one observed filing {requirement.source_modelo!r}/"
                 f"{requirement.filing_year}/{source_period!r}, found {len(matches)}",
             )
-        value = matches[0].casilla_values.get(requirement.source_casilla_id)
+        value = matches[0].casilla_values.get(source_casilla_id)
         if value is None:
             raise RegistryValidationError(
-                f"requires observed source casilla id {requirement.source_casilla_id!r} from "
+                f"requires observed source casilla id {source_casilla_id!r} from "
                 f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
             )
         values.append(value)
@@ -493,7 +494,7 @@ def _collect_expression_relation_ids(expression: object, relation_ids: set[Relat
 def _unresolved_relation_diagnostics(
     *,
     unresolved_relation_ids: frozenset[RelationId],
-    requirements_by_relation: Mapping[RelationId, RegistryRelationSourceRequirement],
+    requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
     resolver_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     diagnostics: list[CalculationSourceDiagnostic] = []
@@ -521,7 +522,7 @@ def _unresolved_relation_diagnostics(
                 relation_id=relation_id,
                 message=(
                     f"relation {relation_id!r} requires modelo {requirement.source_modelo} "
-                    f"{requirement.filing_year} periods {period_text} output {requirement.source_casilla_id}; "
+                    f"{requirement.filing_year} periods {period_text} output {requirement.source_casilla_ids[0]}; "
                     "the source filing is missing or incomplete"
                 ),
             ),
