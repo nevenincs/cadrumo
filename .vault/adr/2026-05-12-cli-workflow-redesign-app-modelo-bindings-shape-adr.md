@@ -175,3 +175,12 @@ Acceptance criteria:
   validation error that lists accepted codes.
 - The accepted `--modelo` choices are derived from the registry, not
   hardcoded in the CLI.
+
+## Status
+
+Accepted and in force. The `bindings list/preview` CLI surface this ADR defines
+stands; its `operator_surface.SourceKind` DUPLICATE is SUPERSEDED by the phase-2.1
+`binding-source-kind-taxonomy-unification` ADR, which deletes the duplicate in favour
+of the one canonical `BindingSourceKind` (code-removal in phase 2.1), and the bindings
+CLI vocabulary aligns under the future phase-2.4 (vocabulary/CLI) ADR. Those phase ADRs
+— not a central apex doc — are the canonical direction.
