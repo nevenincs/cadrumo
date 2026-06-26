@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING, override
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import BindingSourceKind
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -492,7 +493,7 @@ class PreviousFilingSourceResolver:
     """
 
     resolver_id = "previous_filing"
-    owned_sources = ("previous_filing",)
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.PREVIOUS_FILING,)
 
     def __init__(
         self,

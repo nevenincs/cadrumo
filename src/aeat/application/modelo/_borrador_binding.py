@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core import BindingSourceKind, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
 from ...domain.calculations.registry import BindingId, DataBindingDefinition, RegistrySnapshot
@@ -190,7 +190,7 @@ class Modelo100BorradorSourceResolver:
     """Source mesh adapter for explicitly selected Modelo 100 borrador snapshots."""
 
     resolver_id = "modelo_100_borrador"
-    owned_sources = ("borrador",)
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.BORRADOR,)
 
     def __init__(
         self,

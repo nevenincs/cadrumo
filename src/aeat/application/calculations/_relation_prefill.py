@@ -35,7 +35,7 @@ from typing import Final
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
-from ...core import Modelo, Period
+from ...core import BindingSourceKind, Modelo, Period
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -652,7 +652,7 @@ class RelationPrefillSourceResolver:
     """Source mesh adapter for local relation prefill values."""
 
     resolver_id = "relation_prefill"
-    owned_sources = ("relation_prefill",)
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.RELATION_PREFILL,)
 
     def __init__(
         self,

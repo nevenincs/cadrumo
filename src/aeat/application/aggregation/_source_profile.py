@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from ...core import BindingSourceKind
 from ...domain.calculations.registry import BindingId, RegistrySnapshot
 from ._source_mesh import (
     CalculationSourceContext,
@@ -21,7 +22,7 @@ class ProfileSourceResolver:
     """Resolve formula-consumed ``source = "profile"`` bindings through the source mesh."""
 
     resolver_id = "profile"
-    owned_sources = ("profile",)
+    owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)
 
     def __init__(
         self,

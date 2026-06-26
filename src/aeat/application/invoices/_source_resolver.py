@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import date
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import Period
+from ...core import BindingSourceKind, Period
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry import InvoiceObservation, resolve_invoice_binding_values
 from ...domain.invoices import Invoice, InvoiceCatalogueRepository
@@ -24,7 +24,10 @@ from ..aggregation._source_mesh import (
 )
 from ..ledger import BusinessOperationInvoiceSourceKind
 
-_OWNED_SOURCES = ("collectible_invoice", "payable_invoice")
+_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
+    BindingSourceKind.COLLECTIBLE_INVOICE,
+    BindingSourceKind.PAYABLE_INVOICE,
+)
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
