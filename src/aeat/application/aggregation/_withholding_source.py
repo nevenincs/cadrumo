@@ -10,6 +10,8 @@ relations. The pull and calculate surfaces read this ONE store
 Lives in its own module (rather than ``_modelo_bindings.py``) so the percepciones
 source is isolated from the contended retenciones/ledger mesh surface; it is
 enrolled in ``merge_source_resolutions`` exactly like the other source resolvers.
+It reads the withholding bindings declared on the snapshot's :class:`ModeloRevision`
+and returns its result as a :class:`CalculationSourceResolution`.
 
 Empty-store behaviour follows the RET-1 ruling: materialise an explicit ZERO
 count AND surface a non-blocking advisory (NOT a hard refusal) — a legitimate
@@ -24,7 +26,7 @@ from ...adapters.persistence.storage.errors import (
     DecryptionError,
     EnvelopeVersionError,
 )
-from ...core.aggregation import RowSetGroupingKind
+from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry import (
     ModeloRevision,
     WithholdingObservation,
@@ -41,12 +43,12 @@ from ._withholding_observations_repository import WithholdingObservationReposito
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
-_WITHHOLDING_SOURCE = RowSetGroupingKind.WITHHOLDING.value
+_WITHHOLDING_SOURCE = BindingSourceKind.WITHHOLDING
 
 
 def _revision_declares_withholding_scalar(revision: ModeloRevision) -> bool:
     """True when the revision carries any scalar withholding binding to materialise."""
-    return any(binding.source == RowSetGroupingKind.WITHHOLDING for binding in revision.bindings)
+    return any(binding.source == BindingSourceKind.WITHHOLDING for binding in revision.bindings)
 
 
 def _provenance(observations: tuple[WithholdingObservation, ...]) -> tuple[CalculationSourceProvenance, ...]:
@@ -70,7 +72,7 @@ class WithholdingSourceResolver:
     one store (one-aggregation-path).
     """
 
-    resolver_id = _WITHHOLDING_SOURCE
+    resolver_id = _WITHHOLDING_SOURCE.value
     owned_sources = (_WITHHOLDING_SOURCE,)
 
     def __init__(self, *, withholding_repository: WithholdingObservationRepository | None = None) -> None:

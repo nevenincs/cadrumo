@@ -28,6 +28,7 @@ from __future__ import annotations
 
 from ...core import Period, PeriodKind
 from ...core.aggregation import ForeignAssetClass, OperationKind347, OperationKind349, RetencionScheme
+from ...domain.calculations.registry import WithholdingObservation
 from ._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
@@ -150,6 +151,12 @@ from ._source_mesh import (
     storage_degradation_resolution,
 )
 from ._source_profile import ProfileSourceResolver
+from ._withholding_observations_repository import (
+    WithholdingObservationRepository,
+    persist_withholding_observations,
+    withholding_observation_key,
+)
+from ._withholding_source import WithholdingSourceResolver
 
 __all__ = [
     "ACCEPTED_SOURCE_KINDS",
@@ -212,6 +219,9 @@ __all__ = [
     "RetencionScheme",
     "RetencionesAggregation",
     "RetencionesAggregationSourceResolver",
+    "WithholdingObservation",
+    "WithholdingObservationRepository",
+    "WithholdingSourceResolver",
     "aggregate_counterpart_347",
     "aggregate_counterpart_349",
     "aggregate_definitiva_prorrata",
@@ -245,6 +255,7 @@ __all__ = [
     "missing_evidence_advisory_observations",
     "oss_ioss_candidates_from_repositories",
     "persist_retencion_observations",
+    "persist_withholding_observations",
     "resolve_per_modelo_registry_binding_values",
     "retencion_observation_key",
     "stale_filed_revisions",
@@ -253,4 +264,5 @@ __all__ = [
     "validate_iva_ledger_observations",
     "validate_oss_ioss_observation",
     "validate_oss_ioss_observations",
+    "withholding_observation_key",
 ]
