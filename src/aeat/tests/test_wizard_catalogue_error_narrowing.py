@@ -12,6 +12,8 @@ Verifies:
 from __future__ import annotations
 
 import decimal
+from datetime import UTC, datetime
+from typing import NoReturn
 
 import pytest
 
@@ -24,6 +26,11 @@ from ..core.setup_answers import ProjectAnswersNotRegisteredError
 from ..core.wizard_catalogue import (
     WizardCatalogueAlreadyRegisteredError,
     WizardCatalogueNotRegisteredError,
+)
+from ..domain.modelos._calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -126,70 +133,58 @@ class TestAdvisoryPredicateDecimalNarrowing:
 class TestResultSummaryNarrowing:
     """calculation_result_summary returns None on typed errors, propagates unexpected ones."""
 
-    def _make_fake_revision(self) -> object:
-        """Return a duck-typed revision with the minimal fields calculation_result_summary reads."""
-        import uuid
-
-        return type(
-            "FakeRevision",
-            (),
-            {
-                "work_unit_id": uuid.UUID("00000000-0000-0000-0000-000000000001"),
-                "revision_id": uuid.UUID("00000000-0000-0000-0000-000000000002"),
-                "calculation_revision_id": uuid.UUID("00000000-0000-0000-0000-000000000003"),
-                "casilla_values": {},
-            },
-        )()
+    def _revision(self) -> CalculationRevision:
+        work_unit_id = "0" * 64
+        revision_id = derive_calculation_revision_id(
+            work_unit_id=work_unit_id,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            casilla_values={},
+        )
+        return CalculationRevision(
+            calculation_revision_id=revision_id,
+            work_unit_id=work_unit_id,
+            state=CalculationRevisionState.BORRADOR,
+            input_values_by_casilla_id={},
+            casilla_values={},
+            created_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
+            updated_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
+        )
 
     def test_aeat_error_from_get_work_unit_returns_none(self) -> None:
         """An AeatError from get_work_unit is caught and returns None."""
-        from ..application.modelo import _result_summary as module
+        from ..application.modelo._result_summary import calculation_result_summary
 
-        original = module.get_work_unit
-
-        def _raising(*args: object, **kwargs: object) -> object:
+        def _raising(work_unit_id: str) -> NoReturn:
+            del work_unit_id
             raise ProjectAnswersNotRegisteredError()
 
-        module.get_work_unit = _raising  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
-        try:
-            result = module.calculation_result_summary(self._make_fake_revision())  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
-        finally:
-            module.get_work_unit = original  # type: ignore[assignment]
+        result = calculation_result_summary(self._revision(), work_unit_resolver=_raising)
 
         assert result is None
 
     def test_lookup_error_from_get_work_unit_returns_none(self) -> None:
         """A LookupError from get_work_unit returns None."""
-        from ..application.modelo import _result_summary as module
+        from ..application.modelo._result_summary import calculation_result_summary
 
-        original = module.get_work_unit
-
-        def _raising(*args: object, **kwargs: object) -> object:
+        def _raising(work_unit_id: str) -> NoReturn:
+            del work_unit_id
             raise LookupError("not found")
 
-        module.get_work_unit = _raising  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
-        try:
-            result = module.calculation_result_summary(self._make_fake_revision())  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
-        finally:
-            module.get_work_unit = original  # type: ignore[assignment]
+        result = calculation_result_summary(self._revision(), work_unit_resolver=_raising)
 
         assert result is None
 
     def test_runtime_error_from_get_work_unit_propagates(self) -> None:
         """A RuntimeError from get_work_unit propagates — not swallowed."""
-        from ..application.modelo import _result_summary as module
+        from ..application.modelo._result_summary import calculation_result_summary
 
-        original = module.get_work_unit
-
-        def _raising(*args: object, **kwargs: object) -> object:
+        def _raising(work_unit_id: str) -> NoReturn:
+            del work_unit_id
             raise RuntimeError("unexpected db failure")
 
-        module.get_work_unit = _raising  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
-        try:
-            with pytest.raises(RuntimeError, match="unexpected db failure"):
-                module.calculation_result_summary(self._make_fake_revision())  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
-        finally:
-            module.get_work_unit = original  # type: ignore[assignment]
+        with pytest.raises(RuntimeError, match="unexpected db failure"):
+            calculation_result_summary(self._revision(), work_unit_resolver=_raising)
 
 
 class TestLedgerBulkClassifyNarrowing:

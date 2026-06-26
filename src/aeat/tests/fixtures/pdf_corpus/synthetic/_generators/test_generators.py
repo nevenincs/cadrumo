@@ -12,6 +12,7 @@ from decimal import Decimal
 
 import pytest
 
+from ......domain.calculations.registry import CasillaId, validated_casilla_id
 from ._generic_quarterly_generator import (
     QuarterlyGenParams,
 )
@@ -38,6 +39,8 @@ from .modelo_303_generator import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_CASILLA_01")
+_CASILLA_0505: CasillaId = validated_casilla_id("0505", surface="_CASILLA_0505")
 
 
 def _assert_pdf(pdf_bytes: bytes) -> None:
@@ -55,13 +58,13 @@ def test_generic_quarterly_generator_round_trip() -> None:
         tax_id="00000000T",
         ejercicio="2024",
         period_printed="1T",
-        labels={"01": "Casilla 01"},
-        casilla_values={"01": Decimal("100.00")},
+        labels={_CASILLA_01: "Casilla 01"},
+        casilla_values={_CASILLA_01: Decimal("100.00")},
     )
     pdf_bytes, ground_truth = generate_quarterly(params)
     _assert_pdf(pdf_bytes)
     assert ground_truth.params == params
-    assert ground_truth.expected_casillas
+    assert ground_truth.expected_values_by_casilla_id
 
 
 def test_modelo_100_generator_round_trip() -> None:
@@ -71,7 +74,7 @@ def test_modelo_100_generator_round_trip() -> None:
         año=2024,
         ejercicio="2024",
         tax_id="00000000T",
-        casilla_values={"0505": Decimal("30000.00")},
+        casilla_values={_CASILLA_0505: Decimal("30000.00")},
         artefact_kind="BORRADOR",
     )
     pdf_bytes, ground_truth = generate_modelo_100(params)
@@ -88,7 +91,7 @@ def test_modelo_130_generator_round_trip() -> None:
         tax_id="00000000T",
         ejercicio="2024",
         period_printed="1T",
-        casilla_values={"01": Decimal("5000.00")},
+        casilla_values={_CASILLA_01: Decimal("5000.00")},
     )
     pdf_bytes, ground_truth = generate_modelo_130(params)
     _assert_pdf(pdf_bytes)
@@ -104,7 +107,7 @@ def test_modelo_303_generator_round_trip() -> None:
         tax_id="00000000T",
         ejercicio="2024",
         period_printed="1T",
-        casilla_values={"01": Decimal("10000.00")},
+        casilla_values={_CASILLA_01: Decimal("10000.00")},
     )
     pdf_bytes, ground_truth = generate_modelo_303(params)
     _assert_pdf(pdf_bytes)
