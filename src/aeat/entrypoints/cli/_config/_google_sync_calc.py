@@ -6,7 +6,6 @@ Use of :class:`RegistrySnapshot` for compliance.
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
@@ -46,8 +45,9 @@ from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._google_errors import _google_refusal
 from ._google_payloads import (
+    GoogleSyncCalcComputeCasillaPayload,
+    GoogleSyncCalcComputeResult,
     GoogleSyncCalcExportResult,
-    GoogleSyncCalcPullComputedPayload,
     GoogleSyncCalcPullResult,
     GoogleSyncCalcVerifyDivergencePayload,
     GoogleSyncCalcVerifyResult,
@@ -55,10 +55,7 @@ from ._google_payloads import (
 
 if TYPE_CHECKING:
     from ....adapters.outbound.google._calc_sheets_pull import PullResult, RowSetEdit
-    from ....domain.calculations.registry import (
-        RegistryCalculationResult,
-        RegistrySnapshot,
-    )
+    from ....domain.calculations.registry import RegistrySnapshot
 
 
 calc_app = typer.Typer(
@@ -370,11 +367,6 @@ def google_sync_calc_pull(
         help=tr("cli.config.google.sync.calc.pull.spreadsheet_id_help"),
         min=1,
     ),
-    compute: bool = typer.Option(
-        False,
-        "--compute/--no-compute",
-        help=tr("cli.config.google.sync.calc.pull.compute_help"),
-    ),
     assemble_observations: bool = typer.Option(
         False,
         "--assemble-observations/--no-assemble-observations",
@@ -382,10 +374,7 @@ def google_sync_calc_pull(
     ),
 ) -> None:
     """Read operator-edited cells back from a workbook into typed records."""
-    from ....adapters.outbound.google._calc_sheets_pull import (
-        compute_from_pull,
-        pull_operator_edits,
-    )
+    from ....adapters.outbound.google._calc_sheets_pull import pull_operator_edits
 
     try:
         active = resolve_active_profile()
@@ -418,13 +407,6 @@ def google_sync_calc_pull(
         populated_row_sets=populated_row_sets,
         snapshot=snapshot,
         enabled=assemble_observations,
-    )
-
-    computed_casilla_entries = _compute_pull_casillas(
-        snapshot=snapshot,
-        result=result,
-        enabled=compute,
-        compute_from_pull=compute_from_pull,
     )
 
     payload: dict[str, object] = {
@@ -483,7 +465,6 @@ def google_sync_calc_pull(
             }
             for rs in populated_row_sets
         ],
-        "computed": computed_casilla_entries,
     }
     lines: list[str] = [
         "operation\tconfig.google.sync.calc.pull",
@@ -517,10 +498,107 @@ def google_sync_calc_pull(
         lines.append(
             f"assembled\t{assembled['grouping']}\t{assembled['source_kind']}\t{assembled['observation_count']}",
         )
-    for entry in computed_casilla_entries:
-        lines.append(f"computed\t{entry.casilla_id}\t{entry.value}\t{entry.formula_id}")
     pull_result = GoogleSyncCalcPullResult.model_validate(payload)
     _emit_envelope(ctx, command="config.google.sync.calc.pull", result=pull_result, lines=tuple(lines))
+
+
+@calc_app.command("compute", help=tr("cli.config.google.sync.calc.compute_help"))
+def google_sync_calc_compute(
+    ctx: typer.Context,
+    modelo: _ModeloArg,
+    period: _PeriodArg,
+    year: _YearArg,
+    spreadsheet_id: str = typer.Option(
+        ...,
+        "--spreadsheet-id",
+        help=tr("cli.config.google.sync.calc.compute.spreadsheet_id_help"),
+        min=1,
+    ),
+) -> None:
+    """Compute casilla values from a workbook's operator edits; persist nothing."""
+    from ....adapters.outbound.google._calc_sheets_pull import (
+        compute_from_pull,
+        pull_operator_edits,
+    )
+
+    try:
+        active = resolve_active_profile()
+    except GoogleAuthError as exc:
+        raise _google_refusal(exc) from exc
+
+    try:
+        credentials, _ = _resolve_credentials_and_root(active)
+    except (GoogleAuthError, OutboundStorageError) as exc:
+        raise _google_refusal(exc) from exc
+
+    snapshot = _load_snapshot(modelo, _filing_period_or_refusal(modelo=modelo, period=period, year=year))
+
+    try:
+        result: PullResult = pull_operator_edits(
+            snapshot,
+            spreadsheet_id=spreadsheet_id,
+            credentials=credentials,
+        )
+    except (GoogleAuthError, OutboundStorageError) as exc:
+        raise _google_refusal(exc) from exc
+
+    if result.metadata_match != "matches":
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.google.sync.calc.compute.refused_stale",
+            context={"metadata_match": result.metadata_match},
+        )
+
+    try:
+        calc = compute_from_pull(snapshot, result)
+    except OutboundStorageError as exc:
+        raise _google_refusal(exc) from exc
+
+    computed_casilla_entries = [
+        GoogleSyncCalcComputeCasillaPayload(
+            casilla_id=entry.target_casilla_id,
+            value=str(entry.value),
+            formula_id=entry.formula_id,
+            legal_refs=list(entry.legal_refs),
+            source_refs=list(entry.source_refs),
+        )
+        for entry in calc.entries
+    ]
+
+    populated_operator = [e for e in result.operator_edits if e.value is not None]
+    populated_bindings = [e for e in result.binding_edits if e.value is not None]
+    populated_relations = [e for e in result.relation_edits if e.value is not None]
+
+    compute_result = GoogleSyncCalcComputeResult(
+        profile=active,
+        modelo=snapshot.modelo.id,
+        revision=snapshot.revision.id,
+        period=snapshot.period,
+        year=snapshot.filing_year,
+        spreadsheet_id=result.spreadsheet_id,
+        metadata_match=result.metadata_match,
+        cells_read=result.cells_read,
+        operator_edits_populated=len(populated_operator),
+        binding_edits_populated=len(populated_bindings),
+        relation_edits_populated=len(populated_relations),
+        computed=computed_casilla_entries,
+    )
+    lines: list[str] = [
+        "operation\tconfig.google.sync.calc.compute",
+        f"profile\t{active}",
+        f"modelo\t{snapshot.modelo.id}",
+        f"revision\t{snapshot.revision.id}",
+        f"period\t{snapshot.period}",
+        f"year\t{snapshot.filing_year}",
+        f"spreadsheet_id\t{result.spreadsheet_id}",
+        f"metadata_match\t{result.metadata_match}",
+        f"cells_read\t{result.cells_read}",
+        f"operator_edits_populated\t{len(populated_operator)}",
+        f"binding_edits_populated\t{len(populated_bindings)}",
+        f"relation_edits_populated\t{len(populated_relations)}",
+    ]
+    for entry in computed_casilla_entries:
+        lines.append(f"computed\t{entry.casilla_id}\t{entry.value}\t{entry.formula_id}")
+    _emit_envelope(ctx, command="config.google.sync.calc.compute", result=compute_result, lines=tuple(lines))
 
 
 def _assemble_pull_observations(
@@ -558,37 +636,6 @@ def _assemble_pull_observations(
     return groupings, total
 
 
-def _compute_pull_casillas(
-    *,
-    snapshot: RegistrySnapshot,
-    result: PullResult,
-    enabled: bool,
-    compute_from_pull: Callable[[RegistrySnapshot, PullResult], RegistryCalculationResult],
-) -> list[GoogleSyncCalcPullComputedPayload]:
-    """Compute casillas from the pulled edits, refusing stale workbook stamps."""
-    if not enabled:
-        return []
-    if result.metadata_match != "matches":
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.google.sync.calc.pull.compute_refused_stale",
-            context={"metadata_match": result.metadata_match},
-        )
-    try:
-        calc = compute_from_pull(snapshot, result)
-    except OutboundStorageError as exc:
-        raise _google_refusal(exc) from exc
-    return [
-        GoogleSyncCalcPullComputedPayload(
-            casilla_id=entry.target_casilla_id,
-            value=str(entry.value),
-            formula_id=entry.formula_id,
-            legal_refs=list(entry.legal_refs),
-            source_refs=list(entry.source_refs),
-        )
-        for entry in calc.entries
-    ]
-
-
 def register_google_sync_calc_commands(sync_app: typer.Typer) -> None:
     """Register the Google Sheets calculation sync subgroup."""
     sync_app.add_typer(calc_app, name="calc")
@@ -596,6 +643,7 @@ def register_google_sync_calc_commands(sync_app: typer.Typer) -> None:
 
 __all__ = [
     "calc_app",
+    "google_sync_calc_compute",
     "google_sync_calc_export",
     "google_sync_calc_pull",
     "google_sync_calc_verify",

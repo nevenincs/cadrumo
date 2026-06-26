@@ -274,7 +274,7 @@ spreadsheet review loop when you need a wider calculation surface:
 
 ```bash
 aeat config google sync calc export --modelo 390 --year 2025 --period 0A
-aeat config google sync calc pull --modelo 390 --year 2025 --period 0A --spreadsheet-id <spreadsheet-id> --compute
+aeat config google sync calc compute --modelo 390 --year 2025 --period 0A --spreadsheet-id <spreadsheet-id>
 aeat config google sync calc verify --modelo 390 --year 2025 --period 0A
 ```
 

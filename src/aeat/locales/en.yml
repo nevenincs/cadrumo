@@ -2128,6 +2128,12 @@ cli:
       status_help: Show the current Google OAuth session state for the active profile
       sync:
         calc:
+          compute:
+            refused_stale: 'refusing to compute against a workbook whose metadata stamps do not match the supplied snapshot (metadata_match={metadata_match}); re-export, then re-pull'
+            spreadsheet_id_help: 'Drive file id of the workbook to read operator edits from (must be app-owned and bound to the supplied snapshot)'
+          compute_help: Pull operator-edited cells from a calc-sheets workbook, run
+            the local Decimal runtime over them, and emit the computed casilla values
+            (persists nothing)
           export:
             capability_disabled: Google export is disabled for this profile; enable
               it with 'aeat config profile capabilities set google_export on'.
@@ -2144,17 +2150,12 @@ cli:
             year_help: Filing year (e.g. 2025)
           export_help: Export the registry calculation surface for a modelo+period
             to a Google Sheets workbook in the operator's `aeat-vault/`
-          help: Schema-to-sheet calc surface (export and pull)
+          help: 'Schema-to-sheet calc surface (export, pull, and compute)'
           pull:
             assemble_observations_help: After pulling, reassemble Detalle-tab row-set
               cells into typed observations (perceptors, foreign assets, related-party
               operations, atribución members, refund operations) and emit them in
               the payload alongside the raw row_set_edits
-            compute_help: After pulling, run the local Decimal runtime against the
-              pulled inputs and emit the computed casilla values
-            compute_refused_stale: refusing to compute against a workbook whose metadata
-              stamps do not match the supplied snapshot (metadata_match={metadata_match});
-              re-export, then re-pull
             spreadsheet_id_help: Drive file id of the workbook to read operator edits
               from (must be app-owned and bound to the supplied snapshot)
           pull_help: Read operator-edited cells back from a calc-sheets workbook into
