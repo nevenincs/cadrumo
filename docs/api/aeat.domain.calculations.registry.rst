@@ -44,7 +44,6 @@ Submodules
    aeat.domain.calculations.registry._legal
    aeat.domain.calculations.registry._live_parity
    aeat.domain.calculations.registry._loader
-   aeat.domain.calculations.registry._m232_row_bindings
    aeat.domain.calculations.registry._observation_fold
    aeat.domain.calculations.registry._parity_tapes
    aeat.domain.calculations.registry._period_offset_math

@@ -10,7 +10,10 @@ Total positions 144-748 on page_01.
 
 Materialisation maps each row's fields to the registry casilla definitions
 declared on the :class:`ModeloRevision` and produces :class:`CasillaObservation`
-objects carrying full legal and source provenance from the registry.
+objects carrying full legal and source provenance from the registry. This is a
+CLI-row materialiser on the domain row-model surface, not a registry
+``DataBindingDefinition`` family; it consumes the registry symbols it needs
+through the registry package facade.
 """
 
 from __future__ import annotations
@@ -18,14 +21,16 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...modelos._row_models import Modelo232VinculadaRow
-from ._bindings import CasillaObservation
-from ._casilla_membership import casillas_by_id
-from ._errors import RegistryValidationError
-from ._ids import CasillaId
+from ..calculations.registry import (
+    CasillaId,
+    CasillaObservation,
+    RegistryValidationError,
+    casillas_by_id,
+)
+from ._row_models import Modelo232VinculadaRow
 
 if TYPE_CHECKING:
-    from ._schema import ModeloRevision
+    from ..calculations.registry import ModeloRevision
 
 
 def materialize_m232_related_party_rows(
