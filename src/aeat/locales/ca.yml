@@ -971,6 +971,8 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
+      modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: 'La base liquidable general (C500) és positiva però la quota resultant de l''autoliquidació (C595) és zero; confirmeu que és un zero legítim (base igual o inferior al mínim personal i familiar, o compensada per deduccions) i no una llacuna no modelada.'
+      modelo_100_2025_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: 'La base liquidable general (C500) és positiva però la quota resultant de l''autoliquidació (C595) és zero; confirmeu que és un zero legítim (base igual o inferior al mínim personal i familiar, o compensada per deduccions) i no una llacuna no modelada.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
