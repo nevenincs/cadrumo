@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from ...domain.justificante import Justificante
 
 
-class ModeloReconciliationSourceKind(StrEnum):
+class ModeloReconciliationEvidenceKind(StrEnum):
     """Closed set of external-evidence kinds the operator can supply."""
 
     JUSTIFICANTE = "justificante"
@@ -68,7 +68,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
     event_id: str = Field(min_length=1, max_length=128)
     bucket_id: BucketId
     work_unit_id: WorkUnitId
-    source_kind: ModeloReconciliationSourceKind
+    source_kind: ModeloReconciliationEvidenceKind
     source_path: str
     verdict: ModeloReconciliationVerdict
     diff_count: int = Field(ge=0)
@@ -98,7 +98,7 @@ class ModeloReconciliationCommand(BaseModel):
     model_config = _STRICT_FROZEN
 
     work_unit_id: WorkUnitId
-    source_kind: ModeloReconciliationSourceKind
+    source_kind: ModeloReconciliationEvidenceKind
     source_path: Path
     actor: str = Field(default="operator", min_length=1, max_length=64)
 
@@ -115,7 +115,7 @@ class ModeloReconciliationBytesCommand(BaseModel):
     model_config = _STRICT_FROZEN
 
     work_unit_id: WorkUnitId
-    source_kind: ModeloReconciliationSourceKind
+    source_kind: ModeloReconciliationEvidenceKind
     source_bytes: bytes = Field(min_length=1)
     source_ref: str = Field(min_length=1, max_length=512)
     actor: str = Field(default="operator", min_length=1, max_length=64)
@@ -134,7 +134,7 @@ class ModeloReconciliationReport(BaseModel):
 
     work_unit_id: WorkUnitId
     bucket_id: BucketId
-    source_kind: ModeloReconciliationSourceKind
+    source_kind: ModeloReconciliationEvidenceKind
     source_path: str
     verdict: ModeloReconciliationVerdict
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
@@ -208,7 +208,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     the full declaration require the modelo-specific declaration
     parser that has not shipped yet.
     """
-    if command.source_kind is ModeloReconciliationSourceKind.DECLARATION:
+    if command.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",
         )
@@ -236,7 +236,7 @@ def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloR
         The :class:`ModeloReconciliationReport` comparing the parsed evidence to
         the work unit.
     """
-    if command.source_kind is ModeloReconciliationSourceKind.DECLARATION:
+    if command.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
         raise ReconciliationDeclaracionSourceUnsupportedError(
             translated_message="application.modelo.errors.reconcile_declaration_unsupported",
         )
@@ -260,7 +260,7 @@ def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloR
 def _reconcile_parsed_justificante(
     *,
     work_unit_id: WorkUnitId,
-    source_kind: ModeloReconciliationSourceKind,
+    source_kind: ModeloReconciliationEvidenceKind,
     source_ref: str,
     actor: str,
     justificante: Justificante,
@@ -442,7 +442,7 @@ def list_modelo_reconciliations(
                 event_id=event.event_id,
                 bucket_id=event.bucket_id,
                 work_unit_id=event_work_unit_id,
-                source_kind=ModeloReconciliationSourceKind(payload["source_kind"]),
+                source_kind=ModeloReconciliationEvidenceKind(payload["source_kind"]),
                 source_path=payload.get("source_path", ""),
                 verdict=ModeloReconciliationVerdict(payload["verdict"]),
                 diff_count=int(payload.get("diffs", "0")),
@@ -457,9 +457,9 @@ __all__ = [
     "ModeloReconciliationBytesCommand",
     "ModeloReconciliationCommand",
     "ModeloReconciliationDiff",
+    "ModeloReconciliationEvidenceKind",
     "ModeloReconciliationHistoryEntry",
     "ModeloReconciliationReport",
-    "ModeloReconciliationSourceKind",
     "ModeloReconciliationVerdict",
     "ReconciliationCrossBucketRefusedError",
     "ReconciliationDeclaracionSourceUnsupportedError",
