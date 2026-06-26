@@ -8,7 +8,7 @@ repositories it reads are injected.
 
 Major declarations:
 
-* :func:`aggregate_per_modelo` with :class:`PerModeloAggregationProvider`
+* :func:`aggregate_per_modelo` with :class:`PerModeloAggregationContributor`
   and :class:`PerModeloAggregationResult` — the unified per-modelo entry
   point.
 * :func:`aggregate_iva_ledger_observations` with :class:`IvaLedgerAggregation`
@@ -131,8 +131,8 @@ from ._service import (
     ACCEPTED_SOURCE_KINDS,
     AggregationErrorCodes,
     PerModeloAggregationCommand,
+    PerModeloAggregationContributor,
     PerModeloAggregationLogFields,
-    PerModeloAggregationProvider,
     PerModeloAggregationResult,
     aggregate_per_modelo,
     get_per_modelo_aggregation_contract,
@@ -207,8 +207,8 @@ __all__ = [
     "OssIossLedgerCandidate",
     "OssIossLedgerSourceResolver",
     "PerModeloAggregationCommand",
+    "PerModeloAggregationContributor",
     "PerModeloAggregationLogFields",
-    "PerModeloAggregationProvider",
     "PerModeloAggregationResult",
     "Period",
     "PeriodKind",
