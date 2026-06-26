@@ -3,12 +3,21 @@ tags:
   - '#plan'
   - '#retenciones-perceptor-count'
 date: '2026-06-24'
-modified: '2026-06-24'
+modified: '2026-06-25'
 tier: L2
 related:
   - '[[2026-06-24-retenciones-perceptor-count-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `retenciones-perceptor-count` plan
 
@@ -24,9 +33,9 @@ Create the persisted distinct-NIF perceptor source the calc path lacks: a typed,
 
 Add a calc-mesh resolver that aggregates the store into a distinct perceptor count and materialises the perceptor-count binding, enrolled so no source is dormant.
 
-- [ ] `P02.S04` - Add a BindingSourceKind member for the new source plus the registry-vs-enum parity gate entry; `src/aeat/core`.
-- [ ] `P02.S05` - Add a calc-mesh ModeloSourceResolver reading the per-perceptor store and materialising the perceptor-count binding via aggregate_retenciones_180 distinct-NIF total_perceptors; `src/aeat/application/aggregation/_modelo_bindings.py`.
-- [ ] `P02.S06` - Enroll the resolver in merge_source_resolutions and add the source kind to _BUCKET_AGGREGATION_OWNED_SOURCES so no source is dormant; `src/aeat/application/modelo/_calculation_actions.py`.
+- [x] `P02.S04` - Add a BindingSourceKind member for the new source plus the registry-vs-enum parity gate entry; `src/aeat/core`.
+- [x] `P02.S05` - Add a calc-mesh ModeloSourceResolver reading the per-perceptor store and materialising the perceptor-count binding via aggregate_retenciones_180 distinct-NIF total_perceptors; `src/aeat/application/aggregation/_modelo_bindings.py`.
+- [x] `P02.S06` - Enroll the resolver in merge_source_resolutions and add the source kind to _BUCKET_AGGREGATION_OWNED_SOURCES so no source is dormant; `src/aeat/application/modelo/_calculation_actions.py`.
 
 ### Phase `P03` - M180/M190/M193 cutover + pull==calculate parity
 

@@ -7,8 +7,8 @@ modified: '2026-06-19'
 related:
   - "[[2026-06-19-silent-zero-base-aggregation-research]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
+  - '[[2026-06-20-silent-zero-base-aggregation-research]]'
 ---
-
 # `silent-zero-base-aggregation` adr: `Silent-zero regulated-base aggregation: bounded mirror vs ADR boundary` | (**status:** `accepted`)
 
 ## Problem Statement
