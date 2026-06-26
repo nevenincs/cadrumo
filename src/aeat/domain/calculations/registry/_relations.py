@@ -19,6 +19,7 @@ from ....core import STRICT_FROZEN_CONFIG, Period
 from ._binding_selector_utils import unique_tuple
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, RelationId
+from ._observation_fold import gather_observed_requirement_values
 from ._period_offset_math import apply_period_offset
 from ._schema import ModeloRevision, RelationDefinition, filing_period_from_scope
 
@@ -217,7 +218,7 @@ def resolve_relation_values_from_observations(
     available = tuple(observations)
     external_outputs: dict[RelationId, Decimal | tuple[Decimal, ...]] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period):
-        values = tuple(_observed_requirement_values(requirement, available))
+        values = gather_observed_requirement_values(requirement, available)
         raw_value: Decimal | tuple[Decimal, ...]
         if requirement.aggregation_op == "copy":
             if len(values) != 1:
@@ -314,31 +315,3 @@ def _derive_offset_source_anchor(relation: RelationDefinition, *, target_period:
         ) from exc
 
 
-def _observed_requirement_values(
-    requirement: RegistryFoldRequirement,
-    observations: tuple[RegistryModeloObservation, ...],
-) -> tuple[Decimal, ...]:
-    source_casilla_id = requirement.source_casilla_ids[0]
-    values: list[Decimal] = []
-    for source_period in requirement.periods:
-        matches = tuple(
-            observation
-            for observation in observations
-            if observation.modelo == requirement.source_modelo
-            and observation.filing_year == requirement.filing_year
-            and observation.period == source_period
-        )
-        if len(matches) != 1:
-            raise RegistryValidationError(
-                f"relation requirement {requirement.relation_ids!r} expected one observed filing "
-                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, found {len(matches)}",
-            )
-        value = matches[0].casilla_values.get(source_casilla_id)
-        if value is None:
-            raise RegistryValidationError(
-                f"relation requirement {requirement.relation_ids!r} requires observed source casilla id "
-                f"{source_casilla_id!r} from "
-                f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
-            )
-        values.append(value)
-    return tuple(values)
