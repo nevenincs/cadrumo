@@ -47,7 +47,7 @@ from ._revision_persistence import persist_filed_revision
 from ._verification_actions import (
     _cross_period_expected_member_sets_from_profile,
     _require_cross_period_clean_state,
-    _taxpayer_files_economic_activity,
+    derive_taxpayer_files_economic_activity,
 )
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
@@ -189,7 +189,7 @@ def file_modelo_revision(
         taxpayer_tax_id=workflow_profile.tax_id,
         activity_start_date=workflow_profile.activity_start_date,
         modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
-        taxpayer_files_economic_activity=_taxpayer_files_economic_activity(workflow_profile),
+        taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
     )
 
     now = clock or _utc_now()

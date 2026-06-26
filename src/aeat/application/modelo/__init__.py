@@ -270,6 +270,7 @@ from ._taxation_comparison import (
     compare_taxation_modes,
 )
 from ._verification_actions import (
+    derive_taxpayer_files_economic_activity,
     verify_modelo_revision,
 )
 from ._work_addressing import (
@@ -544,6 +545,7 @@ __all__ = [
     "select_exportable_revision",
     "select_modelo_calculation_revision",
     "validate_m349_nif_format",
+    "derive_taxpayer_files_economic_activity",
     "verify_modelo_revision",
     "visible_target_work_units",
     "work_address_for_modelo_target",
