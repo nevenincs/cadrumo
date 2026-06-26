@@ -1135,6 +1135,23 @@ def _modelo_directory_fingerprints(entry: Path) -> tuple[tuple[str, int, int], .
     return tuple(fingerprints)
 
 
+def _registry_disk_cache_enabled() -> bool:
+    """Whether the cross-process ``/tmp`` registry pickle is read/written.
+
+    Disabled under pytest (``PYTEST_CURRENT_TEST`` / ``PYTEST_XDIST_WORKER`` set):
+    the pickle is keyed by file mtime and SHARED across pytest-xdist worker
+    processes, so a parallel run could serve a stale/transient compiled registry
+    from one worker to another -- a test-isolation race (#44). The per-process
+    :func:`lru_cache` on :func:`_load_registry_tree_cached` still memoises within a
+    worker, so in-run perf is unaffected and each worker compiles from the current
+    TOML. Production loads the registry once at startup with no concurrent edits,
+    so it keeps the disk cache.
+    """
+    import os
+
+    return "PYTEST_CURRENT_TEST" not in os.environ and "PYTEST_XDIST_WORKER" not in os.environ
+
+
 @lru_cache(maxsize=32)
 def _load_registry_tree_cached(
     root: str,
@@ -1146,41 +1163,44 @@ def _load_registry_tree_cached(
     import pickle
     import tempfile
 
-    hasher = hashlib.sha256()
-    hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
-    hasher.update(root.encode("utf-8"))
-    for item in fingerprints:
-        hasher.update(item[0].encode("utf-8"))
-        hasher.update(str(item[1]).encode("utf-8"))
-        hasher.update(str(item[2]).encode("utf-8"))
-    key_hash = hasher.hexdigest()
+    cache_path: Path | None = None
+    if _registry_disk_cache_enabled():
+        hasher = hashlib.sha256()
+        hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
+        hasher.update(root.encode("utf-8"))
+        for item in fingerprints:
+            hasher.update(item[0].encode("utf-8"))
+            hasher.update(str(item[1]).encode("utf-8"))
+            hasher.update(str(item[2]).encode("utf-8"))
+        key_hash = hasher.hexdigest()
 
-    cache_path = Path(tempfile.gettempdir()) / f"aeat_registry_{key_hash}.pkl"
-    if cache_path.is_file():
-        # Internal same-user performance cache of first-party registry data only.
-        # The payload is produced exclusively by the dump below in this process and
-        # keyed by a sha256 of the registry tree fingerprints; no untrusted input is
-        # ever deserialized here. A corrupt/foreign file is swallowed and recomputed.
-        with contextlib.suppress(Exception), open(cache_path, "rb") as f:
-            return pickle.load(f)  # noqa: S301  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle
+        cache_path = Path(tempfile.gettempdir()) / f"aeat_registry_{key_hash}.pkl"
+        if cache_path.is_file():
+            # Internal same-user performance cache of first-party registry data only.
+            # The payload is produced exclusively by the dump below in this process and
+            # keyed by a sha256 of the registry tree fingerprints; no untrusted input is
+            # ever deserialized here. A corrupt/foreign file is swallowed and recomputed.
+            with contextlib.suppress(Exception), open(cache_path, "rb") as f:
+                return pickle.load(f)  # noqa: S301  # nosemgrep: python.lang.security.deserialization.pickle.avoid-pickle
 
     resolved = Path(root)
     catalogues = _load_shared_catalogue_files(resolved / "legal")
     modelos = _load_all_modelo_definitions(resolved / "modelos")
     result = (modelos, catalogues)
 
-    temp_name = None
-    try:
-        with tempfile.NamedTemporaryFile("wb", dir=cache_path.parent, delete=False) as tf:
-            # Serialises first-party registry objects to the same-user temp cache read
-            # back above; the data never crosses a trust boundary. See the load note.
-            pickle.dump(result, tf, protocol=pickle.HIGHEST_PROTOCOL)  # nosemgrep
-            temp_name = tf.name
-        os.replace(temp_name, cache_path)
-    except Exception:
-        if temp_name is not None:
-            with contextlib.suppress(Exception):
-                os.unlink(temp_name)
+    if cache_path is not None:
+        temp_name = None
+        try:
+            with tempfile.NamedTemporaryFile("wb", dir=cache_path.parent, delete=False) as tf:
+                # Serialises first-party registry objects to the same-user temp cache read
+                # back above; the data never crosses a trust boundary. See the load note.
+                pickle.dump(result, tf, protocol=pickle.HIGHEST_PROTOCOL)  # nosemgrep
+                temp_name = tf.name
+            os.replace(temp_name, cache_path)
+        except Exception:
+            if temp_name is not None:
+                with contextlib.suppress(Exception):
+                    os.unlink(temp_name)
     return result
 
 
