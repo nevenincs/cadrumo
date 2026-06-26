@@ -10,6 +10,7 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ._corpus_catalogue import verify_source_catalogue
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._schema import (
@@ -19,7 +20,6 @@ from ._schema import (
     RegistryCatalogues,
     SourceReference,
 )
-from ._sources import verify_source_catalogue
 from ._validate_cache import (
     _CATALOGUE_FAILURE_CACHE,
     _MODELO_VALIDATION_CACHE,

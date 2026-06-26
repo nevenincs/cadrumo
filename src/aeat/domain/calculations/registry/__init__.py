@@ -120,6 +120,7 @@ from ._censo_modelos import (
     resolve_censo_modelo_work_unit_foundation,
 )
 from ._constructs import ResolvedConstruct, ResolvedConstructMember, resolve_construct, resolve_revision_constructs
+from ._corpus_catalogue import verify_source_catalogue, verify_source_file
 from ._coverage import (
     EvidenceTierCoverageGate,
     ModelLawCoverageLedger,
@@ -353,7 +354,6 @@ from ._schema import (
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode
 from ._snapshot import build_snapshot
-from ._sources import verify_source_catalogue, verify_source_file
 from ._validate import RegistryValidator
 from ._validate_cross_revision import (
     CrossRevisionCasillaDriftSummary,

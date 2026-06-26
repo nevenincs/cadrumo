@@ -27,6 +27,7 @@ Submodules
    aeat.domain.calculations.registry._checker_oracle_flow
    aeat.domain.calculations.registry._citation_blocklist
    aeat.domain.calculations.registry._constructs
+   aeat.domain.calculations.registry._corpus_catalogue
    aeat.domain.calculations.registry._counterpart_bindings
    aeat.domain.calculations.registry._coverage
    aeat.domain.calculations.registry._cross_revision_divergence
@@ -67,7 +68,6 @@ Submodules
    aeat.domain.calculations.registry._schema_scalars
    aeat.domain.calculations.registry._schema_surfaces
    aeat.domain.calculations.registry._snapshot
-   aeat.domain.calculations.registry._sources
    aeat.domain.calculations.registry._temporal
    aeat.domain.calculations.registry._text
    aeat.domain.calculations.registry._validate

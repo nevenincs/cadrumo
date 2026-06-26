@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
+from .._corpus_catalogue import verify_source_file
 from .._legal import verify_legal_catalogue
 from .._loader import load_registry_tree
 from .._record_design import extract_record_design_pdf
-from .._sources import verify_source_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
