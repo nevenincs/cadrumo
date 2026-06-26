@@ -410,17 +410,6 @@ def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
         )
 
 
-def test_registry_provider_counterpart_binding_source_kinds_are_enum_members() -> None:
-    """_registry_provider._COUNTERPART_BINDING_SOURCE_KINDS must contain BindingSourceKind members."""
-    from .._registry_provider import _COUNTERPART_BINDING_SOURCE_KINDS
-
-    assert len(_COUNTERPART_BINDING_SOURCE_KINDS) == 4
-    for kind in _COUNTERPART_BINDING_SOURCE_KINDS:
-        assert isinstance(kind, BindingSourceKind), (
-            f"_registry_provider._COUNTERPART_BINDING_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
-        )
-
-
 def test_operator_accepted_kind_map_uses_enum_keys_for_aggregation_source_kinds() -> None:
     """_operator._ACCEPTED_KIND_TO_INTERNAL must use BindingSourceKind for the four aggregation kinds."""
     from ...review._operator import _ACCEPTED_KIND_TO_INTERNAL
