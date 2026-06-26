@@ -317,9 +317,8 @@ CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
 )
 # Per-perceptor retención records (perceptor NIF + scheme + taxable base +
-# retención) for the retenciones-summary family (Modelo 180/190/193). The
-# DEDICATED store the calc-mesh perceptor-count resolver reads so the distinct-NIF
-# count (aggregate_retenciones_180.total_perceptors) is computed from one persisted
+# retención) for the M180/M193 calc-mesh perceptor-count resolver. The
+# DEDICATED store lets the distinct-NIF count be computed from one persisted
 # source shared by the pull and calculate surfaces — never the wrong sum of
 # quarterly aggregate counts (retenciones-perceptor-count ADR 2026-06-24).
 # FINANCIAL sensitivity: perceptor NIFs are identity-bearing financial data and
@@ -334,6 +333,19 @@ RETENCION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     # iva-wallet-decision key convention) so the plaintext NIF lives ONLY inside
     # the encrypted payload, never in a repository identifier.
     object_key_grammar="{modelo}:{filing_year}:{period}:{sha256(perceptor_nif)}:{scheme}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+)
+WITHHOLDING_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="withholding_observations",
+    namespace="aeat.withholding.observations",
+    owner="aeat.application.aggregation",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    # The perceptor NIF is sha256-hashed in the object key (mirroring the
+    # iva-wallet-decision key convention) so the plaintext NIF lives ONLY inside
+    # the encrypted payload, never in a repository identifier. The clave/subclave
+    # are non-identifying AEAT percepcion codes, so they stay plain in the key.
+    object_key_grammar="{modelo}:{filing_year}:{period}:{sha256(perceptor_tax_id)}:{clave}:{subclave}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
 )
 IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE = SecureObjectNamespaceDefinition(
@@ -864,6 +876,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         AUTH_APODERADO_CONFIGURATION_NAMESPACE,
         CALCULATION_OBSERVATIONS_NAMESPACE,
         RETENCION_OBSERVATIONS_NAMESPACE,
+        WITHHOLDING_OBSERVATIONS_NAMESPACE,
         IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
         IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
         IVA_COMPENSATION_HISTORY_NAMESPACE,
