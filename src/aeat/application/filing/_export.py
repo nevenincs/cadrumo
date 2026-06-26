@@ -55,7 +55,7 @@ from ...domain.filing import (
     ModeloDraft,
 )
 from ...domain.submission._protocols import ModeloDraftStatus
-from .runtime import RegistrySchemaProvider, build_runtime_schema_provider
+from .runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
 
@@ -224,7 +224,7 @@ def export_draft(
     *,
     output_path: Path,
     headers: dict[str, str],
-    schema_provider: RegistrySchemaProvider | None = None,
+    schema_provider: RegistrySchemaAccessor | None = None,
 ) -> DeclaracionExportResult:
     """Write an approved draft to a fichero-BOE file and return a receipt.
 
@@ -268,7 +268,7 @@ def verify_export(
     draft: ModeloDraft,
     *,
     file_path: Path,
-    schema_provider: RegistrySchemaProvider | None = None,
+    schema_provider: RegistrySchemaAccessor | None = None,
 ) -> DeclaracionVerifyResult:
     """Verify an exported file against an approved :class:`ModeloDraft`.
 
