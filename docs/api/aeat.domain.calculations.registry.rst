@@ -23,6 +23,7 @@ Submodules
    aeat.domain.calculations.registry._binding_selector_utils
    aeat.domain.calculations.registry._bindings
    aeat.domain.calculations.registry._bindings_previous_filing
+   aeat.domain.calculations.registry._casilla_membership
    aeat.domain.calculations.registry._censo_modelos
    aeat.domain.calculations.registry._checker_oracle_flow
    aeat.domain.calculations.registry._citation_blocklist
@@ -57,6 +58,7 @@ Submodules
    aeat.domain.calculations.registry._relations
    aeat.domain.calculations.registry._remote_state_guard
    aeat.domain.calculations.registry._renta_web_open_oracle
+   aeat.domain.calculations.registry._retenciones_bindings
    aeat.domain.calculations.registry._runtime_graph
    aeat.domain.calculations.registry._scenarios
    aeat.domain.calculations.registry._schedules
@@ -103,7 +105,7 @@ Submodules
    aeat.domain.calculations.registry._validate_semantic_role_required
    aeat.domain.calculations.registry._validate_semantic_role_typos
    aeat.domain.calculations.registry._validate_semantic_roles
-   aeat.domain.calculations.registry._validate_source_outputs
+   aeat.domain.calculations.registry._validate_source_casilla_ids
    aeat.domain.calculations.registry._validate_surfaces
    aeat.domain.calculations.registry._withholding_bindings
    aeat.domain.calculations.registry._workbook_parity
