@@ -13,17 +13,9 @@ Related: :mod:`~._iva_ledger`, :mod:`~._renta_ledger`, :mod:`~._renta_income_led
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from decimal import Decimal
-from types import MappingProxyType
-
-from pydantic import BaseModel, Field, field_serializer, field_validator
-
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, Modelo, Period, PeriodError
 from ...domain.calculations.registry import (
-    BindingId,
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
@@ -39,20 +31,13 @@ from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoicePersis
 from ...domain.renta import RentaDeductibleExpenseObservation
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionPersistenceError
 from ._errors import AggregationValidationError, t
-from ._iva_ledger import (
-    IvaLedgerAggregationIssue,
-    aggregate_iva_ledger_observations_from_repositories,
-)
+from ._iva_ledger import aggregate_iva_ledger_observations_from_repositories
 from ._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 from ._renta_income_ledger import (
-    RentaIncomeLedgerAggregationIssue,
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
 )
-from ._renta_ledger import (
-    RentaLedgerAggregationIssue,
-    aggregate_renta_ledger_expenses_from_repositories,
-)
+from ._renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from ._retencion_observations_repository import RetencionObservationRepository
 from ._retenciones import (
     aggregate_retenciones_180,
@@ -74,84 +59,6 @@ _STORAGE_DEGRADATION_ERRORS = (
     InvoicePersistenceError,
     TransactionPersistenceError,
 )
-
-
-class ModeloLedgerBindingAggregation(BaseModel):
-    """Ledger-derived binding values for one modelo calculation window."""
-
-    model_config = _STRICT_FROZEN
-
-    modelo: str = Field(min_length=1, max_length=16)
-    filing_year: int = Field(ge=2000, le=2100)
-    period: Period
-    binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
-    source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
-    iva_issues: Sequence[IvaLedgerAggregationIssue] = Field(default_factory=tuple)
-    renta_issues: Sequence[RentaLedgerAggregationIssue] = Field(default_factory=tuple)
-    renta_income_issues: Sequence[RentaIncomeLedgerAggregationIssue] = Field(default_factory=tuple)
-
-    @field_validator("binding_values")
-    @classmethod
-    def _freeze_binding_values(cls, value: Mapping[BindingId, Decimal]) -> Mapping[BindingId, Decimal]:
-        return MappingProxyType(dict(sorted(value.items())))
-
-    @field_validator("source_transaction_ids")
-    @classmethod
-    def _freeze_source_transaction_ids(cls, value: Sequence[str]) -> tuple[str, ...]:
-        return tuple(sorted(set(value)))
-
-    @field_validator("iva_issues")
-    @classmethod
-    def _freeze_iva_issues(
-        cls,
-        value: Sequence[IvaLedgerAggregationIssue],
-    ) -> tuple[IvaLedgerAggregationIssue, ...]:
-        return tuple(value)
-
-    @field_validator("renta_issues")
-    @classmethod
-    def _freeze_renta_issues(
-        cls,
-        value: Sequence[RentaLedgerAggregationIssue],
-    ) -> tuple[RentaLedgerAggregationIssue, ...]:
-        return tuple(value)
-
-    @field_serializer("binding_values")
-    def _serialize_binding_values(self, value: Mapping[BindingId, Decimal]) -> dict[BindingId, Decimal]:
-        return dict(value)
-
-    @field_serializer("source_transaction_ids")
-    def _serialize_source_transaction_ids(self, value: Sequence[str]) -> tuple[str, ...]:
-        return tuple(value)
-
-    @field_serializer("iva_issues")
-    def _serialize_iva_issues(
-        self,
-        value: Sequence[IvaLedgerAggregationIssue],
-    ) -> tuple[IvaLedgerAggregationIssue, ...]:
-        return tuple(value)
-
-    @field_validator("renta_income_issues")
-    @classmethod
-    def _freeze_renta_income_issues(
-        cls,
-        value: Sequence[RentaIncomeLedgerAggregationIssue],
-    ) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
-        return tuple(value)
-
-    @field_serializer("renta_issues")
-    def _serialize_renta_issues(
-        self,
-        value: Sequence[RentaLedgerAggregationIssue],
-    ) -> tuple[RentaLedgerAggregationIssue, ...]:
-        return tuple(value)
-
-    @field_serializer("renta_income_issues")
-    def _serialize_renta_income_issues(
-        self,
-        value: Sequence[RentaIncomeLedgerAggregationIssue],
-    ) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
-        return tuple(value)
 
 
 class LedgerIvaAggregationSourceResolver:
@@ -642,6 +549,5 @@ __all__ = [
     "LedgerRentaExpenseAggregationSourceResolver",
     "LedgerRentaGastoAggregationSourceResolver",
     "LedgerRentaIncomeAggregationSourceResolver",
-    "ModeloLedgerBindingAggregation",
     "aggregation_period_for_modelo",
 ]
