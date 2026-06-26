@@ -1,6 +1,6 @@
 """E2E: filing an M303 devolución period AUTO-carries zero compensación forward.
 
-ADR 2026-06-21-m303-carry-reconciliation (part 2): the refund disposition is
+decision record 2026-06-21-m303-carry-reconciliation (part 2): the refund disposition is
 determined ONCE at the calculate/file boundary from the profile REDEME axis and
 the eligibility gate, and BOTH the export "Tipo de declaración" and the
 cross-period carry persistence read that one determined fact. A REDEME
@@ -45,6 +45,7 @@ from ....core import Period
 from ....core.config import AuthProviderKindSetting, Settings
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
+from ....domain.calculations.registry import CasillaId, RelationId, validated_casilla_id
 from ....domain.deadlines import IVARegime, ModeloIVAProfile, TaxpayerProfile
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
@@ -74,8 +75,18 @@ _FILE_AT = datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC)
 
 #: The carry chain casilla/relation: the prior period's end-of-period available
 #: compensación flows into the next period's casilla 110.
-_CARRY_RELATION = "modelo-303-rel-self-compensacion-anteriores"
-_SALDO_CASILLA = "iva.compensacion-disponible-fin-periodo"
+_CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M303 refund auto-carry fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_SALDO_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 #: A negative-result M303 credit scenario: cuota soportada (interiores) exceeds
 #: cuota repercutida, so the régimen-general result is negative — the IVA credit
@@ -170,7 +181,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool) -> Decimal:
         clock=_DECIDED_AT,
     )
     # The scenario genuinely produced a negative result and a positive carry saldo.
-    assert revision.casilla_values["iva.resultado"] < Decimal("0")
+    assert revision.casilla_values[_M303_RESULTADO_CASILLA] < Decimal("0")
     saldo = revision.casilla_values[_SALDO_CASILLA]
     assert saldo > Decimal("0")
 
@@ -219,7 +230,9 @@ def _next_period_carry_in() -> Decimal | None:
         snapshot_next,
         repository=CalculationObservationRepository(),
     )
-    resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
+    resolved: dict[RelationId, Decimal] = {
+        item.relation: item.value for item in relation_values.values if item.value is not None
+    }
     return resolved.get(_CARRY_RELATION)
 
 
