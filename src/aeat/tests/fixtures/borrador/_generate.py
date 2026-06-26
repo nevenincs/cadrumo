@@ -31,55 +31,85 @@ Usage (regenerate committed PDFs):
 from __future__ import annotations
 
 import io
+from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
 
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
+
 _FIXTURES_DIR = Path(__file__).parent
+_BASE_LIQUIDABLE_GENERAL_CASILLA = validated_casilla_id(
+    "0505",
+    surface="borrador_fixture.base_liquidable_general",
+)
+_CUOTA_INTEGRA_ESTATAL_CASILLA = validated_casilla_id(
+    "0545",
+    surface="borrador_fixture.cuota_integra_estatal",
+)
+_CUOTA_INTEGRA_AUTONOMICA_CASILLA = validated_casilla_id(
+    "0546",
+    surface="borrador_fixture.cuota_integra_autonomica",
+)
+_CUOTA_LIQUIDA_ESTATAL_CASILLA = validated_casilla_id(
+    "0585",
+    surface="borrador_fixture.cuota_liquida_estatal",
+)
+_CUOTA_LIQUIDA_AUTONOMICA_CASILLA = validated_casilla_id(
+    "0586",
+    surface="borrador_fixture.cuota_liquida_autonomica",
+)
 
 # ---------------------------------------------------------------------------
 # Engine-derived corpus values (Cataluna CCAA, simplificada, zero deductions)
 # Values anchored to registry bracket tables.  See module docstring.
-# Derived by running calculate_registry_snapshot with inputs={'0505': '30000.00'}
+# Derived by running calculate_registry_snapshot with
+# inputs={_BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00")}
 # for each year with binding renta-{year}-profile-tax-residence-ccaa='cataluna'.
 # ---------------------------------------------------------------------------
 
-_CORPUS_VALUES: dict[int, dict[str, Decimal]] = {
+_CORPUS_VALUES: dict[int, dict[CasillaId, Decimal]] = {
     2021: {
-        "0505": Decimal("30000.00"),
-        "0545": Decimal("3582.75"),
-        "0546": Decimal("3845.85"),
-        "0585": Decimal("3582.75"),
-        "0586": Decimal("3845.85"),
+        _BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00"),
+        _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3582.75"),
+        _CUOTA_INTEGRA_AUTONOMICA_CASILLA: Decimal("3845.85"),
+        _CUOTA_LIQUIDA_ESTATAL_CASILLA: Decimal("3582.75"),
+        _CUOTA_LIQUIDA_AUTONOMICA_CASILLA: Decimal("3845.85"),
     },
     2022: {
-        "0505": Decimal("30000.00"),
-        "0545": Decimal("3582.75"),
-        "0546": Decimal("3749.10"),
-        "0585": Decimal("3582.75"),
-        "0586": Decimal("3749.10"),
+        _BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00"),
+        _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3582.75"),
+        _CUOTA_INTEGRA_AUTONOMICA_CASILLA: Decimal("3749.10"),
+        _CUOTA_LIQUIDA_ESTATAL_CASILLA: Decimal("3582.75"),
+        _CUOTA_LIQUIDA_AUTONOMICA_CASILLA: Decimal("3749.10"),
     },
     2023: {
-        "0505": Decimal("30000.00"),
-        "0545": Decimal("3582.75"),
-        "0546": Decimal("3749.10"),
-        "0585": Decimal("3582.75"),
-        "0586": Decimal("3749.10"),
+        _BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00"),
+        _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3582.75"),
+        _CUOTA_INTEGRA_AUTONOMICA_CASILLA: Decimal("3749.10"),
+        _CUOTA_LIQUIDA_ESTATAL_CASILLA: Decimal("3582.75"),
+        _CUOTA_LIQUIDA_AUTONOMICA_CASILLA: Decimal("3749.10"),
     },
 }
 
 # Casilla labels: used for readability in the PDF but not matched by parser.
-_CASILLA_LABELS: dict[str, str] = {
-    "0505": "Base liquidable general sometida a gravamen",
-    "0545": "Cuota integra estatal",
-    "0546": "Cuota integra autonomica",
-    "0585": "Cuota liquida estatal incrementada",
-    "0586": "Cuota liquida autonomica incrementada",
+_CASILLA_LABELS: dict[CasillaId, str] = {
+    _BASE_LIQUIDABLE_GENERAL_CASILLA: "Base liquidable general sometida a gravamen",
+    _CUOTA_INTEGRA_ESTATAL_CASILLA: "Cuota integra estatal",
+    _CUOTA_INTEGRA_AUTONOMICA_CASILLA: "Cuota integra autonomica",
+    _CUOTA_LIQUIDA_ESTATAL_CASILLA: "Cuota liquida estatal incrementada",
+    _CUOTA_LIQUIDA_AUTONOMICA_CASILLA: "Cuota liquida autonomica incrementada",
 }
 
-_PRINT_ORDER: tuple[str, ...] = ("0505", "0545", "0546", "0585", "0586")
+_PRINT_ORDER: tuple[CasillaId, ...] = (
+    _BASE_LIQUIDABLE_GENERAL_CASILLA,
+    _CUOTA_INTEGRA_ESTATAL_CASILLA,
+    _CUOTA_INTEGRA_AUTONOMICA_CASILLA,
+    _CUOTA_LIQUIDA_ESTATAL_CASILLA,
+    _CUOTA_LIQUIDA_AUTONOMICA_CASILLA,
+)
 
 
 def _format_spanish_decimal(value: Decimal) -> str:
@@ -96,7 +126,7 @@ def _format_spanish_decimal(value: Decimal) -> str:
     return f"{'.'.join(reversed(groups))},{fractional}"
 
 
-def _render_borrador_pdf(year: int, casilla_values: dict[str, Decimal]) -> bytes:
+def _render_borrador_pdf(year: int, casilla_values: Mapping[CasillaId, Decimal]) -> bytes:
     """Render a minimal borrador-format PDF for the given year and casilla values.
 
     Layout follows the AEAT Renta Web Open borrador text stream:

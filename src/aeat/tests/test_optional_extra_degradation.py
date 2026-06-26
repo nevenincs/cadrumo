@@ -17,6 +17,7 @@ import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from types import ModuleType
+from typing import override
 
 import pytest
 
@@ -29,6 +30,7 @@ class _ImportBlocker(importlib.abc.MetaPathFinder):
     def __init__(self, blocked: frozenset[str]) -> None:
         self._blocked = blocked
 
+    @override
     def find_spec(self, fullname: str, path: object = None, target: object = None) -> None:
         top = fullname.split(".", 1)[0]
         if top in self._blocked or fullname.startswith(("google.auth", "google.oauth2")):

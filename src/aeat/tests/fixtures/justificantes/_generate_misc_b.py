@@ -151,10 +151,10 @@ class _Modelo123Fixture:
     periodo: str
     tax_id: str
     full_name: str
-    casillas: tuple[tuple[str, str], ...]  # (casilla_id, spanish_formatted_amount)
+    casillas: tuple[tuple[str, str, str], ...]  # (casilla_id, printed_number, spanish_formatted_amount)
 
 
-_MODELO_123_2024_CASILLAS: tuple[tuple[str, str], ...] = (
+_MODELO_123_2024_CASILLAS: tuple[tuple[str, str, str], ...] = (
     # 2024-y-siguientes revision: 14 casillas.
     # Amounts chosen to satisfy all 5 registry formulas:
     #   [03] = [01] + [02]  =  5,00 + 3,00 = 8,00
@@ -163,35 +163,35 @@ _MODELO_123_2024_CASILLAS: tuple[tuple[str, str], ...] = (
     #   [12] = [09] + [11]  =  2.850,00 + 0,00 = 2.850,00
     #   [14] = [12] - [13]  =  2.850,00 - 0,00 = 2.850,00
     # Integer casillas use NN,00 format so SPANISH_AMOUNT_GROUP regex (requires comma) matches.
-    ("01", "5,00"),
-    ("02", "3,00"),
-    ("03", "8,00"),
-    ("04", "10.000,00"),
-    ("05", "5.000,00"),
-    ("06", "15.000,00"),
-    ("07", "1.900,00"),
-    ("08", "950,00"),
-    ("09", "2.850,00"),
-    ("10", "0,00"),
-    ("11", "0,00"),
-    ("12", "2.850,00"),
-    ("13", "0,00"),
-    ("14", "2.850,00"),
+    ("01", "01", "5,00"),
+    ("02", "02", "3,00"),
+    ("03", "03", "8,00"),
+    ("04", "04", "10.000,00"),
+    ("05", "05", "5.000,00"),
+    ("06", "06", "15.000,00"),
+    ("07", "07", "1.900,00"),
+    ("08", "08", "950,00"),
+    ("09", "09", "2.850,00"),
+    ("10", "10", "0,00"),
+    ("11", "11", "0,00"),
+    ("12", "12", "2.850,00"),
+    ("13", "13", "0,00"),
+    ("14", "14", "2.850,00"),
 )
 
-_MODELO_123_2023_LEGACY_CASILLAS: tuple[tuple[str, str], ...] = (
+_MODELO_123_2023_LEGACY_CASILLAS: tuple[tuple[str, str, str], ...] = (
     # 2019-2023 legacy revision: 8 casillas (internal ids have -legacy suffix).
     # Display prefix is the plain digit (01..08).
     # Amounts satisfy: [06]=[03]+[05]=1.520,00+0,00=1.520,00, [08]=[06]-[07]=1.520,00-0,00=1.520,00
     # Integer casilla uses N,00 format so SPANISH_AMOUNT_GROUP regex (requires comma) matches.
-    ("01-legacy", "4,00"),
-    ("02-legacy", "8.000,00"),
-    ("03-legacy", "1.520,00"),
-    ("04-legacy", "0,00"),
-    ("05-legacy", "0,00"),
-    ("06-legacy", "1.520,00"),
-    ("07-legacy", "0,00"),
-    ("08-legacy", "1.520,00"),
+    ("01-legacy", "01", "4,00"),
+    ("02-legacy", "02", "8.000,00"),
+    ("03-legacy", "03", "1.520,00"),
+    ("04-legacy", "04", "0,00"),
+    ("05-legacy", "05", "0,00"),
+    ("06-legacy", "06", "1.520,00"),
+    ("07-legacy", "07", "0,00"),
+    ("08-legacy", "08", "1.520,00"),
 )
 
 _MODELO_123_FIXTURES: tuple[_Modelo123Fixture, ...] = (
@@ -247,13 +247,10 @@ def _draw_modelo_123(c: canvas.Canvas, fixture: _Modelo123Fixture) -> None:
     y -= 6 * mm
     c.drawString(20 * mm, y, f"Razon social: {fixture.full_name}")
     y -= 10 * mm
-    # Casilla block: casilla_id at line start, amount on the same line.
-    # The numeric_casilla regex anchors on re.escape(casilla_id) at line start.
-    # For the 2019-2023 legacy revision casilla IDs carry the -legacy suffix
-    # (e.g. "01-legacy") â€” the fixture prints the full ID so the regex
-    # ^\s*01\-legacy\b...<amount>$ matches.
-    for casilla_id, amount in fixture.casillas:
-        c.drawString(20 * mm, y, f"{casilla_id}  {amount}")
+    # Casilla block: printed AEAT box number at line start, amount on the same line.
+    # The parser resolves this printed number back to the canonical registry casilla_id.
+    for _casilla_id, printed_number, amount in fixture.casillas:
+        c.drawString(20 * mm, y, f"{printed_number}  {amount}")
         y -= 6 * mm
     y -= 4 * mm
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")

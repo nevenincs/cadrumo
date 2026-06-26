@@ -18,6 +18,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
 from ......adapters.inbound.borrador._schema import ArtefactKind
+from ......domain.calculations.registry import CasillaId, validated_casilla_id
 from ._generator_shared import (
     A4_HEIGHT,
     A4_WIDTH,
@@ -32,34 +33,39 @@ from ._generator_shared import (
     format_amount,
 )
 
-_SUMMARY_LABELS: Mapping[str, str] = {
-    "0022": "Rendimiento neto — rendimientos del trabajo",
-    "0049": "Rendimiento neto — capital mobiliario",
-    "0107": "Rendimiento neto — capital inmobiliario",
-    "0175": "Rendimiento neto — actividades economicas (estimacion directa)",
-    "0400": "Ganancia o perdida patrimonial total",
-    "0435": "Base imponible general",
-    "0460": "Base imponible del ahorro",
-    "0500": "Minimo personal y familiar total",
-    "0505": "Minimo del contribuyente",
-    "0510": "Minimo por descendientes",
-    "0515": "Minimo por ascendientes",
-    "0520": "Minimo por discapacidad",
-    "0545": "Base liquidable general",
-    "0555": "Base liquidable del ahorro",
-    "0550": "Cuota integra general estatal",
-    "0551": "Cuota integra general autonomica",
-    "0560": "Cuota integra del ahorro estatal",
-    "0561": "Cuota integra del ahorro autonomica",
-    "0595": "Cuota integra total",
-    "0620": "Deducciones estatales",
-    "0622": "Deducciones autonomicas",
-    "0630": "Total deducciones",
-    "0698": "Cuota liquida total",
-    "0699": "Retenciones e ingresos a cuenta",
-    "0700": "Pagos fraccionados (Modelo 130 / 131)",
-    "0720": "Cuota resultante de la autoliquidacion",
-    "0721": "Resultado a ingresar / a devolver",
+
+def _casilla_id(value: object) -> CasillaId:
+    return validated_casilla_id(value, surface="modelo_100_pdf_fixture._SUMMARY_LABELS")
+
+
+_SUMMARY_LABELS: Mapping[CasillaId, str] = {
+    _casilla_id("0022"): "Rendimiento neto — rendimientos del trabajo",
+    _casilla_id("0049"): "Rendimiento neto — capital mobiliario",
+    _casilla_id("0107"): "Rendimiento neto — capital inmobiliario",
+    _casilla_id("0175"): "Rendimiento neto — actividades economicas (estimacion directa)",
+    _casilla_id("0400"): "Ganancia o perdida patrimonial total",
+    _casilla_id("0435"): "Base imponible general",
+    _casilla_id("0460"): "Base imponible del ahorro",
+    _casilla_id("0500"): "Minimo personal y familiar total",
+    _casilla_id("0505"): "Minimo del contribuyente",
+    _casilla_id("0510"): "Minimo por descendientes",
+    _casilla_id("0515"): "Minimo por ascendientes",
+    _casilla_id("0520"): "Minimo por discapacidad",
+    _casilla_id("0545"): "Base liquidable general",
+    _casilla_id("0555"): "Base liquidable del ahorro",
+    _casilla_id("0550"): "Cuota integra general estatal",
+    _casilla_id("0551"): "Cuota integra general autonomica",
+    _casilla_id("0560"): "Cuota integra del ahorro estatal",
+    _casilla_id("0561"): "Cuota integra del ahorro autonomica",
+    _casilla_id("0595"): "Cuota integra total",
+    _casilla_id("0620"): "Deducciones estatales",
+    _casilla_id("0622"): "Deducciones autonomicas",
+    _casilla_id("0630"): "Total deducciones",
+    _casilla_id("0698"): "Cuota liquida total",
+    _casilla_id("0699"): "Retenciones e ingresos a cuenta",
+    _casilla_id("0700"): "Pagos fraccionados (Modelo 130 / 131)",
+    _casilla_id("0720"): "Cuota resultante de la autoliquidacion",
+    _casilla_id("0721"): "Resultado a ingresar / a devolver",
 }
 
 
@@ -84,7 +90,7 @@ class Modelo100GenParams(BaseModel):
     año: int = Field(ge=2000, le=2099)
     ejercicio: str = Field(min_length=4, max_length=4)
     tax_id: str = Field(min_length=4, max_length=32)
-    casilla_values: Mapping[str, Decimal]
+    casilla_values: Mapping[CasillaId, Decimal]
     artefact_kind: str = Field(pattern=r"^(BORRADOR|PREDECLARACION|DECLARACION)$")
     csv: str | None = None  # required when artefact_kind == DECLARACION
 
@@ -93,7 +99,7 @@ class Modelo100GroundTruth(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     params: Modelo100GenParams
-    expected_casillas: tuple[tuple[str, Decimal], ...]
+    expected_values_by_casilla_id: tuple[tuple[CasillaId, Decimal], ...]
 
 
 def _draw_header(c: canvas.Canvas, params: Modelo100GenParams) -> None:
@@ -158,7 +164,7 @@ def generate(params: Modelo100GenParams) -> tuple[bytes, Modelo100GroundTruth]:
         for box in _BOXES
         if box.casilla_id in params.casilla_values
     )
-    ground_truth = Modelo100GroundTruth(params=params, expected_casillas=expected)
+    ground_truth = Modelo100GroundTruth(params=params, expected_values_by_casilla_id=expected)
     return pdf_bytes, ground_truth
 
 
