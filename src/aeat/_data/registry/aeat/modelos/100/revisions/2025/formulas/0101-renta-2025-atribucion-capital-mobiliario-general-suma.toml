@@ -1,8 +1,8 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-atribucion-capital-mobiliario-general-suma"
-target = "1601"
+target_casilla_id = "1601"
 expression = { op = "sum", args = [
-    { casilla = "1568" },
+    { casilla_id = "1568" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-50", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]

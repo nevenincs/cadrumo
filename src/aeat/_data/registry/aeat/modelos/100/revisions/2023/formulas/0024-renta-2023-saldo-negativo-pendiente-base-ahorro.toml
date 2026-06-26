@@ -1,9 +1,9 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-saldo-negativo-pendiente-base-ahorro"
-target = "1270"
+target_casilla_id = "1270"
 expression = { op = "subtract", args = [
-    { casilla = "0425" },
-    { casilla = "0446" },
+    { casilla_id = "0425" },
+    { casilla_id = "0446" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-49"]

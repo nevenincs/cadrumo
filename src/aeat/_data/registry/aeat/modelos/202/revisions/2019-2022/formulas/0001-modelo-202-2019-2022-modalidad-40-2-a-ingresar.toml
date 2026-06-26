@@ -1,15 +1,15 @@
 [[revisions.2019-2022.formulas]]
 id = "modelo-202-2019-2022-modalidad-40-2-a-ingresar"
-target = "03"
+target_casilla_id = "03"
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]
 expression = { op = "subtract", args = [
     { op = "percent", args = [
-        { casilla = "01" },
+        { casilla_id = "01" },
         { parameter = "is.modalidad_cuota.percentage" },
     ] },
-    { casilla = "02" },
+    { casilla_id = "02" },
 ] }
 
 [[revisions.2019-2022.formulas.source_citations]]

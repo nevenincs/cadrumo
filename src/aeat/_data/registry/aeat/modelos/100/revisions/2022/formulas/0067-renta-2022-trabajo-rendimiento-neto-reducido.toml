@@ -1,9 +1,9 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-trabajo-rendimiento-neto-reducido"
-target = "0025"
+target_casilla_id = "0025"
 expression = { op = "sum", args = [
-        { casilla = "0022" },
-        { op = "negate", args = [{ casilla = "0023" }] },
+        { casilla_id = "0022" },
+        { op = "negate", args = [{ casilla_id = "0023" }] },
     ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20"]

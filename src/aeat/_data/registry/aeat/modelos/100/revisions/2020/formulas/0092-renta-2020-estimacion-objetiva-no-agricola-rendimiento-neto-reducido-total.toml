@@ -1,9 +1,9 @@
 [[revisions."2020".formulas]]
 id = "renta-2020-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total"
-target = "1484"
+target_casilla_id = "1484"
 expression = { op = "subtract", args = [
-    { casilla = "1482" },
-    { casilla = "1483" },
+    { casilla_id = "1482" },
+    { casilla_id = "1483" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-31"]

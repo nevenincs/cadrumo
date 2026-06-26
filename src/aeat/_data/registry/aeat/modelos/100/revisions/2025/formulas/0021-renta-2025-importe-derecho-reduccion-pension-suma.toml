@@ -1,15 +1,15 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-importe-derecho-reduccion-pension-suma"
-target = "0467"
+target_casilla_id = "0467"
 expression = { op = "sum", args = [
-    { casilla = "0463" },
-    { casilla = "0464" },
-    { casilla = "0465" },
-    { casilla = "0438" },
-    { casilla = "0426" },
-    { casilla = "0427" },
-    { casilla = "0499" },
-    { casilla = "0466" },
+    { casilla_id = "0463" },
+    { casilla_id = "0464" },
+    { casilla_id = "0465" },
+    { casilla_id = "0438" },
+    { casilla_id = "0426" },
+    { casilla_id = "0427" },
+    { casilla_id = "0499" },
+    { casilla_id = "0466" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-50"]

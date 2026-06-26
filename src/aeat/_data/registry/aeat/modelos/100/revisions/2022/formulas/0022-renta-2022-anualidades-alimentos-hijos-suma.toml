@@ -1,12 +1,12 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-anualidades-alimentos-hijos-suma"
-target = "0527"
+target_casilla_id = "0527"
 expression = { op = "sum", args = [
-    { casilla = "1741" },
-    { casilla = "1744" },
-    { casilla = "1749" },
-    { casilla = "1754" },
-    { casilla = "1759" },
+    { casilla_id = "1741" },
+    { casilla_id = "1744" },
+    { casilla_id = "1749" },
+    { casilla_id = "1754" },
+    { casilla_id = "1759" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-50"]

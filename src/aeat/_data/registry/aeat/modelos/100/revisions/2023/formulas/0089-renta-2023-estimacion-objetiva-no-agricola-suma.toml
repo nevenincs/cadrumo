@@ -1,8 +1,8 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-estimacion-objetiva-no-agricola-suma"
-target = "1482"
+target_casilla_id = "1482"
 expression = { op = "sum", args = [
-    { casilla = "1481" },
+    { casilla_id = "1481" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-31"]

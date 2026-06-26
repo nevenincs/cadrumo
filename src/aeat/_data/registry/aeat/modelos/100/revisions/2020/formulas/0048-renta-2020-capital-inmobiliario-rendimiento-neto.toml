@@ -1,24 +1,24 @@
 [[revisions."2020".formulas]]
 id = "renta-2020-capital-inmobiliario-rendimiento-neto"
-target = "0149"
+target_casilla_id = "0149"
 expression = { op = "sum", args = [
-        { casilla = "0102" },
-        { op = "negate", args = [{ casilla = "0104" }] },
-        { op = "negate", args = [{ casilla = "0107" }] },
-        { op = "negate", args = [{ casilla = "0109" }] },
-        { op = "negate", args = [{ casilla = "0110" }] },
-        { op = "negate", args = [{ casilla = "0111" }] },
-        { op = "negate", args = [{ casilla = "0112" }] },
-        { op = "negate", args = [{ casilla = "0113" }] },
-        { op = "negate", args = [{ casilla = "0114" }] },
-        { op = "negate", args = [{ casilla = "0115" }] },
-        { op = "negate", args = [{ casilla = "0116" }] },
-        { op = "negate", args = [{ casilla = "0117" }] },
-        { op = "negate", args = [{ casilla = "0131" }] },
-        { op = "negate", args = [{ casilla = "0132" }] },
-        { op = "negate", args = [{ casilla = "0146" }] },
-        { op = "negate", args = [{ casilla = "0147" }] },
-        { op = "negate", args = [{ casilla = "0148" }] },
+        { casilla_id = "0102" },
+        { op = "negate", args = [{ casilla_id = "0104" }] },
+        { op = "negate", args = [{ casilla_id = "0107" }] },
+        { op = "negate", args = [{ casilla_id = "0109" }] },
+        { op = "negate", args = [{ casilla_id = "0110" }] },
+        { op = "negate", args = [{ casilla_id = "0111" }] },
+        { op = "negate", args = [{ casilla_id = "0112" }] },
+        { op = "negate", args = [{ casilla_id = "0113" }] },
+        { op = "negate", args = [{ casilla_id = "0114" }] },
+        { op = "negate", args = [{ casilla_id = "0115" }] },
+        { op = "negate", args = [{ casilla_id = "0116" }] },
+        { op = "negate", args = [{ casilla_id = "0117" }] },
+        { op = "negate", args = [{ casilla_id = "0131" }] },
+        { op = "negate", args = [{ casilla_id = "0132" }] },
+        { op = "negate", args = [{ casilla_id = "0146" }] },
+        { op = "negate", args = [{ casilla_id = "0147" }] },
+        { op = "negate", args = [{ casilla_id = "0148" }] },
     ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]

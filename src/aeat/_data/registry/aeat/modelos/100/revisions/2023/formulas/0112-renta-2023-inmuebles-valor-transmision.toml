@@ -1,9 +1,9 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-inmuebles-valor-transmision"
-target = "1826"
+target_casilla_id = "1826"
 expression = { op = "subtract", args = [
-    { casilla = "1911" },
-    { casilla = "1912" },
+    { casilla_id = "1911" },
+    { casilla_id = "1912" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

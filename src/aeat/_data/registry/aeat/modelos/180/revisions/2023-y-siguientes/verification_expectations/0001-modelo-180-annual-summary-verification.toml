@@ -1,6 +1,6 @@
 [[revisions.2023-y-siguientes.verification_expectations]]
 id = "modelo-180-annual-summary-verification"
-computed_casillas = ["decl.total-perceptores", "decl.base-total", "decl.retenciones-total"]
+computed_casilla_ids = ["decl.total-perceptores", "decl.base-total", "decl.retenciones-total"]
 tolerance = "0.01"
 rounding = "money-2"
 min_coverage = "1"

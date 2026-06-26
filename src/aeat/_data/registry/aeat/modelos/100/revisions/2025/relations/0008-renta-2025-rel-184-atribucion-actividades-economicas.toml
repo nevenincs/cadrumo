@@ -4,7 +4,7 @@ kind = "cross_model_output"
 dependency_role = "factual_evidence"
 source_modelo = "184"
 source_revision_selector = { year = 2025 }
-source_output = "tipo2.renta-atribuible-importe"
+source_casilla_id = "tipo2.renta-atribuible-importe"
 target_binding = "renta-2025-modelo-184-atribucion-actividades-economicas"
 period_alignment = { source_periods = "annual_summary", target_period = "0A" }
 source_periods = ["0A"]

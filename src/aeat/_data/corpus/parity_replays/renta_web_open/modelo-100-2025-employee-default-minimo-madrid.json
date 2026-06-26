@@ -15,13 +15,13 @@
     "Mínimo personal y familiar. Parte estatal": "5.550,00",
     "Resultado de la declaración": "0,00"
   },
-  "expected_by_casilla": {
+  "expected_by_casilla_id": {
     "0610": "0.00",
     "0520": "5956.65",
     "0519": "5550.00",
     "0670": "0.00"
   },
-  "observed_by_casilla": {
+  "observed_by_casilla_id": {
     "0610": "0,00",
     "0520": "5.956,65",
     "0519": "5.550,00",

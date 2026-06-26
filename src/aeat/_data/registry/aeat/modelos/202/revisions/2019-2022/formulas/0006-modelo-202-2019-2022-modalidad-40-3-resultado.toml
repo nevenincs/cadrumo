@@ -1,6 +1,6 @@
 [[revisions.2019-2022.formulas]]
 id = "modelo-202-2019-2022-modalidad-40-3-resultado"
-target = "32"
+target_casilla_id = "32"
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]
@@ -8,14 +8,14 @@ expression = { op = "subtract", args = [
     { op = "subtract", args = [
         { op = "percent", args = [
             { op = "subtract", args = [
-                { op = "subtract", args = [{ casilla = "18" }, { casilla = "27" }] },
-                { casilla = "28" },
+                { op = "subtract", args = [{ casilla_id = "18" }, { casilla_id = "27" }] },
+                { casilla_id = "28" },
             ] },
-            { casilla = "29" },
+            { casilla_id = "29" },
         ] },
-        { casilla = "30" },
+        { casilla_id = "30" },
     ] },
-    { casilla = "31" },
+    { casilla_id = "31" },
 ] }
 
 [[revisions.2019-2022.formulas.source_citations]]

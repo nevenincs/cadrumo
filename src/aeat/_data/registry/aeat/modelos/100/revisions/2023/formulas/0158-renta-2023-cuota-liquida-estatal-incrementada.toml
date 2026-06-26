@@ -1,14 +1,14 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-cuota-liquida-estatal-incrementada"
-target = "0585"
+target_casilla_id = "0585"
 expression = { op = "sum", args = [
-    { casilla = "0570" },
-    { casilla = "0568" },
-    { casilla = "0582" },
-    { casilla = "0572" },
-    { casilla = "0573" },
-    { casilla = "0574" },
-    { casilla = "0576" },
+    { casilla_id = "0570" },
+    { casilla_id = "0568" },
+    { casilla_id = "0582" },
+    { casilla_id = "0572" },
+    { casilla_id = "0573" },
+    { casilla_id = "0574" },
+    { casilla_id = "0576" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-67"]

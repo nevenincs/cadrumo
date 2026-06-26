@@ -6,10 +6,10 @@
 
 [[revisions."2025".formulas]]
 id = "m210-cuota-integra-2025"
-target = "cuota_integra"
+target_casilla_id = "cuota_integra"
 expression = { op = "multiply", args = [
-    { casilla = "base_imponible" },
-    { casilla = "tipo_gravamen" },
+    { casilla_id = "base_imponible" },
+    { casilla_id = "tipo_gravamen" },
 ] }
 rounding = "money-2"
 legal_refs = [

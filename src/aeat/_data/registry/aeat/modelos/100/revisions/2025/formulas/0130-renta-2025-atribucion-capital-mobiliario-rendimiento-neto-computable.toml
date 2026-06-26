@@ -1,10 +1,10 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-atribucion-capital-mobiliario-rendimiento-neto-computable"
-target = "1568"
+target_casilla_id = "1568"
 expression = { op = "sum", args = [
-    { casilla = "1565" },
-    { op = "negate", args = [{ casilla = "1566" }] },
-    { op = "negate", args = [{ casilla = "1567" }] },
+    { casilla_id = "1565" },
+    { op = "negate", args = [{ casilla_id = "1566" }] },
+    { op = "negate", args = [{ casilla_id = "1567" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]

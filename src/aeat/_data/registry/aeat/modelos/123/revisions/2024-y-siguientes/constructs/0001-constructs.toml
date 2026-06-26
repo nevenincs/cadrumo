@@ -8,7 +8,7 @@ source_refs = [
     "aeat-modelo-123-procedure",
     "boe-modelo-123-2024-form",
 ]
-casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14"]
+casilla_ids = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14"]
 formulas = [
     "modelo-123-total-rentas",
     "modelo-123-total-base",

@@ -1,6 +1,6 @@
 [[revisions."2024-y-siguientes".verification_expectations]]
 id = "modelo-190-annual-summary-verification"
-computed_casillas = ["decl.total-percepciones", "decl.percepciones-total", "decl.retenciones-total"]
+computed_casilla_ids = ["decl.total-percepciones", "decl.percepciones-total", "decl.retenciones-total"]
 tolerance = "0.00"
 rounding = "money-2"
 min_coverage = "1.0"

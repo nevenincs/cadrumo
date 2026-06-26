@@ -10,9 +10,9 @@
 
 [[revisions."2021-y-siguientes".formulas]]
 id = "patrimonio-reduccion-limite-80-suelo"
-target = "patrimonio.reduccion-limite-80"
+target_casilla_id = "patrimonio.reduccion-limite-80"
 expression = { op = "percent", args = [
-    { casilla = "patrimonio.cuota-integra" },
+    { casilla_id = "patrimonio.cuota-integra" },
     { literal = "80" },
 ] }
 rounding = "money-2"

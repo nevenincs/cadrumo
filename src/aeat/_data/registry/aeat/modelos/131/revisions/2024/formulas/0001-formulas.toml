@@ -1,7 +1,7 @@
 [[revisions."2024".formulas]]
 id = "modelo-131-2024-pago-fraccionado-sin-datos-base"
-target = "04"
-expression = { op = "percent", args = [{ casilla = "03" }, { parameter = "irpf.objective_no_base_fractional_payment_rate" }] }
+target_casilla_id = "04"
+expression = { op = "percent", args = [{ casilla_id = "03" }, { parameter = "irpf.objective_no_base_fractional_payment_rate" }] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]
@@ -10,8 +10,8 @@ source_ref = "aeat-modelo-131-instructions"
 required_text = ["Casilla 04", "2 por 100", "casilla 03"]
 [[revisions."2024".formulas]]
 id = "modelo-131-2024-pago-fraccionado-agrario"
-target = "06"
-expression = { op = "percent", args = [{ casilla = "05" }, { parameter = "irpf.objective_agriculture_fractional_payment_rate" }] }
+target_casilla_id = "06"
+expression = { op = "percent", args = [{ casilla_id = "05" }, { parameter = "irpf.objective_agriculture_fractional_payment_rate" }] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]
@@ -20,8 +20,8 @@ source_ref = "aeat-modelo-131-instructions"
 required_text = ["Casilla 06", "2 por 100", "casilla 05"]
 [[revisions."2024".formulas]]
 id = "modelo-131-2024-suma-pagos-previos"
-target = "07"
-expression = { op = "add", args = [{ casilla = "02" }, { casilla = "04" }, { casilla = "06" }] }
+target_casilla_id = "07"
+expression = { op = "add", args = [{ casilla_id = "02" }, { casilla_id = "04" }, { casilla_id = "06" }] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]
@@ -30,10 +30,10 @@ source_ref = "aeat-modelo-131-instructions"
 required_text = ["Casilla 07", "sumar", "casillas 02, 04 y 06"]
 [[revisions."2024".formulas]]
 id = "modelo-131-2024-diferencia"
-target = "10"
+target_casilla_id = "10"
 expression = { op = "subtract", args = [
-    { op = "subtract", args = [{ casilla = "07" }, { casilla = "08" }] },
-    { casilla = "09" },
+    { op = "subtract", args = [{ casilla_id = "07" }, { casilla_id = "08" }] },
+    { casilla_id = "09" },
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
@@ -43,10 +43,10 @@ source_ref = "aeat-modelo-131-instructions"
 required_text = ["Casilla 10", "Casilla 07", "Casilla 08", "Casilla 09"]
 [[revisions."2024".formulas]]
 id = "modelo-131-2024-total"
-target = "13"
+target_casilla_id = "13"
 expression = { op = "subtract", args = [
-    { op = "subtract", args = [{ casilla = "10" }, { casilla = "11" }] },
-    { casilla = "12" },
+    { op = "subtract", args = [{ casilla_id = "10" }, { casilla_id = "11" }] },
+    { casilla_id = "12" },
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
@@ -56,8 +56,8 @@ source_ref = "aeat-modelo-131-instructions"
 required_text = ["Casilla 13", "casilla 10", "casillas 11 y 12"]
 [[revisions."2024".formulas]]
 id = "modelo-131-2024-resultado"
-target = "15"
-expression = { op = "subtract", args = [{ casilla = "13" }, { casilla = "14" }] }
+target_casilla_id = "15"
+expression = { op = "subtract", args = [{ casilla_id = "13" }, { casilla_id = "14" }] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]

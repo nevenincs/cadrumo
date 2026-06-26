@@ -15,61 +15,81 @@ legal_refs = ["ley-35-2006:art-99", "orden-eha-672-2007:art-1", "rd-439-2007:art
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "01"
 number = "01"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "02"
 number = "02"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "03"
 number = "03"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "04"
 number = "04"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "05"
 number = "05"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "06"
 number = "06"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "07"
 number = "07"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "08"
 number = "08"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "09"
 number = "09"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "10"
 number = "10"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "11"
 number = "11"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "12"
 number = "12"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "13"
 number = "13"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "14"
 number = "14"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "15"
 number = "15"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "16"
 number = "16"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "17"
 number = "17"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "18"
 number = "18"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "19"
 number = "19"
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "saldo-negativo-fin-periodo"
 number = "saldo-negativo-fin-periodo"

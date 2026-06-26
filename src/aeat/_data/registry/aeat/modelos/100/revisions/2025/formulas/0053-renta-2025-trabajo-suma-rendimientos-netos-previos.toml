@@ -1,8 +1,8 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-trabajo-suma-rendimientos-netos-previos"
-target = "0018"
+target_casilla_id = "0018"
 expression = { op = "copy", args = [
-    { casilla = "0017" },
+    { casilla_id = "0017" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-19", "orden-hac-277-2026:art-3"]

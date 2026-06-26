@@ -1,8 +1,8 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-atribucion-actividades-economicas-suma"
-target = "1605"
+target_casilla_id = "1605"
 expression = { op = "sum", args = [
-    { casilla = "1583" },
+    { casilla_id = "1583" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-2", "orden-hap-2250-2015:art-3", "orden-hap-2250-2015:art-4", "orden-hap-2250-2015:art-5"]

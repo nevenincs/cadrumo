@@ -8,8 +8,8 @@
 
 [[revisions."2025".formulas]]
 id = "m210-base-imponible-2025"
-target = "base_imponible"
-expression = { op = "copy", args = [{ casilla = "rendimientos_integros" }] }
+target_casilla_id = "base_imponible"
+expression = { op = "copy", args = [{ casilla_id = "rendimientos_integros" }] }
 rounding = "money-2"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]

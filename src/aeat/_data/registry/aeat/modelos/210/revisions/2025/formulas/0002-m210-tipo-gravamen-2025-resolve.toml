@@ -15,9 +15,9 @@
 
 [[revisions."2025".formulas]]
 id = "m210-tipo-gravamen-2025-resolve"
-target = "tipo_gravamen"
+target_casilla_id = "tipo_gravamen"
 expression = { op = "m210_resolve_rate", args = [
-    { casilla = "tipo_renta" },
+    { casilla_id = "tipo_renta" },
     { parameter = "m210-tipo-gravamen-2025" },
     { parameter = "m210-convenio-rates" },
     { binding = "m210-2025-profile-country-of-fiscal-residence" },

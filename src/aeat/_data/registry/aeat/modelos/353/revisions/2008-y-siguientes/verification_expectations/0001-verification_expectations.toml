@@ -1,6 +1,6 @@
 [[revisions."2008-y-siguientes".verification_expectations]]
 id = "modelo-353-iva-chain-verification"
-computed_casillas = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general"]
+computed_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general"]
 tolerance = "0.00"
 rounding = "money-2"
 min_coverage = "1"

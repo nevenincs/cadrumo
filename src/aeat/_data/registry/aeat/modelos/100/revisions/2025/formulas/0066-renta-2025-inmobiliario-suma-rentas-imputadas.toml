@@ -1,8 +1,8 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-inmobiliario-suma-rentas-imputadas"
-target = "0155"
+target_casilla_id = "0155"
 expression = { op = "copy", args = [
-    { casilla = "0089" },
+    { casilla_id = "0089" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-22", "orden-hac-277-2026:art-3"]

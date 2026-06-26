@@ -1,15 +1,15 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-perdidas-patrimoniales-base-ahorro-suma"
-target = "0423"
+target_casilla_id = "0423"
 expression = { op = "sum", args = [
-    { casilla = "1609" },
-    { casilla = "0325" },
-    { casilla = "0340" },
-    { casilla = "1813" },
-    { casilla = "1844" },
-    { casilla = "0355" },
-    { casilla = "0385" },
-    { casilla = "0396" },
+    { casilla_id = "1609" },
+    { casilla_id = "0325" },
+    { casilla_id = "0340" },
+    { casilla_id = "1813" },
+    { casilla_id = "1844" },
+    { casilla_id = "0355" },
+    { casilla_id = "0385" },
+    { casilla_id = "0396" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-49"]

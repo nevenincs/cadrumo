@@ -1,7 +1,7 @@
 [[revisions."2019-y-siguientes".verification_expectations]]
 id = "modelo-115-calculation-verification"
-computed_casillas = ["03", "05"]
-reconciliation_totals = { ingresar = "05" }
+computed_casilla_ids = ["03", "05"]
+reconciliation_total_casilla_ids = { ingresar = "05" }
 tolerance = "0.01"
 rounding = "money-2"
 min_coverage = "1"

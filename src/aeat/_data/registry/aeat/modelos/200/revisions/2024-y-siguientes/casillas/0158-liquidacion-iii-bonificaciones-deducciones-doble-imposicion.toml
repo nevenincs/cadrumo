@@ -1,6 +1,7 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00573"
 number = "00573"
+segmento = "DP200014"
 label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Deducciones por doble imposición - D.I. internacional generada y aplicada en el ejercicio actual(art. 31 y 32 LIS) [00573]"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
 data_type = "money"

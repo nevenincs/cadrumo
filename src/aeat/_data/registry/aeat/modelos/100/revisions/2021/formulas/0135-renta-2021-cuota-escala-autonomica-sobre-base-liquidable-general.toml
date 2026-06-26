@@ -1,8 +1,8 @@
 [[revisions."2021".formulas]]
 id = "renta-2021-cuota-escala-autonomica-sobre-base-liquidable-general"
-target = "0529"
+target_casilla_id = "0529"
 expression = { op = "lookup_bracket_by_ccaa", args = [
-    { casilla = "0505" },
+    { casilla_id = "0505" },
     { binding = "renta-2021-profile-tax-residence-ccaa" },
     { dispatch_table_entries = [
         { key = "andalucia", parameter = "renta-2021-escala-autonomica-andalucia-base-general" },

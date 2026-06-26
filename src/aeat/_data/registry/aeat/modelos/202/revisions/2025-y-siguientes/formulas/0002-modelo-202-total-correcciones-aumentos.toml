@@ -1,7 +1,7 @@
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-202-total-correcciones-aumentos"
-target = "38"
-expression = { op = "add", args = [{ op = "add", args = [{ casilla = "05" }, { casilla = "67" }] }, { casilla = "07" }] }
+target_casilla_id = "38"
+expression = { op = "add", args = [{ op = "add", args = [{ casilla_id = "05" }, { casilla_id = "67" }] }, { casilla_id = "07" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]

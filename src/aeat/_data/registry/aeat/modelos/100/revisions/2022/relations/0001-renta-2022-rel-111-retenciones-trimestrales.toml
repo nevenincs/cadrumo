@@ -4,7 +4,7 @@ kind = "cross_model_output"
 dependency_role = "factual_evidence"
 source_modelo = "111"
 source_revision_selector = { year = 2022 }
-source_output = "28"
+source_casilla_id = "28"
 target_binding = "renta-2022-modelo-111-retenciones-periodicas"
 period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]

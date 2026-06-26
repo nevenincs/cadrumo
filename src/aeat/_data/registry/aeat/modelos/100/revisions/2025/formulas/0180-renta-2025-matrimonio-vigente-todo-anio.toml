@@ -1,6 +1,6 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-matrimonio-vigente-todo-anio"
-target = "0245"
+target_casilla_id = "0245"
 # Casilla 0245: Si el matrimonio ha estado vigente durante todo el año 2025.
 # 1 when marriage_date predates 2025 (marriage_full_year = 1); 0 otherwise.
 # When no marriage_date is recorded the binding is absent and the engine

@@ -16,7 +16,7 @@
 # Devengado régimen-general cuotas.
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-dr303-09-projection"
-target = "09"
+target_casilla_id = "09"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -26,11 +26,11 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
-casilla = "iva.repercutido.general"
+casilla_id = "iva.repercutido.general"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-dr303-06-projection"
-target = "06"
+target_casilla_id = "06"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -40,11 +40,11 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
-casilla = "iva.repercutido.reducido"
+casilla_id = "iva.repercutido.reducido"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-dr303-03-projection"
-target = "03"
+target_casilla_id = "03"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -54,14 +54,14 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
-casilla = "iva.repercutido.super-reducido"
+casilla_id = "iva.repercutido.super-reducido"
 
 # Devengado inversión del sujeto pasivo cuotas. Box 11 projects the AIC
 # devengado parity casilla (oficial casillas 10/11), NOT the netted
 # iva.autorepercutido.intracomunitaria.
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-dr303-11-projection"
-target = "11"
+target_casilla_id = "11"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -71,11 +71,11 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
-casilla = "iva.autorepercutido.intracomunitaria.devengado"
+casilla_id = "iva.autorepercutido.intracomunitaria.devengado"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-dr303-13-projection"
-target = "13"
+target_casilla_id = "13"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -85,12 +85,12 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
-casilla = "iva.autorepercutido.interior.devengado"
+casilla_id = "iva.autorepercutido.interior.devengado"
 
 # Devengado total.
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-dr303-27-projection"
-target = "27"
+target_casilla_id = "27"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -100,12 +100,12 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
-casilla = "iva.cuota-devengada-total"
+casilla_id = "iva.cuota-devengada-total"
 
 # Deducible cuotas.
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-dr303-29-projection"
-target = "29"
+target_casilla_id = "29"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -115,11 +115,11 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
-casilla = "iva.soportado.interiores"
+casilla_id = "iva.soportado.interiores"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-dr303-33-projection"
-target = "33"
+target_casilla_id = "33"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -129,7 +129,7 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
-casilla = "iva.soportado.importaciones"
+casilla_id = "iva.soportado.importaciones"
 
 # Box 37 projects the AIC deducible leg (label-exact: "adquisiciones
 # intracomunitarias"), pinned in the P01 reference map. The sibling interior
@@ -137,7 +137,7 @@ casilla = "iva.soportado.importaciones"
 # NOT box 37's source — box 37's label is the AIC leg.
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-dr303-37-projection"
-target = "37"
+target_casilla_id = "37"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -147,12 +147,12 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
-casilla = "iva.autorepercutido.intracomunitaria.deducible"
+casilla_id = "iva.autorepercutido.intracomunitaria.deducible"
 
 # Deducible total.
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-dr303-45-projection"
-target = "45"
+target_casilla_id = "45"
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
@@ -162,4 +162,4 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.formulas.expression]
-casilla = "iva.cuota-deducible-total"
+casilla_id = "iva.cuota-deducible-total"

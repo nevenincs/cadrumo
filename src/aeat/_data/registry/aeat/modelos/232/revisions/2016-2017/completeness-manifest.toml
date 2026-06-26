@@ -8,7 +8,7 @@
 # casillas belong to foreign modelos and are excluded.
 #
 # Derived off-load-path from the modelo's calculation surface, keyed
-# on each closure casilla's own registry (segmento, number) identity.
+# on each closure casilla's canonical casilla_id plus reviewed segment/number metadata.
 # A casilla the revision declares but the manifest does not list (a
 # pure data-entry field that feeds no calculation) is not a gate
 # failure. The off-load-path drift re-verification test re-derives
@@ -20,10 +20,13 @@ legal_refs = ["ley-27-2014:art-19", "ley-58-2003:art-93", "orden-hfp-816-2017:ar
 source_refs = ["aeat-dr-232-2016"]
 
 [[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.cnae"
 number = "2.devengo.cnae"
 
 [[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.ejercicio"
 number = "2.devengo.ejercicio"
 
 [[revisions."2016-2017".completeness_manifest.casillas]]
+casilla_id = "decl.tipo-ejercicio"
 number = "2.devengo.tipo"

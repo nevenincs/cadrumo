@@ -1,8 +1,8 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-otras-ganancias-base-ahorro-suma"
-target = "0390"
+target_casilla_id = "0390"
 expression = { op = "sum", args = [
-    { casilla = "0389" },
+    { casilla_id = "0389" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-49"]

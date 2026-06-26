@@ -15,7 +15,7 @@ source_refs = [
     "aeat-modelo-721-procedure",
     "boe-modelo-721-2023-form",
 ]
-casillas = [
+casilla_ids = [
     "ejercicio",
     "tipo-declaracion",
     "custodio.nombre-razon-social",

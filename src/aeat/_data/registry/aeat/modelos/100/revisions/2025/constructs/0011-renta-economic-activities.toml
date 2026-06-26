@@ -42,7 +42,7 @@ parameters = [
     "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
     "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
 ]
-casillas = [
+casilla_ids = [
     "0171",
     "0172",
     "0173",

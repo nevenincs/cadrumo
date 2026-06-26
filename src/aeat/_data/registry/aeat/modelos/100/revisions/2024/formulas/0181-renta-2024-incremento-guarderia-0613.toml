@@ -1,6 +1,6 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-incremento-guarderia-0613"
-target = "0613"
+target_casilla_id = "0613"
 # Art. 81 bis LIRPF: incremento deducción maternidad por gastos de guardería.
 # Cap = min(gastos_reales_pagados, hijos_menores_3 × 1.000 €, cotizaciones_SS_madre_2024).
 expression = { op = "min", args = [

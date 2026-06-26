@@ -1,8 +1,8 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-atribucion-capital-mobiliario-ahorro-suma"
-target = "1602"
+target_casilla_id = "1602"
 expression = { op = "sum", args = [
-    { casilla = "1569" },
+    { casilla_id = "1569" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]

@@ -1,16 +1,16 @@
 [[revisions."2021".formulas]]
 id = "renta-2021-estimacion-directa-ingresos-computables"
-target = "0180"
+target_casilla_id = "0180"
 expression = { op = "sum", args = [
-        { casilla = "0171" },
-        { casilla = "0172" },
-        { casilla = "0173" },
-        { casilla = "0174" },
-        { casilla = "0175" },
-        { casilla = "0176" },
-        { casilla = "0177" },
-        { casilla = "0178" },
-        { casilla = "0179" },
+        { casilla_id = "0171" },
+        { casilla_id = "0172" },
+        { casilla_id = "0173" },
+        { casilla_id = "0174" },
+        { casilla_id = "0175" },
+        { casilla_id = "0176" },
+        { casilla_id = "0177" },
+        { casilla_id = "0178" },
+        { casilla_id = "0179" },
     ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]

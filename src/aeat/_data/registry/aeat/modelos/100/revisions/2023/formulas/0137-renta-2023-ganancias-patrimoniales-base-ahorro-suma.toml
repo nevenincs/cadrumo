@@ -1,19 +1,19 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-ganancias-patrimoniales-base-ahorro-suma"
-target = "0422"
+target_casilla_id = "0422"
 expression = { op = "sum", args = [
-    { casilla = "1608" },
-    { casilla = "0324" },
-    { casilla = "0339" },
-    { casilla = "0354" },
-    { casilla = "1814" },
-    { casilla = "1845" },
-    { casilla = "1846" },
-    { casilla = "0386" },
-    { casilla = "0387" },
-    { casilla = "0390" },
-    { casilla = "0393" },
-    { casilla = "0412" },
+    { casilla_id = "1608" },
+    { casilla_id = "0324" },
+    { casilla_id = "0339" },
+    { casilla_id = "0354" },
+    { casilla_id = "1814" },
+    { casilla_id = "1845" },
+    { casilla_id = "1846" },
+    { casilla_id = "0386" },
+    { casilla_id = "0387" },
+    { casilla_id = "0390" },
+    { casilla_id = "0393" },
+    { casilla_id = "0412" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-49"]

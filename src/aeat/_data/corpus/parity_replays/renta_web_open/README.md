@@ -16,18 +16,32 @@ output for the same synthetic inputs.
 
 ```json
 {
+  "expected": {
+    "Resultado de la declaración": "0.00",
+    "Cuota diferencial": "0.00"
+  },
   "observed": {
-    "0432": "30000.00",
-    "0435": "25000.00",
-    "0500": "30000.00"
+    "Resultado de la declaración": "0,00",
+    "Cuota diferencial": "0,00"
+  },
+  "expected_by_casilla_id": {
+    "0610": "0.00",
+    "0670": "0.00"
+  },
+  "observed_by_casilla_id": {
+    "0610": "0,00",
+    "0670": "0,00"
   },
   "raw_evidence_locator": "playwright-traces/renta-web-open-2026-05-08-...zip"
 }
 ```
 
-`observed` is a flat string→string mapping of casilla number to
-the value the simulator returned. `raw_evidence_locator` points to
-the captured Playwright trace evidence.
+`expected_by_casilla_id` and `observed_by_casilla_id` are the canonical
+registry-keyed comparison surfaces. Their keys must be current `casilla.id`
+values from the Modelo 100 registry revision under test. `expected` and
+`observed` are legacy human-readable audit evidence only; they are not matcher
+inputs and must never replace the canonical casilla-id blocks.
+`raw_evidence_locator` points to the captured Playwright trace evidence.
 
 ## Capture procedure
 
