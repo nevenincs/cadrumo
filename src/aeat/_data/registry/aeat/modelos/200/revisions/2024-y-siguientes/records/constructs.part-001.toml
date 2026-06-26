@@ -3,7 +3,7 @@ id = "modelo-200-2024-foundation"
 title = "Modelo 200 IS annual settlement foundation (2024 y siguientes) — pagos fraccionados deduction chain"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-124", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "ley-27-2014:art-12", "rd-634-2015:art-3", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26", "ley-27-2014:art-105", "ley-31-2022:art-39"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024", "boe-modelo-200-2025-form"]
-casillas = [
+casilla_ids = [
     "DP200014B:00592",
     "DP200014B:00599",
     "00001",

@@ -1,7 +1,7 @@
 [[revisions."2024".bindings]]
 id = "renta-2024-modelo-130-pagos-fraccionados"
 source = "relation_prefill"
-selector = { source_modelo = "130", source_output = "19" }
+selector = { source_modelo = "130", source_casilla_id = "19" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]

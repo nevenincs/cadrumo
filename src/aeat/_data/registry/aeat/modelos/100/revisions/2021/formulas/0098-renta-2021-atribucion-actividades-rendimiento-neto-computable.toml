@@ -1,13 +1,13 @@
 [[revisions."2021".formulas]]
 id = "renta-2021-atribucion-actividades-rendimiento-neto-computable"
-target = "1583"
+target_casilla_id = "1583"
 expression = { op = "sum", args = [
-    { casilla = "1577" },
-    { op = "negate", args = [{ casilla = "1578" }] },
-    { op = "negate", args = [{ casilla = "1579" }] },
-    { op = "negate", args = [{ casilla = "1580" }] },
-    { op = "negate", args = [{ casilla = "1581" }] },
-    { op = "negate", args = [{ casilla = "1582" }] },
+    { casilla_id = "1577" },
+    { op = "negate", args = [{ casilla_id = "1578" }] },
+    { op = "negate", args = [{ casilla_id = "1579" }] },
+    { op = "negate", args = [{ casilla_id = "1580" }] },
+    { op = "negate", args = [{ casilla_id = "1581" }] },
+    { op = "negate", args = [{ casilla_id = "1582" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]

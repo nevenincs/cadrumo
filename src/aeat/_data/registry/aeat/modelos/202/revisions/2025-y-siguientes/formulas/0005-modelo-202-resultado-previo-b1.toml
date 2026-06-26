@@ -1,7 +1,7 @@
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-202-resultado-previo-b1"
-target = "18"
-expression = { op = "subtract", args = [{ op = "subtract", args = [{ op = "add", args = [{ op = "add", args = [{ op = "percent", args = [{ casilla = "16" }, { casilla = "17" }] }, { casilla = "47" }] }, { casilla = "48" }] }, { casilla = "40" }] }, { casilla = "49" }] }
+target_casilla_id = "18"
+expression = { op = "subtract", args = [{ op = "subtract", args = [{ op = "add", args = [{ op = "add", args = [{ op = "percent", args = [{ casilla_id = "16" }, { casilla_id = "17" }] }, { casilla_id = "47" }] }, { casilla_id = "48" }] }, { casilla_id = "40" }] }, { casilla_id = "49" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]

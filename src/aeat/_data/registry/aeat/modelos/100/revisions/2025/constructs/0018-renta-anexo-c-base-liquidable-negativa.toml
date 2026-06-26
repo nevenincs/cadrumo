@@ -33,7 +33,7 @@ source_refs = [
     "aeat-modelo-100-procedure",
     "aeat-renta-web-open",
 ]
-casillas = [
+casilla_ids = [
     "1388",
     "1389",
     "1390",

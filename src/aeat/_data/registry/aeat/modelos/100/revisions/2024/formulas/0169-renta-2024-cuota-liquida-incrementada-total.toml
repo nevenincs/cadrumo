@@ -1,9 +1,9 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-cuota-liquida-incrementada-total"
-target = "0587"
+target_casilla_id = "0587"
 expression = { op = "sum", args = [
-    { casilla = "0585" },
-    { casilla = "0586" },
+    { casilla_id = "0585" },
+    { casilla_id = "0586" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-79"]

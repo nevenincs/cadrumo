@@ -1,7 +1,7 @@
 [[revisions."2020".bindings]]
 id = "renta-2020-modelo-100-estimacion-directa-es-normal"
 source = "manual_input"
-selector = { casilla = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
+selector = { casilla_id = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
 aggregation = { op = "copy" }
 typed_enum = "EstimacionDirectaModalidad"
 legal_refs = ["ley-35-2006:art-30"]

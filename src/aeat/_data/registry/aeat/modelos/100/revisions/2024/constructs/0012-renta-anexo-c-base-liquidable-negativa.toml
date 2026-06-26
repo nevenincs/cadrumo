@@ -9,7 +9,7 @@ source_refs = [
     "aeat-modelo-100-procedure",
     "boe-modelo-100-2024-form",
 ]
-casillas = [
+casilla_ids = [
     "1388",
 ]
 bindings = [

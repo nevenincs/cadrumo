@@ -8,7 +8,7 @@ source_refs = [
     "aeat-modelo-115-guia-censal",
     "aeat-modelo-115-180-folleto-actividades",
 ]
-casillas = ["01", "02", "03", "04", "05"]
+casilla_ids = ["01", "02", "03", "04", "05"]
 formulas = ["modelo-115-retenciones", "modelo-115-resultado-ingresar"]
 parameters = ["irpf.urban_rental_withholding_rate"]
 export_layouts = ["modelo-115-fichero-boe"]

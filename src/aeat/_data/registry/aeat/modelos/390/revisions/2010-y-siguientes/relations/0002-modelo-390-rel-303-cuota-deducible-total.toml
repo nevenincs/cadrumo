@@ -4,7 +4,7 @@ kind = "cross_model_output"
 dependency_role = "factual_evidence"
 source_modelo = "303"
 source_revision_selector = { year_from = 2009 }
-source_output = "iva.cuota-deducible-total"
+source_casilla_id = "iva.cuota-deducible-total"
 target_binding = "modelo-390-prev-303-cuota-deducible-total"
 period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]

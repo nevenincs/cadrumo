@@ -43,7 +43,7 @@ required = false
 # Per AEAT M130 Instrucciones, Casilla 03 = Casilla 01 - Casilla 02
 # (ingresos - gastos = rendimiento neto). The binding
 # `modelo-130-actividad-economica-rendimiento-neto-cumulative` populates
-# casilla 01 (target_casilla = "01") from the renta-ledger; casilla 03
+# casilla 01 (target_casilla_id = "01") from the renta-ledger; casilla 03
 # is the simple subtraction of the two operator-visible casillas.
 # Computed (not bound) so manual-filing operators who supply casillas
 # 01 and 02 directly get casilla 03 without requiring an active

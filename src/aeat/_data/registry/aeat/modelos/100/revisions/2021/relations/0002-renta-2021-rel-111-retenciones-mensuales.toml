@@ -4,7 +4,7 @@ kind = "cross_model_output"
 dependency_role = "factual_evidence"
 source_modelo = "111"
 source_revision_selector = { year = 2021 }
-source_output = "28"
+source_casilla_id = "28"
 target_binding = "renta-2021-modelo-111-retenciones-periodicas"
 period_alignment = { source_periods = "months", target_period = "0A" }
 source_periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]

@@ -1,24 +1,24 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-resultado-declaracion"
-target = "0670"
+target_casilla_id = "0670"
 expression = { op = "sum", args = [
-    { casilla = "0610" },
-    { op = "negate", args = [{ casilla = "0611" }] },
-    { casilla = "0612" },
-    { op = "negate", args = [{ casilla = "0613" }] },
-    { op = "negate", args = [{ casilla = "0623" }] },
-    { casilla = "0624" },
-    { op = "negate", args = [{ casilla = "0636" }] },
-    { casilla = "0637" },
-    { op = "negate", args = [{ casilla = "0248" }] },
-    { casilla = "0249" },
-    { op = "negate", args = [{ casilla = "0660" }] },
-    { casilla = "0661" },
-    { op = "negate", args = [{ casilla = "0662" }] },
-    { casilla = "0663" },
-    { casilla = "0664" },
-    { casilla = "0666" },
-    { casilla = "0669" },
+    { casilla_id = "0610" },
+    { op = "negate", args = [{ casilla_id = "0611" }] },
+    { casilla_id = "0612" },
+    { op = "negate", args = [{ casilla_id = "0613" }] },
+    { op = "negate", args = [{ casilla_id = "0623" }] },
+    { casilla_id = "0624" },
+    { op = "negate", args = [{ casilla_id = "0636" }] },
+    { casilla_id = "0637" },
+    { op = "negate", args = [{ casilla_id = "0248" }] },
+    { casilla_id = "0249" },
+    { op = "negate", args = [{ casilla_id = "0660" }] },
+    { casilla_id = "0661" },
+    { op = "negate", args = [{ casilla_id = "0662" }] },
+    { casilla_id = "0663" },
+    { casilla_id = "0664" },
+    { casilla_id = "0666" },
+    { casilla_id = "0669" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-103", "ley-35-2006:art-99"]

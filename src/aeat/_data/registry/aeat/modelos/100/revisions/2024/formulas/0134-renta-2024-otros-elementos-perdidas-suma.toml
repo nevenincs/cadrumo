@@ -1,8 +1,8 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-otros-elementos-perdidas-suma"
-target = "0385"
+target_casilla_id = "0385"
 expression = { op = "sum", args = [
-    { casilla = "1639" },
+    { casilla_id = "1639" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

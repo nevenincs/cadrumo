@@ -1,10 +1,10 @@
 [[revisions."2021".formulas]]
 id = "renta-2021-premios-importe-computable"
-target = "0296"
+target_casilla_id = "0296"
 expression = { op = "sum", args = [
-    { casilla = "0293" },
-    { casilla = "0294" },
-    { op = "negate", args = [{ casilla = "0295" }] },
+    { casilla_id = "0293" },
+    { casilla_id = "0294" },
+    { op = "negate", args = [{ casilla_id = "0295" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

@@ -19,7 +19,7 @@ legal_refs = [
     "ley-19-1991:art-31",
 ]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-form", "boe-modelo-714-layout"]
-casillas = [
+casilla_ids = [
     "decl.ejercicio",
     "decl.periodo",
     "patrimonio.base-imponible",

@@ -1,9 +1,9 @@
 [[revisions."2022".formulas]]
 id = "renta-2022-base-imponible-general"
-target = "0435"
+target_casilla_id = "0435"
 expression = { op = "subtract", args = [
-    { casilla = "0432" },
-    { casilla = "0433" },
+    { casilla_id = "0432" },
+    { casilla_id = "0433" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-50"]

@@ -1,19 +1,19 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-cuota-liquida-autonomica"
-target = "0571"
+target_casilla_id = "0571"
 expression = { op = "sum", args = [
-    { casilla = "0546" },
-    { op = "negate", args = [{ casilla = "0548" }] },
-    { op = "negate", args = [{ casilla = "0551" }] },
-    { op = "negate", args = [{ casilla = "0553" }] },
-    { op = "negate", args = [{ casilla = "0555" }] },
-    { op = "negate", args = [{ casilla = "0557" }] },
-    { op = "negate", args = [{ casilla = "0559" }] },
-    { op = "negate", args = [{ casilla = "0561" }] },
-    { op = "negate", args = [{ casilla = "0563" }] },
-    { op = "negate", args = [{ casilla = "0564" }] },
-    { op = "negate", args = [{ casilla = "0566" }] },
-    { op = "negate", args = [{ casilla = "0584" }] },
+    { casilla_id = "0546" },
+    { op = "negate", args = [{ casilla_id = "0548" }] },
+    { op = "negate", args = [{ casilla_id = "0551" }] },
+    { op = "negate", args = [{ casilla_id = "0553" }] },
+    { op = "negate", args = [{ casilla_id = "0555" }] },
+    { op = "negate", args = [{ casilla_id = "0557" }] },
+    { op = "negate", args = [{ casilla_id = "0559" }] },
+    { op = "negate", args = [{ casilla_id = "0561" }] },
+    { op = "negate", args = [{ casilla_id = "0563" }] },
+    { op = "negate", args = [{ casilla_id = "0564" }] },
+    { op = "negate", args = [{ casilla_id = "0566" }] },
+    { op = "negate", args = [{ casilla_id = "0584" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

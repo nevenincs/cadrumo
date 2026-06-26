@@ -1,15 +1,15 @@
 [[revisions."2020".formulas]]
 id = "renta-2020-otras-ganancias-no-transmision-suma"
-target = "0306"
+target_casilla_id = "0306"
 expression = { op = "sum", args = [
-    { casilla = "0299" },
-    { casilla = "0300" },
-    { casilla = "0301" },
-    { casilla = "0302" },
-    { casilla = "0303" },
-    { casilla = "0304" },
-    { casilla = "0356" },
-    { casilla = "0362" },
+    { casilla_id = "0299" },
+    { casilla_id = "0300" },
+    { casilla_id = "0301" },
+    { casilla_id = "0302" },
+    { casilla_id = "0303" },
+    { casilla_id = "0304" },
+    { casilla_id = "0356" },
+    { casilla_id = "0362" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]

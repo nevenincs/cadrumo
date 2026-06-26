@@ -12,7 +12,7 @@
 [[revisions."2008-y-siguientes".bindings]]
 id = "modelo-353-prev-322-cuota-devengada-total"
 source = "previous_filing"
-selector = { source_modelo = "322", filing_year_delta = 0, source_period_offset_from_target = 0, grouping = "per_grupo_member", source_casillas = ["iva.cuota-devengada-total"] }
+selector = { source_modelo = "322", filing_year_delta = 0, source_period_offset_from_target = 0, grouping = "per_grupo_member", source_casilla_ids = ["iva.cuota-devengada-total"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
@@ -24,7 +24,7 @@ required_text = ["modelo 353"]
 [[revisions."2008-y-siguientes".bindings]]
 id = "modelo-353-prev-322-cuota-deducible-total"
 source = "previous_filing"
-selector = { source_modelo = "322", filing_year_delta = 0, source_period_offset_from_target = 0, grouping = "per_grupo_member", source_casillas = ["iva.cuota-deducible-total"] }
+selector = { source_modelo = "322", filing_year_delta = 0, source_period_offset_from_target = 0, grouping = "per_grupo_member", source_casilla_ids = ["iva.cuota-deducible-total"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
@@ -36,7 +36,7 @@ required_text = ["modelo 353"]
 [[revisions."2008-y-siguientes".bindings]]
 id = "modelo-353-prev-322-resultado-regimen-general"
 source = "previous_filing"
-selector = { source_modelo = "322", filing_year_delta = 0, source_period_offset_from_target = 0, grouping = "per_grupo_member", source_casillas = ["iva.resultado-regimen-general"] }
+selector = { source_modelo = "322", filing_year_delta = 0, source_period_offset_from_target = 0, grouping = "per_grupo_member", source_casilla_ids = ["iva.resultado-regimen-general"] }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]

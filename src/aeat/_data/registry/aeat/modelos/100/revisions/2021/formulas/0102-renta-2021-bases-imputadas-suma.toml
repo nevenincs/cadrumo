@@ -1,8 +1,8 @@
 [[revisions."2021".formulas]]
 id = "renta-2021-bases-imputadas-suma"
-target = "0265"
+target_casilla_id = "0265"
 expression = { op = "sum", args = [
-    { casilla = "0259" },
+    { casilla_id = "0259" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-85"]

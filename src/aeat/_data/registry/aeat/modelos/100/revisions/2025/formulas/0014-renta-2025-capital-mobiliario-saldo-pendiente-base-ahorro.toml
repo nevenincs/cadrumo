@@ -1,9 +1,9 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-capital-mobiliario-saldo-pendiente-base-ahorro"
-target = "1283"
+target_casilla_id = "1283"
 expression = { op = "subtract", args = [
-    { casilla = "0430" },
-    { casilla = "0436" },
+    { casilla_id = "0430" },
+    { casilla_id = "0436" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-49"]

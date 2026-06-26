@@ -1,8 +1,8 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-capital-mobiliario-ahorro-suma-rendimientos-reducidos"
-target = "0041"
+target_casilla_id = "0041"
 expression = { op = "copy", args = [
-    { casilla = "0040" },
+    { casilla_id = "0040" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "orden-hac-277-2026:art-3"]

@@ -1,6 +1,6 @@
 [[revisions."2019-y-siguientes".verification_expectations]]
 id = "modelo-130-calculation-verification"
-computed_casillas = ["03", "04", "07", "09", "11", "12", "13", "14", "17", "19"]
+computed_casilla_ids = ["03", "04", "07", "09", "11", "12", "13", "14", "17", "19"]
 tolerance = "0.01"
 rounding = "money-2"
 min_coverage = "1"

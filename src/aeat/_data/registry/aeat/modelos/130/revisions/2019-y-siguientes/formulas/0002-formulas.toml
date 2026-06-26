@@ -1,6 +1,6 @@
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-minoracion-rendimientos-netos"
-target = "13"
+target_casilla_id = "13"
 expression = { op = "if_then_else", args = [
     { op = "less_equal", args = [
         { binding = "irpf.previous_year_economic_activity_net_income" },

@@ -1,8 +1,8 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-retenciones-arrendamientos-urbanos"
-target = "0598"
+target_casilla_id = "0598"
 expression = { op = "copy", args = [
-    { casilla = "0153" },
+    { casilla_id = "0153" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]

@@ -1,8 +1,8 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-cuota-escala-autonomica-sobre-minimo-personal-familiar"
-target = "0531"
+target_casilla_id = "0531"
 expression = { op = "lookup_bracket_by_ccaa", args = [
-    { casilla = "0521" },
+    { casilla_id = "0521" },
     { binding = "renta-2023-profile-tax-residence-ccaa" },
     { dispatch_table_entries = [
         { key = "andalucia", parameter = "renta-2023-escala-autonomica-andalucia-base-general" },

@@ -1,11 +1,11 @@
 [[revisions."2008-y-siguientes".formulas]]
 id = "modelo-322-iva-cuota-devengada-total"
-target = "iva.cuota-devengada-total"
+target_casilla_id = "iva.cuota-devengada-total"
 expression = { op = "add", args = [
-    { casilla = "iva.repercutido.general" },
-    { casilla = "iva.repercutido.reducido" },
-    { casilla = "iva.repercutido.super-reducido" },
-    { casilla = "iva.autorepercutido.intracomunitaria" },
+    { casilla_id = "iva.repercutido.general" },
+    { casilla_id = "iva.repercutido.reducido" },
+    { casilla_id = "iva.repercutido.super-reducido" },
+    { casilla_id = "iva.autorepercutido.intracomunitaria" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
@@ -17,10 +17,10 @@ required_text = ["modelo 322"]
 
 [[revisions."2008-y-siguientes".formulas]]
 id = "modelo-322-iva-cuota-deducible-total"
-target = "iva.cuota-deducible-total"
+target_casilla_id = "iva.cuota-deducible-total"
 expression = { op = "add", args = [
-    { casilla = "iva.soportado.interiores" },
-    { casilla = "iva.autorepercutido.intracomunitaria" },
+    { casilla_id = "iva.soportado.interiores" },
+    { casilla_id = "iva.autorepercutido.intracomunitaria" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
@@ -32,10 +32,10 @@ required_text = ["modelo 322"]
 
 [[revisions."2008-y-siguientes".formulas]]
 id = "modelo-322-iva-resultado-regimen-general"
-target = "iva.resultado-regimen-general"
+target_casilla_id = "iva.resultado-regimen-general"
 expression = { op = "subtract", args = [
-    { casilla = "iva.cuota-devengada-total" },
-    { casilla = "iva.cuota-deducible-total" },
+    { casilla_id = "iva.cuota-devengada-total" },
+    { casilla_id = "iva.cuota-deducible-total" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]

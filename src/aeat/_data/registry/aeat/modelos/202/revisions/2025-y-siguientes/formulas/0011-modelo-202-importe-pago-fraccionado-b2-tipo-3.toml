@@ -1,7 +1,7 @@
 [[revisions.2025-y-siguientes.formulas]]
 id = "modelo-202-importe-pago-fraccionado-b2-tipo-3"
-target = "63"
-expression = { op = "percent", args = [{ casilla = "61" }, { casilla = "62" }] }
+target_casilla_id = "63"
+expression = { op = "percent", args = [{ casilla_id = "61" }, { casilla_id = "62" }] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]

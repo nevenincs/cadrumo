@@ -1,6 +1,6 @@
 [[revisions."2010-y-siguientes".verification_expectations]]
 id = "modelo-390-iva-annual-chain-verification"
-computed_casillas = ["iva.anual.cuota-devengada-total", "iva.anual.cuota-deducible-total", "iva.anual.resultado-regimen-general"]
+computed_casilla_ids = ["iva.anual.cuota-devengada-total", "iva.anual.cuota-deducible-total", "iva.anual.resultado-regimen-general"]
 tolerance = "0.00"
 rounding = "money-2"
 min_coverage = "1"

@@ -1,8 +1,8 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-cuota-escala-estatal-sobre-base-liquidable-general"
-target = "0528"
+target_casilla_id = "0528"
 expression = { op = "lookup_bracket", args = [
-    { casilla = "0505" },
+    { casilla_id = "0505" },
     { parameter = "renta-2024-escala-estatal-base-general" },
 ] }
 rounding = "money-2"

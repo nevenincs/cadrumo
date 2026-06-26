@@ -12,7 +12,7 @@ source_refs = [
     "aeat-dr-840",
     "boe-modelo-840-2003-form",
 ]
-casillas = ["decl.tipo-declaracion", "decl.ejercicio"]
+casilla_ids = ["decl.tipo-declaracion", "decl.ejercicio"]
 workbook_parity_refs = ["modelo-840-dr"]
 live_cross_references = [
     "modelo-840-static-documentation",

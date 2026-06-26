@@ -1,9 +1,9 @@
 [[revisions."2024".formulas]]
 id = "renta-2024-cuota-diferencial"
-target = "0610"
+target_casilla_id = "0610"
 expression = { op = "subtract", args = [
-    { casilla = "0595" },
-    { casilla = "0609" },
+    { casilla_id = "0595" },
+    { casilla_id = "0609" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-79"]

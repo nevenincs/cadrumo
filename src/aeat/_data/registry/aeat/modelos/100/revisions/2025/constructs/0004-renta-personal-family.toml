@@ -39,7 +39,7 @@ bindings = [
     "renta-2025-family-ascendant-cohabiting-descendant-count",
     "renta-2025-family-ascendant-death-date",
 ]
-casillas = [
+casilla_ids = [
     "DPNIF_D",
     "DP_APENOM_D",
     "ZCCAD",

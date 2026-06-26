@@ -1,7 +1,7 @@
 [[revisions."2020".formulas]]
 id = "renta-2020-deduccion-ceuta-melilla-autonomica-50-porciento"
-target = "0561"
-expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
+target_casilla_id = "0561"
+expression = { op = "percent", args = [{ casilla_id = "0727" }, { literal = "50" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-77"]
 source_refs = ["lirpf-cuota-chain-authority"]

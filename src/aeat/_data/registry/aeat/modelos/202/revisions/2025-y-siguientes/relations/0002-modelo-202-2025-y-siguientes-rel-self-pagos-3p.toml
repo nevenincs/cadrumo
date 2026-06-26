@@ -4,7 +4,7 @@ kind = "previous_period"
 dependency_role = "direct_calculation"
 source_modelo = "202"
 source_revision_selector = { filing_year_delta = 0 }
-source_output = "34"
+source_casilla_id = "34"
 target_binding = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
 period_alignment = { mode = "prior_pagos_cumulative" }
 source_periods = ["1P", "2P"]

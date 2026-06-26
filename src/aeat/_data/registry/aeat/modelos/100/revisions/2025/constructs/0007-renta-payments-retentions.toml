@@ -48,7 +48,7 @@ bindings = [
     "renta-2025-modelo-190-retenciones-anuales",
     "renta-2025-modelo-193-retenciones-anuales",
 ]
-casillas = [
+casilla_ids = [
     "0153",
     "0596",
     "0597",

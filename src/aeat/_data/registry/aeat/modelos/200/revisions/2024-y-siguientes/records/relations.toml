@@ -4,7 +4,7 @@ kind = "cross_model_output"
 dependency_role = "instalment_to_final_settlement"
 source_modelo = "202"
 source_revision_selector = { filing_year_delta = 0 }
-source_output = "34"
+source_casilla_id = "34"
 target_binding = "modelo-200-2024-pagos-fraccionados-anuales"
 period_alignment = { target_period = "0A", source_period_kind = "quarterly" }
 source_periods = ["1P", "2P", "3P"]
@@ -24,7 +24,7 @@ kind = "cross_model_output"
 dependency_role = "instalment_to_final_settlement"
 source_modelo = "202"
 source_revision_selector = { filing_year_delta = 0 }
-source_output = "03"
+source_casilla_id = "03"
 target_binding = "modelo-200-2024-pagos-fraccionados-anuales-40-2"
 period_alignment = { target_period = "0A", source_period_kind = "quarterly" }
 source_periods = ["1P", "2P", "3P"]
@@ -45,7 +45,7 @@ kind = "cross_model_output"
 dependency_role = "factual_evidence"
 source_modelo = "200"
 source_revision_selector = { filing_year_delta = -1 }
-source_output = "00671"
+source_casilla_id = "00671"
 target_binding = "modelo-200-2024-bin-pendiente-ejercicios-anteriores"
 period_alignment = { source_period = "0A", target_period = "0A", filing_year_delta = -1 }
 source_periods = ["0A"]
@@ -67,7 +67,7 @@ kind = "cross_model_output"
 dependency_role = "factual_evidence"
 source_modelo = "200"
 source_revision_selector = { filing_year_delta = -1 }
-source_output = "01498"
+source_casilla_id = "01498"
 target_binding = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores"
 period_alignment = { source_period = "0A", target_period = "0A", filing_year_delta = -1 }
 source_periods = ["0A"]
@@ -82,7 +82,7 @@ kind = "cross_model_output"
 dependency_role = "factual_evidence"
 source_modelo = "200"
 source_revision_selector = { filing_year_delta = -1 }
-source_output = "01499"
+source_casilla_id = "01499"
 target_binding = "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores"
 period_alignment = { source_period = "0A", target_period = "0A", filing_year_delta = -1 }
 source_periods = ["0A"]

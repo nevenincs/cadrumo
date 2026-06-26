@@ -4,7 +4,7 @@ kind = "cross_model_output"
 dependency_role = "factual_evidence"
 source_modelo = "180"
 source_revision_selector = { year = 2025 }
-source_output = "decl.retenciones-total"
+source_casilla_id = "decl.retenciones-total"
 target_binding = "renta-2025-modelo-180-retenciones-anuales"
 period_alignment = { source_periods = "annual_summary", target_period = "0A" }
 source_periods = ["0A"]

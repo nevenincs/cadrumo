@@ -1,6 +1,7 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01344"
 number = "01344"
+segmento = "DP200014"
 label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Deducciones por doble imposición - D.I. interna de períodos anteriores aplicada en el ejercicio (DT 23.1 LIS) [01344]"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
 data_type = "money"

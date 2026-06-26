@@ -1,8 +1,8 @@
 [[revisions."2020".formulas]]
 id = "renta-2020-cuota-escala-autonomica-sobre-minimo-personal-familiar-base-ahorro"
-target = "0539"
+target_casilla_id = "0539"
 expression = { op = "lookup_bracket", args = [
-    { casilla = "0524" },
+    { casilla_id = "0524" },
     { parameter = "renta-2020-escala-autonomica-base-ahorro" },
 ] }
 rounding = "money-2"

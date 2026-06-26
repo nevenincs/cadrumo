@@ -1,8 +1,8 @@
 [[revisions."2023".formulas]]
 id = "renta-2023-transparencia-fiscal-suma"
-target = "0270"
+target_casilla_id = "0270"
 expression = { op = "sum", args = [
-    { casilla = "0269" },
+    { casilla_id = "0269" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-50"]

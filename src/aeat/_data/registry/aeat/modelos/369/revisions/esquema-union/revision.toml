@@ -27,7 +27,7 @@ source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".verification_expectations]]
 id = "modelo-369-union-iva-chain-verification"
-computed_casillas = ["iva.union.cuota-total"]
+computed_casilla_ids = ["iva.union.cuota-total"]
 tolerance = "0.00"
 rounding = "money-2"
 min_coverage = "1"
@@ -158,11 +158,11 @@ source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".formulas]]
 id = "modelo-369-union-cuota-total"
-target = "iva.union.cuota-total"
+target_casilla_id = "iva.union.cuota-total"
 expression = { op = "add", args = [
-    { casilla = "iva.union.de.services-cuota" },
-    { casilla = "iva.union.fr.services-cuota" },
-    { casilla = "iva.union.de.goods-distance-cuota" },
+    { casilla_id = "iva.union.de.services-cuota" },
+    { casilla_id = "iva.union.fr.services-cuota" },
+    { casilla_id = "iva.union.de.goods-distance-cuota" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-163-unvicies", "orden-hac-610-2021:art-1"]
@@ -423,7 +423,7 @@ source_refs = [
     "aeat-modelo-369-procedure",
     "boe-modelo-369-2021-form",
 ]
-casillas = [
+casilla_ids = [
     "decl.ejercicio",
     "decl.periodo",
     "iva.union.de.services-cuota",

@@ -1,12 +1,12 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-deduccion-donativos-autonomica-50-porciento"
-target = "0553"
+target_casilla_id = "0553"
 expression = { op = "percent", args = [
     { op = "sum", args = [
-        { casilla = "0722" },
-        { casilla = "0723" },
-        { casilla = "0724" },
-        { casilla = "0725" },
+        { casilla_id = "0722" },
+        { casilla_id = "0723" },
+        { casilla_id = "0724" },
+        { casilla_id = "0725" },
     ] },
     { literal = "50" },
 ] }

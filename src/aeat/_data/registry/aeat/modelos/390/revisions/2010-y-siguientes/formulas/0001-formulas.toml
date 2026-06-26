@@ -1,11 +1,11 @@
 [[revisions."2010-y-siguientes".formulas]]
 id = "modelo-390-iva-anual-cuota-devengada-total"
-target = "iva.anual.cuota-devengada-total"
+target_casilla_id = "iva.anual.cuota-devengada-total"
 expression = { op = "add", args = [
-    { casilla = "iva.anual.repercutido.general" },
-    { casilla = "iva.anual.repercutido.reducido" },
-    { casilla = "iva.anual.repercutido.super-reducido" },
-    { casilla = "iva.anual.autorepercutido.intracomunitaria" },
+    { casilla_id = "iva.anual.repercutido.general" },
+    { casilla_id = "iva.anual.repercutido.reducido" },
+    { casilla_id = "iva.anual.repercutido.super-reducido" },
+    { casilla_id = "iva.anual.autorepercutido.intracomunitaria" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
@@ -17,11 +17,11 @@ required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".formulas]]
 id = "modelo-390-iva-anual-cuota-deducible-total"
-target = "iva.anual.cuota-deducible-total"
+target_casilla_id = "iva.anual.cuota-deducible-total"
 expression = { op = "add", args = [
-    { casilla = "iva.anual.soportado.interiores" },
-    { casilla = "iva.anual.soportado.importaciones" },
-    { casilla = "iva.anual.autorepercutido.intracomunitaria" },
+    { casilla_id = "iva.anual.soportado.interiores" },
+    { casilla_id = "iva.anual.soportado.importaciones" },
+    { casilla_id = "iva.anual.autorepercutido.intracomunitaria" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
@@ -33,10 +33,10 @@ required_text = ["modelo 390"]
 
 [[revisions."2010-y-siguientes".formulas]]
 id = "modelo-390-iva-anual-resultado-regimen-general"
-target = "iva.anual.resultado-regimen-general"
+target_casilla_id = "iva.anual.resultado-regimen-general"
 expression = { op = "subtract", args = [
-    { casilla = "iva.anual.cuota-devengada-total" },
-    { casilla = "iva.anual.cuota-deducible-total" },
+    { casilla_id = "iva.anual.cuota-devengada-total" },
+    { casilla_id = "iva.anual.cuota-deducible-total" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]

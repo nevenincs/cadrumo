@@ -8,7 +8,7 @@
 # casillas belong to foreign modelos and are excluded.
 #
 # Derived off-load-path from the modelo's calculation surface, keyed
-# on each closure casilla's own registry (segmento, number) identity.
+# on each closure casilla's canonical casilla_id plus reviewed segment/number metadata.
 # A casilla the revision declares but the manifest does not list (a
 # pure data-entry field that feeds no calculation) is not a gate
 # failure. The off-load-path drift re-verification test re-derives
@@ -20,22 +20,29 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", 
 source_refs = ["aeat-modelo-210-procedure"]
 
 [[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "base_imponible"
 number = "base_imponible"
 
 [[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "cuota_diferencial"
 number = "cuota_diferencial"
 
 [[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "cuota_integra"
 number = "cuota_integra"
 
 [[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "rendimientos_integros"
 number = "rendimientos_integros"
 
 [[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "retencion_practicada"
 number = "retencion_practicada"
 
 [[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "tipo_gravamen"
 number = "tipo_gravamen"
 
 [[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "tipo_renta"
 number = "tipo_renta"

@@ -1,6 +1,6 @@
 [[revisions."2015-y-siguientes".verification_expectations]]
 id = "modelo-184-informative-summary-verification"
-computed_casillas = [
+computed_casilla_ids = [
     "decl.ejercicio",
     "decl.tipo-declaracion",
     "tipo2.clave",

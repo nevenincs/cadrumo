@@ -1,11 +1,11 @@
 [[revisions."2020".formulas]]
 id = "renta-2020-minimo-personal-y-familiar-estatal"
-target = "0519"
+target_casilla_id = "0519"
 expression = { op = "sum", args = [
-    { casilla = "0511" },
-    { casilla = "0513" },
-    { casilla = "0515" },
-    { casilla = "0517" },
+    { casilla_id = "0511" },
+    { casilla_id = "0513" },
+    { casilla_id = "0515" },
+    { casilla_id = "0517" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-56"]

@@ -1,12 +1,12 @@
 [[revisions."2021".formulas]]
 id = "renta-2021-cuota-liquida-autonomica-incrementada"
-target = "0586"
+target_casilla_id = "0586"
 expression = { op = "sum", args = [
-    { casilla = "0571" },
-    { casilla = "0577" },
-    { casilla = "0578" },
-    { casilla = "0579" },
-    { casilla = "0581" },
+    { casilla_id = "0571" },
+    { casilla_id = "0577" },
+    { casilla_id = "0578" },
+    { casilla_id = "0579" },
+    { casilla_id = "0581" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77"]

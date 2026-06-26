@@ -1,12 +1,12 @@
 [[revisions.2019-2022.formulas]]
 id = "modelo-202-2019-2022-cantidad-a-ingresar"
-target = "34"
+target_casilla_id = "34"
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]
 expression = { op = "max", args = [
-    { casilla = "32" },
-    { casilla = "33" },
+    { casilla_id = "32" },
+    { casilla_id = "33" },
 ] }
 
 [[revisions.2019-2022.formulas.source_citations]]

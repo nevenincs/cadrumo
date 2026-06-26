@@ -1,6 +1,6 @@
 [[revisions."2004-y-siguientes".verification_expectations]]
 id = "modelo-309-iva-chain-verification"
-computed_casillas = ["iva.cuota-no-periodica-total"]
+computed_casilla_ids = ["iva.cuota-no-periodica-total"]
 tolerance = "0.00"
 rounding = "money-2"
 min_coverage = "1"

@@ -1,7 +1,7 @@
 [[revisions."2025".formulas]]
 id = "renta-2025-deduccion-economia-social-passthrough"
-target = "0879"
-expression = { op = "copy", args = [{ casilla = "1179" }] }
+target_casilla_id = "0879"
+expression = { op = "copy", args = [{ casilla_id = "1179" }] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["lirpf-cuota-chain-authority"]

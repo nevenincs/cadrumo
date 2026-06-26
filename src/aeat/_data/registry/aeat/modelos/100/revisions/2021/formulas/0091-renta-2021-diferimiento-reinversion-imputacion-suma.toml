@@ -1,8 +1,8 @@
 [[revisions."2021".formulas]]
 id = "renta-2021-diferimiento-reinversion-imputacion-suma"
-target = "0400"
+target_casilla_id = "0400"
 expression = { op = "sum", args = [
-    { casilla = "0399" },
+    { casilla_id = "0399" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
