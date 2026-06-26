@@ -20,11 +20,17 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import resolve_ledger_renta_gasto_aggregation_binding_values
+from ....domain.calculations.registry import (
+    CasillaId,
+    InputKind,
+    resolve_ledger_renta_gasto_aggregation_binding_values,
+    validated_casilla_id,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -39,6 +45,7 @@ from ....domain.transactions import (
 from ....tests.secure_sql import isolated_runtime_profile
 from .._renta_gasto_ledger import (
     RentaGastoLedgerAggregationIssueReason,
+    RentaGastoObservation,
     aggregate_renta_gasto_ledger,
     aggregate_renta_gasto_ledger_from_repositories,
 )
@@ -52,6 +59,16 @@ def _period(year: int, code: str) -> Period:
 
 _Q1_2024 = _period(2024, "1T")
 _Q2_2024 = _period(2024, "2T")
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"renta gasto aggregation fixture key {value!r} is not a CasillaId") from exc
+
+
+_M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
 
 
 @pytest.fixture
@@ -147,7 +164,10 @@ def test_q1_window_sums_jan_mar_expense_bases() -> None:
     assert apr.transaction_id in issue_ids
     assert result.issues[0].reason == RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD
     # Expected casilla 02 derived from the in-window input bases (apr excluded).
-    assert result.casilla_aggregation.casilla_values["02"] == sum((jan_base, feb_base, mar_base), Decimal("0"))
+    assert result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == sum(
+        (jan_base, feb_base, mar_base),
+        Decimal("0"),
+    )
 
 
 def test_q2_window_accumulates_jan_through_jun() -> None:
@@ -163,7 +183,10 @@ def test_q2_window_accumulates_jan_through_jun() -> None:
     observation_ids = {o.transaction_id for o in result.observations}
     assert observation_ids == {jan.transaction_id, may.transaction_id}
     # jul is outside the Q2 cumulative window; expected = the two in-window bases.
-    assert result.casilla_aggregation.casilla_values["02"] == sum((jan_base, may_base), Decimal("0"))
+    assert result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == sum(
+        (jan_base, may_base),
+        Decimal("0"),
+    )
 
 
 def test_taxable_base_preferred_over_gross_for_deductible_amount() -> None:
@@ -184,7 +207,7 @@ def test_taxable_base_preferred_over_gross_for_deductible_amount() -> None:
     result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
     assert result.observations[0].deductible_amount == Decimal("100.00")
-    assert result.casilla_aggregation.casilla_values["02"] == Decimal("100.00")
+    assert result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == Decimal("100.00")
 
 
 def test_untagged_expense_is_surfaced_not_gross_folded() -> None:
@@ -203,7 +226,7 @@ def test_untagged_expense_is_surfaced_not_gross_folded() -> None:
     assert result.observations == ()
     assert len(result.issues) == 1
     assert result.issues[0].reason == RentaGastoLedgerAggregationIssueReason.MISSING_TAXABLE_BASE
-    assert "02" not in result.casilla_aggregation.casilla_values
+    assert _M130_GASTOS_CASILLA not in result.casilla_aggregation.casilla_values
 
 
 def test_mixed_classification_applies_business_pct() -> None:
@@ -236,7 +259,7 @@ def test_personal_outgoing_is_skipped_silently() -> None:
 
     assert result.observations == ()
     assert result.issues == ()
-    assert "02" not in result.casilla_aggregation.casilla_values
+    assert _M130_GASTOS_CASILLA not in result.casilla_aggregation.casilla_values
 
 
 def test_incoming_transaction_is_not_a_gasto() -> None:
@@ -280,8 +303,28 @@ def test_all_observations_target_casilla_02() -> None:
 
     result = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
-    assert all(o.target_casilla == "02" for o in result.observations)
+    assert all(o.target_casilla_id == _M130_GASTOS_CASILLA for o in result.observations)
     assert result.casilla_aggregation.modelo == "130"
+
+
+def test_gasto_observation_rejects_legacy_target_casilla_key() -> None:
+    transactions = [
+        _gasto_transaction("tx-legacy-key", value_date=date(2024, 1, 1), taxable_base=Decimal("10.00")),
+    ]
+    result = aggregate_renta_gasto_ledger(
+        TransactionCatalogue.from_transactions(transactions),
+        bucket_id="test",
+        period=_Q1_2024,
+    )
+    payload = result.observations[0].model_dump()
+    payload["target_casilla"] = payload.pop("target_casilla_id")
+
+    with pytest.raises(ValidationError) as exc_info:
+        RentaGastoObservation.model_validate(payload)
+
+    detail = str(exc_info.value)
+    assert "target_casilla_id" in detail
+    assert "target_casilla" in detail
 
 
 # ---------------------------------------------------------------------------
@@ -307,7 +350,10 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
     )
     # Q1 window excludes the May row; expected = the two Q1 input bases.
-    assert result_q1.casilla_aggregation.casilla_values["02"] == sum((q1_a_base, q1_b_base), Decimal("0"))
+    assert result_q1.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == sum(
+        (q1_a_base, q1_b_base),
+        Decimal("0"),
+    )
     assert {o.transaction_id for o in result_q1.observations} == {q1_a.transaction_id, q1_b.transaction_id}
 
     result_q2 = aggregate_renta_gasto_ledger_from_repositories(
@@ -317,7 +363,7 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
     )
     # Q2 cumulative window includes all three input bases.
     expected_q2 = sum((q1_a_base, q1_b_base, q2_base), Decimal("0"))
-    assert result_q2.casilla_aggregation.casilla_values["02"] == expected_q2
+    assert result_q2.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == expected_q2
 
 
 def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_binding() -> None:
@@ -331,8 +377,8 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
     modelo_def = next(item for item in resources().modelos.all() if item.id == "130")
     revision = modelo_def.revisions["2019-y-siguientes"]
 
-    casilla_02 = next(c for c in revision.casillas if c.id == "02")
-    assert casilla_02.input_kind == "bound"
+    casilla_02 = next(c for c in revision.casillas if c.id == _M130_GASTOS_CASILLA)
+    assert casilla_02.input_kind is InputKind.BOUND
     binding = next(b for b in revision.bindings if b.id == casilla_02.binding)
     assert str(binding.source) == "ledger_renta_gasto_aggregation"
 

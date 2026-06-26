@@ -217,7 +217,7 @@ def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
 
     profile_bindings = _profile_bindings()
     for binding in profile_bindings:
-        binding_id = str(binding.id)
+        binding_id = binding.id
         if binding_id == absent:
             continue
         selector = binding.selector

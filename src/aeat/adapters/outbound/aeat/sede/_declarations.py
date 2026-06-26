@@ -1008,7 +1008,7 @@ async def capture_previous_filing_observations(
             observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
             observation = _with_derived_303_compensation_available_observation(observation)
             observed_casillas = {casilla.casilla_id for casilla in observation.casillas}
-            missing = sorted(set(requirement.source_casillas).difference(observed_casillas))
+            missing = sorted(set(requirement.source_casilla_ids).difference(observed_casillas))
             if missing:
                 raise SedeParseError(
                     f"previous-filing requirement {requirement.modelo!r}/"
@@ -1040,15 +1040,15 @@ async def capture_relation_source_observations(
         playwright: Optional pre-started Playwright instance.
         artefact_sink: Optional callable storing each captured artefact.
     """
-    required_outputs: dict[tuple[str, int, str], set[str]] = {}
+    required_source_casilla_ids: dict[tuple[str, int, str], set[str]] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period.registry_token):
         for source_period in requirement.periods:
             key = (requirement.source_modelo, requirement.filing_year, source_period)
-            required_outputs.setdefault(key, set()).add(requirement.source_output)
+            required_source_casilla_ids.setdefault(key, set()).add(requirement.source_casilla_id)
 
     observations: list[FiledDeclaracionObservation] = []
     async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
-        for (modelo, source_year, source_period), source_outputs in sorted(required_outputs.items()):
+        for (modelo, source_year, source_period), source_casilla_ids in sorted(required_source_casilla_ids.items()):
             rows = await register.walk(modelo=modelo, ejercicio=source_year)
             matches = tuple(row for row in rows if row.period.registry_token == source_period)
             declaration = _select_authoritative_declaration(
@@ -1061,7 +1061,7 @@ async def capture_relation_source_observations(
             observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
             observation = _with_derived_303_compensation_available_observation(observation)
             observed_casillas = {casilla.casilla_id for casilla in observation.casillas}
-            missing = sorted(source_outputs.difference(observed_casillas))
+            missing = sorted(source_casilla_ids.difference(observed_casillas))
             if missing:
                 raise SedeParseError(
                     f"relation source requirement {modelo!r}/{source_year}/{source_period!r} "

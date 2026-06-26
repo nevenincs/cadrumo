@@ -24,7 +24,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from ...domain.calculations.registry import ModeloRevision
+from ...domain.calculations.registry import CasillaId, ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic
 
 __all__ = ["collect_official_box_unpopulated_diagnostics"]
@@ -32,7 +32,7 @@ __all__ = ["collect_official_box_unpopulated_diagnostics"]
 
 def collect_official_box_unpopulated_diagnostics(
     revision: ModeloRevision,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return advisories for ADVISORY ``implies_any_nonzero`` predicates that fire.
 

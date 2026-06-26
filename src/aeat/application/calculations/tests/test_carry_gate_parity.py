@@ -19,13 +19,14 @@ Real registry authority, real law-determined revision ids, no mocks.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from decimal import Decimal
 
 import pytest
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    RegistryModeloObservation,
+)
 from .._binding_prefill import _revision_carry_outcome
 from .._cross_period_clean_state import CrossPeriodCleanStateBlocker, _revision_carry_check
 from .._observations_repository import _ObservationEnvelopePayload
@@ -47,12 +48,7 @@ def _law_revision_id(modelo: str = _MODELO, year: int = _YEAR, period: str = _PE
 
 
 def _observation(modelo: str = _MODELO, year: int = _YEAR, period: str = _PERIOD) -> RegistryModeloObservation:
-    return RegistryModeloObservation(
-        modelo=modelo,
-        filing_year=year,
-        period=period,
-        observations=(CasillaObservation(casilla_id="c", value=Decimal("1")),),
-    )
+    return RegistryModeloObservation(modelo=modelo, filing_year=year, period=period)
 
 
 def _payload(stamped_revision_id: str | None, observation: RegistryModeloObservation) -> _ObservationEnvelopePayload:

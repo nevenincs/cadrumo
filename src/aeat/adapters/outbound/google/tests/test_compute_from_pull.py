@@ -15,14 +15,16 @@ the snapshot.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 
 import pytest
 
 from .....core.i18n import tr
 from .....core.resources import resources
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .....domain.calculations.registry._schema import InputKind
-from ....outbound.storage._errors import OutboundStorageConflictError
+from ....outbound.storage._errors import OutboundStorageConflictError, OutboundStorageValidationError
 from .._calc_sheets_pull import (
     BindingEdit,
     MetadataMatchState,
@@ -35,11 +37,23 @@ from .._calc_sheets_pull import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M303_PRINTED_RESULT_ALIAS_CASILLA: CasillaId = validated_casilla_id(
+    "69",
+    surface="_M303_PRINTED_RESULT_ALIAS_CASILLA",
+)
+
 
 def _modelo_130_snapshot():
     from datetime import date
 
     return resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+
+
+def _modelo_303_snapshot():
+    from datetime import date
+
+    return resources().modelos.authority.snapshot("303", filing_year=2025, period="1T", on=date(2025, 4, 1))
 
 
 def _matching_metadata(snapshot) -> PullMetadata:
@@ -68,7 +82,7 @@ def _stale_metadata(snapshot) -> PullMetadata:
     )
 
 
-def _operator_edits_for(snapshot, values: dict[str, Decimal | str | None]) -> tuple[OperatorEdit, ...]:
+def _operator_edits_for(snapshot, values: Mapping[CasillaId, Decimal | str | None]) -> tuple[OperatorEdit, ...]:
     """Build OperatorEdit tuples covering every manual / bound casilla.
 
     `values` is keyed by casilla id; missing casillas get a `None` value
@@ -81,8 +95,8 @@ def _operator_edits_for(snapshot, values: dict[str, Decimal | str | None]) -> tu
             continue
         edits.append(
             OperatorEdit(
-                casilla=casilla.id,
-                casilla_number=casilla.number,
+                casilla_id=casilla.id,
+                display_number=casilla.number,
                 label=casilla.label,
                 value=values.get(casilla.id),
             ),
@@ -128,6 +142,30 @@ def test_compute_from_pull_refuses_stale_workbook() -> None:
     assert raised.value.suggestion == tr("adapters.google.calc_sheets.suggestions.reexport_then_pull")
 
 
+def test_compute_from_pull_refuses_printed_number_operator_edit_alias() -> None:
+    snapshot = _modelo_303_snapshot()
+    pull = PullResult(
+        spreadsheet_id="test-id",
+        operator_edits=(
+            *_operator_edits_for(snapshot, {}),
+            OperatorEdit(
+                casilla_id=_M303_PRINTED_RESULT_ALIAS_CASILLA,
+                display_number="69",
+                label="Printed alias for iva.resultado",
+                value=Decimal("0"),
+            ),
+        ),
+        binding_edits=_binding_edits_for(snapshot),
+        relation_edits=_relation_edits_for(snapshot),
+        metadata=_matching_metadata(snapshot),
+        metadata_match=MetadataMatchState.MATCHES,
+        cells_read=1,
+    )
+
+    with pytest.raises(OutboundStorageValidationError, match=r"canonical input casilla\.id"):
+        compute_from_pull(snapshot, pull)
+
+
 def test_compute_from_pull_refuses_missing_metadata() -> None:
     snapshot = _modelo_130_snapshot()
     pull = PullResult(
@@ -150,7 +188,7 @@ def test_compute_from_pull_refuses_contradictory_matching_metadata_verdict() -> 
     snapshot = _modelo_130_snapshot()
     pull = PullResult(
         spreadsheet_id="test-id",
-        operator_edits=_operator_edits_for(snapshot, {"01": Decimal("100")}),
+        operator_edits=_operator_edits_for(snapshot, {_M130_INGRESOS_CASILLA: Decimal("100")}),
         binding_edits=_binding_edits_for(snapshot),
         relation_edits=_relation_edits_for(snapshot),
         metadata=_stale_metadata(snapshot),
@@ -196,7 +234,7 @@ def test_compute_from_pull_coerces_string_operator_values_to_decimal() -> None:
     snapshot = _modelo_130_snapshot()
     pull = PullResult(
         spreadsheet_id="test-id",
-        operator_edits=_operator_edits_for(snapshot, {"01": "10000.50"}),
+        operator_edits=_operator_edits_for(snapshot, {_M130_INGRESOS_CASILLA: "10000.50"}),
         binding_edits=_binding_edits_for(snapshot),
         relation_edits=_relation_edits_for(snapshot),
         metadata=_matching_metadata(snapshot),
@@ -209,7 +247,7 @@ def test_compute_from_pull_coerces_string_operator_values_to_decimal() -> None:
     assert result.modelo == "130"
     # Casilla 01 ("Ingresos") is a bound casilla fed via operator edits;
     # the string "10000.50" must arrive at the runtime as Decimal("10000.50").
-    casilla_01_obs = next(obs for obs in result.observations if obs.casilla_id == "01")
+    casilla_01_obs = next(obs for obs in result.observations if obs.casilla_id == _M130_INGRESOS_CASILLA)
     assert casilla_01_obs.value == Decimal("10000.50")
 
 
@@ -219,7 +257,7 @@ def test_compute_from_pull_coerces_malformed_string_to_zero() -> None:
     snapshot = _modelo_130_snapshot()
     pull = PullResult(
         spreadsheet_id="test-id",
-        operator_edits=_operator_edits_for(snapshot, {"01": "not-a-number"}),
+        operator_edits=_operator_edits_for(snapshot, {_M130_INGRESOS_CASILLA: "not-a-number"}),
         binding_edits=_binding_edits_for(snapshot),
         relation_edits=_relation_edits_for(snapshot),
         metadata=_matching_metadata(snapshot),
@@ -229,5 +267,5 @@ def test_compute_from_pull_coerces_malformed_string_to_zero() -> None:
 
     result = compute_from_pull(snapshot, pull)
 
-    casilla_01_obs = next(obs for obs in result.observations if obs.casilla_id == "01")
+    casilla_01_obs = next(obs for obs in result.observations if obs.casilla_id == _M130_INGRESOS_CASILLA)
     assert casilla_01_obs.value == Decimal("0")

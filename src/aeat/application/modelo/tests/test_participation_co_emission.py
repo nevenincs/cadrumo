@@ -18,6 +18,7 @@ import pytest
 
 from ....application.ledger._actions_common import _blocking_modelo_references
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -48,6 +49,10 @@ def _hex(seed: str) -> str:
 
 _TX_A = _hex("a")
 _TX_B = _hex("b")
+_IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.base-imponible",
+    surface="_IVA_BASE_IMPONIBLE_CASILLA",
+)
 
 
 def _seed_borrador(
@@ -78,10 +83,10 @@ def _seed_borrador(
     wu_repo.save(upsert_work_unit(wu_repo.load(), work_unit))
 
     source_transaction_ids = (_TX_A, _TX_B)
-    inputs_snapshot = {"iva.base-imponible": "1000.00"}
+    input_values_by_casilla_id = {_IVA_BASE_IMPONIBLE_CASILLA: "1000.00"}
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot=inputs_snapshot,
+        input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides={},
         casilla_values={},
         source_transaction_ids=source_transaction_ids,
@@ -90,7 +95,7 @@ def _seed_borrador(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.BORRADOR,
-        inputs_snapshot=inputs_snapshot,
+        input_values_by_casilla_id=input_values_by_casilla_id,
         source_transaction_ids=source_transaction_ids,
         created_at=_T0,
         updated_at=_T0,

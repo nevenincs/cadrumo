@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
 import typer
+from pydantic import TypeAdapter, ValidationError
 
 from ....adapters.outbound.google import GoogleAuthError
 from ....adapters.outbound.google._active_profile import resolve_active_profile
@@ -33,8 +34,12 @@ from ....core.config import load_settings
 from ....core.decimal import coerce_decimal
 from ....core.i18n import tr
 from ....domain.calculations.registry import (
+    BindingId,
+    CasillaId,
     RegistrySnapshotError,
     RegistryValidationError,
+    RelationId,
+    validated_casilla_id,
 )
 from ....domain.calculations.registry import bundled_authority as _bundled_authority
 from .._common import _emit_envelope
@@ -42,6 +47,7 @@ from .._errors import CliRefusedBoundaryError
 from ._google_errors import _google_refusal
 from ._google_payloads import (
     GoogleSyncCalcExportResult,
+    GoogleSyncCalcPullComputedPayload,
     GoogleSyncCalcPullResult,
     GoogleSyncCalcVerifyDivergencePayload,
     GoogleSyncCalcVerifyResult,
@@ -259,18 +265,53 @@ def google_sync_calc_verify(
         scenario = OperatorInputScenario(scenario_label="empty-defaults")
     else:
         raw = json.loads(scenario_path.read_text(encoding="utf-8"))
+        binding_id_adapter: TypeAdapter[str] = TypeAdapter(BindingId)
+        relation_id_adapter: TypeAdapter[str] = TypeAdapter(RelationId)
 
-        def _to_decimal_map(node: object) -> dict[str, Decimal]:
+        def _decimal_value(value: object) -> Decimal:
+            return coerce_decimal(value) or Decimal("0")
+
+        def _binding_id(value: object) -> BindingId:
+            try:
+                return binding_id_adapter.validate_python(value)
+            except ValidationError as exc:
+                raise RegistryValidationError(f"scenario binding key must be canonical: {value!r}") from exc
+
+        def _relation_id(value: object) -> RelationId:
+            try:
+                return relation_id_adapter.validate_python(value)
+            except ValidationError as exc:
+                raise RegistryValidationError(f"scenario relation key must be canonical: {value!r}") from exc
+
+        def _to_casilla_decimal_map(node: object) -> dict[CasillaId, Decimal]:
             if not isinstance(node, dict):
                 return {}
-            return {str(k): coerce_decimal(v) or Decimal("0") for k, v in node.items()}
+            return {
+                validated_casilla_id(k, surface="google sync calc scenario casilla.id"): _decimal_value(v)
+                for k, v in node.items()
+            }
+
+        def _to_binding_decimal_map(node: object) -> dict[BindingId, Decimal]:
+            if not isinstance(node, dict):
+                return {}
+            return {_binding_id(k): _decimal_value(v) for k, v in node.items()}
+
+        def _to_enum_binding_map(node: object) -> dict[BindingId, str]:
+            if not isinstance(node, dict):
+                return {}
+            return {_binding_id(k): str(v) for k, v in node.items()}
+
+        def _to_relation_decimal_map(node: object) -> dict[RelationId, Decimal]:
+            if not isinstance(node, dict):
+                return {}
+            return {_relation_id(k): _decimal_value(v) for k, v in node.items()}
 
         scenario = OperatorInputScenario(
-            inputs_by_number=_to_decimal_map(raw.get("inputs_by_number")),
-            bindings=_to_decimal_map(raw.get("bindings")),
-            enum_bindings={str(k): str(v) for k, v in (raw.get("enum_bindings") or {}).items()},
-            relation_values=_to_decimal_map(raw.get("relation_values")),
-            expected_by_number=_to_decimal_map(raw.get("expected_by_number")),
+            inputs_by_casilla_id=_to_casilla_decimal_map(raw.get("inputs_by_casilla_id")),
+            bindings=_to_binding_decimal_map(raw.get("bindings")),
+            enum_bindings=_to_enum_binding_map(raw.get("enum_bindings")),
+            relation_values=_to_relation_decimal_map(raw.get("relation_values")),
+            expected_by_casilla_id=_to_casilla_decimal_map(raw.get("expected_by_casilla_id")),
             scenario_label=str(raw.get("scenario_label") or scenario_path.stem),
         )
 
@@ -290,7 +331,7 @@ def google_sync_calc_verify(
         divergence_count=len(report.divergences),
         divergences=[
             GoogleSyncCalcVerifyDivergencePayload(
-                casilla=c.casilla_number,
+                casilla_id=c.casilla_id,
                 label=c.label,
                 local=str(c.local) if c.local is not None else None,
                 sheets=str(c.sheets) if c.sheets is not None else None,
@@ -313,7 +354,7 @@ def google_sync_calc_verify(
         f"divergence_count\t{len(report.divergences)}",
     ]
     for div in report.divergences:
-        lines.append(f"divergence\t{div.casilla_number}\tlocal={div.local}\tsheets={div.sheets}\taeat={div.aeat}")
+        lines.append(f"divergence\t{div.casilla_id}\tlocal={div.local}\tsheets={div.sheets}\taeat={div.aeat}")
     _emit_envelope(ctx, command="config.google.sync.calc.verify", result=verify_result, lines=tuple(lines))
 
 
@@ -379,7 +420,7 @@ def google_sync_calc_pull(
         enabled=assemble_observations,
     )
 
-    computed_casillas = _compute_pull_casillas(
+    computed_casilla_entries = _compute_pull_casillas(
         snapshot=snapshot,
         result=result,
         enabled=compute,
@@ -411,7 +452,7 @@ def google_sync_calc_pull(
         "relation_edits_populated": len(populated_relations),
         "operator_edits": [
             {
-                "casilla": e.casilla_number,
+                "casilla_id": e.casilla_id,
                 "label": e.label,
                 "value": str(e.value) if e.value is not None else None,
             }
@@ -442,7 +483,7 @@ def google_sync_calc_pull(
             }
             for rs in populated_row_sets
         ],
-        "computed": computed_casillas,
+        "computed": computed_casilla_entries,
     }
     lines: list[str] = [
         "operation\tconfig.google.sync.calc.pull",
@@ -464,7 +505,7 @@ def google_sync_calc_pull(
         f"row_set_cells_populated\t{row_set_cells_total}",
     ]
     for e in populated_operator:
-        lines.append(f"casilla\t{e.casilla_number}\t{e.value}\t{e.label}")
+        lines.append(f"casilla_id\t{e.casilla_id}\t{e.value}\t{e.label}")
     for e in populated_bindings:
         lines.append(f"binding\t{e.binding}\t{e.value}")
     for e in populated_relations:
@@ -476,8 +517,8 @@ def google_sync_calc_pull(
         lines.append(
             f"assembled\t{assembled['grouping']}\t{assembled['source_kind']}\t{assembled['observation_count']}",
         )
-    for entry in computed_casillas:
-        lines.append(f"computed\t{entry['casilla_id']}\t{entry['value']}\t{entry['formula_id']}")
+    for entry in computed_casilla_entries:
+        lines.append(f"computed\t{entry.casilla_id}\t{entry.value}\t{entry.formula_id}")
     pull_result = GoogleSyncCalcPullResult.model_validate(payload)
     _emit_envelope(ctx, command="config.google.sync.calc.pull", result=pull_result, lines=tuple(lines))
 
@@ -523,7 +564,7 @@ def _compute_pull_casillas(
     result: PullResult,
     enabled: bool,
     compute_from_pull: Callable[[RegistrySnapshot, PullResult], RegistryCalculationResult],
-) -> list[dict[str, object]]:
+) -> list[GoogleSyncCalcPullComputedPayload]:
     """Compute casillas from the pulled edits, refusing stale workbook stamps."""
     if not enabled:
         return []
@@ -537,13 +578,13 @@ def _compute_pull_casillas(
     except OutboundStorageError as exc:
         raise _google_refusal(exc) from exc
     return [
-        {
-            "casilla_id": entry.target,
-            "value": str(entry.value),
-            "formula_id": entry.formula_id,
-            "legal_refs": list(entry.legal_refs),
-            "source_refs": list(entry.source_refs),
-        }
+        GoogleSyncCalcPullComputedPayload(
+            casilla_id=entry.target_casilla_id,
+            value=str(entry.value),
+            formula_id=entry.formula_id,
+            legal_refs=list(entry.legal_refs),
+            source_refs=list(entry.source_refs),
+        )
         for entry in calc.entries
     ]
 

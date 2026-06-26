@@ -16,6 +16,7 @@ import pytest
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing._repository import ModeloDraftRepository
 from ....domain.filing._schema import (
     ModeloDraft,
@@ -29,13 +30,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _P_Q1 = Period.from_year_and_code(2026, "1T")
 _P_Q2 = Period.from_year_and_code(2026, "2T")
+_DRAFT_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_DRAFT_INPUT_CASILLA")
 
 
 def _make_draft(*, period: Period = _P_Q1, ingresos: int = 12500) -> ModeloDraft:
     now = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     values = (
         ModeloValue(
-            casilla_id="01",
+            casilla_id=_DRAFT_INPUT_CASILLA,
             value=Decimal(ingresos),
             kind=ModeloValueKind.LITERAL,
             source="test input",

@@ -21,10 +21,29 @@ import pytest
 
 from ....core import Period
 from ....core.resources import resources
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....domain.filing import ModeloBuilderError
 from .. import _filing_period_date, build_draft, build_runtime_schema_provider
 from ..testing import ModeloTestProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_PAGOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_PAGOS_PREVIOS_CASILLA")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
+_M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
+_M303_PREVIOUS_COMPENSATION_CASILLA: CasillaId = validated_casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+    surface="_M303_PREVIOUS_COMPENSATION_CASILLA",
+)
+_M303_REGIMEN_GENERAL_RESULT_CASILLA: CasillaId = validated_casilla_id(
+    "iva.resultado-regimen-general",
+    surface="_M303_REGIMEN_GENERAL_RESULT_CASILLA",
+)
 
 
 def _profile() -> ModeloTestProfile:
@@ -48,12 +67,12 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
         period=Period.from_year_and_code(2026, "1T"),
         profile=_profile(),
         inputs={
-            "01": Decimal("10000"),
-            "02": Decimal("4000"),
-            "05": Decimal("250"),
-            "06": Decimal("100"),
-            "08": Decimal("2000"),
-            "10": Decimal("10"),
+            _M130_INGRESOS_CASILLA: Decimal("10000"),
+            _M130_GASTOS_CASILLA: Decimal("4000"),
+            _M130_PAGOS_PREVIOS_CASILLA: Decimal("250"),
+            _M130_RETENCIONES_CASILLA: Decimal("100"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
             # Binding IDs are extracted from the flat inputs dict via
             # _decimal_inputs_for_ids(inputs, decimal_binding_ids).
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
@@ -65,8 +84,8 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
             # violate the smuggled-binding guard; the formula
             # engine materialises it as Decimal("0") via the absent-by-
             # design path with provenance marker on the CasillaObservation.
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         schema_provider=build_runtime_schema_provider(),
     )
@@ -82,6 +101,64 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
     assert draft.snapshot_ref.revision_id == snapshot.revision.id
     assert draft.snapshot_ref.modelo_year == 2026
     assert draft.snapshot_ref.period == "1T"
+
+
+def test_build_draft_rejects_whitespace_padded_casilla_input_key() -> None:
+    """The filing builder must not silently ignore an inexact casilla key."""
+    period = Period.from_year_and_code(2026, "1T")
+
+    with pytest.raises(ModeloBuilderError, match="without leading or trailing whitespace"):
+        build_draft(
+            modelo="130",
+            period=period,
+            profile=_profile(),
+            inputs={
+                " 01": Decimal("10000"),  # pyright: ignore[reportArgumentType]  # negative boundary test
+            },
+            schema_provider=build_runtime_schema_provider(modelos=("130",), filing_year=2026, period=period),
+        )
+
+
+def test_build_draft_rejects_printed_number_alias_for_semantic_casilla_id() -> None:
+    """A printed number must not be accepted as a filing input casilla alias."""
+    period = Period.from_year_and_code(2026, "1T")
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
+    casilla = next(c for c in snapshot.revision.casillas if c.id == _M303_PREVIOUS_COMPENSATION_CASILLA)
+    assert casilla.number != casilla.id
+
+    with pytest.raises(ModeloBuilderError, match="casilla metadata aliases are not accepted") as exc_info:
+        build_draft(
+            modelo="303",
+            period=period,
+            profile=_profile(),
+            inputs={
+                casilla.number: Decimal("100.00"),
+            },
+            schema_provider=build_runtime_schema_provider(modelos=("303",), filing_year=2026, period=period),
+        )
+
+    assert "iva.compensacion-pendiente-periodos-anteriores" in str(exc_info.value)
+
+
+def test_build_draft_rejects_export_ref_alias_for_semantic_casilla_id() -> None:
+    """An export field reference must not be accepted as a filing input casilla alias."""
+    period = Period.from_year_and_code(2026, "1T")
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
+    casilla = next(c for c in snapshot.revision.casillas if c.id == _M303_REGIMEN_GENERAL_RESULT_CASILLA)
+    export_ref = next(ref for ref in casilla.export_refs if ref != casilla.id)
+
+    with pytest.raises(ModeloBuilderError, match="casilla metadata aliases are not accepted") as exc_info:
+        build_draft(
+            modelo="303",
+            period=period,
+            profile=_profile(),
+            inputs={
+                export_ref: Decimal("100.00"),
+            },
+            schema_provider=build_runtime_schema_provider(modelos=("303",), filing_year=2026, period=period),
+        )
+
+    assert _M303_REGIMEN_GENERAL_RESULT_CASILLA in str(exc_info.value)
 
 
 def test_typed_extended_and_event_periods_resolve_filing_date_context() -> None:

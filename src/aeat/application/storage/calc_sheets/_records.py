@@ -197,7 +197,7 @@ class SheetValueCell(BaseModel):
     address: SheetCellAddress
     value: Decimal | str | bool | None = None
     note: str | None = None
-    casilla: CasillaId | None = None
+    casilla_id: CasillaId | None = None
     parameter: ParameterId | None = None
     role: Literal["operator_input", "parameter_value", "label", "metadata"]
 
@@ -214,7 +214,7 @@ class SheetFormulaCell(BaseModel):
 
     address: SheetCellAddress
     formula: str = Field(min_length=1)
-    casilla: CasillaId
+    casilla_id: CasillaId
     rounding_scale: int | None = Field(default=None, ge=0, le=12)
     rounding_rule: Literal["money", "integer", "none"]
     note: str | None = None
@@ -241,7 +241,7 @@ class SheetCellConstraint(BaseModel):
     min_value: Decimal | None = None
     max_value: Decimal | None = None
     legal_refs: tuple[str, ...] = Field(min_length=1)
-    casilla: CasillaId
+    casilla_id: CasillaId
 
 
 class SheetRowSetColumn(BaseModel):
@@ -327,7 +327,7 @@ class SheetNumberFormat(BaseModel):
     model_config = _STRICT_FROZEN
 
     address: SheetCellAddress
-    casilla: CasillaId
+    casilla_id: CasillaId
     data_type: Literal["money", "integer", "percentage"]
     pattern: str = Field(min_length=1)
 
@@ -484,7 +484,7 @@ class SheetProvenanceRow(BaseModel):
     model_config = _STRICT_FROZEN
 
     casilla_id: CasillaId
-    casilla_number: str
+    display_number: str
     casilla_label: str
     formula_id: FormulaId | None = None
     rounding_rule: Literal["money", "integer", "none"]
@@ -621,7 +621,7 @@ class OperatorInput(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    casilla: CasillaId
+    casilla_id: CasillaId
     value: Decimal | str | bool | None = None
 
 
@@ -632,15 +632,15 @@ class OperatorInputs(BaseModel):
 
     values: tuple[OperatorInput, ...] = ()
 
-    def by_casilla(self) -> Mapping[CasillaId, OperatorInput]:
-        """Return a ``CasillaId`` → ``OperatorInput`` lookup mapping.
+    def by_casilla_id(self) -> Mapping[CasillaId, OperatorInput]:
+        """Return a ``CasillaId`` -> ``OperatorInput`` lookup mapping.
 
         Returns:
-            Mapping[CasillaId, :class:`OperatorInput`]: A ``Mapping`` keyed by casilla (numbered field) id. Later
+            Mapping[CasillaId, :class:`OperatorInput`]: A ``Mapping`` keyed by canonical casilla.id. Later
             duplicates overwrite earlier ones; the registry enforces
             uniqueness so duplicates are not expected in practice.
         """
-        return {item.casilla: item for item in self.values}
+        return {item.casilla_id: item for item in self.values}
 
 
 class RelationValue(BaseModel):

@@ -43,11 +43,13 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
+    CasillaId,
     IvaLedgerObservation,
     RegistryCalculationResult,
     calculate_registry_snapshot,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
+    validated_casilla_id,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
@@ -69,6 +71,18 @@ _YEAR_IVA: dict[int, tuple[Decimal, Decimal]] = {
     2025: (Decimal("210.00"), Decimal("80.00")),
     2026: (Decimal("168.00"), Decimal("105.00")),
 }
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M322 continuity fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
+_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
 
 
 def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva: Decimal) -> IvaLedgerObservation:
@@ -110,7 +124,7 @@ def _calculate_322(*, filing_year: int) -> tuple[RegistryCalculationResult, int]
     """
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
     binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, _year_ledger(filing_year))
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -132,9 +146,9 @@ def test_322_monthly_result_is_devengada_minus_deducible(tmp_path: Path) -> None
         result, produced = _calculate_322(filing_year=_RENTA_YEARS[0])
 
     assert produced > 0
-    devengada = result.values["iva.cuota-devengada-total"]
-    deducible = result.values["iva.cuota-deducible-total"]
-    assert result.values["iva.resultado-regimen-general"] == devengada - deducible
+    devengada = result.values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA]
+    deducible = result.values[_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+    assert result.values[_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA] == devengada - deducible
     repercutido, soportado = _YEAR_IVA[_RENTA_YEARS[0]]
     assert devengada == repercutido
     assert deducible == soportado
@@ -155,8 +169,9 @@ def test_modelo_322_enrolls_two_renta_years(tmp_path: Path) -> None:
         for filing_year in _RENTA_YEARS:
             result, produced = _calculate_322(filing_year=filing_year)
             # Wiring invariant per year: result == devengada - deducible.
-            assert result.values["iva.resultado-regimen-general"] == (
-                result.values["iva.cuota-devengada-total"] - result.values["iva.cuota-deducible-total"]
+            assert result.values[_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA] == (
+                result.values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA]
+                - result.values[_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
             )
             recorder.record_calculation_year(filing_year=filing_year, produced_value_count=produced)
 

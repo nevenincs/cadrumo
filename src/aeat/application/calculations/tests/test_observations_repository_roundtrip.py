@@ -5,7 +5,8 @@ Persists :class:`RegistryModeloObservation` records at
 
 Anti-tautology: the populated observation carries two
 ``CasillaObservation`` entries with full provenance (formula_id,
-operand_refs, operand_values, legal_refs, source_refs). A
+operand_refs, operand_casilla_refs, operand_values, legal_refs,
+source_refs). A
 save-drops-grounding regression would surface as inequality on the
 loaded observation tuple.
 """
@@ -17,17 +18,21 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import Period
 from ....domain.calculations.registry import (
+    CasillaId,
     CasillaObservation,
     RegistryModeloObservation,
+    validated_casilla_id,
 )
 from ....domain.iva_compensation._reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from .._errors import ObservationCasillaReferenceError
 from .._observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
@@ -38,6 +43,21 @@ from .._observations_repository import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"observation repository fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
+_IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M303_PRINTED_RESULT_ALIAS_CASILLA: CasillaId = _casilla_id("69")
+_M130_ABSENT_BY_DESIGN_CASILLA: CasillaId = _casilla_id("15")
+_M130_PAYMENT_BASE_CASILLA: CasillaId = _casilla_id("14")
+
+
 def _populated_observation() -> RegistryModeloObservation:
     return RegistryModeloObservation(
         modelo="303",
@@ -45,19 +65,21 @@ def _populated_observation() -> RegistryModeloObservation:
         period="1T",
         observations=(
             CasillaObservation(
-                casilla_id="iva.devengado",
+                casilla_id=_IVA_DEVENGADO_CASILLA,
                 value=Decimal("20000.00"),
                 formula_id=None,  # input casilla — no formula
                 operand_refs=(),
+                operand_casilla_refs=(),
                 operand_values=(),
                 legal_refs=("liva.art-21",),
                 source_refs=("aeat.iva.2025",),
             ),
             CasillaObservation(
-                casilla_id="iva.resultado",
+                casilla_id=_IVA_RESULTADO_CASILLA,
                 value=Decimal("12345.67"),
                 formula_id="iva.formula.resultado",
-                operand_refs=("iva.devengado", "iva.deducible"),
+                operand_refs=(_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA),
+                operand_casilla_refs=(_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA),
                 operand_values=(Decimal("20000.00"), Decimal("7654.33")),
                 legal_refs=("liva.art-94",),
                 source_refs=("aeat.iva.2025",),
@@ -97,12 +119,90 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
         assert len(loaded.observation.observations) == 2
         loaded_computed = loaded.observation.observations[1]
         assert loaded_computed.formula_id == "iva.formula.resultado"
-        assert loaded_computed.operand_refs == ("iva.devengado", "iva.deducible")
+        assert loaded_computed.operand_refs == (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
+        assert loaded_computed.operand_casilla_refs == (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
         assert loaded_computed.operand_values == (
             Decimal("20000.00"),
             Decimal("7654.33"),
         )
         assert loaded_computed.legal_refs == ("liva.art-94",)
+
+
+def test_calculation_observation_repository_rejects_printed_number_alias(
+    tmp_path: Path,
+) -> None:
+    """Persisting calculation history must reject printed-number casilla aliases."""
+
+    observation = RegistryModeloObservation(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        observations=(
+            CasillaObservation(
+                casilla_id=_M303_PRINTED_RESULT_ALIAS_CASILLA,
+                value=Decimal("1.00"),
+                legal_refs=("liva.art-94",),
+                source_refs=("aeat.iva.2025",),
+            ),
+        ),
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = CalculationObservationRepository()
+        with pytest.raises(ObservationCasillaReferenceError) as raised:
+            repo.save_observation(
+                observation,
+                source_kind="aeat_sede_justificante",
+                captured_at=datetime.now(UTC).replace(microsecond=0),
+            )
+
+        assert "canonical casilla.id values" in str(raised.value)
+        assert raised.value.context is not None
+        assert raised.value.context["modelo"] == "303"
+        assert raised.value.context["filing_year"] == 2025
+        assert raised.value.context["period"] == "1T"
+        assert raised.value.context["casilla_ids"] == (_M303_PRINTED_RESULT_ALIAS_CASILLA,)
+        assert repo.load_observation("303", Period.from_year_and_code(2025, "1T")) is None
+
+
+def test_calculation_observation_repository_rejects_printed_operand_casilla_ref(
+    tmp_path: Path,
+) -> None:
+    observation = RegistryModeloObservation(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        observations=(
+            CasillaObservation(
+                casilla_id=_IVA_RESULTADO_CASILLA,
+                value=Decimal("1.00"),
+                formula_id="iva.formula.resultado",
+                operand_refs=(_M303_PRINTED_RESULT_ALIAS_CASILLA,),
+                operand_casilla_refs=(_M303_PRINTED_RESULT_ALIAS_CASILLA,),
+                operand_values=(Decimal("1.00"),),
+                legal_refs=("liva.art-94",),
+                source_refs=("aeat.iva.2025",),
+            ),
+        ),
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = CalculationObservationRepository()
+        with pytest.raises(ObservationCasillaReferenceError) as raised:
+            repo.save_observation(
+                observation,
+                source_kind="aeat_sede_justificante",
+                captured_at=datetime.now(UTC).replace(microsecond=0),
+            )
+
+        assert raised.value.context is not None
+        assert raised.value.context["modelo"] == "303"
+        assert raised.value.context["filing_year"] == 2025
+        assert raised.value.context["period"] == "1T"
+        assert raised.value.context["casilla_ids"] == (_M303_PRINTED_RESULT_ALIAS_CASILLA,)
+        assert raised.value.context["observation_casilla_ids"] == ()
+        assert raised.value.context["operand_casilla_refs"] == (_M303_PRINTED_RESULT_ALIAS_CASILLA,)
+        assert repo.load_observation("303", Period.from_year_and_code(2025, "1T")) is None
 
 
 def test_calculation_observation_absent_by_design_flag_survives_encrypted_storage_roundtrip(
@@ -127,14 +227,14 @@ def test_calculation_observation_absent_by_design_flag_survives_encrypted_storag
             period="1T",
             observations=(
                 CasillaObservation(
-                    casilla_id="15",
+                    casilla_id=_M130_ABSENT_BY_DESIGN_CASILLA,
                     value=Decimal("0"),
                     absent_by_design=True,
                     legal_refs=("rd-439-2007:art-110",),
                     source_refs=("aeat-modelo-130-instructions",),
                 ),
                 CasillaObservation(
-                    casilla_id="14",
+                    casilla_id=_M130_PAYMENT_BASE_CASILLA,
                     value=Decimal("500.00"),
                     absent_by_design=False,
                     legal_refs=("rd-439-2007:art-110",),
@@ -155,8 +255,12 @@ def test_calculation_observation_absent_by_design_flag_survives_encrypted_storag
         assert loaded is not None
         assert loaded.observation == absent_by_design_observation
 
-        casilla_15 = next(obs for obs in loaded.observation.observations if obs.casilla_id == "15")
-        casilla_14 = next(obs for obs in loaded.observation.observations if obs.casilla_id == "14")
+        casilla_15 = next(
+            obs for obs in loaded.observation.observations if obs.casilla_id == _M130_ABSENT_BY_DESIGN_CASILLA
+        )
+        casilla_14 = next(
+            obs for obs in loaded.observation.observations if obs.casilla_id == _M130_PAYMENT_BASE_CASILLA
+        )
 
         # The absent_by_design discrimination must survive the
         # encrypted-storage roundtrip. A regression that dropped
@@ -173,9 +277,7 @@ def test_calculation_observation_iter_modelo_enumerates_decrypted_records(
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         target = _populated_observation()
-        other = target.model_copy(
-            update={"modelo": "130", "filing_period": Period.from_year_and_code(2025, "2T"), "period": "2T"},
-        )
+        other = RegistryModeloObservation(modelo="130", filing_year=2025, period="2T")
         repo.save_observation(
             target,
             source_kind="aeat_sede_justificante",
@@ -257,15 +359,8 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
             casillas[1]["legal_refs"] = []
             row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=aad)
 
-        loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
-        assert loaded is not None
-        assert loaded.observation != original, (
-            "anti-tautology proof failed: deleting legal_refs from a "
-            "persisted casilla did NOT surface as strict inequality "
-            "on the loaded observation. The grounding boundary is "
-            "tautological and every observation roundtrip in the "
-            "suite is suspect."
-        )
+        with pytest.raises(ValidationError, match="legal_refs"):
+            repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
 
 
 def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip(

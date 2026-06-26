@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from ....core import Period
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import (
     ModeloDraft,
     ModeloValidationFinding,
@@ -25,6 +26,14 @@ from ..testing import build_registry_filing_draft
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _Q1_2026 = Period.from_year_and_code(2026, "1T")
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_PAGOS_PREVIOS_CASILLA: CasillaId = validated_casilla_id("05", surface="_M130_PAGOS_PREVIOS_CASILLA")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
+_M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
 
 
 def _hint() -> str:
@@ -47,14 +56,14 @@ def _make_draft(
         period=period,
         profile_tax_id="12345678Z",
         casilla_values={
-            "01": Decimal("12500.00"),
-            "02": Decimal("3500.00"),
-            "05": Decimal("250"),
-            "06": Decimal("100"),
-            "08": Decimal("2000"),
-            "10": Decimal("10"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_INGRESOS_CASILLA: Decimal("12500.00"),
+            _M130_GASTOS_CASILLA: Decimal("3500.00"),
+            _M130_PAGOS_PREVIOS_CASILLA: Decimal("250"),
+            _M130_RETENCIONES_CASILLA: Decimal("100"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),

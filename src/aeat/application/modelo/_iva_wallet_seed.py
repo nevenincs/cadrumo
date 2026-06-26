@@ -15,6 +15,7 @@ from decimal import Decimal
 
 from ...core import Modelo, Period
 from ...domain.iva_compensation import IvaCompensationPeriodState
+from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos._calculation_revision import CalculationRevisionState
 from ...domain.modelos._errors import ModeloError
 from ..calculations import correct_iva_compensation_period, seed_iva_compensation_period
@@ -109,7 +110,8 @@ class ModeloIvaWalletOverrideFreshWalletError(ModeloIvaWalletSeedError):
     """Raised when an override would overrule fresh AEAT wallet evidence.
 
     When a non-blocked ``aeat_wallet`` reconciliation decision already resolves the
-    period, the live AEAT wallet/cartera is the authority for casilla 110. An
+    period, the live AEAT wallet/cartera is the authority for
+    ``iva.compensacion-pendiente-periodos-anteriores`` (AEAT box 110). An
     operator-asserted override must not silently overrule fresh AEAT evidence, so
     the override is refused.
     """
@@ -345,7 +347,7 @@ def record_iva_compensation_override_for_bucket(
     amount: Decimal,
     reason: str,
     evidence_locator: str,
-) -> object:
+) -> IvaCompensationReconciliationDecision:
     """Record an explicit taxpayer override for Modelo 303 prior compensation.
 
     Returns the persisted ``taxpayer_override`` reconciliation decision.
@@ -369,7 +371,8 @@ def record_iva_compensation_override_for_bucket(
       drives :func:`~aeat.application.calculations.reconcile_modelo_303_iva_compensation`
       with ``persist=True`` to store a non-blocking ``taxpayer_override`` decision
       keyed by period through the single decision repository; a subsequent
-      ``work calculate`` reads it and applies the amount to casilla 110;
+      ``work calculate`` reads it and applies the amount to
+      ``iva.compensacion-pendiente-periodos-anteriores``;
     - emits a ``MODELO_IVA_WALLET_OVERRIDE_RECORDED`` audit event.
 
     ``reason`` and ``evidence_locator`` are operator-asserted audit metadata: they

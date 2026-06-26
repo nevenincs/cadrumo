@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import typing
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 
 import typer
 

@@ -27,12 +27,15 @@ from ......core import Period
 from ......core.config import Settings
 from ......core.resources import bundled_path, resources
 from ......domain.calculations.registry import (
+    CasillaId,
     InputKind,
     RegistryValidationError,
     calculate_registry_snapshot,
     parse_export_payload,
     relation_source_requirements,
     resolve_export_layout,
+    validated_casilla_id,
+    validated_casilla_id_map,
 )
 from ......tests import FIXTURES_DIR
 from ......tests.secure_sql import isolated_runtime_profile
@@ -175,7 +178,54 @@ _MODELO_303_2022_RECORD_DESIGN = bundled_path(
     "02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx",
 )
 
-_MODELO_130_COMPUTED_CASILLAS = frozenset({"03", "04", "07", "09", "11", "12", "13", "14", "17", "19"})
+_M111_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("28", surface="_M111_RETENCIONES_CASILLA")
+_M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03", surface="_M115_RETENCIONES_CASILLA")
+_M123_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("09", surface="_M123_RETENCIONES_CASILLA")
+_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
+_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id("04", surface="_M130_PAGO_FRACCIONADO_CASILLA")
+_M130_DIFERENCIA_ACTIVIDADES_CASILLA: CasillaId = validated_casilla_id(
+    "07",
+    surface="_M130_DIFERENCIA_ACTIVIDADES_CASILLA",
+)
+_M130_DIFERENCIA_AGRARIA_CASILLA: CasillaId = validated_casilla_id(
+    "09",
+    surface="_M130_DIFERENCIA_AGRARIA_CASILLA",
+)
+_M130_DIFERENCIA_TOTAL_CASILLA: CasillaId = validated_casilla_id("11", surface="_M130_DIFERENCIA_TOTAL_CASILLA")
+_M130_RESULTADO_POSITIVO_CASILLA: CasillaId = validated_casilla_id("12", surface="_M130_RESULTADO_POSITIVO_CASILLA")
+_M130_MINORACION_CASILLA: CasillaId = validated_casilla_id("13", surface="_M130_MINORACION_CASILLA")
+_M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("14", surface="_M130_RESULTADO_PREVIO_CASILLA")
+_M130_DIFERENCIA_CASILLA: CasillaId = validated_casilla_id("17", surface="_M130_DIFERENCIA_CASILLA")
+_M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_FINAL_CASILLA")
+_M131_RESULTADO_CASILLA: CasillaId = validated_casilla_id("15", surface="_M131_RESULTADO_CASILLA")
+_DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "decl.retenciones-total",
+    surface="_DECL_RETENCIONES_TOTAL_CASILLA",
+)
+_M184_RENTA_ATRIBUIBLE_IMPORTE_CASILLA: CasillaId = validated_casilla_id(
+    "tipo2.renta-atribuible-importe",
+    surface="_M184_RENTA_ATRIBUIBLE_IMPORTE_CASILLA",
+)
+
+
+def _casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
+    return validated_casilla_id_map(values, surface="sede declarations support casilla values")
+
+
+_MODELO_130_COMPUTED_CASILLAS = frozenset(
+    {
+        _M130_RENDIMIENTO_NETO_CASILLA,
+        _M130_PAGO_FRACCIONADO_CASILLA,
+        _M130_DIFERENCIA_ACTIVIDADES_CASILLA,
+        _M130_DIFERENCIA_AGRARIA_CASILLA,
+        _M130_DIFERENCIA_TOTAL_CASILLA,
+        _M130_RESULTADO_POSITIVO_CASILLA,
+        _M130_MINORACION_CASILLA,
+        _M130_RESULTADO_PREVIO_CASILLA,
+        _M130_DIFERENCIA_CASILLA,
+        _M130_RESULTADO_FINAL_CASILLA,
+    },
+)
 
 
 def _period(ejercicio: int, period: str | Period) -> Period:
@@ -263,7 +313,7 @@ def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
     return path.read_bytes()
 
 
-def _modelo_303_design_position(workbook_path: Path, *, casilla_id: str) -> int:
+def _modelo_303_design_position(workbook_path: Path, *, casilla_id: CasillaId) -> int:
     workbook = load_workbook(workbook_path, read_only=True, data_only=True)
     try:
         worksheet = workbook["DP30303"]
@@ -310,17 +360,19 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
         modelos=("123",),
     )
     if filing_year >= 2024:
-        inputs = {
-            "01": Decimal("2"),
-            "02": Decimal("3"),
-            "04": Decimal("1000.25"),
-            "05": Decimal("200.75"),
-            "07": Decimal("190.05"),
-            "08": Decimal("38.14"),
-            "10": Decimal("0"),
-            "11": Decimal("7.50"),
-            "13": Decimal("12.25"),
-        }
+        inputs = _casilla_values(
+            {
+                "01": Decimal("2"),
+                "02": Decimal("3"),
+                "04": Decimal("1000.25"),
+                "05": Decimal("200.75"),
+                "07": Decimal("190.05"),
+                "08": Decimal("38.14"),
+                "10": Decimal("0"),
+                "11": Decimal("7.50"),
+                "13": Decimal("12.25"),
+            },
+        )
         headers = {
             "declaration_type": "I",
             "legal_name": "EXPORT TEST",
@@ -328,14 +380,16 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
             "presenter_tax_id": "A12345678",
         }
     else:
-        inputs = {
-            "01-legacy": Decimal("5"),
-            "02-legacy": Decimal("1201.00"),
-            "03-legacy": Decimal("228.19"),
-            "04-legacy": Decimal("0"),
-            "05-legacy": Decimal("7.50"),
-            "07-legacy": Decimal("12.25"),
-        }
+        inputs = _casilla_values(
+            {
+                "01-legacy": Decimal("5"),
+                "02-legacy": Decimal("1201.00"),
+                "03-legacy": Decimal("228.19"),
+                "04-legacy": Decimal("0"),
+                "05-legacy": Decimal("7.50"),
+                "07-legacy": Decimal("12.25"),
+            },
+        )
         headers = {
             "declaration_type": "I",
             "surnames": "EXPORT TEST",
@@ -366,7 +420,7 @@ def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: st
 
 
 def _declaration_pdf_payload(
-    values: dict[str, Decimal],
+    values: Mapping[CasillaId, Decimal],
     *,
     modelo: str = "130",
     ejercicio: int = 2026,
@@ -389,7 +443,7 @@ def _declaration_pdf_payload(
     # right_of_number offset. Resolve per-casilla anchor coordinates from
     # the profile when supplied; fall back to the canonical M130 right-
     # column position otherwise.
-    anchor_x_by_casilla: dict[str, float] = {}
+    anchor_x_by_casilla: dict[CasillaId, float] = {}
     if profile is not None:
         for target in profile.target_casillas:
             anchor = getattr(target, "bbox_anchor", None)
@@ -422,7 +476,7 @@ def _filed_observation(
     modelo: str,
     ejercicio: int,
     period: str,
-    casilla_values: Mapping[str, Decimal | str],
+    casilla_values: Mapping[CasillaId, Decimal | str],
     source_artefact_kind: Literal["submitted_file", "declaration_pdf", "justificante_pdf"] = "submitted_file",
     extraction_coverage: dict[str, float] | None = None,
 ) -> FiledDeclaracionObservation:
@@ -466,7 +520,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             modelo="111",
             ejercicio=2025,
             period=period,
-            casilla_values={"28": value},
+            casilla_values={_M111_RETENCIONES_CASILLA: value},
         )
         for period, value in {
             "1T": Decimal("10"),
@@ -480,7 +534,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             modelo="111",
             ejercicio=2025,
             period=period,
-            casilla_values={"28": value},
+            casilla_values={_M111_RETENCIONES_CASILLA: value},
         )
         for period, value in {
             "01": Decimal("1"),
@@ -502,7 +556,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             modelo="115",
             ejercicio=2025,
             period=period,
-            casilla_values={"03": value},
+            casilla_values={_M115_RETENCIONES_CASILLA: value},
         )
         for period, value in {
             "1T": Decimal("2"),
@@ -516,7 +570,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             modelo="123",
             ejercicio=2025,
             period=period,
-            casilla_values={"09": value},
+            casilla_values={_M123_RETENCIONES_CASILLA: value},
         )
         for period, value in {
             "1T": Decimal("6"),
@@ -530,7 +584,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             modelo="130",
             ejercicio=2025,
             period=period,
-            casilla_values={"19": value},
+            casilla_values={_M130_RESULTADO_FINAL_CASILLA: value},
         )
         for period, value in {
             "1T": Decimal("14"),
@@ -544,7 +598,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             modelo="131",
             ejercicio=2025,
             period=period,
-            casilla_values={"15": value},
+            casilla_values={_M131_RESULTADO_CASILLA: value},
         )
         for period, value in {
             "1T": Decimal("22"),
@@ -558,7 +612,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             modelo="180",
             ejercicio=2025,
             period="0A",
-            casilla_values={"decl.retenciones-total": Decimal("90")},
+            casilla_values={_DECL_RETENCIONES_TOTAL_CASILLA: Decimal("90")},
         ),
     )
     observations.append(
@@ -566,7 +620,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             modelo="190",
             ejercicio=2025,
             period="0A",
-            casilla_values={"decl.retenciones-total": Decimal("178")},
+            casilla_values={_DECL_RETENCIONES_TOTAL_CASILLA: Decimal("178")},
         ),
     )
     observations.append(
@@ -574,7 +628,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             modelo="193",
             ejercicio=2025,
             period="0A",
-            casilla_values={"decl.retenciones-total": Decimal("60")},
+            casilla_values={_DECL_RETENCIONES_TOTAL_CASILLA: Decimal("60")},
         ),
     )
     observations.append(
@@ -582,7 +636,7 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
             modelo="184",
             ejercicio=2025,
             period="0A",
-            casilla_values={"tipo2.renta-atribuible-importe": Decimal("77")},
+            casilla_values={_M184_RENTA_ATRIBUIBLE_IMPORTE_CASILLA: Decimal("77")},
         ),
     )
     return tuple(observations)

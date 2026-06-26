@@ -11,11 +11,17 @@ import typer
 
 from ....application.modelo import WorkUnitNotFoundError
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from ....core.resources import resources
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.cli_runner import invoke_cached_cli
 from .._modelo import _bad_parameter_from_error
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+_NON_INPUT_ERROR_CASILLA: CasillaId = validated_casilla_id(
+    "iva.casilla-99",
+    surface="_NON_INPUT_ERROR_CASILLA",
+)
 
 _UUID_TEXT_RE = re.compile(
     r"\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b",
@@ -420,7 +426,7 @@ def test_missing_binding_guidance_passes_non_input_errors_through() -> None:
     error = RegistryValidationError(
         "casilla referenced before evaluation",
         translated_message="errors.calc.casilla_referenced_before_evaluation",
-        context={"casilla_id": "iva.casilla-99"},
+        context={"casilla_id": _NON_INPUT_ERROR_CASILLA},
     )
     guidance = _missing_binding_guidance(error, "no-such-work-unit")
     assert "--binding KEY=VALUE" not in guidance
@@ -531,6 +537,31 @@ def test_bindings_preview_echoes_override_for_known_key() -> None:
     assert "operation\tregistry.modelo.bindings.preview" in result.output
     assert "override_count\t1" in result.output
     assert "1234.56" in result.output
+
+    json_result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "preview",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+            "--binding",
+            "modelo-303-iva-repercutido-general-cuota=1234.56",
+        ],
+    )
+    assert json_result.exit_code == 0, json_result.output
+    payload = _payload(json_result.output)
+    row = next(
+        item for item in payload["bindings"] if item["binding_id"] == "modelo-303-iva-repercutido-general-cuota"
+    )
+    assert row["override"] == "1234.56"
 
 
 def test_bindings_preview_rejects_unknown_binding_with_suggestion_list() -> None:
@@ -748,6 +779,8 @@ def test_parse_casilla_override_accepts_valid_keys(spec: str) -> None:
     "spec",
     [
         "=value",  # empty key
+        " A=1",  # casilla.id must be accepted exactly as supplied
+        "A =1",  # key-side whitespace must not be stripped into a valid id
         ".starts-with-dot=1",  # dot at start (fails _CASILLA_RE)
         ("x" * 65) + "=0",  # key exceeds 64-char max
     ],
@@ -760,6 +793,17 @@ def test_parse_casilla_override_rejects_invalid_keys(spec: str) -> None:
 
     with pytest.raises(_typer.BadParameter):
         _parse_casilla_override(spec)
+
+
+@pytest.mark.parametrize("spec", [" 01=1.00", "01 =1.00"])
+def test_parse_amendment_casilla_rejects_whitespace_padded_keys(spec: str) -> None:
+    """Amendment ``--set`` casilla keys are validated without key coercion."""
+    import typer as _typer
+
+    from .._modelo import _parse_amendment_casilla
+
+    with pytest.raises(_typer.BadParameter):
+        _parse_amendment_casilla(spec)
 
 
 @pytest.mark.parametrize(
@@ -855,6 +899,10 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
     payload = _payload(result.output)
     bindings = payload["bindings"]
     assert bindings, "Modelo 100 declares bindings; the listing must be non-empty"
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    known_binding_ids = {binding.id for binding in snapshot.revision.bindings}
+    emitted_binding_ids = {row["binding_id"] for row in bindings}
+    assert emitted_binding_ids <= known_binding_ids
     # Every row carries the typed fields and the provenance fields.
     required = {
         "modelo",
@@ -874,8 +922,5 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
         assert required <= set(row), sorted(required - set(row))
         assert isinstance(row["legal_refs"], list)
         assert isinstance(row["source_refs"], list)
-    # At least one binding carries real legal grounding (parity with casillas):
-    # a grounded binding proves the provenance is wired, not merely defaulted.
-    assert any(row["legal_refs"] for row in bindings), (
-        "at least one Modelo 100 binding must carry legal_refs from the registry definition"
-    )
+        assert row["legal_refs"], f"binding {row['binding_id']!r} must carry registry legal_refs"
+        assert row["source_refs"], f"binding {row['binding_id']!r} must carry registry source_refs"

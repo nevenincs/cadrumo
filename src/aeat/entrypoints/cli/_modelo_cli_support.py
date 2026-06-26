@@ -39,7 +39,7 @@ from ...core.errors import resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ...domain.calculations.registry import BindingId, CasillaId
+from ...domain.calculations.registry import BindingId, CasillaId, RelationId, validated_casilla_id
 from ._modelo_rendering import short_id
 
 _log = get_logger(__name__)
@@ -58,7 +58,7 @@ _WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
 _BINDING_MAX_LEN = 128
 _CASILLA_MAX_LEN = 64
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
-_CASILLA_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(CasillaId)
+_RELATION_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(RelationId)
 _ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada", "operador", "contraparte"})
 _ROW_DECIMAL_FIELDS: frozenset[str] = frozenset(
     {"porcentaje", "importe", "importe_Q1", "importe_Q2", "importe_Q3", "importe_Q4"},
@@ -102,6 +102,7 @@ def parse_kv_spec[T](
     value_label: str = "VALUE",
     transform: Callable[[str], T],
     key_validator: Callable[[str, str], None] | None = None,
+    strip_key: bool = True,
 ) -> tuple[str, T]:
     """Parse a ``KEY=VALUE`` CLI token into ``(key, transform(value))``."""
     if "=" not in spec:
@@ -115,7 +116,7 @@ def parse_kv_spec[T](
             ),
         )
     key, _, value = spec.partition("=")
-    key = key.strip()
+    key = key.strip() if strip_key else key
     if not key:
         raise typer.BadParameter(tr("cli.app.modelo.work.kv_empty_key_error", flag=flag, spec=spec))
     if key_validator is not None:
@@ -140,21 +141,50 @@ def validate_binding_key(key: str, spec: str) -> None:
         ) from exc
 
 
-def parse_binding_override(spec: str) -> tuple[str, str]:
+def parse_binding_override(spec: str) -> tuple[BindingId, str]:
     """Parse a ``--binding KEY=VALUE`` spec into a ``(key, value)`` pair."""
-    return parse_kv_spec(
+    key, value = parse_kv_spec(
         spec,
         flag="--binding",
         transform=lambda value: value,
         key_validator=validate_binding_key,
     )
+    return _BINDING_ID_ADAPTER.validate_python(key), value
+
+
+def validate_relation_key(key: str, spec: str) -> None:
+    """Validate a ``--relation`` key against :data:`RelationId` constraints."""
+    try:
+        _RELATION_ID_ADAPTER.validate_python(key)
+    except ValidationError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.invalid_relation_key",
+                default=(
+                    f"--relation key {key!r} is not a valid RelationId "
+                    f"(max {_BINDING_MAX_LEN} chars, lowercase kebab/dotted ref); "
+                    f"got {spec!r}"
+                ),
+            ),
+        ) from exc
+
+
+def parse_relation_override(spec: str) -> tuple[RelationId, str]:
+    """Parse a ``--relation KEY=VALUE`` spec into a ``(key, value)`` pair."""
+    key, value = parse_kv_spec(
+        spec,
+        flag="--relation",
+        transform=lambda value: value,
+        key_validator=validate_relation_key,
+    )
+    return _RELATION_ID_ADAPTER.validate_python(key), value
 
 
 def validate_casilla_key(key: str, spec: str) -> None:
     """Validate a ``--casilla`` key against :data:`CasillaId` constraints."""
     try:
-        _CASILLA_ID_ADAPTER.validate_python(key)
-    except ValidationError as exc:
+        validated_casilla_id(key, surface="--casilla key")
+    except ValueError as exc:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.invalid_casilla_key",
@@ -167,15 +197,17 @@ def validate_casilla_key(key: str, spec: str) -> None:
         ) from exc
 
 
-def parse_casilla_override(spec: str) -> tuple[str, str]:
+def parse_casilla_override(spec: str) -> tuple[CasillaId, str]:
     """Parse a ``--casilla ID=VALUE`` spec into a validated key/value pair."""
-    return parse_kv_spec(
+    key, value = parse_kv_spec(
         spec,
         flag="--casilla",
         key_label="ID",
         transform=str.strip,
         key_validator=validate_casilla_key,
+        strip_key=False,
     )
+    return validated_casilla_id(key, surface="--casilla key"), value
 
 
 def parse_row_spec(spec: str) -> ModeloDetailRow:
@@ -330,9 +362,7 @@ def work_calculate_input_bundle_from_cli(
     """Build a :class:`WorkCalculateInputBundle` from raw Typer option values."""
     casilla_pairs = dict(parse_casilla_override(spec) for spec in (casilla or ()))
     binding_pairs = dict(parse_binding_override(spec) for spec in (binding or ()))
-    relation_pairs = dict(
-        parse_kv_spec(spec, flag="--relation", transform=lambda value: value) for spec in relation or ()
-    )
+    relation_pairs = dict(parse_relation_override(spec) for spec in relation or ())
     detail_rows: tuple[ModeloDetailRow, ...] = tuple(parse_row_spec(spec) for spec in (row or ()))
     meses_pairs: tuple[tuple[str, int], ...] = tuple(
         parse_meses_trabajo_hijo_spec(spec) for spec in (meses_trabajo_con_hijo_menor_3 or ())
@@ -554,6 +584,7 @@ __all__ = [
     "parse_casilla_override",
     "parse_kv_spec",
     "parse_meses_trabajo_hijo_spec",
+    "parse_relation_override",
     "parse_revision_selector",
     "parse_row_spec",
     "resolve_default_actor",
@@ -561,6 +592,7 @@ __all__ = [
     "validate_binding_key",
     "validate_calculation_revision_id",
     "validate_casilla_key",
+    "validate_relation_key",
     "validate_work_unit_id",
     "work_calculate_input_bundle_from_cli",
     "work_candidate_lines",

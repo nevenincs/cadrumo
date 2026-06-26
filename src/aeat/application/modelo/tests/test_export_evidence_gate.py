@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, CasillaObservation, validated_casilla_id
 from ....domain.deadlines import TaxpayerProfile
 from ....domain.deadlines._models import IVARegime
 from ....domain.modelos._calculation_repository import (
@@ -38,6 +39,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
 _TX_ID = "a" * 64
+_BASE_CASILLA: CasillaId = validated_casilla_id("base", surface="_BASE_CASILLA")
+_CUOTA_CASILLA: CasillaId = validated_casilla_id("cuota", surface="_CUOTA_CASILLA")
 
 
 @pytest.fixture
@@ -63,17 +66,25 @@ def _revision(
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={"base": "100.00"},
+        input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
         binding_overrides={},
-        casilla_values={"cuota": Decimal("21.00")},
+        casilla_values={_CUOTA_CASILLA: Decimal("21.00")},
         source_transaction_ids=source_transaction_ids,
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        inputs_snapshot={"base": "100.00"},
-        casilla_values={"cuota": Decimal("21.00")},
+        input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
+        casilla_values={_CUOTA_CASILLA: Decimal("21.00")},
+        observations=(
+            CasillaObservation(
+                casilla_id=_CUOTA_CASILLA,
+                value=Decimal("21.00"),
+                legal_refs=("ley-37-1992:art-99",),
+                source_refs=("export-evidence-gate-test",),
+            ),
+        ),
         source_transaction_ids=source_transaction_ids,
         ledger_filing_snapshot=ledger_filing_snapshot,
         created_at=_NOW,

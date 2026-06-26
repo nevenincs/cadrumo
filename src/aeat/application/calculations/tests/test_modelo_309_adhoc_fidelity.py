@@ -50,11 +50,12 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
     calculate_registry_snapshot,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -70,9 +71,18 @@ _CLOCK_N = datetime(2024, 4, 10, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2025, 3, 5, 10, 0, 0, tzinfo=UTC)
 
 #: The computed total casilla and its two bound leaves.
-_CASILLA_TOTAL = "iva.cuota-no-periodica-total"
-_CASILLA_AUTOREPERCUTIDO = "iva.autorepercutido.intracomunitaria"
-_CASILLA_RECARGO = "iva.soportado.recargo-equivalencia"
+_CASILLA_TOTAL: CasillaId = validated_casilla_id(
+    "iva.cuota-no-periodica-total",
+    surface="test_modelo_309_adhoc_fidelity:_CASILLA_TOTAL",
+)
+_CASILLA_AUTOREPERCUTIDO: CasillaId = validated_casilla_id(
+    "iva.autorepercutido.intracomunitaria",
+    surface="test_modelo_309_adhoc_fidelity:_CASILLA_AUTOREPERCUTIDO",
+)
+_CASILLA_RECARGO: CasillaId = validated_casilla_id(
+    "iva.soportado.recargo-equivalencia",
+    surface="test_modelo_309_adhoc_fidelity:_CASILLA_RECARGO",
+)
 
 #: The two ``ledger_iva_aggregation`` bindings whose facts feed the leaves.
 _BINDING_AUTOREPERCUTIDO = "modelo-309-iva-autorepercutido-intracomunitaria-cuota"
@@ -101,7 +111,7 @@ def _calculate_309(
     """
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=period)
     binding_values = dict(leaf_cuotas)
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -121,7 +131,7 @@ def _registry_observation(
         modelo=_MODELO,
         filing_year=filing_year,
         period=period,
-        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+        observations=result.observations,
     )
 
 

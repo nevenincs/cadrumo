@@ -35,8 +35,8 @@ class DiscrepancyCause(StrEnum):
             casilla). The operator should re-check the source PDF.
         ROUNDING: Small delta within ``10 * tolerance`` on a computed
             casilla. Non-blocking.
-        UNMODELLED_RULE: The registry snapshot has no formula for this casilla;
-            the user's value is accepted as-is.
+        UNMODELLED_RULE: The registry snapshot does not model this casilla.
+            Verification cannot be marked complete until the gap is reviewed.
         CORRECTNESS_DIVERGENCE: Material disagreement — likely an
             extractor bug or a formula bug. Requires operator review.
     """
@@ -51,12 +51,13 @@ class VerificationStatus(StrEnum):
     """Operator-facing single-word verdict.
 
     Attributes:
-        VERIFIED: No correctness or reliability findings; rounding and
-            unmodelled-rule discrepancies (if any) are non-blocking.
+        VERIFIED: No correctness, reliability, or unmodelled-registry
+            findings; rounding discrepancies (if any) are non-blocking.
         NEEDS_REVIEW: At least one
             :attr:`DiscrepancyCause.EXTRACTION_UNRELIABLE` or
+            :attr:`DiscrepancyCause.UNMODELLED_RULE` or
             :attr:`DiscrepancyCause.CORRECTNESS_DIVERGENCE` finding, or
-            registry coverage below 30%.
+            registry coverage below the active threshold.
     """
 
     VERIFIED = "VERIFIED"

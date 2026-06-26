@@ -22,6 +22,7 @@ from ...application.modelo import (
     list_verification_reports,
 )
 from ...core.i18n import tr
+from ...domain.calculations.registry import CasillaId
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_payloads import (
     FilingRecordImportResult,
@@ -38,7 +39,7 @@ from ._modelo_rendering import (
 )
 
 _validate_work_unit_id: Callable[[str], str] | None = None
-_parse_amendment_casilla: Callable[[str], tuple[str, Decimal]] | None = None
+_parse_amendment_casilla: Callable[[str], tuple[CasillaId, Decimal]] | None = None
 _resolve_default_actor: Callable[[], str] | None = None
 _bad_parameter_from_error: Callable[[Exception], typer.BadParameter] | None = None
 
@@ -47,7 +48,7 @@ def register_record_commands(
     app: typer.Typer,
     *,
     validate_work_unit_id: Callable[[str], str],
-    parse_amendment_casilla: Callable[[str], tuple[str, Decimal]],
+    parse_amendment_casilla: Callable[[str], tuple[CasillaId, Decimal]],
     resolve_default_actor: Callable[[], str],
     bad_parameter_from_error: Callable[[Exception], typer.BadParameter],
 ) -> None:
@@ -71,7 +72,7 @@ def _work_unit_id(raw: str) -> str:
     return _validate_work_unit_id(raw)
 
 
-def _casilla_value(spec: str) -> tuple[str, Decimal]:
+def _casilla_value(spec: str) -> tuple[CasillaId, Decimal]:
     if _parse_amendment_casilla is None:
         raise RuntimeError("modelo record commands were not registered")
     return _parse_amendment_casilla(spec)
@@ -218,7 +219,7 @@ def filing_record_import(
             ),
         ) from exc
 
-    casilla_values: dict[str, Decimal] = {}
+    casilla_values: dict[CasillaId, Decimal] = {}
     for spec in set_overrides or ():
         key, value = _casilla_value(spec)
         casilla_values[key] = value

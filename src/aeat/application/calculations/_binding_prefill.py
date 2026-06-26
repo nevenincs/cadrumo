@@ -29,13 +29,20 @@ from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
+    CasillaDefinition,
+    CasillaId,
     CasillaObservation,
+    FormulaDefinition,
     RegistryModeloObservation,
     RegistrySnapshot,
+    binding_source_casilla_ids,
+    expression_casilla_refs,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
+    validated_casilla_id,
 )
 from ...domain.iva_compensation._carry_forward import IvaCompensationPeriodState
+from ...domain.iva_compensation._errors import IvaCompensationCasillaReferenceError
 from ._errors import BindingPrefillTypeError
 from ._iva_compensation_history import IvaCompensationHistoryRepository
 from ._observations_repository import CalculationObservationRepository, _ObservationEnvelopePayload
@@ -71,6 +78,24 @@ _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _IVA_COMPENSATION_HISTORY_SOURCE_KIND: Final = "aeat_sede_iva_compensation_history"
 _MIXED_OBSERVATION_SOURCE_KIND: Final = "mixed_observation_sources"
 _MODELO_303_IVA_COMPENSATION_BINDING_ID: Final = "modelo-303-compensacion-pendiente-anteriores"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="binding-prefill casilla constant")
+    except ValueError as exc:
+        raise RuntimeError(f"binding-prefill casilla constant {value!r} is not a CasillaId") from exc
+
+
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = (
+    _casilla_id("iva.compensacion-pendiente-periodos-anteriores")
+)
+_M303_COMPENSACION_APLICADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-aplicada-periodo")
+_M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_RESULTADO_CASILLA: Final[CasillaId] = _casilla_id("iva.resultado")
+_M303_RESULTADO_FINAL_CASILLA: Final[CasillaId] = _casilla_id("71")
+_M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
+_M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 
 def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> tuple[bool, bool]:
@@ -110,7 +135,7 @@ class _GatheredObservation(BaseModel):
 
     observation: RegistryModeloObservation
     source_kind: str
-    casilla_source_kinds: Mapping[str, str]
+    casilla_source_kinds: Mapping[CasillaId, str]
     unstamped_revision_advisory: bool = False
     """Non-blocking advisory: source observation has no revision stamp (legacy record)."""
 
@@ -190,7 +215,7 @@ class BindingPrefillReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     prefilled: tuple[PrefilledBinding, ...]
-    binding_values: Mapping[str, Decimal]
+    binding_values: Mapping[BindingId, Decimal]
 
     @property
     def has_unstamped_revision_advisory(self) -> bool:
@@ -391,30 +416,34 @@ def _observation_from_iva_compensation_history(
         period=state.period.registry_token,
     )
     casillas = {item.id: item for item in snapshot.revision.casillas}
-    formulas = {item.target: item for item in snapshot.revision.formulas}
+    formulas = {item.target_casilla_id: item for item in snapshot.revision.formulas}
 
-    def observed(casilla_id: str, value: Decimal | None) -> tuple[CasillaObservation, ...]:
+    def observed(casilla_id: CasillaId, value: Decimal | None) -> tuple[CasillaObservation, ...]:
         if value is None:
             return ()
-        casilla = casillas.get(casilla_id)
-        formula = formulas.get(casilla_id)
-        operand_refs: tuple[str, ...] = ()
+        operand_refs: tuple[CasillaId, ...] = ()
         operand_values: tuple[Decimal, ...] = ()
-        if casilla_id == "iva.compensacion-disponible-fin-periodo" and (
-            state.pending_for_later_amount is not None and state.period_result_amount is not None
+        if casilla_id == _M303_POSTERIOR_CASILLA and (
+            state.prior_pending_amount is not None and state.applied_amount is not None
         ):
-            operand_refs = ("87", "69")
-            operand_values = (state.pending_for_later_amount, state.period_result_amount)
-        return (
-            CasillaObservation(
-                casilla_id=casilla_id,
-                value=value,
-                formula_id=formula.id if formula is not None else None,
-                operand_refs=operand_refs,
-                operand_values=operand_values,
-                legal_refs=tuple(casilla.legal_refs) if casilla is not None else (),
-                source_refs=tuple(casilla.source_refs) if casilla is not None else (),
-            ),
+            operand_refs = (_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, _M303_COMPENSACION_APLICADA_CASILLA)
+            operand_values = (state.prior_pending_amount, state.applied_amount)
+        elif casilla_id == _M303_GENERADA_CASILLA and state.period_result_amount is not None:
+            operand_refs = (_M303_RESULTADO_CASILLA,)
+            operand_values = (state.period_result_amount,)
+        elif casilla_id == _M303_DISPONIBLE_CASILLA and (
+            state.pending_for_later_amount is not None and state.generated_amount is not None
+        ):
+            operand_refs = (_M303_POSTERIOR_CASILLA, _M303_GENERADA_CASILLA)
+            operand_values = (state.pending_for_later_amount, state.generated_amount)
+        return _iva_compensation_history_observation(
+            snapshot=snapshot,
+            casillas=casillas,
+            formulas=formulas,
+            casilla_id=casilla_id,
+            value=value,
+            operand_refs=operand_refs,
+            operand_values=operand_values,
         )
 
     return RegistryModeloObservation(
@@ -422,13 +451,89 @@ def _observation_from_iva_compensation_history(
         filing_year=state.filing_year,
         period=state.period.registry_token,
         observations=(
-            *observed("110", state.prior_pending_amount),
-            *observed("78", state.applied_amount),
-            *observed("87", state.pending_for_later_amount),
-            *observed("69", state.period_result_amount),
-            *observed("71", state.final_result_amount),
-            *observed("iva.compensacion-generada-periodo", state.generated_amount),
-            *observed("iva.compensacion-disponible-fin-periodo", state.available_end_amount),
+            *observed(_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, state.prior_pending_amount),
+            *observed(_M303_COMPENSACION_APLICADA_CASILLA, state.applied_amount),
+            *observed(_M303_POSTERIOR_CASILLA, state.pending_for_later_amount),
+            *observed(_M303_RESULTADO_CASILLA, state.period_result_amount),
+            *observed(_M303_RESULTADO_FINAL_CASILLA, state.final_result_amount),
+            *observed(_M303_GENERADA_CASILLA, state.generated_amount),
+            *observed(_M303_DISPONIBLE_CASILLA, state.available_end_amount),
+        ),
+    )
+
+
+def _iva_compensation_history_observation(
+    *,
+    snapshot: RegistrySnapshot,
+    casillas: Mapping[CasillaId, CasillaDefinition],
+    formulas: Mapping[CasillaId, FormulaDefinition],
+    casilla_id: CasillaId,
+    value: Decimal,
+    operand_refs: tuple[CasillaId, ...] = (),
+    operand_values: tuple[Decimal, ...] = (),
+) -> tuple[CasillaObservation, ...]:
+    """Project one IVA history casilla, failing if registry provenance is missing."""
+    casilla = casillas.get(casilla_id)
+    if casilla is None:
+        raise IvaCompensationCasillaReferenceError(
+            f"IVA compensation history casilla {casilla_id!r} is not declared in "
+            f"modelo {snapshot.modelo.id} revision {snapshot.revision.id}; refusing "
+            "to emit a CasillaObservation without legal_refs/source_refs",
+            context={
+                "modelo": snapshot.modelo.id,
+                "revision_id": snapshot.revision.id,
+                "casilla_id": casilla_id,
+            },
+        )
+    formula = formulas.get(casilla_id)
+    formula_id = None
+    if len(operand_values) != len(operand_refs):
+        raise IvaCompensationCasillaReferenceError(
+            f"IVA compensation history casilla {casilla_id!r} has {len(operand_refs)} operand refs "
+            f"but {len(operand_values)} operand values; refusing to emit partial formula provenance",
+            context={
+                "modelo": snapshot.modelo.id,
+                "revision_id": snapshot.revision.id,
+                "casilla_id": casilla_id,
+            },
+        )
+    if operand_refs and formula is None:
+        raise IvaCompensationCasillaReferenceError(
+            f"IVA compensation history casilla {casilla_id!r} supplied operand refs but has no "
+            f"formula in modelo {snapshot.modelo.id} revision {snapshot.revision.id}",
+            context={
+                "modelo": snapshot.modelo.id,
+                "revision_id": snapshot.revision.id,
+                "casilla_id": casilla_id,
+            },
+        )
+    if formula is not None:
+        expected_operand_refs = expression_casilla_refs(formula.expression)
+        if operand_refs:
+            if operand_refs != expected_operand_refs:
+                raise IvaCompensationCasillaReferenceError(
+                    f"IVA compensation history casilla {casilla_id!r} supplied operand refs "
+                    f"{operand_refs!r} but formula {formula.id!r} projects to {expected_operand_refs!r}",
+                    context={
+                        "modelo": snapshot.modelo.id,
+                        "revision_id": snapshot.revision.id,
+                        "casilla_id": casilla_id,
+                        "formula_id": formula.id,
+                    },
+                )
+            formula_id = formula.id
+        elif not expected_operand_refs:
+            formula_id = formula.id
+    return (
+        CasillaObservation(
+            casilla_id=casilla_id,
+            value=value,
+            formula_id=formula_id,
+            operand_refs=operand_refs,
+            operand_casilla_refs=operand_refs,
+            operand_values=operand_values,
+            legal_refs=tuple(casilla.legal_refs),
+            source_refs=tuple(casilla.source_refs),
         ),
     )
 
@@ -449,16 +554,6 @@ def _requirements_by_binding(
         binding_id: (source_modelo, source_year, tuple(sorted(periods)))
         for binding_id, (source_modelo, source_year, periods) in grouped.items()
     }
-
-
-def _selector_source_casillas(value: object) -> tuple[str, ...]:
-    if isinstance(value, str):
-        return (value,)
-    if isinstance(value, tuple) and all(isinstance(item, str) for item in value):
-        return tuple(str(item) for item in value)
-    if isinstance(value, list) and all(isinstance(item, str) for item in value):
-        return tuple(str(item) for item in value)
-    return ()
 
 
 def _selector_value(selector: object, key: str, default: object) -> object:
@@ -499,7 +594,7 @@ def _source_kind_for_binding(
     source_modelo: str,
     source_filing_year: int,
     source_periods: tuple[str, ...],
-    source_casillas: tuple[str, ...] = (),
+    source_casilla_ids: tuple[CasillaId, ...] = (),
 ) -> str:
     required_periods = set(source_periods)
     matched_source_kinds: set[str] = set()
@@ -510,10 +605,10 @@ def _source_kind_for_binding(
             or item.observation.period not in required_periods
         ):
             continue
-        if source_casillas:
+        if source_casilla_ids:
             matched_source_kinds.update(
                 item.casilla_source_kinds.get(casilla_id, item.source_kind)
-                for casilla_id in source_casillas
+                for casilla_id in source_casilla_ids
                 if casilla_id in item.observation.casilla_values
             )
         else:
@@ -587,7 +682,7 @@ def resolve_bindings_from_local_store(
                 _selector_periods(_selector_value(selector, "source_periods", ())),
             ),
         )
-        source_casillas = _selector_source_casillas(_selector_value(selector, "source_casillas", ()))
+        source_casilla_ids = binding_source_casilla_ids(binding)
         # Propagate the unstamped-revision advisory from the gathered source observation
         # for this binding's (modelo, filing_year, periods) to the prefilled record
         # (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2).
@@ -606,7 +701,7 @@ def resolve_bindings_from_local_store(
                     source_modelo=source_modelo,
                     source_filing_year=source_filing_year,
                     source_periods=source_periods,
-                    source_casillas=source_casillas,
+                    source_casilla_ids=source_casilla_ids,
                 ),
                 source_modelo=source_modelo,
                 source_filing_year=source_filing_year,

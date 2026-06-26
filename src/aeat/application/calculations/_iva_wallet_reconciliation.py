@@ -127,8 +127,8 @@ def reconcile_modelo_303_iva_compensation(
         max_wallet_age_days: Maximum accepted age for live wallet evidence.
         treat_absent_recurrence_as_first_period: When ``True`` and there is no
             live wallet and no prior local recurrence, treat the target as the
-            taxpayer's FIRST IVA period: casilla 110 is zero per LIVA art. 99.5
-            (no prior compensation balance can exist), yielding the non-blocking
+            taxpayer's FIRST IVA period: ``iva.compensacion-pendiente-periodos-anteriores``
+            is zero per LIVA art. 99.5 (no prior compensation balance can exist), yielding the non-blocking
             ``first_period_zero`` decision instead of the ``missing`` block. The
             caller asserts first-period status (e.g. the calculate path verifies
             no prior 303 compensation history exists). It NEVER fabricates a
@@ -169,10 +169,11 @@ def reconcile_modelo_303_iva_compensation(
     )
     local_recurrence_amount = recurrence.amount if recurrence is not None else None
     # First-period treatment: with no live wallet and no prior recurrence, the
-    # caller-asserted first IVA period has a legally-certain zero casilla 110
-    # (LIVA art. 99.5). Pass an explicit zero recurrence + the first-period flag
-    # so the decision is the non-blocking ``first_period_zero`` rather than the
-    # ``missing`` block. This NEVER overrides a real recurrence: only the
+    # caller-asserted first IVA period has a legally-certain zero
+    # ``iva.compensacion-pendiente-periodos-anteriores`` (LIVA art. 99.5).
+    # Pass an explicit zero recurrence + the first-period flag so the decision
+    # is the non-blocking ``first_period_zero`` rather than the ``missing``
+    # block. This NEVER overrides a real recurrence: only the
     # genuinely-absent (None) case is mapped to zero.
     is_first_iva_period = treat_absent_recurrence_as_first_period and wallet is None and local_recurrence_amount is None
     if is_first_iva_period:

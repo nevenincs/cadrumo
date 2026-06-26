@@ -20,8 +20,8 @@ def test_runtime_schema_provider_reads_modelo_130_registry_schema() -> None:
     casillas = collection.all()
     assert collection.schema_version.startswith("registry:130:")
     assert casillas
-    known_ids = {casilla.id for casilla in casillas}
-    by_id = {casilla.id: casilla for casilla in casillas}
+    known_ids = {casilla.casilla_id for casilla in casillas}
+    by_id = {casilla.casilla_id: casilla for casilla in casillas}
     snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
     formulas = {formula.id: formula for formula in snapshot.revision.formulas}
     formula_bound = {
@@ -32,7 +32,7 @@ def test_runtime_schema_provider_reads_modelo_130_registry_schema() -> None:
     assert formula_bound
     for casilla_id, expected_inputs in formula_bound.items():
         casilla = by_id[casilla_id]
-        assert casilla.formula_inputs == expected_inputs
+        assert casilla.formula_input_casilla_ids == expected_inputs
         assert set(expected_inputs) <= known_ids
 
     subview = provider.get_subview("130")

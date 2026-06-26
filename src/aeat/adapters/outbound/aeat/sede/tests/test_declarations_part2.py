@@ -2,8 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
+from ......domain.calculations.registry import (
+    previous_filing_source_reference,
+    validated_casilla_id,
+    validated_casilla_id_map,
+)
 from .._declarations_observations import _submitted_file_coverage_for_casillas
 from ._declarations_support import (
     _COTEJO_DOCUMENT_URL,
@@ -15,6 +22,7 @@ from ._declarations_support import (
     _SUBMITTED_FILE_111_2025_1T,
     UTC,
     AnyHttpUrl,
+    CasillaId,
     Decimal,
     Declaracion,
     FiledDeclaracionArtefact,
@@ -53,6 +61,31 @@ pytestmark = [
     pytest.mark.hex_outbound_adapter,
     pytest.mark.usefixtures(_isolate_secure_object_backend.__name__),
 ]
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id(
+    "0224",
+    surface="_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA",
+)
+_M100_CASILLA_0180: CasillaId = validated_casilla_id("0180", surface="_M100_CASILLA_0180")
+_M100_CASILLA_0695: CasillaId = validated_casilla_id("0695", surface="_M100_CASILLA_0695")
+_M100_CASILLA_0067: CasillaId = validated_casilla_id("0067", surface="_M100_CASILLA_0067")
+_M130_PAGOS_FRACCIONADOS_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "05",
+    surface="_M130_PAGOS_FRACCIONADOS_ANTERIORES_CASILLA",
+)
+_M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
+    "15",
+    surface="_M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA",
+)
+_M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA: CasillaId = validated_casilla_id(
+    "saldo-negativo-fin-periodo",
+    surface="_M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA",
+)
+_M111_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("28", surface="_M111_RETENCIONES_CASILLA")
+_M111_RESULTADO_CASILLA: CasillaId = validated_casilla_id("30", surface="_M111_RESULTADO_CASILLA")
+
+
+def _casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
+    return validated_casilla_id_map(values, surface="sede declarations part2 casilla values")
 
 
 class TestSubmittedFileObservation:
@@ -87,27 +120,29 @@ class TestSubmittedFileObservation:
             artefact=artefact,
         )
 
-        assert {item.casilla_id: Decimal(item.value) for item in observed} == {
-            "01": Decimal("100"),
-            "02": Decimal("25"),
-            "03": Decimal("75"),
-            "04": Decimal("15"),
-            "05": Decimal("0"),
-            "06": Decimal("0"),
-            "07": Decimal("15"),
-            "08": Decimal("0"),
-            "09": Decimal("0"),
-            "10": Decimal("0"),
-            "11": Decimal("0"),
-            "12": Decimal("15"),
-            "13": Decimal("0"),
-            "14": Decimal("15"),
-            "15": Decimal("0"),
-            "16": Decimal("0"),
-            "17": Decimal("15"),
-            "18": Decimal("0"),
-            "19": Decimal("15"),
-        }
+        assert {item.casilla_id: Decimal(item.value) for item in observed} == _casilla_values(
+            {
+                "01": Decimal("100"),
+                "02": Decimal("25"),
+                "03": Decimal("75"),
+                "04": Decimal("15"),
+                "05": Decimal("0"),
+                "06": Decimal("0"),
+                "07": Decimal("15"),
+                "08": Decimal("0"),
+                "09": Decimal("0"),
+                "10": Decimal("0"),
+                "11": Decimal("0"),
+                "12": Decimal("15"),
+                "13": Decimal("0"),
+                "14": Decimal("15"),
+                "15": Decimal("0"),
+                "16": Decimal("0"),
+                "17": Decimal("15"),
+                "18": Decimal("0"),
+                "19": Decimal("15"),
+            },
+        )
 
     def test_modelo_130_redacted_submitted_file_matches_registry_calculation(self) -> None:
         snapshot = _modelo_130_snapshot()
@@ -142,23 +177,23 @@ class TestSubmittedFileObservation:
         # casillas; they must route through binding_values keyed by the binding
         # id, not through inputs alone. The _formula_runtime smuggle guard
         # refuses inputs["05"]/inputs["15"] without matching binding entries.
-        prior_payments_value = observed_values.get("05", Decimal("0"))
-        carry_forward_value = observed_values.get("15", Decimal("0"))
+        prior_payments_value = observed_values.get(_M130_PAGOS_FRACCIONADOS_ANTERIORES_CASILLA, Decimal("0"))
+        carry_forward_value = observed_values.get(_M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA, Decimal("0"))
         input_values = {
             casilla.id: observed_values[casilla.id]
             for casilla in snapshot.revision.casillas
-            if casilla.input_kind != InputKind.COMPUTED and casilla.id != "15"
+            if casilla.input_kind != InputKind.COMPUTED
+            and casilla.id != _M130_RESULTADOS_NEGATIVOS_ANTERIORES_CASILLA
         }
         binding = next(
             item for item in snapshot.revision.bindings if item.id == "irpf.previous_year_economic_activity_net_income"
         )
-        selector = binding.selector
-        source_casillas = selector["source_casillas"]
-        assert isinstance(source_casillas, tuple)
-        previous_year_values = {
-            str(casilla_id): value
+        source_reference = previous_filing_source_reference(binding)
+        source_casilla_ids = source_reference.source_casilla_ids
+        previous_year_values: dict[CasillaId, Decimal] = {
+            casilla_id: value
             for casilla_id, value in zip(
-                source_casillas,
+                source_casilla_ids,
                 (Decimal("3000"), Decimal("4000"), Decimal("2000"), Decimal("4000")),
                 strict=True,
             )
@@ -167,9 +202,9 @@ class TestSubmittedFileObservation:
             snapshot.revision,
             (
                 _filed_observation(
-                    modelo=str(selector["source_modelo"]),
+                    modelo=source_reference.source_modelo,
                     ejercicio=2025,
-                    period=str(selector["period"]),
+                    period=source_reference.required_periods[0],
                     casilla_values=previous_year_values,
                 ),
             ),
@@ -181,7 +216,7 @@ class TestSubmittedFileObservation:
         computed_casillas = {
             casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == InputKind.COMPUTED
         }
-        assert computed_casillas == _MODELO_130_COMPUTED_CASILLAS | {"saldo-negativo-fin-periodo"}
+        assert computed_casillas == _MODELO_130_COMPUTED_CASILLAS | {_M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA}
 
         calculated = calculate_registry_snapshot(
             snapshot,
@@ -193,7 +228,7 @@ class TestSubmittedFileObservation:
         assert {casilla_id: calculated.values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS} == {
             casilla_id: observed_values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS
         }
-        assert calculated.values["saldo-negativo-fin-periodo"] == Decimal("0.00")
+        assert calculated.values[_M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA] == Decimal("0.00")
 
     def test_submitted_file_coverage_scores_fully_extracted_modelo_130_filing(self) -> None:
         # The extracted coverage helper resolves the export layout and scores the
@@ -273,7 +308,9 @@ class TestSubmittedFileObservation:
         calculated = calculate_registry_snapshot(
             snapshot,
             inputs={
-                casilla_id: value for casilla_id, value in observed_values.items() if casilla_id not in {"28", "30"}
+                casilla_id: value
+                for casilla_id, value in observed_values.items()
+                if casilla_id not in {_M111_RETENCIONES_CASILLA, _M111_RESULTADO_CASILLA}
             },
             date_context={},
         )
@@ -283,8 +320,8 @@ class TestSubmittedFileObservation:
         assert set(observed_values) == {t.casilla_id for t in profile.target_casillas}
         assert parsed_fields["modelo-111-tax-id"] == "Y0000001S"
         assert parsed_fields["modelo-111-surnames"] == "SANITIZED SURNAME"
-        assert observed_values["28"] == calculated.values["28"]
-        assert observed_values["30"] == calculated.values["30"]
+        assert observed_values[_M111_RETENCIONES_CASILLA] == calculated.values[_M111_RETENCIONES_CASILLA]
+        assert observed_values[_M111_RESULTADO_CASILLA] == calculated.values[_M111_RESULTADO_CASILLA]
 
     @pytest.mark.parametrize(
         ("filing_year", "period", "profile_id", "expected"),
@@ -293,37 +330,41 @@ class TestSubmittedFileObservation:
                 2026,
                 "1T",
                 "modelo-123-export-record",
-                {
-                    "01": Decimal("2"),
-                    "02": Decimal("3"),
-                    "03": Decimal("5"),
-                    "04": Decimal("1000.25"),
-                    "05": Decimal("200.75"),
-                    "06": Decimal("1201.00"),
-                    "07": Decimal("190.05"),
-                    "08": Decimal("38.14"),
-                    "09": Decimal("228.19"),
-                    "10": Decimal("0.00"),
-                    "11": Decimal("7.50"),
-                    "12": Decimal("235.69"),
-                    "13": Decimal("12.25"),
-                    "14": Decimal("223.44"),
-                },
+                _casilla_values(
+                    {
+                        "01": Decimal("2"),
+                        "02": Decimal("3"),
+                        "03": Decimal("5"),
+                        "04": Decimal("1000.25"),
+                        "05": Decimal("200.75"),
+                        "06": Decimal("1201.00"),
+                        "07": Decimal("190.05"),
+                        "08": Decimal("38.14"),
+                        "09": Decimal("228.19"),
+                        "10": Decimal("0.00"),
+                        "11": Decimal("7.50"),
+                        "12": Decimal("235.69"),
+                        "13": Decimal("12.25"),
+                        "14": Decimal("223.44"),
+                    },
+                ),
             ),
             (
                 2023,
                 "4T",
                 "modelo-123-2019-export-record",
-                {
-                    "01-legacy": Decimal("5"),
-                    "02-legacy": Decimal("1201.00"),
-                    "03-legacy": Decimal("228.19"),
-                    "04-legacy": Decimal("0.00"),
-                    "05-legacy": Decimal("7.50"),
-                    "06-legacy": Decimal("235.69"),
-                    "07-legacy": Decimal("12.25"),
-                    "08-legacy": Decimal("223.44"),
-                },
+                _casilla_values(
+                    {
+                        "01-legacy": Decimal("5"),
+                        "02-legacy": Decimal("1201.00"),
+                        "03-legacy": Decimal("228.19"),
+                        "04-legacy": Decimal("0.00"),
+                        "05-legacy": Decimal("7.50"),
+                        "06-legacy": Decimal("235.69"),
+                        "07-legacy": Decimal("12.25"),
+                        "08-legacy": Decimal("223.44"),
+                    },
+                ),
             ),
         ),
     )
@@ -333,7 +374,7 @@ class TestSubmittedFileObservation:
         filing_year: int,
         period: str,
         profile_id: str,
-        expected: dict[str, Decimal],
+        expected: dict[CasillaId, Decimal],
     ) -> None:
         snapshot = _modelo_snapshot("123", filing_year=filing_year, period=period)
         profile = snapshot.extraction_profiles[profile_id]
@@ -413,10 +454,10 @@ class TestSubmittedFileObservation:
         body_text = body.decode("utf-8")
 
         assert len(observed) == 77
-        assert observed_values["0180"] == "26.26"
-        assert observed_values["0224"] == "37.37"
-        assert observed_values["0695"] == "87.87"
-        assert observed_values["0067"] == "True"
+        assert observed_values[_M100_CASILLA_0180] == "26.26"
+        assert observed_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA] == "37.37"
+        assert observed_values[_M100_CASILLA_0695] == "87.87"
+        assert observed_values[_M100_CASILLA_0067] == "True"
         assert 'nif="Y' not in body_text
         assert 'nif="00000000T"' in body_text
         assert "CL SANITIZADA 0000 LOCALIDAD" in body_text
@@ -632,22 +673,24 @@ class TestFiledObservationBindings:
 
     def test_previous_filing_binding_resolves_from_filed_observation(self) -> None:
         snapshot = _modelo_130_snapshot()
-        selector = next(
-            binding.selector
+        binding = next(
+            binding
             for binding in snapshot.revision.bindings
             if binding.id == "irpf.previous_year_economic_activity_net_income"
         )
-        source_casillas = selector["source_casillas"]
-        assert isinstance(source_casillas, tuple)
-        casilla_values = {str(casilla_id): Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
+        source_reference = previous_filing_source_reference(binding)
+        source_casilla_ids = source_reference.source_casilla_ids
+        casilla_values: dict[CasillaId, Decimal] = {
+            casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)
+        }
 
         resolved = resolve_previous_filing_bindings_from_filed_declarations(
             snapshot.revision,
             (
                 _filed_observation(
-                    modelo=str(selector["source_modelo"]),
+                    modelo=source_reference.source_modelo,
                     ejercicio=2025,
-                    period=str(selector["period"]),
+                    period=source_reference.required_periods[0],
                     casilla_values=casilla_values,
                 ),
             ),
@@ -661,21 +704,23 @@ class TestFiledObservationBindings:
 
     def test_encrypted_filed_observation_roundtrip_supplies_previous_filing_binding(self, tmp_path: Path) -> None:
         snapshot = _modelo_130_snapshot()
-        selector = next(
-            binding.selector
+        binding = next(
+            binding
             for binding in snapshot.revision.bindings
             if binding.id == "irpf.previous_year_economic_activity_net_income"
         )
-        source_casillas = selector["source_casillas"]
-        assert isinstance(source_casillas, tuple)
-        casilla_values = {str(casilla_id): Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
+        source_reference = previous_filing_source_reference(binding)
+        source_casilla_ids = source_reference.source_casilla_ids
+        casilla_values: dict[CasillaId, Decimal] = {
+            casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)
+        }
         store = FiledDeclaracionObservationStore(
             tmp_path / "observations",
         )
         observation = _filed_observation(
-            modelo=str(selector["source_modelo"]),
+            modelo=source_reference.source_modelo,
             ejercicio=2025,
-            period=str(selector["period"]),
+            period=source_reference.required_periods[0],
             casilla_values=casilla_values,
         )
 
@@ -697,7 +742,7 @@ class TestFiledObservationBindings:
             modelo="100",
             ejercicio=2025,
             period="0A",
-            casilla_values={"0224": Decimal("1")},
+            casilla_values={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("1")},
             source_artefact_kind="justificante_pdf",
         )
 
@@ -720,7 +765,7 @@ class TestFiledObservationBindings:
             modelo="100",
             ejercicio=2025,
             period="0A",
-            casilla_values={"0224": "no-decimal"},
+            casilla_values={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: "no-decimal"},
         )
 
         with pytest.raises(SedeParseError, match="not decimal-valued"):
@@ -731,19 +776,19 @@ class TestFiledObservationBindings:
             modelo="100",
             ejercicio=2025,
             period="0A",
-            casilla_values={"0224": Decimal("1")},
+            casilla_values={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("1")},
         ).model_copy(
             update={
                 "casillas": (
                     ObservedCasillaValue(
-                        casilla_id="0224",
+                        casilla_id=_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA,
                         value="1",
                         source_artefact_kind="submitted_file",
                         source_locator="field:0224",
                         confidence=1.0,
                     ),
                     ObservedCasillaValue(
-                        casilla_id="0224",
+                        casilla_id=_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA,
                         value="2",
                         source_artefact_kind="submitted_file",
                         source_locator="field:0224",
@@ -761,7 +806,7 @@ class TestFiledObservationBindings:
             modelo="100",
             ejercicio=2025,
             period="0A",
-            casilla_values={"0224": Decimal("1")},
+            casilla_values={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("1")},
             extraction_coverage={"submitted_file": 0.5},
         )
 

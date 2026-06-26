@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
+from ......domain.calculations.registry import CasillaId, validated_casilla_id
 from ._generator_shared import (
     CasillaBox,
     draw_casilla_box,
@@ -32,43 +33,49 @@ from ._generator_shared import (
 # across two "pages" of the synthetic PDF in declaration order. We keep
 # them on page 1 because the extractor's ``_derive_status`` + line
 # regex don't depend on page layout, only on line text.
-_LABELS: Mapping[str, str] = {
-    "01": "Base imponible tipo general",
-    "02": "Tipo impositivo general (%)",
-    "03": "Cuota repercutida tipo general",
-    "04": "Base imponible tipo reducido",
-    "05": "Tipo impositivo reducido (%)",
-    "06": "Cuota repercutida tipo reducido",
-    "07": "Base imponible tipo superreducido",
-    "08": "Tipo impositivo superreducido (%)",
-    "09": "Cuota repercutida tipo superreducido",
-    "28": "Autoconsumo de bienes y servicios — base",
-    "29": "Autoconsumo de bienes y servicios — cuota",
-    "30": "Adquisiciones intracomunitarias — base",
-    "31": "Adquisiciones intracomunitarias — cuota",
-    "32": "Otros supuestos — base",
-    "33": "Otros supuestos — cuota",
-    "34": "IVA soportado operaciones interiores — base",
-    "35": "IVA soportado operaciones interiores — cuota",
-    "36": "IVA soportado importaciones — base",
-    "37": "IVA soportado importaciones — cuota",
-    "38": "IVA soportado intracomunitarias — base",
-    "39": "IVA soportado intracomunitarias — cuota",
-    "40": "IVA soportado bienes inversion — base",
-    "41": "IVA soportado bienes inversion — cuota",
-    "42": "Compensaciones régimen especial agrícola",
-    "43": "Regularización de bienes de inversión",
-    "44": "Suma IVA soportado deducible",
-    "45": "Resultado régimen general (cuotas devengadas - cuotas deducibles)",
-    "64": "Resultado de la liquidación antes de compensaciones",
-    "65": "Compensaciones de períodos anteriores aplicadas",
-    "66": "Resultado tras compensaciones",
-    "67": "Entregas intracomunitarias y exportaciones",
-    "69": "Resultado final antes del ingreso",
-    "71": "Resultado a ingresar / a devolver",
+
+
+def _casilla_id(value: object) -> CasillaId:
+    return validated_casilla_id(value, surface="modelo_303_pdf_fixture._LABELS")
+
+
+_LABELS: Mapping[CasillaId, str] = {
+    _casilla_id("01"): "Base imponible tipo general",
+    _casilla_id("02"): "Tipo impositivo general (%)",
+    _casilla_id("03"): "Cuota repercutida tipo general",
+    _casilla_id("04"): "Base imponible tipo reducido",
+    _casilla_id("05"): "Tipo impositivo reducido (%)",
+    _casilla_id("06"): "Cuota repercutida tipo reducido",
+    _casilla_id("07"): "Base imponible tipo superreducido",
+    _casilla_id("08"): "Tipo impositivo superreducido (%)",
+    _casilla_id("09"): "Cuota repercutida tipo superreducido",
+    _casilla_id("28"): "Autoconsumo de bienes y servicios — base",
+    _casilla_id("29"): "Autoconsumo de bienes y servicios — cuota",
+    _casilla_id("30"): "Adquisiciones intracomunitarias — base",
+    _casilla_id("31"): "Adquisiciones intracomunitarias — cuota",
+    _casilla_id("32"): "Otros supuestos — base",
+    _casilla_id("33"): "Otros supuestos — cuota",
+    _casilla_id("34"): "IVA soportado operaciones interiores — base",
+    _casilla_id("35"): "IVA soportado operaciones interiores — cuota",
+    _casilla_id("36"): "IVA soportado importaciones — base",
+    _casilla_id("37"): "IVA soportado importaciones — cuota",
+    _casilla_id("38"): "IVA soportado intracomunitarias — base",
+    _casilla_id("39"): "IVA soportado intracomunitarias — cuota",
+    _casilla_id("40"): "IVA soportado bienes inversion — base",
+    _casilla_id("41"): "IVA soportado bienes inversion — cuota",
+    _casilla_id("42"): "Compensaciones régimen especial agrícola",
+    _casilla_id("43"): "Regularización de bienes de inversión",
+    _casilla_id("44"): "Suma IVA soportado deducible",
+    _casilla_id("45"): "Resultado régimen general (cuotas devengadas - cuotas deducibles)",
+    _casilla_id("64"): "Resultado de la liquidación antes de compensaciones",
+    _casilla_id("65"): "Compensaciones de períodos anteriores aplicadas",
+    _casilla_id("66"): "Resultado tras compensaciones",
+    _casilla_id("67"): "Entregas intracomunitarias y exportaciones",
+    _casilla_id("69"): "Resultado final antes del ingreso",
+    _casilla_id("71"): "Resultado a ingresar / a devolver",
 }
 
-_IDS_IN_ORDER: tuple[str, ...] = tuple(_LABELS.keys())
+_IDS_IN_ORDER: tuple[CasillaId, ...] = tuple(_LABELS.keys())
 
 # Stack each casilla on a single line, 4.5mm apart, starting at y=50mm.
 _ROW_HEIGHT_MM = 4.5
@@ -94,7 +101,7 @@ class Modelo303GenParams(BaseModel):
     tax_id: str = Field(min_length=4, max_length=32)
     ejercicio: str = Field(min_length=4, max_length=4)
     period_printed: str = Field(min_length=1, max_length=4)
-    casilla_values: Mapping[str, Decimal]
+    casilla_values: Mapping[CasillaId, Decimal]
     csv: str | None = None
     presented_at: str = "2025-04-20 10:00:00"
 
@@ -105,7 +112,7 @@ class Modelo303GroundTruth(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     params: Modelo303GenParams
-    expected_casillas: tuple[tuple[str, Decimal], ...]
+    expected_values_by_casilla_id: tuple[tuple[CasillaId, Decimal], ...]
 
 
 def generate(params: Modelo303GenParams) -> tuple[bytes, Modelo303GroundTruth]:
@@ -142,7 +149,7 @@ def generate(params: Modelo303GenParams) -> tuple[bytes, Modelo303GroundTruth]:
         for box in _BOXES
         if box.casilla_id in params.casilla_values
     )
-    ground_truth = Modelo303GroundTruth(params=params, expected_casillas=expected)
+    ground_truth = Modelo303GroundTruth(params=params, expected_values_by_casilla_id=expected)
     return pdf_bytes, ground_truth
 
 

@@ -44,6 +44,7 @@ from decimal import Decimal
 from typing import Final
 
 from ...core import Modelo
+from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ..aggregation import CalculationSourceDiagnostic
 from ..calculations import CalculationObservationRepository
 
@@ -59,20 +60,20 @@ _QUARTERLY_ORDINAL: Final[dict[str, int]] = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}
 
 #: The casilla whose zero value (on a non-first trimestre with a real prior
 #: filing) indicates an undeducted prior pago fraccionado.
-_PRIOR_PAYMENT_CASILLA: Final[str] = "05"
+_PRIOR_PAYMENT_CASILLA: Final[CasillaId] = validated_casilla_id("05", surface="_PRIOR_PAYMENT_CASILLA")
 
 #: The cumulative ingresos casilla whose positivity proves real activity.
-_CUMULATIVE_INGRESOS_CASILLA: Final[str] = "01"
+_CUMULATIVE_INGRESOS_CASILLA: Final[CasillaId] = validated_casilla_id("01", surface="_CUMULATIVE_INGRESOS_CASILLA")
 
 #: The prior-quarter casilla whose presence proves the prior filing carried a
 #: pago fraccionado the casilla-05 carry deducts.
-_PRIOR_POSITIVE_PART_CASILLA: Final[str] = "07"
+_PRIOR_POSITIVE_PART_CASILLA: Final[CasillaId] = validated_casilla_id("07", surface="_PRIOR_POSITIVE_PART_CASILLA")
 
 #: The prior-quarter minoración casilla (Deducción por inversión en vivienda
 #: habitual) the casilla-05 carry subtracts. A prior filing carrying casilla 07
 #: but LACKING any casilla-16 entry is "not captured" (distinct from "filed 0");
 #: the carry proceeds treating absence as zero, but the gap must surface.
-_PRIOR_MINORACION_CASILLA: Final[str] = "16"
+_PRIOR_MINORACION_CASILLA: Final[CasillaId] = validated_casilla_id("16", surface="_PRIOR_MINORACION_CASILLA")
 
 
 def _prior_trimestre_codes(period_token: str) -> tuple[str, ...]:
@@ -113,7 +114,7 @@ def _prior_m130_filing_exists(
 
 
 def collect_prior_payment_not_deducted_diagnostics(
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
     *,
     modelo: str,
     period_token: str,

@@ -23,6 +23,7 @@ from ...adapters.persistence.storage.errors import ClassificationError, Decrypti
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, PeriodError
 from ...domain.calculations.registry import (
+    BindingId,
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
@@ -83,7 +84,7 @@ class ModeloLedgerBindingAggregation(BaseModel):
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=2000, le=2100)
     period: Period
-    binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
+    binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
     iva_issues: Sequence[IvaLedgerAggregationIssue] = Field(default_factory=tuple)
     renta_issues: Sequence[RentaLedgerAggregationIssue] = Field(default_factory=tuple)
@@ -91,7 +92,7 @@ class ModeloLedgerBindingAggregation(BaseModel):
 
     @field_validator("binding_values")
     @classmethod
-    def _freeze_binding_values(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
+    def _freeze_binding_values(cls, value: Mapping[BindingId, Decimal]) -> Mapping[BindingId, Decimal]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("source_transaction_ids")
@@ -116,7 +117,7 @@ class ModeloLedgerBindingAggregation(BaseModel):
         return tuple(value)
 
     @field_serializer("binding_values")
-    def _serialize_binding_values(self, value: Mapping[str, Decimal]) -> dict[str, Decimal]:
+    def _serialize_binding_values(self, value: Mapping[BindingId, Decimal]) -> dict[BindingId, Decimal]:
         return dict(value)
 
     @field_serializer("source_transaction_ids")
@@ -282,7 +283,7 @@ class LedgerRentaExpenseAggregationSourceResolver:
                 error=exc,
             )
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable
-        # expense whose (modelo, period, target_casilla) matches no
+        # expense whose (modelo, period, target_casilla_id) matches no
         # ledger_renta_expense_aggregation binding would otherwise be silently
         # dropped (no-silent-under-declaration). Calculate still succeeds; the
         # operator sees the unrouted expense instead of an under-declared form.
@@ -314,7 +315,7 @@ class LedgerRentaExpenseAggregationSourceResolver:
                     message=(
                         f"declarable renta expense observation "
                         f"(modelo={str(observation.modelo)!r}, period={observation.period!r}, "
-                        f"target_casilla={observation.target_casilla!r}, "
+                        f"target_casilla_id={observation.target_casilla_id!r}, "
                         f"deductible_amount={observation.deductible_amount}) is not consumed by any "
                         f"ledger_renta_expense_aggregation binding on revision {context.revision.id!r}; "
                         "its deductible amount is not declared on this calculation"
@@ -369,7 +370,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 error=exc,
             )
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable
-        # income whose target_casilla matches no ledger_renta_income_aggregation
+        # income whose target_casilla_id matches no ledger_renta_income_aggregation
         # binding would otherwise be silently dropped (no-silent-under-declaration).
         unrouted = unsupported_ledger_renta_income_observations(context.revision, aggregation.observations)
         return CalculationSourceResolution(
@@ -397,8 +398,8 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     source_kind="ledger_renta_income_aggregation",
                     resolver_id=self.resolver_id,
                     message=(
-                        f"declarable renta income observation (target_casilla="
-                        f"{observation.target_casilla!r}, gross_amount={observation.gross_amount}) "
+                        f"declarable renta income observation (target_casilla_id="
+                        f"{observation.target_casilla_id!r}, gross_amount={observation.gross_amount}) "
                         f"is not consumed by any ledger_renta_income_aggregation binding on revision "
                         f"{context.revision.id!r}; its income is not declared on this calculation"
                     ),
@@ -451,7 +452,7 @@ class LedgerRentaGastoAggregationSourceResolver:
                 error=exc,
             )
         # Fail-closed advisory parity with the income screen: a non-zero
-        # declarable gasto whose target_casilla matches no
+        # declarable gasto whose target_casilla_id matches no
         # ledger_renta_gasto_aggregation binding would otherwise be silently
         # dropped (no-silent-under-declaration). Calculate still succeeds; the
         # operator sees the unrouted expense instead of an under-declared form.
@@ -481,8 +482,8 @@ class LedgerRentaGastoAggregationSourceResolver:
                     source_kind="ledger_renta_gasto_aggregation",
                     resolver_id=self.resolver_id,
                     message=(
-                        f"declarable renta gasto observation (target_casilla="
-                        f"{observation.target_casilla!r}, deductible_amount={observation.deductible_amount}) "
+                        f"declarable renta gasto observation (target_casilla_id="
+                        f"{observation.target_casilla_id!r}, deductible_amount={observation.deductible_amount}) "
                         f"is not consumed by any ledger_renta_gasto_aggregation binding on revision "
                         f"{context.revision.id!r}; its deductible expense is not declared on this calculation"
                     ),

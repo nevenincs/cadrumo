@@ -42,7 +42,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...domain.calculations.registry import CasillaObservation
+from ...domain.calculations.registry import CasillaId, CasillaObservation
 from ...domain.renta._errors import RentaValidationError
 from ...domain.renta._maritime_exemption import (
     MaritimeWorkerFacts,
@@ -70,7 +70,7 @@ class MaritimeExemptionResult(BaseModel):
     retmar_mandatory_filing: bool = False
 
     @property
-    def casilla_values(self) -> Mapping[str, Decimal]:
+    def casilla_values(self) -> Mapping[CasillaId, Decimal]:
         """Derived flat view: casilla_id -> Decimal.
 
         Provided for human readability only. The canonical storage is

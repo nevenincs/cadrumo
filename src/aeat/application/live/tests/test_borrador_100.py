@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.storage import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
@@ -174,6 +175,24 @@ def test_borrador_100_snapshot_service_captures_content_addressed_snapshot(
         binding_values=values,
     )
     assert repository.load(snapshot.snapshot_id) == snapshot
+
+
+def test_borrador_100_snapshot_service_rejects_non_binding_id_keys(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    service = Borrador100SnapshotService(
+        bucket_id=_BUCKET_ID,
+        repository=Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+    )
+
+    with pytest.raises(ValidationError, match="binding_values"):
+        service.capture(
+            filing_year=2025,
+            period=_PERIOD,
+            captured_at=_CAPTURED_AT,
+            source_url=_SOURCE,
+            binding_values={"Casilla 0500": Decimal("15.25")},
+        )
 
 
 def test_borrador_100_snapshot_service_deduplicates_identical_captures(

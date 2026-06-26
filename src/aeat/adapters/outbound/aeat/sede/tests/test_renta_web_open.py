@@ -8,8 +8,10 @@ import pytest
 
 from ......core.config import Settings
 from ......domain.calculations.registry import (
+    CasillaId,
     RentaWebOpenLivePayload,
     equivalent_renta_web_open_value,
+    validated_casilla_id,
 )
 from ..._playwright import PlaywrightTimeoutError
 from .._errors import SedeFailureMode, SedeParseError
@@ -21,12 +23,27 @@ from .._renta_web_open import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_RENTA_RESULTADO_CASILLA: CasillaId = validated_casilla_id("0670", surface="_RENTA_RESULTADO_CASILLA")
+_RENTA_MINIMO_ESTATAL_CASILLA: CasillaId = validated_casilla_id("0519", surface="_RENTA_MINIMO_ESTATAL_CASILLA")
+
 
 def test_renta_web_open_driver_plans_real_app_navigation_and_summary_scrapes() -> None:
-    payload = RentaWebOpenLivePayload().model_dump_json().encode("utf-8")
+    payload = (
+        RentaWebOpenLivePayload(
+            summary_labels_by_casilla_id={
+                _RENTA_RESULTADO_CASILLA: "Resultado de la declaración",
+                _RENTA_MINIMO_ESTATAL_CASILLA: "Mínimo personal y familiar",
+            },
+        )
+        .model_dump_json()
+        .encode("utf-8")
+    )
     plan = RentaWebOpenSedeDriver().planned_operations(
         payload,
-        expected={"Resultado de la declaración": Decimal("0.00"), "Mínimo personal y familiar": Decimal("5550.00")},
+        expected={
+            _RENTA_RESULTADO_CASILLA: Decimal("0.00"),
+            _RENTA_MINIMO_ESTATAL_CASILLA: Decimal("5550.00"),
+        },
     )
 
     _ext = Settings.external_constants()

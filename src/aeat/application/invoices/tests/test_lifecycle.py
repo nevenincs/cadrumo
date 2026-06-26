@@ -19,6 +19,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.invoices import (
+    Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
     InvoiceNotFoundError,
@@ -39,7 +40,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _COUNTERPARTY_CIF = "A58818501"
 
 
-def _build(invoice_number: str, *, linked: tuple[str, ...] = ()) -> object:
+def _build(invoice_number: str, *, linked: tuple[str, ...] = ()) -> Invoice:
     invoice = build_catalogue_invoice(
         bucket_id="operator",
         kind=InvoiceKind.RECEIVED,
@@ -99,17 +100,19 @@ def test_resolve_catalogue_invoice_ambiguous_prefix_names_candidates() -> None:
     with pytest.raises(InvoiceValidationError) as exc:
         resolve_catalogue_invoice(catalogue, shared_char)
     assert exc.value.translated_message == "application.invoices.lifecycle.errors.ambiguous_invoice_prefix"
+    assert exc.value.context is not None
     candidates = exc.value.context["candidates"]
+    assert isinstance(candidates, str)
     sharing = [invoice for invoice in members if invoice.invoice_id.startswith(shared_char)]
     assert len(sharing) >= 2
     for invoice in sharing:
         assert invoice.invoice_id in candidates
 
 
-def _two_invoices_sharing_a_prefix() -> tuple[str, list[object]]:
+def _two_invoices_sharing_a_prefix() -> tuple[str, list[Invoice]]:
     """Build invoices until at least two ids share a leading hex character."""
-    members: list[object] = []
-    seen: dict[str, object] = {}
+    members: list[Invoice] = []
+    seen: dict[str, Invoice] = {}
     for index in range(64):
         invoice = _build(f"2026-{index:04d}")
         head = invoice.invoice_id[0]
@@ -165,8 +168,11 @@ def test_remove_catalogue_invoice_refuses_linked_record(tmp_path) -> None:
         with pytest.raises(InvoiceValidationError) as exc:
             remove_catalogue_invoice(bucket_id="operator", invoice_id=linked_invoice.invoice_id)
         assert exc.value.translated_message == "application.invoices.lifecycle.errors.remove_linked_invoice"
+        assert exc.value.context is not None
         assert exc.value.context["invoice_id"] == linked_invoice.invoice_id
-        assert transaction_id in exc.value.context["linked_transaction_ids"]
+        linked_transaction_ids = exc.value.context["linked_transaction_ids"]
+        assert isinstance(linked_transaction_ids, str)
+        assert transaction_id in linked_transaction_ids
 
         # The refusal left the record intact — nothing was deleted.
         reloaded = repository.load()

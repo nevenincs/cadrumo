@@ -12,6 +12,7 @@ import pytest
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import (
     Invoice,
@@ -52,6 +53,11 @@ def _period(year: int, code: str) -> Period:
 
 
 _ANNUAL_2025 = _period(2025, "0A")
+_M100_ASESORIA_CASILLA: CasillaId = validated_casilla_id("0199", surface="_M100_ASESORIA_CASILLA")
+_M100_GASTOS_FINANCIEROS_CASILLA: CasillaId = validated_casilla_id(
+    "0203",
+    surface="_M100_GASTOS_FINANCIEROS_CASILLA",
+)
 
 
 @pytest.fixture
@@ -187,7 +193,7 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
     )
 
     assert result.issues == ()
-    assert result.casilla_values == {"0199": Decimal("121.00")}
+    assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("121.00")}
     assert len(result.observations) == 1
     observation = result.observations[0]
     assert observation.transaction_id == linked.transaction_id
@@ -223,7 +229,7 @@ def test_repository_backed_aggregation_binds_default_invoice_repository_to_reque
 
     assert result.issues == ()
     assert result.observations[0].invoice_id == invoice.invoice_id
-    assert result.casilla_values == {"0199": Decimal("121.00")}
+    assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("121.00")}
 
 
 def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects: SecureObjectRepository) -> None:
@@ -326,7 +332,7 @@ def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
     )
 
     assert result.issues == ()
-    assert result.casilla_values == {"0203": Decimal("50.0000")}
+    assert result.casilla_values == {_M100_GASTOS_FINANCIEROS_CASILLA: Decimal("50.0000")}
     assert result.observations[0].gross_amount == Decimal("50.0000")
     assert result.observations[0].deductible_amount == Decimal("50.0000")
 
@@ -360,7 +366,7 @@ def test_archived_and_stashed_transactions_do_not_feed_renta_expense_aggregation
 
     assert result.issues == ()
     assert [observation.transaction_id for observation in result.observations] == [active.transaction_id]
-    assert result.casilla_values == {"0203": Decimal("100.00")}
+    assert result.casilla_values == {_M100_GASTOS_FINANCIEROS_CASILLA: Decimal("100.00")}
 
 
 def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_catalogue() -> None:
@@ -467,7 +473,7 @@ def test_linked_incoming_refund_becomes_negative_binding_value() -> None:
 
     assert result.issues == ()
     assert result.observations[0].direction is RentaExpenseDirection.REFUND
-    assert result.casilla_values == {"0199": Decimal("-121.00")}
+    assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("-121.00")}
 
 
 def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> None:
@@ -518,7 +524,7 @@ def test_transaction_only_renta_expense_buckets_on_value_date_caja_basis() -> No
     # observation's filing_date is that value_date (operation_date fallback).
     assert [observation.transaction_id for observation in result.observations] == [caja_in_year.transaction_id]
     assert result.observations[0].filing_date == date(2025, 1, 2)
-    assert result.casilla_values == {"0203": Decimal("100.00")}
+    assert result.casilla_values == {_M100_GASTOS_FINANCIEROS_CASILLA: Decimal("100.00")}
     # The mirror row is excluded keyed on value_date — a devengo basis
     # (booked_date 2025-01-02) would instead have INCLUDED it.
     assert [issue.transaction_id for issue in result.issues] == [caja_out_of_year.transaction_id]

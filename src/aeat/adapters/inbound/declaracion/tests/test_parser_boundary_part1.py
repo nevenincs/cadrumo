@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from ._parser_boundary_support import (
@@ -15,11 +17,13 @@ from ._parser_boundary_support import (
     A4,
     FIXTURES_DIR,
     AeatError,
+    CasillaId,
     Decimal,
     DeclaracionParseError,
     Path,
     PdfModeloImportError,
     TemplateNotDetectedError,
+    _casilla_id,
     _expected_period,
     _extract_pages_words,
     _modelo_130_snapshot,
@@ -32,6 +36,17 @@ from ._parser_boundary_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+
+def _expected_casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
+    return {_casilla_id(casilla_id): amount for casilla_id, amount in values.items()}
+
+
+_M111_CASILLA_07: CasillaId = _casilla_id("07")
+_M111_CASILLA_08: CasillaId = _casilla_id("08")
+_M111_CASILLA_09: CasillaId = _casilla_id("09")
+_M111_CASILLA_28: CasillaId = _casilla_id("28")
+_M111_CASILLA_30: CasillaId = _casilla_id("30")
 
 
 def test_declaracion_errors_stay_on_core_exception_hierarchy() -> None:
@@ -208,31 +223,34 @@ def test_parser_extracts_modelo_111_casillas_from_corpus(pdf_stem: str, year: in
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
     # Casilla 30 (Resultado a ingresar) is present in all 4 corpus specimens.
-    assert "30" in values, f"{pdf_stem}: expected casilla '30' in extracted values, got {set(values.keys())!r}"
-    assert values["30"] == Decimal("1000.00"), (
-        f"{pdf_stem}: casilla '30' expected Decimal('1000.00'), got {values['30']!r}"
+    assert _M111_CASILLA_30 in values, (
+        f"{pdf_stem}: expected casilla {_M111_CASILLA_30!r} in extracted values, got {set(values.keys())!r}"
+    )
+    assert values[_M111_CASILLA_30] == Decimal("1000.00"), (
+        f"{pdf_stem}: casilla {_M111_CASILLA_30!r} expected Decimal('1000.00'), "
+        f"got {values[_M111_CASILLA_30]!r}"
     )
 
     if pdf_stem == "2024-4T":
         # Negative filing: only casilla 30 is present; no other amounts printed.
-        assert set(values.keys()) == {"30"}, (
+        assert set(values.keys()) == {_M111_CASILLA_30}, (
             f"{pdf_stem}: negative filing should yield only casilla '30', got {set(values.keys())!r}"
         )
     else:
         # Positive filing: casillas 07 (count=1), 08 and 09 (amounts), 28, 30 are present.
-        assert "07" in values and "08" in values and "09" in values and "28" in values, (
+        assert {_M111_CASILLA_07, _M111_CASILLA_08, _M111_CASILLA_09, _M111_CASILLA_28} <= set(values), (
             f"{pdf_stem}: expected casillas 07/08/09/28/30, got {set(values.keys())!r}"
         )
-        assert values["07"] == Decimal("1"), f"{pdf_stem}: casilla '07' expected Decimal('1'), got {values['07']!r}"
-        assert values["08"] == Decimal("1000.00"), (
-            f"{pdf_stem}: casilla '08' expected Decimal('1000.00'), got {values['08']!r}"
-        )
-        assert values["09"] == Decimal("1000.00"), (
-            f"{pdf_stem}: casilla '09' expected Decimal('1000.00'), got {values['09']!r}"
-        )
-        assert values["28"] == Decimal("1000.00"), (
-            f"{pdf_stem}: casilla '28' expected Decimal('1000.00'), got {values['28']!r}"
-        )
+        expected_positive_values = {
+            _M111_CASILLA_07: Decimal("1"),
+            _M111_CASILLA_08: Decimal("1000.00"),
+            _M111_CASILLA_09: Decimal("1000.00"),
+            _M111_CASILLA_28: Decimal("1000.00"),
+        }
+        for casilla_id, expected_value in expected_positive_values.items():
+            assert values[casilla_id] == expected_value, (
+                f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, got {values[casilla_id]!r}"
+            )
 
 
 @pytest.mark.parametrize(
@@ -334,22 +352,22 @@ def test_parser_extracts_modelo_130_casillas_from_corpus(pdf_stem: str, year: in
     # are absent (zero by default in the engine).  Values are formula-consistent:
     #   c19 = max(0, c03 * 20%) - 100  (prev_year_income=0 → casilla 13 = 100 EUR)
     # Ground truth is derived from _MODELO_130_CORPUS_FIXTURES in _generate.py.
-    corpus_ground_truth: dict[str, dict[str, Decimal]] = {
-        "2021-2T": {"03": Decimal("5000.00"), "19": Decimal("900.00")},
-        "2021-3T": {"03": Decimal("7500.00"), "19": Decimal("1400.00")},
-        "2021-4T": {"03": Decimal("10000.00"), "19": Decimal("1900.00")},
-        "2022-1T": {"03": Decimal("5200.00"), "19": Decimal("940.00")},
-        "2022-2T": {"03": Decimal("7800.00"), "19": Decimal("1460.00")},
-        "2022-3T": {"03": Decimal("9100.00"), "19": Decimal("1720.00")},
-        "2022-4T": {"03": Decimal("11000.00"), "19": Decimal("2100.00")},
-        "2023-1T": {"03": Decimal("5400.00"), "19": Decimal("980.00")},
-        "2023-2T": {"03": Decimal("8100.00"), "19": Decimal("1520.00")},
-        "2023-3T": {"03": Decimal("10500.00"), "19": Decimal("2000.00")},
-        "2023-4T": {"03": Decimal("13000.00"), "19": Decimal("2500.00")},
-        "2024-1T": {"03": Decimal("5600.00"), "19": Decimal("1020.00")},
-        "2024-2T": {"03": Decimal("8400.00"), "19": Decimal("1580.00")},
-        "2024-3T": {"03": Decimal("11200.00"), "19": Decimal("2140.00")},
-        "2024-4T": {"03": Decimal("14000.00"), "19": Decimal("2700.00")},
+    corpus_ground_truth: dict[str, dict[CasillaId, Decimal]] = {
+        "2021-2T": _expected_casilla_values({"03": Decimal("5000.00"), "19": Decimal("900.00")}),
+        "2021-3T": _expected_casilla_values({"03": Decimal("7500.00"), "19": Decimal("1400.00")}),
+        "2021-4T": _expected_casilla_values({"03": Decimal("10000.00"), "19": Decimal("1900.00")}),
+        "2022-1T": _expected_casilla_values({"03": Decimal("5200.00"), "19": Decimal("940.00")}),
+        "2022-2T": _expected_casilla_values({"03": Decimal("7800.00"), "19": Decimal("1460.00")}),
+        "2022-3T": _expected_casilla_values({"03": Decimal("9100.00"), "19": Decimal("1720.00")}),
+        "2022-4T": _expected_casilla_values({"03": Decimal("11000.00"), "19": Decimal("2100.00")}),
+        "2023-1T": _expected_casilla_values({"03": Decimal("5400.00"), "19": Decimal("980.00")}),
+        "2023-2T": _expected_casilla_values({"03": Decimal("8100.00"), "19": Decimal("1520.00")}),
+        "2023-3T": _expected_casilla_values({"03": Decimal("10500.00"), "19": Decimal("2000.00")}),
+        "2023-4T": _expected_casilla_values({"03": Decimal("13000.00"), "19": Decimal("2500.00")}),
+        "2024-1T": _expected_casilla_values({"03": Decimal("5600.00"), "19": Decimal("1020.00")}),
+        "2024-2T": _expected_casilla_values({"03": Decimal("8400.00"), "19": Decimal("1580.00")}),
+        "2024-3T": _expected_casilla_values({"03": Decimal("11200.00"), "19": Decimal("2140.00")}),
+        "2024-4T": _expected_casilla_values({"03": Decimal("14000.00"), "19": Decimal("2700.00")}),
     }
 
     expected = corpus_ground_truth[pdf_stem]
@@ -464,26 +482,34 @@ def test_parser_extracts_modelo_123_2024_corpus_round_trip() -> None:
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
     # All 14 casillas defined by the 2024+ declaracion_pdf profile must be present.
-    assert set(values.keys()) == {str(i).zfill(2) for i in range(1, 15)}, (
+    assert set(values.keys()) == set(_MODELO_123_CURRENT_EXPECTED_TARGETS), (
         f"expected exactly the 14 M123 2024+ profile casillas, got {set(values.keys())!r}"
     )
 
     # Ground truth: fixture amounts from _generate.py _MODELO_123_2024_CASILLAS.
     # Integer casillas (01-03) stored as comma-format, parse_spanish_decimal returns Decimal.
-    assert values["01"] == Decimal("5.00"), f"casilla 01: expected Decimal('5.00'), got {values['01']!r}"
-    assert values["02"] == Decimal("3.00"), f"casilla 02: expected Decimal('3.00'), got {values['02']!r}"
-    assert values["03"] == Decimal("8.00"), f"casilla 03: expected Decimal('8.00'), got {values['03']!r}"
-    assert values["04"] == Decimal("10000.00"), f"casilla 04: expected Decimal('10000.00'), got {values['04']!r}"
-    assert values["05"] == Decimal("5000.00"), f"casilla 05: expected Decimal('5000.00'), got {values['05']!r}"
-    assert values["06"] == Decimal("15000.00"), f"casilla 06: expected Decimal('15000.00'), got {values['06']!r}"
-    assert values["07"] == Decimal("1900.00"), f"casilla 07: expected Decimal('1900.00'), got {values['07']!r}"
-    assert values["08"] == Decimal("950.00"), f"casilla 08: expected Decimal('950.00'), got {values['08']!r}"
-    assert values["09"] == Decimal("2850.00"), f"casilla 09: expected Decimal('2850.00'), got {values['09']!r}"
-    assert values["10"] == Decimal("0.00"), f"casilla 10: expected Decimal('0.00'), got {values['10']!r}"
-    assert values["11"] == Decimal("0.00"), f"casilla 11: expected Decimal('0.00'), got {values['11']!r}"
-    assert values["12"] == Decimal("2850.00"), f"casilla 12: expected Decimal('2850.00'), got {values['12']!r}"
-    assert values["13"] == Decimal("0.00"), f"casilla 13: expected Decimal('0.00'), got {values['13']!r}"
-    assert values["14"] == Decimal("2850.00"), f"casilla 14: expected Decimal('2850.00'), got {values['14']!r}"
+    expected_values = _expected_casilla_values(
+        {
+            "01": Decimal("5.00"),
+            "02": Decimal("3.00"),
+            "03": Decimal("8.00"),
+            "04": Decimal("10000.00"),
+            "05": Decimal("5000.00"),
+            "06": Decimal("15000.00"),
+            "07": Decimal("1900.00"),
+            "08": Decimal("950.00"),
+            "09": Decimal("2850.00"),
+            "10": Decimal("0.00"),
+            "11": Decimal("0.00"),
+            "12": Decimal("2850.00"),
+            "13": Decimal("0.00"),
+            "14": Decimal("2850.00"),
+        },
+    )
+    for casilla_id, expected_value in expected_values.items():
+        assert values[casilla_id] == expected_value, (
+            f"casilla {casilla_id}: expected {expected_value!r}, got {values[casilla_id]!r}"
+        )
 
 
 def test_parser_extracts_modelo_123_2023_legacy_corpus_round_trip() -> None:
@@ -498,9 +524,9 @@ def test_parser_extracts_modelo_123_2023_legacy_corpus_round_trip() -> None:
     strategy is valid for both revisions.
 
     The 2019-2023 registry revision uses internal casilla IDs with the -legacy suffix
-    (e.g. "01-legacy") to disambiguate them from the 2024+ plain IDs.  The
-    numeric_casilla regex uses re.escape(casilla_id), so the fixture must print
-    "01-legacy  4,00" etc. at line start for the regex to match.
+    (e.g. "01-legacy") to disambiguate them from the 2024+ plain IDs. The printed
+    form still carries bare box numbers ("01", "02", ...); the parser must match the
+    printed number and emit the canonical legacy casilla.id.
 
     The fixture encodes synthetic amounts satisfying both registry formulas:
       [06] = [03] + [05] = 1.520,00 + 0,00 = 1.520,00
@@ -509,10 +535,9 @@ def test_parser_extracts_modelo_123_2023_legacy_corpus_round_trip() -> None:
     Ground truth values are derived from the fixture data in _generate.py
     _MODELO_123_2023_LEGACY_CASILLAS — not re-computed from the registry formula.
 
-    Non-tautology: a fixture that printed plain "01  4,00" (without -legacy) would
-    produce coverage=0 for the 2019-2023 profile because the regex expects "01-legacy".
-    The test therefore verifies the exact ID-to-printed-text mapping convention used
-    for legacy casilla IDs.
+    Non-tautology: the fixture prints the official bare box number while the expected
+    output keys are the registry's legacy casilla IDs. A parser that anchors on
+    casilla.id text instead of casilla.number would produce coverage=0 here.
     """
     filing = parse_declaracion(
         _MODELO_123_2023_SYNTHETIC_FIXTURE,
@@ -533,35 +558,27 @@ def test_parser_extracts_modelo_123_2023_legacy_corpus_round_trip() -> None:
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
     # All 8 casillas defined by the 2019-2023 declaracion_pdf profile must be present.
-    assert set(values.keys()) == {f"{i:02d}-legacy" for i in range(1, 9)}, (
+    assert set(values.keys()) == set(_MODELO_123_HISTORICAL_EXPECTED_TARGETS), (
         f"expected exactly the 8 M123 legacy profile casillas, got {set(values.keys())!r}"
     )
 
     # Ground truth: fixture amounts from _generate.py _MODELO_123_2023_LEGACY_CASILLAS.
-    assert values["01-legacy"] == Decimal("4.00"), (
-        f"casilla 01-legacy: expected Decimal('4.00'), got {values['01-legacy']!r}"
+    expected_values = _expected_casilla_values(
+        {
+            "01-legacy": Decimal("4.00"),
+            "02-legacy": Decimal("8000.00"),
+            "03-legacy": Decimal("1520.00"),
+            "04-legacy": Decimal("0.00"),
+            "05-legacy": Decimal("0.00"),
+            "06-legacy": Decimal("1520.00"),
+            "07-legacy": Decimal("0.00"),
+            "08-legacy": Decimal("1520.00"),
+        },
     )
-    assert values["02-legacy"] == Decimal("8000.00"), (
-        f"casilla 02-legacy: expected Decimal('8000.00'), got {values['02-legacy']!r}"
-    )
-    assert values["03-legacy"] == Decimal("1520.00"), (
-        f"casilla 03-legacy: expected Decimal('1520.00'), got {values['03-legacy']!r}"
-    )
-    assert values["04-legacy"] == Decimal("0.00"), (
-        f"casilla 04-legacy: expected Decimal('0.00'), got {values['04-legacy']!r}"
-    )
-    assert values["05-legacy"] == Decimal("0.00"), (
-        f"casilla 05-legacy: expected Decimal('0.00'), got {values['05-legacy']!r}"
-    )
-    assert values["06-legacy"] == Decimal("1520.00"), (
-        f"casilla 06-legacy: expected Decimal('1520.00'), got {values['06-legacy']!r}"
-    )
-    assert values["07-legacy"] == Decimal("0.00"), (
-        f"casilla 07-legacy: expected Decimal('0.00'), got {values['07-legacy']!r}"
-    )
-    assert values["08-legacy"] == Decimal("1520.00"), (
-        f"casilla 08-legacy: expected Decimal('1520.00'), got {values['08-legacy']!r}"
-    )
+    for casilla_id, expected_value in expected_values.items():
+        assert values[casilla_id] == expected_value, (
+            f"casilla {casilla_id}: expected {expected_value!r}, got {values[casilla_id]!r}"
+        )
 
 
 def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy() -> None:
@@ -603,16 +620,22 @@ def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy(
         "71",
     }
     # 2024-1T synthetic fixture: c27=13200, c29=8400, c37=0, c45=8400, c46=c69=4800
-    assert values["27"] == Decimal("13200.00")
-    assert values["29"] == Decimal("8400.00")
-    assert values["37"] == Decimal("0.00")
-    assert values["45"] == Decimal("8400.00")
-    assert values["iva.resultado-regimen-general"] == Decimal("4800.00")
-    assert values["64"] == Decimal("4800.00")
-    assert values["66"] == Decimal("4800.00")
-    assert values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("0.00")
-    assert values["iva.resultado"] == Decimal("4800.00")
-    assert values["71"] == Decimal("4800.00")
+    expected_values = _expected_casilla_values(
+        {
+            "27": Decimal("13200.00"),
+            "29": Decimal("8400.00"),
+            "37": Decimal("0.00"),
+            "45": Decimal("8400.00"),
+            "iva.resultado-regimen-general": Decimal("4800.00"),
+            "64": Decimal("4800.00"),
+            "66": Decimal("4800.00"),
+            "iva.compensacion-pendiente-periodos-anteriores": Decimal("0.00"),
+            "iva.resultado": Decimal("4800.00"),
+            "71": Decimal("4800.00"),
+        },
+    )
+    for casilla_id, expected_value in expected_values.items():
+        assert values[casilla_id] == expected_value
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "303"
     assert filing.registry_snapshot_ref.modelo_year == 2024

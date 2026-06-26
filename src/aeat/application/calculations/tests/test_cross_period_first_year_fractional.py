@@ -19,9 +19,10 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import Period
-from ....domain.calculations.registry import Modelo202Modality
+from ....domain.calculations.registry import CasillaId, Modelo202Modality, validated_casilla_id
 from .. import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
@@ -38,6 +39,7 @@ from .._cross_period_clean_state import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TARGET_YEAR = 2026
+_M202_SOURCE_CASILLA_03: CasillaId = validated_casilla_id("03", surface="_M202_SOURCE_CASILLA_03")
 
 
 def _requirement(
@@ -50,10 +52,22 @@ def _requirement(
         source_modelo=source_modelo,
         filing_year=year,
         period=Period.from_year_and_code(year, period_code),
-        source_casillas=("03",),
+        source_casilla_ids=(_M202_SOURCE_CASILLA_03,),
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=(f"binding-{source_modelo}",),
     )
+
+
+def test_cross_period_requirement_rejects_legacy_source_casillas_key() -> None:
+    payload = _requirement("202").model_dump()
+    payload["source_casillas"] = payload.pop("source_casilla_ids")
+
+    with pytest.raises(ValidationError) as exc_info:
+        CrossPeriodDependencyRequirement.model_validate(payload)
+
+    detail = str(exc_info.value)
+    assert "source_casilla_ids" in detail
+    assert "source_casillas" in detail
 
 
 def _verdict(*dependencies: CrossPeriodDependencyEvidence) -> CrossPeriodCleanStateVerdict:

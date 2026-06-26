@@ -9,6 +9,7 @@ from io import BytesIO
 
 import pytest
 from openpyxl import load_workbook
+from pydantic import ValidationError
 
 from ....application.storage.calc_sheets import (
     OfflineWorkbookEvidenceSidecar,
@@ -22,6 +23,7 @@ from ....application.storage.calc_sheets import (
 )
 from ....application.storage.calc_sheets._errors import CalcSheetsEngineError
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos._ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingEvidence, ManualFactBasisEntry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -29,6 +31,19 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _NOW = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
 _FINGERPRINT = "a" * 64
 _SNAPSHOT = "b" * 64
+_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
+    "resultado.contable",
+    surface="_RESULTADO_CONTABLE_CASILLA",
+)
+_IVA_DEVENGADO_BASE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.devengado.base",
+    surface="_IVA_DEVENGADO_BASE_CASILLA",
+)
+_IVA_DEVENGADO_CUOTA_CASILLA: CasillaId = validated_casilla_id(
+    "iva.devengado.cuota",
+    surface="_IVA_DEVENGADO_CUOTA_CASILLA",
+)
+_NONCANONICAL_IVA_DEVENGADO_BASE_CASILLA_ID = " iva.devengado.base "
 
 
 def _ledger_evidence() -> LedgerFilingEvidence:
@@ -66,7 +81,7 @@ def _ledger_evidence() -> LedgerFilingEvidence:
         ),
         manual_entries=(
             ManualFactBasisEntry(
-                casilla="resultado.contable",
+                casilla_id=_RESULTADO_CONTABLE_CASILLA,
                 value="140000.00",
                 kind="casilla_input",
                 note="operator supplied accounting result",
@@ -95,7 +110,9 @@ def _plan(evidence: SheetEvidenceFacet) -> SheetExportPlan:
 def test_offline_export_sidecar_reconstitutes_evidence_casilla_basis() -> None:
     evidence = sheet_evidence_from_ledger_filing(
         _ledger_evidence(),
-        contributor_casillas={"tx-roundtrip-001": ("iva.devengado.base", "iva.devengado.cuota")},
+        casilla_ids_by_contributor_id={
+            "tx-roundtrip-001": (_IVA_DEVENGADO_BASE_CASILLA, _IVA_DEVENGADO_CUOTA_CASILLA),
+        },
     )
     export = serialize_offline_export(_plan(evidence))
 
@@ -104,23 +121,33 @@ def test_offline_export_sidecar_reconstitutes_evidence_casilla_basis() -> None:
     try:
         evidencia = workbook[TabName.EVIDENCIA.value]
         assert evidencia["B1"].value == _SNAPSHOT
-        assert evidencia["B4"].value == "iva.devengado.base"
-        assert evidencia["B5"].value == "iva.devengado.cuota"
-        assert evidencia["B6"].value == "resultado.contable"
+        assert evidencia["B4"].value == _IVA_DEVENGADO_BASE_CASILLA
+        assert evidencia["B5"].value == _IVA_DEVENGADO_CUOTA_CASILLA
+        assert evidencia["B6"].value == _RESULTADO_CONTABLE_CASILLA
     finally:
         workbook.close()
 
     assert sidecar.workbook_sha256 == hashlib.sha256(export.workbook_payload).hexdigest()
     assert sidecar.evidence == evidence
     assert tuple(row.casilla_id for row in sidecar.evidence.contributor_rows) == (
-        "iva.devengado.base",
-        "iva.devengado.cuota",
+        _IVA_DEVENGADO_BASE_CASILLA,
+        _IVA_DEVENGADO_CUOTA_CASILLA,
     )
-    assert sidecar.evidence.manual_entries[0].casilla_id == "resultado.contable"
+    assert sidecar.evidence.manual_entries[0].casilla_id == _RESULTADO_CONTABLE_CASILLA
     assert sidecar.evidence.contributor_rows[0].transaction_id == "tx-roundtrip-001"
     assert sidecar.evidence.contributor_rows[0].legal_refs == ("liva-art-99",)
 
 
 def test_ledger_evidence_projection_refuses_unattributed_contributor() -> None:
     with pytest.raises(CalcSheetsEngineError, match="casilla attribution"):
-        sheet_evidence_from_ledger_filing(_ledger_evidence(), contributor_casillas={})
+        sheet_evidence_from_ledger_filing(_ledger_evidence(), casilla_ids_by_contributor_id={})
+
+
+def test_ledger_evidence_projection_refuses_noncanonical_casilla_attribution() -> None:
+    with pytest.raises(ValidationError, match="casilla_id"):
+        sheet_evidence_from_ledger_filing(
+            _ledger_evidence(),
+            casilla_ids_by_contributor_id={
+                "tx-roundtrip-001": (_NONCANONICAL_IVA_DEVENGADO_BASE_CASILLA_ID,),
+            },
+        )

@@ -19,13 +19,15 @@ from ...core import Modelo, Period
 from ...core.aggregation import COUNTERPART_SOURCE_KINDS, CounterpartSourceKind, counterpart_source_kind
 from ...core.parsing._dates import _parse_iso8601_date
 from ...domain.calculations.registry import (
-    CounterpartAggregationObservation as RegistryCounterpartObservation,
-)
-from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
     ModeloRevision,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
     resolve_counterpart_binding_row_values,
     resolve_counterpart_binding_values,
+)
+from ...domain.calculations.registry import (
+    CounterpartAggregationObservation as RegistryCounterpartObservation,
 )
 from ._counterpart import CounterpartAggregation, OperationKind349
 from ._errors import AggregationUnsupportedModeloError, AggregationValidationError, t
@@ -54,30 +56,42 @@ class PerModeloRegistryBindingResolution(BaseModel):
     modelo: str = Field(min_length=1, max_length=16)
     period: Period
     provider: PerModeloAggregationProvider
-    binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
-    row_values: Mapping[tuple[str, int], Decimal | str] = Field(default_factory=dict)
-    casilla_values: Mapping[str, Decimal] = Field(default_factory=dict)
+    binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
+    row_values: Mapping[tuple[BindingId, int], Decimal | str] = Field(default_factory=dict)
+    casilla_values: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     source_observation_count: int = Field(ge=0)
 
-    @field_validator("binding_values", "casilla_values")
+    @field_validator("binding_values")
     @classmethod
-    def _freeze_decimal_mapping(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
+    def _freeze_decimal_mapping(cls, value: Mapping[BindingId, Decimal]) -> Mapping[BindingId, Decimal]:
+        return MappingProxyType(dict(sorted(value.items())))
+
+    @field_validator("casilla_values")
+    @classmethod
+    def _freeze_casilla_values(cls, value: Mapping[CasillaId, Decimal]) -> Mapping[CasillaId, Decimal]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("row_values")
     @classmethod
     def _freeze_row_values(
         cls,
-        value: Mapping[tuple[str, int], Decimal | str],
-    ) -> Mapping[tuple[str, int], Decimal | str]:
+        value: Mapping[tuple[BindingId, int], Decimal | str],
+    ) -> Mapping[tuple[BindingId, int], Decimal | str]:
         return MappingProxyType(dict(sorted(value.items(), key=lambda item: (item[0][0], item[0][1]))))
 
-    @field_serializer("binding_values", "casilla_values")
-    def _serialize_decimal_mapping(self, value: Mapping[str, Decimal]) -> dict[str, Decimal]:
+    @field_serializer("binding_values")
+    def _serialize_decimal_mapping(self, value: Mapping[BindingId, Decimal]) -> dict[BindingId, Decimal]:
+        return dict(value)
+
+    @field_serializer("casilla_values")
+    def _serialize_casilla_values(self, value: Mapping[CasillaId, Decimal]) -> dict[CasillaId, Decimal]:
         return dict(value)
 
     @field_serializer("row_values")
-    def _serialize_row_values(self, value: Mapping[tuple[str, int], Decimal | str]) -> dict[str, Decimal | str]:
+    def _serialize_row_values(
+        self,
+        value: Mapping[tuple[BindingId, int], Decimal | str],
+    ) -> dict[str, Decimal | str]:
         return {f"{binding_id}:{row_index}": row_value for (binding_id, row_index), row_value in value.items()}
 
 
@@ -130,7 +144,7 @@ def resolve_per_modelo_registry_binding_values(
     )
     binding_values = resolve_counterpart_binding_values(revision, observations)
     row_values = resolve_counterpart_binding_row_values(revision, observations)
-    casilla_values = resolve_bound_casilla_inputs(revision, binding_values)
+    casilla_values = resolve_bound_inputs_by_casilla_id(revision, binding_values)
     return PerModeloRegistryBindingResolution(
         modelo=result.modelo,
         period=result.period,

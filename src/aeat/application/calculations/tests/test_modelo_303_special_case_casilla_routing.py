@@ -42,8 +42,10 @@ import pytest
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
+    CasillaId,
     calculate_registry_snapshot,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
 from ....domain.iva._schema import IvaCategory
 from ....domain.transactions import (
@@ -96,6 +98,21 @@ _STATE_RATIO_BINDING = "modelo-303-profile-state-attribution-ratio"
 _PRIOR_COMPENSATION_BINDING = "modelo-303-compensacion-pendiente-anteriores"
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M303 special-case fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA: CasillaId = _casilla_id(
+    "iva.autorepercutido.intracomunitaria",
+)
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
+
+
 def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota(tmp_path: Path) -> None:
     """A reverse-charge intracom cuota feeds BOTH devengada-total AND deducible-total.
 
@@ -115,21 +132,21 @@ def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota(tmp_path:
             _PRIOR_COMPENSATION_BINDING: Decimal("0"),
             **{b: Decimal("0") for b in _LEDGER_CUOTA_BINDINGS if b != _INTRACOM_BINDING},
         }
-        inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+        inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
         result = calculate_registry_snapshot(
             snapshot,
             inputs=inputs,
             binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
-        )
+    )
 
     # The intracom cuota self-assesses as output IVA (devengada leg, art. 84)...
-    assert result.values["iva.autorepercutido.intracomunitaria"] == intracom_cuota
-    assert result.values["iva.cuota-devengada-total"] == intracom_cuota
+    assert result.values[_M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA] == intracom_cuota
+    assert result.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA] == intracom_cuota
     # ...AND is deductible by the same amount (deducible leg, art. 92).
-    assert result.values["iva.cuota-deducible-total"] == intracom_cuota
+    assert result.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA] == intracom_cuota
     # The reverse-charge double-entry nets to zero régimen-general result.
-    assert result.values["iva.resultado-regimen-general"] == Decimal("0.00")
+    assert result.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA] == Decimal("0.00")
 
 
 def test_intracom_cuota_is_not_silently_dropped_from_deducible(tmp_path: Path) -> None:
@@ -148,14 +165,14 @@ def test_intracom_cuota_is_not_silently_dropped_from_deducible(tmp_path: Path) -
             _PRIOR_COMPENSATION_BINDING: Decimal("0"),
             **{b: Decimal("0") for b in _LEDGER_CUOTA_BINDINGS if b != _INTRACOM_BINDING},
         }
-        inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+        inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
         result = calculate_registry_snapshot(
             snapshot,
             inputs=inputs,
             binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
         )
-    assert result.values["iva.cuota-deducible-total"] > Decimal("0"), (
+    assert result.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA] > Decimal("0"), (
         "intracom autorepercutido cuota was dropped from the deducible total — "
         "reverse-charge acquisition would over-state IVA payable"
     )

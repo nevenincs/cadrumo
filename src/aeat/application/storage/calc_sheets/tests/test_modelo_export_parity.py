@@ -49,10 +49,10 @@ def _plan_casilla_keys(snapshot: RegistrySnapshot) -> set[tuple[str, str | None]
     plan = build_export_plan(snapshot)
     emitted_ids: set[str] = set()
     for cell in plan.value_cells:
-        if cell.casilla is not None:
-            emitted_ids.add(cell.casilla)
+        if cell.casilla_id is not None:
+            emitted_ids.add(cell.casilla_id)
     for cell in plan.formula_cells:
-        emitted_ids.add(cell.casilla)
+        emitted_ids.add(cell.casilla_id)
     return {(by_id[cid].number, by_id[cid].segmento) for cid in emitted_ids if cid in by_id}
 
 
@@ -73,7 +73,7 @@ def test_every_computed_casilla_has_a_live_formula(modelo: str, year: int, perio
     snapshot = _snapshot(modelo, year, period, on)
     computed_ids = {c.id for c in snapshot.revision.casillas if c.formula is not None}
     plan = build_export_plan(snapshot)
-    formula_ids = {fc.casilla for fc in plan.formula_cells}
+    formula_ids = {fc.casilla_id for fc in plan.formula_cells}
     assert computed_ids, f"modelo {modelo} declares no computed casillas"
     missing = sorted(computed_ids - formula_ids)
     # Every computed casilla must carry a live spreadsheet formula in the export.
@@ -91,7 +91,7 @@ _FORMAT_BY_REGISTRY_TYPE = {
 def test_numeric_casillas_carry_number_format_facet(modelo: str, year: int, period: str, on: date) -> None:
     snapshot = _snapshot(modelo, year, period, on)
     plan = build_export_plan(snapshot)
-    formats = {item.casilla: item for item in plan.number_formats}
+    formats = {item.casilla_id: item for item in plan.number_formats}
     expected = {
         casilla.id: _FORMAT_BY_REGISTRY_TYPE[casilla.data_type]
         for casilla in snapshot.revision.casillas

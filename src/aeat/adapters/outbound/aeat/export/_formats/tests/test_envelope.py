@@ -12,6 +12,7 @@ from decimal import Decimal
 import pytest
 
 from .......core.external_constants import ISO_8859_1_ENCODING
+from .......domain.calculations.registry import CasillaId, validated_casilla_id
 from .._deserialise import deserialise_envelope
 from .._record_spec import (
     FieldKind,
@@ -22,6 +23,7 @@ from .._record_spec import (
 from .._serialise import serialise_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_ENVELOPE_AMOUNT_CASILLA: CasillaId = validated_casilla_id("01", surface="_ENVELOPE_AMOUNT_CASILLA")
 
 
 def _build_envelope_mini() -> tuple[SegmentSpec, ...]:
@@ -73,7 +75,7 @@ def _build_envelope_mini() -> tuple[SegmentSpec, ...]:
                 offset=21,
                 length=11,
                 field_id="FIELD_AMOUNT",
-                casilla_id="01",
+                casilla_id=_ENVELOPE_AMOUNT_CASILLA,
                 kind=FieldKind.CURRENCY,
             ),
             record_field(
@@ -143,7 +145,7 @@ class TestEnvelopeSerialise:
         validate_segment_specs(segments)
 
         payload = serialise_envelope(
-            casilla_values={"01": Decimal("12345.67")},
+            casilla_values={_ENVELOPE_AMOUNT_CASILLA: Decimal("12345.67")},
             headers={
                 "FIELD_YEAR": "2024",
                 "FIELD_IDENTITY": "X1234567L",
@@ -172,7 +174,7 @@ class TestEnvelopeSerialise:
     def test_round_trip_preserves_casilla_via_deserialise(self) -> None:
         segments = _build_envelope_mini()
         payload = serialise_envelope(
-            casilla_values={"01": Decimal("500.00")},
+            casilla_values={_ENVELOPE_AMOUNT_CASILLA: Decimal("500.00")},
             headers={
                 "FIELD_YEAR": "2024",
                 "FIELD_IDENTITY": "X1234567L",
@@ -187,7 +189,7 @@ class TestEnvelopeSerialise:
         )
         assert "SEG0_MINI" in parsed.segments
         assert "SEG1_MINI" in parsed.segments
-        assert parsed.merged_casilla_values["01"] == Decimal("500.00")
+        assert parsed.merged_casilla_values[_ENVELOPE_AMOUNT_CASILLA] == Decimal("500.00")
         assert parsed.segments["SEG1_MINI"].field_values["FIELD_IDENTITY"] == "X1234567L"
         assert parsed.segments["SEG0_MINI"].field_values["FIELD_YEAR"] == "2024"
 
@@ -195,7 +197,7 @@ class TestEnvelopeSerialise:
         segments = _build_envelope_mini()
         with pytest.raises(ValueError, match="FIELD_IDENTITY"):
             serialise_envelope(
-                casilla_values={"01": Decimal("0.00")},
+                casilla_values={_ENVELOPE_AMOUNT_CASILLA: Decimal("0.00")},
                 headers={"FIELD_YEAR": "2024"},
                 segments=segments,
                 encoding=ISO_8859_1_ENCODING,

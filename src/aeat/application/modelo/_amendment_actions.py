@@ -12,6 +12,7 @@ from decimal import Decimal
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry import CasillaId
 from ...domain.modelos import (
     CalculationRevisionCatalogue,
     ModeloRecordCatalogue,
@@ -51,10 +52,10 @@ from ._registry_helpers import reject_unknown_override_casillas as _reject_unkno
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 
 
-def _load_amendment_baseline(
+def _load_amendment_baseline[CasillaKey](
     *,
     from_filing_record_id: str,
-    overrides: Mapping[str, Decimal],
+    overrides: Mapping[CasillaKey, Decimal],
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
@@ -92,19 +93,19 @@ def _load_amendment_baseline(
             f"baseline calculation revision {baseline.calculation_revision_id!r} is missing from the catalogue",
         )
 
-    _reject_unknown_override_casillas(
+    canonical_overrides = _reject_unknown_override_casillas(
         modelo=baseline.modelo,
         filing_year=baseline.filing_year,
         period=baseline.period,
         overrides=overrides,
     )
-    return filing_catalogue, baseline, work_units, work_unit, revisions, baseline_revision
+    return filing_catalogue, baseline, work_units, work_unit, revisions, baseline_revision, canonical_overrides
 
 
-def amend_modelo_revision(
+def amend_modelo_revision[CasillaKey](
     *,
     from_filing_record_id: str,
-    overrides: Mapping[str, Decimal],
+    overrides: Mapping[CasillaKey, Decimal],
     amendment_kind: CalculationRevisionAmendmentKind,
     reason: str,
     actor: str,
@@ -124,22 +125,25 @@ def amend_modelo_revision(
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
-    filing_catalogue, baseline, work_units, work_unit, revisions, baseline_revision = _load_amendment_baseline(
-        from_filing_record_id=from_filing_record_id,
-        overrides=overrides,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
+    filing_catalogue, baseline, work_units, work_unit, revisions, baseline_revision, canonical_overrides = (
+        _load_amendment_baseline(
+            from_filing_record_id=from_filing_record_id,
+            overrides=overrides,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+        )
     )
 
     now = clock or _utc_now()
-    corrected_values: dict[str, Decimal] = dict(baseline_revision.casilla_values)
-    corrected_values.update(overrides)
+    corrected_values: dict[CasillaId, Decimal] = dict(baseline_revision.casilla_values)
+    corrected_values.update(canonical_overrides)
 
     new_revision_id = derive_calculation_revision_id(
         work_unit_id=baseline.work_unit_id,
-        inputs_snapshot=baseline_revision.inputs_snapshot,
+        input_values_by_casilla_id=baseline_revision.input_values_by_casilla_id,
         binding_overrides=baseline_revision.binding_overrides,
+        relation_overrides=baseline_revision.relation_overrides,
         casilla_values=corrected_values,
         source_transaction_ids=baseline_revision.source_transaction_ids,
         borrador_snapshot_id=baseline_revision.borrador_snapshot_id,
@@ -158,7 +162,7 @@ def amend_modelo_revision(
     # non-overridden casillas) instead of an empty observations tuple.
     amendment_observations = _amendment_observations(
         corrected_values=corrected_values,
-        overrides=overrides,
+        overrides=canonical_overrides,
         baseline_revision=baseline_revision,
         snapshot=_resolve_registry_snapshot_for_work_unit(work_unit),
     )
@@ -167,8 +171,9 @@ def amend_modelo_revision(
         calculation_revision_id=new_revision_id,
         work_unit_id=baseline.work_unit_id,
         state=CalculationRevisionState.BORRADOR,
-        inputs_snapshot=baseline_revision.inputs_snapshot,
+        input_values_by_casilla_id=baseline_revision.input_values_by_casilla_id,
         binding_overrides=baseline_revision.binding_overrides,
+        relation_overrides=baseline_revision.relation_overrides,
         source_transaction_ids=baseline_revision.source_transaction_ids,
         borrador_snapshot_id=baseline_revision.borrador_snapshot_id,
         bindings_sourced_from_borrador=baseline_revision.bindings_sourced_from_borrador,
@@ -252,7 +257,7 @@ def amend_modelo_revision(
         new_revision_id=new_revision_id,
         new_filing_id=new_filing_id,
         amendment_kind=amendment_kind,
-        override_count=len(overrides),
+        override_count=len(canonical_overrides),
         actor=actor,
         now=now,
     )

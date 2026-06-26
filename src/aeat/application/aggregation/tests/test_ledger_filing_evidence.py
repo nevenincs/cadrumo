@@ -20,6 +20,7 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -39,6 +40,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo._actions import _assert_evidence_covers_snapshot
 from .._ledger_filing_snapshot import (
@@ -50,6 +52,17 @@ from .._ledger_filing_snapshot import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_MANUAL_FACT_CASILLA: CasillaId = _casilla_id("00501")
+_REVISION_CASILLA: CasillaId = _casilla_id("01")
 
 
 def _txn() -> Transaction:
@@ -101,7 +114,7 @@ def test_capture_projects_tax_facts_and_binds_fingerprint() -> None:
         catalogue=catalogue,
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
         captured_at=_NOW,
-        manual_entries=(ManualFactBasisEntry(casilla="00501", value="140000.00"),),
+        manual_entries=(ManualFactBasisEntry(casilla_id=_MANUAL_FACT_CASILLA, value="140000.00"),),
     )
     assert evidence.snapshot_fingerprint == snapshot.snapshot_fingerprint
     assert len(evidence.rows) == 1
@@ -114,7 +127,7 @@ def test_capture_projects_tax_facts_and_binds_fingerprint() -> None:
     assert row.iva_category == "domestic_general_21"
     assert row.direction == "OUTGOING"
     assert row.lifecycle_state == "ACTIVE"
-    assert evidence.manual_entries[0].casilla == "00501"
+    assert evidence.manual_entries[0].casilla_id == _MANUAL_FACT_CASILLA
 
 
 @pytest.fixture
@@ -134,19 +147,25 @@ def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> Ca
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={"01": "1"},
+        input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
-        casilla_values={"01": Decimal("1")},
+        casilla_values={_REVISION_CASILLA: Decimal("1")},
         source_transaction_ids=(tx_id,),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        inputs_snapshot={"01": "1"},
+        input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
         source_transaction_ids=(tx_id,),
-        casilla_values={"01": Decimal("1")},
+        casilla_values={_REVISION_CASILLA: Decimal("1")},
+        observations=registry_grounded_observations(
+            modelo="303",
+            filing_year=2025,
+            period=period.registry_token,
+            casilla_values={_REVISION_CASILLA: Decimal("1")},
+        ),
         created_at=_NOW,
         updated_at=_NOW,
         verified_at=_NOW,
@@ -168,7 +187,9 @@ def test_evidence_roundtrips_through_encrypted_revision(_objects: SecureObjectRe
         catalogue=catalogue,
         snapshot_fingerprint=snapshot.snapshot_fingerprint,
         captured_at=_NOW,
-        manual_entries=(ManualFactBasisEntry(casilla="00501", value="140000.00", note="resultado contable"),),
+        manual_entries=(
+            ManualFactBasisEntry(casilla_id=_MANUAL_FACT_CASILLA, value="140000.00", note="resultado contable"),
+        ),
     )
     original = _revision_with_evidence(evidence=evidence, tx_id=txn.transaction_id)
     repo = CalculationRevisionCatalogueRepository(objects=_objects)

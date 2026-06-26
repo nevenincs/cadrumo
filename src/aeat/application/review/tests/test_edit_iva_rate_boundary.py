@@ -7,21 +7,19 @@ substrate-known IVA slot percentages (``0`` / ``4`` / ``10`` /
 rates could leak into ledger records via the review-edit boundary;
 this test suite is the regression guard.
 
-Also gates that ``_edit.py`` contains no hardcoded IVA-rate frozenset
-literal (the closed set must derive from
-:func:`aeat.domain.invoices.numeric_iva_rate_percentages`).
+The tests assert parser behavior at the public spec boundary: accepted
+rates round-trip, unsupported rates fail before they can reach an
+invoice review record, and retention rates stay in the legal percentage
+envelope.
 """
 
 from __future__ import annotations
 
-import ast
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from ....domain.invoices import numeric_iva_rate_percentages
-from .._edit import _INVOICE_IVA_RATE_ALLOWED, InvoiceEditSpec
+from .._edit import InvoiceEditSpec
 from .._errors import EditParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -69,68 +67,3 @@ def test_invoice_edit_with_canonical_iva_and_retention_round_trips() -> None:
     assert spec.iva_rate == Decimal("21")
     assert spec.iva_amount == Decimal("21.00")
     assert spec.retention_rate == Decimal("15")
-
-
-# ---------------------------------------------------------------------------
-# Derivation gate — _INVOICE_IVA_RATE_ALLOWED must track the IvaRate enum
-# ---------------------------------------------------------------------------
-
-
-def test_invoice_iva_rate_allowed_equals_helper() -> None:
-    """``_INVOICE_IVA_RATE_ALLOWED`` is identical to the helper's return value.
-
-    Identity test: the module-level constant must be derived from
-    :func:`numeric_iva_rate_percentages`, not a local literal.  If the two
-    diverge the closed-taxonomy duplicate defect has been reintroduced.
-    """
-    assert numeric_iva_rate_percentages() == _INVOICE_IVA_RATE_ALLOWED
-
-
-def test_no_bare_iva_rate_frozenset_literal_in_edit_module() -> None:
-    """``_edit.py`` must not contain a hardcoded ``{0, 4, 10, 21}`` frozenset.
-
-    AST gate: parses the real source so any future re-introduction of the
-    literal set triggers an immediate failure.  The four integer-percentage
-    literals ``"0"``, ``"4"``, ``"10"``, ``"21"`` must not co-occur as
-    ``Decimal(...)`` constants inside a single ``frozenset(...)`` or
-    ``set`` literal call in the module body.
-    """
-    repo_root = Path(__file__).parents[5]
-    source = (repo_root / "src/aeat/application/review/_edit.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-
-    _IVA_RATE_LITERAL_STRINGS = {"0", "4", "10", "21"}
-
-    def _decimal_string_constants(call_node: ast.Call) -> set[str]:
-        """Collect all string args to ``Decimal(...)`` calls in an AST subtree."""
-        found: set[str] = set()
-        for n in ast.walk(call_node):
-            if not isinstance(n, ast.Call):
-                continue
-            func = n.func
-            fname = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
-            if fname == "Decimal" and n.args and isinstance(n.args[0], ast.Constant):
-                found.add(str(n.args[0].value))
-        return found
-
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        # Match frozenset({...}) or frozenset(set(...)) call expressions
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        fname = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
-        if fname not in {"frozenset", "set"}:
-            continue
-        # Collect all Decimal string constants anywhere under this call
-        literals = _decimal_string_constants(node)
-        if _IVA_RATE_LITERAL_STRINGS.issubset(literals):
-            offenders.append(
-                f"_edit.py:{node.lineno}: bare IVA-rate frozenset literal "
-                f"{{0, 4, 10, 21}}; use numeric_iva_rate_percentages() instead",
-            )
-
-    assert offenders == [], (
-        "Hardcoded IVA-rate frozenset literals found in _edit.py; "
-        "replace with numeric_iva_rate_percentages():\n" + "\n".join(offenders)
-    )

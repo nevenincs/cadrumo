@@ -14,6 +14,7 @@ from ....core.errors import build_error_envelope
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.resources import resources
 from ....core.topics import Topic, TopicCatalogue
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.manuals import ManualId, ManualPart
 from ....domain.normatives import NormativeNotFoundError
 from .. import (
@@ -38,6 +39,17 @@ from .. import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_RENTA_2025_BORRADOR_RENTA_FAMILIAR_CASILLA: CasillaId = _casilla_id("0695")
+_UNDECLARED_MANUAL_RULE_CASILLA: CasillaId = _casilla_id("not-real")
 
 
 def _write_valid_normative(root: Path) -> None:
@@ -288,6 +300,155 @@ def test_manuals_list_report_rows_verify_against_canonical_corpus() -> None:
     assert verification.manual_id == listed_part.manual_id
     assert verification.year == listed_part.year
     assert verification.part == listed_part.part
+
+
+def _write_extracted_renta_part1_with_rule(root: Path, *, casilla_id: CasillaId) -> None:
+    part_root = root / "renta" / "2025" / "part1"
+    structure = part_root / "structure"
+    source_url = "https://example.invalid/synthetic/renta-2025-part1.pdf"
+    part_root.mkdir(parents=True)
+    (part_root / "source.pdf").write_bytes(b"%PDF-1.4\n%%EOF\n")
+    (part_root / "manifest.json").write_text(
+        json.dumps(
+            {
+                "content_length": 12,
+                "fetched_at": "2026-01-01T00:00:00Z",
+                "manual_id": "renta",
+                "part": "part1",
+                "relative_pdf_path": "source.pdf",
+                "sha256": "0" * 64,
+                "source_pdf_url": source_url,
+                "synthetic": True,
+                "year": 2025,
+            },
+        ),
+        encoding="utf-8",
+    )
+    (structure / "manual.json").parent.mkdir(parents=True, exist_ok=True)
+    (structure / "manual.json").write_text(
+        json.dumps(
+            {
+                "manual_id": "renta",
+                "year": 2025,
+                "part": "part1",
+                "title": "Manual practico Renta 2025",
+                "summary": "Resumen",
+                "source_pdf_url": source_url,
+                "source_html_url": None,
+                "fetched_at": "2026-01-01T00:00:00Z",
+                "definition_reviewed_by": "gw",
+                "definition_reviewed_at": "2026-01-01",
+            },
+        ),
+        encoding="utf-8",
+    )
+    (structure / "chapters.json").write_text(
+        json.dumps(
+            [
+                {
+                    "chapter_id": "cap1",
+                    "title": "Capitulo 1",
+                    "summary": "Resumen",
+                    "sections": [
+                        {
+                            "section_id": "sec1",
+                            "relative_path": "structure/sections/cap1/sec1.json",
+                        },
+                    ],
+                },
+            ],
+        ),
+        encoding="utf-8",
+    )
+    section_payload = {
+        "section_id": "sec1",
+        "chapter_id": "cap1",
+        "title": "Rendimientos",
+        "summary": "Resumen",
+        "prose": [],
+        "rules": [
+            {
+                "rule_id": "renta-2025-part1-cap1-sec1-rule0001",
+                "manual_id": "renta",
+                "year": 2025,
+                "part": "part1",
+                "chapter_id": "cap1",
+                "section_id": "sec1",
+                "kind": "computation",
+                "statement": "Regla Renta",
+                "applies_when": None,
+                "references_casillas": [{"modelo_id": "100", "casilla_id": casilla_id}],
+                "references_sections": [],
+                "references_legal_acts": ["LEY_35_2006|art. 1"],
+                "source": {
+                    "manual_url": source_url,
+                    "page": 1,
+                    "paragraph": 1,
+                },
+                "extracted_by": {
+                    "provider": "anthropic",
+                    "model": "test-model",
+                    "prompt_id": "manual_rule_extract_v1",
+                    "cache_hit": False,
+                    "extracted_at": "2026-01-01T00:00:00Z",
+                },
+                "definition_reviewed_by": "gw",
+                "definition_reviewed_at": "2026-01-01",
+            },
+        ],
+        "references_sections": [],
+        "references_legal_acts": [],
+        "source": {
+            "manual_url": source_url,
+            "page": 1,
+        },
+        "definition_reviewed_by": "gw",
+        "definition_reviewed_at": "2026-01-01",
+    }
+    (structure / "sections" / "cap1").mkdir(parents=True, exist_ok=True)
+    (structure / "sections" / "cap1" / "sec1.json").write_text(
+        json.dumps(section_payload),
+        encoding="utf-8",
+    )
+
+
+def test_manual_verify_accepts_registry_resolved_casilla_reference(tmp_path: Path) -> None:
+    _write_extracted_renta_part1_with_rule(
+        tmp_path,
+        casilla_id=_RENTA_2025_BORRADOR_RENTA_FAMILIAR_CASILLA,
+    )
+
+    with override_settings(aeat_manuals_root=tmp_path):
+        report = verify_registry_manual(
+            RegistryManualVerifyCommand(
+                manual=RegistryManualId.RENTA,
+                year=2025,
+                part=ManualPart.PARTE_1,
+            ),
+        )
+
+    assert report.passed is True
+    assert report.error_count == 0
+    assert report.issues == ()
+
+
+def test_manual_verify_rejects_dangling_registry_casilla_reference(tmp_path: Path) -> None:
+    _write_extracted_renta_part1_with_rule(tmp_path, casilla_id=_UNDECLARED_MANUAL_RULE_CASILLA)
+
+    with override_settings(aeat_manuals_root=tmp_path):
+        report = verify_registry_manual(
+            RegistryManualVerifyCommand(
+                manual=RegistryManualId.RENTA,
+                year=2025,
+                part=ManualPart.PARTE_1,
+            ),
+        )
+
+    assert report.passed is False
+    assert report.error_count == 1
+    assert report.issues[0].code == "dangling-casilla-ref"
+    assert "not-real" in report.issues[0].message
+    assert "revision(s) ('2025',)" in report.issues[0].message
 
 
 def _write_unextracted_renta_part1(root: Path) -> None:

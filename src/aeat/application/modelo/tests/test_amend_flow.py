@@ -15,7 +15,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
 
 import pytest
 
@@ -24,6 +23,7 @@ from ....domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventType,
 )
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -50,6 +50,7 @@ from ....domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
 from ....domain.modelos._work_unit import WorkUnit
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AmendmentEvidenceMissingError,
@@ -81,6 +82,25 @@ _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
 _T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
 _T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_AMEND_INCOME_CASILLA: CasillaId = _casilla_id("01")
+_AMEND_EXPENSE_CASILLA: CasillaId = _casilla_id("02")
+_AMEND_WITHHELD_CASILLA: CasillaId = _casilla_id("05")
+_AMEND_PREVIOUS_PAYMENT_CASILLA: CasillaId = _casilla_id("06")
+_AMEND_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
+_AMEND_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
+_AMEND_CARRY_FORWARD_CASILLA: CasillaId = _casilla_id("15")
+_AMEND_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
+_AMEND_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
+_UNKNOWN_AMEND_CASILLA: CasillaId = _casilla_id("9999")
 
 
 @pytest.fixture
@@ -120,7 +140,7 @@ _DEFAULT_130_BINDING_VALUES = {
 def _seed_external_baseline(
     repos_tuple: _Repos,
     *,
-    casilla_values: dict[str, Decimal],
+    casilla_values: dict[CasillaId, Decimal],
 ) -> tuple[WorkUnit, CalculationRevision, ModeloRecord]:
     """Seed a CURRENT filing record carrying ``external_evidence`` plus
     its underlying calculation revision and work unit."""
@@ -128,11 +148,11 @@ def _seed_external_baseline(
     wu_repo, cr_repo, fr_repo, _, _ = repos_tuple
     work_unit = _seed_work_unit(wu_repo)
 
-    inputs: dict[str, str] = {}
+    inputs: dict[CasillaId, str] = {}
     overrides_map: dict[str, str] = {}
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
-        inputs_snapshot=inputs,
+        input_values_by_casilla_id=inputs,
         binding_overrides=overrides_map,
         casilla_values=casilla_values,
     )
@@ -146,9 +166,15 @@ def _seed_external_baseline(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.PRESENTADO,
-        inputs_snapshot=inputs,
+        input_values_by_casilla_id=inputs,
         binding_overrides=overrides_map,
         casilla_values=casilla_values,
+        observations=registry_grounded_observations(
+            modelo=str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+            casilla_values=casilla_values,
+        ),
         created_at=_T1,
         updated_at=_T1,
         verified_at=_T1,
@@ -231,15 +257,15 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
         work_unit.work_unit_id,
         actor="operator-A",
         casilla_inputs={
-            "01": Decimal("1000"),
-            "02": Decimal("0"),
-            "05": Decimal("0"),
-            "06": Decimal("0"),
-            "08": Decimal("0"),
-            "10": Decimal("0"),
-            "15": Decimal("0"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _AMEND_INCOME_CASILLA: Decimal("1000"),
+            _AMEND_EXPENSE_CASILLA: Decimal("0"),
+            _AMEND_WITHHELD_CASILLA: Decimal("0"),
+            _AMEND_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
+            _AMEND_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _AMEND_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+            _AMEND_CARRY_FORWARD_CASILLA: Decimal("0"),
+            _AMEND_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _AMEND_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
         binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
@@ -283,7 +309,7 @@ def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
     with pytest.raises(AmendmentEvidenceMissingError, match=r"external_evidence|imported|baseline"):
         amend_modelo_revision(
             from_filing_record_id=locally_filed.filing_record_id,
-            overrides={"01": Decimal("1100")},
+            overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             reason="under-reported turnover",
             actor="operator-A",
@@ -299,7 +325,7 @@ def test_amend_refuses_when_baseline_already_superseded(repos: _Repos) -> None:
     """A SUPERSEDED filing record cannot be amended."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    _, _, baseline = _seed_external_baseline(repos, casilla_values={"01": Decimal("1000")})
+    _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
     fake_successor = "f" * 64
     fr_repo.save(
         upsert_filing_record(
@@ -317,7 +343,7 @@ def test_amend_refuses_when_baseline_already_superseded(repos: _Repos) -> None:
     with pytest.raises(AmendmentTargetStateError, match=r"status|CURRENT|superseded"):
         amend_modelo_revision(
             from_filing_record_id=baseline.filing_record_id,
-            overrides={"01": Decimal("1100")},
+            overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             reason="late evidence",
             actor="operator-A",
@@ -349,11 +375,11 @@ def _drive_amend_creates_complementaria(repos: _Repos) -> _AmendOutcome:
     wu_repo, cr_repo, fr_repo, _evidence_repo, bv_repo = repos
     work_unit, baseline_revision, baseline = _seed_external_baseline(
         repos,
-        casilla_values={"01": Decimal("1000"), "02": Decimal("250")},
+        casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000"), _AMEND_EXPENSE_CASILLA: Decimal("250")},
     )
     new_filing = amend_modelo_revision(
         from_filing_record_id=baseline.filing_record_id,
-        overrides={"01": Decimal("1100")},
+        overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
         amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
         reason="under-reported turnover discovered in audit",
         actor="operator-A",
@@ -406,14 +432,16 @@ def test_amend_overridden_casilla_takes_new_value(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
     new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
-    assert new_revision.casilla_values["01"] == Decimal("1100")
+    assert new_revision.casilla_values[_AMEND_INCOME_CASILLA] == Decimal("1100")
 
 
 def test_amend_unoverridden_casilla_inherits_baseline_value(repos: _Repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
     new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
-    assert new_revision.casilla_values["02"] == outcome.baseline_revision.casilla_values["02"]
+    assert new_revision.casilla_values[_AMEND_EXPENSE_CASILLA] == outcome.baseline_revision.casilla_values[
+        _AMEND_EXPENSE_CASILLA
+    ]
 
 
 def test_amend_work_unit_pointers_advance_to_new_filing(repos: _Repos) -> None:
@@ -469,12 +497,12 @@ def test_amend_refuses_no_op_overrides(repos: _Repos) -> None:
     a no-op amendment."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    _, _, baseline = _seed_external_baseline(repos, casilla_values={"01": Decimal("1000")})
+    _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
 
     with pytest.raises(CalculationRevisionStateError, match=r"already exists|no-op"):
         amend_modelo_revision(
             from_filing_record_id=baseline.filing_record_id,
-            overrides={"01": Decimal("1000")},
+            overrides={_AMEND_INCOME_CASILLA: Decimal("1000")},
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             reason="duplicate filing attempt",
             actor="operator-A",
@@ -493,12 +521,12 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos: _Repos)
     fabricated casillas cannot be silently accepted."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    _, _, baseline = _seed_external_baseline(repos, casilla_values={"01": Decimal("1000")})
+    _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
 
     with pytest.raises(AmendmentOverrideCasillaError) as exc_info:
         amend_modelo_revision(
             from_filing_record_id=baseline.filing_record_id,
-            overrides={"9999": Decimal("100")},
+            overrides={_UNKNOWN_AMEND_CASILLA: Decimal("100")},
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             reason="fabricated casilla rejected",
             actor="operator-A",
@@ -510,7 +538,33 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos: _Repos)
         )
     assert exc_info.value.translated_message == "application.modelo.errors.amendment_unknown_casillas"
     assert exc_info.value.context is not None
-    assert "9999" in cast("list[str]", exc_info.value.context["casillas"])
+    casillas_obj = exc_info.value.context.get("casillas", [])
+    assert isinstance(casillas_obj, (list, tuple))
+    assert _UNKNOWN_AMEND_CASILLA in casillas_obj
+
+
+def test_amend_refuses_non_string_override_casilla_keys_without_coercion(repos: _Repos) -> None:
+    """Malformed override casilla keys fail before registry membership checks."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
+
+    with pytest.raises(AmendmentOverrideCasillaError) as exc_info:
+        amend_modelo_revision(
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={1: Decimal("100")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="malformed casilla rejected",
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T4,
+        )
+    assert exc_info.value.translated_message == "application.modelo.errors.amendment_unknown_casillas"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context.get("casillas") == ["1"]
 
 
 def test_amend_revision_carries_casilla_observations(repos: _Repos) -> None:
@@ -532,6 +586,6 @@ def test_amend_revision_carries_casilla_observations(repos: _Repos) -> None:
     assert observed, "amendment revision persisted zero observations — provenance lost"
     assert set(observed) == set(new_revision.casilla_values)
     # the overridden casilla carries the corrected value
-    assert observed["01"].value == Decimal("1100")
+    assert observed[_AMEND_INCOME_CASILLA].value == Decimal("1100")
     # the non-overridden casilla carries the baseline value
-    assert observed["02"].value == new_revision.casilla_values["02"]
+    assert observed[_AMEND_EXPENSE_CASILLA].value == new_revision.casilla_values[_AMEND_EXPENSE_CASILLA]

@@ -9,14 +9,15 @@ the headline casillas, so the CLI can lead with it before the full
 table.
 
 The headline casillas are taken from the modelo's own registry
-metadata, never hand-picked: the ``reconciliation_totals`` of the
+metadata, never hand-picked: the ``reconciliation_total_casilla_ids`` of the
 revision's verification expectations name the result-to-pay /
 result-to-refund casillas, and the verification expectation's
-``computed_casillas`` enumerate the modelo's key computed outputs.
+``computed_casilla_ids`` enumerate the modelo's key computed outputs.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
@@ -27,6 +28,7 @@ from ...core.errors import AeatError
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId
 from ...domain.modelos._calculation_revision import CalculationRevision
+from ...domain.modelos._work_unit import WorkUnit
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._work_lifecycle import get_work_unit
 
@@ -61,7 +63,11 @@ class CalculationResultSummary(BaseModel):
     rows: tuple[ResultSummaryRow, ...] = Field(default_factory=tuple)
 
 
-def calculation_result_summary(revision: CalculationRevision) -> CalculationResultSummary | None:
+def calculation_result_summary(
+    revision: CalculationRevision,
+    *,
+    work_unit_resolver: Callable[[str], WorkUnit] = get_work_unit,
+) -> CalculationResultSummary | None:
     """Return the headline :class:`CalculationResultSummary` for a persisted :class:`CalculationRevision`.
 
     Resolves the revision's work unit and registry snapshot, then picks
@@ -72,7 +78,7 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
     """
     casilla_values = revision.casilla_values
     try:
-        work_unit = get_work_unit(str(revision.work_unit_id))
+        work_unit = work_unit_resolver(str(revision.work_unit_id))
     except (LookupError, KeyError, AttributeError, AeatError) as exc:
         _log.warning(
             "modelo result summary: unable to resolve work unit for revision=%s",
@@ -90,22 +96,22 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
         )
         return None
 
-    casilla_labels = {str(casilla.id): casilla.label for casilla in snapshot.revision.casillas}
-    result_roles: dict[str, str] = {}
-    key_figures: list[str] = []
+    casilla_labels = {casilla.id: casilla.label for casilla in snapshot.revision.casillas}
+    result_roles: dict[CasillaId, str] = {}
+    key_figures: list[CasillaId] = []
     for expectation in snapshot.revision.verification_expectations:
-        for kind, casilla_id in expectation.reconciliation_totals.items():
+        for kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
             role = "result_ingresar" if kind == "ingresar" else "result_devolver"
-            result_roles.setdefault(str(casilla_id), role)
-        for casilla_id in expectation.computed_casillas:
-            if str(casilla_id) not in key_figures:
-                key_figures.append(str(casilla_id))
+            result_roles.setdefault(casilla_id, role)
+        for casilla_id in expectation.computed_casilla_ids:
+            if casilla_id not in key_figures:
+                key_figures.append(casilla_id)
 
     if not result_roles and not key_figures:
         return None
 
     rows: list[ResultSummaryRow] = []
-    seen: set[str] = set()
+    seen: set[CasillaId] = set()
     # Result-to-pay / result-to-refund totals lead the summary.
     for casilla_id, role in result_roles.items():
         value = casilla_values.get(casilla_id)
@@ -120,7 +126,7 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
             ),
         )
         seen.add(casilla_id)
-    # The verification expectation's computed casillas follow as key figures.
+    # The verification expectation's computed casilla ids follow as key figures.
     for casilla_id in key_figures:
         value = casilla_values.get(casilla_id)
         if value is None or casilla_id in seen:

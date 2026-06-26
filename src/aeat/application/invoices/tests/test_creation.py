@@ -98,11 +98,14 @@ def test_build_catalogue_invoice_refuses_unsupported_rate() -> None:
             taxable_base=Decimal("100.00"),
             iva_rate=Decimal("13"),
             currency="EUR",
-        )
+    )
     # The accepted-rate set is carried structurally on the error context (the
     # CLI boundary renders it through the locale), so assert the context names
     # the closed slot taxonomy rather than the bare message.
-    assert "21" in exc.value.context["accepted"], exc.value.context
+    assert exc.value.context is not None
+    accepted = exc.value.context["accepted"]
+    assert isinstance(accepted, str)
+    assert "21" in accepted, exc.value.context
 
 
 def test_create_catalogue_invoice_persists_and_refuses_duplicate(tmp_path) -> None:

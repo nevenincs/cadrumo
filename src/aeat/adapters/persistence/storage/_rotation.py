@@ -137,7 +137,7 @@ class RotationPlanEntry(BaseModel):
         path with an additional ``.lock`` suffix appended; the rotation and
         writer therefore land on the same lock-byte target.
         """
-        if self.target_filename is not None:
+        if self.target_casilla_id_filename is not None:
             return envelope_path.with_suffix(".lock")
         name = envelope_path.name
         stem = name[: -len(self.envelope_suffix)] if name.endswith(self.envelope_suffix) else envelope_path.stem
@@ -169,11 +169,11 @@ def _iter_envelope_files(
     for entry in plan:
         if not entry.store_dir.exists():
             continue
-        if entry.target_filename is not None:
+        if entry.target_casilla_id_filename is not None:
             # Single-file mode: visit exactly this filename inside the
             # directory. Used by consumers whose on-disk filename does
             # not end in ``.envelope.json`` (usage_ratios).
-            target = entry.store_dir / entry.target_filename
+            target = entry.store_dir / entry.target_casilla_id_filename
             if target.is_file():
                 yield target, entry
             continue

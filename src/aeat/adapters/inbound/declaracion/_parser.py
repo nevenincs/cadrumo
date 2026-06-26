@@ -21,12 +21,15 @@ from ....core.resources import bundled_path
 from ....core.time import now
 from ....domain.calculations.registry import (
     BboxAnchorSpec,
+    CasillaId,
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
+    ModeloRevision,
     RegistrySnapshot,
     RegistrySnapshotError,
     RegistrySnapshotRef,
     ValidatedRegistryAuthority,
+    casillas_by_id,
 )
 from ..pdf import ExtractedCasilla
 from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
@@ -218,7 +221,13 @@ def _parse_declaracion_pages(
     _validate_snapshot_matches_template(snapshot, template)
     profile = _select_extraction_profile(snapshot, extraction_profile_id=extraction_profile_id)
     tax_id = _extract_tax_id(text)
-    values = _extract_profile_values(pages, profile, source_pdf_path=source_path, pdf_bytes=pdf_bytes)
+    values = _extract_profile_values(
+        pages,
+        profile,
+        revision=snapshot.revision,
+        source_pdf_path=source_path,
+        pdf_bytes=pdf_bytes,
+    )
     _logger.debug(
         "parse_declaracion: source=<input-pdf> modelo=%s año=%s period=%s revision=%s profile=%s",
         template.modelo,
@@ -437,9 +446,9 @@ class _TargetClassification:
     """
 
     value: ExtractedCasilla | None = None
-    missing: str | None = None
-    malformed: str | None = None
-    ambiguous: str | None = None
+    missing: CasillaId | None = None
+    malformed: CasillaId | None = None
+    ambiguous: CasillaId | None = None
 
 
 def _classify_target(
@@ -447,6 +456,7 @@ def _classify_target(
     *,
     pages: tuple[str, ...],
     pages_words: tuple[list[_PdfWord], ...] | None,
+    numeric_anchors: dict[CasillaId, str],
 ) -> _TargetClassification:
     """Resolve one target's hits into a value or a failure category.
 
@@ -462,7 +472,7 @@ def _classify_target(
             return _TargetClassification(missing=casilla_id)
         hits = _find_bbox_casilla_hits(pages_words, target)
     else:
-        hits = _find_casilla_hits(pages, target)
+        hits = _find_casilla_hits(pages, target, numeric_anchors=numeric_anchors)
     if not hits:
         return _TargetClassification(missing=casilla_id)
     if len(hits) > 1:
@@ -489,9 +499,9 @@ def _classify_target(
 def _raise_extraction_failed(
     profile: ExtractionProfileDefinition,
     *,
-    missing: list[str],
-    malformed: list[str],
-    ambiguous: list[str],
+    missing: list[CasillaId],
+    malformed: list[CasillaId],
+    ambiguous: list[CasillaId],
     coverage: Decimal,
 ) -> None:
     """Raise the degraded-extraction error with a human-readable detail summary."""
@@ -517,6 +527,7 @@ def _extract_profile_values(
     pages: tuple[str, ...],
     profile: ExtractionProfileDefinition,
     *,
+    revision: ModeloRevision,
     source_pdf_path: Path | None = None,
     pdf_bytes: bytes | None = None,
 ) -> tuple[ExtractedCasilla, ...]:
@@ -532,12 +543,18 @@ def _extract_profile_values(
             pages_words = _extract_pages_words(source_pdf_path)
 
     values: list[ExtractedCasilla] = []
-    missing: list[str] = []
-    malformed: list[str] = []
-    ambiguous: list[str] = []
+    missing: list[CasillaId] = []
+    malformed: list[CasillaId] = []
+    ambiguous: list[CasillaId] = []
+    numeric_anchors = _numeric_casilla_anchors(profile, revision)
 
     for target in profile.target_casillas:
-        outcome = _classify_target(target, pages=pages, pages_words=pages_words)
+        outcome = _classify_target(
+            target,
+            pages=pages,
+            pages_words=pages_words,
+            numeric_anchors=numeric_anchors,
+        )
         if outcome.value is not None:
             values.append(outcome.value)
         elif outcome.malformed is not None:
@@ -561,6 +578,26 @@ def _extract_profile_values(
             coverage=coverage,
         )
     return tuple(values)
+
+
+def _numeric_casilla_anchors(
+    profile: ExtractionProfileDefinition,
+    revision: ModeloRevision,
+) -> dict[CasillaId, str]:
+    """Map canonical target ids to the printed numbers used by ``numeric_casilla``."""
+    revision_casillas_by_id = casillas_by_id(revision)
+    anchors: dict[CasillaId, str] = {}
+    for target in profile.target_casillas:
+        if target.match_strategy != "numeric_casilla":
+            continue
+        casilla = revision_casillas_by_id.get(target.casilla_id)
+        if casilla is None:
+            raise DeclaracionParseError(
+                f"extraction profile {profile.id!r} target {target.casilla_id!r} "
+                f"is not a canonical casilla.id in revision {revision.id!r}",
+            )
+        anchors[target.casilla_id] = casilla.number
+    return anchors
 
 
 def _extract_pages_words(pdf_path: Path) -> tuple[list[_PdfWord], ...]:
@@ -761,14 +798,16 @@ def _find_column_x_range(
 def _find_casilla_hits(
     pages: tuple[str, ...],
     target: ExtractionTargetDefinition,
+    *,
+    numeric_anchors: dict[CasillaId, str],
 ) -> list[tuple[int, str]]:
     """Find all regex hits for ``target`` across ``pages``.
 
     Branches on ``target.match_strategy``:
 
-    - ``"numeric_casilla"``: anchors on the casilla id printed literally at
-      line start followed by a Spanish-formatted amount.  The numeric path is
-      unchanged from the pre-named-field implementation.
+    - ``"numeric_casilla"``: anchors on the printed casilla number at line start
+      followed by a Spanish-formatted amount.  The emitted value remains keyed by
+      ``target.casilla_id``.
     - ``"named_label"``: anchors on the printed human-readable label specified
       by ``target.label_pattern`` and captures the last token on the line via
       :data:`TEXT_VALUE_GROUP`.
@@ -777,8 +816,13 @@ def _find_casilla_hits(
     ``"bbox_anchored"`` targets must use :func:`_find_bbox_casilla_hits` instead.
     """
     if target.match_strategy == "numeric_casilla":
+        anchor = numeric_anchors.get(target.casilla_id)
+        if anchor is None:
+            raise DeclaracionParseError(
+                f"numeric extraction target {target.casilla_id!r} has no registry casilla.number anchor",
+            )
         pattern = re.compile(
-            rf"(?m)^\s*{re.escape(target.casilla_id)}\b[^\n]*?\s+{SPANISH_AMOUNT_GROUP}\s*$",
+            rf"(?m)^\s*{re.escape(anchor)}\b[^\n]*?\s+{SPANISH_AMOUNT_GROUP}\s*$",
             re.IGNORECASE,
         )
     else:

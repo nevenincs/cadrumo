@@ -50,12 +50,14 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
     calculate_registry_snapshot,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -73,6 +75,26 @@ _CLOCK = datetime(2026, 2, 1, 9, 0, 0, tzinfo=UTC)
 _CARRY_BINDING = "modelo-131-2024-resultados-negativos-anteriores"
 _CARRY_BINDING_2025 = "modelo-131-2025-resultados-negativos-anteriores"
 
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M131 carry-forward fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M131_RENDIMIENTO_MODULOS_CASILLA: CasillaId = _casilla_id("01")
+_M131_PAGO_PREVIO_CASILLA: CasillaId = _casilla_id("02")
+_M131_VOLUME_SIN_DATOS_BASE_CASILLA: CasillaId = _casilla_id("03")
+_M131_PAYMENT_SIN_DATOS_BASE_CASILLA: CasillaId = _casilla_id("04")
+_M131_VOLUME_AGRARIO_CASILLA: CasillaId = _casilla_id("05")
+_M131_RETENCIONES_CASILLA: CasillaId = _casilla_id("08")
+_M131_RETENCIONES_SOPORTADAS_CASILLA: CasillaId = _casilla_id("09")
+_M131_RESULTADO_CASILLA: CasillaId = _casilla_id("10")
+_M131_DEDUCCION_CASILLA: CasillaId = _casilla_id("12")
+_M131_RESULTADO_EJERCICIOS_ANTERIORES_CASILLA: CasillaId = _casilla_id("14")
+_M131_SALDO_NEGATIVO_CASILLA: CasillaId = _casilla_id("saldo-negativo-fin-periodo")
+
 # ---------------------------------------------------------------------------
 # Loss-making 1T/2024 scenario:
 #   casilla 03 (volumen actividades sin datos base) = 20000
@@ -85,15 +107,15 @@ _CARRY_BINDING_2025 = "modelo-131-2025-resultados-negativos-anteriores"
 # the formula under test. The wiring assertion is: the saldo equals 200 from
 # the engine's own evaluation of max(0, -casilla10).
 # ---------------------------------------------------------------------------
-_Q1_2024_INPUTS = {
-    "01": Decimal("0"),  # rendimiento neto módulos con datos base
-    "02": Decimal("0"),  # pago fraccionado previo con datos base
-    "03": Decimal("20000.00"),  # volumen actividades sin datos base (manual)
-    "05": Decimal("0"),  # volumen agrario
-    "08": Decimal("600.00"),  # ingresos a cuenta / retenciones practicadas
-    "09": Decimal("0"),  # retenciones soportadas
-    "12": Decimal("0"),  # deducción por discapacidad / familia numerosa
-    "14": Decimal("0"),  # resultado ejercicios anteriores
+_Q1_2024_INPUTS: dict[CasillaId, Decimal] = {
+    _M131_RENDIMIENTO_MODULOS_CASILLA: Decimal("0"),  # rendimiento neto módulos con datos base
+    _M131_PAGO_PREVIO_CASILLA: Decimal("0"),  # pago fraccionado previo con datos base
+    _M131_VOLUME_SIN_DATOS_BASE_CASILLA: Decimal("20000.00"),  # volumen actividades sin datos base (manual)
+    _M131_VOLUME_AGRARIO_CASILLA: Decimal("0"),  # volumen agrario
+    _M131_RETENCIONES_CASILLA: Decimal("600.00"),  # ingresos a cuenta / retenciones practicadas
+    _M131_RETENCIONES_SOPORTADAS_CASILLA: Decimal("0"),  # retenciones soportadas
+    _M131_DEDUCCION_CASILLA: Decimal("0"),  # deducción por discapacidad / familia numerosa
+    _M131_RESULTADO_EJERCICIOS_ANTERIORES_CASILLA: Decimal("0"),  # resultado ejercicios anteriores
 }
 _Q1_2024_CARRY_BINDING = {_CARRY_BINDING: Decimal("0")}  # Q1 has no prior quarter
 
@@ -107,15 +129,15 @@ _EXPECTED_Q1_2024_SALDO = Decimal("200.00")
 #   casilla 10 = 600 - 100 - 0 = 500
 #   saldo = max(0, -500) = 0 (no carry needed)
 # ---------------------------------------------------------------------------
-_Q1_2025_INPUTS = {
-    "01": Decimal("0"),
-    "02": Decimal("0"),
-    "03": Decimal("30000.00"),
-    "05": Decimal("0"),
-    "08": Decimal("100.00"),
-    "09": Decimal("0"),
-    "12": Decimal("0"),
-    "14": Decimal("0"),
+_Q1_2025_INPUTS: dict[CasillaId, Decimal] = {
+    _M131_RENDIMIENTO_MODULOS_CASILLA: Decimal("0"),
+    _M131_PAGO_PREVIO_CASILLA: Decimal("0"),
+    _M131_VOLUME_SIN_DATOS_BASE_CASILLA: Decimal("30000.00"),
+    _M131_VOLUME_AGRARIO_CASILLA: Decimal("0"),
+    _M131_RETENCIONES_CASILLA: Decimal("100.00"),
+    _M131_RETENCIONES_SOPORTADAS_CASILLA: Decimal("0"),
+    _M131_DEDUCCION_CASILLA: Decimal("0"),
+    _M131_RESULTADO_EJERCICIOS_ANTERIORES_CASILLA: Decimal("0"),
 }
 _Q1_2025_CARRY_BINDING = {_CARRY_BINDING_2025: Decimal("0")}  # Q1 has no prior quarter
 
@@ -124,12 +146,12 @@ def _calculate_131(
     *,
     filing_year: int,
     period: str,
-    casilla_inputs: dict[str, Decimal],
+    casilla_inputs: dict[CasillaId, Decimal],
     carry_binding: dict[str, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL M131 engine for one quarter; return result + produced-value count."""
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=period)
-    bound = resolve_bound_casilla_inputs(snapshot.revision, carry_binding)
+    bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, carry_binding)
     inputs = {**bound, **casilla_inputs}
     result = calculate_registry_snapshot(
         snapshot,
@@ -141,11 +163,11 @@ def _calculate_131(
 
 
 def _131_observation(*, filing_year: int, period: str, result: RegistryCalculationResult) -> RegistryModeloObservation:
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=filing_year,
         period=period,
-        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+        casilla_values=result.values,
     )
 
 
@@ -163,8 +185,8 @@ def test_q1_2024_loss_produces_carry_forward_saldo(tmp_path: Path) -> None:
             casilla_inputs=_Q1_2024_INPUTS,
             carry_binding=_Q1_2024_CARRY_BINDING,
         )
-    assert result.values["10"] == Decimal("-200.00")
-    assert result.values["saldo-negativo-fin-periodo"] == _EXPECTED_Q1_2024_SALDO
+    assert result.values[_M131_RESULTADO_CASILLA] == Decimal("-200.00")
+    assert result.values[_M131_SALDO_NEGATIVO_CASILLA] == _EXPECTED_Q1_2024_SALDO
 
 
 def test_q1_2025_profitable_produces_zero_saldo(tmp_path: Path) -> None:
@@ -180,8 +202,8 @@ def test_q1_2025_profitable_produces_zero_saldo(tmp_path: Path) -> None:
             casilla_inputs=_Q1_2025_INPUTS,
             carry_binding=_Q1_2025_CARRY_BINDING,
         )
-    assert result.values["10"] == Decimal("500.00")
-    assert result.values["saldo-negativo-fin-periodo"] == Decimal("0.00")
+    assert result.values[_M131_RESULTADO_CASILLA] == Decimal("500.00")
+    assert result.values[_M131_SALDO_NEGATIVO_CASILLA] == Decimal("0.00")
 
 
 def test_q2_2024_carry_forward_resolves_from_q1_2024_saldo(tmp_path: Path) -> None:
@@ -253,14 +275,14 @@ def test_modelo_131_modules_continuity_enrolls_two_renta_years(tmp_path: Path) -
         recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Year N wiring: 2% rate from registry parameter applied to 20,000.
-    assert result_n.values["04"] == Decimal("400.00")  # 2% × 20000
-    assert result_n.values["10"] == Decimal("-200.00")
-    assert result_n.values["saldo-negativo-fin-periodo"] == _EXPECTED_Q1_2024_SALDO
+    assert result_n.values[_M131_PAYMENT_SIN_DATOS_BASE_CASILLA] == Decimal("400.00")  # 2% x 20000
+    assert result_n.values[_M131_RESULTADO_CASILLA] == Decimal("-200.00")
+    assert result_n.values[_M131_SALDO_NEGATIVO_CASILLA] == _EXPECTED_Q1_2024_SALDO
 
     # Year N+1 wiring: 2% rate from 2025 registry parameter applied to 30,000.
-    assert result_n1.values["04"] == Decimal("600.00")  # 2% × 30000
-    assert result_n1.values["10"] == Decimal("500.00")
-    assert result_n1.values["saldo-negativo-fin-periodo"] == Decimal("0.00")
+    assert result_n1.values[_M131_PAYMENT_SIN_DATOS_BASE_CASILLA] == Decimal("600.00")  # 2% x 30000
+    assert result_n1.values[_M131_RESULTADO_CASILLA] == Decimal("500.00")
+    assert result_n1.values[_M131_SALDO_NEGATIVO_CASILLA] == Decimal("0.00")
 
     # Authorization-gate enrollment.
     evidence = recorder.evidence()

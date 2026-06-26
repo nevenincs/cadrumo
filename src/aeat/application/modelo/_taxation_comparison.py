@@ -30,8 +30,15 @@ from ...core import Modelo
 from ...core import Period as _Period
 from ...core.errors import CoreError
 from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
     RegistrySnapshot,
+    RelationId,
     calculate_registry_snapshot,
+)
+from ._semantic_role_resolution import (
+    AmbiguousSemanticRoleCasillaError,
+    casilla_id_for_unique_semantic_role,
 )
 
 # ---------------------------------------------------------------------------
@@ -86,15 +93,15 @@ class TaxationComparisonResult(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def _casilla_by_semantic_role(snapshot: RegistrySnapshot, role: str) -> str | None:
+def _casilla_by_semantic_role(snapshot: RegistrySnapshot, role: str) -> CasillaId | None:
     """Return the casilla id with ``semantic_role == role``, or ``None``."""
-    for casilla in snapshot.revision.casillas:
-        if casilla.semantic_role == role:
-            return casilla.id
-    return None
+    try:
+        return casilla_id_for_unique_semantic_role(snapshot, role)
+    except AmbiguousSemanticRoleCasillaError as exc:
+        raise TaxationComparisonError(str(exc)) from exc
 
 
-def _declaration_type_binding_id(snapshot: RegistrySnapshot) -> str | None:
+def _declaration_type_binding_id(snapshot: RegistrySnapshot) -> BindingId | None:
     """Return the binding id for ``profile-declaration-type`` in this revision."""
     suffix = _DECLARATION_TYPE_BINDING_SUFFIX
     for binding in snapshot.revision.bindings:
@@ -111,11 +118,11 @@ def _declaration_type_binding_id(snapshot: RegistrySnapshot) -> str | None:
 def compare_taxation_modes(
     snapshot: RegistrySnapshot,
     *,
-    inputs: Mapping[str, Decimal],
-    binding_values: Mapping[str, Decimal],
-    enum_binding_values: Mapping[str, str],
-    relation_values: Mapping[str, Decimal] | None = None,
-    date_binding_values: Mapping[str, date] | None = None,
+    inputs: Mapping[CasillaId, Decimal],
+    binding_values: Mapping[BindingId, Decimal],
+    enum_binding_values: Mapping[BindingId, str],
+    relation_values: Mapping[RelationId, Decimal] | None = None,
+    date_binding_values: Mapping[BindingId, date] | None = None,
     date_context: Mapping[str, date] | None = None,
 ) -> TaxationComparisonResult:
     """Run the registry engine for conjunta and individual, then diff the results.
@@ -164,7 +171,7 @@ def compare_taxation_modes(
     resolved_dates = dict(date_binding_values or {})
     resolved_date_ctx: dict[str, date] = dict(date_context or {})
 
-    def _run(declaration_type: Literal[1, 2]) -> Mapping[str, Decimal]:
+    def _run(declaration_type: Literal[1, 2]) -> Mapping[CasillaId, Decimal]:
         merged_bindings = {**binding_values, decl_binding: Decimal(declaration_type)}
         result = calculate_registry_snapshot(
             snapshot,
@@ -256,7 +263,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     from ._action_errors import WorkUnitNotFoundError
     from ._binding_resolution import (
         _resolve_declaration_period_inputs,
-        resolve_bound_casilla_inputs_for_available_bindings,
+        resolve_available_bound_inputs_by_casilla_id,
     )
     from ._registry_resources import authority_via_resources as _authority_via_resources
 
@@ -309,7 +316,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
         filing_year=work_unit.filing_year,
         period=work_unit.period,
     )
-    bound_inputs = resolve_bound_casilla_inputs_for_available_bindings(
+    bound_inputs = resolve_available_bound_inputs_by_casilla_id(
         snapshot.revision,
         resolution.binding_values,
     )

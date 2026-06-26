@@ -30,7 +30,12 @@ import pytest
 
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    CasillaObservation,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
 from .._multi_year import MultiYearResolutionRequest, MultiYearResolver
@@ -49,6 +54,17 @@ _CLOCK = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _FAKE_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"revision stamp fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M303_CARRY_SOURCE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+
+
 def _filing_period(year: int = _YEAR, period: str = _PERIOD) -> Period:
     return Period.from_year_and_code(year, period)
 
@@ -61,7 +77,7 @@ def _minimal_observation(modelo: str = _MODELO, year: int = _YEAR, period: str =
         period=period,
         observations=(
             CasillaObservation(
-                casilla_id="iva.resultado",
+                casilla_id=_M303_RESULTADO_CASILLA,
                 value=Decimal("5000.00"),
                 legal_refs=("liva.art-94",),
                 source_refs=("aeat.iva.2025",),
@@ -233,7 +249,6 @@ def test_stamped_revision_id_anti_tautology_drop_surfaces_as_inequality(tmp_path
 _M303_CARRY_YEAR = 2025
 _M303_CARRY_TARGET_PERIOD = "2T"
 _M303_CARRY_SOURCE_PERIOD = "1T"  # offset -1 from 2T
-_M303_CARRY_SOURCE_CASILLA = "iva.compensacion-disponible-fin-periodo"
 _M303_CARRY_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"
 
 

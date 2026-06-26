@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import Any, Literal
 
 from ...core import Period
+from ...domain.calculations.registry import BindingId
 from ._schemas import OutputSchema, register_schema
 
 # ---------------------------------------------------------------------------
@@ -637,7 +638,7 @@ class Borrador100ListResult(OutputSchema):
 class Borrador100ViewResult(OutputSchema):
     """Payload for ``aeat app live borrador 100 view``.
 
-    ``binding_values`` is a ``{casilla_id: string_amount}`` mapping;
+    ``binding_values`` is a ``{BindingId: string_value}`` mapping;
     Decimal values are rendered as their canonical string form before
     they reach the envelope so the strict :class:`OutputSchema` never
     encounters a non-JSON-native scalar at validation time.
@@ -651,7 +652,7 @@ class Borrador100ViewResult(OutputSchema):
     source_url: str
     binding_count: int
     state: str
-    binding_values: dict[str, str]
+    binding_values: dict[BindingId, str]
 
 
 @register_schema("app.live.borrador.100.latest")

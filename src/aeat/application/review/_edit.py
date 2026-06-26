@@ -1,7 +1,7 @@
 """Typed ``--set KEY=VALUE`` parser for record-edit commands.
 
-The CLI exposes ``--set KEY=VALUE`` on every ledger / invoice /
-declaration ``edit`` command. The canonical grammar:
+The CLI exposes ``--set KEY=VALUE`` on ledger / invoice review-edit
+commands. The canonical grammar:
 
 - ledger:      ``--set category=software``, ``--set business.share=1.0``,
   ``--set reference=invoice-1``, ``--set comments=…``,
@@ -11,17 +11,15 @@ declaration ``edit`` command. The canonical grammar:
   ``--set retention.rate=15``, ``--set retention.amount=18.00``,
   ``--set payment.id=row_…``, ``--set reference=…``,
   ``--set comments=…``, ``--set document.path=…``
-- declaration: ``--set casilla.NN=DECIMAL`` (per-modelo casilla
-  override; ``casilla.71=1200.00`` is the canonical example).
 
 The CLI argv layer parses the raw strings; this module turns them
 into typed :class:`EditClause` records and binds them to per-scope
-:class:`LedgerEditSpec` / :class:`InvoiceEditSpec` /
-:class:`DeclaracionEditSpec` records. Each spec validates its closed
+:class:`LedgerEditSpec` / :class:`InvoiceEditSpec` records. Each spec
+validates its closed
 key catalogue, coerces each value to its typed shape (``Decimal``,
-``Path``, free text, foreign-key id, casilla id), and exposes typed
-accessors the orchestration layer reads instead of re-parsing strings
-at every edit-application call site.
+``Path``, free text, foreign-key id), and exposes typed accessors the
+orchestration layer reads instead of re-parsing strings at every
+edit-application call site.
 
 The orchestration that applies an ``EditSpec`` to a stored
 :class:`aeat.domain.transactions.Transaction` /
@@ -45,14 +43,10 @@ from ...core.decimal import coerce_decimal
 from ...domain.invoices import numeric_iva_rate_percentages
 from ._errors import EditParseError
 
-_CASILLA_EDIT_RE = re.compile(r"^casilla\.(?P<casilla_id>\d{2,5})$")
-"""Match ``casilla.NN`` keys for declaration edits (2-5 digit ids)."""
-
 _DECIMAL_RE = re.compile(r"^-?\d+(\.\d+)?$")
 """Reject malformed decimals before constructor; ruff-friendly fast path."""
 
 __all__ = (
-    "DeclaracionEditSpec",
     "EditClause",
     "EditParseError",
     "InvoiceEditKey",
@@ -116,7 +110,6 @@ def parse_edit_clause(raw: str) -> EditClause:
         return EditClause(key=key, raw_value=value)
     except ValueError as exc:
         raise EditParseError(raw, reason="invalid-value") from exc
-
 
 def parse_edit_clauses(raw: Iterable[str]) -> tuple[EditClause, ...]:
     """Parse a sequence of ``--set`` strings into :class:`EditClause` records, preserving input order."""
@@ -486,60 +479,7 @@ class InvoiceEditSpec(BaseModel):
                 raise ValueError(f"clauses[{label}] / {label} field disagree")
         return self
 
-
-class DeclaracionEditSpec(BaseModel):
-    """Typed modelo casilla edit spec.
-
-    The declaration edit grammar uses the dotted prefix
-    ``casilla.NN`` for casilla-value overrides — every key MUST match
-    the ``casilla.<2-5 digits>`` shape and every value MUST be a
-    Decimal. Attempts to set anything else are rejected.
-
-    Attributes:
-        clauses: Raw clauses in input order.
-        casilla_edits: Mapping from canonical casilla id (``"71"``) to
-            the typed Decimal override. Empty when the command is
-            invoked without ``--set``.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    clauses: tuple[EditClause, ...] = ()
-    casilla_edits: dict[str, Decimal] = Field(default_factory=dict)
-
-    @classmethod
-    def from_strings(cls, raw: Iterable[str]) -> DeclaracionEditSpec:
-        """Parse ``--set`` arguments into a typed :class:`DeclaracionEditSpec`."""
-        clauses = parse_edit_clauses(raw)
-        _ensure_unique_keys(clauses, scope="declaration")
-        casilla_edits: dict[str, Decimal] = {}
-        for clause in clauses:
-            match = _CASILLA_EDIT_RE.fullmatch(clause.key)
-            if match is None:
-                raise EditParseError(
-                    f"--set {clause.key}={clause.raw_value}",
-                    reason="unknown-key-declaration",
-                )
-            casilla_id = match.group("casilla_id")
-            casilla_edits[casilla_id] = _coerce_decimal(clause, scope="declaration-casilla")
-        return cls(clauses=clauses, casilla_edits=casilla_edits)
-
-    @model_validator(mode="after")
-    def _enforce_clause_consistency(self) -> DeclaracionEditSpec:
-        """Resolved field must agree with the clauses tuple."""
-        present_ids: set[str] = set()
-        for clause in self.clauses:
-            match = _CASILLA_EDIT_RE.fullmatch(clause.key)
-            if match is None:
-                raise ValueError(f"clauses[{clause.key}] is not a casilla.NN key")
-            present_ids.add(match.group("casilla_id"))
-        if present_ids != set(self.casilla_edits):
-            raise ValueError("clauses / casilla_edits field disagree")
-        return self
-
-
 __all__ = [
-    "DeclaracionEditSpec",
     "EditClause",
     "EditParseError",
     "InvoiceEditKey",

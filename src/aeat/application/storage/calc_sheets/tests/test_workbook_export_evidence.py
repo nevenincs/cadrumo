@@ -12,6 +12,7 @@ import pytest
 from openpyxl import load_workbook
 
 from .....core import Period
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .._records import (
     SheetCellAddress,
     SheetEvidenceContributorRow,
@@ -27,6 +28,12 @@ from .._records import (
 from .._workbook_export import serialize_offline_export, serialize_offline_workbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_BASE_CASILLA: CasillaId = validated_casilla_id("base", surface="_BASE_CASILLA")
+_CUOTA_CASILLA: CasillaId = validated_casilla_id("cuota", surface="_CUOTA_CASILLA")
+_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
+    "resultado.contable",
+    surface="_RESULTADO_CONTABLE_CASILLA",
+)
 
 
 def _metadata() -> SheetExportMetadata:
@@ -49,14 +56,14 @@ def _evidence_plan() -> SheetExportPlan:
                 address=SheetCellAddress.at(TabName.ENTRADAS, 2, 4),
                 value=Decimal("100.00"),
                 role="operator_input",
-                casilla="base",
+                casilla_id=_BASE_CASILLA,
             ),
         ),
         formula_cells=(
             SheetFormulaCell(
                 address=SheetCellAddress.at(TabName.CALCULOS, 2, 4),
                 formula="'Entradas'!D2*0.21",
-                casilla="cuota",
+                casilla_id=_CUOTA_CASILLA,
                 rounding_rule="money",
                 rounding_scale=2,
             ),
@@ -66,7 +73,7 @@ def _evidence_plan() -> SheetExportPlan:
             snapshot_fingerprint="f" * 64,
             contributor_rows=(
                 SheetEvidenceContributorRow(
-                    casilla_id="cuota",
+                    casilla_id=_CUOTA_CASILLA,
                     transaction_id="tx-001",
                     amount=Decimal("-121.00"),
                     currency="EUR",
@@ -82,7 +89,7 @@ def _evidence_plan() -> SheetExportPlan:
             ),
             manual_entries=(
                 SheetEvidenceManualEntry(
-                    casilla_id="resultado.contable",
+                    casilla_id=_RESULTADO_CONTABLE_CASILLA,
                     value="140000.00",
                     kind="casilla_input",
                     note="operator supplied accounting result",

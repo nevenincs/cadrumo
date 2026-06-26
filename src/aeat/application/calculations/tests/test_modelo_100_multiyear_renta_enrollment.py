@@ -18,7 +18,7 @@ pending balance for the immediately-prior origin ejercicio — casilla 1388
 label is "Ejercicio 2024: Pendiente de aplicación al principio del
 periodo", in the 2024 revision "Ejercicio 2023: ..."). The
 ``previous_filing`` binding ``renta-{year}-base-liquidable-negativa-general-anterior``
-(selector ``source_modelo = "100", source_output = "1391",
+(selector ``source_modelo = "100", source_casilla_id = "1391",
 filing_year_delta = -1, period = "0A"``, ``op = copy``) makes casilla 1388
 auto-resolve from the prior filing, so the operator does not re-key the
 carried saldo. The carry is origin-year-matched in both revisions (each
@@ -64,13 +64,16 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
 from ....domain.calculations.registry import (
-    CasillaObservation,
-    RegistryModeloObservation,
+    BindingId,
+    CasillaId,
     RegistrySnapshot,
+    RelationId,
+    validated_casilla_id,
 )
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit
 from ...user_profile import UserProfileLifecycleRepository
@@ -89,8 +92,15 @@ _PERIOD = "0A"
 #: 1391 is the end-of-year *generated* saldo pending future application; 1388
 #: is the next year's *opening* pending for the immediately-prior origin
 #: ejercicio, bound from the prior year's 1391 by the carry binding.
-_GENERATED_SALDO = "1391"
-_PENDIENTE_INICIO = "1388"
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M100 multiyear fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_GENERATED_SALDO: CasillaId = _casilla_id("1391")
+_PENDIENTE_INICIO: CasillaId = _casilla_id("1388")
 
 #: Two distinct renta years the enrollment spans; each sources the prior year's 1391.
 _YEAR_N = 2024
@@ -113,11 +123,11 @@ def _snapshot(filing_year: int) -> RegistrySnapshot:
 def _seed_prior_year_saldo(*, source_year: int, saldo: Decimal, obs_repo: CalculationObservationRepository) -> None:
     """Record a prior-year M100 end-of-year generated saldo (casilla 1391)."""
     obs_repo.save_observation(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo=_MODELO,
             filing_year=source_year,
             period=_PERIOD,
-            observations=(CasillaObservation(casilla_id=_GENERATED_SALDO, value=saldo),),
+            casilla_values={_GENERATED_SALDO: saldo},
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,
@@ -182,11 +192,11 @@ def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationReposito
     # Every non-profile binding defaults to zero through the caller channel;
     # the previous_filing carry overlays its real resolved value. profile
     # bindings are deliberately omitted so the profile resolver fills them.
-    binding_values: dict[str, Decimal] = {
-        str(binding.id): Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"
+    binding_values: dict[BindingId, Decimal] = {
+        binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"
     }
     binding_values.update(carry)
-    relation_values = {str(relation.id): Decimal("0") for relation in snapshot.revision.relations}
+    relation_values: dict[RelationId, Decimal] = {relation.id: Decimal("0") for relation in snapshot.revision.relations}
 
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()

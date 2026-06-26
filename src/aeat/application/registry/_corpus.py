@@ -14,7 +14,9 @@ from ...core.config import Settings, load_settings
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ...core.logging import get_logger
 from ...core.topics import Topic, TopicCatalogue, load_topic_catalogue
+from ...domain.calculations.registry import RegistrySnapshotError, ValidatedRegistryAuthority, bundled_authority
 from ...domain.manuals import (
+    ManualCasillaReference,
     ManualId,
     ManualPart,
     ManualVerificationIssue,
@@ -270,7 +272,7 @@ class RegistryManualRuleProjection(BaseModel):
     rule_id: str = Field(min_length=1)
     kind: str = Field(min_length=1)
     section_id: str = Field(min_length=1)
-    references_casillas: tuple[str, ...] = ()
+    references_casillas: tuple[ManualCasillaReference, ...] = ()
 
 
 class RegistryManualRulesReport(BaseModel):
@@ -625,6 +627,7 @@ def verify_registry_manual(
     command: RegistryManualVerifyCommand,
     *,
     settings: Settings | None = None,
+    registry_authority: ValidatedRegistryAuthority | None = None,
     topic_catalogue: TopicCatalogue | None = None,
     locale: str | None = None,
 ) -> RegistryManualVerificationReport:
@@ -641,7 +644,159 @@ def verify_registry_manual(
         part=command.part,
         settings=settings,
     )
+    report = _manual_report_with_registry_casilla_issues(
+        report,
+        settings=settings,
+        registry_authority=registry_authority,
+    )
     return _manual_verification_report(report, topics=topics)
+
+
+def _manual_report_with_registry_casilla_issues(
+    report: ManualVerificationReport,
+    *,
+    settings: Settings | None,
+    registry_authority: ValidatedRegistryAuthority | None,
+) -> ManualVerificationReport:
+    issues = _manual_registry_casilla_reference_issues(
+        report,
+        settings=settings,
+        registry_authority=registry_authority,
+    )
+    if not issues:
+        return report
+    return report.model_copy(update={"issues": (*report.issues, *issues)})
+
+
+def _manual_registry_casilla_reference_issues(
+    report: ManualVerificationReport,
+    *,
+    settings: Settings | None,
+    registry_authority: ValidatedRegistryAuthority | None,
+) -> tuple[ManualVerificationIssue, ...]:
+    if any(issue.code == "load-failed" for issue in report.errors):
+        return ()
+    part_root = resolve_part_root(
+        manual_id=report.manual_id,
+        year=report.year,
+        part=report.part,
+        settings=settings,
+    )
+    if not (part_root / "structure" / "manual.json").exists():
+        return ()
+
+    manual = load_manual(report.manual_id, report.year, report.part, settings=settings)
+    authority = registry_authority or bundled_authority()
+
+    issues: list[ManualVerificationIssue] = []
+    for section in iter_sections(manual, settings=settings):
+        for rule in section.rules:
+            for reference in rule.references_casillas:
+                issues.extend(
+                    _manual_registry_casilla_reference_rule_issues(
+                        reference,
+                        authority=authority,
+                        manual_year=report.year,
+                        rule_id=rule.rule_id,
+                    ),
+                )
+    return tuple(issues)
+
+
+def _manual_registry_casilla_reference_rule_issues(
+    reference: ManualCasillaReference,
+    *,
+    authority: ValidatedRegistryAuthority,
+    manual_year: int,
+    rule_id: str,
+) -> tuple[ManualVerificationIssue, ...]:
+    try:
+        modelo = authority.modelo(reference.modelo_id)
+    except RegistrySnapshotError:
+        return (
+            ManualVerificationIssue(
+                level="error",
+                code="unknown-casilla-modelo-ref",
+                message=(
+                    f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
+                    f"{reference.casilla_id!r}, but the modelo is absent from the registry"
+                ),
+            ),
+        )
+
+    covering_revisions = tuple(
+        sorted(
+            (
+                revision
+                for revision in modelo.revisions.values()
+                if revision.period_selector.includes_year(manual_year)
+            ),
+            key=lambda revision: (revision.valid_from, str(revision.id)),
+        ),
+    )
+    if not covering_revisions:
+        return (
+            ManualVerificationIssue(
+                level="error",
+                code="no-casilla-revision-ref",
+                message=(
+                    f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
+                    f"{reference.casilla_id!r}, but no registry revision covers year {manual_year}"
+                ),
+            ),
+        )
+
+    issues: list[ManualVerificationIssue] = []
+    missing_revisions: list[str] = []
+    resolved_signatures: dict[tuple[str | None, str, str, tuple[str, ...], str], list[str]] = {}
+    for revision in covering_revisions:
+        matches = tuple(casilla for casilla in revision.casillas if casilla.id == reference.casilla_id)
+        if len(matches) > 1:
+            issues.append(
+                ManualVerificationIssue(
+                    level="error",
+                    code="ambiguous-casilla-ref",
+                    message=(
+                        f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
+                        f"{reference.casilla_id!r}, but revision {revision.id!r} declares "
+                        f"{len(matches)} matching casilla ids"
+                    ),
+                ),
+            )
+            continue
+        if not matches:
+            missing_revisions.append(str(revision.id))
+            continue
+        casilla = matches[0]
+        signature = (casilla.segmento, casilla.number, casilla.label, casilla.section, casilla.data_type)
+        resolved_signatures.setdefault(signature, []).append(str(revision.id))
+
+    if missing_revisions:
+        issues.append(
+            ManualVerificationIssue(
+                level="error",
+                code="dangling-casilla-ref",
+                message=(
+                    f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
+                    f"{reference.casilla_id!r}, but that casilla.id is missing from "
+                    f"revision(s) {tuple(missing_revisions)!r} for year {manual_year}"
+                ),
+            ),
+        )
+    if len(resolved_signatures) > 1:
+        signature_revisions = tuple(tuple(revisions) for revisions in resolved_signatures.values())
+        issues.append(
+            ManualVerificationIssue(
+                level="error",
+                code="ambiguous-casilla-ref",
+                message=(
+                    f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
+                    f"{reference.casilla_id!r}, but year {manual_year} resolves to divergent "
+                    f"casilla definitions across revision groups {signature_revisions!r}"
+                ),
+            ),
+        )
+    return tuple(issues)
 
 
 def _topic_projections(

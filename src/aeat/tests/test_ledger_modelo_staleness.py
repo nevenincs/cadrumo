@@ -27,6 +27,7 @@ from ..application.aggregation._ledger_filing_snapshot import (
 )
 from ..application.ledger import ManualLedgerTransactionPatch, update_manual_transaction_fields
 from ..core import Period
+from ..domain.calculations.registry import CasillaId, validated_casilla_id
 from ..domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ..domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -50,11 +51,22 @@ from ..domain.transactions import (
     TransactionValidationError,
 )
 from ..tests.secure_sql import isolated_runtime_profile
+from .registry_observations import registry_grounded_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 4, 6, 12, 0, tzinfo=UTC)
 _FILING_PERIOD = Period.from_year_and_code(2025, "1T")
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_REVISION_CASILLA: CasillaId = _casilla_id("01")
 
 
 def _txn(*, taxable_base: Decimal) -> Transaction:
@@ -107,19 +119,25 @@ def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={"01": "1"},
+        input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
-        casilla_values={"01": Decimal("1")},
+        casilla_values={_REVISION_CASILLA: Decimal("1")},
         source_transaction_ids=(tx_id,),
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        inputs_snapshot={"01": "1"},
+        input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
         source_transaction_ids=(tx_id,),
-        casilla_values={"01": Decimal("1")},
+        casilla_values={_REVISION_CASILLA: Decimal("1")},
+        observations=registry_grounded_observations(
+            modelo="303",
+            filing_year=2025,
+            period=_FILING_PERIOD.registry_token,
+            casilla_values={_REVISION_CASILLA: Decimal("1")},
+        ),
         created_at=_NOW,
         updated_at=_NOW,
         verified_at=_NOW,

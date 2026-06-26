@@ -42,6 +42,7 @@ from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
 from ...core.parsing._dates import _parse_iso8601_date
 from ...domain.calculations.registry import (
+    BindingId,
     DataBindingDefinition,
     RegistrySnapshot,
     enum_consumed_binding_ids,
@@ -80,10 +81,10 @@ class ProfileSourcedBindingResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
-    enum_binding_values: Mapping[str, str] = Field(default_factory=dict)
-    date_binding_values: Mapping[str, date] = Field(default_factory=dict)
-    bindings_sourced_from_profile: tuple[str, ...] = ()
+    binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
+    enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
+    date_binding_values: Mapping[BindingId, date] = Field(default_factory=dict)
+    bindings_sourced_from_profile: tuple[BindingId, ...] = ()
     profile_record_fingerprint: str | None = Field(default=None, min_length=1)
 
     @model_validator(mode="after")
@@ -265,7 +266,7 @@ def _inject_derived_state_attribution_facts(
         fact_index[synthetic_key] = Decimal("100")
 
 
-def _decimal_value(binding_id: str, value: object) -> Decimal:
+def _decimal_value(binding_id: BindingId, value: object) -> Decimal:
     # Boolean-typed profile facts arrive as Python ``bool`` now that
     # ``_profile_fact_index`` preserves the typed value. ``bool`` is a
     # subclass of ``int``, so ``isinstance(value, bool)`` must be tested
@@ -296,13 +297,13 @@ class _ResolvedBindingChannels:
     :func:`_route_resolved_binding` mutates the same accumulator in place.
     """
 
-    decimal_values: dict[str, Decimal] = dataclass_field(default_factory=dict)
-    enum_values: dict[str, str] = dataclass_field(default_factory=dict)
-    date_values: dict[str, date] = dataclass_field(default_factory=dict)
+    decimal_values: dict[BindingId, Decimal] = dataclass_field(default_factory=dict)
+    enum_values: dict[BindingId, str] = dataclass_field(default_factory=dict)
+    date_values: dict[BindingId, date] = dataclass_field(default_factory=dict)
 
 
 def _route_resolved_binding(
-    binding_id: str,
+    binding_id: BindingId,
     value: UserProfileFactValue,
     *,
     is_date_channel: bool,
@@ -356,7 +357,7 @@ def resolve_profile_sourced_bindings(
     *,
     bucket_id: str,
     profile_record: object | None = None,
-    caller_binding_ids: frozenset[str] = frozenset(),
+    caller_binding_ids: frozenset[BindingId] = frozenset(),
     schema: ProfileSchemaDefinition | None = None,
 ) -> ProfileSourcedBindingResult:
     """Resolve every ``source = "profile"`` binding the revision declares.
@@ -392,14 +393,14 @@ def resolve_profile_sourced_bindings(
     # Decimal channel and fail, so a bound casilla is only swept in when its
     # ``data_type`` routes through the numeric (Decimal) channel. Restrict
     # resolution to formula-consumed and bound-numeric-casilla bindings.
-    formula_consumed: set[str] = set()
-    formula_date_consumed: set[str] = set()
+    formula_consumed: set[BindingId] = set()
+    formula_date_consumed: set[BindingId] = set()
     for formula in snapshot.revision.formulas:
         formula_consumed.update(expression_binding_refs(formula.expression))
         formula_date_consumed.update(expression_date_binding_refs(formula.expression))
     _numeric_casilla_data_types = {"decimal", "money", "integer", "ratio"}
-    bound_casilla_binding_ids: set[str] = {
-        str(casilla.binding)
+    bound_casilla_binding_ids: set[BindingId] = {
+        casilla.binding
         for casilla in snapshot.revision.casillas
         if casilla.binding is not None and casilla.data_type in _numeric_casilla_data_types
     }
@@ -408,9 +409,9 @@ def resolve_profile_sourced_bindings(
         for binding in snapshot.revision.bindings
         if binding.source == "profile"
         and (
-            str(binding.id) in formula_consumed
-            or str(binding.id) in formula_date_consumed
-            or str(binding.id) in bound_casilla_binding_ids
+            binding.id in formula_consumed
+            or binding.id in formula_date_consumed
+            or binding.id in bound_casilla_binding_ids
         )
     ]
     if not profile_bindings:
@@ -435,7 +436,7 @@ def resolve_profile_sourced_bindings(
 
     channels = _ResolvedBindingChannels()
     for binding in profile_bindings:
-        binding_id = str(binding.id)
+        binding_id = binding.id
         if binding_id in caller_binding_ids:
             continue
         value = _resolve_one(binding, fact_index)

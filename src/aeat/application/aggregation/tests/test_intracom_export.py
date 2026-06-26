@@ -29,7 +29,7 @@ import pytest
 
 from ....core import Period
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import load_registry_tree
+from ....domain.calculations.registry import BindingId, CasillaId, load_registry_tree, validated_casilla_id
 from ....domain.calculations.registry._ledger_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
@@ -53,9 +53,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ledger_iva_aggregation bindings (the canonical path production uses), not a
 # bespoke application-tier helper. These tests assert the registry binding
 # reproduces the expected base sums end-to-end.
-_CASILLA_BASE_BINDING = {
-    "59": "modelo-303-casilla-59-entregas-intracomunitarias-base",
-    "60": "modelo-303-casilla-60-exportaciones-base",
+_CASILLA_BASE_BINDING: dict[CasillaId, BindingId] = {
+    validated_casilla_id("59", surface="_CASILLA_BASE_BINDING.59"): (
+        "modelo-303-casilla-59-entregas-intracomunitarias-base"
+    ),
+    validated_casilla_id("60", surface="_CASILLA_BASE_BINDING.60"): (
+        "modelo-303-casilla-60-exportaciones-base"
+    ),
 }
 
 
@@ -65,10 +69,10 @@ def _modelo_303_revision():
     return next(m for m in modelos if m.id == "303").revisions["2023-y-siguientes"]
 
 
-def _casilla_base(aggregation: IvaLedgerAggregation, casilla: str) -> Decimal:
+def _casilla_base(aggregation: IvaLedgerAggregation, casilla_id: CasillaId) -> Decimal:
     """Resolve a casilla base imponible via the registry binding from an aggregation."""
     resolved = resolve_ledger_iva_aggregation_binding_values(_modelo_303_revision(), aggregation.observations)
-    return resolved.get(_CASILLA_BASE_BINDING[casilla], Decimal("0"))
+    return resolved.get(_CASILLA_BASE_BINDING[casilla_id], Decimal("0"))
 
 
 def _period(year: int, code: str) -> Period:

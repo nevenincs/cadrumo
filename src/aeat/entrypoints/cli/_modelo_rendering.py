@@ -258,6 +258,7 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
             value=str(obs.value),
             formula_id=obs.formula_id,
             operand_refs=tuple(obs.operand_refs),
+            operand_casilla_refs=tuple(obs.operand_casilla_refs),
             operand_values=tuple(str(v) for v in obs.operand_values),
             legal_refs=tuple(obs.legal_refs),
             source_refs=tuple(obs.source_refs),
@@ -272,7 +273,8 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
         observations=observations,
         result_summary=result_summary_payload(rev),
         binding_overrides={key: str(value) for key, value in rev.binding_overrides.items()},
-        inputs_snapshot=dict(rev.inputs_snapshot),
+        relation_overrides={key: str(value) for key, value in rev.relation_overrides.items()},
+        input_values_by_casilla_id=dict(rev.input_values_by_casilla_id),
         created_at=rev.created_at.isoformat(),
         updated_at=rev.updated_at.isoformat(),
         verified_at=rev.verified_at.isoformat() if rev.verified_at else None,
@@ -467,8 +469,8 @@ def verification_report_payload(report) -> VerificationReportPayload:
         calculation_revision_id=report.calculation_revision_id,
         completeness_status=report.completeness_status.value,
         granted_verificado_completo=report.granted_verificado_completo,
-        resolved_casillas=list(report.resolved_casillas),
-        missing_required_casillas=list(report.missing_required_casillas),
+        resolved_casilla_ids=list(report.resolved_casilla_ids),
+        missing_required_casilla_ids=list(report.missing_required_casilla_ids),
         run_at=report.run_at.isoformat(),
         verified_by=report.verified_by,
         findings=[
@@ -495,12 +497,12 @@ def verification_report_lines(report) -> list[str]:
         f"granted_verificado_completo\t{str(report.granted_verificado_completo).lower()}",
         f"run_at\t{report.run_at.isoformat()}",
         f"verified_by\t{report.verified_by}",
-        f"resolved_casilla_count\t{len(report.resolved_casillas)}",
-        f"missing_required_casilla_count\t{len(report.missing_required_casillas)}",
+        f"resolved_casilla_id_count\t{len(report.resolved_casilla_ids)}",
+        f"missing_required_casilla_id_count\t{len(report.missing_required_casilla_ids)}",
         f"finding_count\t{len(report.findings)}",
     ]
-    for casilla in report.missing_required_casillas:
-        lines.append(f"missing_casilla\t{casilla}")
+    for casilla_id in report.missing_required_casilla_ids:
+        lines.append(f"missing_casilla_id\t{casilla_id}")
     for finding in report.findings:
         next_action = finding.next_action or ""
         casilla = finding.casilla_id or ""

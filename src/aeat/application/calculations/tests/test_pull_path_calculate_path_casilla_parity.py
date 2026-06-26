@@ -53,10 +53,11 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     InputKind,
     RegistryModeloObservation,
     calculate_registry_snapshot,
+    validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
@@ -79,14 +80,46 @@ _YEAR = 2025
 _T0 = datetime(_YEAR, 1, 5, 10, 0, tzinfo=UTC)
 _T1 = datetime(_YEAR, 3, 31, 14, 0, tzinfo=UTC)
 
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"pull/calculate parity fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M115_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
+_M115_BASE_CASILLA: CasillaId = _casilla_id("02")
+_M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
+_M115_ANTERIORES_CASILLA: CasillaId = _casilla_id("04")
+_M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
+_M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
+_M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+
 # Distinct per-quarter bases so cross-quarter contamination surfaces
 # as a mismatch rather than a false-positive cancellation.
 # casilla 01 = perceptores (int count), 02 = base (money), 04 = anteriores
-_QUARTERS_115: dict[str, dict[str, Decimal]] = {
-    "1T": {"01": Decimal("2"), "02": Decimal("1200.00"), "04": Decimal("0")},
-    "2T": {"01": Decimal("3"), "02": Decimal("1350.00"), "04": Decimal("0")},
-    "3T": {"01": Decimal("2"), "02": Decimal("900.00"), "04": Decimal("0")},
-    "4T": {"01": Decimal("2"), "02": Decimal("1100.00"), "04": Decimal("0")},
+_QUARTERS_115: dict[str, dict[CasillaId, Decimal]] = {
+    "1T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("2"),
+        _M115_BASE_CASILLA: Decimal("1200.00"),
+        _M115_ANTERIORES_CASILLA: Decimal("0"),
+    },
+    "2T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("3"),
+        _M115_BASE_CASILLA: Decimal("1350.00"),
+        _M115_ANTERIORES_CASILLA: Decimal("0"),
+    },
+    "3T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("2"),
+        _M115_BASE_CASILLA: Decimal("900.00"),
+        _M115_ANTERIORES_CASILLA: Decimal("0"),
+    },
+    "4T": {
+        _M115_PERCEPTORES_CASILLA: Decimal("2"),
+        _M115_BASE_CASILLA: Decimal("1100.00"),
+        _M115_ANTERIORES_CASILLA: Decimal("0"),
+    },
 }
 
 
@@ -96,10 +129,14 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         yield profile.repository
 
 
-def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[str, Decimal]:
+def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[CasillaId, Decimal]:
     """Compute and persist the four M115 quarters; return the expected M180 sums."""
     auth = resources().modelos.authority
-    totals: dict[str, Decimal] = {"01": Decimal("0"), "02": Decimal("0"), "03": Decimal("0")}
+    totals: dict[CasillaId, Decimal] = {
+        _M115_PERCEPTORES_CASILLA: Decimal("0"),
+        _M115_BASE_CASILLA: Decimal("0"),
+        _M115_RETENCIONES_CASILLA: Decimal("0"),
+    }
     for period, casilla_inputs in _QUARTERS_115.items():
         snap = auth.snapshot("115", filing_year=_YEAR, period=period)
         # Resolve full input map (non-computed casillas start at 0, then apply
@@ -122,7 +159,7 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[s
                 modelo="115",
                 filing_year=_YEAR,
                 period=period,
-                observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+                observations=result.observations,
             ),
             source_kind="app_filing",
             captured_at=_T0,
@@ -162,7 +199,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
 
     # Non-vacuous gate: the summed base must be strictly positive so a silent
     # blank masquerading as "equal" fails here.
-    assert expected_totals["02"] > Decimal("0"), "seeded M115 bases sum to zero — test fixture is broken"
+    assert expected_totals[_M115_BASE_CASILLA] > Decimal("0"), "seeded M115 bases sum to zero — test fixture is broken"
 
     auth = resources().modelos.authority
     snap_180 = auth.snapshot("180", filing_year=_YEAR, period="0A")
@@ -251,9 +288,9 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     # (sumar los cuatro trimestres = total anual), not from the formula under
     # test — the expected values are computed from the same registry engine
     # applied to the four quarters, making them an oracle, not a tautology.
-    assert live_as_decimal["decl.total-perceptores"] == expected_totals["01"]
-    assert live_as_decimal["decl.base-total"] == expected_totals["02"]
-    assert live_as_decimal["decl.retenciones-total"] == expected_totals["03"]
+    assert live_as_decimal[_M180_TOTAL_PERCEPTORES_CASILLA] == expected_totals[_M115_PERCEPTORES_CASILLA]
+    assert live_as_decimal[_M180_BASE_TOTAL_CASILLA] == expected_totals[_M115_BASE_CASILLA]
+    assert live_as_decimal[_M180_RETENCIONES_TOTAL_CASILLA] == expected_totals[_M115_RETENCIONES_CASILLA]
 
     # Structural-share proof: the relay path's relation_values must equal the
     # values that resolve_relations_from_local_store produces independently —

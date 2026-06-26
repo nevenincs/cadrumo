@@ -39,7 +39,9 @@ from ...core.logging import get_logger
 from ...core.money import round_to_cents
 from ...core.time import now
 from ...domain.calculations.registry import (
+    BindingId,
     CasillaFieldKind,
+    CasillaId,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
@@ -155,12 +157,12 @@ class DeclaracionVerifyResult(BaseModel):
             the file was compared against.
         file_path: Absolute path of the file that was verified.
         verdict: Closed :class:`DeclaracionVerifyVerdict`.
-        mismatched_casillas: Tuple of casilla identifiers whose value
+        mismatched_casilla_ids: Tuple of casilla identifiers whose value
             in the file differs from the approved draft. Empty when
             ``verdict is MATCH``; populated when ``verdict is DRIFT``;
             always empty when ``verdict is MISSING`` (the diff cannot
             be computed).
-        unchecked_casillas: Tuple of draft casilla identifiers that do
+        unchecked_casilla_ids: Tuple of draft casilla identifiers that do
             not round-trip through the export parser because the wire
             schema exposes them as reserved constants or derived fields
             rather than deserialised currency casillas.
@@ -173,7 +175,7 @@ class DeclaracionVerifyResult(BaseModel):
         casilla_provenance: Regulatory grounding for the draft
             casillas covered by the export parser/layout.
         mismatched_casilla_provenance: Regulatory grounding for the
-            subset of ``mismatched_casillas``.
+            subset of ``mismatched_casilla_ids``.
     """
 
     model_config = _STRICT_FROZEN
@@ -181,22 +183,22 @@ class DeclaracionVerifyResult(BaseModel):
     draft_id: str = Field(min_length=1, max_length=128)
     file_path: Path
     verdict: DeclaracionVerifyVerdict
-    mismatched_casillas: tuple[str, ...] = ()
-    unchecked_casillas: tuple[str, ...] = ()
+    mismatched_casilla_ids: tuple[CasillaId, ...] = ()
+    unchecked_casilla_ids: tuple[CasillaId, ...] = ()
     casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     mismatched_casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     file_sha256: str | None = Field(default=None)
     verified_at: datetime
     narrative: str
 
-    @field_validator("mismatched_casillas", "unchecked_casillas")
+    @field_validator("mismatched_casilla_ids", "unchecked_casilla_ids")
     @classmethod
-    def _validate_casilla_ids(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+    def _validate_casilla_ids(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         """Reject blank casilla identifiers; the CLI renders them verbatim."""
         for entry in value:
             if not entry or entry != entry.strip():
                 raise FilingExportValidationError(
-                    "mismatched_casillas entries must be non-blank, untrimmed identifiers",
+                    "casilla-id entries must be non-blank, untrimmed identifiers",
                 )
         return value
 
@@ -297,7 +299,7 @@ def verify_export(
     payload = file_path.read_bytes()
     digest = sha256_hex(payload)
     try:
-        mismatched, checked = _mismatched_casillas(subview.export_layouts[0], draft=draft, payload=payload)
+        mismatched, checked = _mismatched_casilla_ids(subview.export_layouts[0], draft=draft, payload=payload)
     except RegistryValidationError:
         _logger.warning("declaration export verification could not parse %s", file_path, exc_info=True)
         return DeclaracionVerifyResult(
@@ -311,7 +313,7 @@ def verify_export(
     # Draft casillas the export parser never re-read: the wire layout
     # carries them as RESERVED literals or derived fields, so they round-
     # trip outside the deserialised-currency set. Surface them as
-    # ``unchecked_casillas`` so the verdict is honest about its coverage —
+    # ``unchecked_casilla_ids`` so the verdict is honest about its coverage —
     # a MATCH does not mean every draft casilla was confirmed on disk.
     checked_set = set(checked)
     unchecked = tuple(sorted(value.casilla_id for value in draft.values if value.casilla_id not in checked_set))
@@ -319,8 +321,8 @@ def verify_export(
         draft_id=draft.draft_id,
         file_path=file_path,
         verdict=DeclaracionVerifyVerdict.MATCH if not mismatched else DeclaracionVerifyVerdict.DRIFT,
-        mismatched_casillas=mismatched,
-        unchecked_casillas=unchecked,
+        mismatched_casilla_ids=mismatched,
+        unchecked_casilla_ids=unchecked,
         casilla_provenance=_provenance_for_casillas(draft, checked),
         mismatched_casilla_provenance=_provenance_for_casillas(draft, mismatched),
         file_sha256=digest,
@@ -361,8 +363,8 @@ def _did_page_suppressed(record: ExportRecordDefinition, *, headers: dict[str, s
 def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, headers: dict[str, str]) -> bytes:
     chunks: list[bytes] = []
     normalized_headers = {key.lower(): value for key, value in headers.items()}
-    casilla_values: dict[str, object] = {value.casilla_id: value.value for value in draft.values}
-    binding_values: dict[tuple[str, int | None], object] = {
+    casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
+    binding_values: dict[tuple[BindingId, int | None], object] = {
         (value.binding_id, value.row_index): value.value for value in draft.binding_values
     }
     for record in sorted(layout.records, key=lambda item: item.order):
@@ -388,7 +390,7 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
 
 def _record_row_indexes(
     record: ExportRecordDefinition,
-    binding_values: dict[tuple[str, int | None], object],
+    binding_values: dict[tuple[BindingId, int | None], object],
 ) -> tuple[int | None, ...]:
     if record.repeat != "binding_rows":
         if record.binding_record is not None and not _record_has_binding_value(record, binding_values):
@@ -405,7 +407,7 @@ def _record_row_indexes(
 
 def _record_has_binding_value(
     record: ExportRecordDefinition,
-    binding_values: dict[tuple[str, int | None], object],
+    binding_values: dict[tuple[BindingId, int | None], object],
 ) -> bool:
     binding_ids = {
         field.binding for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None
@@ -415,14 +417,14 @@ def _record_has_binding_value(
     )
 
 
-def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict[str, object]) -> None:
-    if record.requires_positive_casilla is None:
+def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict[CasillaId, object]) -> None:
+    if record.requires_positive_casilla_id is None:
         return
-    raw = casilla_values.get(record.requires_positive_casilla)
+    raw = casilla_values.get(record.requires_positive_casilla_id)
     amount = coerce_decimal(raw, default=Decimal("0")) or Decimal("0")
     if amount <= 0:
         raise FilingExportValidationError(
-            f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla!r}",
+            f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla_id!r}",
         )
 
 
@@ -431,8 +433,8 @@ def _render_record(
     *,
     draft: ModeloDraft,
     headers: dict[str, str],
-    casilla_values: dict[str, object],
-    binding_values: dict[tuple[str, int | None], object],
+    casilla_values: dict[CasillaId, object],
+    binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
 ) -> str:
     positioned = all(field.offset is not None for field in record.fields)
@@ -474,8 +476,8 @@ def _render_field(
     *,
     draft: ModeloDraft,
     headers: dict[str, str],
-    casilla_values: dict[str, object],
-    binding_values: dict[tuple[str, int | None], object],
+    casilla_values: dict[CasillaId, object],
+    binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
 ) -> str:
     if field.length is None:
@@ -496,8 +498,8 @@ def _field_value(
     *,
     draft: ModeloDraft,
     headers: dict[str, str],
-    casilla_values: dict[str, object],
-    binding_values: dict[tuple[str, int | None], object],
+    casilla_values: dict[CasillaId, object],
+    binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
 ) -> object:
     match field.kind:
@@ -519,15 +521,15 @@ def _field_value(
             raise FilingExportError(f"unsupported export field kind {field.kind!r}")
 
 
-def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[str, object]) -> object:
-    if field.casilla is None:
-        raise FilingExportValidationError(f"export field {field.id!r} must declare casilla")
-    return casilla_values.get(field.casilla)
+def _casilla_field_value(field: ExportFieldDefinition, casilla_values: dict[CasillaId, object]) -> object:
+    if field.casilla_id is None:
+        raise FilingExportValidationError(f"export field {field.id!r} must declare casilla_id")
+    return casilla_values.get(field.casilla_id)
 
 
 def _binding_field_value(
     field: ExportFieldDefinition,
-    binding_values: dict[tuple[str, int | None], object],
+    binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
 ) -> object:
     if field.binding is None:
@@ -569,7 +571,7 @@ def _draft_value(field: ExportFieldDefinition, draft: ModeloDraft) -> str:
 def _format_field(field: ExportFieldDefinition, value: object) -> str:
     if field.length is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare length")
-    if field.kind == "filler":
+    if field.kind == CasillaFieldKind.FILLER:
         return " " * field.length
     if field.data_type == "money":
         rendered = _format_money(value, length=field.length, signed=field.signed)
@@ -621,15 +623,15 @@ def _pad(value: str, field: ExportFieldDefinition) -> str:
     return value
 
 
-def _mismatched_casillas(
+def _mismatched_casilla_ids(
     layout: ExportLayoutDefinition,
     *,
     draft: ModeloDraft,
     payload: bytes,
-) -> tuple[tuple[str, ...], tuple[str, ...]]:
+) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]]:
     values = {value.casilla_id: value.value for value in draft.values}
-    mismatched: list[str] = []
-    checked: list[str] = []
+    mismatched: list[CasillaId] = []
+    checked: list[CasillaId] = []
     for parsed in parse_export_payload(layout, payload).casillas:
         if parsed.casilla_id is None:
             continue
@@ -646,7 +648,7 @@ def _mismatched_casillas(
 
 def _provenance_for_casillas(
     draft: ModeloDraft,
-    casilla_ids: Iterable[str],
+    casilla_ids: Iterable[CasillaId],
 ) -> tuple[ModeloCasillaProvenance, ...]:
     provenance_by_id = {entry.casilla_id: entry for entry in draft.casilla_provenance}
     return tuple(
@@ -661,10 +663,12 @@ def _exported_casilla_provenance(
 ) -> tuple[ModeloCasillaProvenance, ...]:
     draft_casillas = {value.casilla_id for value in draft.values}
     layout_casillas = (
-        field.casilla
+        field.casilla_id
         for record in sorted(layout.records, key=lambda item: item.order)
         for field in record.fields
-        if field.kind == CasillaFieldKind.CASILLA and field.casilla is not None and field.casilla in draft_casillas
+        if field.kind == CasillaFieldKind.CASILLA
+        and field.casilla_id is not None
+        and field.casilla_id in draft_casillas
     )
     return _provenance_for_casillas(draft, layout_casillas)
 

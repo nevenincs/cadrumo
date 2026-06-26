@@ -16,7 +16,14 @@ from ....core import Period
 from ....core.errors import ErrorCategory, get_registered_error_code
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
-from ....domain.calculations.registry import RegistrySnapshot
+from ....domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    RegistrySnapshot,
+    RegistryValidationError,
+    RelationId,
+    validated_casilla_id,
+)
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import derive_calculation_revision_id
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
@@ -35,16 +42,21 @@ from .. import (
     create_work_unit,
     resolve_modelo_100_borrador_bindings,
 )
+from .._registry_helpers import validate_casilla_input_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "bucket-renta"
 _YEAR = 2025
 _PERIOD = "0A"
-_DECIMAL_BINDING = "renta-2025-modelo-111-retenciones-periodicas"
-_ENUM_BINDING = "renta-2025-profile-tax-residence-ccaa"
-_UNMARKED_BINDING = "renta-2025-ledger-expense-0186-deductible"
+_DECIMAL_BINDING: BindingId = "renta-2025-modelo-111-retenciones-periodicas"
+_ENUM_BINDING: BindingId = "renta-2025-profile-tax-residence-ccaa"
+_UNMARKED_BINDING: BindingId = "renta-2025-ledger-expense-0186-deductible"
 _R210_SIMULATOR_URL = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
+_BORRADOR_IDENTITY_CASILLA: CasillaId = validated_casilla_id("0100", surface="_BORRADOR_IDENTITY_CASILLA")
+_M100_TEXT_CASILLA: CasillaId = validated_casilla_id("0001", surface="_M100_TEXT_CASILLA")
+_M100_NUMERIC_CASILLA: CasillaId = validated_casilla_id("0003", surface="_M100_NUMERIC_CASILLA")
+_M303_RESULT_CASILLA: CasillaId = validated_casilla_id("iva.resultado", surface="_M303_RESULT_CASILLA")
 
 
 @pytest.fixture
@@ -82,6 +94,61 @@ def _modelo_100_registry_snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
+def test_validate_casilla_input_ids_rejects_non_string_keys_without_coercion() -> None:
+    snapshot = _modelo_100_registry_snapshot()
+
+    with pytest.raises(RegistryValidationError, match="malformed keys"):
+        validate_casilla_input_ids(snapshot.revision, {1: Decimal("1")})
+
+
+def test_validate_casilla_input_ids_rejects_printed_number_alias_for_semantic_id() -> None:
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
+    result_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M303_RESULT_CASILLA)
+    assert result_casilla.number == "69"
+    assert result_casilla.id != result_casilla.number
+    assert result_casilla.number not in {casilla.id for casilla in snapshot.revision.casillas}
+
+    with pytest.raises(RegistryValidationError, match="unknown or alias keys") as raised:
+        validate_casilla_input_ids(snapshot.revision, {result_casilla.number: Decimal("1")})
+
+    assert raised.value.context == {
+        "casilla_ids": result_casilla.number,
+        "revision_id": snapshot.revision.id,
+    }
+
+
+def test_validate_casilla_input_ids_rejects_decimal_value_for_non_numeric_casilla() -> None:
+    snapshot = _modelo_100_registry_snapshot()
+    text_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M100_TEXT_CASILLA)
+    assert text_casilla.data_type == "text"
+
+    with pytest.raises(RegistryValidationError) as raised:
+        validate_casilla_input_ids(snapshot.revision, {_M100_TEXT_CASILLA: Decimal("1")})
+
+    assert raised.value.context == {
+        "casilla_ids": _M100_TEXT_CASILLA,
+        "revision_id": snapshot.revision.id,
+        "data_types": "text",
+    }
+
+
+def test_validate_casilla_input_ids_rejects_non_decimal_numeric_value() -> None:
+    snapshot = _modelo_100_registry_snapshot()
+    numeric_casilla = next(
+        casilla for casilla in snapshot.revision.casillas if casilla.id == _M100_NUMERIC_CASILLA
+    )
+    assert numeric_casilla.data_type in {"decimal", "money", "integer", "ratio"}
+
+    with pytest.raises(RegistryValidationError) as raised:
+        validate_casilla_input_ids(snapshot.revision, {_M100_NUMERIC_CASILLA: 1})
+
+    assert raised.value.context == {
+        "casilla_ids": _M100_NUMERIC_CASILLA,
+        "revision_id": snapshot.revision.id,
+        "value_types": "int",
+    }
+
+
 def _save_snapshot(
     repository: Borrador100SnapshotRepository,
     values: dict[str, Decimal | str],
@@ -114,8 +181,8 @@ def _command(
     borrador_snapshot_id: str | None,
     modelo: str = "100",
     bucket_id: str = _BUCKET_ID,
-    caller_binding_values: dict[str, Decimal] | None = None,
-    caller_enum_binding_values: dict[str, str] | None = None,
+    caller_binding_values: dict[BindingId, Decimal] | None = None,
+    caller_enum_binding_values: dict[BindingId, str] | None = None,
     filing_year: int = _YEAR,
     period: str = _PERIOD,
 ) -> Modelo100BorradorBindingCommand:
@@ -131,25 +198,25 @@ def _command(
     )
 
 
-def _non_borrador_decimal_binding_values() -> dict[str, Decimal]:
+def _non_borrador_decimal_binding_values() -> dict[BindingId, Decimal]:
     """Zero-fill caller decimal bindings while leaving the profile-sourced
     date/enum/profile bindings unset so :func:`resolve_profile_sourced_bindings`
     can populate them from the seeded :class:`UserProfileRecord`."""
     snapshot = _modelo_100_registry_snapshot()
     exclusions = {_DECIMAL_BINDING, _ENUM_BINDING}
     return {
-        str(binding.id): Decimal("0")
+        binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
-        if str(binding.id) not in exclusions and binding.source != "profile"
+        if binding.id not in exclusions and binding.source != "profile"
     }
 
 
-def _non_borrador_enum_binding_values() -> dict[str, str]:
+def _non_borrador_enum_binding_values() -> dict[BindingId, str]:
     return {}
 
 
-def _zero_relation_values() -> dict[str, Decimal]:
-    return {str(relation.id): Decimal("0") for relation in _modelo_100_registry_snapshot().revision.relations}
+def _zero_relation_values() -> dict[RelationId, Decimal]:
+    return {relation.id: Decimal("0") for relation in _modelo_100_registry_snapshot().revision.relations}
 
 
 def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
@@ -212,10 +279,36 @@ def test_borrador_binding_command_carries_structured_period() -> None:
     assert command.model_dump(mode="json")["period"] == {"filing_year": _YEAR, "code": _PERIOD}
 
 
-def test_borrador_binding_command_rejects_blank_caller_binding_keys() -> None:
-    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
+def test_borrador_binding_command_rejects_noncanonical_caller_binding_keys() -> None:
+    with pytest.raises(ValidationError) as decimal_exc:
+        _command(borrador_snapshot_id="snap-1", caller_binding_values={"Bad Binding": Decimal("1")})
+    assert decimal_exc.value.errors()[0]["loc"][0] == "caller_binding_values"
+
+    with pytest.raises(ValidationError) as enum_exc:
+        _command(borrador_snapshot_id="snap-1", caller_enum_binding_values={"Bad Binding": "madrid"})
+    assert enum_exc.value.errors()[0]["loc"][0] == "caller_enum_binding_values"
+
+    with pytest.raises(ValidationError) as blank_exc:
         _command(borrador_snapshot_id="snap-1", caller_binding_values={" ": Decimal("1")})
-    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.caller_binding_keys_blank"
+    assert blank_exc.value.errors()[0]["loc"][0] == "caller_binding_values"
+
+
+def test_borrador_binding_result_rejects_noncanonical_value_keys() -> None:
+    with pytest.raises(ValidationError) as decimal_exc:
+        Modelo100BorradorBindingResult(
+            borrador_snapshot_id="snap-1",
+            binding_values={"Bad Binding": Decimal("1")},
+            bindings_sourced_from_borrador=("Bad Binding",),
+        )
+    assert decimal_exc.value.errors()[0]["loc"][0] == "binding_values"
+
+    with pytest.raises(ValidationError) as enum_exc:
+        Modelo100BorradorBindingResult(
+            borrador_snapshot_id="snap-1",
+            enum_binding_values={"Bad Binding": "madrid"},
+            bindings_sourced_from_borrador=("Bad Binding",),
+        )
+    assert enum_exc.value.errors()[0]["loc"][0] == "enum_binding_values"
 
 
 def test_borrador_binding_result_requires_trace_to_match_values() -> None:
@@ -245,7 +338,7 @@ def test_borrador_resolution_is_inert_without_named_snapshot(
 
 
 def test_committed_modelo_100_registry_declares_borrador_prefilled_bindings() -> None:
-    bindings = {str(binding.id): binding for binding in _modelo_100_registry_snapshot().revision.bindings}
+    bindings = {binding.id: binding for binding in _modelo_100_registry_snapshot().revision.bindings}
 
     assert bindings[_DECIMAL_BINDING].aeat_prefilled is True
     assert bindings[_ENUM_BINDING].aeat_prefilled is True
@@ -363,6 +456,7 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
         },
     )
 
+    relation_values = _zero_relation_values()
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
@@ -370,7 +464,7 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
         binding_values=_non_borrador_decimal_binding_values(),
         enum_binding_values=_non_borrador_enum_binding_values(),
         borrador_snapshot_id=snapshot_id,
-        relation_values=_zero_relation_values(),
+        relation_values=relation_values,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         bucket_event_repository=bucket_event_repository,
@@ -379,6 +473,9 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
 
     assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
     assert revision.binding_overrides[_ENUM_BINDING] == "madrid"
+    assert set(revision.relation_overrides) == set(relation_values)
+    assert all(Decimal(value) == Decimal("0") for value in revision.relation_overrides.values())
+    assert set(revision.binding_overrides).isdisjoint(revision.relation_overrides)
     assert revision.borrador_snapshot_id == snapshot_id
     assert revision.bindings_sourced_from_borrador == (_DECIMAL_BINDING, _ENUM_BINDING)
     fresh_calculation_repository = CalculationRevisionCatalogueRepository(objects=objects)
@@ -388,6 +485,7 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
     assert stored_revision.borrador_snapshot_id == snapshot_id
     assert stored_revision.bindings_sourced_from_borrador == (_DECIMAL_BINDING, _ENUM_BINDING)
     assert Decimal(stored_revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
+    assert stored_revision.relation_overrides == revision.relation_overrides
     calculation_events = [
         event
         for event in bucket_event_repository.load().for_bucket(_BUCKET_ID)
@@ -461,17 +559,17 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
 def test_borrador_snapshot_id_participates_in_calculation_revision_identity() -> None:
     first = derive_calculation_revision_id(
         work_unit_id="1" * 64,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={_DECIMAL_BINDING: "125.50"},
-        casilla_values={"0100": Decimal("125.50")},
+        casilla_values={_BORRADOR_IDENTITY_CASILLA: Decimal("125.50")},
         borrador_snapshot_id="borrador-one",
         bindings_sourced_from_borrador=(_DECIMAL_BINDING,),
     )
     second = derive_calculation_revision_id(
         work_unit_id="1" * 64,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={_DECIMAL_BINDING: "125.50"},
-        casilla_values={"0100": Decimal("125.50")},
+        casilla_values={_BORRADOR_IDENTITY_CASILLA: Decimal("125.50")},
         borrador_snapshot_id="borrador-two",
         bindings_sourced_from_borrador=(_DECIMAL_BINDING,),
     )

@@ -41,10 +41,11 @@ from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
+from ...core.resources import resources
 from ...core.time import now
-from ...domain.calculations.registry import RegistryModeloObservation
+from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotError, undeclared_casilla_ids
 from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-from ._errors import ObservationKeyError
+from ._errors import ObservationCasillaReferenceError, ObservationKeyError
 
 
 class _ObservationEnvelopePayload(BaseModel):
@@ -130,6 +131,20 @@ def _require_observation_period(period: Period) -> Period:
     return period
 
 
+def observation_key_for_token(modelo: str, filing_year: int, period_token: str) -> str:
+    """Stable repository key for a modelo/year/raw registry-period token triple.
+
+    Censo modelos can declare non-date registry tokens such as ``alta`` or
+    ``modificacion`` that are not valid :class:`Period` codes. The encrypted
+    observation store still keys them by the same logical triple.
+    """
+    safe_repository_id(modelo, context="modelo")
+    safe_repository_id(period_token, context="period")
+    if not 2000 <= filing_year <= 2099:
+        raise ObservationKeyError(f"observation filing_year {filing_year} out of supported range [2000, 2099]")
+    return f"{modelo}:{filing_year}:{period_token}"
+
+
 def observation_key(modelo: str, period: Period) -> str:
     """Stable repository key for a `(modelo, Period)` pair.
 
@@ -138,13 +153,21 @@ def observation_key(modelo: str, period: Period) -> str:
     composition.
     """
     filing_period = _require_observation_period(period)
-    filing_year = filing_period.filing_year
-    period_token = filing_period.registry_token
-    safe_repository_id(modelo, context="modelo")
-    safe_repository_id(period_token, context="period")
-    if not 2000 <= filing_year <= 2099:
-        raise ObservationKeyError(f"observation filing_year {filing_year} out of supported range [2000, 2099]")
-    return f"{modelo}:{filing_year}:{period_token}"
+    return observation_key_for_token(modelo, filing_period.filing_year, filing_period.registry_token)
+
+
+def member_observation_key_for_token(
+    modelo: str,
+    filing_year: int,
+    period_token: str,
+    member_nif: str | None,
+) -> str:
+    """Storage key for an observation keyed by a raw registry period token."""
+    base = observation_key_for_token(modelo, filing_year, period_token)
+    if member_nif is None:
+        return base
+    safe_repository_id(member_nif, context="member_nif")
+    return f"{base}:{member_nif}"
 
 
 def member_observation_key(modelo: str, period: Period, member_nif: str | None) -> str:
@@ -157,11 +180,13 @@ def member_observation_key(modelo: str, period: Period, member_nif: str | None) 
     ``(modelo, filing_year, period)`` persist as distinct rows — the cross-member
     fan-in the 353<-322 ``per_grupo_member`` aggregation enumerates and sums.
     """
-    base = observation_key(modelo, period)
-    if member_nif is None:
-        return base
-    safe_repository_id(member_nif, context="member_nif")
-    return f"{base}:{member_nif}"
+    filing_period = _require_observation_period(period)
+    return member_observation_key_for_token(
+        modelo,
+        filing_period.filing_year,
+        filing_period.registry_token,
+        member_nif,
+    )
 
 
 def iva_wallet_decision_key(taxpayer_nif: str, target_period: Period) -> str:
@@ -206,6 +231,47 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
     return f"iva-wallet-decision-event:{digest}"
 
 
+def _validate_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
+    observed_casilla_ids = frozenset(observation.casilla_values)
+    operand_casilla_refs = frozenset(
+        operand_ref for item in observation.observations for operand_ref in item.operand_casilla_refs
+    )
+    referenced_casilla_ids = observed_casilla_ids | operand_casilla_refs
+    if not referenced_casilla_ids:
+        return
+    try:
+        snapshot = resources().modelos.authority.snapshot(
+            observation.modelo,
+            filing_year=observation.filing_year,
+            period=observation.period,
+        )
+    except RegistrySnapshotError as exc:
+        raise ObservationCasillaReferenceError(
+            "calculation observation casilla ids cannot be validated because the registry snapshot is missing",
+            context={
+                "modelo": observation.modelo,
+                "filing_year": observation.filing_year,
+                "period": observation.period,
+            },
+        ) from exc
+
+    invalid = undeclared_casilla_ids(snapshot.revision, referenced_casilla_ids)
+    if not invalid:
+        return
+    raise ObservationCasillaReferenceError(
+        "calculation observations must use canonical casilla.id values declared by the registry snapshot",
+        context={
+            "modelo": observation.modelo,
+            "filing_year": observation.filing_year,
+            "period": observation.period,
+            "revision_id": snapshot.revision.id,
+            "casilla_ids": invalid,
+            "observation_casilla_ids": undeclared_casilla_ids(snapshot.revision, observed_casilla_ids),
+            "operand_casilla_refs": undeclared_casilla_ids(snapshot.revision, operand_casilla_refs),
+        },
+    )
+
+
 class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelopePayload]):
     """Repository over encrypted SQL-backed past-filing observations."""
 
@@ -219,7 +285,12 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         observation = payload.observation
         period = observation.filing_period
         if period is None:
-            period = Period.from_year_and_code(observation.filing_year, observation.period)
+            return member_observation_key_for_token(
+                observation.modelo,
+                observation.filing_year,
+                observation.period,
+                payload.member_nif,
+            )
         return member_observation_key(
             observation.modelo,
             period,
@@ -265,6 +336,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         part of repository keys and must only contain data that belongs inside the
         AUDIT-class secure payload.
         """
+        _validate_observation_casilla_ids(observation)
         when = captured_at if captured_at is not None else now()
         payload = _ObservationEnvelopePayload(
             observation=observation,
@@ -387,5 +459,7 @@ __all__ = [
     "iva_wallet_decision_event_key",
     "iva_wallet_decision_key",
     "member_observation_key",
+    "member_observation_key_for_token",
     "observation_key",
+    "observation_key_for_token",
 ]

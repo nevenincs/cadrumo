@@ -791,7 +791,7 @@ def _input_message_for_constraint(constraint: SheetCellConstraint) -> str:
         parts.append(f"≤ {format(constraint.max_value, 'f')}")
     bounds = " ∧ ".join(parts) if parts else "any"
     refs = ", ".join(constraint.legal_refs)
-    return f"Casilla {constraint.casilla}: {bounds}. Refs: {refs}."
+    return f"Casilla {constraint.casilla_id}: {bounds}. Refs: {refs}."
 
 
 def _developer_metadata_pairs(plan: SheetExportPlan) -> list[tuple[str, str]]:

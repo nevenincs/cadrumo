@@ -42,7 +42,7 @@ from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
-from ._errors import AggregationValidationError
+from ._errors import AggregationValidationError, t
 from ._retenciones import RetencionObservation, RetencionScheme
 
 
@@ -70,7 +70,10 @@ class _RetencionObservationEnvelopePayload(BaseModel):
 def _hashed_perceptor_token(perceptor_nif: str) -> str:
     token = perceptor_nif.strip().upper()
     if not token:
-        raise AggregationValidationError("perceptor_nif must be non-empty for a retención observation key")
+        raise AggregationValidationError(
+            t("aggregation.retenciones.errors.perceptor_nif_blank"),
+            context={"field": "perceptor_nif"},
+        )
     return hashlib.sha256(token.encode(UTF_8_ENCODING)).hexdigest()
 
 
@@ -90,7 +93,10 @@ def retencion_observation_key(
     correct.
     """
     if not 2000 <= filing_year <= 2099:
-        raise AggregationValidationError(f"filing_year {filing_year} out of supported range [2000, 2099]")
+        raise AggregationValidationError(
+            t("aggregation.retenciones.errors.filing_year_out_of_range"),
+            context={"filing_year": str(filing_year), "min_year": "2000", "max_year": "2099"},
+        )
     safe_repository_id(modelo, context="modelo")
     period_token = period.registry_token
     safe_repository_id(period_token, context="period")

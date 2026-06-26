@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Modelo
+from ....domain.calculations.registry import CasillaId
 from ..pdf._shared import ExtractedCasilla
 
 
@@ -49,7 +50,7 @@ class BorradorExtractionTarget(Protocol):
     """Per-target descriptor surface the parser reads from a profile."""
 
     @property
-    def casilla_id(self) -> str: ...
+    def casilla_id(self) -> CasillaId: ...
 
 
 class BorradorExtractionProfile(Protocol):

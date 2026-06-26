@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 
+from ....domain.calculations.registry import CasillaId
 from ....domain.modelos._ledger_filing_snapshot import LedgerFilingEvidence
 from ._errors import CalcSheetsEngineError
 from ._records import SheetEvidenceContributorRow, SheetEvidenceFacet, SheetEvidenceManualEntry
@@ -12,28 +13,27 @@ from ._records import SheetEvidenceContributorRow, SheetEvidenceFacet, SheetEvid
 def sheet_evidence_from_ledger_filing(
     evidence: LedgerFilingEvidence,
     *,
-    contributor_casillas: Mapping[str, Iterable[str]],
+    casilla_ids_by_contributor_id: Mapping[str, Iterable[CasillaId]],
 ) -> SheetEvidenceFacet:
     """Project bundled filing evidence into the per-casilla workbook facet.
 
     ``LedgerFilingEvidence`` is contributor-oriented; the workbook evidence
     surface is casilla-oriented. The caller must therefore provide the
     generic attribution map from each contributor transaction id to the
-    casilla ids it supports. Missing attribution is refused instead of being
-    guessed from modelo-specific tax facts.
+    canonical ``casilla.id`` values it supports. Missing attribution is
+    refused instead of being guessed from modelo-specific tax facts.
 
     Returns:
         :class:`SheetEvidenceFacet`: The projected evidence facet.
     """
     contributor_rows: list[SheetEvidenceContributorRow] = []
     for row in evidence.rows:
-        casillas = tuple(str(casilla).strip() for casilla in contributor_casillas.get(row.transaction_id, ()))
-        casillas = tuple(casilla for casilla in casillas if casilla)
-        if not casillas:
+        contributor_casilla_ids = tuple(casilla_ids_by_contributor_id.get(row.transaction_id, ()))
+        if not contributor_casilla_ids:
             raise CalcSheetsEngineError(
                 f"ledger filing evidence contributor {row.transaction_id!r} has no workbook casilla attribution",
             )
-        for casilla_id in casillas:
+        for casilla_id in contributor_casilla_ids:
             contributor_rows.append(
                 SheetEvidenceContributorRow(
                     casilla_id=casilla_id,
@@ -53,7 +53,7 @@ def sheet_evidence_from_ledger_filing(
 
     manual_entries = tuple(
         SheetEvidenceManualEntry(
-            casilla_id=entry.casilla,
+            casilla_id=entry.casilla_id,
             value=entry.value,
             kind=entry.kind,
             note=entry.note,

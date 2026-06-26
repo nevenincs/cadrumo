@@ -24,24 +24,25 @@ import pytest
 from ....core.errors import AeatError, build_error_envelope
 from ....core.resources import resources
 from ....domain.calculations.registry import (
+    BindingId,
     enum_consumed_binding_ids,
     revision_date_binding_ids,
 )
 from .._calculate_input import (
     ModeloCalculateBindingInputError,
-    _binding_input_channel,
+    _validated_binding_input_channel,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "200"
 _REVISION = "2024-y-siguientes"
-_ENUM_BINDING = "modelo-200-2024-profile-legal-entity-form"
-_DECIMAL_BINDING = "modelo-200-2024-pagos-fraccionados-anuales"
+_ENUM_BINDING: BindingId = "modelo-200-2024-profile-legal-entity-form"
+_DECIMAL_BINDING: BindingId = "modelo-200-2024-pagos-fraccionados-anuales"
 
 # Modelo 100 declares a date-valued binding (taxpayer birth date) consumed by
 # the ``age_at_year_end`` op; it is profile-sourced, not a --binding channel.
-_M100_DATE_BINDING = "renta-2024-profile-taxpayer-birth-date"
+_M100_DATE_BINDING: BindingId = "renta-2024-profile-taxpayer-birth-date"
 
 
 def _revision():
@@ -50,7 +51,7 @@ def _revision():
 
 def _channel_inputs():
     revision = _revision()
-    known = {str(binding.id) for binding in revision.bindings}
+    known = {binding.id for binding in revision.bindings}
     enum_ids = enum_consumed_binding_ids(revision)
     return revision, known, enum_ids
 
@@ -65,7 +66,9 @@ def test_enum_consumed_binding_routes_to_enum_channel() -> None:
     revision, known, enum_ids = _channel_inputs()
     assert _ENUM_BINDING in known
     assert _ENUM_BINDING in enum_ids
-    assert _binding_input_channel(_ENUM_BINDING, revision, known, enum_ids) == "enum"
+    key, channel = _validated_binding_input_channel(_ENUM_BINDING, revision, known, enum_ids)
+    assert key == _ENUM_BINDING
+    assert channel == "enum"
 
 
 def test_decimal_consumed_binding_routes_to_decimal_channel() -> None:
@@ -73,14 +76,16 @@ def test_decimal_consumed_binding_routes_to_decimal_channel() -> None:
     revision, known, enum_ids = _channel_inputs()
     assert _DECIMAL_BINDING in known
     assert _DECIMAL_BINDING not in enum_ids
-    assert _binding_input_channel(_DECIMAL_BINDING, revision, known, enum_ids) == "decimal"
+    key, channel = _validated_binding_input_channel(_DECIMAL_BINDING, revision, known, enum_ids)
+    assert key == _DECIMAL_BINDING
+    assert channel == "decimal"
 
 
 def test_unknown_binding_id_refuses_with_accepted_set() -> None:
     """An unknown ``--binding`` id refuses with the revision's accepted ids."""
     revision, known, enum_ids = _channel_inputs()
     with pytest.raises(ModeloCalculateBindingInputError) as exc_info:
-        _binding_input_channel("no-such-binding-id", revision, known, enum_ids)
+        _validated_binding_input_channel("no-such-binding-id", revision, known, enum_ids)
 
     error = exc_info.value
     assert isinstance(error, AeatError)

@@ -198,7 +198,7 @@ def test_cross_period_clean_state_blocks_member_observation_authenticated_identi
         _seed_member_322_filing(
             observation_repository,
             member_nif=_GROUP_MEMBER_A,
-            source_casillas=requirement.source_casillas,
+            source_casilla_ids=requirement.source_casilla_ids,
             source_metadata={
                 "aeat_register_status": "ALTA",
                 "aeat_expediente_id": "EXP-322-2026-12-A",

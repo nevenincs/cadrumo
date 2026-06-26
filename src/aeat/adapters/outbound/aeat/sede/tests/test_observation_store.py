@@ -13,7 +13,9 @@ from pydantic import AnyHttpUrl
 
 from ......core import Period
 from ......core.config import Settings
+from ......domain.calculations.registry import CasillaId, validated_casilla_id
 from ......tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from .._errors import SedeValidationError
 from .._observation_store import FiledDeclaracionObservationStore
 from .._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
@@ -21,6 +23,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "sede-observation"
 _AEAT = Settings.external_constants().aeat
 _DECLARATIONS_LISTING_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.declarations_listing}"
+_M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_CASILLA")
+_M303_PRINTED_COMPENSATION_ALIAS_CASILLA: CasillaId = validated_casilla_id(
+    "110",
+    surface="_M303_PRINTED_COMPENSATION_ALIAS_CASILLA",
+)
 
 
 @pytest.fixture
@@ -52,7 +59,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
         artefacts=(stored,),
         casillas=(
             ObservedCasillaValue(
-                casilla_id="19",
+                casilla_id=_M130_RESULTADO_CASILLA,
                 value="12.34",
                 source_artefact_kind="submitted_file",
                 source_locator="layout:field:19",
@@ -99,6 +106,39 @@ def test_store_rejects_artefact_body_that_does_not_match_metadata(
         store.persist_artefact(
             ("130", 2026, Period.from_year_and_code(2026, "1T"), "202610013522222A"), artefact, b"abcd"
         )
+
+
+def test_store_rejects_observation_with_printed_number_casilla_alias(
+    tmp_path: Path,
+    active_storage: TestRuntimeProfile,
+) -> None:
+    del active_storage
+    store = FiledDeclaracionObservationStore(tmp_path / "observations")
+    body = b"3032024-4T-submitted-file"
+    artefact = _artefact(kind="submitted_file", body=body, content_type="text/plain")
+    observation = FiledDeclaracionObservation(
+        modelo="303",
+        ejercicio=2024,
+        period=Period.from_year_and_code(2024, "4T"),
+        expediente_id="202410013522222A",
+        status="ALTA",
+        presented_at=datetime(2025, 1, 20, 10, 0, 0, tzinfo=UTC),
+        authenticated_identity="12345678Z",
+        artefacts=(artefact,),
+        casillas=(
+            ObservedCasillaValue(
+                casilla_id=_M303_PRINTED_COMPENSATION_ALIAS_CASILLA,
+                value="0.00",
+                source_artefact_kind="submitted_file",
+                source_locator="submitted-file:casilla:110",
+                confidence=1.0,
+            ),
+        ),
+        extraction_coverage={"submitted_file": 1.0},
+    )
+
+    with pytest.raises(SedeValidationError, match=r"canonical casilla\.id"):
+        store.persist_observation(observation)
 
 
 def _artefact(

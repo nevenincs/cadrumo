@@ -18,11 +18,16 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import resolve_ledger_renta_income_aggregation_binding_values
+from ....domain.calculations.registry import (
+    CasillaId,
+    resolve_ledger_renta_income_aggregation_binding_values,
+    validated_casilla_id,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -37,6 +42,7 @@ from ....domain.transactions import (
 from ....tests.secure_sql import isolated_runtime_profile
 from .._renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
+    RentaIncomeObservation,
     aggregate_renta_income_ledger,
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger,
@@ -52,6 +58,17 @@ def _period(year: int, code: str) -> Period:
 _ANNUAL_2024 = _period(2024, "0A")
 _Q1_2024 = _period(2024, "1T")
 _Q2_2024 = _period(2024, "2T")
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"renta income aggregation fixture key {value!r} is not a CasillaId") from exc
+
+
+_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
+_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA: CasillaId = _casilla_id("0171")
 
 
 @pytest.fixture
@@ -143,7 +160,7 @@ def test_q1_window_includes_jan_mar_transactions() -> None:
     # April is outside Q1 window — ends up in issues
     issue_ids = {i.transaction_id for i in result.issues}
     assert apr.transaction_id in issue_ids
-    assert result.casilla_aggregation.casilla_values["01"] == sum(
+    assert result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == sum(
         (tx.raw.amount for tx in (jan, feb, mar)),
         Decimal("0"),
     )
@@ -160,7 +177,10 @@ def test_q2_window_accumulates_jan_through_jun() -> None:
 
     observation_ids = {o.transaction_id for o in result.observations}
     assert observation_ids == {jan.transaction_id, may.transaction_id}
-    assert result.casilla_aggregation.casilla_values["01"] == sum((tx.raw.amount for tx in (jan, may)), Decimal("0"))
+    assert result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == sum(
+        (tx.raw.amount for tx in (jan, may)),
+        Decimal("0"),
+    )
 
 
 def test_mixed_classification_applies_business_pct() -> None:
@@ -178,7 +198,7 @@ def test_mixed_classification_applies_business_pct() -> None:
 
     assert len(result.observations) == 1
     assert result.observations[0].gross_amount == Decimal("600.00")
-    assert result.casilla_aggregation.casilla_values["01"] == Decimal("600.00")
+    assert result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == Decimal("600.00")
 
 
 def test_personal_transaction_excluded_with_reason() -> None:
@@ -322,7 +342,7 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
     # q2_only is outside Q1 window so it produces one OUTSIDE_PERIOD issue
     assert len(result_q1.issues) == 1
     assert result_q1.issues[0].reason == RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
-    assert result_q1.casilla_aggregation.casilla_values["01"] == sum(
+    assert result_q1.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == sum(
         (tx.raw.amount for tx in (q1_tx1, q1_tx2)),
         Decimal("0"),
     )
@@ -337,7 +357,7 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
 
     # Q2 is cumulative YTD: Jan-Jun, so all three transactions qualify
     assert result_q2.issues == ()
-    assert result_q2.casilla_aggregation.casilla_values["01"] == sum(
+    assert result_q2.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == sum(
         (tx.raw.amount for tx in (q1_tx1, q1_tx2, q2_only)),
         Decimal("0"),
     )
@@ -354,8 +374,28 @@ def test_casilla_01_target_matches_expected_binding_contract() -> None:
 
     result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
-    assert all(o.target_casilla == "01" for o in result.observations)
+    assert all(o.target_casilla_id == _M130_INGRESOS_CASILLA for o in result.observations)
     assert result.casilla_aggregation.modelo == "130"
+
+
+def test_income_observation_rejects_legacy_target_casilla_key() -> None:
+    transactions = [
+        _income_transaction("tx-legacy-key", value_date=date(2024, 1, 1), amount=Decimal("100.00")),
+    ]
+    result = aggregate_renta_income_ledger(
+        TransactionCatalogue.from_transactions(transactions),
+        bucket_id="test",
+        period=_Q1_2024,
+    )
+    payload = result.observations[0].model_dump()
+    payload["target_casilla"] = payload.pop("target_casilla_id")
+
+    with pytest.raises(ValidationError) as exc_info:
+        RentaIncomeObservation.model_validate(payload)
+
+    detail = str(exc_info.value)
+    assert "target_casilla_id" in detail
+    assert "target_casilla" in detail
 
 
 # ---------------------------------------------------------------------------
@@ -430,7 +470,7 @@ def test_irpf_actividad_economica_flows_despite_unclassified_business() -> None:
 
     assert len(result.observations) == 1, result
     assert result.observations[0].gross_amount == amount
-    assert result.casilla_aggregation.casilla_values["01"] == amount
+    assert result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == amount
     assert result.issues == ()
 
 
@@ -464,7 +504,7 @@ def test_trabajo_income_excluded_from_m130() -> None:
     assert result.issues[0].reason == RentaIncomeLedgerAggregationIssueReason.TRABAJO_INCOME
     assert result.issues[0].transaction_id == nomina.transaction_id
     # casilla 01 only reflects the actividad transaction
-    assert result.casilla_aggregation.casilla_values["01"] == Decimal("1800.00")
+    assert result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == Decimal("1800.00")
 
 
 def test_taxable_base_amount_populated_when_set() -> None:
@@ -524,7 +564,7 @@ def test_casilla_projection_uses_base_for_tagged_and_gross_for_untagged() -> Non
     # IVA-exclusive base, untagged row its gross transfer amount. The
     # inequality guard proves the selection is live (a gross-summing
     # regression would produce the IVA-inflated total instead).
-    projected = result.casilla_aggregation.casilla_values["01"]
+    projected = result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA]
     assert tagged.taxable_base is not None
     assert projected == tagged.taxable_base + untagged.raw.amount
     assert projected != tagged.raw.amount + untagged.raw.amount
@@ -572,8 +612,8 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
     catalogue_b = TransactionCatalogue.from_transactions((actividad_b1, actividad_b2))
     result_b = aggregate_renta_income_ledger(catalogue_b, bucket_id="test", period=_Q1_2024)
 
-    casilla_a = result_a.casilla_aggregation.casilla_values.get("01", Decimal("0"))
-    casilla_b = result_b.casilla_aggregation.casilla_values.get("01", Decimal("0"))
+    casilla_a = result_a.casilla_aggregation.casilla_values.get(_M130_INGRESOS_CASILLA, Decimal("0"))
+    casilla_b = result_b.casilla_aggregation.casilla_values.get(_M130_INGRESOS_CASILLA, Decimal("0"))
 
     assert casilla_a != casilla_b, (
         f"Anti-tautology failure: both scenarios produced casilla_01={casilla_a}; irpf_category filter has no effect"
@@ -682,7 +722,7 @@ def test_renta_income_aggregation_mixes_es_and_foreign_source() -> None:
 
     # Art. 8 universal-base: both rows enter the casilla aggregation.
     assert len(result.observations) == 2
-    assert result.casilla_aggregation.casilla_values["01"] == es_amount + fr_amount
+    assert result.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == es_amount + fr_amount
     # Distinct-preservation witness: each observation carries its own
     # jurisdiction unchanged.
     by_id = {obs.transaction_id: obs for obs in result.observations}
@@ -710,11 +750,14 @@ def test_m100_annual_income_sums_full_ejercicio_into_casilla_0171() -> None:
 
     result = aggregate_renta_m100_income_ledger(catalogue, bucket_id="test", period=_ANNUAL_2024)
 
-    assert all(o.target_casilla == "0171" for o in result.observations)
+    assert all(o.target_casilla_id == _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA for o in result.observations)
     assert result.casilla_aggregation.modelo == "100"
     # Prior-year row excluded; in-year receipts summed into 0171.
     assert {o.transaction_id for o in result.observations} == {jan.transaction_id, dec.transaction_id}
-    assert result.casilla_aggregation.casilla_values["0171"] == sum((jan_amount, dec_amount), Decimal("0"))
+    assert result.casilla_aggregation.casilla_values[_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA] == sum(
+        (jan_amount, dec_amount),
+        Decimal("0"),
+    )
 
 
 def test_m100_annual_income_rejects_non_annual_period() -> None:
@@ -735,7 +778,7 @@ def test_m100_revision_binds_0171_to_income_source_and_resolves() -> None:
     """
     modelo_def = next(item for item in resources().modelos.all() if item.id == "100")
     revision = modelo_def.revisions["2025"]
-    casilla_0171 = next(c for c in revision.casillas if c.id == "0171")
+    casilla_0171 = next(c for c in revision.casillas if c.id == _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA)
     assert str(casilla_0171.input_kind) == "bound"
     binding = next(b for b in revision.bindings if b.id == casilla_0171.binding)
     assert str(binding.source) == "ledger_renta_income_aggregation"

@@ -8,8 +8,13 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.outbound.aeat.sede import Declaracion
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
 from ....domain.modelos import ExternalEvidence, ExternalEvidenceKind
+from ....tests.registry_observations import registry_grounded_observations
 from ...calculations._observations_repository import _ObservationEnvelopePayload
 from ...live._expedientes import PersistedExpedientesSnapshot
 from .. import (
@@ -31,6 +36,26 @@ from .test_calendar import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"overview conflict fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_OBSERVED_CASILLA: CasillaId = _casilla_id("01")
+
+
+def _observed_casilla_observations(value: Decimal):
+    return registry_grounded_observations(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        casilla_values={_OBSERVED_CASILLA: value},
+    )
 
 
 def test_calendar_entry_warns_when_local_and_filed_history_aeat_references_disagree() -> None:
@@ -158,7 +183,7 @@ def test_calendar_does_not_conflict_matching_verified_csv_across_reference_names
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",

@@ -35,3 +35,14 @@ class ObservationKeyError(CoreValidationError):
     instead of a bare :class:`ValueError` so the failure propagates through
     the typed error registry and produces a structured envelope.
     """
+
+
+class ObservationCasillaReferenceError(CoreValidationError):
+    """Raised when a persisted filing observation names undeclared casillas.
+
+    `CalculationObservationRepository` is the encrypted calculation-history
+    substrate for cross-period and cross-modelo reads. It must not persist a
+    `RegistryModeloObservation` whose casilla keys are only syntactically valid
+    :class:`CasillaId` strings; every key must be declared by the resolved
+    registry snapshot for that modelo, year, and period.
+    """

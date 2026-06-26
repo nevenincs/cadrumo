@@ -7,12 +7,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Final, Protocol
 
 from ...core import Modelo
 from ...core import Period as _Period
 from ...core.i18n import tr
-from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision, RegistrySnapshot, validated_casilla_id
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._work_unit import WorkUnit
@@ -21,8 +21,28 @@ if TYPE_CHECKING:
     from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
     from ..calculations._observations_repository import IvaWalletDecisionRepository
 
-_M303_PRIOR_COMPENSATION_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"
-_M303_PRIOR_COMPENSATION_CASILLA_ID = "iva.compensacion-pendiente-periodos-anteriores"
+
+class _IvaWalletBlockedDecision(Protocol):
+    @property
+    def divergence(self) -> object: ...
+
+    @property
+    def reason(self) -> object: ...
+
+
+_M303_PRIOR_COMPENSATION_BINDING_ID: BindingId = "modelo-303-compensacion-pendiente-anteriores"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="IVA wallet gate casilla constant")
+    except ValueError as exc:
+        raise RuntimeError(f"IVA wallet gate casilla constant {value!r} is not a CasillaId") from exc
+
+
+_M303_PRIOR_COMPENSATION_CASILLA_ID: Final[CasillaId] = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
 
 
 class ModeloIvaWalletReconciliationBlockedError(ModeloError):
@@ -38,10 +58,10 @@ def resolve_iva_compensation_decision_for_calculation(
     snapshot: RegistrySnapshot,
     supplied_decision: object | None,
     repository: IvaWalletDecisionRepository | None,
-    binding_values: Mapping[str, Decimal] | None,
-    backend_binding_values: Mapping[str, Decimal] | None,
-    casilla_inputs: Mapping[str, Decimal] | None,
-    backend_casilla_inputs: Mapping[str, Decimal] | None,
+    binding_values: Mapping[BindingId, Decimal] | None,
+    backend_binding_values: Mapping[BindingId, Decimal] | None,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
 ) -> object | None:
     """Resolve the Modelo 303 IVA wallet decision that may feed calculation bindings.
 
@@ -78,10 +98,10 @@ def apply_iva_compensation_decision_binding(
     bucket_id: str,
     revision: ModeloRevision,
     taxpayer_nif: str | None = None,
-    casilla_inputs: Mapping[str, Decimal] | None = None,
-    backend_casilla_inputs: Mapping[str, Decimal] | None = None,
-    caller_binding_values: dict[str, Decimal],
-    backend_binding_values: dict[str, Decimal],
+    casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
+    caller_binding_values: dict[BindingId, Decimal],
+    backend_binding_values: dict[BindingId, Decimal],
     decision: object | None,
 ) -> None:
     """Apply a non-blocking IVA wallet decision to Modelo 303 binding values.
@@ -221,10 +241,10 @@ def load_persisted_iva_compensation_decision_for_work_unit(
 
 def caller_supplied_prior_compensation_value(
     *,
-    binding_values: Mapping[str, Decimal] | None,
-    backend_binding_values: Mapping[str, Decimal] | None,
-    casilla_inputs: Mapping[str, Decimal] | None,
-    backend_casilla_inputs: Mapping[str, Decimal] | None,
+    binding_values: Mapping[BindingId, Decimal] | None,
+    backend_binding_values: Mapping[BindingId, Decimal] | None,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
 ) -> bool:
     """Return whether a Modelo 303 prior-compensation value was explicitly supplied.
 
@@ -273,7 +293,8 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
         decision_repository=repository,
         # No caller-supplied prior-compensation value reached this point and no
         # live wallet is configured. A missing prior local recurrence is the
-        # taxpayer's first IVA period, so casilla 110 is a legally-certain zero.
+        # taxpayer's first IVA period, so
+        # ``iva.compensacion-pendiente-periodos-anteriores`` is a legally-certain zero.
         treat_absent_recurrence_as_first_period=True,
         persist=True,
     )
@@ -354,7 +375,7 @@ def revision_iva_compensation_amount(revision: CalculationRevision) -> Decimal |
     return None
 
 
-def iva_wallet_blocked_message(decision: Any) -> str:
+def iva_wallet_blocked_message(decision: _IvaWalletBlockedDecision) -> str:
     """Render a localized IVA wallet blocked message from a decision-like object."""
     divergence = str(decision.divergence)
     reason = str(decision.reason)

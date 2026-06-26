@@ -11,8 +11,9 @@ because ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays.
 
 from __future__ import annotations
 
-from pydantic import ConfigDict
+from pydantic import Field
 
+from ....domain.calculations.registry import CasillaId, FormulaId, LegalRefId, SourceRefId
 from .._schemas import OutputSchema, register_schema
 
 
@@ -184,7 +185,7 @@ class GoogleSyncCalcExportResult(OutputSchema):
 class GoogleSyncCalcVerifyDivergencePayload(OutputSchema):
     """One divergence row in a calc verify report."""
 
-    casilla: str
+    casilla_id: CasillaId
     label: str
     local: str | None = None
     sheets: str | None = None
@@ -210,19 +211,33 @@ class GoogleSyncCalcVerifyResult(OutputSchema):
     divergences: list[GoogleSyncCalcVerifyDivergencePayload] = []
 
 
+class GoogleSyncCalcPullOperatorEditPayload(OutputSchema):
+    """One populated operator casilla edit emitted by ``sync calc pull``."""
+
+    casilla_id: CasillaId
+    label: str
+    value: str | None = None
+
+
+class GoogleSyncCalcPullComputedPayload(OutputSchema):
+    """One computed casilla emitted by ``sync calc pull --compute``."""
+
+    casilla_id: CasillaId
+    value: str
+    formula_id: FormulaId | None = None
+    legal_refs: list[LegalRefId] = Field(min_length=1)
+    source_refs: list[SourceRefId] = Field(min_length=1)
+
+
 @register_schema("config.google.sync.calc.pull")
 class GoogleSyncCalcPullResult(OutputSchema):
     """JSON envelope for ``aeat config google sync calc pull``.
 
     The payload composes pull metadata, populated operator/binding/relation
     edits, optional row-set assemblies, and an optional computed-casillas
-    block. The composite shape stays loose to forward registry-grounded
-    fields (``legal_refs``, ``source_refs``) on every computed entry.
+    block. Casilla-bearing rows are typed so the CLI cannot emit anonymous
+    string casilla references at this boundary.
     """
-
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2
-    # model_config shadows ConfigDict descriptor; mypy assignment check incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
     operation: str = "config.google.sync.calc.pull"
     profile: str
@@ -238,7 +253,7 @@ class GoogleSyncCalcPullResult(OutputSchema):
     operator_edits_populated: int
     binding_edits_populated: int
     relation_edits_populated: int
-    operator_edits: list[dict[str, object]] = []
+    operator_edits: list[GoogleSyncCalcPullOperatorEditPayload] = []
     binding_edits: list[dict[str, object]] = []
     relation_edits: list[dict[str, object]] = []
     row_set_edits_populated: int
@@ -246,4 +261,4 @@ class GoogleSyncCalcPullResult(OutputSchema):
     assembled_groupings: list[dict[str, object]] = []
     assembled_observation_count: int
     row_set_edits: list[dict[str, object]] = []
-    computed: list[dict[str, object]] = []
+    computed: list[GoogleSyncCalcPullComputedPayload] = []

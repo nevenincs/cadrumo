@@ -10,17 +10,28 @@ through ``tr()`` so the operator-facing surface is localised.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
-from types import SimpleNamespace
-from typing import cast
 
 import pytest
 
 from ....core import Period
-from ....domain.calculations.registry import InputKind
-from ....domain.calculations.registry._schema import ModeloRevision, VerificationPredicateDefinition
+from ....core.aggregation import BindingSourceKind
+from ....core.resources import resources
+from ....domain.calculations.registry import (
+    BindingId,
+    CasillaDefinition,
+    CasillaId,
+    DataBindingDefinition,
+    InputKind,
+    validated_casilla_id,
+)
+from ....domain.calculations.registry._schema import ModeloRevision, PeriodSelector, VerificationPredicateDefinition
 from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.iva_compensation._reconciliation import (
+    IvaCompensationDivergence,
+    IvaCompensationReconciliationDecision,
+)
 from ....domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -54,12 +65,146 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_TEST_LEGAL_REF = "test-actions:legal"
+_TEST_SOURCE_REF = "test-actions:source"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"actions test fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_SOURCE_BOUND_CASILLA: CasillaId = _casilla_id("0001")
+_PREDICATE_REQUIRED_LEFT_CASILLA: CasillaId = _casilla_id("0001")
+_PREDICATE_REQUIRED_RIGHT_CASILLA: CasillaId = _casilla_id("0002")
+_PREDICATE_OPTIONAL_LEFT_CASILLA: CasillaId = _casilla_id("0003")
+_PREDICATE_OPTIONAL_RIGHT_CASILLA: CasillaId = _casilla_id("0004")
+_DT12_INGRESO_CASILLA: CasillaId = _casilla_id("0003")
+_DT12_REDUCCION_CASILLA: CasillaId = _casilla_id("0011")
+_ART20_RNT_CASILLA: CasillaId = _casilla_id("0022")
+_ART20_REDUCCION_CASILLA: CasillaId = _casilla_id("0023")
+_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
+_M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
+_SOURCE_BOUND_BINDING: BindingId = "ledger_iva_base"
+
+
+def _test_casilla_definition(
+    casilla_id: CasillaId,
+    *,
+    semantic_role: str | None = None,
+    input_kind: InputKind = InputKind.MANUAL,
+    binding: BindingId | None = None,
+) -> CasillaDefinition:
+    return CasillaDefinition(
+        id=casilla_id,
+        number=casilla_id,
+        label=f"Test casilla {casilla_id}",
+        section=("test",),
+        input_kind=input_kind,
+        binding=binding,
+        semantic_role=semantic_role,
+        legal_refs=(_TEST_LEGAL_REF,),
+        source_refs=(_TEST_SOURCE_REF,),
+    )
+
+
+def _test_revision(
+    *,
+    casillas: tuple[CasillaDefinition, ...] = (),
+    bindings: tuple[DataBindingDefinition, ...] = (),
+) -> ModeloRevision:
+    return ModeloRevision(
+        id="test-actions-revision",
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(years=(2026,), periods=("0A", "1T")),
+        legal_refs=(_TEST_LEGAL_REF,),
+        source_refs=(_TEST_SOURCE_REF,),
+        casillas=casillas,
+        bindings=bindings,
+    )
+
+
+def _dt12_revision() -> ModeloRevision:
+    return _test_revision(
+        casillas=(
+            _test_casilla_definition(
+                _DT12_INGRESO_CASILLA,
+                semantic_role="irpf_rendimiento_trabajo_importe_integro_dinerario",
+            ),
+            _test_casilla_definition(
+                _DT12_REDUCCION_CASILLA,
+                semantic_role="irpf_rendimiento_trabajo_reduccion",
+            ),
+        ),
+    )
+
+
+def _art20_revision() -> ModeloRevision:
+    return _test_revision(
+        casillas=(
+            _test_casilla_definition(
+                _ART20_RNT_CASILLA,
+                semantic_role="irpf_rendimiento_trabajo_rendimiento_neto",
+            ),
+            _test_casilla_definition(
+                _ART20_REDUCCION_CASILLA,
+                semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales",
+            ),
+        ),
+    )
+
+
+def _source_bound_revision() -> ModeloRevision:
+    return _test_revision(
+        bindings=(
+            DataBindingDefinition(
+                id=_SOURCE_BOUND_BINDING,
+                source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+                selector={"record": "ventas", "row_field": "importe"},
+                legal_refs=(_TEST_LEGAL_REF,),
+                source_refs=(_TEST_SOURCE_REF,),
+            ),
+        ),
+        casillas=(
+            _test_casilla_definition(
+                _SOURCE_BOUND_CASILLA,
+                input_kind=InputKind.BOUND,
+                binding=_SOURCE_BOUND_BINDING,
+            ),
+        ),
+    )
+
+
+def _blocked_wallet_decision(
+    *,
+    divergence: IvaCompensationDivergence,
+    reason: str,
+) -> IvaCompensationReconciliationDecision:
+    return IvaCompensationReconciliationDecision(
+        taxpayer_nif="12345678Z",
+        target_year=2026,
+        target_period=Period.from_year_and_code(2026, "1T"),
+        selected_authority="missing",
+        selected_amount=None,
+        divergence=divergence,
+        blocked=True,
+        stale_wallet=False,
+        reason=reason,
+        decided_at=_T0,
+    )
+
+
+def _m130_casilla_definition(casilla_id: CasillaId) -> CasillaDefinition:
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    return next(item for item in snapshot.revision.casillas if item.id == casilla_id)
 
 
 def _resident_profile() -> TaxpayerProfile:
     """Minimal RESIDENT_IRPF profile for predicate-evaluator call sites.
 
-    Casilla-only predicates ignore the profile; this stub is for tests
+    Casilla-only predicates ignore the profile; this real profile is for tests
     that exercise the casilla DSL operators (all_nonzero, any_nonzero,
     cap_le_when_positive, implies_nonzero) without exercising the
     profile_field_required branch.
@@ -92,7 +237,7 @@ def _minimal_work_unit(modelo: str = "999", period: str = "0A", filing_year: int
 def _minimal_calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
     )
@@ -100,7 +245,7 @@ def _minimal_calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.BORRADOR,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         casilla_values={},
         created_at=_T0,
         updated_at=_T0,
@@ -164,13 +309,13 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
     predicate = VerificationPredicateDefinition(
         predicate_id="test-cross-casilla-001",
         legal_refs=("irpf:art1",),
-        expression='all_nonzero(["0001","0002"])',
+        expression=f'all_nonzero(["{_PREDICATE_REQUIRED_LEFT_CASILLA}","{_PREDICATE_REQUIRED_RIGHT_CASILLA}"])',
         finding_kind="BLOCKING_RULE",
     )
     # Both casillas are zero — predicate is violated.
     findings = _evaluate_verification_predicates(
         (predicate,),
-        {"0001": Decimal(0), "0002": Decimal(0)},
+        {_PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0), _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0)},
         _resident_profile(),
     )
 
@@ -178,7 +323,7 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
     finding = findings[0]
     # The message must contain the predicate_id and expression (from the locale template).
     assert "test-cross-casilla-001" in finding.message
-    assert 'all_nonzero(["0001","0002"])' in finding.message
+    assert predicate.expression in finding.message
     # Must not be the old raw f-string format with repr apostrophes around predicate_id.
     assert "violated: " in finding.message
 
@@ -188,12 +333,12 @@ def test_cross_casilla_invariant_next_action_is_localised() -> None:
     predicate = VerificationPredicateDefinition(
         predicate_id="test-cross-casilla-002",
         legal_refs=("irpf:art2",),
-        expression='any_nonzero(["0003","0004"])',
+        expression=f'any_nonzero(["{_PREDICATE_OPTIONAL_LEFT_CASILLA}","{_PREDICATE_OPTIONAL_RIGHT_CASILLA}"])',
         finding_kind="BLOCKING_RULE",
     )
     findings = _evaluate_verification_predicates(
         (predicate,),
-        {"0003": Decimal(0), "0004": Decimal(0)},
+        {_PREDICATE_OPTIONAL_LEFT_CASILLA: Decimal(0), _PREDICATE_OPTIONAL_RIGHT_CASILLA: Decimal(0)},
         _resident_profile(),
     )
 
@@ -244,22 +389,19 @@ def test_registry_snapshot_unresolved_finding_is_localised() -> None:
 def test_dt12_reduccion_advisory_message_is_localised() -> None:
     """_dt12_reduccion_advisory_finding emits a tr()-rendered message.
 
-    A synthetic revision object carrying two casillas with the correct semantic
+    A real revision object carrying two casillas with the correct semantic
     roles triggers the advisory. The finding message must contain ingreso_id,
     ingreso_value, and reduccion_id tokens from the locale template.
     """
-    ingreso = SimpleNamespace(id="0003", semantic_role="irpf_rendimiento_trabajo_importe_integro_dinerario")
-    reduccion = SimpleNamespace(id="0011", semantic_role="irpf_rendimiento_trabajo_reduccion")
-    # Both casillas present in revision; large ingreso, zero reduccion.
-    revision = SimpleNamespace(casillas=[ingreso, reduccion])
-    casilla_values = {"0003": Decimal("25000"), "0011": Decimal("0")}
+    revision = _dt12_revision()
+    casilla_values = {_DT12_INGRESO_CASILLA: Decimal("25000"), _DT12_REDUCCION_CASILLA: Decimal("0")}
 
     finding = _dt12_reduccion_advisory_finding(revision, casilla_values)
 
     assert finding is not None
-    assert "0003" in finding.message
+    assert str(_DT12_INGRESO_CASILLA) in finding.message
     assert "25000" in finding.message
-    assert "0011" in finding.message
+    assert str(_DT12_REDUCCION_CASILLA) in finding.message
     # Locale template token "reduccion" must appear in the rendered string.
     assert "reduccion" in finding.message.lower()
 
@@ -272,16 +414,14 @@ def test_dt12_reduccion_advisory_message_is_localised() -> None:
 def test_art20_reduccion_advisory_fires_within_band_and_is_localised() -> None:
     """_art20_reduccion_advisory_finding warns when RNT is in-band but reduction is zero.
 
-    A synthetic revision carrying the rendimiento-neto-del-trabajo role and the
+    A real revision carrying the rendimiento-neto-del-trabajo role and the
     art. 20 general-reducción role triggers the ADVISORY finding when RNT is strictly
     positive and below the art. 20 ceiling while the reducción casilla is zero. The
     finding is non-blocking (ADVISORY / WARNING) and its tr()-rendered message carries
     the rnt_id, rnt_value, and reduccion_id tokens.
     """
-    rnt = SimpleNamespace(id="0022", semantic_role="irpf_rendimiento_trabajo_rendimiento_neto")
-    reduccion = SimpleNamespace(id="0023", semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales")
-    revision = SimpleNamespace(casillas=[rnt, reduccion])
-    casilla_values = {"0022": Decimal("12000"), "0023": Decimal("0")}
+    revision = _art20_revision()
+    casilla_values = {_ART20_RNT_CASILLA: Decimal("12000"), _ART20_REDUCCION_CASILLA: Decimal("0")}
 
     finding = _art20_reduccion_advisory_finding(revision, casilla_values)
 
@@ -289,11 +429,11 @@ def test_art20_reduccion_advisory_fires_within_band_and_is_localised() -> None:
     # Non-blocking advisory: the eligibility gate (otras rentas <= 6.500) is not engine-visible.
     assert finding.kind == "advisory"
     assert finding.severity == "warning"
-    assert finding.casilla_id == "0023"
+    assert finding.casilla_id == _ART20_REDUCCION_CASILLA
     assert finding.legal_refs == ("ley-35-2006:art-20",)
-    assert "0022" in finding.message
+    assert str(_ART20_RNT_CASILLA) in finding.message
     assert "12000" in finding.message
-    assert "0023" in finding.message
+    assert str(_ART20_REDUCCION_CASILLA) in finding.message
     assert finding.next_action
     # The advisory message must be the rendered locale value, not the raw key.
     assert finding.message != "application.modelo.findings.art20_reduccion_possible"
@@ -305,18 +445,34 @@ def test_art20_reduccion_advisory_silent_in_negative_cases() -> None:
     No false positive when: RNT is at/above the ceiling (reduction is genuinely zero),
     the reducción is already declared, RNT is zero, or the roles are absent.
     """
-    rnt = SimpleNamespace(id="0022", semantic_role="irpf_rendimiento_trabajo_rendimiento_neto")
-    reduccion = SimpleNamespace(id="0023", semantic_role="irpf_rendimiento_trabajo_reduccion_gastos_generales")
-    revision = SimpleNamespace(casillas=[rnt, reduccion])
+    revision = _art20_revision()
 
     # Above the ceiling: the art. 20 reduction is legitimately zero — no advisory.
-    assert _art20_reduccion_advisory_finding(revision, {"0022": Decimal("25000"), "0023": Decimal("0")}) is None
+    assert (
+        _art20_reduccion_advisory_finding(
+            revision,
+            {_ART20_RNT_CASILLA: Decimal("25000"), _ART20_REDUCCION_CASILLA: Decimal("0")},
+        )
+        is None
+    )
     # Reduction already declared — nothing to surface.
-    assert _art20_reduccion_advisory_finding(revision, {"0022": Decimal("12000"), "0023": Decimal("3500")}) is None
+    assert (
+        _art20_reduccion_advisory_finding(
+            revision,
+            {_ART20_RNT_CASILLA: Decimal("12000"), _ART20_REDUCCION_CASILLA: Decimal("3500")},
+        )
+        is None
+    )
     # RNT zero — no eligible income.
-    assert _art20_reduccion_advisory_finding(revision, {"0022": Decimal("0"), "0023": Decimal("0")}) is None
+    assert (
+        _art20_reduccion_advisory_finding(
+            revision,
+            {_ART20_RNT_CASILLA: Decimal("0"), _ART20_REDUCCION_CASILLA: Decimal("0")},
+        )
+        is None
+    )
     # Roles absent — the advisory cannot resolve its casillas.
-    assert _art20_reduccion_advisory_finding(SimpleNamespace(casillas=[]), {}) is None
+    assert _art20_reduccion_advisory_finding(_test_revision(), {}) is None
 
 
 # ---------------------------------------------------------------------------
@@ -331,8 +487,6 @@ def test_iva_wallet_blocking_finding_next_action_is_localised() -> None:
     'application.modelo.findings.iva_wallet_next_action' and must not be
     the old hardcoded English string.
     """
-    from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
-
     decision = IvaCompensationReconciliationDecision(
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "1T"),
@@ -367,7 +521,7 @@ def test_iva_wallet_blocked_message_is_localised() -> None:
     The returned string must contain the divergence and reason tokens as
     produced by the locale template, not a raw f-string fallback.
     """
-    decision = SimpleNamespace(divergence="wallet_missing", reason="No history available.")
+    decision = _blocked_wallet_decision(divergence="wallet_missing", reason="No history available.")
 
     message = _iva_wallet_blocked_message(decision)
 
@@ -390,7 +544,7 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
     """
     from .._actions import ModeloIvaWalletReconciliationBlocked
 
-    decision = SimpleNamespace(divergence="filed_history_only", reason="Only filed history present.")
+    decision = _blocked_wallet_decision(divergence="filed_history_only", reason="Only filed history present.")
     rendered = _iva_wallet_blocked_message(decision)
 
     exc = ModeloIvaWalletReconciliationBlocked(
@@ -409,9 +563,7 @@ def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
             2026,
             Period.from_year_and_code(2026, "1T"),
             bucket_id="bucket-1",
-            # The unsupported-decision-type guard raises before the revision is read,
-            # so an empty structural double suffices for this path.
-            revision=cast(ModeloRevision, SimpleNamespace()),
+            revision=_test_revision(),
             taxpayer_nif="12345678Z",
             caller_binding_values={},
             backend_binding_values={},
@@ -424,29 +576,22 @@ def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
 
 
 def test_source_bound_casilla_override_error_is_localised() -> None:
-    # Structural double carrying only the bindings/casillas slice the guard reads.
-    revision = cast(
-        ModeloRevision,
-        SimpleNamespace(
-            bindings=(SimpleNamespace(id="ledger_iva_base", source="ledger_iva_aggregation"),),
-            casillas=(SimpleNamespace(id="0001", input_kind=InputKind.BOUND, binding="ledger_iva_base"),),
-        ),
-    )
+    revision = _source_bound_revision()
 
     with pytest.raises(ModeloAggregationBindingError) as raised:
         _reject_caller_overrides_of_source_bindings(
             revision=revision,
             owned_sources=frozenset({"ledger_iva_aggregation"}),
             caller_binding_values={},
-            caller_casilla_inputs={"0001": Decimal("12.34")},
+            caller_casilla_inputs={_SOURCE_BOUND_CASILLA: Decimal("12.34")},
         )
 
     assert raised.value.translated_message == "application.modelo.errors.caller_casilla_source_binding_conflict"
-    assert raised.value.context == {"casillas": ["0001"]}
+    assert raised.value.context == {"casillas": [_SOURCE_BOUND_CASILLA]}
     assert raised.value.context is not None
     rejected_casillas = raised.value.context["casillas"]
     assert isinstance(rejected_casillas, list)
-    assert "0001" in rejected_casillas
+    assert _SOURCE_BOUND_CASILLA in rejected_casillas
 
 
 # ---------------------------------------------------------------------------
@@ -473,7 +618,7 @@ class TestWorkflowInputMismatchError:
         revision = _minimal_calculation_revision(work_unit)
         return _RevisionInputsProvider(revision=revision, work_unit=work_unit)
 
-    def _stub_profile(self) -> TaxpayerProfile:
+    def _resident_profile(self) -> TaxpayerProfile:
         """Return a minimal real profile (load_inputs discards it via ``del``)."""
         return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
 
@@ -488,7 +633,7 @@ class TestWorkflowInputMismatchError:
         result = provider.load_inputs(
             modelo="100",
             period=expected_period,
-            profile=self._stub_profile(),
+            profile=self._resident_profile(),
         )
         assert isinstance(result, dict)
 
@@ -505,7 +650,7 @@ class TestWorkflowInputMismatchError:
             provider.load_inputs(
                 modelo="303",
                 period=correct_period,
-                profile=self._stub_profile(),
+                profile=self._resident_profile(),
             )
 
         exc = exc_info.value
@@ -524,7 +669,7 @@ class TestWorkflowInputMismatchError:
             provider.load_inputs(
                 modelo="303",
                 period=Period.from_year_and_code(2026, "2T"),
-                profile=self._stub_profile(),
+                profile=self._resident_profile(),
             )
 
         exc = exc_info.value
@@ -551,7 +696,7 @@ class TestWorkflowInputMismatchError:
             provider.load_inputs(
                 modelo="999",
                 period=Period.from_year_and_code(2026, "0A"),
-                profile=self._stub_profile(),
+                profile=self._resident_profile(),
             )
         except WorkflowInputMismatchError as exc:
             code = get_registered_error_code(exc)
@@ -587,11 +732,15 @@ def test_missing_required_casilla_finding_message_is_localised() -> None:
     The returned finding message must contain the casilla_id token
     (interpolated by the locale template) and must not be the raw locale key.
     """
-    finding = _missing_required_casilla_finding("irpf.cuota-liquida-total", "wu-abc123")
+    finding = _missing_required_casilla_finding(
+        _M130_INGRESOS_CASILLA,
+        "wu-abc123",
+        casilla_def=_m130_casilla_definition(_M130_INGRESOS_CASILLA),
+    )
 
     assert finding.message is not None
     # The casilla_id must appear in the rendered message.
-    assert "irpf.cuota-liquida-total" in finding.message
+    assert _M130_INGRESOS_CASILLA in finding.message
     # Must not be the raw locale key surfaced as a self-referencing fallback.
     assert finding.message != "application.modelo.findings.missing_required_casilla"
 
@@ -603,12 +752,20 @@ def test_missing_required_casilla_finding_message_changes_with_casilla_id() -> N
     ids must produce different rendered strings. A tautological template or
     missing interpolation would produce identical output.
     """
-    finding_a = _missing_required_casilla_finding("irpf.cuota-a-ingresar", "wu-1")
-    finding_b = _missing_required_casilla_finding("irpf.base-imponible-general", "wu-1")
+    finding_a = _missing_required_casilla_finding(
+        _M130_INGRESOS_CASILLA,
+        "wu-1",
+        casilla_def=_m130_casilla_definition(_M130_INGRESOS_CASILLA),
+    )
+    finding_b = _missing_required_casilla_finding(
+        _M130_GASTOS_CASILLA,
+        "wu-1",
+        casilla_def=_m130_casilla_definition(_M130_GASTOS_CASILLA),
+    )
 
     assert finding_a.message != finding_b.message
-    assert "irpf.cuota-a-ingresar" in finding_a.message
-    assert "irpf.base-imponible-general" in finding_b.message
+    assert _M130_INGRESOS_CASILLA in finding_a.message
+    assert _M130_GASTOS_CASILLA in finding_b.message
 
 
 # ---------------------------------------------------------------------------
@@ -623,10 +780,8 @@ def test_dt12_reduccion_advisory_next_action_is_localised() -> None:
     'application.modelo.findings.dt12a_reduccion_next_action' and must
     not be the old hardcoded English string.
     """
-    ingreso = SimpleNamespace(id="0003", semantic_role="irpf_rendimiento_trabajo_importe_integro_dinerario")
-    reduccion = SimpleNamespace(id="0011", semantic_role="irpf_rendimiento_trabajo_reduccion")
-    revision = SimpleNamespace(casillas=[ingreso, reduccion])
-    casilla_values = {"0003": Decimal("25000"), "0011": Decimal("0")}
+    revision = _dt12_revision()
+    casilla_values = {_DT12_INGRESO_CASILLA: Decimal("25000"), _DT12_REDUCCION_CASILLA: Decimal("0")}
 
     finding = _dt12_reduccion_advisory_finding(revision, casilla_values)
 
@@ -647,10 +802,8 @@ def test_dt12_reduccion_advisory_next_action_differs_from_hardcoded_string() -> 
     value was a specific English sentence; asserting it is gone proves
     the catalogue path is active.
     """
-    ingreso = SimpleNamespace(id="0003", semantic_role="irpf_rendimiento_trabajo_importe_integro_dinerario")
-    reduccion = SimpleNamespace(id="0011", semantic_role="irpf_rendimiento_trabajo_reduccion")
-    revision = SimpleNamespace(casillas=[ingreso, reduccion])
-    casilla_values = {"0003": Decimal("25000"), "0011": Decimal("0")}
+    revision = _dt12_revision()
+    casilla_values = {_DT12_INGRESO_CASILLA: Decimal("25000"), _DT12_REDUCCION_CASILLA: Decimal("0")}
 
     finding = _dt12_reduccion_advisory_finding(revision, casilla_values)
 

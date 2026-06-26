@@ -111,6 +111,12 @@ def test_iva_compensation_decimal_parse_error_is_registered_and_roundtrips() -> 
     _assert_registered_and_roundtrip(IvaCompensationDecimalParseError)
 
 
+def test_iva_compensation_casilla_reference_error_is_registered_and_roundtrips() -> None:
+    from ...domain.iva_compensation._errors import IvaCompensationCasillaReferenceError
+
+    _assert_registered_and_roundtrip(IvaCompensationCasillaReferenceError)
+
+
 def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() -> None:
     from ...core import Period
     from ...domain.iva_compensation._errors import IvaCompensationYearRangeError

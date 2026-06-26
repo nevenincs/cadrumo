@@ -30,6 +30,7 @@ from .....application.storage.calc_sheets import (
 )
 from .....application.storage.calc_sheets._records import OperatorInput
 from .....core.resources import resources
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .....domain.calculations.registry._schema import InputKind
 from .._calc_sheets_pull import (
     BindingEdit,
@@ -43,11 +44,21 @@ from .._calc_sheets_pull import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_INGRESOS_CASILLA")
+_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_GASTOS_CASILLA")
+_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_RENDIMIENTO_NETO_CASILLA")
+
 
 def _modelo_130_snapshot():
     """Load a real modelo-130 snapshot from the bundled registry."""
 
     return resources().modelos.authority.snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1))
+
+
+def _casilla_id_from_plan_cell(value: object) -> CasillaId:
+    """Validate a workbook cell casilla key before it enters local lookups."""
+
+    return validated_casilla_id(value, surface="test casilla id")
 
 
 def _operator_edits_from_export_plan(plan, snapshot) -> tuple[OperatorEdit, ...]:
@@ -61,21 +72,21 @@ def _operator_edits_from_export_plan(plan, snapshot) -> tuple[OperatorEdit, ...]
     silent value loss.
     """
 
-    by_casilla: dict[str, Decimal | str | bool | None] = {}
+    by_casilla_id: dict[CasillaId, Decimal | str | bool | None] = {}
     for cell in plan.value_cells:
-        if cell.role != "operator_input" or cell.casilla is None:
+        if cell.role != "operator_input" or cell.casilla_id is None:
             continue
-        by_casilla[cell.casilla] = cell.value
+        by_casilla_id[_casilla_id_from_plan_cell(cell.casilla_id)] = cell.value
     edits: list[OperatorEdit] = []
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind in (InputKind.COMPUTED, InputKind.INFORMATIONAL):
             continue
         edits.append(
             OperatorEdit(
-                casilla=casilla.id,
-                casilla_number=casilla.number,
+                casilla_id=casilla.id,
+                display_number=casilla.number,
                 label=casilla.label,
-                value=by_casilla.get(casilla.id),
+                value=by_casilla_id.get(casilla.id),
             ),
         )
     return tuple(edits)
@@ -100,8 +111,8 @@ def test_workbook_input_values_survive_export_pull_compute_loop() -> None:
     gastos = Decimal("2000.25")
     inputs = OperatorInputs(
         values=(
-            OperatorInput(casilla="01", value=ingresos),
-            OperatorInput(casilla="02", value=gastos),
+            OperatorInput(casilla_id=_INGRESOS_CASILLA, value=ingresos),
+            OperatorInput(casilla_id=_GASTOS_CASILLA, value=gastos),
         ),
     )
 
@@ -115,13 +126,13 @@ def test_workbook_input_values_survive_export_pull_compute_loop() -> None:
     # plan dropped or mutated a value, every downstream assertion is
     # already invalidated; assert here so the failure points at the
     # right boundary.
-    by_casilla_on_plan = {
-        cell.casilla: cell.value
+    by_casilla_on_plan: dict[CasillaId, Decimal | str | bool | None] = {
+        _casilla_id_from_plan_cell(cell.casilla_id): cell.value
         for cell in plan.value_cells
-        if cell.role == "operator_input" and cell.casilla is not None
+        if cell.role == "operator_input" and cell.casilla_id is not None
     }
-    assert by_casilla_on_plan["01"] == ingresos
-    assert by_casilla_on_plan["02"] == gastos
+    assert by_casilla_on_plan[_INGRESOS_CASILLA] == ingresos
+    assert by_casilla_on_plan[_GASTOS_CASILLA] == gastos
 
     operator_edits = _operator_edits_from_export_plan(plan, snapshot)
     pull = PullResult(
@@ -156,13 +167,13 @@ def test_workbook_input_values_survive_export_pull_compute_loop() -> None:
     # A string coercion that landed via ``Decimal(str(value))`` mid-loop
     # would diverge here only on values that exercise the failure mode;
     # using non-trivial decimals on both inputs surfaces it.
-    assert result.values["01"] == ingresos
-    assert result.values["02"] == gastos
+    assert result.values[_INGRESOS_CASILLA] == ingresos
+    assert result.values[_GASTOS_CASILLA] == gastos
 
     # Casilla 03 (rendimiento neto) is computed by the registry from the
     # two operator inputs above. Keep the expected value literal so this
     # test remains an oracle instead of duplicating formula logic inline.
-    casilla_03_obs = next(obs for obs in result.observations if obs.casilla_id == "03")
+    casilla_03_obs = next(obs for obs in result.observations if obs.casilla_id == _RENDIMIENTO_NETO_CASILLA)
     assert casilla_03_obs.value == Decimal("8000.25")
 
 

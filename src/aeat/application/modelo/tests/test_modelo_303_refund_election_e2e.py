@@ -43,6 +43,7 @@ from ....core import Period, RefundElection, ResultDisposition
 from ....core.config import AuthProviderKindSetting, Settings
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
+from ....domain.calculations.registry import CasillaId, RelationId, validated_casilla_id
 from ....domain.deadlines import IVARegime, ModeloIVAProfile, TaxpayerProfile
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
@@ -71,8 +72,18 @@ _MID_PERIOD = "2T"
 
 #: The carry chain casilla/relation: the prior period's end-of-period available
 #: compensación flows into the next period's casilla 110.
-_CARRY_RELATION = "modelo-303-rel-self-compensacion-anteriores"
-_SALDO_CASILLA = "iva.compensacion-disponible-fin-periodo"
+_CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M303 refund election fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_SALDO_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 #: A negative-result M303 credit scenario: cuota soportada (interiores) exceeds
 #: cuota repercutida, so the régimen-general result is negative — the IVA credit
@@ -198,7 +209,7 @@ def _calculate_negative_period(
         bucket_event_repository=event_repo,
         clock=decided_at,
     )
-    assert revision.casilla_values["iva.resultado"] < Decimal("0")
+    assert revision.casilla_values[_M303_RESULTADO_CASILLA] < Decimal("0")
     saldo = revision.casilla_values[_SALDO_CASILLA]
     assert saldo > Decimal("0")
 
@@ -276,7 +287,9 @@ def _next_period_carry_in(*, next_year: int, next_period: str) -> Decimal | None
         snapshot_next,
         repository=CalculationObservationRepository(),
     )
-    resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
+    resolved: dict[RelationId, Decimal] = {
+        item.relation: item.value for item in relation_values.values if item.value is not None
+    }
     return resolved.get(_CARRY_RELATION)
 
 
@@ -343,6 +356,7 @@ def test_non_redeme_mid_period_refund_election_is_refused(tmp_path: Path) -> Non
                 refund_election=RefundElection.DEVOLVER,
             )
 
+    assert excinfo.value.context is not None
     assert excinfo.value.context["period"] == _MID_PERIOD
     assert excinfo.value.context["modelo"] == "303"
 

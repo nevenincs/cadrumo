@@ -23,7 +23,12 @@ from ....core import Period
 from ....core.external_constants import load_external_constants
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation, RegistryValidationError
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    RegistryValidationError,
+    validated_casilla_id,
+)
 from ....domain.iva_compensation._carry_forward import IvaCompensationPeriodState
 from ....domain.justificante import JustificanteRepository
 from ....domain.modelos import (
@@ -39,6 +44,7 @@ from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests import FIXTURES_DIR
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...calculations import (
     CalculationObservationRepository,
@@ -68,6 +74,21 @@ _SYNTHETIC_PROFILE_ID = "SYNTHETIC_PROFILE"
 _SYNTHETIC_EXPEDIENTE_ID = "200030300000000Z"
 _BUCKET_ID = "operator"
 _SESSION_BUCKET_ID = "ephemeral"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    return validated_casilla_id(value, surface="test casilla id")
+
+
+_M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
+_M303_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
+_M303_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
+_M303_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("71")
 
 
 @contextmanager
@@ -574,7 +595,7 @@ def test_duplicate_period_capture_promotes_alta_over_later_non_alta_observation(
 
         assert keys == ("303:2026:1T",)
         assert stored is not None
-        assert stored.observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("1200.00")
+        assert stored.observation.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("1200.00")
         assert history is not None
         assert history.expediente_id == "200030300000012Z"
 
@@ -644,7 +665,7 @@ def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(
         stored = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
 
         assert stored is not None
-        assert stored.observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("1200.00")
+        assert stored.observation.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("1200.00")
 
 
 def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Path) -> None:
@@ -688,12 +709,13 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
         assert _SYNTHETIC_EXPEDIENTE_ID.encode("utf-8") not in database_bytes
 
 
-def test_filed_303_capture_accepts_semantic_compensation_casilla_ids(tmp_path: Path) -> None:
+def test_filed_303_capture_accepts_canonical_compensation_casilla_ids(tmp_path: Path) -> None:
     pending_compensation = Decimal("11.00")
     prior_pending = Decimal("15.00")
     applied = Decimal("4.00")
     period_result = Decimal("-2.50")
-    expected_available_end = pending_compensation - period_result
+    generated = Decimal("2.50")
+    expected_available_end = pending_compensation + generated
     with _secure_backend(tmp_path):
         key = persist_filed_calculation_observation(
             _prior_303_observation(
@@ -702,7 +724,7 @@ def test_filed_303_capture_accepts_semantic_compensation_casilla_ids(tmp_path: P
                 applied=applied,
                 result=period_result,
                 final_result=period_result,
-                semantic_compensation_ids=True,
+                generated=generated,
             ),
         )
 
@@ -717,7 +739,13 @@ def test_filed_303_capture_accepts_semantic_compensation_casilla_ids(tmp_path: P
         assert history.period_result_amount == period_result
         assert history.available_end_amount == expected_available_end
         assert stored is not None
-        assert stored.observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == expected_available_end
+        assert stored.observation.casilla_values[_M303_DISPONIBLE_CASILLA] == expected_available_end
+        available = next(
+            item for item in stored.observation.observations if item.casilla_id == _M303_DISPONIBLE_CASILLA
+        )
+        assert available.formula_id == "modelo-303-compensacion-disponible-fin-periodo"
+        assert available.operand_casilla_refs == (_M303_POSTERIOR_CASILLA, _M303_GENERADA_CASILLA)
+        assert available.operand_values == (pending_compensation, generated)
 
 
 def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_path: Path) -> None:
@@ -795,7 +823,12 @@ def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: P
                 modelo="303",
                 filing_year=2026,
                 period="1T",
-                observations=(CasillaObservation(casilla_id="87", value=Decimal("1200.00")),),
+                observations=registry_grounded_observations(
+                    modelo="303",
+                    filing_year=2026,
+                    period="1T",
+                    casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
+                ),
             ),
             source_kind="aeat_sede_justificante",
             captured_at=_CAPTURED_AT,
@@ -985,11 +1018,11 @@ def _prior_303_observation(
     applied: Decimal | None = None,
     result: Decimal = Decimal("0.00"),
     final_result: Decimal | None = None,
+    generated: Decimal | None = None,
     year: int = 2026,
     period: str = "1T",
     expediente_id: str = _SYNTHETIC_EXPEDIENTE_ID,
     presented_at: datetime = _CAPTURED_AT,
-    semantic_compensation_ids: bool = False,
     status: str = "ALTA",
 ) -> FiledDeclaracionObservation:
     observation_period = Period.from_year_and_code(year, period)
@@ -1016,14 +1049,12 @@ def _prior_303_observation(
         ),
         casillas=(
             *(
-                (
-                    ObservedCasillaValue(
-                        casilla_id=(
-                            "iva.compensacion-pendiente-periodos-anteriores" if semantic_compensation_ids else "110"
-                        ),
-                        value=str(prior_pending),
-                        source_artefact_kind="submitted_file",
-                        source_locator="submitted-file:110",
+                    (
+                        ObservedCasillaValue(
+                            casilla_id=_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+                            value=str(prior_pending),
+                            source_artefact_kind="submitted_file",
+                            source_locator="submitted-file:110",
                         confidence=1.0,
                     ),
                 )
@@ -1033,7 +1064,7 @@ def _prior_303_observation(
             *(
                 (
                     ObservedCasillaValue(
-                        casilla_id="iva.compensacion-aplicada-periodo" if semantic_compensation_ids else "78",
+                        casilla_id=_M303_APLICADA_CASILLA,
                         value=str(applied),
                         source_artefact_kind="submitted_file",
                         source_locator="submitted-file:78",
@@ -1044,14 +1075,14 @@ def _prior_303_observation(
                 else ()
             ),
             ObservedCasillaValue(
-                casilla_id="iva.compensacion-pendiente-periodos-posteriores" if semantic_compensation_ids else "87",
+                casilla_id=_M303_POSTERIOR_CASILLA,
                 value=str(pending_compensation),
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:87",
                 confidence=1.0,
             ),
             ObservedCasillaValue(
-                casilla_id="iva.resultado" if semantic_compensation_ids else "69",
+                casilla_id=_M303_RESULTADO_CASILLA,
                 value=str(result),
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:69",
@@ -1060,7 +1091,20 @@ def _prior_303_observation(
             *(
                 (
                     ObservedCasillaValue(
-                        casilla_id="71",
+                        casilla_id=_M303_GENERADA_CASILLA,
+                        value=str(generated),
+                        source_artefact_kind="submitted_file",
+                        source_locator="submitted-file:derived-generated",
+                        confidence=1.0,
+                    ),
+                )
+                if generated is not None
+                else ()
+            ),
+            *(
+                (
+                    ObservedCasillaValue(
+                        casilla_id=_M303_RESULTADO_FINAL_CASILLA,
                         value=str(final_result),
                         source_artefact_kind="submitted_file",
                         source_locator="submitted-file:71",

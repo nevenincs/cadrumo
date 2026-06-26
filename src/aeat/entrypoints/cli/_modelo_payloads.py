@@ -8,14 +8,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from ...core import Period
 from ...core.identity import BucketId
 from ...domain.calculations.registry import (
+    BindingId,
     CasillaId,
     FormulaId,
+    LegalRefId,
+    ParameterId,
+    RelationId,
     RevisionId,
+    SourceRefId,
 )
 from ...domain.modelos._ids import (
     CalculationRevisionId,
@@ -66,9 +71,20 @@ class ObservationPayload(OutputSchema):
     value: str  # serialised Decimal
     formula_id: FormulaId | None = None
     operand_refs: tuple[str, ...] = ()
+    operand_casilla_refs: tuple[CasillaId, ...] = ()
     operand_values: tuple[str, ...] = ()
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _operand_casilla_refs_are_traced(self) -> ObservationPayload:
+        missing = tuple(ref for ref in self.operand_casilla_refs if ref not in self.operand_refs)
+        if missing:
+            raise ValueError(
+                f"observation payload for {self.casilla_id!r} declares operand_casilla_refs "
+                f"that are absent from operand_refs: {missing!r}",
+            )
+        return self
 
 
 class WorkRecargoPayload(OutputSchema):
@@ -117,11 +133,12 @@ class CalculationRevisionPayload(OutputSchema):
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
     state: str
-    casilla_values: dict[str, str]  # casilla_id → str(Decimal)
+    casilla_values: dict[CasillaId, str]  # casilla_id -> str(Decimal)
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
-    binding_overrides: dict[str, str]
-    inputs_snapshot: dict[str, str]
+    binding_overrides: dict[BindingId, str]
+    relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
+    input_values_by_casilla_id: dict[CasillaId, str]
     created_at: str
     updated_at: str
     verified_at: str | None = None
@@ -150,7 +167,7 @@ class CrossPeriodDependencyRequirementPayload(OutputSchema):
     source_modelo: str
     filing_year: int
     period: Period
-    source_casillas: tuple[str, ...]
+    source_casilla_ids: tuple[CasillaId, ...]
     origin: str
     origin_ids: tuple[str, ...]
     requires_member_fan_in: bool
@@ -205,8 +222,8 @@ class VerificationReportPayload(OutputSchema):
     calculation_revision_id: CalculationRevisionId
     completeness_status: str
     granted_verificado_completo: bool
-    resolved_casillas: list[str]
-    missing_required_casillas: list[str]
+    resolved_casilla_ids: list[CasillaId]
+    missing_required_casilla_ids: list[CasillaId]
     run_at: str
     verified_by: str
     findings: list[FindingPayload]
@@ -247,14 +264,14 @@ class FormulaPayload(OutputSchema):
     """One formula row in the formulas command output."""
 
     formula_id: FormulaId
-    target: str
-    input_casillas: tuple[str, ...]
-    input_bindings: tuple[str, ...]
-    input_parameters: tuple[str, ...]
-    input_relations: tuple[str, ...]
+    target_casilla_id: CasillaId
+    input_casilla_ids: tuple[CasillaId, ...]
+    input_bindings: tuple[BindingId, ...]
+    input_parameters: tuple[ParameterId, ...]
+    input_relations: tuple[RelationId, ...]
     expression: dict[str, object]
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
 
 
 @register_schema("modelo.work.create")
@@ -391,11 +408,12 @@ class WorkCalculateResult(OutputSchema):
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
     state: str
-    casilla_values: dict[str, str]
+    casilla_values: dict[CasillaId, str]
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
-    binding_overrides: dict[str, str]
-    inputs_snapshot: dict[str, str]
+    binding_overrides: dict[BindingId, str]
+    relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
+    input_values_by_casilla_id: dict[CasillaId, str]
     created_at: str
     updated_at: str
     verified_at: str | None = None
@@ -438,11 +456,12 @@ class WorkRevisionResult(OutputSchema):
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
     state: str
-    casilla_values: dict[str, str]
+    casilla_values: dict[CasillaId, str]
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
-    binding_overrides: dict[str, str]
-    inputs_snapshot: dict[str, str]
+    binding_overrides: dict[BindingId, str]
+    relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
+    input_values_by_casilla_id: dict[CasillaId, str]
     created_at: str
     updated_at: str
     verified_at: str | None = None
@@ -468,8 +487,8 @@ class WorkVerifyResult(OutputSchema):
     calculation_revision_id: CalculationRevisionId
     completeness_status: str
     granted_verificado_completo: bool
-    resolved_casillas: list[str]
-    missing_required_casillas: list[str]
+    resolved_casilla_ids: list[CasillaId]
+    missing_required_casilla_ids: list[CasillaId]
     run_at: str
     verified_by: str
     findings: list[FindingPayload]
@@ -600,8 +619,8 @@ class VerificationReportShowResult(OutputSchema):
     calculation_revision_id: CalculationRevisionId
     completeness_status: str
     granted_verificado_completo: bool
-    resolved_casillas: list[str]
-    missing_required_casillas: list[str]
+    resolved_casilla_ids: list[CasillaId]
+    missing_required_casilla_ids: list[CasillaId]
     run_at: str
     verified_by: str
     findings: list[FindingPayload]
@@ -802,7 +821,7 @@ class ModeloDescribeResult(OutputSchema):
 class CasillaRowPayload(OutputSchema):
     """One casilla row in the casillas output."""
 
-    casilla_id: str
+    casilla_id: CasillaId
     number: str
     input_kind: str
     required: bool
@@ -837,14 +856,14 @@ class BindingRowPayload(OutputSchema):
     revision: str
     filing_year: int | None
     period: str | None
-    binding_id: str
+    binding_id: BindingId
     source: str
     readiness: str
     typed_enum: str | None
     input_channel: str
     borrador_capable: bool
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
 @register_schema("modelo.bindings.list")
@@ -869,13 +888,13 @@ class BindingPreviewRowPayload(OutputSchema):
     provenance-parity decision of the bindings-interface-hardening ADR.
     """
 
-    binding_id: str
+    binding_id: BindingId
     source: str
     readiness: str
     typed_enum: str | None
     override: str | None
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
 
 
 @register_schema("modelo.bindings.preview")
@@ -949,7 +968,7 @@ class ModeloExportPayload(OutputSchema):
 class DeltaRowPayload(OutputSchema):
     """One casilla comparison row in the compare output."""
 
-    casilla_id: str
+    casilla_id: CasillaId
     label: str
     section: str
     year_a_value: str
@@ -957,8 +976,8 @@ class DeltaRowPayload(OutputSchema):
     delta: str
     pct_change: str | None
     formula_id: str | None = None
-    legal_refs: list[str] = []
-    source_refs: list[str] = []
+    legal_refs: list[LegalRefId] = Field(min_length=1)
+    source_refs: list[SourceRefId] = Field(min_length=1)
 
 
 class CompareSectionPayload(OutputSchema):
@@ -1011,11 +1030,11 @@ class ModeloHistoryResult(OutputSchema):
 class CasillaObservationPayload(OutputSchema):
     """One typed casilla observation in the project result."""
 
-    casilla_id: str
+    casilla_id: CasillaId
     value: str
     formula_id: str | None = None
-    legal_refs: list[str] = []
-    source_refs: list[str] = []
+    legal_refs: list[LegalRefId] = Field(min_length=1)
+    source_refs: list[SourceRefId] = Field(min_length=1)
 
 
 class M130AccumulatedPayload(OutputSchema):
@@ -1179,7 +1198,7 @@ class WorkPreviewMaritimeExemptionResult(OutputSchema):
     retmar_registered: bool = False
     retmar_mandatory_filing: bool = False
     retmar_warning: str | None = None
-    casilla_values: dict[str, str] = Field(default_factory=dict)
+    casilla_values: dict[CasillaId, str] = Field(default_factory=dict)
     observations: list[CasillaObservationPayload] = Field(default_factory=list)
 
 

@@ -45,7 +45,7 @@ from ....core import Period
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.config import override_settings
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import calculate_registry_snapshot
+from ....domain.calculations.registry import CasillaId, calculate_registry_snapshot, validated_casilla_id
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.cli_runner import aeat_click_command
 from ....tests.cli_runner import invoke_cached_cli as _invoke_cached_cli
@@ -66,6 +66,19 @@ _WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
 _BUCKET_ID = "registry-cli"
 _DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))
 _CLI_ENV: dict[str, str] = {}
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
+_M130_CARRY_FORWARD_CASILLA: CasillaId = validated_casilla_id("15", surface="_M130_CARRY_FORWARD_CASILLA")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
+_M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
+_M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_FINAL_CASILLA")
+_M100_SOURCE_0224_CASILLA: CasillaId = validated_casilla_id("0224", surface="_M100_SOURCE_0224_CASILLA")
+_M100_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479", surface="_M100_SOURCE_1479_CASILLA")
+_M100_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553", surface="_M100_SOURCE_1553_CASILLA")
+_M100_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577", surface="_M100_SOURCE_1577_CASILLA")
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -592,7 +605,7 @@ def test_verify_filed_state_compares_local_calculation_to_encrypted_observation(
 
     assert report.comparison.status == "satisfied"
     assert report.comparison.modelo == "130"
-    assert "19" in report.comparison.compared_casillas
+    assert _M130_RESULTADO_FINAL_CASILLA in report.comparison.compared_casilla_ids
     assert report.comparison.drifts == ()
 
 
@@ -618,7 +631,7 @@ def test_verify_filed_state_cli_loads_secure_observation_refs(tmp_path: Path) ->
             "--source-root",
             str(bundled_path()),
             "--casilla",
-            "19",
+            str(_M130_RESULTADO_FINAL_CASILLA),
         ],
     )
 
@@ -628,8 +641,39 @@ def test_verify_filed_state_cli_loads_secure_observation_refs(tmp_path: Path) ->
     comparison = envelope["result"]["comparison"]
     assert comparison["status"] == "satisfied"
     assert comparison["modelo"] == "130"
-    assert comparison["compared_casillas"] == ["19"]
+    assert comparison["compared_casilla_ids"] == [str(_M130_RESULTADO_FINAL_CASILLA)]
     assert comparison["drifts"] == []
+
+
+def test_verify_filed_state_cli_rejects_required_casilla_absent_from_revision(tmp_path: Path) -> None:
+    store = FiledDeclaracionObservationStore(tmp_path / "observations")
+    primary, source = _modelo_130_filed_state_observations()
+    primary_path = store.persist_observation(primary)
+    source_path = store.persist_observation(source)
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "registry",
+            "verify-filed-state",
+            "--observation",
+            str(primary_path),
+            "--source-observation",
+            str(source_path),
+            "--registry-root",
+            str(_REGISTRY_ROOT),
+            "--source-root",
+            str(bundled_path()),
+            "--casilla",
+            "99999",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "canonical casilla.id" in result.output
+    assert "99999" in result.output
 
 
 def test_verify_filed_state_reports_drift_from_encrypted_observation(tmp_path: Path) -> None:
@@ -637,7 +681,7 @@ def test_verify_filed_state_reports_drift_from_encrypted_observation(tmp_path: P
     primary, source = _modelo_130_filed_state_observations()
     casillas = tuple(
         item.model_copy(update={"value": str(Decimal(item.value) + Decimal("0.01"))})
-        if item.casilla_id == "19"
+        if item.casilla_id == _M130_RESULTADO_FINAL_CASILLA
         else item
         for item in primary.casillas
     )
@@ -649,11 +693,11 @@ def test_verify_filed_state_reports_drift_from_encrypted_observation(tmp_path: P
         source_observation_paths=(source_path,),
         registry_root=_REGISTRY_ROOT,
         source_root=bundled_path(),
-        required_casillas=("19",),
+        required_casilla_ids=(_M130_RESULTADO_FINAL_CASILLA,),
     )
 
     assert report.comparison.status == "failed"
-    assert report.comparison.drifts[0].casilla_id == "19"
+    assert report.comparison.drifts[0].casilla_id == _M130_RESULTADO_FINAL_CASILLA
     assert report.comparison.drifts[0].delta == Decimal("-0.01")
 
 
@@ -1200,25 +1244,25 @@ def _modelo_130_filed_state_observations() -> tuple[FiledDeclaracionObservation,
             ejercicio=2025,
             period="0A",
             casilla_values={
-                "0224": Decimal("3000"),
-                "1479": Decimal("4000"),
-                "1553": Decimal("2000"),
-                "1577": Decimal("4000"),
+                _M100_SOURCE_0224_CASILLA: Decimal("3000"),
+                _M100_SOURCE_1479_CASILLA: Decimal("4000"),
+                _M100_SOURCE_1553_CASILLA: Decimal("2000"),
+                _M100_SOURCE_1577_CASILLA: Decimal("4000"),
             },
         ),
     )
 
 
-def _modelo_130_inputs() -> dict[str, Decimal]:
+def _modelo_130_inputs() -> dict[CasillaId, Decimal]:
     return {
-        "01": Decimal("10000"),
-        "02": Decimal("4000"),
-        "06": Decimal("100"),
-        "08": Decimal("2000"),
-        "10": Decimal("10"),
-        "15": Decimal("0"),
-        "16": Decimal("0"),
-        "18": Decimal("0"),
+        _M130_INGRESOS_CASILLA: Decimal("10000"),
+        _M130_GASTOS_CASILLA: Decimal("4000"),
+        _M130_RETENCIONES_CASILLA: Decimal("100"),
+        _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
+        _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
+        _M130_CARRY_FORWARD_CASILLA: Decimal("0"),
+        _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+        _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
     }
 
 
@@ -1227,7 +1271,7 @@ def _filed_observation(
     modelo: str,
     ejercicio: int,
     period: str,
-    casilla_values: dict[str, Decimal],
+    casilla_values: dict[CasillaId, Decimal],
 ) -> FiledDeclaracionObservation:
     return FiledDeclaracionObservation(
         modelo=modelo,

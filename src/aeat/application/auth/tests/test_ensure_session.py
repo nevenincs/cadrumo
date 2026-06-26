@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
 from pydantic import SecretStr
 
+from ....adapters.outbound.aeat.auth import (
+    AeatLoginAssertion,
+    AeatSession,
+    ClaveMovilLoginAssertionDetail,
+    ClaveMovilSessionDetail,
+)
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import SecretStoreBackend, Settings, override_settings
 from ....tests.secure_sql import dev_test_database_password
@@ -25,26 +31,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 if TYPE_CHECKING:
     from ....adapters.outbound.aeat.auth import BrowserSessionFactory
 
+_T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 
-class _Provider:
-    """Duck-typed auth provider stub.
 
-    Real providers (AeatAuthenticator, ClaveMovilAuthProvider) require a live
-    Playwright browser and AEAT network access; they cannot be instantiated
-    without network infrastructure. This stub satisfies the ``AuthProvider``
-    runtime-checkable protocol and exercises the session-service orchestration
-    logic (lock acquisition, double-probe race-guard, fresh-flow deletion) under
-    unit conditions. Live provider behaviour is covered separately in
-    ``test_authenticator.py`` and ``test_clave_movil.py``.
-    """
+class _ScriptedAuthProvider:
+    """Auth provider driven by explicit probe/auth outcomes for orchestration checks."""
 
     kind: AuthProviderKind = AuthProviderKind.CLAVE_MOVIL
 
     def __init__(
         self,
         *,
-        probe: tuple[object, object] | Exception | None = None,
-        auth: tuple[object, object] | None = None,
+        probe: tuple[AeatSession, AeatLoginAssertion] | Exception | None = None,
+        auth: tuple[AeatSession, AeatLoginAssertion] | None = None,
     ) -> None:
         self._probe = probe
         self._auth = auth
@@ -54,9 +53,13 @@ class _Provider:
         self.close_calls = 0
 
     def describe(self) -> AuthProviderDescription:
-        return AuthProviderDescription(kind=self.kind, label="_Provider", configured=True, available=True)
+        return AuthProviderDescription(kind=self.kind, label="scripted-clave-movil", configured=True, available=True)
 
-    async def probe_persisted_session(self, *, target_url: str | None = None) -> tuple[object, object]:
+    async def probe_persisted_session(
+        self,
+        *,
+        target_url: str | None = None,
+    ) -> tuple[AeatSession, AeatLoginAssertion]:
         del target_url
         self.probe_calls += 1
         if isinstance(self._probe, Exception):
@@ -65,14 +68,24 @@ class _Provider:
             raise AuthSessionUnavailableError("no persisted session")
         return self._probe
 
-    async def authenticate(self, *, target_url: str | None = None) -> object:
-        del target_url
+    async def authenticate(
+        self,
+        *,
+        browser_session: object | None = None,
+        target_url: str | None = None,
+    ) -> AeatSession:
+        del browser_session, target_url
         self.authenticate_calls += 1
         if self._auth is None:
             raise AuthSessionUnavailableError("auth not configured")
         return self._auth[0]
 
-    async def verify(self, session: object, *, target_url: str | None = None) -> object:
+    async def verify(
+        self,
+        session: AeatSession,
+        *,
+        target_url: str | None = None,
+    ) -> AeatLoginAssertion:
         del target_url
         self.verify_calls += 1
         if self._auth is None:
@@ -84,17 +97,17 @@ class _Provider:
         self.close_calls += 1
 
 
-def test_provider_stub_satisfies_auth_provider_protocol() -> None:
-    """_Provider must be recognised as a valid AuthProvider by the runtime check.
+def test_scripted_provider_satisfies_auth_provider_protocol() -> None:
+    """_ScriptedAuthProvider must be recognised as a valid AuthProvider by the runtime check.
 
-    This guards against the stub drifting out of step with the protocol as new
-    required methods are added; if the protocol grows a method that _Provider
+    This guards against the provider drifting out of step with the protocol as new
+    required methods are added; if the protocol grows a method this provider
     lacks, this test will fail with an ``AssertionError``, surfacing the gap
     before any orchestration test can produce a false-positive.
     """
-    assert isinstance(_Provider(), AuthProvider), (
-        "_Provider does not satisfy the AuthProvider runtime-checkable protocol; "
-        "update _Provider to match the protocol definition in aeat.application.auth"
+    assert isinstance(_ScriptedAuthProvider(), AuthProvider), (
+        "_ScriptedAuthProvider does not satisfy the AuthProvider runtime-checkable protocol; "
+        "update it to match the protocol definition in aeat.application.auth"
     )
 
 
@@ -136,16 +149,47 @@ def _settings(tmp_path: Path) -> Settings:
     )
 
 
-def _assertion(valid: bool = True) -> object:
-    return SimpleNamespace(is_valid=valid, status_code=200, error_message=None)
+def _session() -> AeatSession:
+    return AeatSession(
+        provider_kind=AuthProviderKind.CLAVE_MOVIL,
+        authenticated_at=_T0,
+        idle_deadline=_T0 + timedelta(minutes=20),
+        storage_state_path=None,
+        identity_nif="12345678Z",
+        provider_detail=ClaveMovilSessionDetail(
+            dni_nie="12345678Z",
+            used_non_qr_fallback=True,
+            verification_code="ABC",
+            landing_url="https://sede.agenciatributaria.gob.es/",
+        ),
+    )
 
 
-def _factory(providers: list[_Provider]):
+def _assertion(valid: bool = True) -> AeatLoginAssertion:
+    return AeatLoginAssertion(
+        target_url="https://sede.agenciatributaria.gob.es/",
+        is_valid=valid,
+        provider_kind=AuthProviderKind.CLAVE_MOVIL,
+        identity_nif="12345678Z",
+        status_code=200,
+        elapsed_ms=1,
+        attempted_at=_T0,
+        error_message=None if valid else "invalid live assertion",
+        assertion_detail=ClaveMovilLoginAssertionDetail(
+            session_cookie_present=valid,
+            landing_url="https://sede.agenciatributaria.gob.es/",
+        ),
+    )
+
+
+def _factory(
+    providers: list[_ScriptedAuthProvider],
+) -> Callable[[AuthProviderKind, Settings, BrowserSessionFactory | None], AuthProvider]:
     def build(
         kind: AuthProviderKind,
         settings: Settings,
         browser_session_factory: BrowserSessionFactory | None,
-    ) -> _Provider:
+    ) -> AuthProvider:
         del kind, settings, browser_session_factory
         return providers.pop(0)
 
@@ -155,14 +199,14 @@ def _factory(providers: list[_Provider]):
 @pytest.mark.asyncio
 async def test_ensure_reuses_persisted_session_without_acquiring_lock(tmp_path: Path) -> None:
     settings = _settings(tmp_path)
-    session = SimpleNamespace(identity_nif="12345678Z")
+    session = _session()
     assertion = _assertion()
-    provider = _Provider(probe=(session, assertion))
+    provider = _ScriptedAuthProvider(probe=(session, assertion))
 
     result = await ensure_authenticated_aeat_session(
         settings,
         kind=AuthProviderKind.CLAVE_MOVIL,
-        provider_factory=_factory([provider]),  # pyright: ignore[reportArgumentType]  # pyrefly: ignore[bad-argument-type]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
+        provider_factory=_factory([provider]),
     )
 
     assert result.session is session
@@ -177,16 +221,16 @@ async def test_ensure_reuses_persisted_session_without_acquiring_lock(tmp_path: 
 @pytest.mark.asyncio
 async def test_ensure_acquires_lock_then_authenticates_after_probe_failure(tmp_path: Path) -> None:
     settings = _settings(tmp_path)
-    session = SimpleNamespace(identity_nif="12345678Z")
+    session = _session()
     assertion = _assertion()
-    first_probe = _Provider(probe=AuthSessionUnavailableError("missing"))
-    second_probe = _Provider(probe=AuthSessionUnavailableError("missing"))
-    auth_provider = _Provider(auth=(session, assertion))
+    first_probe = _ScriptedAuthProvider(probe=AuthSessionUnavailableError("missing"))
+    second_probe = _ScriptedAuthProvider(probe=AuthSessionUnavailableError("missing"))
+    auth_provider = _ScriptedAuthProvider(auth=(session, assertion))
 
     result = await ensure_authenticated_aeat_session(
         settings,
         kind=AuthProviderKind.CLAVE_MOVIL,
-        provider_factory=_factory([first_probe, second_probe, auth_provider]),  # pyright: ignore[reportArgumentType]  # pyrefly: ignore[bad-argument-type]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
+        provider_factory=_factory([first_probe, second_probe, auth_provider]),
     )
 
     assert result.session is session
@@ -203,15 +247,15 @@ async def test_ensure_acquires_lock_then_authenticates_after_probe_failure(tmp_p
 @pytest.mark.asyncio
 async def test_ensure_fresh_skips_persisted_probe(tmp_path: Path) -> None:
     settings = _settings(tmp_path)
-    session = SimpleNamespace(identity_nif="12345678Z")
+    session = _session()
     assertion = _assertion()
-    auth_provider = _Provider(auth=(session, assertion))
+    auth_provider = _ScriptedAuthProvider(auth=(session, assertion))
 
     result = await ensure_authenticated_aeat_session(
         settings,
         kind=AuthProviderKind.CLAVE_MOVIL,
         fresh=True,
-        provider_factory=_factory([auth_provider]),  # pyright: ignore[reportArgumentType]  # pyrefly: ignore[bad-argument-type]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
+        provider_factory=_factory([auth_provider]),
     )
 
     assert result.session is session
@@ -234,18 +278,18 @@ async def test_ensure_raises_when_assertion_is_invalid(tmp_path: Path) -> None:
     from ....adapters.outbound.aeat.auth import AeatLoginAssertionError
 
     settings = _settings(tmp_path)
-    session = SimpleNamespace(identity_nif="12345678Z")
+    session = _session()
     # is_valid=False triggers the gate.
     invalid_assertion = _assertion(valid=False)
     # The service builds three providers: probe-outside-lock, probe-inside-lock,
     # then authenticate. All three are needed in the factory queue.
-    probe_1 = _Provider(probe=AuthSessionUnavailableError("no session"))
-    probe_2 = _Provider(probe=AuthSessionUnavailableError("no session"))
-    auth_provider = _Provider(auth=(session, invalid_assertion))
+    probe_1 = _ScriptedAuthProvider(probe=AuthSessionUnavailableError("no session"))
+    probe_2 = _ScriptedAuthProvider(probe=AuthSessionUnavailableError("no session"))
+    auth_provider = _ScriptedAuthProvider(auth=(session, invalid_assertion))
 
     with pytest.raises(AeatLoginAssertionError):
         await ensure_authenticated_aeat_session(
             settings,
             kind=AuthProviderKind.CLAVE_MOVIL,
-            provider_factory=_factory([probe_1, probe_2, auth_provider]),  # pyright: ignore[reportArgumentType]  # pyrefly: ignore[bad-argument-type]
+            provider_factory=_factory([probe_1, probe_2, auth_provider]),
         )

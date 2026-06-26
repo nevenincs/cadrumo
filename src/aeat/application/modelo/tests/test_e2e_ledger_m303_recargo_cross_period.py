@@ -44,12 +44,14 @@ from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._calculation_revision import CalculationRevision
@@ -82,12 +84,14 @@ _T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)
 
 _M303_REVISION = "2023-y-siguientes"
+type RecargoTier = Literal["general", "reducido"]
+type RecargoAmountsByPeriod = dict[str, dict[RecargoTier, Decimal]]
 
 # Official M303 recargo de equivalencia cuota casillas (keyed by casilla id in
 # ``casilla_values``). General = IVA 21% tier (recargo 5.2%); reducido = IVA 10%
 # tier (recargo 1.4%).
-_RECARGO_GENERAL_CUOTA = "24"
-_RECARGO_REDUCIDO_CUOTA = "21"
+_RECARGO_GENERAL_CUOTA: CasillaId = validated_casilla_id("24", surface="_RECARGO_GENERAL_CUOTA")
+_RECARGO_REDUCIDO_CUOTA: CasillaId = validated_casilla_id("21", surface="_RECARGO_REDUCIDO_CUOTA")
 
 _GENERAL_RATE = Decimal("0.21")
 _REDUCED_RATE = Decimal("0.10")
@@ -99,7 +103,7 @@ _REDUCED_RATE = Decimal("0.10")
 _QUARTER_MONTH: dict[str, int] = {"1T": 2, "2T": 5}
 
 # period -> tier -> (taxable_base, iva_rate, recargo_amount)
-_QUARTER_SALES: dict[str, dict[str, tuple[Decimal, Decimal, Decimal]]] = {
+_QUARTER_SALES: dict[str, dict[RecargoTier, tuple[Decimal, Decimal, Decimal]]] = {
     "1T": {
         "general": (Decimal("1000.00"), _GENERAL_RATE, Decimal("52.00")),
         "reducido": (Decimal("1000.00"), _REDUCED_RATE, Decimal("14.00")),
@@ -171,7 +175,7 @@ def _recargo_sale(
 
 def _persist_two_quarters_of_recargo_sales(
     secure_objects: SecureObjectRepository,
-) -> dict[str, dict[str, Decimal]]:
+) -> RecargoAmountsByPeriod:
     """Persist both quarters' general + reduced recargo sales once upfront.
 
     Each M303 quarter's bucket aggregation selects only its own period's
@@ -185,7 +189,7 @@ def _persist_two_quarters_of_recargo_sales(
     seed and the expectation.
     """
     transactions: list[Transaction] = []
-    stored: dict[str, dict[str, Decimal]] = {}
+    stored: RecargoAmountsByPeriod = {}
     for period, tiers in _QUARTER_SALES.items():
         stored[period] = {}
         for tier, (base, rate, recargo) in tiers.items():
@@ -277,7 +281,7 @@ def test_ledger_recargo_sales_populate_m303_recargo_casillas_per_quarter(
     _store_profile(secure_objects)
     stored = _persist_two_quarters_of_recargo_sales(secure_objects)
 
-    computed: dict[str, dict[str, Decimal]] = {}
+    computed: RecargoAmountsByPeriod = {}
     for period in ("1T", "2T"):
         revision = _calculate_m303_quarter(secure_objects, period=period)
 

@@ -11,6 +11,8 @@ from ._verification_chain_support import (
     _DR303_PROJECTION_CASILLAS,
     _M303_2023_ONWARDS_PARAMS,
     FIXTURES_DIR,
+    BindingId,
+    CasillaId,
     Decimal,
     DeclaracionParseError,
     RegistryValidationError,
@@ -20,9 +22,89 @@ from ._verification_chain_support import (
     calculate_registry_snapshot,
     date,
     parse_declaracion,
+    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+def _casilla_ids(*values: object) -> frozenset[CasillaId]:
+    return frozenset(_casilla_id(value) for value in values)
+
+
+_M303_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("27")
+_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("45")
+_M303_STATE_ATTRIBUTION_RATIO_CASILLA: CasillaId = _casilla_id("65")
+_M303_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.resultado-regimen-general")
+_M303_SUMA_RESULTADOS_CASILLA: CasillaId = _casilla_id("64")
+_M303_ATRIBUIBLE_ESTADO_CASILLA: CasillaId = _casilla_id("66")
+_M303_RESULTADO_AUTOLIQUIDACION_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M303_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("71")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
+_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
+_M130_GASTOS_CASILLA: CasillaId = _casilla_id("02")
+_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = _casilla_id("03")
+_M130_RESULTADO_CASILLA: CasillaId = _casilla_id("19")
+_M130_FORMULA_CHAIN_CASILLAS: tuple[CasillaId, ...] = (
+    _M130_RENDIMIENTO_NETO_CASILLA,
+    _casilla_id("04"),
+    _casilla_id("05"),
+    _casilla_id("06"),
+    _casilla_id("07"),
+    _casilla_id("13"),
+    _casilla_id("14"),
+    _casilla_id("15"),
+    _casilla_id("17"),
+    _casilla_id("18"),
+    _M130_RESULTADO_CASILLA,
+)
+_M111_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("28")
+_M111_RESULTADO_CASILLA: CasillaId = _casilla_id("30")
+_M111_RETENCIONES_TOTAL_LEAVES: frozenset[CasillaId] = _casilla_ids(
+    "03",
+    "06",
+    "09",
+    "12",
+    "15",
+    "18",
+    "21",
+    "24",
+    "27",
+)
+_M303_2023_PROFILE_CASILLAS: frozenset[CasillaId] = _casilla_ids(
+    "iva.repercutido.general",
+    "iva.repercutido.reducido",
+    "iva.repercutido.super-reducido",
+    "iva.autorepercutido.intracomunitaria",
+    "iva.soportado.interiores",
+    "iva.autoconsumo.promotor.base",
+    "27",
+    "29",
+    "37",
+    "45",
+    "iva.resultado-regimen-general",
+    "64",
+    "66",
+    "iva.compensacion-pendiente-periodos-anteriores",
+    "iva.compensacion-aplicada-periodo",
+    "iva.compensacion-pendiente-periodos-posteriores",
+    "iva.resultado",
+    "71",
+)
+_M303_ENGINE_REQUIRED_CASILLAS: tuple[CasillaId, ...] = (
+    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+    _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
+)
 
 
 @pytest.mark.parametrize(
@@ -101,16 +183,19 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
     # Skip specimens where casilla 19 was not extracted.
-    if "19" not in extracted:
+    closure_extracted: Decimal | None
+    if _M130_RESULTADO_CASILLA not in extracted:
         # The corpus PDF is a partial filing — casilla 19 blank.
         # Still run the engine so BINDING-GAP and FORMULA-MISMATCH can be
         # detected on other extracted casillas; skip the 19-equality assertion.
         closure_extracted = None
     else:
-        assert isinstance(extracted["19"], Decimal), (
-            f"{pdf_stem}: casilla '19' expected Decimal, got {type(extracted['19']).__name__}"
+        raw_closure = extracted[_M130_RESULTADO_CASILLA]
+        assert isinstance(raw_closure, Decimal), (
+            f"{pdf_stem}: casilla {_M130_RESULTADO_CASILLA!r} expected Decimal, "
+            f"got {type(raw_closure).__name__}"
         )
-        closure_extracted = extracted["19"]
+        closure_extracted = raw_closure
 
     # Build leaf inputs.
     # The fixture prints only c03 (rendimiento neto) and c19 (closure).  Box 03 is
@@ -119,8 +204,8 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
     # c02 = 0 (gastos absent from fixture).  The art-110.3.b branch of c17 is safe:
     # with c06=0 both paths yield (c14 - c15) - c16, so c19 is unaffected.
     # Other extracted non-computed casillas (absent in these fixtures) pass through.
-    extracted_c03 = extracted.get("03")
-    inputs: dict[str, Decimal] = {}
+    extracted_c03 = extracted.get(_M130_RENDIMIENTO_NETO_CASILLA)
+    inputs: dict[CasillaId, Decimal] = {}
     for casilla_id, value in extracted.items():
         if casilla_id in _COMPUTED_CASILLAS_M130:
             continue
@@ -129,11 +214,11 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         inputs[casilla_id] = value
     # Inject the reconstructed leaf decomposition for box 03.
     if isinstance(extracted_c03, Decimal):
-        inputs["01"] = extracted_c03  # c01 = rendimiento neto (c03), no gastos
+        inputs[_M130_INGRESOS_CASILLA] = extracted_c03  # c01 = rendimiento neto (c03), no gastos
         # c02 defaults to 0 (absent from fixture — not injected here)
 
     # Only previous_filing bindings must be supplied via binding_values:
-    binding_values: dict[str, Decimal] = {
+    binding_values: dict[BindingId, Decimal] = {
         # Prior-quarter payments and negative-result carry-forward; 0 = no prior
         # values (safe default for corpus specimens where we don't know prior
         # quarter saldo or payments).
@@ -170,9 +255,9 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
     # Verify engine computes casilla 03 = 01 - 02.
     engine_values = dict(result.values)
 
-    input_01 = inputs.get("01", Decimal("0"))
-    input_02 = inputs.get("02", Decimal("0"))
-    engine_03 = engine_values.get("03")
+    input_01 = inputs.get(_M130_INGRESOS_CASILLA, Decimal("0"))
+    input_02 = inputs.get(_M130_GASTOS_CASILLA, Decimal("0"))
+    engine_03 = engine_values.get(_M130_RENDIMIENTO_NETO_CASILLA)
     assert engine_03 is not None, (
         f"FORMULA-MISMATCH [{pdf_stem}]: casilla '03' absent from engine result "
         f"— formula modelo-130-rendimiento-neto evaluation failed."
@@ -184,23 +269,20 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
 
     # Compare engine casilla 19 against extracted value.
     if closure_extracted is not None:
-        engine_19 = engine_values.get("19")
+        engine_19 = engine_values.get(_M130_RESULTADO_CASILLA)
         assert engine_19 is not None, (
             f"FORMULA-MISMATCH [{pdf_stem}]: casilla '19' absent from engine result "
             f"— formula evaluation order issue or casilla missing from revision."
+        )
+        formula_chain_values = " ".join(
+            f"{casilla_id}={engine_values.get(casilla_id)!r}" for casilla_id in _M130_FORMULA_CHAIN_CASILLAS
         )
         assert engine_19 == closure_extracted, (
             f"FORMULA-MISMATCH [{pdf_stem}]: engine recomputed casilla '19' as "
             f"{engine_19!r} but AEAT-printed form shows {closure_extracted!r}.\n"
             f"  diff: {engine_19 - closure_extracted!r}\n"
             f"  extracted inputs: {dict((k, v) for k, v in extracted.items() if k not in _COMPUTED_CASILLAS_M130)}\n"
-            f"  engine values for formula chain: "
-            f"03={engine_values.get('03')!r} 04={engine_values.get('04')!r} "
-            f"05={engine_values.get('05')!r} 06={engine_values.get('06')!r} "
-            f"07={engine_values.get('07')!r} 13={engine_values.get('13')!r} "
-            f"14={engine_values.get('14')!r} 15={engine_values.get('15')!r} "
-            f"17={engine_values.get('17')!r} 18={engine_values.get('18')!r} "
-            f"19={engine_19!r}"
+            f"  engine values for formula chain: {formula_chain_values}"
         )
 
 
@@ -262,7 +344,7 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
     # Build inputs: exclude computed casillas 28 and 30.
-    inputs: dict[str, Decimal] = {}
+    inputs: dict[CasillaId, Decimal] = {}
     for casilla_id, value in extracted.items():
         if casilla_id in _COMPUTED_CASILLAS_M111:
             continue
@@ -294,14 +376,13 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
     # filing where only the totals were printed), the engine correctly computes
     # 28=0 and 30=0 — these cannot be compared against the extracted totals
     # without the breakdown.  Skip formula-consistency checks in that case.
-    _CASILLA_28_LEAVES = frozenset({"03", "06", "09", "12", "15", "18", "21", "24", "27"})
-    has_leaf_inputs = bool(inputs.keys() & _CASILLA_28_LEAVES)
+    has_leaf_inputs = bool(inputs.keys() & _M111_RETENCIONES_TOTAL_LEAVES)
 
     # Verify casilla 28 when extracted and leaf inputs are present.
-    if "28" in extracted and has_leaf_inputs:
-        extracted_28 = extracted["28"]
+    if _M111_RETENCIONES_TOTAL_CASILLA in extracted and has_leaf_inputs:
+        extracted_28 = extracted[_M111_RETENCIONES_TOTAL_CASILLA]
         assert isinstance(extracted_28, Decimal)
-        engine_28 = engine_values.get("28")
+        engine_28 = engine_values.get(_M111_RETENCIONES_TOTAL_CASILLA)
         assert engine_28 is not None, f"FORMULA-MISMATCH [{pdf_stem}]: casilla '28' absent from engine result."
         assert engine_28 == extracted_28, (
             f"FORMULA-MISMATCH [{pdf_stem}]: engine casilla '28' = {engine_28!r}, "
@@ -311,10 +392,10 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
         )
 
     # Verify casilla 30 when extracted and leaf inputs are present.
-    if "30" in extracted and has_leaf_inputs:
-        extracted_30 = extracted["30"]
+    if _M111_RESULTADO_CASILLA in extracted and has_leaf_inputs:
+        extracted_30 = extracted[_M111_RESULTADO_CASILLA]
         assert isinstance(extracted_30, Decimal)
-        engine_30 = engine_values.get("30")
+        engine_30 = engine_values.get(_M111_RESULTADO_CASILLA)
         assert engine_30 is not None, f"FORMULA-MISMATCH [{pdf_stem}]: casilla '30' absent from engine result."
         assert engine_30 == extracted_30, (
             f"FORMULA-MISMATCH [{pdf_stem}]: engine casilla '30' = {engine_30!r}, "
@@ -368,31 +449,7 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
-    assert set(extracted.keys()) == {
-        # Primitive cuota leaves: the engine sums these into iva.cuota-devengada-total
-        # and iva.cuota-deducible-total so resultado-regimen-general is
-        # recomputed from primitives rather than copied from the printed total.
-        "iva.repercutido.general",
-        "iva.repercutido.reducido",
-        "iva.repercutido.super-reducido",
-        "iva.autorepercutido.intracomunitaria",
-        "iva.soportado.interiores",
-        "iva.autoconsumo.promotor.base",
-        # Form-page totals retained for AEAT-form fidelity and the engine
-        # resultado == c27 - c45 internal-consistency assertion.
-        "27",
-        "29",
-        "37",
-        "45",
-        "iva.resultado-regimen-general",
-        "64",
-        "66",
-        "iva.compensacion-pendiente-periodos-anteriores",
-        "iva.compensacion-aplicada-periodo",
-        "iva.compensacion-pendiente-periodos-posteriores",
-        "iva.resultado",
-        "71",
-    }, (
+    assert set(extracted.keys()) == _M303_2023_PROFILE_CASILLAS, (
         f"PARSER-GAP [{pdf_stem}]: M303 2023+ profile extraction did not produce "
         f"the expected 18 casilla IDs (6 primitives + 12 form-page totals).\n"
         f"  got: {sorted(extracted)}"
@@ -452,14 +509,14 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
-    for required_id in ("27", "45", "iva.resultado-regimen-general"):
+    for required_id in _M303_ENGINE_REQUIRED_CASILLAS:
         assert required_id in extracted, (
             f"PARSER-GAP [{pdf_stem}]: required casilla {required_id!r} not in extracted values.\n"
             f"  got: {sorted(extracted)}"
         )
 
     # Build inputs — supply only non-computed Decimal casillas.
-    inputs: dict[str, Decimal] = {}
+    inputs: dict[CasillaId, Decimal] = {}
     for casilla_id, value in extracted.items():
         if casilla_id in _COMPUTED_CASILLAS_M303:
             continue
@@ -474,14 +531,14 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
     # application-layer resolver to have populated ``inputs`` before reaching
     # the calculator. Supply C65 via both channels for the engine-direct test
     # path.
-    inputs["65"] = Decimal("100")
+    inputs[_M303_STATE_ATTRIBUTION_RATIO_CASILLA] = Decimal("100")
 
     # The previous_filing binding for compensacion-pendiente-anteriores is
     # required by the engine. Supply the extracted value from the corpus PDF
     # if available (box iva.compensacion-pendiente-periodos-anteriores), else zero.
-    _extracted_comp = extracted.get("iva.compensacion-pendiente-periodos-anteriores", Decimal("0"))
+    _extracted_comp = extracted.get(_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, Decimal("0"))
     _comp = _extracted_comp if isinstance(_extracted_comp, Decimal) else Decimal("0")
-    binding_values: dict[str, Decimal] = {
+    binding_values: dict[BindingId, Decimal] = {
         "modelo-303-compensacion-pendiente-anteriores": _comp,
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
     }
@@ -512,11 +569,11 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
     # The synthetic corpus PDFs were generated with c46 = c27 - c45, matching
     # the registry formula. Any future registry formula change that breaks this
     # will cause a loud test failure.
-    engine_resultado = engine_values.get("iva.resultado-regimen-general")
+    engine_resultado = engine_values.get(_M303_RESULTADO_REGIMEN_GENERAL_CASILLA)
     assert engine_resultado is not None, (
         f"VERIFIED-FAIL [{pdf_stem}]: 'iva.resultado-regimen-general' absent from engine result"
     )
-    extracted_resultado = extracted.get("iva.resultado-regimen-general")
+    extracted_resultado = extracted.get(_M303_RESULTADO_REGIMEN_GENERAL_CASILLA)
     assert isinstance(extracted_resultado, Decimal), (
         f"VERIFIED-FAIL [{pdf_stem}]: extracted 'iva.resultado-regimen-general' is not Decimal: {extracted_resultado!r}"
     )
@@ -527,8 +584,8 @@ def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
         f"   Orden EHA/3786/2008 art. 1)"
     )
     # Internal consistency cross-check: engine resultado == computed c27 - c45.
-    engine_27 = engine_values.get("27")
-    engine_45 = engine_values.get("45")
+    engine_27 = engine_values.get(_M303_CUOTA_DEVENGADA_TOTAL_CASILLA)
+    engine_45 = engine_values.get(_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA)
     assert isinstance(engine_27, Decimal), (
         f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 27 missing or non-Decimal: {engine_27!r}"
     )
@@ -559,9 +616,9 @@ def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
     """
     extracted, engine_values, _inputs = _build_m303_engine_result(pdf_stem, year, period)
 
-    engine_64 = engine_values.get("64")
+    engine_64 = engine_values.get(_M303_SUMA_RESULTADOS_CASILLA)
     assert engine_64 is not None, f"VERIFIED-FAIL [{pdf_stem}]: '64' (suma de resultados) absent from engine result"
-    extracted_64 = extracted.get("64")
+    extracted_64 = extracted.get(_M303_SUMA_RESULTADOS_CASILLA)
     assert isinstance(extracted_64, Decimal), (
         f"VERIFIED-FAIL [{pdf_stem}]: extracted '64' is not Decimal: {extracted_64!r}"
     )
@@ -570,7 +627,7 @@ def test_verification_chain_m303_engine_recomputes_box_64_suma_resultados(
         f"  (Orden HAC/819/2024 art. 1 §4: box 64 = box 46 + box 58 + box 76)"
     )
     # Internal cross-check: for synthetic PDFs c58=0, c76=0 → box 64 == box 46.
-    box_46 = engine_values.get("iva.resultado-regimen-general", Decimal("0"))
+    box_46 = engine_values.get(_M303_RESULTADO_REGIMEN_GENERAL_CASILLA, Decimal("0"))
     assert engine_64 == box_46, (
         f"VERIFIED-FAIL [{pdf_stem}]: engine box 64 {engine_64!r} != engine box 46 {box_46!r}\n"
         f"  (c58=0, c76=0 in corpus PDFs — expected 64 == 46)"
@@ -594,9 +651,9 @@ def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
     """
     extracted, engine_values, _inputs = _build_m303_engine_result(pdf_stem, year, period)
 
-    engine_66 = engine_values.get("66")
+    engine_66 = engine_values.get(_M303_ATRIBUIBLE_ESTADO_CASILLA)
     assert engine_66 is not None, f"VERIFIED-FAIL [{pdf_stem}]: '66' (atribuible Estado) absent from engine result"
-    extracted_66 = extracted.get("66")
+    extracted_66 = extracted.get(_M303_ATRIBUIBLE_ESTADO_CASILLA)
     assert isinstance(extracted_66, Decimal), (
         f"VERIFIED-FAIL [{pdf_stem}]: extracted '66' is not Decimal: {extracted_66!r}"
     )
@@ -605,7 +662,7 @@ def test_verification_chain_m303_engine_recomputes_box_66_atribuible_estado(
         f"  (Orden HAC/819/2024 art. 1 §4: box 66 = box 64 × box 65 / 100)"
     )
     # Internal cross-check: box 65 = 100 → box 66 == box 64.
-    box_64 = engine_values.get("64", Decimal("0"))
+    box_64 = engine_values.get(_M303_SUMA_RESULTADOS_CASILLA, Decimal("0"))
     assert engine_66 == box_64, (
         f"VERIFIED-FAIL [{pdf_stem}]: engine box 66 {engine_66!r} != engine box 64 {box_64!r}\n"
         f"  (box 65 = 100 in territorio común — expected 66 == 64)"
@@ -629,9 +686,9 @@ def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidac
     """
     extracted, engine_values, _inputs = _build_m303_engine_result(pdf_stem, year, period)
 
-    engine_69 = engine_values.get("iva.resultado")
+    engine_69 = engine_values.get(_M303_RESULTADO_AUTOLIQUIDACION_CASILLA)
     assert engine_69 is not None, f"VERIFIED-FAIL [{pdf_stem}]: 'iva.resultado' (box 69) absent from engine result"
-    extracted_69 = extracted.get("iva.resultado")
+    extracted_69 = extracted.get(_M303_RESULTADO_AUTOLIQUIDACION_CASILLA)
     assert isinstance(extracted_69, Decimal), (
         f"VERIFIED-FAIL [{pdf_stem}]: extracted 'iva.resultado' (box 69) is not Decimal: {extracted_69!r}"
     )
@@ -640,7 +697,7 @@ def test_verification_chain_m303_engine_recomputes_box_69_resultado_autoliquidac
         f"  (Orden HAC/819/2024 art. 1 §5: box 69 = box 66 + box 77 + box 68 − box 78)"
     )
     # Internal cross-check: c77=0, c68=0, c78=0 → box 69 == box 66.
-    box_66 = engine_values.get("66", Decimal("0"))
+    box_66 = engine_values.get(_M303_ATRIBUIBLE_ESTADO_CASILLA, Decimal("0"))
     assert engine_69 == box_66, (
         f"VERIFIED-FAIL [{pdf_stem}]: engine box 69 {engine_69!r} != engine box 66 {box_66!r}\n"
         f"  (c77=0, c68=0, c78=0 in corpus PDFs — expected 69 == 66)"
@@ -664,9 +721,9 @@ def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
     """
     extracted, engine_values, _inputs = _build_m303_engine_result(pdf_stem, year, period)
 
-    engine_71 = engine_values.get("71")
+    engine_71 = engine_values.get(_M303_RESULTADO_FINAL_CASILLA)
     assert engine_71 is not None, f"VERIFIED-FAIL [{pdf_stem}]: '71' (resultado final) absent from engine result"
-    extracted_71 = extracted.get("71")
+    extracted_71 = extracted.get(_M303_RESULTADO_FINAL_CASILLA)
     assert isinstance(extracted_71, Decimal), (
         f"VERIFIED-FAIL [{pdf_stem}]: extracted '71' is not Decimal: {extracted_71!r}"
     )
@@ -675,7 +732,7 @@ def test_verification_chain_m303_engine_recomputes_box_71_resultado_final(
         f"  (Orden HAC/819/2024 art. 1 §6: box 71 = box 69 − box 70 + box 109)"
     )
     # Internal cross-check: c70=0, c109=0 → box 71 == box 69.
-    box_69 = engine_values.get("iva.resultado", Decimal("0"))
+    box_69 = engine_values.get(_M303_RESULTADO_AUTOLIQUIDACION_CASILLA, Decimal("0"))
     assert engine_71 == box_69, (
         f"VERIFIED-FAIL [{pdf_stem}]: engine box 71 {engine_71!r} != engine box 69 {box_69!r}\n"
         f"  (c70=0, c109=0 in corpus PDFs — expected 71 == 69)"
@@ -729,14 +786,14 @@ def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_gene
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
-    for required_id in ("27", "45", "iva.resultado-regimen-general"):
+    for required_id in _M303_ENGINE_REQUIRED_CASILLAS:
         assert required_id in extracted, (
             f"PARSER-GAP [{pdf_stem}]: required casilla {required_id!r} not in extracted values.\n"
             f"  got: {sorted(extracted)}"
         )
 
     # Build inputs — supply only non-computed Decimal casillas.
-    inputs: dict[str, Decimal] = {}
+    inputs: dict[CasillaId, Decimal] = {}
     for casilla_id, value in extracted.items():
         if casilla_id in _COMPUTED_CASILLAS_M303 and casilla_id not in _DR303_PROJECTION_CASILLAS:
             continue
@@ -744,9 +801,9 @@ def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_gene
             continue
         inputs[casilla_id] = value
 
-    _extracted_comp = extracted.get("iva.compensacion-pendiente-periodos-anteriores", Decimal("0"))
+    _extracted_comp = extracted.get(_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, Decimal("0"))
     _comp = _extracted_comp if isinstance(_extracted_comp, Decimal) else Decimal("0")
-    binding_values: dict[str, Decimal] = {
+    binding_values: dict[BindingId, Decimal] = {
         "modelo-303-compensacion-pendiente-anteriores": _comp,
     }
 
@@ -772,11 +829,11 @@ def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_gene
     engine_values = dict(result.values)
 
     # VERIFIED gate: engine resultado must equal extracted printed box 46.
-    engine_resultado = engine_values.get("iva.resultado-regimen-general")
+    engine_resultado = engine_values.get(_M303_RESULTADO_REGIMEN_GENERAL_CASILLA)
     assert engine_resultado is not None, (
         f"VERIFIED-FAIL [{pdf_stem}]: 'iva.resultado-regimen-general' absent from engine result"
     )
-    extracted_resultado = extracted.get("iva.resultado-regimen-general")
+    extracted_resultado = extracted.get(_M303_RESULTADO_REGIMEN_GENERAL_CASILLA)
     assert isinstance(extracted_resultado, Decimal), (
         f"VERIFIED-FAIL [{pdf_stem}]: extracted 'iva.resultado-regimen-general' is not Decimal: {extracted_resultado!r}"
     )
@@ -786,8 +843,8 @@ def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_gene
         f"  (engine formula or fixture inconsistency — box 46 = box 27 − box 45,\n"
         f"   Orden EHA/3786/2008 art. 1)"
     )
-    engine_27 = engine_values.get("27")
-    engine_45 = engine_values.get("45")
+    engine_27 = engine_values.get(_M303_CUOTA_DEVENGADA_TOTAL_CASILLA)
+    engine_45 = engine_values.get(_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA)
     assert isinstance(engine_27, Decimal), (
         f"VERIFIED-FAIL [{pdf_stem}]: engine-computed box 27 missing or non-Decimal: {engine_27!r}"
     )

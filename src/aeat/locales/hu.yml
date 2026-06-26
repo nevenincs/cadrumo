@@ -540,6 +540,7 @@ application:
     runtime:
       errors:
         active_profile_load_failed: 'Az aktiv bevallasi profil nem toltheto be: %{reason}.'
+        ambiguous_casilla_schema: application.filing.runtime.errors.ambiguous_casilla_schema
         blank_modelo_selection: A kert modellvalasztas nem tartalmazhat ures modellazonositokat.
         filing_year_period_mismatch: application.filing.runtime.errors.filing_year_period_mismatch
         filing_year_period_pair: A filing_year es a period ertekeket egyutt kell megadni.
@@ -679,14 +680,16 @@ application:
         felel meg ebben a revizioban. Elfogadott binding azonositok: %{accepted}.
         Hasznalja a `aeat app modelo bindings list <MODELO>` parancsot az ervenyes
         azonositok listazasahoz.'
-      calculate_casilla_ambiguous: 'A --casilla %{key} több casillához illeszkedik
-        ebben a revízióban: %{candidates}. A pontosításhoz adja meg a PREFIX:NNNNN
-        alakú azonosítót.'
+      calculate_relation_unknown: '--relation %{key} egyik relation azonositonak
+        sem felel meg ebben a revizioban. Elfogadott relation azonositok: %{accepted}.'
+      calculate_casilla_alias_refused: 'A --casilla %{key} nyomtatott mezőszám vagy
+        űrlapszám, nem kanonikus casilla.id. Használja ezt a kanonikus casilla.id
+        értéket: %{accepted}.'
       calculate_casilla_non_numeric: 'A --casilla %{casilla_id} nem numerikus adattipusra
         mutat: %{data_type} (%{label}); hasznaljon --binding opciot vagy profilforrast.'
-      calculate_casilla_unknown: 'A --casilla %{key} nem illeszkedik egyetlen casilla
-        számra sem ebben a revízióban. Érvényes azonosítóhoz futtassa: `aeat app modelo
-        casillas <MODELO>`.'
+      calculate_casilla_unknown: 'A --casilla %{key} nem kanonikus casilla.id ebben
+        a revízióban. Érvényes casilla.id értékekhez futtassa: `aeat app modelo casillas
+        <MODELO>`.'
       calculate_decimal_input_invalid: 'A(z) %{flag} ertek %{key} kulcshoz nem decimalis
         szam: %{value}'
       calculate_m184_share_sum_invalid: 'A 184-es modell tag sorainak reszesedesi
@@ -697,6 +700,9 @@ application:
         kell megadni.
       calculate_sal_inputs_incomplete: A SAL/SLL kulonleges tartalek adatait egyutt
         kell megadni.
+      calculate_semantic_role_ambiguous: 'A modell revíziója egynél több casillát
+        tartalmaz ezzel a szemantikus szereppel: %{semantic_role}; a shortcut nem
+        választhat biztonságosan kanonikus casilla.id értéket.'
       calculate_semantic_role_missing: 'A modell revíziója nem tartalmaz casillát
         ezzel a szemantikus szereppel: %{semantic_role}.'
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
@@ -789,6 +795,10 @@ application:
         reconcile file paranccsal, amíg a bevallás-elemző elérhetővé válik.
       reconcile_no_active_bucket: 'Nincs aktív profilmappa; futtassa: `aeat config
         profile create NÉV` az egyeztetés előtt.'
+      refund_election_not_eligible: A(z) %{modelo} %{filing_year} %{period} modellnel
+        visszariteres (devolver) lett kivalasztva, de visszateritites csak az ev utolso
+        bevallasi idoszakaban kerheto. Vigye at a jovairast (compensar), vagy valassza
+        a visszateritest az utolso idoszakban.
       revision_pick_explicit_id_required: Az explicit revízió kiválasztásához calculation_revision_id
         szükséges.
       revision_pick_id_requires_explicit_selector: A calculation_revision_id csak
@@ -882,6 +892,10 @@ application:
         százalék).
       modelo_200_base_imponible_determinada_cuando_resultado_positivo: A számviteli
         eredmény pozitív, de az adóalap (C552) nulla; ellenőrizze az adóalap meghatározását.
+      modelo_200_bin_stock_cierre_reconcilia_roll_forward: A negatív adóalap záró
+        egyenlege (C671) nem egyezik a göngyölítéssel (nyitó C670 mínusz a tárgyidőszakban
+        felhasznált C547 plusz a tárgyidőszakban keletkezett negatív adóalap); ellenőrizze
+        a jövőbeli időszakokra átvitt egyenleget.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: A
         teljes levonhato AFA (cuota-deducible-total) pozitiv, de a Diseño de Registros
         minden hivatalos szamozott rovata (29 belfoldi folyo, 33 import, 37 kozossegen
@@ -901,7 +915,6 @@ application:
           beallitasaval az `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
           megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
           ki az AEAT kommunikaciohoz.
-      modelo_200_bin_stock_cierre_reconcilia_roll_forward: 'A negatív adóalap záró egyenlege (C671) nem egyezik a göngyölítéssel (nyitó C670 mínusz a tárgyidőszakban felhasznált C547 plusz a tárgyidőszakban keletkezett negatív adóalap); ellenőrizze a jövőbeli időszakokra átvitt egyenleget.'
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa az ''aeat app modelo iva-wallet seed'' parancsot; a javítás
@@ -1014,8 +1027,8 @@ application:
         errors:
           seed_anchor_missing: A paritási forgatókönyv bemenetéhez nincs kitölthető
             táblázatcella.
-          unknown_casilla_numbers: A paritási forgatókönyv olyan mezőszámokra hivatkozik,
-            amelyek nincsenek a nyilvántartási pillanatképben.
+          unknown_casilla_ids: A paritási forgatókönyv olyan casilla.id értékekre
+            hivatkozik, amelyek nincsenek a nyilvántartási pillanatképben.
       records:
         errors:
           address_mismatch: A táblázatcella címe nem egyezik a sorával és oszlopával.
@@ -1526,7 +1539,7 @@ cli:
         evidence_reference_id_help: Az importált bizonyíték stabil hivatkozási azonosítója
           (justificante-szám, CSV-nyilvántartás-azonosító, élő rögzítés azonosítója).
         filing_record_id_help: Stabil benyújtási rekord-azonosító.
-        import_casilla_help: Importált mezőérték CASILLA=DECIMAL szintaxissal (ismételhető;
+        import_casilla_help: Importált mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető;
           legalább egy szükséges).
         import_help: Külsőleg benyújtott bevallás megőrzése alap-benyújtási rekordként,
           importált AEAT-igazolt bizonyítékkal.
@@ -1633,7 +1646,7 @@ cli:
           előtag) alapján.
       project:
         binding_help: Kötési érték KEY=VALUE szintaxissal (ismételhető).
-        casilla_help: Mezőérték CASILLA=DECIMAL szintaxissal (ismételhető).
+        casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető).
         ccaa_help: Autonóm közösség kódja a területi vetítéshez.
         no_m130_revisions: 'Nincs M130-revízió a megadott évre. Először futtasd minden
           negyedévre: `aeat app modelo work calculate --modelo 130 --year %{year}
@@ -1714,9 +1727,8 @@ cli:
           nem lesz.'
         calculation_revision_id_help: Stabil 64 karakteres SHA-256 azonosító egy számítási
           revízióhoz.
-        casilla_help: Mezőérték CASILLA=DECIMAL szintaxissal (ismételhető). A CASILLA
-          elfogadja a mező azonosítóját, a nyilvántartási számot vagy az `aeat app
-          modelo casillas` által megjelenített BOE-n nyomtatott mezőszámot.
+        casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető). A CASILLA_ID
+          az `aeat app modelo casillas` által mutatott kanonikus casilla.id.
         casilla_not_decimal: 'A(z) {key} mező --casilla értéke nem decimális: {value}.'
         causante_ccaa_help: Az örökhagyó autonóm közöségének kódja (IRPF öröklési
           ügyek).
@@ -1785,6 +1797,9 @@ cli:
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
         discard_yes_help: Az eldobási művelet explicit megerősítése.
+        disposition_help: 'A 303-as modell negativ eredmenyenek rendelkezese: compensar
+          (a jovairas atvitele, alapertelmezett) vagy devolver (visszaterites kerese;
+          nem REDEME-adozonal csak az ev utolso bevallasi idoszakaban).'
         dt12_computation_error: 'DT12 számítási hiba: %{message}'
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
@@ -1966,7 +1981,7 @@ cli:
           revízió {requested_revision}. Folytassa a meglévő munkaegységet, dobja el
           explicit módon, vagy adjon meg pontos azonosítót.
         set_not_decimal: 'A --set értékének decimálisnak kell lennie; kapott: {value}.'
-        set_override_help: Javított mezőérték CASILLA=DECIMAL szintaxissal (ismételhető;
+        set_override_help: Javított mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető;
           legalább egy szükséges).
         status_help: Egy munkaegység metaadatainak megjelenítése.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
@@ -3748,7 +3763,7 @@ errors:
       100 tervezet-sémával sem.
     error_calc_sheets_engine: A táblázatexportáló motor feloldhatatlan állapotba került
       az exportálási terv elkészítésekor.
-    error_calc_sheets_parity: A paritás-tesztelési forgatókönyv olyan casilla-számokra
+    error_calc_sheets_parity: A paritás-tesztelési forgatókönyv olyan casilla.id értékekre
       hivatkozik, amelyek nem találhatók a registry pillanatképében.
     error_calc_sheets_record: Egy táblázat-rekordművelet érvénytelen oszlopindex vagy
       hibás A1-cím miatt meghiúsult.
@@ -4202,6 +4217,7 @@ errors:
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
     modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
     modelo_calculate_input: errors.refused.modelo_calculate_input
+    modelo_calculate_relation_input: errors.refused.modelo_calculate_relation_input
     modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
     modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
     modelo_calculation_revision_selector_ambiguous: A számítási revízió választó több
@@ -4361,6 +4377,12 @@ errors:
     refused_modelo_applicability_filter: Ismeretlen alkalmazhatósági szűrőnév szerepel
       a nyilvántartásban. Ez egy nyilvántartás-szerzői hiba; frissítse a szűrő diszpécser
       táblázatot.
+    refused_modelo_refund_account_missing: Visszateritest kertek, de nincs visszateritesi
+      szamla rogzitve; az AEAT nem tud visszateritest fizetni szamla nelkul. Allitson
+      be visszateritesi szamlat, vagy vigye tovabb a kreditet (compensar).
+    refused_modelo_refund_election_not_eligible: Visszateritest kertek olyan idoszakra,
+      ahol nem elerheto; csak az ev utolso bevallasi idoszaka tesz lehetove nem REDEME
+      visszateritest.
     refused_modelo_workflow_gate: A munkafolyamat-kapu elutasította a benyújtás-átmenetet.
       A bevallás nem tekinthető jogilag benyújtottnak.
     refused_no_active_profile: Ehhez a művelethez aktív profil szükséges. Hozzon létre

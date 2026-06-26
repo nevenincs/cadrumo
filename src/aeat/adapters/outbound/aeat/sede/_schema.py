@@ -182,7 +182,13 @@ class ObservedCasillaValue(BaseModel):
 
     casilla_id: CasillaId
     value: str = Field(min_length=1, max_length=4096)
-    source_artefact_kind: Literal["submitted_file", "declaration_pdf", "justificante_pdf", "derived_registry_formula"]
+    source_artefact_kind: Literal[
+        "submitted_file",
+        "declaration_pdf",
+        "justificante_pdf",
+        "derived_registry_formula",
+        "derived_carry_policy",
+    ]
     source_locator: str = Field(min_length=1, max_length=512)
     confidence: float = Field(ge=0, le=1)
     mode: Literal["read"] = "read"

@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -43,6 +44,10 @@ _TX_FILED = "1" * 64
 _TX_VERIFIED = "2" * 64
 _TX_BORRADOR = "3" * 64
 _TX_SHARED = "4" * 64  # touched by both the filed and the verified revision
+_IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
+    "iva.base-imponible",
+    surface="_IVA_BASE_IMPONIBLE_CASILLA",
+)
 
 
 def _hex(seed: str) -> str:
@@ -72,10 +77,10 @@ def _work_unit(*, modelo: str, period: str, revision_seed: str) -> WorkUnit:
 
 
 def _revision(*, work_unit: WorkUnit, state: CalculationRevisionState, txids: tuple[str, ...]) -> CalculationRevision:
-    inputs = {"iva.base-imponible": "1000.00"}
+    inputs = {_IVA_BASE_IMPONIBLE_CASILLA: "1000.00"}
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
-        inputs_snapshot=inputs,
+        input_values_by_casilla_id=inputs,
         binding_overrides={},
         casilla_values={},
         source_transaction_ids=txids,
@@ -91,7 +96,7 @@ def _revision(*, work_unit: WorkUnit, state: CalculationRevisionState, txids: tu
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
         state=state,
-        inputs_snapshot=inputs,
+        input_values_by_casilla_id=inputs,
         source_transaction_ids=txids,
         created_at=_T0,
         updated_at=_T0 + timedelta(hours=2),

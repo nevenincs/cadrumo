@@ -19,7 +19,7 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry import CasillaObservation
+from ...domain.calculations.registry import BindingId, CasillaId, CasillaObservation, RelationId
 from ...domain.modelos._calculation_repository import upsert_calculation_revision
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
@@ -93,12 +93,13 @@ def persist_calculation_revision(
     work_unit_id: str,
     work_unit: WorkUnit,
     work_units: WorkUnitCatalogue,
-    inputs_snapshot: dict[str, str],
-    binding_overrides: dict[str, str],
-    casilla_values: dict[str, Decimal],
+    input_values_by_casilla_id: dict[CasillaId, str],
+    binding_overrides: dict[BindingId, str],
+    relation_overrides: dict[RelationId, str],
+    casilla_values: dict[CasillaId, Decimal],
     source_transaction_ids: tuple[str, ...],
     borrador_snapshot_id: str | None,
-    bindings_sourced_from_borrador: tuple[str, ...],
+    bindings_sourced_from_borrador: tuple[BindingId, ...],
     observations: tuple[CasillaObservation, ...],
     detail_rows: tuple[ModeloDetailRow, ...],
     formula_count: int,
@@ -115,8 +116,9 @@ def persist_calculation_revision(
     """
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot=inputs_snapshot,
+        input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
+        relation_overrides=relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
         borrador_snapshot_id=borrador_snapshot_id,
@@ -147,8 +149,9 @@ def persist_calculation_revision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.BORRADOR,
-        inputs_snapshot=inputs_snapshot,
+        input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
+        relation_overrides=relation_overrides,
         source_transaction_ids=source_transaction_ids,
         borrador_snapshot_id=borrador_snapshot_id,
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
@@ -184,7 +187,7 @@ def persist_calculation_revision(
             "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
             "period": work_unit.period.registry_token,
-            "input_casilla_count": str(len(inputs_snapshot)),
+            "input_casilla_count": str(len(input_values_by_casilla_id)),
             "casilla_count": str(len(casilla_values)),
             "formula_count": str(formula_count),
             "source_transaction_count": str(len(source_transaction_ids)),

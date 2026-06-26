@@ -9,12 +9,18 @@ from __future__ import annotations
 
 import pytest
 import typer
+from pydantic import ValidationError
 
 from ....core import Period
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+_VERIFICATION_FINDING_CASILLA: CasillaId = validated_casilla_id(
+    "0100",
+    surface="_VERIFICATION_FINDING_CASILLA",
+)
 
 # ---------------------------------------------------------------------------
 # filing-record emitter surface — external_evidence + amends_filing_record_id
@@ -741,7 +747,7 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                 severity=ModeloVerificationFindingSeverity.BLOCKING,
-                casilla_id="0100",
+                casilla_id=_VERIFICATION_FINDING_CASILLA,
                 message="cuota repercutida is under-declared",
                 legal_refs=legal,
                 source_refs=sources,
@@ -772,12 +778,12 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
 
 
 def test_verification_report_view_lists_missing_required_casillas() -> None:
-    """`verification-report view` lists each missing required casilla, not just a count.
+    """`verification-report view` lists each missing required casilla id, not just a count.
 
     The verification-reports how-to ("The report says incomplete") promises the
     report lists which required casillas are still missing. This locks the text
-    transport's per-id ``missing_casilla`` lines and the typed JSON
-    ``missing_required_casillas`` list against the bare ``count`` so the page's
+    transport's per-id ``missing_casilla_id`` lines and the typed JSON
+    ``missing_required_casilla_ids`` list against the bare ``count`` so the page's
     "lists which ones" claim cannot silently regress to a count-only view.
     """
     from datetime import UTC, datetime
@@ -807,23 +813,35 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
         verification_report_id=report_id,
         calculation_revision_id=calc_id,
         completeness_status=VerificationCompletenessStatus.INCOMPLETE,
-        missing_required_casillas=missing,
+        missing_required_casilla_ids=missing,
         run_at=run_at,
         verified_by="test-actor",
         granted_verificado_completo=False,
     )
 
-    # Text transport: one ``missing_casilla`` line per id, alongside the count.
+    # Text transport: one ``missing_casilla_id`` line per id, alongside the count.
     lines = _verification_report_lines(report)
-    missing_lines = [line for line in lines if line.startswith("missing_casilla\t")]
+    missing_lines = [line for line in lines if line.startswith("missing_casilla_id\t")]
     assert {line.split("\t", 1)[1] for line in missing_lines} == set(missing)
-    assert f"missing_required_casilla_count\t{len(missing)}" in lines
+    assert f"missing_required_casilla_id_count\t{len(missing)}" in lines
 
     # JSON transport: the typed payload carries the full list, not just the count.
     payload = _verification_report_payload(report)
     result = VerificationReportShowResult.model_validate(payload.model_dump(mode="python"))
     dumped = result.model_dump(mode="json")
-    assert dumped["missing_required_casillas"] == list(missing)
+    assert dumped["missing_required_casilla_ids"] == list(missing)
+
+    with pytest.raises(ValidationError) as raised:
+        VerificationReportShowResult.model_validate(
+            {
+                **dumped,
+                "resolved_casillas": [],
+                "missing_required_casillas": list(missing),
+            },
+        )
+    message = str(raised.value)
+    assert "resolved_casillas" in message
+    assert "missing_required_casillas" in message
 
 
 # ---------------------------------------------------------------------------

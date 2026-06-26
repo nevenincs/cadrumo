@@ -1,11 +1,11 @@
 """Unit tests for :class:`aeat.application.workflow.WorkflowEngine`.
 
-Every test uses real Protocol-conforming test doubles. No imports from
+Every test uses real Protocol-conforming test harness components. No imports from
 ``unittest`` — the project-wide pytest-only mandate applies to this
 suite especially, because the engine *is* the place where composition
 correctness is validated.
 
-The shared :class:`_Fixtures` helper builds a healthy set of doubles
+The shared :class:`_Fixtures` helper builds a healthy set of components
 and lets individual tests override exactly the knob that should
 provoke a bailout.
 
@@ -25,12 +25,11 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
-from typing import cast
 
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.auth import AeatSession
+from ....adapters.outbound.aeat.auth import AeatSession, ClaveMovilSessionDetail
 from ....adapters.outbound.aeat.browser._site_health import SiteHealthState
 from ....adapters.outbound.aeat.browser._site_health_parsers import evaluate_response
 from ....adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot, RemoteNotification
@@ -39,6 +38,7 @@ from ....core import Period
 from ....core.config import Settings
 from ....core.errors import BaseSeverity, SiteHealthError, build_error_envelope
 from ....core.errors._registry import ErrorCategory, ErrorEnvelope
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import (
     IVARegime,
     ModeloDeadline,
@@ -59,10 +59,12 @@ from .. import (
     WorkflowStage,
 )
 from .._errors import UnhandledWorkflowError, WorkflowInputMismatchError
+from .._models import WorkflowStepDetails
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _SEDE_ROOT_URL = aeat_url("sede", "/")
 _NOTIFICATIONS_QUERY_URL = aeat_url("www6", configured_path("sede_paths", "notifications_query"))
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 
 
 def _period(year: int, code: str) -> Period:
@@ -104,7 +106,9 @@ class _ConcreteDraft:
     profile_tax_id: str = "X1234567L"
     schema_version: str = field(default_factory=_registry_schema_version)
     status: object = ModeloDraftStatus.APROBADO
-    values: Mapping[str, str] | Iterable[object] = field(default_factory=lambda: {"01": "1000"})
+    values: Mapping[str, str] | Iterable[object] = field(
+        default_factory=lambda: {str(_M130_INGRESOS_CASILLA): "1000"},
+    )
     findings: tuple[object, ...] = ()
 
 
@@ -234,7 +238,7 @@ class _ConcreteCertificateBundle:
 
 @dataclass
 class _ConcreteInputsProvider:
-    inputs: ModeloInputs = field(default_factory=lambda: {"01": "1000"})
+    inputs: ModeloInputs = field(default_factory=lambda: {_M130_INGRESOS_CASILLA: "1000"})
     raise_exc: BaseException | None = None
 
     def load_inputs(
@@ -315,12 +319,19 @@ class _Fixtures:
         )
 
 
-# An :class:`aeat.adapters.outbound.aeat.auth.AeatSession` is strict-frozen pydantic with a
-# heavy provider_detail discriminator; constructing one fully would
-# pull in unrelated machinery. The engine never inspects the session
-# itself — it only forwards it to the injected source seams — so a
-# typed sentinel is sufficient and keeps the test surface tight.
-_SENTINEL_SESSION = cast(AeatSession, object())
+_WORKFLOW_SESSION = AeatSession(
+    provider_kind=AuthProviderKind.CLAVE_MOVIL,
+    authenticated_at=datetime(2026, 4, 12, 8, 0, tzinfo=UTC),
+    idle_deadline=datetime(2026, 4, 12, 8, 20, tzinfo=UTC),
+    storage_state_path=None,
+    identity_nif="X1234567L",
+    provider_detail=ClaveMovilSessionDetail(
+        dni_nie="X1234567L",
+        used_non_qr_fallback=True,
+        verification_code="ABC",
+        landing_url=_SEDE_ROOT_URL,
+    ),
+)
 
 
 def _fixtures() -> _Fixtures:
@@ -340,7 +351,7 @@ def _fixtures() -> _Fixtures:
         inputs_provider=_ConcreteInputsProvider(),
         settings=Settings(),
         today=date(2026, 4, 12),
-        session=_SENTINEL_SESSION,
+        session=_WORKFLOW_SESSION,
     )
 
 
@@ -460,6 +471,7 @@ class TestAbortReasons:
         assert result.aborted_reason is not WorkflowAbortReason.DEADLINE_PASSED
         deadline_step = next(s for s in result.steps if s.stage is WorkflowStage.COMPUTING_DEADLINES)
         assert deadline_step.success
+        assert isinstance(deadline_step.details, WorkflowStepDetails)
         assert deadline_step.details.get("extemporanea") == "true"
 
     def test_inbox_blocking_requerimiento(self) -> None:
@@ -532,8 +544,9 @@ class TestAbortReasons:
         building_step = next(
             step for step in reversed(result.steps) if step.stage is WorkflowStage.BUILDING_DRAFT and not step.success
         )
-        assert building_step.details is not None
+        assert isinstance(building_step.details, WorkflowStepDetails)
         blocking = building_step.details["blocking_findings"]
+        assert isinstance(blocking, str)
         assert "error:" in blocking
         assert "warning:" in blocking
         assert "blocking findings" in building_step.summary

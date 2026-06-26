@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from ...domain.calculations.registry import RegistrySnapshot
+from ...domain.calculations.registry import BindingId, RegistrySnapshot
 from ._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
@@ -26,7 +26,7 @@ class ProfileSourceResolver:
     def __init__(
         self,
         *,
-        caller_binding_ids: Iterable[str] = (),
+        caller_binding_ids: Iterable[BindingId] = (),
         registry_snapshot: RegistrySnapshot | None = None,
         profile_record: object | None = None,
     ) -> None:

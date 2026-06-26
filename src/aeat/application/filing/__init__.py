@@ -19,7 +19,16 @@ from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ...core.resources import resources as _resources
 from ...core.time import now as _utc_now
 from ...domain.calculations.registry import (
+    BindingId as _BindingId,
+)
+from ...domain.calculations.registry import (
+    CasillaId as _CasillaId,
+)
+from ...domain.calculations.registry import (
     InputKind as _InputKind,
+)
+from ...domain.calculations.registry import (
+    LegalRefId as _LegalRefId,
 )
 from ...domain.calculations.registry import (
     RegistrySnapshot as _RegistrySnapshot,
@@ -34,7 +43,19 @@ from ...domain.calculations.registry import (
     RegistryValidationError as _RegistryValidationError,
 )
 from ...domain.calculations.registry import (
+    RelationId as _RelationId,
+)
+from ...domain.calculations.registry import (
+    SourceRefId as _SourceRefId,
+)
+from ...domain.calculations.registry import (
     calculate_registry_snapshot as _calculate_registry_snapshot,
+)
+from ...domain.calculations.registry import (
+    casilla_metadata_aliases as _casilla_metadata_aliases,
+)
+from ...domain.calculations.registry import (
+    declared_casilla_ids as _declared_casilla_ids,
 )
 from ...domain.calculations.registry import (
     enum_consumed_binding_ids as _enum_consumed_binding_ids,
@@ -145,7 +166,7 @@ def build_draft(
             f"schema provider version {collection.schema_version!r} does not match registry snapshot "
             f"{snapshot.revision.id!r}",
         )
-    casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
+    casilla_ids = set(_declared_casilla_ids(snapshot.revision))
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     calculation_binding_ids = _formula_binding_ids(snapshot) | _bound_casilla_binding_ids(snapshot)
     enum_binding_ids = _enum_consumed_binding_ids(snapshot.revision)
@@ -154,22 +175,26 @@ def build_draft(
     # Date and relation ids ride dedicated engine channels; never coerce their
     # values through the Decimal binding channel (an ISO date is not a Decimal).
     decimal_binding_ids = calculation_binding_ids - enum_binding_ids - date_binding_ids - relation_ids
+    _validate_filing_input_keys(
+        inputs,
+        accepted_ids=casilla_ids | set(bindings) | relation_ids,
+        snapshot=snapshot,
+    )
     casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids)
     binding_inputs = _decimal_inputs_for_ids(inputs, decimal_binding_ids)
     enum_binding_inputs = _string_inputs_for_ids(inputs, enum_binding_ids)
     # Date bindings (e.g. taxpayer birth_date for age_at_year_end) and period
     # relations (e.g. prior pagos fraccionados) travel on dedicated engine
-    # channels, not the Decimal binding channel. They are persisted on the
-    # calculation revision's ``binding_overrides`` snapshot so a verify/file
-    # replay can reconstruct the identical draft without re-resolving the live
-    # profile; extract them here by their registry id-sets and route them.
+    # channels, not the Decimal binding channel. Replay callers merge the
+    # calculation revision's BindingId and RelationId snapshots into this flat
+    # input map; extract them here by their registry id-sets and route them.
     date_binding_inputs = _date_inputs_for_ids(inputs, date_binding_ids)
     relation_inputs = _decimal_inputs_for_ids(inputs, relation_ids)
     filing_binding_values = _filing_binding_values(
         inputs,
         bindings,
         enum_binding_ids,
-        frozenset(date_binding_ids | relation_ids),
+        frozenset(date_binding_ids),
     )
     try:
         result = _calculate_registry_snapshot(
@@ -183,33 +208,35 @@ def build_draft(
         )
     except _RegistryValidationError as exc:
         raise ModeloBuilderError(f"registry calculation failed: {exc}") from exc
-    entries = {entry.target: entry for entry in result.entries}
-    schema_ids = {casilla.id for casilla in collection.all()}
-    # A computed casilla's formula_trace documents the static casilla inputs its
+    entries = {entry.target_casilla_id: entry for entry in result.entries}
+    # A computed casilla's formula_trace_casilla_ids documents the static casilla inputs its
     # formula declares (the validator checks the trace against
-    # ``CasillaSchema.formula_inputs``). It must NOT be the branch-dependent
+    # ``CasillaSchema.formula_input_casilla_ids``). It must NOT be the branch-dependent
     # runtime operand set: ``if_then_else`` short-circuits, so a conditional
-    # formula (e.g. M303 ``iva.prorrata-porcentaje``) emits operand_refs for only
-    # the branch actually taken — a subset of the declared inputs — which the
-    # formula-divergence rule then rejects, leaving the draft in BORRADOR. Read
-    # the deterministic declared input set from the schema collection instead.
-    formula_inputs_by_casilla = {
-        schema.id: tuple(schema.formula_inputs) for schema in collection.all() if schema.formula is not None
+    # formula (e.g. M303 ``iva.prorrata-porcentaje``) emits operand_casilla_refs
+    # for only the branch actually taken — a subset of the declared inputs —
+    # which the formula-divergence rule then rejects, leaving the draft in
+    # BORRADOR. Read the deterministic declared input set from the schema
+    # collection instead.
+    formula_input_casilla_ids_by_casilla = {
+        schema.casilla_id: tuple(schema.formula_input_casilla_ids)
+        for schema in collection.all()
+        if schema.formula is not None
     }
     values: list[ModeloValue] = []
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind == _InputKind.COMPUTED:
             entry = entries[casilla.id]
-            trace = formula_inputs_by_casilla.get(casilla.id)
+            trace = formula_input_casilla_ids_by_casilla.get(casilla.id)
             if trace is None:
-                trace = tuple(ref for ref in entry.operand_refs if ref in schema_ids)
+                trace = entry.operand_casilla_refs
             values.append(
                 ModeloValue(
                     casilla_id=casilla.id,
                     value=result.values[casilla.id],
                     kind=ModeloValueKind.COMPUTED,
                     source=f"registry formula {entry.formula_id}",
-                    formula_trace=trace,
+                    formula_trace_casilla_ids=trace,
                 ),
             )
             continue
@@ -322,14 +349,14 @@ def _filing_period_date(period: _Period) -> date:
     return date(filing_year, 12, 31)
 
 
-def _formula_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:
-    binding_ids: set[str] = set()
+def _formula_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
+    binding_ids: set[_BindingId] = set()
     for formula in snapshot.revision.formulas:
         _collect_formula_binding_ids(formula.expression, binding_ids)
     return binding_ids
 
 
-def _bound_casilla_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:
+def _bound_casilla_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
     return {
         casilla.binding
         for casilla in snapshot.revision.casillas
@@ -337,7 +364,7 @@ def _bound_casilla_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:
     }
 
 
-def _date_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:
+def _date_binding_ids(snapshot: _RegistrySnapshot) -> set[_BindingId]:
     """Collect every date_binding id referenced by the revision's formulas.
 
     Date bindings (date-valued profile facts such as ``birth_date``,
@@ -350,7 +377,7 @@ def _date_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:
     return set(_revision_date_binding_ids(snapshot.revision))
 
 
-def _relation_ids(snapshot: _RegistrySnapshot) -> set[str]:
+def _relation_ids(snapshot: _RegistrySnapshot) -> set[_RelationId]:
     """Collect the cross-model relation ids declared on the revision.
 
     Period relations (e.g. prior pagos fraccionados aggregated into the
@@ -359,14 +386,53 @@ def _relation_ids(snapshot: _RegistrySnapshot) -> set[str]:
     persisted inputs by this id-set; relations not present in the inputs
     are simply absent from the resolved relation map.
     """
-    return {str(relation.id) for relation in snapshot.revision.relations}
+    return {relation.id for relation in snapshot.revision.relations}
 
 
-def _date_inputs_for_ids(inputs: ModeloInputs, input_ids: set[str]) -> dict[str, date]:
+def _validate_filing_input_keys(
+    inputs: ModeloInputs,
+    *,
+    accepted_ids: set[_BindingId | _CasillaId | _RelationId],
+    snapshot: _RegistrySnapshot,
+) -> None:
+    """Reject input keys that are not canonical registry input ids."""
+    non_string = tuple(repr(key) for key in inputs if not isinstance(key, str))
+    if non_string:
+        raise ModeloBuilderError(
+            "filing input keys must be string registry ids; "
+            f"non-string keys are not accepted: {', '.join(sorted(non_string))}",
+        )
+
+    padded = tuple(key for key in inputs if key != key.strip())
+    if padded:
+        raise ModeloBuilderError(
+            "filing input keys must be exact registry ids without leading or trailing whitespace: "
+            f"{', '.join(repr(key) for key in sorted(padded))}",
+        )
+
+    aliases = _casilla_metadata_aliases(snapshot.revision)
+    supplied_aliases = tuple(key for key in inputs if key in aliases)
+    if supplied_aliases:
+        details = "; ".join(f"{key!r} -> {', '.join(aliases[key])}" for key in sorted(supplied_aliases))
+        raise ModeloBuilderError(
+            "filing input keys must use canonical casilla.id values; "
+            f"casilla metadata aliases are not accepted: {details}",
+        )
+
+    unknown = tuple(key for key in inputs if key not in accepted_ids)
+    if unknown:
+        raise ModeloBuilderError(
+            "filing input keys must be declared casilla.id, binding, or relation ids for "
+            f"registry:{snapshot.modelo.id}:{snapshot.revision.id}; unknown keys: "
+            f"{', '.join(repr(key) for key in sorted(unknown))}",
+        )
+
+def _date_inputs_for_ids(inputs: ModeloInputs, input_ids: set[_BindingId]) -> dict[_BindingId, date]:
     """Extract ISO-date-shaped inputs for ``input_ids`` as ``date`` values."""
-    date_inputs: dict[str, date] = {}
-    for binding_id, value in inputs.items():
-        if binding_id not in input_ids or value is None:
+    date_inputs: dict[_BindingId, date] = {}
+    for binding_id in input_ids:
+        value = inputs.get(binding_id)
+        if value is None:
             continue
         if isinstance(value, date):
             date_inputs[binding_id] = value
@@ -382,31 +448,34 @@ def _date_inputs_for_ids(inputs: ModeloInputs, input_ids: set[str]) -> dict[str,
     return date_inputs
 
 
-def _collect_formula_binding_ids(expression: object, binding_ids: set[str]) -> None:
+def _collect_formula_binding_ids(expression: object, binding_ids: set[_BindingId]) -> None:
     binding = getattr(expression, "binding", None)
     if binding is not None:
-        binding_ids.add(str(binding))
+        if not isinstance(binding, str):
+            raise ModeloBuilderError(f"formula binding reference must be a canonical binding id string: {binding!r}")
+        binding_ids.add(binding)
     for arg in getattr(expression, "args", ()):
         _collect_formula_binding_ids(arg, binding_ids)
 
 
-def _decimal_inputs_for_ids(inputs: ModeloInputs, input_ids: set[str]) -> dict[str, Decimal]:
-    decimal_inputs: dict[str, Decimal] = {}
-    for casilla_id, value in inputs.items():
-        if casilla_id not in input_ids:
-            continue
+def _decimal_inputs_for_ids[InputId: str](
+    inputs: ModeloInputs,
+    input_ids: set[InputId],
+) -> dict[InputId, Decimal]:
+    decimal_inputs: dict[InputId, Decimal] = {}
+    for input_id in input_ids:
+        value = inputs.get(input_id)
         if value is None:
             continue
-        decimal_inputs[casilla_id] = _decimal_input(casilla_id, value)
+        decimal_inputs[input_id] = _decimal_input(input_id, value)
     return decimal_inputs
 
 
-def _string_inputs_for_ids(inputs: ModeloInputs, input_ids: frozenset[str]) -> dict[str, str]:
+def _string_inputs_for_ids(inputs: ModeloInputs, input_ids: frozenset[_BindingId]) -> dict[_BindingId, str]:
     # Enum-channel bindings carry string values; skip None and non-string entries.
-    string_inputs: dict[str, str] = {}
-    for binding_id, value in inputs.items():
-        if binding_id not in input_ids:
-            continue
+    string_inputs: dict[_BindingId, str] = {}
+    for binding_id in input_ids:
+        value = inputs.get(binding_id)
         if value is None:
             continue
         if not isinstance(value, str):
@@ -415,7 +484,9 @@ def _string_inputs_for_ids(inputs: ModeloInputs, input_ids: frozenset[str]) -> d
     return string_inputs
 
 
-def _binding_provenance(binding: object) -> tuple[_BindingSourceKind, tuple[str, ...], tuple[str, ...]]:
+def _binding_provenance(
+    binding: object,
+) -> tuple[_BindingSourceKind, tuple[_LegalRefId, ...], tuple[_SourceRefId, ...]]:
     """Extract the typed source kind and grounding from a binding definition.
 
     The ``binding`` is the registry ``DataBindingDefinition`` already held by
@@ -439,9 +510,9 @@ def _binding_provenance(binding: object) -> tuple[_BindingSourceKind, tuple[str,
 
 def _filing_binding_values(
     inputs: ModeloInputs,
-    bindings: Mapping[str, object],
-    enum_binding_ids: frozenset[str] = frozenset(),
-    non_decimal_binding_ids: frozenset[str] = frozenset(),
+    bindings: Mapping[_BindingId, object],
+    enum_binding_ids: frozenset[_BindingId] = frozenset(),
+    non_decimal_binding_ids: frozenset[_BindingId] = frozenset(),
 ) -> list[ModeloBindingValue]:
     values: list[ModeloBindingValue] = []
     for binding_id, binding in bindings.items():
@@ -497,7 +568,7 @@ def _filing_binding_values(
     return values
 
 
-def _binding_row_index(binding_id: str, row_key: object) -> int:
+def _binding_row_index(binding_id: _BindingId, row_key: object) -> int:
     if isinstance(row_key, bool):
         raise ModeloBuilderError(f"binding input {binding_id!r} row key must be a positive integer")
     if isinstance(row_key, int):
@@ -514,7 +585,7 @@ def _binding_row_index(binding_id: str, row_key: object) -> int:
     return index
 
 
-def _binding_input(binding_id: str, value: object, binding: object) -> ModeloScalar:
+def _binding_input(binding_id: _BindingId, value: object, binding: object) -> ModeloScalar:
     selector = getattr(binding, "selector", None)
     raw_data_type = selector.get("data_type") if isinstance(selector, Mapping) else getattr(selector, "data_type", None)
     data_type = str(raw_data_type or "decimal")

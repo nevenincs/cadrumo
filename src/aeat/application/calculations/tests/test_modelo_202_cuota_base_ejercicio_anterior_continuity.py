@@ -29,7 +29,7 @@ arithmetic against itself.
 
 The 1P (April) instalment binds two years back (``filing_year_delta = -2``)
 because the prior-year M200's July deadline has not elapsed in April. That
-coverage is guarded explicitly below by seeding historical M200 observations:
+coverage is guarded explicitly below by seeding modelled M200 observations:
 the resolver must bind the target year minus two and must not silently use the
 nearer prior year. The two-year enrollment still exercises the 2P cross-year
 hook, which is the >=2-distinct-renta-years gate contract.
@@ -45,13 +45,16 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
+    RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
+from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -63,7 +66,20 @@ _MODELO_200 = "200"
 _MODELO_202 = "202"
 
 #: The M200 source casilla the 40.2 base copies (cuota líquida).
-_M200_CUOTA_LIQUIDA = "DP200014B:00592"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M202 continuity fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M200_CUOTA_LIQUIDA_CASILLA: CasillaId = _casilla_id("DP200014B:00592")
+_M202_BASE_CASILLA: CasillaId = _casilla_id("01")
+_M202_DEDUCCIONES_CASILLA: CasillaId = _casilla_id("02")
+_M202_A_INGRESAR_CASILLA: CasillaId = _casilla_id("03")
+_M202_1P_PAGO_CASILLA: CasillaId = _casilla_id("34")
 
 #: The statutory modalidad 40.2 rate as declared in the registry parameter
 #: ``is.modalidad_cuota.percentage`` — grounded in LIS art. 40.2 via the
@@ -103,7 +119,7 @@ _M200_CUOTA_BY_SOURCE_YEAR: dict[int, Decimal] = {
     2025: Decimal("48000.00"),
     2026: Decimal("63000.00"),
 }
-_TARGET_YEAR_1P = 2025
+_TARGET_YEAR_1P = 2026
 _M200_1P_SOURCE_TWO_BACK = Decimal("37000.00")
 _M200_1P_NEAR_PRIOR = Decimal("99000.00")
 
@@ -117,7 +133,12 @@ def _seed_m200_cuota_liquida(*, source_year: int, cuota: Decimal, obs_repo: Calc
             modelo=_MODELO_200,
             filing_year=source_year,
             period="0A",
-            observations=(CasillaObservation(casilla_id=_M200_CUOTA_LIQUIDA, value=cuota),),
+            observations=registry_grounded_observations(
+                modelo=_MODELO_200,
+                filing_year=source_year,
+                period="0A",
+                casilla_values={_M200_CUOTA_LIQUIDA_CASILLA: cuota},
+            ),
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,
@@ -143,14 +164,14 @@ def _seed_m202_1p(
     separately.
     """
     obs_repo.save_observation(
-        RegistryModeloObservation(
+        registry_grounded_modelo_observation(
             modelo=_MODELO_202,
             filing_year=filing_year,
             period="1P",
-            observations=(
-                CasillaObservation(casilla_id="01", value=base),
-                CasillaObservation(casilla_id="34", value=pago),
-            ),
+            casilla_values={
+                _M202_BASE_CASILLA: base,
+                _M202_1P_PAGO_CASILLA: pago,
+            },
         ),
         source_kind="app_filing",
         captured_at=_CLOCK,
@@ -160,7 +181,7 @@ def _seed_m202_1p(
 def _calculate_202_2p(
     *,
     filing_year: int,
-    relation_values: dict[str, Decimal],
+    relation_values: dict[RelationId, Decimal],
     casilla_02: Decimal,
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL M202 2P calculation from the resolved prior-cuota relation."""
@@ -168,10 +189,10 @@ def _calculate_202_2p(
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="2P")
     binding_values = {**relation_binding_values}
     inputs = {
-        **resolve_bound_casilla_inputs(snapshot.revision, binding_values),
+        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         # Casilla 02 (deductions/withholdings of the period) is a manual input;
         # zero keeps the 03 wiring assertion a clean 18% of the bound base.
-        "02": casilla_02,
+        _M202_DEDUCCIONES_CASILLA: casilla_02,
     }
     result = calculate_registry_snapshot(
         snapshot,
@@ -188,7 +209,7 @@ def _resolve_202_relations(
     filing_year: int,
     period: str = "2P",
     obs_repo: CalculationObservationRepository,
-) -> dict[str, Decimal]:
+) -> dict[RelationId, Decimal]:
     snapshot = resources().modelos.authority.snapshot(_MODELO_202, filing_year=filing_year, period=period)
     prefill = resolve_relations_from_local_store(snapshot, repository=obs_repo)
     return {item.relation: item.value for item in prefill.values if item.value is not None}
@@ -232,7 +253,7 @@ def test_modelo_202_2p_base_resolves_from_prior_year_m200_cuota(tmp_path: Path) 
         _seed_m202_1p(filing_year=_TARGET_YEAR_N, pago=Decimal("5000.00"), base=Decimal("48000.00"), obs_repo=obs_repo)
         resolved = _resolve_202_relations(filing_year=_TARGET_YEAR_N, obs_repo=obs_repo)
         result, _ = _calculate_202_2p(filing_year=_TARGET_YEAR_N, relation_values=resolved, casilla_02=Decimal("0"))
-    assert result.values["01"] == _M200_CUOTA_BY_SOURCE_YEAR[2025]
+    assert result.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2025]
 
 
 def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(tmp_path: Path) -> None:
@@ -276,10 +297,10 @@ def test_modelo_202_2p_a_ingresar_recomputes_from_bound_base(tmp_path: Path) -> 
     # Wiring assertion: 03 = registry_rate × 01 (with casilla 02 = 0).
     # The rate comes from the real snapshot, not from this test's author.
     expected_03 = (_M200_CUOTA_BY_SOURCE_YEAR[2025] * registry_rate).quantize(Decimal("0.01"))
-    assert result.values["03"] == expected_03, (
+    assert result.values[_M202_A_INGRESAR_CASILLA] == expected_03, (
         f"casilla 03 must equal registry_rate ({registry_rate}) × casilla 01 "
         f"({_M200_CUOTA_BY_SOURCE_YEAR[2025]}) = {expected_03}; "
-        f"got {result.values['03']}"
+        f"got {result.values[_M202_A_INGRESAR_CASILLA]}"
     )
 
 
@@ -329,8 +350,8 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path) -> None:
 
     # Wiring invariant: each target year's 2P base equals the immediately prior
     # M200 cuota líquida, year-isolated.
-    assert result_n.values["01"] == _M200_CUOTA_BY_SOURCE_YEAR[2025]
-    assert result_n1.values["01"] == _M200_CUOTA_BY_SOURCE_YEAR[2026]
+    assert result_n.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2025]
+    assert result_n1.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2026]
 
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_TARGET_YEAR_N, _TARGET_YEAR_N_PLUS_1)

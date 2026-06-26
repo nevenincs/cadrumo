@@ -65,7 +65,6 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
-    CasillaObservation,
     RegistryModeloObservation,
     validated_casilla_id,
 )
@@ -73,6 +72,7 @@ from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations._observations_repository import CalculationObservationRepository
 from .. import (
@@ -142,7 +142,12 @@ def _seed_m303_compensacion_quarters(*, obs_repo: CalculationObservationReposito
                 modelo="303",
                 filing_year=_YEAR,
                 period=period,
-                observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casillas.items()),
+                observations=registry_grounded_observations(
+                    modelo="303",
+                    filing_year=_YEAR,
+                    period=period,
+                    casilla_values=casillas,
+                ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,

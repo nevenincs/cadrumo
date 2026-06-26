@@ -6,10 +6,16 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core.i18n import tr
+from ...domain.calculations.registry import CasillaId
+from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
+)
+from ._semantic_role_resolution import (
+    AmbiguousSemanticRoleCasillaError,
+    casilla_id_for_unique_revision_semantic_role,
 )
 
 _DT12_TRABAJO_INGRESO_ROLE = "irpf_rendimiento_trabajo_importe_integro_dinerario"
@@ -19,17 +25,14 @@ _DT12_LARGE_TRABAJO_THRESHOLD = Decimal("20000")
 
 def _dt12_reduccion_advisory_finding(
     revision: object,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
 ) -> ModeloVerificationFinding | None:
     """Warn when large trabajo income is present but no DT12 reduction is declared."""
-    ingreso_id: str | None = None
-    reduccion_id: str | None = None
-    for casilla in getattr(revision, "casillas", ()):
-        role = getattr(casilla, "semantic_role", None)
-        if role == _DT12_TRABAJO_INGRESO_ROLE:
-            ingreso_id = str(casilla.id)
-        elif role == _DT12_TRABAJO_REDUCCION_ROLE:
-            reduccion_id = str(casilla.id)
+    try:
+        ingreso_id = casilla_id_for_unique_revision_semantic_role(revision, _DT12_TRABAJO_INGRESO_ROLE)
+        reduccion_id = casilla_id_for_unique_revision_semantic_role(revision, _DT12_TRABAJO_REDUCCION_ROLE)
+    except AmbiguousSemanticRoleCasillaError as exc:
+        raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
 
     if ingreso_id is None or reduccion_id is None:
         return None

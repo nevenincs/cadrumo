@@ -26,12 +26,13 @@ a :class:`ValidatedRegistryAuthority` loaded from the configured registry root.
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
-from typing import Protocol
+from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field
 
@@ -55,6 +56,7 @@ from ...domain.calculations.registry import (
     SourceRefId,
     ValidatedRegistryAuthority,
     expression_casilla_refs,
+    revision_reference_identity_failures,
 )
 from ...domain.filing import CasillaCollection, CasillaSchema, ModeloBuilderError
 
@@ -95,11 +97,11 @@ class RegistryCasillaSchema(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    id: CasillaId
+    casilla_id: CasillaId
     value_type: str
     required: bool
     formula: FormulaId | None
-    formula_inputs: tuple[CasillaId, ...]
+    formula_input_casilla_ids: tuple[CasillaId, ...]
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
     min_value: Decimal | None = None
@@ -114,14 +116,47 @@ class RegistryCasillaCollection:
     casillas: tuple[RegistryCasillaSchema, ...]
     schema_version: str
 
+    def __post_init__(self) -> None:
+        """Reject ambiguous or dangling casilla schema references at construction."""
+        ids = tuple(casilla.casilla_id for casilla in self.casillas)
+        duplicates = tuple(sorted(casilla_id for casilla_id, count in Counter(ids).items() if count > 1))
+        if duplicates:
+            raise ModeloBuilderError(
+                "runtime casilla schema contains duplicate casilla.id values; registry projection is ambiguous",
+                translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
+                context={"schema_version": self.schema_version, "casilla_ids": ",".join(duplicates)},
+            )
+
+        known_ids = frozenset(ids)
+        dangling_formula_input_casilla_ids = {
+            casilla.casilla_id: tuple(
+                input_id for input_id in casilla.formula_input_casilla_ids if input_id not in known_ids
+            )
+            for casilla in self.casillas
+            if casilla.formula_input_casilla_ids
+        }
+        dangling_formula_input_casilla_ids = {
+            casilla_id: missing for casilla_id, missing in dangling_formula_input_casilla_ids.items() if missing
+        }
+        if dangling_formula_input_casilla_ids:
+            details = "; ".join(
+                f"{casilla_id}: {','.join(missing)}"
+                for casilla_id, missing in sorted(dangling_formula_input_casilla_ids.items())
+            )
+            raise ModeloBuilderError(
+                "runtime casilla schema formula inputs must reference canonical casilla.id values in the same schema",
+                translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
+                context={"schema_version": self.schema_version, "casilla_ids": details},
+            )
+
     def __iter__(self) -> object:
         """Iterate over the contained :class:`RegistryCasillaSchema` instances."""
         return iter(self.casillas)
 
-    def get(self, casilla_id: str) -> CasillaSchema | None:
+    def get(self, casilla_id: CasillaId) -> CasillaSchema | None:
         """Return the :class:`CasillaSchema` for ``casilla_id``, or ``None`` if absent."""
         for casilla in self.casillas:
-            if casilla.id == casilla_id:
+            if casilla.casilla_id == casilla_id:
                 return casilla
         return None
 
@@ -146,7 +181,7 @@ class RegistryModeloSubview:
     source_ref_ids: tuple[str, ...]
     extraction_profile_ids: tuple[str, ...]
     verification_expectation_ids: tuple[str, ...]
-    reconciliation_total_casillas: Mapping[str, str]
+    reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId]
     export_layout_ids: tuple[str, ...]
     export_layouts: tuple[ExportLayoutDefinition, ...]
     application_link_ids: tuple[str, ...]
@@ -433,21 +468,37 @@ def _current_provider_revision(modelo: ModeloDefinition) -> ModeloRevision:
 def _collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaCollection:
     modelo = snapshot.modelo
     revision = snapshot.revision
-    casillas: dict[str, RegistryCasillaSchema] = {}
+    schema_version = f"registry:{modelo.id}:{revision.id}"
+    identity_failures = revision_reference_identity_failures(f"runtime schema {schema_version}", revision)
+    if identity_failures:
+        raise ModeloBuilderError(
+            "runtime schema revision identity is ambiguous; registry projection cannot continue:\n"
+            + "\n".join(f" - {failure}" for failure in identity_failures),
+            translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
+            context={
+                "schema_version": schema_version,
+                "modelo": modelo.id,
+                "revision_id": revision.id,
+                "filing_year": snapshot.filing_year,
+                "period": snapshot.period,
+                "casilla_ids": "; ".join(identity_failures),
+            },
+        )
     formulas = {formula.id: formula for formula in revision.formulas}
-    for casilla in revision.casillas:
-        casillas[casilla.id] = _casilla_schema(casilla, formulas)
+    casillas = tuple(
+        sorted((_casilla_schema(casilla, formulas) for casilla in revision.casillas), key=lambda c: c.casilla_id),
+    )
     return RegistryCasillaCollection(
-        casillas=tuple(casillas[key] for key in sorted(casillas)),
-        schema_version=f"registry:{modelo.id}:{revision.id}",
+        casillas=casillas,
+        schema_version=schema_version,
     )
 
 
 def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
-    reconciliation_total_casillas = {
+    reconciliation_total_casilla_ids = {
         kind: casilla_id
         for expectation in snapshot.revision.verification_expectations
-        for kind, casilla_id in expectation.reconciliation_totals.items()
+        for kind, casilla_id in expectation.reconciliation_total_casilla_ids.items()
     }
     return RegistryModeloSubview(
         modelo_id=snapshot.modelo.id,
@@ -459,7 +510,7 @@ def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
         source_ref_ids=tuple(sorted(snapshot.sources)),
         extraction_profile_ids=tuple(sorted(snapshot.extraction_profiles)),
         verification_expectation_ids=tuple(sorted(snapshot.verification_expectations)),
-        reconciliation_total_casillas=dict(sorted(reconciliation_total_casillas.items())),
+        reconciliation_total_casilla_ids=dict(sorted(reconciliation_total_casilla_ids.items())),
         export_layout_ids=tuple(sorted(layout.id for layout in snapshot.revision.export_layouts)),
         export_layouts=tuple(sorted(snapshot.revision.export_layouts, key=lambda layout: layout.id)),
         application_link_ids=tuple(sorted(snapshot.application_links)),
@@ -471,21 +522,21 @@ def _casilla_schema(
     casilla: CasillaDefinition,
     formulas: dict[str, FormulaDefinition],
 ) -> RegistryCasillaSchema:
-    formula_inputs: tuple[CasillaId, ...] = ()
+    formula_input_casilla_ids: tuple[CasillaId, ...] = ()
     if casilla.formula is not None:
         formula = formulas[casilla.formula]
-        formula_inputs = tuple(dict.fromkeys(expression_casilla_refs(formula.expression)))
+        formula_input_casilla_ids = tuple(dict.fromkeys(expression_casilla_refs(formula.expression)))
     min_value: Decimal | None = None
     max_value: Decimal | None = None
     if casilla.constraints is not None:
         min_value = casilla.constraints.min_value
         max_value = casilla.constraints.max_value
     return RegistryCasillaSchema(
-        id=casilla.id,
+        casilla_id=casilla.id,
         value_type=_value_type(casilla.data_type),
         required=casilla.required,
         formula=casilla.formula,
-        formula_inputs=formula_inputs,
+        formula_input_casilla_ids=formula_input_casilla_ids,
         legal_refs=casilla.legal_refs,
         source_refs=casilla.source_refs,
         min_value=min_value,

@@ -15,7 +15,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ..core import read_toml
+from ..core import CasillaId, read_toml
 from ..core.errors import AeatError
 from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.resources import bundled_path
@@ -105,7 +105,7 @@ class ModeloLocaleInventoryKey(BaseModel):
     scope: ModeloLocaleScope
     field: ModeloLocaleFieldKind
     key: str = Field(min_length=1)
-    source_casilla_id: str = Field(min_length=1)
+    source_casilla_id: CasillaId
     source_continuidad_id: str | None = Field(default=None, min_length=1)
     official_label: str = Field(min_length=1)
 

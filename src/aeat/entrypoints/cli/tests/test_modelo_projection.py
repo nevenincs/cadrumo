@@ -56,7 +56,7 @@ import pytest
 
 from ....application.user_profile._repository import UserProfileLifecycleRepository
 from ....core.resources import resources
-from ....domain.calculations.registry import calculate_registry_snapshot
+from ....domain.calculations.registry import CasillaId, calculate_registry_snapshot, validated_casilla_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
@@ -85,18 +85,18 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
     engine_result = calculate_registry_snapshot(
         m130_snapshot,
         inputs={
-            "01": Decimal("10000.00"),
+            _M130_INGRESOS_CASILLA: Decimal("10000.00"),
             # Casilla 02 (gastos) is no longer a manual input (it is bound/computed);
             # it resolves to 0 here with no gastos source, so casilla 03 = 01.
             # Casilla 05 (pagos fraccionados anteriores) is a previous-filing-bound
             # carry; at 1T its expanding span is empty so the engine materialises it
             # as the absent-by-design zero. Supplying it as a raw input is now
             # smuggling past the previous-filing binding and is rejected by the guard.
-            "06": Decimal("0"),
-            "08": Decimal("0"),
-            "10": Decimal("0"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_RETENCIONES_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
         date_context={"filing_period": date(2026, 3, 31)},
         binding_values={
@@ -108,7 +108,7 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
     # The project verb builds casilla_observations from engine_result.entries.
     casilla_observations = [
         {
-            "casilla_id": entry.target,
+            "casilla_id": entry.target_casilla_id,
             "value": str(entry.value),
             "formula_id": entry.formula_id,
             "legal_refs": list(entry.legal_refs),
@@ -118,9 +118,12 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
     ]
 
     assert len(casilla_observations) > 0, "M130 must produce formula-computed entries"
-    obs_by_id = {obs["casilla_id"]: obs for obs in casilla_observations}
+    obs_by_id = {
+        validated_casilla_id(obs["casilla_id"], surface="project payload casilla observation id"): obs
+        for obs in casilla_observations
+    }
 
-    for casilla_id in ("03", "19"):
+    for casilla_id in (_M130_RENDIMIENTO_NETO_CASILLA, _M130_RESULTADO_FINAL_CASILLA):
         obs = obs_by_id.get(casilla_id)
         assert obs is not None, f"computed casilla {casilla_id!r} must be in casilla_observations"
         assert obs["formula_id"], f"casilla {casilla_id!r} must carry formula_id"
@@ -133,6 +136,38 @@ def test_proyecto_casilla_observations_carry_provenance() -> None:
 # ---------------------------------------------------------------------------
 
 _PROFILE_ID = "m130-projection-test-profile"
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id("03", surface="_M130_RENDIMIENTO_NETO_CASILLA")
+_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_M130_AGRARIAN_VOLUME_CASILLA")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
+_M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
+_M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_FINAL_CASILLA")
+_M100_RENDIMIENTO_NETO_PROJECTED_CASILLA: CasillaId = validated_casilla_id(
+    "0171",
+    surface="_M100_RENDIMIENTO_NETO_PROJECTED_CASILLA",
+)
+_M100_CUOTA_INTEGRA_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
+    "0545",
+    surface="_M100_CUOTA_INTEGRA_ESTATAL_CASILLA",
+)
+_M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
+    "0546",
+    surface="_M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA",
+)
+_M100_CUOTA_LIQUIDA_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
+    "0595",
+    surface="_M100_CUOTA_LIQUIDA_ESTATAL_CASILLA",
+)
+_M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
+    "0596",
+    surface="_M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA",
+)
+_M100_CUOTA_RESULTANTE_CASILLA: CasillaId = validated_casilla_id(
+    "0597",
+    surface="_M100_CUOTA_RESULTANTE_CASILLA",
+)
 
 # Per-quarter incremental M130 income: one 12.000 cobro per quarter. Because
 # M130 casilla 01 is the year-to-date cumulative source window, the four quarters
@@ -371,15 +406,17 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         quarter_payload = _payload(calc_result.output)
         assert "casilla_values" in quarter_payload, calc_result.output
         # casilla 03 is the cumulative (year-to-date) rendimiento neto.
-        assert Decimal(quarter_payload["casilla_values"]["03"]) == _CUMULATIVE_RENDIMIENTO[period], (
+        rendimiento_key = str(_M130_RENDIMIENTO_NETO_CASILLA)
+        assert Decimal(quarter_payload["casilla_values"][rendimiento_key]) == _CUMULATIVE_RENDIMIENTO[period], (
             f"Period {period} casilla 03 (cumulative rendimiento neto): expected "
-            f"{_CUMULATIVE_RENDIMIENTO[period]}, got {quarter_payload['casilla_values']['03']!r}"
+            f"{_CUMULATIVE_RENDIMIENTO[period]}, got {quarter_payload['casilla_values'][rendimiento_key]!r}"
         )
         # casilla 19 is the incremental amount paid this quarter (04 − 05).
-        assert Decimal(quarter_payload["casilla_values"]["19"]) == _Q_RESULTADO, (
+        resultado_key = str(_M130_RESULTADO_FINAL_CASILLA)
+        assert Decimal(quarter_payload["casilla_values"][resultado_key]) == _Q_RESULTADO, (
             f"Period {period} casilla 19 (resultado final): expected {_Q_RESULTADO} "
             f"(20% cumulative − prior pagos, AEAT DR 130), got "
-            f"{quarter_payload['casilla_values']['19']!r}"
+            f"{quarter_payload['casilla_values'][resultado_key]!r}"
         )
 
     # -- Run the projection verb -------------------------------------------
@@ -436,7 +473,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     oracle_result = calculate_registry_snapshot(
         m100_snapshot,
         inputs={
-            "0171": _ANNUAL_RENDIMIENTO_NETO,  # EDS ingresos explotación leaf (manual-kind)
+            _M100_RENDIMIENTO_NETO_PROJECTED_CASILLA: _ANNUAL_RENDIMIENTO_NETO,
         },
         date_context={"filing_period": date(_FILING_YEAR, 12, 31)},
         # Mirror the project verb's merged_bindings shape exactly. The verb
@@ -478,16 +515,16 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     # Assert projected M100 casilla values equal oracle values.
     proj_m100 = proj_payload["m100_projection"]
 
-    casilla_map = {
-        "0545": "cuota_integra_estatal_0545",
-        "0546": "cuota_integra_autonomica_0546",
-        "0595": "cuota_liquida_estatal_0595",
-        "0596": "cuota_liquida_autonomica_0596",
-        "0597": "cuota_resultante_0597",
+    casilla_map: dict[CasillaId, str] = {
+        _M100_CUOTA_INTEGRA_ESTATAL_CASILLA: "cuota_integra_estatal_0545",
+        _M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA: "cuota_integra_autonomica_0546",
+        _M100_CUOTA_LIQUIDA_ESTATAL_CASILLA: "cuota_liquida_estatal_0595",
+        _M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA: "cuota_liquida_autonomica_0596",
+        _M100_CUOTA_RESULTANTE_CASILLA: "cuota_resultante_0597",
     }
 
     for casilla_id, payload_key in casilla_map.items():
-        oracle_value = oracle_result.values.get(casilla_id, Decimal("0"))
+        oracle_value = oracle_result.values[casilla_id]
         projected_value = Decimal(proj_m100[payload_key])
         assert projected_value == oracle_value, (
             f"M100 casilla {casilla_id}: project verb returned {projected_value}, "
@@ -506,7 +543,11 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     assert len(casilla_observations) > 0, "project payload must have at least one casilla_observation"
     # Every observation for a computed M100 casilla must carry non-empty legal_refs.
     obs_by_id = {obs["casilla_id"]: obs for obs in casilla_observations}
-    for casilla_id in ("0545", "0546", "0595"):
+    for casilla_id in (
+        _M100_CUOTA_INTEGRA_ESTATAL_CASILLA,
+        _M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA,
+        _M100_CUOTA_LIQUIDA_ESTATAL_CASILLA,
+    ):
         obs = obs_by_id.get(casilla_id)
         assert obs is not None, f"casilla_observations must include computed casilla {casilla_id!r}"
         assert obs.get("formula_id"), f"casilla {casilla_id!r} observation must carry formula_id"

@@ -120,8 +120,9 @@ class _RevisionInputsProvider:
                 },
             )
         return {
-            **dict(self._revision.inputs_snapshot),
+            **dict(self._revision.input_values_by_casilla_id),
             **dict(self._revision.binding_overrides),
+            **dict(self._revision.relation_overrides),
         }
 
 

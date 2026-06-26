@@ -68,11 +68,13 @@ import pytest
 
 from .....core.resources import resources
 from .....domain.calculations.registry import (
+    CasillaId,
     RegistryValidationError,
     calculate_registry_snapshot,
+    validated_casilla_id,
 )
 from .....tests import FIXTURES_DIR
-from .. import ArtefactKind, BorradorParseError, parse_borrador
+from .. import ArtefactKind, BorradorParseError, BorradorParseMode, parse_borrador
 
 pytestmark = [
     pytest.mark.unit,
@@ -83,12 +85,38 @@ _BORRADOR_FIXTURES_DIR = FIXTURES_DIR / "borrador"
 
 # Casillas computed by the engine from leaf input 0505.
 # Must NOT appear in inputs; the engine derives them.
-_COMPUTED_CASILLAS_M100 = frozenset({"0545", "0546", "0585", "0586"})
+_BASE_LIQUIDABLE_GENERAL_CASILLA: CasillaId = validated_casilla_id("0505", surface="_BASE_LIQUIDABLE_GENERAL_CASILLA")
+_CUOTA_INTEGRA_ESTATAL_CASILLA: CasillaId = validated_casilla_id("0545", surface="_CUOTA_INTEGRA_ESTATAL_CASILLA")
+_CUOTA_INTEGRA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
+    "0546",
+    surface="_CUOTA_INTEGRA_AUTONOMICA_CASILLA",
+)
+_CUOTA_LIQUIDA_ESTATAL_CASILLA: CasillaId = validated_casilla_id("0585", surface="_CUOTA_LIQUIDA_ESTATAL_CASILLA")
+_CUOTA_LIQUIDA_AUTONOMICA_CASILLA: CasillaId = validated_casilla_id(
+    "0586",
+    surface="_CUOTA_LIQUIDA_AUTONOMICA_CASILLA",
+)
+_COMPUTED_CASILLAS_M100: frozenset[CasillaId] = frozenset(
+    {
+        _CUOTA_INTEGRA_ESTATAL_CASILLA,
+        _CUOTA_INTEGRA_AUTONOMICA_CASILLA,
+        _CUOTA_LIQUIDA_ESTATAL_CASILLA,
+        _CUOTA_LIQUIDA_AUTONOMICA_CASILLA,
+    },
+)
 
 
 def _registry_snapshot_m100(year: int):
     """Resolve the M100 validated registry snapshot for the given filing year."""
     return resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
+
+
+def _borrador_extraction_profile(snapshot):
+    profiles = tuple(profile for profile in snapshot.extraction_profiles.values() if profile.surface == "borrador_pdf")
+    assert len(profiles) == 1, (
+        f"expected one M100 borrador extraction profile, got {[profile.id for profile in profiles]}"
+    )
+    return profiles[0]
 
 
 def _binding_values_for_year(year: int) -> dict[str, Decimal]:
@@ -145,6 +173,8 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
     EXTRACTION-ONLY (CORPUS-LIMITED) → VERIFIED via the borrador surface.
     """
     pdf_path = _BORRADOR_FIXTURES_DIR / f"modelo_100_{year}.pdf"
+    snapshot = _registry_snapshot_m100(year)
+    extraction_profile = _borrador_extraction_profile(snapshot)
 
     # Parse the borrador PDF.
     try:
@@ -152,29 +182,31 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
             pdf_path,
             artefact_kind_override=ArtefactKind.BORRADOR,
             año_override=year,
+            extraction_profile=extraction_profile,
+            parse_mode=BorradorParseMode.REGISTRY_PROFILE,
         )
     except BorradorParseError as exc:
         pytest.fail(f"PARSER-GAP [M100-borrador/{year}]: parse_borrador raised BorradorParseError.\n  error: {exc}")
 
+    assert borrador.registry_extraction_profile_id == extraction_profile.id
+    assert borrador.extraction_coverage == Decimal("1")
     extracted = {v.casilla_id: v.printed_value for v in borrador.values}
 
     # Verify leaf input 0505 is present and is a Decimal.
-    assert "0505" in extracted, (
+    assert _BASE_LIQUIDABLE_GENERAL_CASILLA in extracted, (
         f"PARSER-GAP [M100-borrador/{year}]: leaf casilla '0505' not extracted.\n  got: {sorted(extracted)}"
     )
-    assert isinstance(extracted["0505"], Decimal), (
-        f"PARSER-GAP [M100-borrador/{year}]: casilla '0505' is not Decimal: {type(extracted['0505']).__name__!r}"
+    assert isinstance(extracted[_BASE_LIQUIDABLE_GENERAL_CASILLA], Decimal), (
+        f"PARSER-GAP [M100-borrador/{year}]: casilla '0505' is not Decimal: "
+        f"{type(extracted[_BASE_LIQUIDABLE_GENERAL_CASILLA]).__name__!r}"
     )
 
     # Build engine inputs: supply only the leaf casilla 0505.
     # All computed casillas (0545, 0546, 0585, 0586) are excluded — the engine
     # must derive them from 0505 via the bracket formulas.
-    inputs: dict[str, Decimal] = {
+    inputs: dict[CasillaId, Decimal] = {
         cid: val for cid, val in extracted.items() if cid not in _COMPUTED_CASILLAS_M100 and isinstance(val, Decimal)
     }
-
-    # Resolve registry snapshot and run engine.
-    snapshot = _registry_snapshot_m100(year)
 
     try:
         result = calculate_registry_snapshot(
@@ -196,7 +228,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
     engine_values = dict(result.values)
 
     # VERIFIED gate: all four closure casillas must match.
-    for closure_id in ("0545", "0546", "0585", "0586"):
+    for closure_id in _COMPUTED_CASILLAS_M100:
         if closure_id not in extracted:
             pytest.fail(
                 f"PARSER-GAP [M100-borrador/{year}]: closure casilla {closure_id!r} "
@@ -219,14 +251,8 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
             f"VERIFIED-FAIL [M100-borrador/{year}]: engine recomputed casilla {closure_id!r} as "
             f"{engine_val!r} but corpus fixture shows {extracted_val!r}.\n"
             f"  diff: {engine_val - extracted_val!r}\n"
-            f"  leaf input 0505={inputs.get('0505')!r}\n"
-            f"  engine chain: 0505={engine_values.get('0505')!r} "
-            f"0528={engine_values.get('0528')!r} "
-            f"0529={engine_values.get('0529')!r} "
-            f"0532={engine_values.get('0532')!r} "
-            f"0533={engine_values.get('0533')!r} "
-            f"0540={engine_values.get('0540')!r} "
-            f"0541={engine_values.get('0541')!r} "
-            f"0545={engine_values.get('0545')!r} "
-            f"0546={engine_values.get('0546')!r}"
+            f"  leaf input 0505={inputs.get(_BASE_LIQUIDABLE_GENERAL_CASILLA)!r}\n"
+            f"  engine chain: 0505={engine_values.get(_BASE_LIQUIDABLE_GENERAL_CASILLA)!r} "
+            f"0545={engine_values.get(_CUOTA_INTEGRA_ESTATAL_CASILLA)!r} "
+            f"0546={engine_values.get(_CUOTA_INTEGRA_AUTONOMICA_CASILLA)!r}"
         )

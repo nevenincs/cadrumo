@@ -25,6 +25,7 @@ import pytest
 
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
@@ -39,6 +40,25 @@ _Repos = tuple[
 ]
 
 _CLOCK = datetime(2026, 10, 15, 9, 0, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_M130_INCOME_CASILLA: CasillaId = _casilla_id("01")
+_M130_EXPENSE_CASILLA: CasillaId = _casilla_id("02")
+_M130_PREVIOUS_PAYMENTS_CASILLA: CasillaId = _casilla_id("05")
+_M130_WITHHELD_CASILLA: CasillaId = _casilla_id("06")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
+_M130_CARRY_FORWARD_CASILLA: CasillaId = _casilla_id("15")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
+_M130_DIFFERENCE_CASILLA: CasillaId = _casilla_id("17")
+_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -103,21 +123,21 @@ def test_casilla_15_override_accepted_at_3t(repos: _Repos) -> None:
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs={
-            "01": Decimal("30000"),
-            "02": Decimal("12000"),
-            "05": Decimal("0"),
-            "06": Decimal("0"),
-            "08": Decimal("0"),
-            "10": Decimal("0"),
-            "15": override,
-            "16": Decimal("0"),
-            "18": Decimal("0"),
+            _M130_INCOME_CASILLA: Decimal("30000"),
+            _M130_EXPENSE_CASILLA: Decimal("12000"),
+            _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
+            _M130_WITHHELD_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+            _M130_CARRY_FORWARD_CASILLA: override,
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
         # Previous year M100 binding required for casilla-13 minoración
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("0"),
             # modelo-130-resultados-negativos-anteriores deliberately NOT supplied —
-            # the fix under test must promote casilla_inputs["15"] into this slot.
+            # the fix under test must promote _M130_CARRY_FORWARD_CASILLA into this slot.
         },
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -125,7 +145,7 @@ def test_casilla_15_override_accepted_at_3t(repos: _Repos) -> None:
         clock=_CLOCK,
     )
 
-    casilla_15_value = Decimal(revision.casilla_values["15"])
+    casilla_15_value = Decimal(revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
     assert casilla_15_value == override, (
         f"Casilla 15 must equal the supplied override {override}; got {casilla_15_value}"
     )
@@ -145,21 +165,21 @@ def test_casilla_15_override_flows_into_casilla_17(repos: _Repos) -> None:
     work_unit, wu_repo, cr_repo, bv_repo = _work_unit_3t(repos)
 
     common_inputs = {
-        "01": Decimal("30000"),
-        "02": Decimal("12000"),
-        "05": Decimal("0"),
-        "06": Decimal("0"),
-        "08": Decimal("0"),
-        "10": Decimal("0"),
-        "16": Decimal("0"),
-        "18": Decimal("0"),
+        _M130_INCOME_CASILLA: Decimal("30000"),
+        _M130_EXPENSE_CASILLA: Decimal("12000"),
+        _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
+        _M130_WITHHELD_CASILLA: Decimal("0"),
+        _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+        _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+        _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+        _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
     }
     common_bindings = {"irpf.previous_year_economic_activity_net_income": Decimal("0")}
 
     # Baseline: casilla 15 = 0
     rev_zero = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**common_inputs, "15": Decimal("0")},
+        casilla_inputs={**common_inputs, _M130_CARRY_FORWARD_CASILLA: Decimal("0")},
         binding_values=common_bindings,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -171,7 +191,7 @@ def test_casilla_15_override_flows_into_casilla_17(repos: _Repos) -> None:
     override = Decimal("2694")
     rev_override = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**common_inputs, "15": override},
+        casilla_inputs={**common_inputs, _M130_CARRY_FORWARD_CASILLA: override},
         binding_values=common_bindings,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -179,8 +199,8 @@ def test_casilla_15_override_flows_into_casilla_17(repos: _Repos) -> None:
         clock=_CLOCK,
     )
 
-    c17_zero = Decimal(rev_zero.casilla_values["17"])
-    c17_override = Decimal(rev_override.casilla_values["17"])
+    c17_zero = Decimal(rev_zero.casilla_values[_M130_DIFFERENCE_CASILLA])
+    c17_override = Decimal(rev_override.casilla_values[_M130_DIFFERENCE_CASILLA])
 
     # The formula for casilla 17 subtracts casilla 15 from casilla 14.
     # Increasing casilla 15 by ``override`` must reduce casilla 17 by the same
@@ -209,15 +229,15 @@ def test_casilla_15_binding_already_supplied_is_not_overwritten(repos: _Repos) -
         calculate_modelo_revision(
             work_unit.work_unit_id,
             casilla_inputs={
-                "01": Decimal("30000"),
-                "02": Decimal("12000"),
-                "05": Decimal("0"),
-                "06": Decimal("0"),
-                "08": Decimal("0"),
-                "10": Decimal("0"),
-                "15": Decimal("2694"),
-                "16": Decimal("0"),
-                "18": Decimal("0"),
+                _M130_INCOME_CASILLA: Decimal("30000"),
+                _M130_EXPENSE_CASILLA: Decimal("12000"),
+                _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
+                _M130_WITHHELD_CASILLA: Decimal("0"),
+                _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+                _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+                _M130_CARRY_FORWARD_CASILLA: Decimal("2694"),
+                _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+                _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
             },
             binding_values={
                 "irpf.previous_year_economic_activity_net_income": Decimal("0"),

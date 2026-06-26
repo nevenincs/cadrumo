@@ -42,7 +42,12 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -77,6 +82,21 @@ _CLOCK_N = datetime(2024, 5, 15, 10, 0, 0, tzinfo=UTC)  # M714 deadline window ~
 _CLOCK_N_PLUS_1 = datetime(2025, 5, 15, 10, 0, 0, tzinfo=UTC)
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M714 patrimonio fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_PATRIMONIO_BASE_IMPONIBLE_CASILLA: CasillaId = _casilla_id("patrimonio.base-imponible")
+_PATRIMONIO_BASE_LIQUIDABLE_CASILLA: CasillaId = _casilla_id("patrimonio.base-liquidable")
+_PATRIMONIO_CUOTA_INTEGRA_CASILLA: CasillaId = _casilla_id("patrimonio.cuota-integra")
+_PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA: CasillaId = _casilla_id("patrimonio.total-cuota-integra")
+_PATRIMONIO_CUOTA_A_INGRESAR_CASILLA: CasillaId = _casilla_id("patrimonio.cuota-a-ingresar")
+
+
 def _find_observation(repo: CalculationObservationRepository, *, filing_year: int, period: str):
     """Scan iter_modelo and return the envelope matching (filing_year, period) or None."""
     for payload in repo.iter_modelo(_MODELO):
@@ -99,18 +119,18 @@ def _observation(
     are non-default so a save-drops-field regression surfaces as strict
     inequality on reload.
     """
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO,
         filing_year=filing_year,
         period="0A",
-        observations=(
-            CasillaObservation(casilla_id="decl.ejercicio", value=Decimal(str(filing_year))),
-            CasillaObservation(casilla_id="patrimonio.base-imponible", value=base_imponible),
-            CasillaObservation(casilla_id="patrimonio.base-liquidable", value=base_liquidable),
-            CasillaObservation(casilla_id="patrimonio.cuota-integra", value=cuota),
-            CasillaObservation(casilla_id="patrimonio.total-cuota-integra", value=cuota),
-            CasillaObservation(casilla_id="patrimonio.cuota-a-ingresar", value=cuota),
-        ),
+        casilla_values={
+            _DECL_EJERCICIO_CASILLA: Decimal(str(filing_year)),
+            _PATRIMONIO_BASE_IMPONIBLE_CASILLA: base_imponible,
+            _PATRIMONIO_BASE_LIQUIDABLE_CASILLA: base_liquidable,
+            _PATRIMONIO_CUOTA_INTEGRA_CASILLA: cuota,
+            _PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA: cuota,
+            _PATRIMONIO_CUOTA_A_INGRESAR_CASILLA: cuota,
+        },
     )
 
 
@@ -166,12 +186,12 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
 
         n_vals = loaded_n.observation.casilla_values
         n1_vals = loaded_n1.observation.casilla_values
-        assert n_vals["decl.ejercicio"] == Decimal(str(_YEAR_N))
-        assert n1_vals["decl.ejercicio"] == Decimal(str(_YEAR_N_PLUS_1))
+        assert n_vals[_DECL_EJERCICIO_CASILLA] == Decimal(str(_YEAR_N))
+        assert n1_vals[_DECL_EJERCICIO_CASILLA] == Decimal(str(_YEAR_N_PLUS_1))
         # Wealth bases must not bleed between ejercicios.
-        assert n_vals["patrimonio.base-imponible"] == _BASE_IMPONIBLE_N
-        assert n1_vals["patrimonio.base-imponible"] == _BASE_IMPONIBLE_N1
-        assert n_vals["patrimonio.base-imponible"] != n1_vals["patrimonio.base-imponible"]
+        assert n_vals[_PATRIMONIO_BASE_IMPONIBLE_CASILLA] == _BASE_IMPONIBLE_N
+        assert n1_vals[_PATRIMONIO_BASE_IMPONIBLE_CASILLA] == _BASE_IMPONIBLE_N1
+        assert n_vals[_PATRIMONIO_BASE_IMPONIBLE_CASILLA] != n1_vals[_PATRIMONIO_BASE_IMPONIBLE_CASILLA]
 
 
 def test_both_years_base_exceeds_filing_obligation_threshold(tmp_path: Path) -> None:
@@ -190,8 +210,8 @@ def test_both_years_base_exceeds_filing_obligation_threshold(tmp_path: Path) -> 
 
         assert loaded_n is not None
         assert loaded_n1 is not None
-        assert loaded_n.observation.casilla_values["patrimonio.base-imponible"] > _FILING_OBLIGATION_EUR
-        assert loaded_n1.observation.casilla_values["patrimonio.base-imponible"] > _FILING_OBLIGATION_EUR
+        assert loaded_n.observation.casilla_values[_PATRIMONIO_BASE_IMPONIBLE_CASILLA] > _FILING_OBLIGATION_EUR
+        assert loaded_n1.observation.casilla_values[_PATRIMONIO_BASE_IMPONIBLE_CASILLA] > _FILING_OBLIGATION_EUR
 
 
 def test_anti_tautology_proof_missing_cuota_surfaces_as_inequality(tmp_path: Path) -> None:
@@ -201,7 +221,7 @@ def test_anti_tautology_proof_missing_cuota_surfaces_as_inequality(tmp_path: Pat
         modelo=_MODELO,
         filing_year=_YEAR_N,
         period="0A",
-        observations=tuple(o for o in obs_n.observations if o.casilla_id != "patrimonio.cuota-integra"),
+        observations=tuple(o for o in obs_n.observations if o.casilla_id != _PATRIMONIO_CUOTA_INTEGRA_CASILLA),
     )
     assert obs_n != obs_n_no_cuota
 

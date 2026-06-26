@@ -13,7 +13,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
+from pydantic import TypeAdapter, ValidationError
+
 from ...core import Period
+from ...domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
 from ...domain.filing._protocols import ModeloInputs
 from ...domain.filing._schema import ModeloDraft
 from ...domain.submission import ModeloDraftStatus
@@ -21,6 +24,7 @@ from ...domain.transactions import TransactionCatalogue
 from . import ModeloBuilderError, approve_draft, build_draft, build_runtime_schema_provider
 
 _REGISTRY_TEST_BUCKET_ID = "registry-test"
+_BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,7 +38,7 @@ class RegistryTestProfile:
 def build_registry_filing_draft(
     *,
     modelo: str,
-    period: Period,
+    period: object,
     profile_tax_id: str = "Y0000001S",
     casilla_values: ModeloInputs,
     binding_values: ModeloInputs | None = None,
@@ -83,24 +87,31 @@ def build_registry_filing_draft(
     )
 
 
-def build_registry_filing_draft_from_decimals(
+def build_registry_filing_draft_from_decimals[CasillaKey, BindingKey](
     *,
     modelo: str,
     period: Period,
     profile_tax_id: str = "Y0000001S",
-    casilla_decimals: Mapping[str, str | Decimal],
-    binding_decimals: Mapping[str, str | Decimal] | None = None,
+    casilla_decimals: Mapping[CasillaKey, str | Decimal],
+    binding_decimals: Mapping[BindingKey, str | Decimal] | None = None,
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
     """Coerce decimal strings before building through the registry runtime.
 
     Returns a :class:`ModeloDraft`.
     """
-    coerced: dict[str, Decimal] = {}
+    coerced: dict[CasillaId, Decimal] = {}
     for casilla_id, raw in casilla_decimals.items():
-        coerced[casilla_id] = raw if isinstance(raw, Decimal) else Decimal(raw)
-    coerced_bindings: dict[str, Decimal] = {}
-    for binding_id, raw in (binding_decimals or {}).items():
+        canonical_casilla_id = validated_casilla_id(casilla_id, surface="registry filing test helper casilla id")
+        coerced[canonical_casilla_id] = raw if isinstance(raw, Decimal) else Decimal(raw)
+    coerced_bindings: dict[BindingId, Decimal] = {}
+    for raw_binding_id, raw in (binding_decimals or {}).items():
+        try:
+            binding_id = _BINDING_ID_ADAPTER.validate_python(raw_binding_id)
+        except ValidationError as exc:
+            raise ModeloBuilderError(
+                f"registry filing test helper binding id must be canonical: {raw_binding_id!r}",
+            ) from exc
         coerced_bindings[binding_id] = raw if isinstance(raw, Decimal) else Decimal(raw)
     return build_registry_filing_draft(
         modelo=modelo,

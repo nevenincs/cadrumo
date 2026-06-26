@@ -13,7 +13,7 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span, set_active_fields
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -85,7 +85,7 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
     now = datetime.now(UTC)
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
     )
@@ -101,17 +101,28 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
     return work_unit_id, calculation_revision_id
 
 
-_MODELO_111_INPUTS: dict[str, str] = {
-    "03": "180.25",
-    "06": "12.10",
-    "09": "300.00",
-    "12": "14.40",
-    "15": "25.00",
-    "18": "0.50",
-    "21": "7.00",
-    "24": "8.00",
-    "27": "9.00",
-    "29": "40.00",
+_M111_CASILLA_03: CasillaId = validated_casilla_id("03", surface="modelo 111 export test casilla")
+_M111_CASILLA_06: CasillaId = validated_casilla_id("06", surface="modelo 111 export test casilla")
+_M111_CASILLA_09: CasillaId = validated_casilla_id("09", surface="modelo 111 export test casilla")
+_M111_CASILLA_12: CasillaId = validated_casilla_id("12", surface="modelo 111 export test casilla")
+_M111_CASILLA_15: CasillaId = validated_casilla_id("15", surface="modelo 111 export test casilla")
+_M111_CASILLA_18: CasillaId = validated_casilla_id("18", surface="modelo 111 export test casilla")
+_M111_CASILLA_21: CasillaId = validated_casilla_id("21", surface="modelo 111 export test casilla")
+_M111_CASILLA_24: CasillaId = validated_casilla_id("24", surface="modelo 111 export test casilla")
+_M111_CASILLA_27: CasillaId = validated_casilla_id("27", surface="modelo 111 export test casilla")
+_M111_CASILLA_29: CasillaId = validated_casilla_id("29", surface="modelo 111 export test casilla")
+
+_MODELO_111_INPUTS: dict[CasillaId, str] = {
+    _M111_CASILLA_03: "180.25",
+    _M111_CASILLA_06: "12.10",
+    _M111_CASILLA_09: "300.00",
+    _M111_CASILLA_12: "14.40",
+    _M111_CASILLA_15: "25.00",
+    _M111_CASILLA_18: "0.50",
+    _M111_CASILLA_21: "7.00",
+    _M111_CASILLA_24: "8.00",
+    _M111_CASILLA_27: "9.00",
+    _M111_CASILLA_29: "40.00",
 }
 
 
@@ -151,10 +162,10 @@ def _seed_modelo_111_revisions(
     revision_ids: list[str] = []
     revisions: list[CalculationRevision] = []
     for index, state_value in enumerate(states):
-        inputs = {**_MODELO_111_INPUTS, "03": f"{180 + index}.25"}
+        inputs = {**_MODELO_111_INPUTS, _M111_CASILLA_03: f"{180 + index}.25"}
         calculation_revision_id = derive_calculation_revision_id(
             work_unit_id=work_unit_id,
-            inputs_snapshot=inputs,
+            input_values_by_casilla_id=inputs,
             binding_overrides={},
             casilla_values={},
         )
@@ -164,7 +175,7 @@ def _seed_modelo_111_revisions(
                 calculation_revision_id=calculation_revision_id,
                 work_unit_id=work_unit_id,
                 state=state_value,
-                inputs_snapshot=inputs,
+                input_values_by_casilla_id=inputs,
                 created_at=now,
                 updated_at=now,
                 verified_at=now
@@ -243,7 +254,7 @@ def _seed_exportable_modelo_111_revision(
 
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot=_MODELO_111_INPUTS,
+        input_values_by_casilla_id=_MODELO_111_INPUTS,
         binding_overrides={},
         casilla_values={},
     )
@@ -251,7 +262,7 @@ def _seed_exportable_modelo_111_revision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        inputs_snapshot=_MODELO_111_INPUTS,
+        input_values_by_casilla_id=_MODELO_111_INPUTS,
         created_at=now,
         updated_at=now,
         verified_at=now,

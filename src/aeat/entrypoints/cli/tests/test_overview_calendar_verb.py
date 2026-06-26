@@ -31,7 +31,11 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period
 from ....core.time import now
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
 from ....domain.justificante import Justificante, JustificanteRepository
 from ....domain.modelos import (
     ExternalEvidence,
@@ -46,6 +50,7 @@ from ....domain.modelos import (
 from ....domain.user_profile import UserProfileFact
 from ....tests import FIXTURES_DIR
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
 from .._overview import _local_calendar_filing_evidence
@@ -55,6 +60,25 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _SOURCE_URL = AnyHttpUrl(aeat_url("sede", "/"))
 _WORK_UNIT_ID = "a" * 64
 _CALCULATION_REVISION_ID = "b" * 64
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"overview calendar fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_OBSERVED_CASILLA: CasillaId = _casilla_id("01")
+
+
+def _observed_casilla_observations(value: Decimal):
+    return registry_grounded_observations(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        casilla_values={_OBSERVED_CASILLA: value},
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -719,7 +743,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
         filing_year=2025,
         period="1T",
         filing_period=Period.from_year_and_code(2025, "1T"),
-        observations=(CasillaObservation(casilla_id="01", value=Decimal("10.00")),),
+        observations=_observed_casilla_observations(Decimal("10.00")),
     )
     with profile_storage_session("operator"):
         CalculationObservationRepository().save_observation(

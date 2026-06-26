@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -21,6 +22,7 @@ from ....domain.modelos._calculation_revision import (
 )
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     ModeloCalculationRevisionSelector,
@@ -36,6 +38,16 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_OUTPUT_CASILLA: CasillaId = _casilla_id("01")
 
 
 @pytest.fixture
@@ -79,16 +91,22 @@ def _seed_revision(
 ) -> CalculationRevision:
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={"01": str(output)},
+        input_values_by_casilla_id={_OUTPUT_CASILLA: str(output)},
         binding_overrides={},
-        casilla_values={"01": output},
+        casilla_values={_OUTPUT_CASILLA: output},
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
         state=state,
-        inputs_snapshot={"01": str(output)},
-        casilla_values={"01": output},
+        input_values_by_casilla_id={_OUTPUT_CASILLA: str(output)},
+        casilla_values={_OUTPUT_CASILLA: output},
+        observations=registry_grounded_observations(
+            modelo="130",
+            filing_year=2026,
+            period="1T",
+            casilla_values={_OUTPUT_CASILLA: output},
+        ),
         created_at=created_at,
         updated_at=created_at,
         verified_at=created_at if state is not CalculationRevisionState.BORRADOR else None,

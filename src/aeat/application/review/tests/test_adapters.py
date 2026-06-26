@@ -22,6 +22,7 @@ from ....core.classification import SensitivityClass
 from ....core.config import Settings
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -67,6 +68,9 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PERIOD = Period.from_year_and_code(2026, "1T")
+_REVIEW_FINDING_CASILLA: CasillaId = validated_casilla_id("03", surface="_REVIEW_FINDING_CASILLA")
+_REVIEW_MISSING_CASILLA: CasillaId = validated_casilla_id("04", surface="_REVIEW_MISSING_CASILLA")
+_REVIEW_INFO_CASILLA: CasillaId = validated_casilla_id("05", surface="_REVIEW_INFO_CASILLA")
 
 
 # ── shared helpers ────────────────────────────────────────────────
@@ -381,7 +385,7 @@ def _draft(
 ) -> ModeloDraft:
     values = (
         ModeloValue(
-            casilla_id="03",
+            casilla_id=_REVIEW_FINDING_CASILLA,
             value=Decimal("0"),
             kind=ModeloValueKind.LITERAL,
             source="test",
@@ -445,19 +449,19 @@ def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     findings = (
         ModeloValidationFinding(
-            casilla_id="03",
+            casilla_id=_REVIEW_FINDING_CASILLA,
             severity=BaseSeverity.ERROR,
             code="casilla-out-of-range",
             message=_summary("range"),
         ),
         ModeloValidationFinding(
-            casilla_id="04",
+            casilla_id=_REVIEW_MISSING_CASILLA,
             severity=BaseSeverity.WARNING,
             code="casilla-required-missing",
             message=_summary("missing"),
         ),
         ModeloValidationFinding(
-            casilla_id="05",
+            casilla_id=_REVIEW_INFO_CASILLA,
             severity=BaseSeverity.INFO,
             code="casilla-info-note",
             message=_summary("info"),
@@ -527,7 +531,7 @@ def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> N
 def test_drafts_pending_dedups_identical_finding_triples(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     finding = ModeloValidationFinding(
-        casilla_id="03",
+        casilla_id=_REVIEW_FINDING_CASILLA,
         severity=BaseSeverity.ERROR,
         code="casilla-out-of-range",
         message=_summary("dup"),

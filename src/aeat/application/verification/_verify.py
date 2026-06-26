@@ -7,6 +7,7 @@ used to run the formula engine over operator-provided casilla values.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from datetime import date
@@ -21,12 +22,15 @@ from ...core.logging import get_logger
 from ...core.resources import bundled_path
 from ...core.time import now
 from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
     InputKind,
     RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
+    declared_casilla_ids,
 )
 from ._errors import VerificationError
 from ._schema import (
@@ -51,7 +55,7 @@ _UNRELIABLE_WARNING_CODES: frozenset[str] = frozenset(
 
 class _DiscrepancyLike(Protocol):
     @property
-    def casilla_id(self) -> str: ...
+    def casilla_id(self) -> CasillaId: ...
 
     @property
     def computed_value(self) -> Decimal: ...
@@ -65,7 +69,7 @@ class _DiscrepancyLike(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class _Discrepancy:
-    casilla_id: str
+    casilla_id: CasillaId
     computed_value: Decimal
     user_value: Decimal
     delta: Decimal
@@ -74,7 +78,7 @@ class _Discrepancy:
 def verify_declaracion(
     declaracion: DeclaracionObservation,
     *,
-    binding_values: dict[str, Decimal] | None = None,
+    binding_values: Mapping[BindingId, Decimal] | None = None,
     registry_root: Path | None = None,
 ) -> VerificationVerdict:
     """Compare the printed casilla values against a registry snapshot.
@@ -153,14 +157,14 @@ def verify_declaracion(
         for warning in declaracion.warnings
         if warning.casilla_id is not None and warning.code in _UNRELIABLE_WARNING_CODES
     }
-    registry_casillas = {casilla.id for casilla in snapshot.revision.casillas}
+    registry_casilla_ids = declared_casilla_ids(snapshot.revision)
     discrepancies: list[ClassifiedDiscrepancy] = []
     for casilla_id, actual in sorted(extracted.items()):
-        if casilla_id in registry_casillas and casilla_id not in policy.computed_casillas:
+        if casilla_id in registry_casilla_ids and casilla_id not in policy.computed_casilla_ids:
             continue
         expected = result.values.get(casilla_id, actual)
         delta = actual - expected
-        if abs(delta) <= policy.tolerance and casilla_id not in unreliable_ids and casilla_id in registry_casillas:
+        if abs(delta) <= policy.tolerance and casilla_id not in unreliable_ids and casilla_id in registry_casilla_ids:
             continue
         discrepancies.append(
             _classify_discrepancy(
@@ -171,12 +175,12 @@ def verify_declaracion(
                     delta=delta,
                 ),
                 unreliable_ids=unreliable_ids,
-                registry_casillas=registry_casillas,
+                registry_casilla_ids=registry_casilla_ids,
                 tolerance=policy.tolerance,
             ),
         )
     classified = tuple(discrepancies)
-    coverage = _compute_coverage(declaracion, policy.computed_casillas)
+    coverage = _compute_coverage(declaracion, policy.computed_casilla_ids)
     status = _derive_status(classified, coverage, min_coverage=policy.min_coverage)
     return VerificationVerdict(
         modelo=declaracion.modelo,
@@ -221,8 +225,8 @@ def _load_snapshot(
         ) from exc
 
 
-def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[str, Decimal]:
-    extracted: dict[str, Decimal] = {}
+def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[CasillaId, Decimal]:
+    extracted: dict[CasillaId, Decimal] = {}
     for value in declaracion.values:
         printed = value.printed_value
         if isinstance(printed, Decimal):
@@ -288,8 +292,8 @@ def _period_end_date(period: Period) -> date:
 def _classify_discrepancy(
     discrepancy: _DiscrepancyLike,
     *,
-    unreliable_ids: set[str],
-    registry_casillas: set[str],
+    unreliable_ids: AbstractSet[CasillaId],
+    registry_casilla_ids: AbstractSet[CasillaId],
     tolerance: Decimal,
 ) -> ClassifiedDiscrepancy:
     """Assign one of the four :class:`DiscrepancyCause` categories.
@@ -309,9 +313,9 @@ def _classify_discrepancy(
         rationale = (
             f"Casilla {casilla_id}: el extractor ha marcado este valor como poco fiable. Revisa manualmente el PDF."
         )
-    elif casilla_id not in registry_casillas:
+    elif casilla_id not in registry_casilla_ids:
         cause = DiscrepancyCause.UNMODELLED_RULE
-        rationale = f"Casilla {casilla_id}: el registro no contempla esta casilla. Se acepta el valor extraido."
+        rationale = f"Casilla {casilla_id}: el registro no contempla esta casilla. Revisa el modelo antes de verificar."
     elif abs_delta < 10 * tolerance:
         cause = DiscrepancyCause.ROUNDING
         rationale = f"Casilla {casilla_id}: diferencia dentro del margen de redondeo ({abs_delta} €)."
@@ -331,7 +335,7 @@ def _classify_discrepancy(
 
 def _compute_coverage(
     declaracion: DeclaracionObservation,
-    expected_casillas: AbstractSet[str],
+    expected_casilla_ids: AbstractSet[CasillaId],
 ) -> float:
     """Return the fraction of registry casillas the extraction supplied.
 
@@ -339,11 +343,11 @@ def _compute_coverage(
     keeps the downstream coverage threshold in :func:`_derive_status`
     well-defined.
     """
-    if not expected_casillas:
+    if not expected_casilla_ids:
         return 0.0
     provided_ids = {v.casilla_id for v in declaracion.values}
-    covered = expected_casillas & provided_ids
-    return len(covered) / len(expected_casillas)
+    covered = expected_casilla_ids & provided_ids
+    return len(covered) / len(expected_casilla_ids)
 
 
 def _derive_status(
@@ -355,7 +359,7 @@ def _derive_status(
     """Map discrepancies and coverage onto a :class:`VerificationStatus`.
 
     Returns :attr:`VerificationStatus.NEEDS_REVIEW` when any discrepancy
-    has a blocking cause (extraction-unreliable or
+    has a blocking cause (extraction-unreliable, unmodelled rule, or
     correctness-divergence) or when registry coverage drops below the
     active verification expectation threshold; otherwise
     :attr:`VerificationStatus.VERIFIED`.
@@ -363,6 +367,7 @@ def _derive_status(
     blocking = {
         DiscrepancyCause.CORRECTNESS_DIVERGENCE,
         DiscrepancyCause.EXTRACTION_UNRELIABLE,
+        DiscrepancyCause.UNMODELLED_RULE,
     }
     if any(c.cause in blocking for c in classified):
         return VerificationStatus.NEEDS_REVIEW

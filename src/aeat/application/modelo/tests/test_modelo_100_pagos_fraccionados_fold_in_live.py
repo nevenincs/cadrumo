@@ -5,14 +5,14 @@ ingresados") is a *computed* casilla whose registry formula
 ``renta-2024-pagos-fraccionados-ingresados`` sums two cross-model relations:
 
 * ``renta-2024-rel-130-pagos-fraccionados`` — ``source_modelo='130'``,
-  ``source_output='19'``, ``source_periods=('1T','2T','3T','4T')``.
+  ``source_casilla_id='19'``, ``source_periods=('1T','2T','3T','4T')``.
 * ``renta-2024-rel-131-pagos-fraccionados`` — ``source_modelo='131'``,
-  ``source_output='15'``, same four periods.
+  ``source_casilla_id='15'``, same four periods.
 
 Each relation materialises into its declared ``target_binding``
 (``renta-2024-modelo-130-pagos-fraccionados`` / ``-131-``), whose registry
 binding declares ``source='relation_prefill'`` with a ``sum`` aggregation over
-``source_output``. :class:`RelationPrefillSourceResolver` is enrolled in the
+``source_casilla_id``. :class:`RelationPrefillSourceResolver` is enrolled in the
 live source mesh, making the relation canonical for cross-modelo fold-in. This
 module proves the wiring works end-to-end on the LIVE operator calculate path
 (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`):
@@ -45,14 +45,17 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    BindingId,
+    CasillaId,
     RegistryModeloObservation,
+    validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations._observations_repository import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
@@ -80,10 +83,10 @@ _M130_C19_BY_PERIOD: dict[str, Decimal] = {
     "4T": Decimal("300.00"),
 }
 _EXPECTED_M130_TOTAL = Decimal("100.00") + Decimal("250.50") + Decimal("75.25") + Decimal("300.00")  # 725.75
-_M130_SOURCE_OUTPUT = "19"
-_M131_SOURCE_OUTPUT = "15"
+_M130_SOURCE_CASILLA_ID: CasillaId = validated_casilla_id("19", surface="_M130_SOURCE_CASILLA_ID")
+_M131_SOURCE_CASILLA_ID: CasillaId = validated_casilla_id("15", surface="_M131_SOURCE_CASILLA_ID")
 _M100_ANNUAL_PERIOD = "0A"
-_M100_PAGOS_CASILLA = "0604"
+_M100_PAGOS_CASILLA: CasillaId = validated_casilla_id("0604", surface="_M100_PAGOS_CASILLA")
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _M130_PAGOS_RELATION_ID = "renta-2024-rel-130-pagos-fraccionados"
 
@@ -124,7 +127,12 @@ def _seed_m130_quarters(
                 modelo="130",
                 filing_year=_YEAR,
                 period=period,
-                observations=(CasillaObservation(casilla_id=_M130_SOURCE_OUTPUT, value=value),),
+                observations=registry_grounded_observations(
+                    modelo="130",
+                    filing_year=_YEAR,
+                    period=period,
+                    casilla_values={_M130_SOURCE_CASILLA_ID: value},
+                ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
@@ -146,7 +154,12 @@ def _seed_m131_zero_quarters(*, obs_repo: CalculationObservationRepository) -> N
                 modelo="131",
                 filing_year=_YEAR,
                 period=period,
-                observations=(CasillaObservation(casilla_id=_M131_SOURCE_OUTPUT, value=Decimal("0")),),
+                observations=registry_grounded_observations(
+                    modelo="131",
+                    filing_year=_YEAR,
+                    period=period,
+                    casilla_values={_M131_SOURCE_CASILLA_ID: Decimal("0")},
+                ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
@@ -191,7 +204,7 @@ def _seed_taxpayer_unit_profile() -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
 
 
-def _non_relation_zero_bindings() -> dict[str, Decimal]:
+def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default every M100/2024 binding that is neither profile- nor relation-sourced.
 
     The annual M100 revision binds many casillas (the Anexo-C base-liquidable
@@ -205,7 +218,7 @@ def _non_relation_zero_bindings() -> dict[str, Decimal]:
     """
     snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     return {
-        str(binding.id): Decimal("0")
+        binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
         if binding.source
         not in (
@@ -233,7 +246,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository):
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,

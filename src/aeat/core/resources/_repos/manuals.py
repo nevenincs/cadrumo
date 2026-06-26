@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from ....core.config import Settings
     from ....domain.manuals import (
         Manual,
+        ManualCasillaReference,
         ManualCatalogue,
         ManualId,
         ManualPart,
@@ -87,7 +88,7 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
         self,
         catalogue: ManualCatalogue,
         *,
-        casilla_id: str | None = None,
+        casilla_reference: ManualCasillaReference | None = None,
         kind: RuleKind | None = None,
         lang: str | None = None,
     ) -> Iterator[Rule]:
@@ -100,7 +101,7 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
 
         return find_rules(
             catalogue,
-            casilla_id=casilla_id,
+            casilla_reference=casilla_reference,
             kind=kind,
             lang=lang,
             settings=self._settings(),

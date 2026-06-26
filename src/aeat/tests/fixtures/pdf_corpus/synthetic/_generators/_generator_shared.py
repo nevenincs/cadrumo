@@ -22,6 +22,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas as _canvas
 
+from ......domain.calculations.registry import CasillaId
+
 # A4 dimensions and standard AEAT-like margins.
 A4_WIDTH, A4_HEIGHT = A4
 MARGIN_LEFT = 20 * mm
@@ -43,7 +45,7 @@ VALUE_FONT_SIZE = 10
 class CasillaBox:
     """One casilla's rendering footprint on the page."""
 
-    casilla_id: str  # e.g. "01"
+    casilla_id: CasillaId  # e.g. "01"
     label_es: str  # e.g. "Ingresos íntegros"
     x_mm: float  # left edge in millimetres
     y_mm: float  # top edge in millimetres (measured from page top)

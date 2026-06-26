@@ -14,9 +14,11 @@ from decimal import Decimal
 
 import pytest
 
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .. import SPANISH_AMOUNT_GROUP, LabelHit, apply_label_regex, parse_spanish_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+_TEST_LABEL_CASILLA: CasillaId = validated_casilla_id("01", surface="_TEST_LABEL_CASILLA")
 
 
 class TestParseSpanishDecimal:
@@ -120,7 +122,7 @@ class TestLabelHitShape:
     def test_frozen_dataclass(self) -> None:
         """Mutating an attribute on a frozen :class:`LabelHit` raises."""
         hit = LabelHit(
-            casilla_id="01",
+            casilla_id=_TEST_LABEL_CASILLA,
             raw_value="10,00",
             decimal_value=Decimal("10.00"),
             match_count=1,

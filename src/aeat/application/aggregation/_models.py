@@ -23,6 +23,7 @@ from pydantic import (
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...domain.calculations.registry import CasillaId
 from ...domain.categories import SpendingCategory
 
 
@@ -48,7 +49,7 @@ class CasillaProvenance(BaseModel):
     """Transaction trace backing one (casilla, category) subtotal.
 
     Attributes:
-        casilla: Target casilla code (e.g. ``"02"``).
+        casilla_id: Target canonical casilla id (e.g. ``"02"``).
         transaction_ids: Sorted, frozen tuple of contributing
             transaction IDs.
         subtotal: Sum of contributions for this casilla/category pair.
@@ -58,7 +59,7 @@ class CasillaProvenance(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    casilla: str = Field(min_length=2, max_length=8)
+    casilla_id: CasillaId
     transaction_ids: Sequence[str] = Field(default_factory=tuple)
     subtotal: Decimal
     # Typed SpendingCategory enum (was bare ``str`` before R025/R026
@@ -82,7 +83,7 @@ class CasillaAggregation(BaseModel):
         modelo: Modelo identifier (``ModeloCode.value``) the totals
             belong to.
         period: The :class:`Period` covered.
-        casilla_values: Mapping of casilla code to summed
+        casilla_values: Mapping of canonical casilla id to summed
             :class:`~decimal.Decimal` value, sorted and frozen.
         provenance: Tuple of :class:`CasillaProvenance` rows tracing
             each contribution back to its source transactions.
@@ -92,17 +93,17 @@ class CasillaAggregation(BaseModel):
 
     modelo: str = Field(min_length=1, max_length=16)
     period: Period
-    casilla_values: Mapping[str, Decimal] = Field(default_factory=dict)
+    casilla_values: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     provenance: Sequence[CasillaProvenance] = Field(default_factory=tuple)
 
     @field_validator("casilla_values")
     @classmethod
-    def _freeze_casilla_values(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
+    def _freeze_casilla_values(cls, value: Mapping[CasillaId, Decimal]) -> Mapping[CasillaId, Decimal]:
         """Return ``value`` as a sorted, immutable :class:`MappingProxyType`."""
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_serializer("casilla_values")
-    def _serialize_casilla_values(self, value: Mapping[str, Decimal]) -> dict[str, Decimal]:
+    def _serialize_casilla_values(self, value: Mapping[CasillaId, Decimal]) -> dict[CasillaId, Decimal]:
         """Serialise the immutable view back to a plain ``dict`` for JSON output."""
         return dict(value)
 

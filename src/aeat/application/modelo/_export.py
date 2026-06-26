@@ -587,8 +587,9 @@ def _approve_export_draft(
         modelos=(work_unit.modelo,),
     )
     inputs: filing_domain.ModeloInputs = {
-        **dict(revision.inputs_snapshot),
+        **dict(revision.input_values_by_casilla_id),
         **dict(revision.binding_overrides),
+        **dict(revision.relation_overrides),
     }
     try:
         draft = build_draft(
@@ -633,8 +634,8 @@ def export_modelo_revision(
     filing draft headers.
 
     Local-only: never contacts AEAT. Re-builds the filing draft from
-    the revision's captured ``inputs_snapshot`` and
-    ``binding_overrides`` so the exported file reflects the same legal
+    the revision's captured ``input_values_by_casilla_id`` and
+    replay override maps so the exported file reflects the same legal
     casilla map that would be filed.
 
     Emits ``MODELO_EXPORTED`` into the bucket-event-history catalogue

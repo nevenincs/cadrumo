@@ -4,9 +4,8 @@ Drives the real ``aeat`` CLI against an isolated encrypted backend to
 pin the modelo / bindings discovery findings reported by the persona
 fleet:
 
-* ``work calculate --casilla`` accepts the registry ``number`` and the
-  BOE form number shown in the ``casillas`` output, not only the
-  canonical dot-path id.
+* ``work calculate --casilla`` refuses registry ``number`` / BOE form
+  aliases and requires the canonical casilla id.
 * ``bindings list --missing`` consults the active profile and drops
   the bindings it already resolves.
 * ``bindings list --year`` (no ``--period``) resolves the revision
@@ -83,24 +82,12 @@ def _create_111_work_unit() -> str:
 
 
 # ---------------------------------------------------------------------------
-# D1 - numeric / short casilla ids accepted by work calculate
+# D1 - printed-number aliases refused by work calculate
 # ---------------------------------------------------------------------------
 
 
-def test_work_calculate_accepts_registry_number_as_casilla_alias() -> None:
-    """``--casilla`` accepts the registry ``number`` shown in the
-    ``casillas`` output, not only the canonical dot-path id.
-
-    Modelo 303 casilla ``iva.regularizacion-inversiones`` carries the
-    registry number ``regularizacion-inversiones`` (the short form without
-    the namespace prefix). Supplying that number resolves to the canonical
-    id: the engine does not reject it as an unknown casilla.
-
-    Alias resolution is the pre-engine step under test. The calculation
-    succeeds because compensacion-pendiente-anteriores defaults to zero
-    for fresh-filer scenarios; the alias resolution surface is
-    confirmed by the calculation completing with a draft revision.
-    """
+def test_work_calculate_rejects_registry_number_as_casilla_alias() -> None:
+    """``--casilla`` requires canonical ``casilla.id`` values."""
 
     _create_profile()
     work_unit_id = _create_303_work_unit()
@@ -110,20 +97,17 @@ def test_work_calculate_accepts_registry_number_as_casilla_alias() -> None:
             "--casilla", "regularizacion-inversiones=10.00",
         ],
     )  # fmt: skip
-    # The alias was resolved: the calculation succeeded with a draft revision.
-    # An alias-rejection regression would produce "unknown casilla" before reaching the engine.
-    assert result.exit_code == 0, result.output
+    assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
-    assert "unknown casilla" not in result.output.lower(), result.output
-    assert "borrador" in result.output
+    output = result.output.replace("\n", " ")
+    assert "not a canonical casilla.id" in output
+    assert "iva.regularizacion-inversiones" in output
 
 
-def test_work_calculate_rejects_a_genuinely_unknown_casilla_number() -> None:
-    """A casilla number that resolves to no casilla still refuses.
+def test_work_calculate_rejects_a_genuinely_unknown_numeric_casilla_id_candidate() -> None:
+    """A numeric token that resolves to no canonical casilla.id still refuses.
 
-    The alias resolution must not turn a typo into a silent no-op: an
-    unresolvable key passes through and the engine raises its
-    unknown-casilla refusal.
+    The canonical-id gate must not turn a typo into a silent no-op.
     """
 
     _create_profile()

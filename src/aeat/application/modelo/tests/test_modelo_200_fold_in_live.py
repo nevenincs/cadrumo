@@ -18,7 +18,7 @@ never on the operator's live calculate.
   limit). The prior ejercicio's casilla ``00671`` ("pendiente de aplicación en
   períodos futuros", a manual end-of-year stock) feeds this ejercicio's opening
   stock casilla ``00670`` ("pendiente de aplicación a principio del período").
-  Relation ``modelo-200-2024-rel-self-bin-pendiente-anterior`` (``source_output =
+  Relation ``modelo-200-2024-rel-self-bin-pendiente-anterior`` (``source_casilla_id =
   '00671'``) drives binding
   ``modelo-200-2024-bin-pendiente-ejercicios-anteriores`` (``copy``), which casilla
   ``00670`` (``input_kind = bound``) consumes.
@@ -28,11 +28,11 @@ never on the operator's live calculate.
   final ``01498`` (NO han cumplido condiciones) / ``01499`` (SÍ han cumplido) feed
   this ejercicio's saldo inicial ``01494`` / ``01495``. Relations
   ``modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior``
-  (``source_output = '01498'``) and ``-cumplido-anterior`` (``01499``) drive
+  (``source_casilla_id = '01498'``) and ``-cumplido-anterior`` (``01499``) drive
   bindings ``...saldo-no-cumplido-anteriores`` / ``...saldo-cumplido-anteriores``
   (``copy``), which casillas ``01494`` / ``01495`` (``input_kind = bound``) consume.
 
-The prior ejercicio (2023) is seeded as a filed observation through the production
+The prior ejercicio (2024) is seeded as a filed observation through the production
 observation-persistence API
 (:meth:`CalculationObservationRepository.save_observation`, the same write path the
 local-file carry flow uses), stamped with the non-official ``app_filing``
@@ -53,7 +53,7 @@ closing stock (a copy of a distinct seeded value, never a re-evaluated formula).
 channel swap (no-cumplido into cumplido, or BIN into a dotación channel), an
 off-by-year fold, a single-channel copy, or a silent blank cannot satisfy the three
 per-casilla assertions. The prior-year stock is a manual input no formula under
-test produces; a change in any relation's ``source_output`` or ``aggregation`` op,
+test produces; a change in any relation's ``source_casilla_id`` or ``aggregation`` op,
 or a binding retraction, would red the assertions.
 """
 
@@ -70,14 +70,16 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryModeloObservation,
+    validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations._observations_repository import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
@@ -103,27 +105,52 @@ _M202 = "202"
 # (finding #26) rather than resolving present-or-zero. It is NOT the cross-year
 # carry under test, so seed it as zero (no instalments this scenario) to keep the
 # live calculate focused on the BIN / dotaciones self-carries.
-_M202_PAGO_OUTPUT = "34"
-_M202_PAGO_OUTPUT_40_2 = "03"  # modalidad cuota (art. 40.2); folds alongside casilla 34
+_M202_PAGO_OUTPUT: CasillaId = validated_casilla_id("34", surface="_M202_PAGO_OUTPUT")
+_M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id(
+    "03",
+    surface="_M202_PAGO_OUTPUT_40_2",
+)  # modalidad cuota (art. 40.2); folds alongside casilla 34
 _M202_PAGO_PERIODS = ("1P", "2P", "3P")
 _M202_PAGO_RELATION = "modelo-200-2024-rel-202-pagos-fraccionados"
-_CASILLA_CUOTA_DIFERENCIAL = "DP200014B:00611"
+_CASILLA_CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id(
+    "DP200014B:00611",
+    surface="_CASILLA_CUOTA_DIFERENCIAL",
+)
 
 # The M200 ejercicio under live calculate, and the prior ejercicio the
-# filing_year_delta = -1 self-relations source.
-_FILING_YEAR = 2024
-_PRIOR_YEAR = 2023
+# filing_year_delta = -1 self-relations source. The bundled M200 authority
+# begins at 2024, so this test must exercise a supported two-year window.
+_FILING_YEAR = 2025
+_PRIOR_YEAR = 2024
 
 # Prior-ejercicio closing-stock casillas (manual on the prior filing) that the
 # self-relations read.
-_PRIOR_BIN_PENDIENTE_FUTUROS = "00671"  # source_output for the BIN self-relation
-_PRIOR_SALDO_FINAL_NO_CUMPLIDO = "01498"  # source_output for the no-cumplido relation
-_PRIOR_SALDO_FINAL_CUMPLIDO = "01499"  # source_output for the cumplido relation
+_PRIOR_BIN_PENDIENTE_FUTUROS: CasillaId = validated_casilla_id(
+    "00671",
+    surface="_PRIOR_BIN_PENDIENTE_FUTUROS",
+)  # source_casilla_id for the BIN self-relation
+_PRIOR_SALDO_FINAL_NO_CUMPLIDO: CasillaId = validated_casilla_id(
+    "01498",
+    surface="_PRIOR_SALDO_FINAL_NO_CUMPLIDO",
+)  # source_casilla_id for the no-cumplido relation
+_PRIOR_SALDO_FINAL_CUMPLIDO: CasillaId = validated_casilla_id(
+    "01499",
+    surface="_PRIOR_SALDO_FINAL_CUMPLIDO",
+)  # source_casilla_id for the cumplido relation
 
 # This-ejercicio opening-stock casillas (bound) the carries populate.
-_BIN_PENDIENTE_INICIO = "00670"  # consumes the BIN carry
-_SALDO_INICIAL_NO_CUMPLIDO = "01494"  # consumes the no-cumplido carry
-_SALDO_INICIAL_CUMPLIDO = "01495"  # consumes the cumplido carry
+_BIN_PENDIENTE_INICIO: CasillaId = validated_casilla_id(
+    "00670",
+    surface="_BIN_PENDIENTE_INICIO",
+)  # consumes the BIN carry
+_SALDO_INICIAL_NO_CUMPLIDO: CasillaId = validated_casilla_id(
+    "01494",
+    surface="_SALDO_INICIAL_NO_CUMPLIDO",
+)  # consumes the no-cumplido carry
+_SALDO_INICIAL_CUMPLIDO: CasillaId = validated_casilla_id(
+    "01495",
+    surface="_SALDO_INICIAL_CUMPLIDO",
+)  # consumes the cumplido carry
 
 # Three DISTINCT non-equal known prior-year closing stocks. Distinctness makes a
 # channel swap, an off-by-year fold, or a single-channel copy red the per-casilla
@@ -145,7 +172,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 def _seed_m200_sociedad_profile() -> None:
     """Seed a legal-entity ``UserProfileRecord`` covering M200's six profile bindings.
 
-    M200/2024 declares six ``source = "profile"`` bindings. Four are consumed by
+    M200 declares six ``source = "profile"`` bindings. Four are consumed by
     the cuota chain (``legal-entity-form``, ``new-entity-flag``,
     ``incn-prior-12-months``, ``tributacion-estado-porcentaje``); two are Sociedad
     Laboral specific (``sal-reserva-especial-dotada`` / ``sal-capital-social``),
@@ -173,12 +200,12 @@ def _seed_m200_sociedad_profile() -> None:
 
 
 def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository) -> None:
-    """Persist the prior-ejercicio (2023) M200 closing stock the self-relations read.
+    """Persist the prior-ejercicio M200 closing stock the self-relations read.
 
-    One filed M200/2023/0A observation carrying the three DISTINCT closing-stock
+    One filed prior-year M200/0A observation carrying the three DISTINCT closing-stock
     casillas (``00671`` BIN-pendiente-futuros, ``01498`` saldo-final-no-cumplido,
     ``01499`` saldo-final-cumplido), stamped ``app_filing`` — the operator's
-    historical filing the ``filing_year_delta = -1`` carries fold into the 2024
+    historical filing the ``filing_year_delta = -1`` carries fold into the current
     ejercicio.
     """
     obs_repo.save_observation(
@@ -186,10 +213,15 @@ def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository
             modelo=_M200,
             filing_year=_PRIOR_YEAR,
             period="0A",
-            observations=(
-                CasillaObservation(casilla_id=_PRIOR_BIN_PENDIENTE_FUTUROS, value=_PRIOR_BIN_STOCK),
-                CasillaObservation(casilla_id=_PRIOR_SALDO_FINAL_NO_CUMPLIDO, value=_PRIOR_DOTACIONES_NO_CUMPLIDO),
-                CasillaObservation(casilla_id=_PRIOR_SALDO_FINAL_CUMPLIDO, value=_PRIOR_DOTACIONES_CUMPLIDO),
+            observations=registry_grounded_observations(
+                modelo=_M200,
+                filing_year=_PRIOR_YEAR,
+                period="0A",
+                casilla_values={
+                    _PRIOR_BIN_PENDIENTE_FUTUROS: _PRIOR_BIN_STOCK,
+                    _PRIOR_SALDO_FINAL_NO_CUMPLIDO: _PRIOR_DOTACIONES_NO_CUMPLIDO,
+                    _PRIOR_SALDO_FINAL_CUMPLIDO: _PRIOR_DOTACIONES_CUMPLIDO,
+                },
             ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
@@ -198,7 +230,7 @@ def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository
 
 
 def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None:
-    """Seed same-year M202/2024 instalments as zero c34 so the pagos relation resolves.
+    """Seed same-year M202 instalments as zero c34 so the pagos relation resolves.
 
     The M200 cuota-diferencial formula folds ``modelo-200-2024-rel-202-pagos-fraccionados``
     (a same-year M202 pagos relation) as a DIRECT formula operand, which raises if
@@ -212,9 +244,14 @@ def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None
                 modelo=_M202,
                 filing_year=_FILING_YEAR,
                 period=period,
-                observations=(
-                    CasillaObservation(casilla_id=_M202_PAGO_OUTPUT, value=Decimal("0")),
-                    CasillaObservation(casilla_id=_M202_PAGO_OUTPUT_40_2, value=Decimal("0")),
+                observations=registry_grounded_observations(
+                    modelo=_M202,
+                    filing_year=_FILING_YEAR,
+                    period=period,
+                    casilla_values={
+                        _M202_PAGO_OUTPUT: Decimal("0"),
+                        _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                    },
                 ),
             ),
             source_kind=APP_FILING_SOURCE_KIND,
@@ -227,7 +264,7 @@ def _calculate_m200(
     *,
     seed_m202_pagos: bool = True,
 ) -> BucketAggregationCalculationResult:
-    """Run the live M200/2024/0A calculate over the seeded bucket.
+    """Run the live M200 calculate over the seeded bucket.
 
     Every M200 binding is either ``profile`` (filled by the profile resolver from
     the seeded sociedad record) or ``relation_prefill`` (filled by the enrolled
@@ -269,10 +306,10 @@ def _calculate_m200(
 def test_m200_self_cross_year_stock_carries_fire_on_live_calculate(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """E2E: the prior-ejercicio BIN + dotaciones closing stock fold into M200/2024 live.
+    """E2E: the prior-ejercicio BIN + dotaciones closing stock fold into live M200.
 
-    With the prior 2023 M200 closing stock filed (distinct ``00671`` / ``01498`` /
-    ``01499``), a live calculate of the 2024 ejercicio draws all three self
+    With the prior-year M200 closing stock filed (distinct ``00671`` / ``01498`` /
+    ``01499``), a live calculate of the current ejercicio draws all three self
     cross-year carries through the enrolled ``RelationPrefillSourceResolver``:
 
     - casilla ``00670`` (opening BIN stock) == prior ``00671`` (LIS art. 26.1
@@ -295,15 +332,16 @@ def test_m200_self_cross_year_stock_carries_fire_on_live_calculate(
 
     values = result.revision.casilla_values
     assert Decimal(values[_BIN_PENDIENTE_INICIO]) == _PRIOR_BIN_STOCK, (
-        f"M200 2024 casilla 00670 must copy the prior 2023 00671 BIN stock ({_PRIOR_BIN_STOCK}); "
+        f"M200 {_FILING_YEAR} casilla 00670 must copy the prior {_PRIOR_YEAR} 00671 BIN stock "
+        f"({_PRIOR_BIN_STOCK}); "
         f"got {values[_BIN_PENDIENTE_INICIO]}"
     )
     assert Decimal(values[_SALDO_INICIAL_NO_CUMPLIDO]) == _PRIOR_DOTACIONES_NO_CUMPLIDO, (
-        f"M200 2024 casilla 01494 must copy the prior 2023 01498 no-cumplido stock "
+        f"M200 {_FILING_YEAR} casilla 01494 must copy the prior {_PRIOR_YEAR} 01498 no-cumplido stock "
         f"({_PRIOR_DOTACIONES_NO_CUMPLIDO}); got {values[_SALDO_INICIAL_NO_CUMPLIDO]}"
     )
     assert Decimal(values[_SALDO_INICIAL_CUMPLIDO]) == _PRIOR_DOTACIONES_CUMPLIDO, (
-        f"M200 2024 casilla 01495 must copy the prior 2023 01499 cumplido stock "
+        f"M200 {_FILING_YEAR} casilla 01495 must copy the prior {_PRIOR_YEAR} 01499 cumplido stock "
         f"({_PRIOR_DOTACIONES_CUMPLIDO}); got {values[_SALDO_INICIAL_CUMPLIDO]}"
     )
     # The two dotaciones channels carry distinct values — a condition-state channel
@@ -328,7 +366,7 @@ def test_m200_self_carries_resolve_zero_with_no_prior_filing_on_live_calculate(
     observation-coverage semantics: with NO prior M200 in the store, the
     ``filing_year_delta = -1`` carries resolve present-or-zero rather than raising
     (a first-ejercicio filer simply has no prior stock to carry — a correct zero,
-    not a silent under-declaration of a declared prior). The live 2024 calculate
+    not a silent under-declaration of a declared prior). The live calculate
     succeeds and all three opening-stock casillas resolve to zero. This documents
     the status quo and fails loudly if it drifts. (xfail/skip-free per the testing
     mandate.)
@@ -337,13 +375,16 @@ def test_m200_self_carries_resolve_zero_with_no_prior_filing_on_live_calculate(
 
     values = result.revision.casilla_values
     assert Decimal(values[_BIN_PENDIENTE_INICIO]) == Decimal("0"), (
-        f"M200 2024 casilla 00670 with no prior 00671 must resolve zero; got {values[_BIN_PENDIENTE_INICIO]}"
+        f"M200 {_FILING_YEAR} casilla 00670 with no prior 00671 must resolve zero; "
+        f"got {values[_BIN_PENDIENTE_INICIO]}"
     )
     assert Decimal(values[_SALDO_INICIAL_NO_CUMPLIDO]) == Decimal("0"), (
-        f"M200 2024 casilla 01494 with no prior 01498 must resolve zero; got {values[_SALDO_INICIAL_NO_CUMPLIDO]}"
+        f"M200 {_FILING_YEAR} casilla 01494 with no prior 01498 must resolve zero; "
+        f"got {values[_SALDO_INICIAL_NO_CUMPLIDO]}"
     )
     assert Decimal(values[_SALDO_INICIAL_CUMPLIDO]) == Decimal("0"), (
-        f"M200 2024 casilla 01495 with no prior 01499 must resolve zero; got {values[_SALDO_INICIAL_CUMPLIDO]}"
+        f"M200 {_FILING_YEAR} casilla 01495 with no prior 01499 must resolve zero; "
+        f"got {values[_SALDO_INICIAL_CUMPLIDO]}"
     )
     assert result.source_diagnostics == ()
 

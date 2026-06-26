@@ -15,11 +15,14 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.errors import AeatError
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .. import ExtractedCasilla, PdfModeloImportError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 _PrintedValue = Decimal | int | str | bool | date | None
+_DEFAULT_CASILLA: CasillaId = validated_casilla_id("01", surface="_DEFAULT_CASILLA")
+_OTHER_CASILLA: CasillaId = validated_casilla_id("02", surface="_OTHER_CASILLA")
 
 
 class TestExtractedCasillaShape:
@@ -28,7 +31,7 @@ class TestExtractedCasillaShape:
     def _build(
         self,
         *,
-        casilla_id: str = "01",
+        casilla_id: CasillaId = _DEFAULT_CASILLA,
         printed_value: _PrintedValue = Decimal("1234.56"),
         source_page: int = 1,
         source_bbox: tuple[float, float, float, float] | None = None,
@@ -45,7 +48,7 @@ class TestExtractedCasillaShape:
 
     def test_builds_with_decimal_value(self) -> None:
         record = self._build()
-        assert record.casilla_id == "01"
+        assert record.casilla_id == _DEFAULT_CASILLA
         assert record.printed_value == Decimal("1234.56")
         assert record.extraction_confidence == 1.0
 
@@ -57,13 +60,13 @@ class TestExtractedCasillaShape:
     def test_is_frozen(self) -> None:
         record = self._build()
         with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-            record.casilla_id = "02"
+            record.casilla_id = _OTHER_CASILLA
 
     def test_extra_fields_rejected(self) -> None:
         with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             ExtractedCasilla.model_validate(
                 {
-                    "casilla_id": "01",
+                    "casilla_id": _DEFAULT_CASILLA,
                     "printed_value": Decimal("1.00"),
                     "source_page": 1,
                     "extraction_confidence": 1.0,
@@ -89,7 +92,7 @@ class TestExtractedCasillaShape:
         with pytest.raises(ValidationError, match=r"source_bbox|Tuple should have"):
             ExtractedCasilla.model_validate(
                 {
-                    "casilla_id": "01",
+                    "casilla_id": _DEFAULT_CASILLA,
                     "printed_value": Decimal("0"),
                     "source_page": 1,
                     "source_bbox": (10.0, 20.0, 30.0),

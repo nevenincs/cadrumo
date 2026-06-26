@@ -23,12 +23,14 @@ from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
     M210_RATE_SENTINELS,
     CasillaDefinition,
+    CasillaId,
     CasillaObservation,
     InputKind,
     Modelo202Modality,
     RegistrySnapshot,
     VerificationPredicateDefinition,
     derive_modelo_202_modality,
+    validated_casilla_id,
 )
 from ...domain.deadlines import FiscalResidency, IrpfIncomeCategory, TaxpayerProfile
 from ...domain.modelos._calculation_repository import (
@@ -40,7 +42,7 @@ from ...domain.modelos._calculation_revision import (
     CalculationRevisionCatalogue,
     CalculationRevisionState,
 )
-from ...domain.modelos._errors import ModeloError
+from ...domain.modelos._errors import ModeloError, ModeloValidationError
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ...domain.modelos._ledger_filing_snapshot import (
     LedgerFilingEvidence,
@@ -117,6 +119,7 @@ from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectWrite
+    from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
     from ..calculations._observations_repository import IvaWalletDecisionRepository
 
 _PREDICATE_ALL_NONZERO = _re.compile(r"^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
@@ -183,19 +186,26 @@ _PREDICATE_ROLL_FORWARD_BALANCES = _re.compile(r"^roll_forward_balances\(\[(?P<i
 _BALANCE_CENT_TOLERANCE = Decimal("0.01")
 
 
-def _parse_predicate_casilla_ids(ids_fragment: str) -> list[str]:
+def _parse_predicate_casilla_ids(ids_fragment: str) -> list[CasillaId]:
     """Parse the comma-separated quoted-id list from a predicate expression."""
-    ids: list[str] = []
+    ids: list[CasillaId] = []
     for token in ids_fragment.split(","):
         token = token.strip().strip('"').strip("'")
         if token:
-            ids.append(token)
+            ids.append(_validated_predicate_casilla_id(token))
     return ids
 
 
+def _validated_predicate_casilla_id(token: str) -> CasillaId:
+    try:
+        return validated_casilla_id(token, surface="verification predicate casilla id")
+    except ValueError as exc:
+        raise ModeloError(f"verification predicate references non-canonical casilla.id {token!r}") from exc
+
+
 def _roll_forward_balance_reconciles(
-    ids: list[str],
-    casilla_values: Mapping[str, Decimal],
+    ids: list[CasillaId],
+    casilla_values: Mapping[CasillaId, Decimal],
 ) -> bool | None:
     """Return whether a carry-forward closing balance reconciles to its roll-forward.
 
@@ -246,7 +256,7 @@ def _evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) -
 
 def _evaluate_predicate_expression(
     expression: str,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
     profile: TaxpayerProfile,
 ) -> bool:
     """Return True when the predicate holds, False when it is violated.
@@ -440,7 +450,7 @@ def _rewrite_m210_sentinels(
 
 def _evaluate_advisory_predicate_fires(
     expression: str,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
 ) -> bool:
     """Return True when an advisory predicate's condition is met (i.e. advisory should fire).
 
@@ -466,8 +476,8 @@ def _evaluate_advisory_predicate_fires(
     expr = expression.strip()
     m = _PREDICATE_ADVISORY_WHEN_RATIO_GE.match(expr)
     if m:
-        num_id = m.group("num")
-        den_id = m.group("den")
+        num_id = _validated_predicate_casilla_id(m.group("num"))
+        den_id = _validated_predicate_casilla_id(m.group("den"))
         thr_str = m.group("thr")
         den = casilla_values.get(den_id, Decimal(0))
         if den <= Decimal(0):
@@ -515,7 +525,7 @@ def _evaluate_advisory_predicate_fires(
 
 def _evaluate_verification_predicates(
     predicates: tuple[VerificationPredicateDefinition, ...],
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
     profile: TaxpayerProfile,
 ) -> list[ModeloVerificationFinding]:
     """Evaluate Layer 2 cross-casilla predicates; return findings for violations or advisories.
@@ -567,17 +577,17 @@ def _evaluate_verification_predicates(
     return findings
 
 
-def _manual_fact_basis_entries(inputs_snapshot: Mapping[str, str]) -> tuple[ManualFactBasisEntry, ...]:
+def _manual_fact_basis_entries(input_values_by_casilla_id: Mapping[CasillaId, str]) -> tuple[ManualFactBasisEntry, ...]:
     """Project a revision's operator casilla inputs into manual fact-basis entries.
 
-    The ``inputs_snapshot`` holds the caller-supplied (operator-entered) casilla
+    The ``input_values_by_casilla_id`` holds the caller-supplied (operator-entered) casilla
     values that are not ledger-derived; each non-empty entry is part of the fact
     basis a filing artefact must explain. Blank values are skipped (they carry no
     fact).
     """
     return tuple(
-        ManualFactBasisEntry(casilla=casilla, value=value)
-        for casilla, value in sorted(inputs_snapshot.items())
+        ManualFactBasisEntry(casilla_id=casilla, value=value)
+        for casilla, value in sorted(input_values_by_casilla_id.items())
         if value.strip()
     )
 
@@ -1317,7 +1327,7 @@ def verify_modelo_revision(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
         )
 
-    findings, resolved_casillas, missing_required = _collect_revision_verification_findings(
+    findings, resolved_casilla_ids, missing_required_casilla_ids = _collect_revision_verification_findings(
         work_unit=work_unit,
         target=target,
         profile=workflow_profile,
@@ -1361,7 +1371,7 @@ def verify_modelo_revision(
     )
     completeness, granted = _classify_verification_outcome(
         findings=findings,
-        missing_required=missing_required,
+        missing_required=missing_required_casilla_ids,
     )
 
     now = clock or _utc_now()
@@ -1375,8 +1385,8 @@ def verify_modelo_revision(
         calculation_revision_id=calculation_revision_id,
         completeness_status=completeness,
         findings=tuple(findings),
-        resolved_casillas=tuple(resolved_casillas),
-        missing_required_casillas=tuple(missing_required),
+        resolved_casilla_ids=tuple(resolved_casilla_ids),
+        missing_required_casilla_ids=tuple(missing_required_casilla_ids),
         run_at=now,
         verified_by=actor.strip(),
         granted_verificado_completo=granted,
@@ -1426,7 +1436,7 @@ def verify_modelo_revision(
         completeness=completeness,
         granted=granted,
         finding_count=len(findings),
-        missing_required_count=len(missing_required),
+        missing_required_count=len(missing_required_casilla_ids),
         actor=actor,
         occurred_at=now,
     )
@@ -1488,7 +1498,7 @@ def _persist_verified_revision_evidence(
         catalogue=catalogue,
         snapshot_fingerprint=filing_snapshot.snapshot_fingerprint,
         captured_at=now,
-        manual_entries=_manual_fact_basis_entries(target.inputs_snapshot),
+        manual_entries=_manual_fact_basis_entries(target.input_values_by_casilla_id),
     )
     _assert_evidence_covers_snapshot(filing_snapshot, filing_evidence)
     verified = target.model_copy(
@@ -1559,25 +1569,25 @@ def _collect_revision_verification_findings(
     work_unit: WorkUnit,
     target: CalculationRevision,
     profile: TaxpayerProfile,
-) -> tuple[list[ModeloVerificationFinding], list[str], list[str]]:
+) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId]]:
     """Build the verification finding list for one calculation revision.
 
-    Returns ``(findings, resolved_casillas, missing_required)``. A
+    Returns ``(findings, resolved_casilla_ids, missing_required_casilla_ids)``. A
     revision whose ``(modelo, year, period)`` triple does not resolve
     against the registry yields a single BLOCKING_RULE finding and
     empty resolved/missing lists — there is no per-casilla check to
     perform without a registry snapshot.
 
     With a snapshot present, the operator-supplied
-    ``inputs_snapshot`` keys are compared against the registry's
+    ``input_values_by_casilla_id`` keys are compared against the registry's
     required-input casilla set. Each missing required casilla
     produces a MISSING_REQUIRED_CASILLA finding plus an entry in the
     missing-required list; each present required casilla lands in
-    the resolved-casillas list.
+    the resolved-casilla-ids list.
     """
     findings: list[ModeloVerificationFinding] = []
-    resolved_casillas: list[str] = []
-    missing_required: list[str] = []
+    resolved_casilla_ids: list[CasillaId] = []
+    missing_required_casilla_ids: list[CasillaId] = []
 
     from ...domain.calculations.registry import RegistrySnapshotError
 
@@ -1602,16 +1612,16 @@ def _collect_revision_verification_findings(
                 next_action="aeat app registry verify",
             ),
         )
-        return findings, resolved_casillas, missing_required
+        return findings, resolved_casilla_ids, missing_required_casilla_ids
 
-    revision_keys = set(target.inputs_snapshot)
+    revision_keys = set(target.input_values_by_casilla_id)
     for casilla in snapshot.revision.casillas:
-        casilla_id = str(casilla.id)
+        casilla_id = casilla.id
         if casilla.input_kind == InputKind.MANUAL and casilla.required:
             if casilla_id in revision_keys:
-                resolved_casillas.append(casilla_id)
+                resolved_casilla_ids.append(casilla_id)
             else:
-                missing_required.append(casilla_id)
+                missing_required_casilla_ids.append(casilla_id)
                 findings.append(
                     _missing_required_casilla_finding(
                         casilla_id,
@@ -1647,17 +1657,25 @@ def _collect_revision_verification_findings(
     if art20_finding is not None:
         findings.append(art20_finding)
 
-    return findings, resolved_casillas, missing_required
+    return findings, resolved_casilla_ids, missing_required_casilla_ids
 
 
 def _missing_required_casilla_finding(
-    casilla_id: str,
+    casilla_id: CasillaId,
     work_unit_id: str,
     *,
     casilla_def: CasillaDefinition | None = None,
 ) -> ModeloVerificationFinding:
-    legal_refs: tuple[str, ...] = tuple(str(r) for r in casilla_def.legal_refs) if casilla_def is not None else ()
-    source_refs: tuple[str, ...] = tuple(str(r) for r in casilla_def.source_refs) if casilla_def is not None else ()
+    if casilla_def is None:
+        raise ModeloValidationError(
+            f"missing-required finding for casilla {casilla_id!r} requires registry casilla definition provenance",
+        )
+    legal_refs: tuple[str, ...] = tuple(str(r) for r in casilla_def.legal_refs)
+    source_refs: tuple[str, ...] = tuple(str(r) for r in casilla_def.source_refs)
+    if not legal_refs or not source_refs:
+        raise ModeloValidationError(
+            f"missing-required finding for casilla {casilla_id!r} requires legal_refs/source_refs provenance",
+        )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
@@ -1669,7 +1687,9 @@ def _missing_required_casilla_finding(
     )
 
 
-def _iva_wallet_blocking_verification_finding(decision: object) -> ModeloVerificationFinding:
+def _iva_wallet_blocking_verification_finding(
+    decision: IvaCompensationReconciliationDecision,
+) -> ModeloVerificationFinding:
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
@@ -1699,7 +1719,7 @@ def _translated_exception_message(error: ModeloIvaWalletReconciliationBlocked) -
 def _classify_verification_outcome(
     *,
     findings: list[ModeloVerificationFinding],
-    missing_required: list[str],
+    missing_required: list[CasillaId],
 ) -> tuple[VerificationCompletenessStatus, bool]:
     """Compute the completeness status + granted flag from finding shape.
 

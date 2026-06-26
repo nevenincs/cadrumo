@@ -48,13 +48,16 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
+    RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
+from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -71,6 +74,29 @@ _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
 
 _CLOCK = datetime(2027, 2, 1, 9, 0, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M193/123 reconciliation fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M123_RENTAS_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("01")
+_M123_RENTAS_RESTO_CASILLA: CasillaId = _casilla_id("02")
+_M123_RENTAS_TOTAL_CASILLA: CasillaId = _casilla_id("03")
+_M123_BASE_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("04")
+_M123_BASE_RESTO_CASILLA: CasillaId = _casilla_id("05")
+_M123_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("06")
+_M123_RETENCIONES_DIVIDENDOS_CASILLA: CasillaId = _casilla_id("07")
+_M123_RETENCIONES_RESTO_CASILLA: CasillaId = _casilla_id("08")
+_M123_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("09")
+_M123_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("10")
+_M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: CasillaId = _casilla_id("11")
+_M193_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
+_M193_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
+_M193_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
 
 # ---------------------------------------------------------------------------
 # 123 quarterly scenarios.
@@ -90,89 +116,89 @@ _CLOCK = datetime(2027, 2, 1, 9, 0, 0, tzinfo=UTC)
 # (retenciones total). These three are what the 193 relations aggregate.
 # ---------------------------------------------------------------------------
 
-_YEAR_N_QUARTERS: dict[str, dict[str, Decimal]] = {
+_YEAR_N_QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
     "1T": {
-        "01": Decimal("3"),
-        "02": Decimal("1"),
-        "04": Decimal("5000.00"),
-        "05": Decimal("1200.00"),
-        "07": Decimal("950.00"),
-        "08": Decimal("228.00"),
-        "10": Decimal("0"),
-        "11": Decimal("0"),
+        _M123_RENTAS_DIVIDENDOS_CASILLA: Decimal("3"),
+        _M123_RENTAS_RESTO_CASILLA: Decimal("1"),
+        _M123_BASE_DIVIDENDOS_CASILLA: Decimal("5000.00"),
+        _M123_BASE_RESTO_CASILLA: Decimal("1200.00"),
+        _M123_RETENCIONES_DIVIDENDOS_CASILLA: Decimal("950.00"),
+        _M123_RETENCIONES_RESTO_CASILLA: Decimal("228.00"),
+        _M123_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+        _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: Decimal("0"),
     },
     "2T": {
-        "01": Decimal("4"),
-        "02": Decimal("2"),
-        "04": Decimal("7000.00"),
-        "05": Decimal("800.00"),
-        "07": Decimal("1330.00"),
-        "08": Decimal("152.00"),
-        "10": Decimal("0"),
-        "11": Decimal("0"),
+        _M123_RENTAS_DIVIDENDOS_CASILLA: Decimal("4"),
+        _M123_RENTAS_RESTO_CASILLA: Decimal("2"),
+        _M123_BASE_DIVIDENDOS_CASILLA: Decimal("7000.00"),
+        _M123_BASE_RESTO_CASILLA: Decimal("800.00"),
+        _M123_RETENCIONES_DIVIDENDOS_CASILLA: Decimal("1330.00"),
+        _M123_RETENCIONES_RESTO_CASILLA: Decimal("152.00"),
+        _M123_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+        _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: Decimal("0"),
     },
     "3T": {
-        "01": Decimal("2"),
-        "02": Decimal("1"),
-        "04": Decimal("4000.00"),
-        "05": Decimal("600.00"),
-        "07": Decimal("760.00"),
-        "08": Decimal("114.00"),
-        "10": Decimal("0"),
-        "11": Decimal("0"),
+        _M123_RENTAS_DIVIDENDOS_CASILLA: Decimal("2"),
+        _M123_RENTAS_RESTO_CASILLA: Decimal("1"),
+        _M123_BASE_DIVIDENDOS_CASILLA: Decimal("4000.00"),
+        _M123_BASE_RESTO_CASILLA: Decimal("600.00"),
+        _M123_RETENCIONES_DIVIDENDOS_CASILLA: Decimal("760.00"),
+        _M123_RETENCIONES_RESTO_CASILLA: Decimal("114.00"),
+        _M123_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+        _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: Decimal("0"),
     },
     "4T": {
-        "01": Decimal("3"),
-        "02": Decimal("0"),
-        "04": Decimal("6000.00"),
-        "05": Decimal("0"),
-        "07": Decimal("1140.00"),
-        "08": Decimal("0"),
-        "10": Decimal("0"),
-        "11": Decimal("0"),
+        _M123_RENTAS_DIVIDENDOS_CASILLA: Decimal("3"),
+        _M123_RENTAS_RESTO_CASILLA: Decimal("0"),
+        _M123_BASE_DIVIDENDOS_CASILLA: Decimal("6000.00"),
+        _M123_BASE_RESTO_CASILLA: Decimal("0"),
+        _M123_RETENCIONES_DIVIDENDOS_CASILLA: Decimal("1140.00"),
+        _M123_RETENCIONES_RESTO_CASILLA: Decimal("0"),
+        _M123_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+        _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: Decimal("0"),
     },
 }
 
-_YEAR_N_PLUS_1_QUARTERS: dict[str, dict[str, Decimal]] = {
+_YEAR_N_PLUS_1_QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
     "1T": {
-        "01": Decimal("2"),
-        "02": Decimal("1"),
-        "04": Decimal("3000.00"),
-        "05": Decimal("500.00"),
-        "07": Decimal("570.00"),
-        "08": Decimal("95.00"),
-        "10": Decimal("0"),
-        "11": Decimal("0"),
+        _M123_RENTAS_DIVIDENDOS_CASILLA: Decimal("2"),
+        _M123_RENTAS_RESTO_CASILLA: Decimal("1"),
+        _M123_BASE_DIVIDENDOS_CASILLA: Decimal("3000.00"),
+        _M123_BASE_RESTO_CASILLA: Decimal("500.00"),
+        _M123_RETENCIONES_DIVIDENDOS_CASILLA: Decimal("570.00"),
+        _M123_RETENCIONES_RESTO_CASILLA: Decimal("95.00"),
+        _M123_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+        _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: Decimal("0"),
     },
     "2T": {
-        "01": Decimal("5"),
-        "02": Decimal("2"),
-        "04": Decimal("8000.00"),
-        "05": Decimal("1500.00"),
-        "07": Decimal("1520.00"),
-        "08": Decimal("285.00"),
-        "10": Decimal("0"),
-        "11": Decimal("0"),
+        _M123_RENTAS_DIVIDENDOS_CASILLA: Decimal("5"),
+        _M123_RENTAS_RESTO_CASILLA: Decimal("2"),
+        _M123_BASE_DIVIDENDOS_CASILLA: Decimal("8000.00"),
+        _M123_BASE_RESTO_CASILLA: Decimal("1500.00"),
+        _M123_RETENCIONES_DIVIDENDOS_CASILLA: Decimal("1520.00"),
+        _M123_RETENCIONES_RESTO_CASILLA: Decimal("285.00"),
+        _M123_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+        _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: Decimal("0"),
     },
     "3T": {
-        "01": Decimal("3"),
-        "02": Decimal("1"),
-        "04": Decimal("5500.00"),
-        "05": Decimal("900.00"),
-        "07": Decimal("1045.00"),
-        "08": Decimal("171.00"),
-        "10": Decimal("0"),
-        "11": Decimal("0"),
+        _M123_RENTAS_DIVIDENDOS_CASILLA: Decimal("3"),
+        _M123_RENTAS_RESTO_CASILLA: Decimal("1"),
+        _M123_BASE_DIVIDENDOS_CASILLA: Decimal("5500.00"),
+        _M123_BASE_RESTO_CASILLA: Decimal("900.00"),
+        _M123_RETENCIONES_DIVIDENDOS_CASILLA: Decimal("1045.00"),
+        _M123_RETENCIONES_RESTO_CASILLA: Decimal("171.00"),
+        _M123_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+        _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: Decimal("0"),
     },
     "4T": {
-        "01": Decimal("4"),
-        "02": Decimal("0"),
-        "04": Decimal("7500.00"),
-        "05": Decimal("0"),
-        "07": Decimal("1425.00"),
-        "08": Decimal("0"),
-        "10": Decimal("0"),
-        "11": Decimal("0"),
+        _M123_RENTAS_DIVIDENDOS_CASILLA: Decimal("4"),
+        _M123_RENTAS_RESTO_CASILLA: Decimal("0"),
+        _M123_BASE_DIVIDENDOS_CASILLA: Decimal("7500.00"),
+        _M123_BASE_RESTO_CASILLA: Decimal("0"),
+        _M123_RETENCIONES_DIVIDENDOS_CASILLA: Decimal("1425.00"),
+        _M123_RETENCIONES_RESTO_CASILLA: Decimal("0"),
+        _M123_PREVIOUS_RESULT_CASILLA: Decimal("0"),
+        _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: Decimal("0"),
     },
 }
 
@@ -181,12 +207,12 @@ def _calculate_123(
     *,
     filing_year: int,
     period: str,
-    casilla_inputs: dict[str, Decimal],
+    casilla_inputs: dict[CasillaId, Decimal],
 ) -> RegistryCalculationResult:
     """Run the REAL 123 quarterly calculation and return the engine result."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_123, filing_year=filing_year, period=period)
     inputs = {
-        **resolve_bound_casilla_inputs(snapshot.revision, {}),
+        **resolve_bound_inputs_by_casilla_id(snapshot.revision, {}),
         **casilla_inputs,
     }
     return calculate_registry_snapshot(
@@ -198,25 +224,25 @@ def _calculate_123(
 
 
 def _123_observation(*, filing_year: int, period: str, result: RegistryCalculationResult) -> RegistryModeloObservation:
-    return RegistryModeloObservation(
+    return registry_grounded_modelo_observation(
         modelo=_MODELO_123,
         filing_year=filing_year,
         period=period,
-        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+        casilla_values=result.values,
     )
 
 
 def _calculate_193(
     *,
     filing_year: int,
-    relation_values: dict[str, Decimal],
+    relation_values: dict[RelationId, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL 193 annual calculation from resolved relations; return result + count."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_193, filing_year=filing_year, period="0A")
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     binding_values = {**relation_binding_values}
     inputs = {
-        **resolve_bound_casilla_inputs(snapshot.revision, binding_values),
+        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
     }
     result = calculate_registry_snapshot(
         snapshot,
@@ -229,17 +255,21 @@ def _calculate_193(
 
 
 def _compute_year_123_totals(
-    quarters: dict[str, dict[str, Decimal]],
+    quarters: dict[str, dict[CasillaId, Decimal]],
     *,
     filing_year: int,
     obs_repo: CalculationObservationRepository,
-) -> dict[str, Decimal]:
+) -> dict[CasillaId, Decimal]:
     """Calculate all four 123 quarters, persist observations, return casilla sums.
 
     Returns a dict with the summed computed values for casillas 03, 06, 09 —
     the casillas the 193 relations aggregate.
     """
-    totals: dict[str, Decimal] = {"03": Decimal("0"), "06": Decimal("0"), "09": Decimal("0")}
+    totals: dict[CasillaId, Decimal] = {
+        _M123_RENTAS_TOTAL_CASILLA: Decimal("0"),
+        _M123_BASE_TOTAL_CASILLA: Decimal("0"),
+        _M123_RETENCIONES_TOTAL_CASILLA: Decimal("0"),
+    }
     for period, inputs in quarters.items():
         result = _calculate_123(filing_year=filing_year, period=period, casilla_inputs=inputs)
         obs_repo.save_observation(
@@ -265,9 +295,9 @@ def test_modelo_123_quarterly_engine_produces_computed_totals(tmp_path: Path) ->
             casilla_inputs=_YEAR_N_QUARTERS["1T"],
         )
     # All three total casillas must be positive (seeded with non-zero inputs).
-    assert result.values["03"] > Decimal("0")  # total rentas
-    assert result.values["06"] > Decimal("0")  # base total
-    assert result.values["09"] > Decimal("0")  # retenciones total
+    assert result.values[_M123_RENTAS_TOTAL_CASILLA] > Decimal("0")  # total rentas
+    assert result.values[_M123_BASE_TOTAL_CASILLA] > Decimal("0")  # base total
+    assert result.values[_M123_RETENCIONES_TOTAL_CASILLA] > Decimal("0")  # retenciones total
 
 
 def test_modelo_193_relation_prefill_aggregates_123_quarters(tmp_path: Path) -> None:
@@ -286,10 +316,12 @@ def test_modelo_193_relation_prefill_aggregates_123_quarters(tmp_path: Path) -> 
         snapshot_193 = resources().modelos.authority.snapshot(_MODELO_193, filing_year=_YEAR_N, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_193, repository=obs_repo)
 
-    resolved = {item.relation: item.value for item in prefill.values if item.value is not None}
-    assert resolved["modelo-193-rel-123-perceptores-anual"] == expected["03"]
-    assert resolved["modelo-193-rel-123-base-anual"] == expected["06"]
-    assert resolved["modelo-193-rel-123-retenciones-anual"] == expected["09"]
+    resolved: dict[RelationId, Decimal] = {
+        item.relation: item.value for item in prefill.values if item.value is not None
+    }
+    assert resolved["modelo-193-rel-123-perceptores-anual"] == expected[_M123_RENTAS_TOTAL_CASILLA]
+    assert resolved["modelo-193-rel-123-base-anual"] == expected[_M123_BASE_TOTAL_CASILLA]
+    assert resolved["modelo-193-rel-123-retenciones-anual"] == expected[_M123_RETENCIONES_TOTAL_CASILLA]
 
 
 def test_modelo_193_year_isolation_ignores_prior_year_observations(tmp_path: Path) -> None:
@@ -306,10 +338,12 @@ def test_modelo_193_year_isolation_ignores_prior_year_observations(tmp_path: Pat
         snapshot_193_n1 = resources().modelos.authority.snapshot(_MODELO_193, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill = resolve_relations_from_local_store(snapshot_193_n1, repository=obs_repo)
 
-    resolved = {item.relation: item.value for item in prefill.values if item.value is not None}
-    assert resolved["modelo-193-rel-123-perceptores-anual"] == expected_n1["03"]
-    assert resolved["modelo-193-rel-123-base-anual"] == expected_n1["06"]
-    assert resolved["modelo-193-rel-123-retenciones-anual"] == expected_n1["09"]
+    resolved: dict[RelationId, Decimal] = {
+        item.relation: item.value for item in prefill.values if item.value is not None
+    }
+    assert resolved["modelo-193-rel-123-perceptores-anual"] == expected_n1[_M123_RENTAS_TOTAL_CASILLA]
+    assert resolved["modelo-193-rel-123-base-anual"] == expected_n1[_M123_BASE_TOTAL_CASILLA]
+    assert resolved["modelo-193-rel-123-retenciones-anual"] == expected_n1[_M123_RETENCIONES_TOTAL_CASILLA]
 
 
 def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> None:
@@ -366,14 +400,14 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         recorder_193.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Wiring invariant Year N: each 193 output == summed 123 quarterly totals.
-    assert result_n.values["decl.total-perceptores"] == expected_n["03"]
-    assert result_n.values["decl.base-total"] == expected_n["06"]
-    assert result_n.values["decl.retenciones-total"] == expected_n["09"]
+    assert result_n.values[_M193_TOTAL_PERCEPTORES_CASILLA] == expected_n[_M123_RENTAS_TOTAL_CASILLA]
+    assert result_n.values[_M193_BASE_TOTAL_CASILLA] == expected_n[_M123_BASE_TOTAL_CASILLA]
+    assert result_n.values[_M193_RETENCIONES_TOTAL_CASILLA] == expected_n[_M123_RETENCIONES_TOTAL_CASILLA]
 
     # Wiring invariant Year N+1 (year-isolated):
-    assert result_n1.values["decl.total-perceptores"] == expected_n1["03"]
-    assert result_n1.values["decl.base-total"] == expected_n1["06"]
-    assert result_n1.values["decl.retenciones-total"] == expected_n1["09"]
+    assert result_n1.values[_M193_TOTAL_PERCEPTORES_CASILLA] == expected_n1[_M123_RENTAS_TOTAL_CASILLA]
+    assert result_n1.values[_M193_BASE_TOTAL_CASILLA] == expected_n1[_M123_BASE_TOTAL_CASILLA]
+    assert result_n1.values[_M193_RETENCIONES_TOTAL_CASILLA] == expected_n1[_M123_RETENCIONES_TOTAL_CASILLA]
 
     # Authorization-gate enrollment for the 193 resumen.
     evidence_193 = recorder_193.evidence()

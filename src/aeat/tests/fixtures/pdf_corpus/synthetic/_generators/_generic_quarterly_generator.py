@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
+from ......domain.calculations.registry import CasillaId
 from ._generator_shared import (
     CasillaBox,
     draw_casilla_box,
@@ -37,8 +38,8 @@ class QuarterlyGenParams(BaseModel):
     tax_id: str = Field(min_length=4, max_length=32)
     ejercicio: str = Field(min_length=4, max_length=4)
     period_printed: str = Field(min_length=1, max_length=4)
-    labels: Mapping[str, str]
-    casilla_values: Mapping[str, Decimal | str]
+    labels: Mapping[CasillaId, str]
+    casilla_values: Mapping[CasillaId, Decimal | str]
     csv: str | None = None
     presented_at: str = "2025-04-20 10:00:00"
     thousands_sep: str = Field(
@@ -63,7 +64,7 @@ class QuarterlyGenParams(BaseModel):
 class QuarterlyGroundTruth(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
     params: QuarterlyGenParams
-    expected_casillas: tuple[tuple[str, Decimal | str], ...]
+    expected_values_by_casilla_id: tuple[tuple[CasillaId, Decimal | str], ...]
 
 
 def generate(params: QuarterlyGenParams) -> tuple[bytes, QuarterlyGroundTruth]:
@@ -113,7 +114,7 @@ def generate(params: QuarterlyGenParams) -> tuple[bytes, QuarterlyGroundTruth]:
         for casilla_id in ids_in_order
         if casilla_id in params.casilla_values
     )
-    return pdf_bytes, QuarterlyGroundTruth(params=params, expected_casillas=expected)
+    return pdf_bytes, QuarterlyGroundTruth(params=params, expected_values_by_casilla_id=expected)
 
 
 __all__ = ["QuarterlyGenParams", "QuarterlyGroundTruth", "generate"]

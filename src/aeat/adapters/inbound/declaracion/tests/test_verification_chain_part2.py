@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....tests.registry_observations import registry_grounded_observations
 from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M115,
     _COMPUTED_CASILLAS_M123_2019,
@@ -11,7 +12,8 @@ from ._verification_chain_support import (
     _COMPUTED_CASILLAS_M131,
     _COMPUTED_CASILLAS_M390,
     FIXTURES_DIR,
-    CasillaObservation,
+    BindingId,
+    CasillaId,
     Decimal,
     DeclaracionParseError,
     RegistryModeloObservation,
@@ -22,9 +24,94 @@ from ._verification_chain_support import (
     date,
     parse_declaracion,
     resolve_relation_values_from_observations,
+    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+def _casilla_ids(*values: object) -> frozenset[CasillaId]:
+    return frozenset(_casilla_id(value) for value in values)
+
+
+_M390_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-devengada-total")
+_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = _casilla_id("iva.anual.cuota-deducible-total")
+_M390_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = _casilla_id("iva.anual.resultado-regimen-general")
+_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.compensacion-ultimo-periodo-97",
+)
+_M390_COMPENSACION_GENERADA_NO_97_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.compensacion-generada-ejercicio-no-97",
+)
+_M390_REPERCUTIDO_GENERAL_CASILLA: CasillaId = _casilla_id("iva.anual.repercutido.general")
+_M390_REPERCUTIDO_REDUCIDO_CASILLA: CasillaId = _casilla_id("iva.anual.repercutido.reducido")
+_M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.repercutido.super-reducido",
+)
+_M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA: CasillaId = _casilla_id(
+    "iva.anual.autorepercutido.intracomunitaria",
+)
+_M390_SOPORTADO_INTERIORES_CASILLA: CasillaId = _casilla_id("iva.anual.soportado.interiores")
+_M390_REQUIRED_CASILLAS: tuple[CasillaId, ...] = (
+    _M390_CUOTA_DEVENGADA_TOTAL_CASILLA,
+    _M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+)
+_DECL_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
+_DECL_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
+_DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_DECL_SUMMARY_CASILLAS: frozenset[CasillaId] = _casilla_ids(
+    "decl.total-perceptores",
+    "decl.base-total",
+    "decl.retenciones-total",
+)
+_DECL_SUMMARY_ASSERTION_CASILLAS: tuple[CasillaId, ...] = (
+    _DECL_TOTAL_PERCEPTORES_CASILLA,
+    _DECL_BASE_TOTAL_CASILLA,
+    _DECL_RETENCIONES_TOTAL_CASILLA,
+)
+_M115_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
+_M115_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("02")
+_M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
+_M115_ANTERIORES_CASILLA: CasillaId = _casilla_id("04")
+_M115_RESULTADO_CASILLA: CasillaId = _casilla_id("05")
+_M115_REQUIRED_CASILLAS: tuple[CasillaId, ...] = (
+    _M115_TOTAL_PERCEPTORES_CASILLA,
+    _M115_BASE_TOTAL_CASILLA,
+    _M115_RETENCIONES_CASILLA,
+    _M115_ANTERIORES_CASILLA,
+    _M115_RESULTADO_CASILLA,
+)
+_M115_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
+    _M115_RETENCIONES_CASILLA,
+    _M115_RESULTADO_CASILLA,
+)
+_M123_2019_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
+    _casilla_id("06-legacy"),
+    _casilla_id("08-legacy"),
+)
+_M123_TOTAL_RENTAS_CASILLA: CasillaId = _casilla_id("03")
+_M123_TOTAL_BASE_CASILLA: CasillaId = _casilla_id("06")
+_M123_TOTAL_RETENCIONES_CASILLA: CasillaId = _casilla_id("09")
+_M123_2024_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
+    _M123_TOTAL_RENTAS_CASILLA,
+    _M123_TOTAL_BASE_CASILLA,
+    _M123_TOTAL_RETENCIONES_CASILLA,
+    _casilla_id("12"),
+    _casilla_id("14"),
+)
+_M131_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
+    _casilla_id("07"),
+    _casilla_id("10"),
+    _casilla_id("13"),
+    _casilla_id("15"),
+)
 
 
 @pytest.mark.parametrize(
@@ -79,7 +166,7 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
     # Verify the profile captured the required closure casillas.
-    for required_id in ("iva.anual.cuota-devengada-total", "iva.anual.cuota-deducible-total"):
+    for required_id in _M390_REQUIRED_CASILLAS:
         assert required_id in extracted, (
             f"PARSER-GAP [{pdf_stem}]: closure casilla {required_id!r} "
             f"not in extracted values — parser did not capture it.\n  got: {sorted(extracted)}"
@@ -88,7 +175,7 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
     # Build inputs — supply only non-computed Decimal casillas.
     # Leaf bound casillas (repercutido.general, etc.) are non-previous_filing
     # and therefore go into inputs (engine defaults absent ones to ZERO).
-    inputs: dict[str, Decimal] = {}
+    inputs: dict[CasillaId, Decimal] = {}
     for casilla_id, value in extracted.items():
         if casilla_id in _COMPUTED_CASILLAS_M390:
             continue
@@ -103,11 +190,11 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
     # binding_values to agree when both are populated. For the three reconciliation
     # casillas (devengada/deducible/resultado from M303), supply zero because no
     # M303 quarterly filings exist for the sanitised corpus specimens.
-    _extracted_comp_97 = extracted.get("iva.anual.compensacion-ultimo-periodo-97", Decimal("0"))
+    _extracted_comp_97 = extracted.get(_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA, Decimal("0"))
     _comp_97 = _extracted_comp_97 if isinstance(_extracted_comp_97, Decimal) else Decimal("0")
-    _extracted_comp_662 = extracted.get("iva.anual.compensacion-generada-ejercicio-no-97", Decimal("0"))
+    _extracted_comp_662 = extracted.get(_M390_COMPENSACION_GENERADA_NO_97_CASILLA, Decimal("0"))
     _comp_662 = _extracted_comp_662 if isinstance(_extracted_comp_662, Decimal) else Decimal("0")
-    binding_values: dict[str, Decimal] = {
+    binding_values: dict[BindingId, Decimal] = {
         "modelo-390-prev-303-cuota-devengada-total": Decimal("0"),
         "modelo-390-prev-303-cuota-deducible-total": Decimal("0"),
         "modelo-390-prev-303-resultado-regimen-general": Decimal("0"),
@@ -136,8 +223,8 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
     engine_values = dict(result.values)
 
     # VERIFIED: cuota-devengada-total (box 47).
-    extracted_devengada = extracted["iva.anual.cuota-devengada-total"]
-    engine_devengada = engine_values.get("iva.anual.cuota-devengada-total")
+    extracted_devengada = extracted[_M390_CUOTA_DEVENGADA_TOTAL_CASILLA]
+    engine_devengada = engine_values.get(_M390_CUOTA_DEVENGADA_TOTAL_CASILLA)
     assert isinstance(extracted_devengada, Decimal)
     assert engine_devengada is not None, (
         f"FORMULA-MISMATCH [{pdf_stem}]: 'iva.anual.cuota-devengada-total' absent from engine result"
@@ -145,15 +232,15 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
     assert engine_devengada == extracted_devengada, (
         f"FORMULA-MISMATCH [{pdf_stem}]: engine recomputed cuota-devengada-total as "
         f"{engine_devengada!r} but corpus printed form shows {extracted_devengada!r}.\n"
-        f"  leaf inputs: repercutido.general={inputs.get('iva.anual.repercutido.general', Decimal('0'))!r} "
-        f"reducido={inputs.get('iva.anual.repercutido.reducido', Decimal('0'))!r} "
-        f"super-reducido={inputs.get('iva.anual.repercutido.super-reducido', Decimal('0'))!r} "
-        f"autorepercutido={inputs.get('iva.anual.autorepercutido.intracomunitaria', Decimal('0'))!r}"
+        f"  leaf inputs: repercutido.general={inputs.get(_M390_REPERCUTIDO_GENERAL_CASILLA, Decimal('0'))!r} "
+        f"reducido={inputs.get(_M390_REPERCUTIDO_REDUCIDO_CASILLA, Decimal('0'))!r} "
+        f"super-reducido={inputs.get(_M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA, Decimal('0'))!r} "
+        f"autorepercutido={inputs.get(_M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA, Decimal('0'))!r}"
     )
 
     # VERIFIED: cuota-deducible-total (box 64).
-    extracted_deducible = extracted["iva.anual.cuota-deducible-total"]
-    engine_deducible = engine_values.get("iva.anual.cuota-deducible-total")
+    extracted_deducible = extracted[_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+    engine_deducible = engine_values.get(_M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA)
     assert isinstance(extracted_deducible, Decimal)
     assert engine_deducible is not None, (
         f"FORMULA-MISMATCH [{pdf_stem}]: 'iva.anual.cuota-deducible-total' absent from engine result"
@@ -161,15 +248,15 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
     assert engine_deducible == extracted_deducible, (
         f"FORMULA-MISMATCH [{pdf_stem}]: engine recomputed cuota-deducible-total as "
         f"{engine_deducible!r} but corpus printed form shows {extracted_deducible!r}.\n"
-        f"  leaf inputs: soportado.interiores={inputs.get('iva.anual.soportado.interiores', Decimal('0'))!r} "
-        f"autorepercutido={inputs.get('iva.anual.autorepercutido.intracomunitaria', Decimal('0'))!r}"
+        f"  leaf inputs: soportado.interiores={inputs.get(_M390_SOPORTADO_INTERIORES_CASILLA, Decimal('0'))!r} "
+        f"autorepercutido={inputs.get(_M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA, Decimal('0'))!r}"
     )
 
     # VERIFIED: resultado-regimen-general (box 65).
     # The synthetic fixtures are formula-consistent: leaf inputs are chosen so that
     # resultado = devengada - deducible matches the printed box 65 value exactly.
-    engine_resultado = engine_values.get("iva.anual.resultado-regimen-general")
-    extracted_resultado = extracted.get("iva.anual.resultado-regimen-general")
+    engine_resultado = engine_values.get(_M390_RESULTADO_REGIMEN_GENERAL_CASILLA)
+    extracted_resultado = extracted.get(_M390_RESULTADO_REGIMEN_GENERAL_CASILLA)
     assert engine_resultado is not None, (
         f"VERIFIED-FAIL [{pdf_stem}]: 'iva.anual.resultado-regimen-general' absent from engine result"
     )
@@ -207,11 +294,9 @@ def test_verification_chain_m180_parser_extracts_declaracion_pdf_casillas() -> N
         pytest.fail(f"PARSER-GAP [M180/2024-0A]: parse_declaracion raised.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert set(extracted.keys()) == {
-        "decl.total-perceptores",
-        "decl.base-total",
-        "decl.retenciones-total",
-    }, f"PARSER-GAP [M180/2024-0A]: unexpected casilla set.\n  got: {sorted(extracted)}"
+    assert set(extracted.keys()) == _DECL_SUMMARY_CASILLAS, (
+        f"PARSER-GAP [M180/2024-0A]: unexpected casilla set.\n  got: {sorted(extracted)}"
+    )
     for casilla_id, value in extracted.items():
         assert isinstance(value, Decimal), (
             f"PARSER-GAP [M180/2024-0A]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r}"
@@ -266,18 +351,39 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
     # M115 casilla 01 (integer): 1+1+1+0 = 3 == extracted["decl.total-perceptores"]
     # M115 casilla 02 (money):   3000+3000+3000+3000 = 12000.00 == extracted["decl.base-total"]
     # M115 casilla 03 (money):   570+570+570+570 = 2280.00 == extracted["decl.retenciones-total"]
-    _m115_quarterly: dict[str, dict[str, Decimal]] = {
-        "1T": {"01": Decimal("1"), "02": Decimal("3000.00"), "03": Decimal("570.00")},
-        "2T": {"01": Decimal("1"), "02": Decimal("3000.00"), "03": Decimal("570.00")},
-        "3T": {"01": Decimal("1"), "02": Decimal("3000.00"), "03": Decimal("570.00")},
-        "4T": {"01": Decimal("0"), "02": Decimal("3000.00"), "03": Decimal("570.00")},
+    _m115_quarterly: dict[str, dict[CasillaId, Decimal]] = {
+        "1T": {
+            _M115_TOTAL_PERCEPTORES_CASILLA: Decimal("1"),
+            _M115_BASE_TOTAL_CASILLA: Decimal("3000.00"),
+            _M115_RETENCIONES_CASILLA: Decimal("570.00"),
+        },
+        "2T": {
+            _M115_TOTAL_PERCEPTORES_CASILLA: Decimal("1"),
+            _M115_BASE_TOTAL_CASILLA: Decimal("3000.00"),
+            _M115_RETENCIONES_CASILLA: Decimal("570.00"),
+        },
+        "3T": {
+            _M115_TOTAL_PERCEPTORES_CASILLA: Decimal("1"),
+            _M115_BASE_TOTAL_CASILLA: Decimal("3000.00"),
+            _M115_RETENCIONES_CASILLA: Decimal("570.00"),
+        },
+        "4T": {
+            _M115_TOTAL_PERCEPTORES_CASILLA: Decimal("0"),
+            _M115_BASE_TOTAL_CASILLA: Decimal("3000.00"),
+            _M115_RETENCIONES_CASILLA: Decimal("570.00"),
+        },
     }
     observations = tuple(
         RegistryModeloObservation(
             modelo="115",
             filing_year=2024,
             period=period,
-            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
+            observations=registry_grounded_observations(
+                modelo="115",
+                filing_year=2024,
+                period=period,
+                casilla_values=casilla_values,
+            ),
         )
         for period, casilla_values in sorted(_m115_quarterly.items())
     )
@@ -317,7 +423,7 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
     # Assert engine closure values match AEAT-grounded extracted values.
     engine_values = dict(result.values)
 
-    for casilla_id in ("decl.total-perceptores", "decl.base-total", "decl.retenciones-total"):
+    for casilla_id in _DECL_SUMMARY_ASSERTION_CASILLAS:
         extracted_value = extracted.get(casilla_id)
         engine_value = engine_values.get(casilla_id)
         assert extracted_value is not None, (
@@ -362,10 +468,10 @@ def test_verification_chain_m190_parser_extracts_declaracion_pdf_casillas() -> N
         pytest.fail(f"PARSER-GAP [M190/2024-0A]: parse_declaracion raised.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert "decl.retenciones-total" in extracted, (
+    assert _DECL_RETENCIONES_TOTAL_CASILLA in extracted, (
         f"PARSER-GAP [M190/2024-0A]: 'decl.retenciones-total' not extracted.\n  got: {sorted(extracted)}"
     )
-    assert isinstance(extracted["decl.retenciones-total"], Decimal), (
+    assert isinstance(extracted[_DECL_RETENCIONES_TOTAL_CASILLA], Decimal), (
         "PARSER-GAP [M190/2024-0A]: 'decl.retenciones-total' not Decimal"
     )
 
@@ -405,12 +511,12 @@ def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
-    for required_id in ("01", "02", "03", "04", "05"):
+    for required_id in _M115_REQUIRED_CASILLAS:
         assert required_id in extracted, (
             f"PARSER-GAP [M115/2024-1T]: casilla {required_id!r} not extracted.\n  got: {sorted(extracted)}"
         )
 
-    inputs: dict[str, Decimal] = {
+    inputs: dict[CasillaId, Decimal] = {
         cid: val for cid, val in extracted.items() if cid not in _COMPUTED_CASILLAS_M115 and isinstance(val, Decimal)
     }
 
@@ -431,7 +537,7 @@ def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -
 
     engine_values = dict(result.values)
 
-    for closure_id in ("03", "05"):
+    for closure_id in _M115_CLOSURE_CASILLAS:
         extracted_val = extracted[closure_id]
         assert isinstance(extracted_val, Decimal)
         engine_val = engine_values.get(closure_id)
@@ -448,16 +554,16 @@ def test_verification_chain_m115_engine_recomputes_retenciones_and_resultado() -
 @pytest.mark.parametrize(
     "pdf_stem,year,period,computed_set,closure_ids",
     [
-        ("2023-1T", 2023, "1T", _COMPUTED_CASILLAS_M123_2019, ("06-legacy", "08-legacy")),
-        ("2024-1T", 2024, "1T", _COMPUTED_CASILLAS_M123_2024, ("03", "06", "09", "12", "14")),
+        ("2023-1T", 2023, "1T", _COMPUTED_CASILLAS_M123_2019, _M123_2019_CLOSURE_CASILLAS),
+        ("2024-1T", 2024, "1T", _COMPUTED_CASILLAS_M123_2024, _M123_2024_CLOSURE_CASILLAS),
     ],
 )
 def test_verification_chain_m123_engine_recomputes_closure_casillas(
     pdf_stem: str,
     year: int,
     period: str,
-    computed_set: frozenset[str],
-    closure_ids: tuple[str, ...],
+    computed_set: frozenset[CasillaId],
+    closure_ids: tuple[CasillaId, ...],
 ) -> None:
     """Engine recomputes M123 closure casillas from leaf inputs.
 
@@ -497,7 +603,7 @@ def test_verification_chain_m123_engine_recomputes_closure_casillas(
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
-    inputs: dict[str, Decimal] = {
+    inputs: dict[CasillaId, Decimal] = {
         cid: val for cid, val in extracted.items() if cid not in computed_set and isinstance(val, Decimal)
     }
 
@@ -582,11 +688,11 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
-    inputs: dict[str, Decimal] = {
+    inputs: dict[CasillaId, Decimal] = {
         cid: val for cid, val in extracted.items() if cid not in _COMPUTED_CASILLAS_M131 and isinstance(val, Decimal)
     }
 
-    binding_values: dict[str, Decimal] = {
+    binding_values: dict[BindingId, Decimal] = {
         "modelo-131-2026-resultados-negativos-anteriores": Decimal("0"),
     }
 
@@ -609,7 +715,7 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
 
     engine_values = dict(result.values)
 
-    for closure_id in ("07", "10", "13", "15"):
+    for closure_id in _M131_CLOSURE_CASILLAS:
         if closure_id not in extracted:
             continue
         extracted_val = extracted[closure_id]
@@ -647,11 +753,9 @@ def test_verification_chain_m193_parser_extracts_declaracion_pdf_casillas() -> N
         pytest.fail(f"PARSER-GAP [M193/2024-0A]: parse_declaracion raised.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert set(extracted.keys()) == {
-        "decl.total-perceptores",
-        "decl.base-total",
-        "decl.retenciones-total",
-    }, f"PARSER-GAP [M193/2024-0A]: unexpected casilla set.\n  got: {sorted(extracted)}"
+    assert set(extracted.keys()) == _DECL_SUMMARY_CASILLAS, (
+        f"PARSER-GAP [M193/2024-0A]: unexpected casilla set.\n  got: {sorted(extracted)}"
+    )
     for casilla_id, value in extracted.items():
         assert isinstance(value, Decimal), (
             f"PARSER-GAP [M193/2024-0A]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r}"
@@ -710,18 +814,39 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
     # Q1: 03=2, 06=2000.00, 09=380.00  (all values in decl.total-perceptores come from 1Q here)
     # Q2-Q4: 03=0, 06=2000.00, 09=380.00
     # Sums: 03 → 2, 06 → 8000.00, 09 → 1520.00
-    _m123_quarterly: dict[str, dict[str, Decimal]] = {
-        "1T": {"03": Decimal("2"), "06": Decimal("2000.00"), "09": Decimal("380.00")},
-        "2T": {"03": Decimal("0"), "06": Decimal("2000.00"), "09": Decimal("380.00")},
-        "3T": {"03": Decimal("0"), "06": Decimal("2000.00"), "09": Decimal("380.00")},
-        "4T": {"03": Decimal("0"), "06": Decimal("2000.00"), "09": Decimal("380.00")},
+    _m123_quarterly: dict[str, dict[CasillaId, Decimal]] = {
+        "1T": {
+            _M123_TOTAL_RENTAS_CASILLA: Decimal("2"),
+            _M123_TOTAL_BASE_CASILLA: Decimal("2000.00"),
+            _M123_TOTAL_RETENCIONES_CASILLA: Decimal("380.00"),
+        },
+        "2T": {
+            _M123_TOTAL_RENTAS_CASILLA: Decimal("0"),
+            _M123_TOTAL_BASE_CASILLA: Decimal("2000.00"),
+            _M123_TOTAL_RETENCIONES_CASILLA: Decimal("380.00"),
+        },
+        "3T": {
+            _M123_TOTAL_RENTAS_CASILLA: Decimal("0"),
+            _M123_TOTAL_BASE_CASILLA: Decimal("2000.00"),
+            _M123_TOTAL_RETENCIONES_CASILLA: Decimal("380.00"),
+        },
+        "4T": {
+            _M123_TOTAL_RENTAS_CASILLA: Decimal("0"),
+            _M123_TOTAL_BASE_CASILLA: Decimal("2000.00"),
+            _M123_TOTAL_RETENCIONES_CASILLA: Decimal("380.00"),
+        },
     }
     observations = tuple(
         RegistryModeloObservation(
             modelo="123",
             filing_year=2024,
             period=period,
-            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
+            observations=registry_grounded_observations(
+                modelo="123",
+                filing_year=2024,
+                period=period,
+                casilla_values=casilla_values,
+            ),
         )
         for period, casilla_values in sorted(_m123_quarterly.items())
     )
@@ -758,7 +883,7 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
 
     engine_values = dict(result.values)
 
-    for casilla_id in ("decl.total-perceptores", "decl.base-total", "decl.retenciones-total"):
+    for casilla_id in _DECL_SUMMARY_ASSERTION_CASILLAS:
         extracted_value = extracted.get(casilla_id)
         engine_value = engine_values.get(casilla_id)
         assert extracted_value is not None, (

@@ -11,13 +11,22 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ...core.time import now as _utc_now
 from ...domain._identifiers import canonical_decimal_string as _canonical_decimal_str
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.calculations.registry import InputKind, ModeloRevision, calculate_registry_snapshot
+from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    InputKind,
+    ModeloRevision,
+    RelationId,
+    calculate_registry_snapshot,
+    casillas_by_id,
+    validated_casilla_id,
+)
 from ...domain.deadlines import IVARegime
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
@@ -49,7 +58,7 @@ from ._action_errors import (
     WorkUnitRevisionDivergenceError,
 )
 from ._binding_resolution import (
-    resolve_bound_casilla_inputs_for_available_bindings,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_calculation_binding_inputs,
 )
 from ._calculation_helpers import (
@@ -66,13 +75,14 @@ from ._prior_payment_advisory import (
     collect_prior_payment_minoracion_not_captured_diagnostics,
     collect_prior_payment_not_deducted_diagnostics,
 )
-from ._registry_helpers import normalize_casilla_input_aliases as _normalize_casilla_input_aliases
+from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._registry_resources import authority_via_resources as _authority_via_resources
 from ._registry_resources import registry_root as _registry_root
 from ._revision_persistence import persist_calculation_revision
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import RegistrySnapshot
+    from ...domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
     from ..aggregation import CalculationSourceDiagnostic, CalculationSourceResolution
     from ..calculations._observations_repository import IvaWalletDecisionRepository
 
@@ -209,17 +219,17 @@ def calculate_modelo_revision(
     work_unit_id: str,
     *,
     actor: str = "system",
-    casilla_inputs: Mapping[str, Decimal],
-    binding_values: Mapping[str, Decimal] | None = None,
-    enum_binding_values: Mapping[str, str] | None = None,
-    backend_binding_values: Mapping[str, Decimal] | None = None,
-    backend_casilla_inputs: Mapping[str, Decimal] | None = None,
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    binding_values: Mapping[BindingId, Decimal] | None = None,
+    enum_binding_values: Mapping[BindingId, str] | None = None,
+    backend_binding_values: Mapping[BindingId, Decimal] | None = None,
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     ledger_preflight_transaction_repository: TransactionCatalogueRepository | None = None,
     borrador_snapshot_id: str | None = None,
-    relation_values: Mapping[str, Decimal] | None = None,
-    unresolved_relation_ids: tuple[str, ...] = (),
+    relation_values: Mapping[RelationId, Decimal] | None = None,
+    unresolved_relation_ids: tuple[RelationId, ...] = (),
     source_transaction_ids: tuple[str, ...] = (),
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -247,8 +257,8 @@ def calculate_modelo_revision(
        engine evaluates every declared formula in dependency order
        and returns the full ``casilla_values`` map (inputs plus
        formula outputs).
-    4. Build canonical-string ``inputs_snapshot`` and
-       ``binding_overrides`` from the engine inputs (so the
+    4. Build canonical-string ``input_values_by_casilla_id``, ``binding_overrides``,
+       and ``relation_overrides`` from the engine inputs (so the
        content-addressed revision id is stable across structurally
        identical re-runs).
     5. Persist the revision in ``DRAFT`` state; advance the work
@@ -265,13 +275,12 @@ def calculate_modelo_revision(
     work_units = wu_repo.load()
     work_unit = _load_work_unit_for_calculation(work_units, work_unit_id=work_unit_id)
     snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
-    # Operator-supplied casilla keys may be the registry number or BOE
-    # form number shown by `modelo casillas`; normalise both the caller
-    # inputs and the backend-merged inputs to canonical casilla ids
-    # before the engine consumes them.
-    casilla_inputs = _normalize_casilla_input_aliases(snapshot.revision, casilla_inputs)
+    # Casilla inputs are accepted only as canonical casilla.id values.
+    # Printed registry numbers and BOE form numbers must fail before the
+    # engine consumes or persists them.
+    casilla_inputs = _validate_casilla_input_ids(snapshot.revision, casilla_inputs)
     if backend_casilla_inputs is not None:
-        backend_casilla_inputs = _normalize_casilla_input_aliases(snapshot.revision, backend_casilla_inputs)
+        backend_casilla_inputs = _validate_casilla_input_ids(snapshot.revision, backend_casilla_inputs)
     _raise_if_ledger_preflight_blocks_calculation(
         work_unit=work_unit,
         revision=snapshot.revision,
@@ -340,22 +349,27 @@ def calculate_modelo_revision(
         date_binding_values=resolved_date_bindings or None,
     )
 
-    inputs_snapshot: dict[str, str] = dict(
-        sorted((k.strip(), _canonical_decimal_str(v)) for k, v in resolved_inputs.items()),
+    input_values_by_casilla_id: dict[CasillaId, str] = dict(
+        sorted(
+            (
+                validated_casilla_id(k, surface="calculate_modelo_revision.input_values_by_casilla_id"),
+                _canonical_decimal_str(v),
+            )
+            for k, v in resolved_inputs.items()
+        ),
     )
-    binding_overrides: dict[str, str] = dict(
+    binding_overrides: dict[BindingId, str] = dict(
         sorted(
             [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
             + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
-            # Persist the date-binding and raw-relation inputs alongside the
-            # Decimal/enum binding overrides so a verify / file replay can
-            # reconstruct the identical draft from the revision alone, without
-            # re-resolving the live profile (which would break immutable-snapshot
-            # determinism). The draft-builder routes them back onto the engine's
-            # date_binding_values / relation_values channels by registry id-set.
-            + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()]
-            + [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items()],
+            # Persist date-binding inputs with the other BindingId-keyed replay
+            # values. Relations ride the separate relation_overrides channel
+            # below so a BindingId map never carries RelationId keys.
+            + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()],
         ),
+    )
+    relation_overrides: dict[RelationId, str] = dict(
+        sorted((k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items()),
     )
     casilla_values = dict(engine_result.values)
     typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
@@ -365,8 +379,9 @@ def calculate_modelo_revision(
         work_unit_id=work_unit_id,
         work_unit=work_unit,
         work_units=work_units,
-        inputs_snapshot=inputs_snapshot,
+        input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
+        relation_overrides=relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
         borrador_snapshot_id=borrador_result.borrador_snapshot_id,
@@ -385,7 +400,7 @@ def calculate_modelo_revision(
 # ANY-RETURN-RATIONALE-ACTIONS-IVA-WALLET-DECISION:
 # Wrapper preserves the legacy _actions.py private surface and drift token
 # while the extracted IVA wallet gate owns message rendering.
-def _iva_wallet_blocked_message(decision: Any) -> str:
+def _iva_wallet_blocked_message(decision: IvaCompensationReconciliationDecision) -> str:
     return iva_wallet_blocked_message(decision)
 
 
@@ -456,13 +471,13 @@ def calculate_modelo_revision_from_bucket_aggregation(
     work_unit_id: str,
     *,
     actor: str = "system",
-    casilla_inputs: Mapping[str, Decimal] | None = None,
-    binding_values: Mapping[str, Decimal] | None = None,
-    enum_binding_values: Mapping[str, str] | None = None,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
+    binding_values: Mapping[BindingId, Decimal] | None = None,
+    enum_binding_values: Mapping[BindingId, str] | None = None,
     iva_compensation_decision: object | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     borrador_snapshot_id: str | None = None,
-    relation_values: Mapping[str, Decimal] | None = None,
+    relation_values: Mapping[RelationId, Decimal] | None = None,
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
@@ -624,13 +639,13 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     work_unit_id: str,
     *,
     actor: str = "system",
-    casilla_inputs: Mapping[str, Decimal] | None = None,
-    binding_values: Mapping[str, Decimal] | None = None,
-    enum_binding_values: Mapping[str, str] | None = None,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
+    binding_values: Mapping[BindingId, Decimal] | None = None,
+    enum_binding_values: Mapping[BindingId, str] | None = None,
     iva_compensation_decision: object | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     borrador_snapshot_id: str | None = None,
-    relation_values: Mapping[str, Decimal] | None = None,
+    relation_values: Mapping[RelationId, Decimal] | None = None,
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
@@ -714,11 +729,10 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     # blank into a loud error so a novel TOML source cannot slip through.
     assert_no_novel_source_kinds(snapshot.revision)
 
-    # Normalise operator-supplied casilla aliases (registry number / BOE
-    # form number) to canonical ids before the source-collision and
+    # Refuse non-canonical casilla keys before source-collision and
     # bucket-merge checks compare them against registry casilla ids.
     if casilla_inputs is not None:
-        casilla_inputs = _normalize_casilla_input_aliases(snapshot.revision, casilla_inputs)
+        casilla_inputs = _validate_casilla_input_ids(snapshot.revision, casilla_inputs)
 
     # Use the LOCK set (deterministic ledger resolvers only) for the pre-merge
     # caller-override guard.  Optional-return resolvers (previous_filing, profile,
@@ -754,7 +768,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     backend_inputs = _merge_bucket_bound_inputs(
         revision=snapshot.revision,
         casilla_inputs=casilla_inputs or {},
-        bound_inputs=resolve_bound_casilla_inputs_for_available_bindings(
+        bound_inputs=resolve_available_bound_inputs_by_casilla_id(
             snapshot.revision,
             source_resolution.binding_values,
         ),
@@ -851,10 +865,10 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
 def _merge_bucket_bound_inputs(
     *,
     revision: ModeloRevision,
-    casilla_inputs: Mapping[str, Decimal],
-    bound_inputs: Mapping[str, Decimal],
-) -> dict[str, Decimal]:
-    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    bound_inputs: Mapping[CasillaId, Decimal],
+) -> dict[CasillaId, Decimal]:
+    casillas = casillas_by_id(revision)
     computed = sorted(
         casilla_id
         for casilla_id in bound_inputs
@@ -927,11 +941,11 @@ def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
         )
 
 
-def _source_owned_binding_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[str]:
+def _source_owned_binding_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[BindingId]:
     return frozenset(binding.id for binding in revision.bindings if binding.source in owned_sources)
 
 
-def _source_owned_bound_casilla_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[str]:
+def _source_owned_bound_casilla_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[CasillaId]:
     source_owned_binding_ids = _source_owned_binding_ids(revision, owned_sources)
     return frozenset(
         casilla.id
@@ -944,8 +958,8 @@ def _reject_caller_overrides_of_source_bindings(
     *,
     revision: ModeloRevision,
     owned_sources: frozenset[str],
-    caller_binding_values: Mapping[str, Decimal],
-    caller_casilla_inputs: Mapping[str, Decimal],
+    caller_binding_values: Mapping[BindingId, Decimal],
+    caller_casilla_inputs: Mapping[CasillaId, Decimal],
 ) -> None:
     """Refuse caller-supplied bindings or casilla inputs that collide with values bucket source resolvers own.
 

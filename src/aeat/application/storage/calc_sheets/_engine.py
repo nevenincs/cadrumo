@@ -18,6 +18,7 @@ from ....core.i18n import tr
 from ....domain.calculations.registry import (
     BindingAggregationOp,
     CasillaDefinition,
+    CasillaId,
     DataBindingDefinition,
     FormulaDefinition,
     InputKind,
@@ -25,6 +26,7 @@ from ....domain.calculations.registry import (
     ParameterDefinition,
     RegistrySnapshot,
     binding_aggregation_op,
+    casillas_by_id,
 )
 from ._errors import CalcSheetsEngineError
 from ._layout import SheetLayout, plan_layout
@@ -123,8 +125,8 @@ def _value_cells_for_entradas(
     layout: SheetLayout,
     inputs: OperatorInputs,
 ) -> tuple[SheetValueCell, ...]:
-    by_id = {casilla.id: casilla for casilla in revision.casillas}
-    by_casilla = inputs.by_casilla()
+    by_id = casillas_by_id(revision)
+    by_casilla_id = inputs.by_casilla_id()
     cells: list[SheetValueCell] = []
     # Header row.
     cells.append(
@@ -157,7 +159,7 @@ def _value_cells_for_entradas(
     )
     previous_section: tuple[str, ...] | None = None
     for row in layout.entradas_rows:
-        casilla = by_id[row.casilla]
+        casilla = by_id[row.casilla_id]
         # Show the section label once, on the row where the section changes
         # (rendered as a banner); intervening rows leave column A blank so the
         # tab reads like the official modelo rather than repeating the long
@@ -186,12 +188,12 @@ def _value_cells_for_entradas(
                 role="label",
             ),
         )
-        seed = by_casilla.get(casilla.id)
+        seed = by_casilla_id.get(casilla.id)
         cells.append(
             SheetValueCell(
                 address=layout.entradas_cells[casilla.id],
                 value=seed.value if seed is not None else None,
-                casilla=casilla.id,
+                casilla_id=casilla.id,
                 role="operator_input",
             ),
         )
@@ -238,7 +240,7 @@ def _label_cells_for_calculos(
     revision: ModeloRevision,
     layout: SheetLayout,
 ) -> tuple[SheetValueCell, ...]:
-    by_id = {casilla.id: casilla for casilla in revision.casillas}
+    by_id = casillas_by_id(revision)
     cells: list[SheetValueCell] = []
     cells.append(
         SheetValueCell(
@@ -270,7 +272,7 @@ def _label_cells_for_calculos(
     )
     previous_section: tuple[str, ...] | None = None
     for row in layout.calculos_rows:
-        casilla = by_id[row.casilla]
+        casilla = by_id[row.casilla_id]
         section = tuple(casilla.section)
         if section and section != previous_section:
             cells.append(
@@ -302,11 +304,11 @@ def _formula_cells(
     revision: ModeloRevision,
     layout: SheetLayout,
 ) -> tuple[SheetFormulaCell, ...]:
-    by_id = {casilla.id: casilla for casilla in revision.casillas}
+    by_id = casillas_by_id(revision)
     formulas = {formula.id: formula for formula in revision.formulas}
     cells: list[SheetFormulaCell] = []
     for row in layout.calculos_rows:
-        casilla = by_id[row.casilla]
+        casilla = by_id[row.casilla_id]
         if casilla.formula is None:
             continue
         formula = formulas[casilla.formula]
@@ -316,7 +318,7 @@ def _formula_cells(
             SheetFormulaCell(
                 address=layout.calculos_cells[casilla.id],
                 formula=_wrap_rounded(body, rule=rule, scale=scale),
-                casilla=casilla.id,
+                casilla_id=casilla.id,
                 rounding_scale=scale,
                 rounding_rule=rule,
             ),
@@ -512,11 +514,11 @@ def _provenance_rows(
     revision: ModeloRevision,
     layout: SheetLayout,
 ) -> tuple[SheetProvenanceRow, ...]:
-    by_id: Mapping[str, CasillaDefinition] = {casilla.id: casilla for casilla in revision.casillas}
+    by_id: Mapping[CasillaId, CasillaDefinition] = casillas_by_id(revision)
     formulas = {formula.id: formula for formula in revision.formulas}
     rows: list[SheetProvenanceRow] = []
     for row in layout.calculos_rows:
-        casilla = by_id[row.casilla]
+        casilla = by_id[row.casilla_id]
         if casilla.formula is None:
             continue
         formula = formulas[casilla.formula]
@@ -524,7 +526,7 @@ def _provenance_rows(
         rows.append(
             SheetProvenanceRow(
                 casilla_id=casilla.id,
-                casilla_number=casilla.number,
+                display_number=casilla.number,
                 casilla_label=casilla.label,
                 formula_id=formula.id,
                 rounding_rule=rule,
@@ -584,14 +586,14 @@ def _provenance_value_cells(rows: Iterable[SheetProvenanceRow]) -> tuple[SheetVa
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.PROVENANCE, index, 1),
                 value=row.casilla_id,
-                casilla=row.casilla_id,
+                casilla_id=row.casilla_id,
                 role="metadata",
             ),
         )
         cells.append(
             SheetValueCell(
                 address=SheetCellAddress.at(TabName.PROVENANCE, index, 2),
-                value=row.casilla_number,
+                value=row.display_number,
                 role="metadata",
             ),
         )
@@ -749,7 +751,7 @@ def _number_formats(
         formats.append(
             SheetNumberFormat(
                 address=address,
-                casilla=casilla.id,
+                casilla_id=casilla.id,
                 data_type=data_type,
                 pattern=format_pattern,
             ),
@@ -1037,16 +1039,16 @@ def _collect_cell_constraints(
             continue
         if address is None:
             continue
-        constraints.append(
-            SheetCellConstraint(
-                address=address,
+            constraints.append(
+                SheetCellConstraint(
+                    address=address,
                 sign=casilla.constraints.sign,
                 min_value=casilla.constraints.min_value,
-                max_value=casilla.constraints.max_value,
-                legal_refs=tuple(casilla.constraints.legal_refs),
-                casilla=casilla.id,
-            ),
-        )
+                    max_value=casilla.constraints.max_value,
+                    legal_refs=tuple(casilla.constraints.legal_refs),
+                    casilla_id=casilla.id,
+                ),
+            )
     return tuple(constraints)
 
 

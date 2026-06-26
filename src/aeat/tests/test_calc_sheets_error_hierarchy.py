@@ -75,7 +75,7 @@ def test_calc_sheets_error_code_registered(error_cls: type[AeatError], expected_
     [
         CalcSheetsEngineError("unsupported rounding code 'bad'"),
         CalcSheetsRecordError("column index must be 1-based"),
-        CalcSheetsParityError("unknown casilla numbers [999]"),
+        CalcSheetsParityError("unknown casilla ids [999]"),
     ],
 )
 def test_calc_sheets_error_envelope_roundtrip(instance: AeatError) -> None:

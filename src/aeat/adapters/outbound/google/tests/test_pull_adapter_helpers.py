@@ -187,7 +187,7 @@ def test_classify_metadata_returns_stale_for_drifted_registry_sha() -> None:
     The pull module's docstring promises ``aeat_registry_sha`` is part
     of the metadata gate: a workbook whose modelo / revision / year /
     period all align but whose registry-SHA stamp diverges was compiled
-    against a different calculation surface — casilla numbering, formula
+    against a different calculation surface — casilla identity/layout, formula
     chains, and bracket tables may have shifted. ``_classify_metadata_match``
     must classify it ``stale`` so ``compute_from_pull`` refuses the
     merge. Google Sheets is an export mirror, never an authority for a

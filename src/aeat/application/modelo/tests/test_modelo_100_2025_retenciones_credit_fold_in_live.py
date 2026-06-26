@@ -8,11 +8,11 @@ output through the enrolled :class:`RelationPrefillSourceResolver`:
 
 * casilla ``0596`` ("Por rendimientos del trabajo") binds
   ``renta-2025-modelo-111-retenciones-periodicas`` — ``source_modelo='111'``,
-  ``source_output='28'`` (M111 "retenciones e ingresos a cuenta"), summed over
+  ``source_casilla_id='28'`` (M111 "retenciones e ingresos a cuenta"), summed over
   the four quarters.
 * casilla ``0597`` ("Por rendimientos del capital mobiliario") binds
   ``renta-2025-modelo-123-retenciones-periodicas`` — ``source_modelo='123'``,
-  ``source_output='09'`` (M123 retenciones), summed over the four quarters.
+  ``source_casilla_id='09'`` (M123 retenciones), summed over the four quarters.
 
 This module proves both folds work end-to-end on the LIVE operator calculate
 path (:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`)
@@ -59,14 +59,17 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    BindingId,
+    CasillaId,
     RegistryModeloObservation,
+    validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations._observations_repository import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
@@ -87,11 +90,14 @@ _ANNUAL_PERIOD = "0A"
 _QUARTERS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 
-# The two genuine cross-modelo retenciones-credit casillas and their source outputs.
-_M100_TRABAJO_CASILLA = "0596"  # bound: renta-2025-modelo-111-retenciones-periodicas
-_M100_CAPITAL_MOBILIARIO_CASILLA = "0597"  # bound: renta-2025-modelo-123-retenciones-periodicas
-_M111_RETENCIONES_OUTPUT = "28"
-_M123_RETENCIONES_OUTPUT = "09"
+# The two genuine cross-modelo retenciones-credit casillas and their source casilla ids.
+_M100_TRABAJO_CASILLA: CasillaId = validated_casilla_id("0596", surface="_M100_TRABAJO_CASILLA")
+_M100_CAPITAL_MOBILIARIO_CASILLA: CasillaId = validated_casilla_id(
+    "0597",
+    surface="_M100_CAPITAL_MOBILIARIO_CASILLA",
+)
+_M111_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("28", surface="_M111_RETENCIONES_OUTPUT")
+_M123_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("09", surface="_M123_RETENCIONES_OUTPUT")
 
 # Four DISTINCT non-equal quarterly M111 c28 retenciones-rendimientos-del-trabajo
 # values for 2025. Distinctness makes the annual fold unmistakable: an
@@ -121,8 +127,8 @@ _M130_C19_BY_PERIOD: dict[str, Decimal] = {
     "3T": Decimal("95.50"),
     "4T": Decimal("350.00"),
 }
-_M130_PAGOS_OUTPUT = "19"
-_M131_PAGOS_OUTPUT = "15"
+_M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
+_M131_PAGOS_OUTPUT: CasillaId = validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT")
 
 
 @pytest.fixture
@@ -137,10 +143,10 @@ def _seed_quarterly_filing(
     obs_repo: CalculationObservationRepository,
     source_modelo: str,
     period: str,
-    casilla_id: str,
+    casilla_id: CasillaId,
     value: Decimal,
 ) -> None:
-    """Persist one filed source-modelo quarter carrying a single source output.
+    """Persist one filed source-modelo quarter carrying a single source casilla id.
 
     Persisted through the production observation-persistence API
     (:meth:`CalculationObservationRepository.save_observation`) — the same write
@@ -152,7 +158,12 @@ def _seed_quarterly_filing(
             modelo=source_modelo,
             filing_year=_YEAR,
             period=period,
-            observations=(CasillaObservation(casilla_id=casilla_id, value=value),),
+            observations=registry_grounded_observations(
+                modelo=source_modelo,
+                filing_year=_YEAR,
+                period=period,
+                casilla_values={casilla_id: value},
+            ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=_T0,
@@ -217,7 +228,7 @@ def _seed_taxpayer_unit_profile() -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(record)
 
 
-def _non_relation_zero_bindings() -> dict[str, Decimal]:
+def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     """Zero-default M100/2025 bindings the caller must supply (manual_input and previous_filing).
 
     The annual M100/2025 revision binds casillas via several source kinds.
@@ -247,7 +258,7 @@ def _non_relation_zero_bindings() -> dict[str, Decimal]:
         },
     )
     return {
-        str(binding.id): Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _AUTO_RESOLVED
+        binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _AUTO_RESOLVED
     }
 
 

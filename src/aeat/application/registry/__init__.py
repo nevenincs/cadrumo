@@ -28,6 +28,7 @@ from ...core.resources import bundled_path as _bundled_path
 # cross-domain snapshot check required by Modelo 100 snapshots.
 from ...domain import renta as _renta_snapshot_checks  # noqa: F401 - snapshot-check registration side effect
 from ...domain.calculations.registry import AeatNifIvaCheckerOracle as _AeatNifIvaCheckerOracle
+from ...domain.calculations.registry import CasillaId as _CasillaId
 from ...domain.calculations.registry import (
     CrossReferenceApplicabilityDeclaracion as _CrossReferenceApplicabilityDeclaracion,
 )
@@ -45,6 +46,8 @@ from ...domain.calculations.registry import (
 from ...domain.calculations.registry import (
     RegistryFiledStateComparison as _RegistryFiledStateComparison,
 )
+from ...domain.calculations.registry import RegistrySnapshot as _RegistrySnapshot
+from ...domain.calculations.registry import RelationId as _RelationId
 from ...domain.calculations.registry import (
     ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
 )
@@ -90,6 +93,8 @@ from ...domain.calculations.registry import (
 from ...domain.calculations.registry import (
     save_parity_tape as _save_parity_tape,
 )
+from ...domain.calculations.registry import undeclared_casilla_ids as _undeclared_casilla_ids
+from ...domain.calculations.registry import validated_casilla_id as _validated_casilla_id
 from ...domain.calculations.registry import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.calculations.registry import (
     verify_workbook_backend as _verify_workbook_backend,
@@ -129,6 +134,42 @@ from ._corpus import (
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
 
 _ORACLE_ENVIRONMENT_VALUES: tuple[str, ...] = tuple(sorted(member.value for member in _OracleEnvironment))
+
+
+def _verified_required_casilla_ids(
+    required_casilla_refs: tuple[object, ...],
+    *,
+    snapshot: _RegistrySnapshot,
+) -> tuple[_CasillaId, ...]:
+    """Validate requested filed-state casillas against the resolved revision."""
+    requested: list[_CasillaId] = []
+    for raw_casilla_id in required_casilla_refs:
+        try:
+            casilla_id = _validated_casilla_id(
+                raw_casilla_id,
+                surface="registry.verify_filed_state --casilla",
+            )
+        except ValueError as exc:
+            raise RegistryApplicationInputError(
+                f"registry.verify_filed_state --casilla {raw_casilla_id!r} is not a canonical casilla.id",
+                context={
+                    "modelo": snapshot.modelo.id,
+                    "revision_id": snapshot.revision.id,
+                    "casilla_id": str(raw_casilla_id),
+                },
+            ) from exc
+        if _undeclared_casilla_ids(snapshot.revision, (casilla_id,)):
+            raise RegistryApplicationInputError(
+                f"registry.verify_filed_state --casilla {casilla_id!r} is not declared as a canonical "
+                f"casilla.id in modelo {snapshot.modelo.id} revision {snapshot.revision.id}",
+                context={
+                    "modelo": snapshot.modelo.id,
+                    "revision_id": snapshot.revision.id,
+                    "casilla_id": casilla_id,
+                },
+            )
+        requested.append(casilla_id)
+    return tuple(requested)
 
 
 class RegistryTreeReport(BaseModel):
@@ -185,7 +226,7 @@ class RegistryRevisionDetailReport(BaseModel):
     export_field_count: int
     deadline_window_count: int
     deadline_periods: tuple[str, ...]
-    relation_ids: tuple[str, ...]
+    relation_ids: tuple[_RelationId, ...]
     relation_count: int
     relation_dependency_roles: tuple[str, ...]
     filing_schedule_ids: tuple[str, ...]
@@ -362,7 +403,7 @@ def verify_filed_state(
     source_observation_paths: tuple[Path, ...] = (),
     registry_root: Path | None = None,
     source_root: Path | None = None,
-    required_casillas: tuple[str, ...] = (),
+    required_casilla_ids: tuple[_CasillaId, ...] = (),
 ) -> FiledStateVerificationReport:
     """Compare a local registry calculation to a captured filed observation.
 
@@ -385,6 +426,7 @@ def verify_filed_state(
         filing_year=filed_observation.ejercicio,
         period=filing_period_token,
     )
+    requested_required_casilla_ids = _verified_required_casilla_ids(required_casilla_ids, snapshot=snapshot)
     binding_values = _resolve_previous_filing_binding_values(
         snapshot.revision,
         registry_source_observations,
@@ -392,7 +434,7 @@ def verify_filed_state(
         period=filing_period_token,
     )
     bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
-    input_casillas = set()
+    input_casilla_ids = set()
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind == _InputKind.COMPUTED:
             continue
@@ -404,11 +446,11 @@ def verify_filed_state(
             and binding_def.id not in binding_values
         ):
             continue
-        input_casillas.add(casilla.id)
-    inputs: dict[str, Decimal] = {
+        input_casilla_ids.add(casilla.id)
+    inputs: dict[_CasillaId, Decimal] = {
         casilla_id: value
         for casilla_id, value in registry_observation.casilla_values.items()
-        if casilla_id in input_casillas
+        if casilla_id in input_casilla_ids
     }
     relation_values = _resolve_relation_values_from_observations(
         snapshot.revision,
@@ -428,13 +470,13 @@ def verify_filed_state(
         binding_values=binding_values,
         relation_values=relation_values,
     )
-    casillas = required_casillas or tuple(
+    casilla_ids = requested_required_casilla_ids or tuple(
         casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == _InputKind.COMPUTED
     )
     comparison = _compare_calculation_to_filed_observation(
         calculation,
         registry_observation,
-        required_casillas=casillas,
+        required_casilla_ids=casilla_ids,
     )
     return FiledStateVerificationReport(
         observation_path=str(observation_path),
@@ -555,7 +597,7 @@ def _revision_details(modelos: tuple[_ModeloDefinition, ...]) -> tuple[RegistryR
                     deadline_periods=tuple(
                         sorted(window.period.registry_token for window in revision.deadline_windows),
                     ),
-                    relation_ids=tuple(str(relation.id) for relation in revision.relations),
+                    relation_ids=tuple(relation.id for relation in revision.relations),
                     relation_count=len(revision.relations),
                     relation_dependency_roles=tuple(
                         sorted({relation.dependency_role for relation in revision.relations}),

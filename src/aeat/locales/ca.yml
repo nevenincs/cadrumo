@@ -581,6 +581,7 @@ application:
       errors:
         active_profile_load_failed: 'No s ha pogut carregar el perfil actiu de presentacio:
           %{reason}.'
+        ambiguous_casilla_schema: application.filing.runtime.errors.ambiguous_casilla_schema
         blank_modelo_selection: La seleccio de models sol.licitada no pot contenir
           identificadors buits.
         filing_year_period_mismatch: application.filing.runtime.errors.filing_year_period_mismatch
@@ -733,14 +734,16 @@ application:
       calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta
         revisio. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list
         <MODELO>` per llistar els bindings valids.'
-      calculate_casilla_ambiguous: '--casilla %{key} coincideix amb diverses caselles
-        d''aquesta revisio: %{candidates}. Indica la forma qualificada PREFIX:NNNNN
-        per desambiguar.'
+      calculate_relation_unknown: '--relation %{key} no coincideix amb cap relation
+        d''aquesta revisio. Relations acceptades: %{accepted}.'
+      calculate_casilla_alias_refused: '--casilla %{key} es un numero impres de casella
+        o numero de formulari, no un casilla.id canonic. Usa el casilla.id canonic:
+        %{accepted}.'
       calculate_casilla_non_numeric: --casilla %{casilla_id} apunta a un tipus no
         numeric %{data_type} (%{label}); usa --binding o fonts de perfil.
-      calculate_casilla_unknown: --casilla %{key} no coincideix amb cap numero de
-        casella d'aquesta revisio. Usa `aeat app modelo casillas <MODELO>` per llistar
-        els identificadors valids.
+      calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonic d'aquesta
+        revisio. Usa `aeat app modelo casillas <MODELO>` per llistar els casilla.id
+        valids.
       calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no es decimal:
         %{value}'
       calculate_m184_share_sum_invalid: Els percentatges de participacio de les files
@@ -753,6 +756,9 @@ application:
         s'han d'indicar juntes.
       calculate_sal_inputs_incomplete: Les dades de la reserva especial SAL/SLL s'han
         d'indicar juntes.
+      calculate_semantic_role_ambiguous: La revisio del model conte mes d'una casella
+        amb el rol semantic %{semantic_role}; la drecera no pot triar un casilla.id
+        canonic de forma segura.
       calculate_semantic_role_missing: La revisio del model no conte cap casella amb
         el rol semantic %{semantic_role}.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
@@ -845,6 +851,9 @@ application:
         app modelo reconcile file fins que el parser de declaracions estigui disponible.
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una unitat de treball.
+      refund_election_not_eligible: S'ha triat tornar per al Model %{modelo} %{filing_year}
+        %{period}, pero la devolucio nomes esta disponible en l'ultim periode de declaracio
+        de l'any. Arrossega el credit (compensar) o tria la devolucio en l'ultim periode.
       revision_pick_explicit_id_required: La seleccio explicita de revisio requereix
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id nomes es
@@ -936,6 +945,10 @@ application:
       modelo_200_base_imponible_determinada_cuando_resultado_positivo: El resultat
         comptable és positiu però la base imposable (C552) és zero; reviseu la determinació
         de la base imposable.
+      modelo_200_bin_stock_cierre_reconcilia_roll_forward: El saldo final de bases
+        imposables negatives pendents (C671) no concilia amb l'arrossegament (obertura
+        C670 menys aplicat C547 més la BIN generada en el període); reviseu el saldo
+        a compensar en exercicis futurs.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: L'IVA
         deduible total (cuota-deducible-total) es positiu, pero totes les caselles
         oficials del Disseny de Registres (29 interiors corrents, 33 importacions,
@@ -955,7 +968,6 @@ application:
           mitjancant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
           que els declarants IRNR no residents a la UE/EEE designin un representant
           per a comunicacions amb l'AEAT.
-      modelo_200_bin_stock_cierre_reconcilia_roll_forward: 'El saldo final de bases imposables negatives pendents (C671) no concilia amb l''arrossegament (obertura C670 menys aplicat C547 més la BIN generada en el període); reviseu el saldo a compensar en exercicis futurs.'
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
@@ -1068,8 +1080,8 @@ application:
         errors:
           seed_anchor_missing: L'entrada de l'escenari de paritat no té cap cel·la
             del full de càlcul on sembrar-se.
-          unknown_casilla_numbers: L'escenari de paritat referencia números de casella
-            que no són a la instantània del registre.
+          unknown_casilla_ids: L'escenari de paritat referencia casilla.id que no
+            són a la instantània del registre.
       records:
         errors:
           address_mismatch: La direcció de cel·la del full de càlcul no coincideix
@@ -1580,7 +1592,7 @@ cli:
         evidence_reference_id_help: Identificador estable de l'evidència importada
           (número de justificant, id del registre CSV, id de captura en viu)
         filing_record_id_help: Identificador estable d'un filing record
-        import_casilla_help: Valor de casella importat amb sintaxi CASILLA=DECIMAL
+        import_casilla_help: Valor de casella importat amb sintaxi CASILLA_ID=DECIMAL
           (repetible; almenys un requerit)
         import_help: Persistir una declaració presentada externament com a filing
           record base amb evidència oficial importada de l'AEAT
@@ -1685,7 +1697,7 @@ cli:
         view_help: Mostra una declaració M036 registrada pel seu id (o un prefix inequívoc).
       project:
         binding_help: Valor d'enllaç amb la sintaxi KEY=VALUE (repetible).
-        casilla_help: Valor de casilla amb la sintaxi CASILLA=DECIMAL (repetible).
+        casilla_help: Valor de casilla amb la sintaxi CASILLA_ID=DECIMAL (repetible).
         ccaa_help: Codi de comunitat autònoma per a la projecció territorial.
         no_m130_revisions: No hi ha revisions M130 per a l'exercici indicat. Executa
           `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`
@@ -1769,9 +1781,9 @@ cli:
           que el model estigui autoritzat.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'una revisió de càlcul
-        casilla_help: Valor de casella amb sintaxi CASILLA=DECIMAL (repetible). CASILLA
-          admet l'id de casella, el número del registre o el número de casella imprès
-          al BOE mostrats per `aeat app modelo casillas`.
+        casilla_help: Valor de casella amb sintaxi CASILLA_ID=DECIMAL (repetible).
+          CASILLA_ID ha de ser el casilla.id canonic mostrat per `aeat app modelo
+          casillas`.
         casilla_not_decimal: 'El valor de --casilla per a {key} no és un decimal:
           {value}.'
         causante_ccaa_help: CCAA de residència habitual del causant (ISD Modelo 650/660)
@@ -1844,6 +1856,9 @@ cli:
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
           a executar 'aeat app modelo work discard %{work_unit_id} --yes' per confirmar.
         discard_yes_help: Confirmar explícitament l'operació de descart
+        disposition_help: 'Disposicio del resultat negatiu del Model 303: compensar
+          (arrossegar el credit, per defecte) o tornar (sol·licitar la devolucio;
+          nomes en l''ultim periode de l''any per a un contribuent no inscrit a REDEME).'
         dt12_computation_error: 'Error de càlcul DT12: %{message}'
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
@@ -2020,8 +2035,8 @@ cli:
           ha sol licitat {requested_revision}. Repreneu la unitat existent, descarteu-la
           explicitament o passeu un id exacte.
         set_not_decimal: El valor de --set ha de ser un decimal; s'ha rebut {value}.
-        set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL (repetible;
-          almenys un requerit)
+        set_override_help: Valor de casella corregit amb sintaxi CASILLA_ID=DECIMAL
+          (repetible; almenys un requerit)
         status_help: Mostrar les metadades d'una unitat de treball
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         verify_selector_help: Selector de revisio esborrany (current, latest-draft
@@ -3790,7 +3805,7 @@ errors:
     error_calc_sheets_engine: El motor d'exportació de fulls de càlcul ha trobat un
       estat irresoluble en generar el pla d'exportació.
     error_calc_sheets_parity: L'escenari del bastiment de paritat fa referència a
-      números de casella que no es troben a la instantània del registre.
+      casilla.id que no es troben a la instantània del registre.
     error_calc_sheets_record: Una operació de registre de full de càlcul ha fallat
       per un índex de columna invàlid o una adreça A1 malformada.
     error_calculations_registry: S'ha produït un error en carregar, resoldre o validar
@@ -4302,6 +4317,7 @@ errors:
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
     modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
     modelo_calculate_input: errors.refused.modelo_calculate_input
+    modelo_calculate_relation_input: errors.refused.modelo_calculate_relation_input
     modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
     modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
     modelo_calculation_revision_selector_ambiguous: El selector de revisio de calcul
@@ -4474,6 +4490,12 @@ errors:
     refused_modelo_applicability_filter: S'ha trobat un nom de filtre d'aplicabilitat
       desconegut al registre. Es tracta d'un error d'autoria del registre; actualitzeu
       la taula de despacho de filtres.
+    refused_modelo_refund_account_missing: S'ha sol·licitat una devolucio pero no
+      hi ha cap compte de devolucio configurat; l'AEAT no pot pagar una devolucio
+      sense un compte. Configureu un compte de devolucio o compenseu el credit (compensar).
+    refused_modelo_refund_election_not_eligible: S'ha sol·licitat una devolucio en
+      un periode on no esta disponible; nomes l'ultim periode de declaracio de l'any
+      permet la devolucio a un no inscrit a REDEME.
     refused_modelo_workflow_gate: El control del flux de treball ha rebutjat la transició
       de la declaració. La declaració no es pot considerar presentada legalment.
     refused_no_active_profile: Aquesta operació necessita un perfil actiu. Crea o

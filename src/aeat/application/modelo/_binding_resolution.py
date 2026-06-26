@@ -13,9 +13,13 @@ from typing import Protocol, runtime_checkable
 
 from ...core import Period as _Period
 from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
     InputKind,
     ModeloRevision,
     RegistrySnapshot,
+    RelationId,
+    casillas_by_id,
     enum_consumed_binding_ids,
     expression_binding_refs,
 )
@@ -26,6 +30,10 @@ from ._borrador_binding import (
     Modelo100BorradorSourceResolver,
 )
 from ._profile_binding import ProfileSourcedBindingResult
+from ._semantic_role_resolution import (
+    AmbiguousSemanticRoleCasillaError,
+    casilla_id_for_unique_revision_semantic_role,
+)
 
 
 @runtime_checkable
@@ -51,21 +59,21 @@ class BindingSourceResolution(Protocol):
     """
 
     @property
-    def binding_values(self) -> Mapping[str, Decimal]: ...
+    def binding_values(self) -> Mapping[BindingId, Decimal]: ...
 
     @property
-    def enum_binding_values(self) -> Mapping[str, str]: ...
+    def enum_binding_values(self) -> Mapping[BindingId, str]: ...
 
 
 @dataclass(frozen=True)
 class CalculationBindingResolution:
     """Engine-ready inputs resolved from caller, backend, profile, and borrador sources."""
 
-    resolved_inputs: Mapping[str, Decimal]
-    resolved_bindings: Mapping[str, Decimal]
-    resolved_enum_bindings: Mapping[str, str]
-    resolved_date_bindings: Mapping[str, date]
-    resolved_relations: Mapping[str, Decimal]
+    resolved_inputs: Mapping[CasillaId, Decimal]
+    resolved_bindings: Mapping[BindingId, Decimal]
+    resolved_enum_bindings: Mapping[BindingId, str]
+    resolved_date_bindings: Mapping[BindingId, date]
+    resolved_relations: Mapping[RelationId, Decimal]
     borrador_result: Modelo100BorradorBindingResult
     profile_result: ProfileSourcedBindingResult
 
@@ -76,14 +84,14 @@ def resolve_calculation_binding_inputs(
     snapshot: RegistrySnapshot,
     filing_year: int,
     period: _Period,
-    casilla_inputs: Mapping[str, Decimal],
-    caller_binding_values: Mapping[str, Decimal],
-    caller_enum_binding_values: Mapping[str, str],
-    backend_binding_values: Mapping[str, Decimal],
-    backend_casilla_inputs: Mapping[str, Decimal] | None,
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    caller_binding_values: Mapping[BindingId, Decimal],
+    caller_enum_binding_values: Mapping[BindingId, str],
+    backend_binding_values: Mapping[BindingId, Decimal],
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
     borrador_snapshot_id: str | None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
-    relation_values: Mapping[str, Decimal] | None,
+    relation_values: Mapping[RelationId, Decimal] | None,
 ) -> CalculationBindingResolution:
     """Resolve every binding-related engine channel for one calculation.
 
@@ -160,7 +168,7 @@ def resolve_calculation_binding_inputs(
             {
                 **declaration_period_inputs,
                 **dict(backend_casilla_inputs or {}),
-                **resolve_bound_casilla_inputs_for_available_bindings(
+                **resolve_available_bound_inputs_by_casilla_id(
                     snapshot.revision,
                     resolved_bindings,
                 ),
@@ -183,10 +191,10 @@ def _resolve_profile_bindings_for_calculation(
     *,
     bucket_id: str,
     snapshot: RegistrySnapshot,
-    caller_binding_values: Mapping[str, Decimal],
-    caller_enum_binding_values: Mapping[str, str],
+    caller_binding_values: Mapping[BindingId, Decimal],
+    caller_enum_binding_values: Mapping[BindingId, str],
     borrador_result: Modelo100BorradorBindingResult,
-    backend_binding_values: Mapping[str, Decimal],
+    backend_binding_values: Mapping[BindingId, Decimal],
 ) -> ProfileSourcedBindingResult:
     """Resolve ``source = "profile"`` bindings from the bucket's user profile."""
     from ..aggregation import CalculationSourceContext, ProfileSourceResolver
@@ -226,8 +234,8 @@ def _resolve_profile_bindings_for_calculation(
 
 def _reject_binding_channel_mismatch(
     revision: ModeloRevision,
-    binding_values: Mapping[str, Decimal],
-    enum_binding_values: Mapping[str, str],
+    binding_values: Mapping[BindingId, Decimal],
+    enum_binding_values: Mapping[BindingId, str],
 ) -> None:
     """Refuse bindings supplied through the wrong engine channel."""
     enum_consumed = enum_consumed_binding_ids(revision)
@@ -252,7 +260,7 @@ def _reject_binding_channel_mismatch(
         )
 
 
-def _binding_is_formula_consumed(revision: ModeloRevision, binding_id: str) -> bool:
+def _binding_is_formula_consumed(revision: ModeloRevision, binding_id: BindingId) -> bool:
     """Return whether any formula expression references ``binding_id``."""
     return any(binding_id in expression_binding_refs(formula.expression) for formula in revision.formulas)
 
@@ -264,8 +272,8 @@ def _resolve_borrador_bindings_for_calculation(
     filing_year: int,
     period: _Period,
     borrador_snapshot_id: str | None,
-    caller_binding_values: Mapping[str, Decimal],
-    caller_enum_binding_values: Mapping[str, str],
+    caller_binding_values: Mapping[BindingId, Decimal],
+    caller_enum_binding_values: Mapping[BindingId, str],
     registry_snapshot: RegistrySnapshot,
     snapshot_repository: Borrador100SnapshotRepository | None,
 ) -> Modelo100BorradorBindingResult:
@@ -295,15 +303,15 @@ def _resolve_borrador_bindings_for_calculation(
     )
 
 
-def resolve_bound_casilla_inputs_for_available_bindings(
+def resolve_available_bound_inputs_by_casilla_id(
     revision: ModeloRevision,
-    binding_values: Mapping[str, Decimal],
-) -> dict[str, Decimal]:
-    """Project available binding values into their bound casilla input ids.
+    binding_values: Mapping[BindingId, Decimal],
+) -> dict[CasillaId, Decimal]:
+    """Project available binding values into input values keyed by bound ``casilla.id``.
 
     Use of :class:`ModeloRevision` for compliance.
     """
-    resolved: dict[str, Decimal] = {}
+    resolved: dict[CasillaId, Decimal] = {}
     for casilla in revision.casillas:
         if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
             continue
@@ -315,15 +323,15 @@ def resolve_bound_casilla_inputs_for_available_bindings(
 
 def _lift_previous_filing_casilla_overrides_to_bindings(
     revision: ModeloRevision,
-    casilla_inputs: Mapping[str, Decimal],
-    resolved_bindings: Mapping[str, Decimal],
-) -> dict[str, Decimal]:
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    resolved_bindings: Mapping[BindingId, Decimal],
+) -> dict[BindingId, Decimal]:
     """Promote operator casilla overrides for previous-filing-bound casillas into bindings."""
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
-    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
-    promoted: dict[str, Decimal] = {}
+    revision_casillas_by_id = casillas_by_id(revision)
+    promoted: dict[BindingId, Decimal] = {}
     for casilla_id, value in casilla_inputs.items():
-        casilla = casillas_by_id.get(casilla_id)
+        casilla = revision_casillas_by_id.get(casilla_id)
         if casilla is None or casilla.input_kind != InputKind.BOUND or not casilla.binding:
             continue
         binding = bindings_by_id.get(casilla.binding)
@@ -364,27 +372,44 @@ def _resolve_declaration_period_inputs(
     *,
     filing_year: int,
     period: _Period,
-) -> dict[str, Decimal]:
+) -> dict[CasillaId, Decimal]:
     """Return informational-casilla inputs sourced from work-unit metadata."""
-    resolved: dict[str, Decimal] = {}
-    for casilla in revision.casillas:
-        if casilla.input_kind != InputKind.INFORMATIONAL:
-            continue
-        if casilla.semantic_role == "filing_year":
-            resolved[casilla.id] = Decimal(filing_year)
-        elif casilla.semantic_role == "filing_period":
-            ordinal = _FILING_PERIOD_ORDINALS.get(period.registry_token)
-            if ordinal is None:
-                raise ModeloError(
-                    f"work-unit period {period.registry_token!r} has no registry period ordinal; "
-                    f"cannot resolve informational casilla {casilla.id!r}",
-                )
-            resolved[casilla.id] = Decimal(ordinal)
+    resolved: dict[CasillaId, Decimal] = {}
+    filing_year_id = _informational_semantic_role_casilla_id(revision, "filing_year")
+    if filing_year_id is not None:
+        resolved[filing_year_id] = Decimal(filing_year)
+
+    filing_period_id = _informational_semantic_role_casilla_id(revision, "filing_period")
+    if filing_period_id is not None:
+        ordinal = _FILING_PERIOD_ORDINALS.get(period.registry_token)
+        if ordinal is None:
+            raise ModeloError(
+                f"work-unit period {period.registry_token!r} has no registry period ordinal; "
+                f"cannot resolve informational casilla {filing_period_id!r}",
+            )
+        resolved[filing_period_id] = Decimal(ordinal)
     return resolved
+
+
+def _informational_semantic_role_casilla_id(revision: ModeloRevision, semantic_role: str) -> CasillaId | None:
+    try:
+        casilla_id = casilla_id_for_unique_revision_semantic_role(revision, semantic_role)
+    except AmbiguousSemanticRoleCasillaError as exc:
+        raise ModeloError(str(exc), context=exc.ambiguity.context()) from exc
+    if casilla_id is None:
+        return None
+    casilla = casillas_by_id(revision).get(casilla_id)
+    if casilla is None or casilla.input_kind != InputKind.INFORMATIONAL:
+        raise ModeloError(
+            f"semantic_role={semantic_role!r} resolved to casilla {casilla_id!r}, "
+            "but declaration-period metadata can only populate informational casillas",
+            context={"semantic_role": semantic_role, "casilla_id": casilla_id},
+        )
+    return casilla_id
 
 
 __all__ = [
     "CalculationBindingResolution",
-    "resolve_bound_casilla_inputs_for_available_bindings",
+    "resolve_available_bound_inputs_by_casilla_id",
     "resolve_calculation_binding_inputs",
 ]

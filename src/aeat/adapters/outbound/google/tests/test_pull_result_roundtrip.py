@@ -30,6 +30,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .._calc_sheets_pull import (
     BindingEdit,
     MetadataMatchState,
@@ -42,6 +43,11 @@ from .._calc_sheets_pull import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_M100_CASILLA_0001: CasillaId = validated_casilla_id("modelo-100-casilla-0001", surface="_M100_CASILLA_0001")
+_M100_CASILLA_0002: CasillaId = validated_casilla_id("modelo-100-casilla-0002", surface="_M100_CASILLA_0002")
+_M100_CASILLA_0003: CasillaId = validated_casilla_id("modelo-100-casilla-0003", surface="_M100_CASILLA_0003")
+_M100_CASILLA_0004: CasillaId = validated_casilla_id("modelo-100-casilla-0004", surface="_M100_CASILLA_0004")
 
 
 def _populated_pull_result() -> PullResult:
@@ -62,26 +68,26 @@ def _populated_pull_result() -> PullResult:
         spreadsheet_id="spreadsheet-fixture-001",
         operator_edits=(
             OperatorEdit(
-                casilla="modelo-100-casilla-0001",
-                casilla_number="0001",
+                casilla_id=_M100_CASILLA_0001,
+                display_number="0001",
                 label="Casilla 0001",
                 value=Decimal("1234.56"),
             ),
             OperatorEdit(
-                casilla="modelo-100-casilla-0002",
-                casilla_number="0002",
+                casilla_id=_M100_CASILLA_0002,
+                display_number="0002",
                 label="Casilla 0002",
                 value="text-shape",  # unambiguous str path
             ),
             OperatorEdit(
-                casilla="modelo-100-casilla-0003",
-                casilla_number="0003",
+                casilla_id=_M100_CASILLA_0003,
+                display_number="0003",
                 label="Casilla 0003",
                 value=True,  # bool path
             ),
             OperatorEdit(
-                casilla="modelo-100-casilla-0004",
-                casilla_number="0004",
+                casilla_id=_M100_CASILLA_0004,
+                display_number="0004",
                 label="Casilla 0004",
                 value=None,
             ),
@@ -228,3 +234,17 @@ def test_pull_result_round_trip_extra_field_raises() -> None:
     mutated = json.dumps(encoded)
     with pytest.raises(ValidationError):
         PullResult.model_validate_json(mutated)
+
+
+def test_operator_edit_rejects_generic_casilla_key() -> None:
+    """The pull adapter exposes the canonical casilla_id key, not a second casilla dialect."""
+
+    with pytest.raises(ValidationError):
+        OperatorEdit.model_validate(
+            {
+                "casilla": _M100_CASILLA_0001,
+                "display_number": "0001",
+                "label": "Casilla 0001",
+                "value": "1234.56",
+            },
+        )

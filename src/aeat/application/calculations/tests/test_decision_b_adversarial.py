@@ -10,26 +10,33 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from .._cross_period_clean_state import (
     _OFFICIAL_EVIDENCE_DELTA_BLOCKERS,
-    _relax_same_year_local_chain,
     CrossPeriodCleanStateBlocker,
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
+    _relax_same_year_local_chain,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_DELTA = tuple(_OFFICIAL_EVIDENCE_DELTA_BLOCKERS)
+_DELTA: tuple[CrossPeriodCleanStateBlocker, ...] = tuple(_OFFICIAL_EVIDENCE_DELTA_BLOCKERS)
+_M130_SOURCE_CASILLA_19: CasillaId = validated_casilla_id("19", surface="_M130_SOURCE_CASILLA_19")
 
 
-def _evidence(*, filing_year: int, source_kind: str | None, blockers: tuple) -> CrossPeriodDependencyEvidence:
+def _evidence(
+    *,
+    filing_year: int,
+    source_kind: str | None,
+    blockers: tuple[CrossPeriodCleanStateBlocker, ...],
+) -> CrossPeriodDependencyEvidence:
     req = CrossPeriodDependencyRequirement(
         source_modelo="130",
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, "1T"),
-        source_casillas=("19",),
+        source_casilla_ids=(_M130_SOURCE_CASILLA_19,),
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=("modelo-130-pagos-fraccionados-anteriores",),
     )
@@ -62,7 +69,7 @@ def test_same_year_app_filing_only_delta_is_admitted() -> None:
         CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD,
     ],
 )
-def test_same_year_app_filing_with_extra_blocker_stays_blocking(extra) -> None:
+def test_same_year_app_filing_with_extra_blocker_stays_blocking(extra: CrossPeriodCleanStateBlocker) -> None:
     """ATTACK: a same-year app_filing chain with ANY non-delta blocker must NOT relax.
 
     A value divergence, operator-manual source, revision divergence, or missing
@@ -84,7 +91,7 @@ def test_cross_year_app_filing_stays_blocking() -> None:
 
 
 @pytest.mark.parametrize("kind", ["operator_manual", "aeat_sede_justificante", "aeat_csv_register", None])
-def test_non_app_filing_source_stays_blocking(kind) -> None:
+def test_non_app_filing_source_stays_blocking(kind: str | None) -> None:
     """ATTACK: only app_filing relaxes; operator_manual/official/None must NOT."""
     ev = _evidence(filing_year=2026, source_kind=kind, blockers=_DELTA)
     out = _relax_same_year_local_chain(ev, target_filing_year=2026)

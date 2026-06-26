@@ -22,7 +22,7 @@ from ...application.modelo import (
 )
 from ...core import Modelo
 from ...core.i18n import tr
-from ...domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry import CasillaId, RegistrySnapshotError, RegistryValidationError
 from ._common import _emit_envelope
 from ._modelo_payloads import (
     CasillaObservationPayload,
@@ -34,7 +34,8 @@ from ._modelo_payloads import (
     ModeloProjectResult,
 )
 
-ParseOverride = Callable[[str], tuple[str, str]]
+CasillaParseOverride = Callable[[str], tuple[CasillaId, str]]
+BindingParseOverride = Callable[[str], tuple[str, str]]
 BadParameterRenderer = Callable[[BaseException], typer.BadParameter]
 
 
@@ -42,8 +43,8 @@ def register_projection_commands(
     app: typer.Typer,
     *,
     require_active_profile: Callable[[], None],
-    parse_casilla_override: ParseOverride,
-    parse_binding_override: ParseOverride,
+    parse_casilla_override: CasillaParseOverride,
+    parse_binding_override: BindingParseOverride,
     bad_parameter_from_error: BadParameterRenderer,
     bad_parameter_from_localized_context: BadParameterRenderer,
 ) -> None:
@@ -68,8 +69,8 @@ def _register_modelo_project_command(
     app: typer.Typer,
     *,
     require_active_profile: Callable[[], None],
-    parse_casilla_override: ParseOverride,
-    parse_binding_override: ParseOverride,
+    parse_casilla_override: CasillaParseOverride,
+    parse_binding_override: BindingParseOverride,
     bad_parameter_from_error: BadParameterRenderer,
     bad_parameter_from_localized_context: BadParameterRenderer,
 ) -> None:

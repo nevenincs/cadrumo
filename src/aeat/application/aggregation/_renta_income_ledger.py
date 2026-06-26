@@ -36,6 +36,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, PeriodKind
+from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -52,7 +53,7 @@ from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance
 
 # The only casilla income aggregation feeds for M130 actividad económica direct estimation.
-_TARGET_CASILLA_INGRESOS = "01"
+_TARGET_CASILLA_INGRESOS: CasillaId = validated_casilla_id("01", surface="_TARGET_CASILLA_INGRESOS")
 
 
 class RentaIncomeLedgerAggregationIssueReason(StrEnum):
@@ -83,8 +84,8 @@ class RentaIncomeLedgerAggregationIssue(BaseModel):
 class RentaIncomeObservation(BaseModel):
     """One eligible INCOMING professional-income ledger row.
 
-    Carries the typed gross amount and the target casilla it feeds. The
-    domain registry resolver matches ``target_casilla`` against the binding
+    Carries the typed gross amount and the target casilla id it feeds. The
+    domain registry resolver matches ``target_casilla_id`` against the binding
     selector and sums ``gross_amount`` (or ``taxable_base_amount``) across
     all observations for that casilla depending on the declared fact.
 
@@ -105,7 +106,7 @@ class RentaIncomeObservation(BaseModel):
     model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1, max_length=128)
-    target_casilla: str = Field(min_length=2, max_length=8)
+    target_casilla_id: CasillaId
     gross_amount: Decimal = Field(ge=Decimal("0"))
     taxable_base_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     filing_date: date
@@ -242,7 +243,10 @@ def aggregate_renta_income_ledger(
 # return aggregates the same actividad-económica income the M130 quarterly path
 # sums, but over the full ejercicio and into the M100 income leaf rather than the
 # M130 cumulative casilla.
-_TARGET_CASILLA_M100_INGRESOS = "0171"
+_TARGET_CASILLA_M100_INGRESOS: CasillaId = validated_casilla_id(
+    "0171",
+    surface="_TARGET_CASILLA_M100_INGRESOS",
+)
 
 
 def aggregate_renta_m100_income_ledger_from_repositories(
@@ -301,7 +305,7 @@ def aggregate_renta_m100_income_ledger(
         else:
             # The classifier targets the M130 casilla 01; re-target the same
             # eligible observation to the M100 income leaf 0171.
-            observations.append(outcome.model_copy(update={"target_casilla": _TARGET_CASILLA_M100_INGRESOS}))
+            observations.append(outcome.model_copy(update={"target_casilla_id": _TARGET_CASILLA_M100_INGRESOS}))
 
     casilla_aggregation = _m100_income_casilla_aggregation(period, observations)
     return RentaIncomeLedgerAggregation(
@@ -317,17 +321,17 @@ def _m100_income_casilla_aggregation(
     period: Period,
     observations: Sequence[RentaIncomeObservation],
 ) -> CasillaAggregation:
-    totals: dict[str, Decimal] = {}
-    grouped: dict[str, list[RentaIncomeObservation]] = {}
+    totals: dict[CasillaId, Decimal] = {}
+    grouped: dict[CasillaId, list[RentaIncomeObservation]] = {}
     for observation in observations:
-        totals[observation.target_casilla] = totals.get(
-            observation.target_casilla,
+        totals[observation.target_casilla_id] = totals.get(
+            observation.target_casilla_id,
             Decimal("0"),
         ) + _computable_income_amount(observation)
-        grouped.setdefault(observation.target_casilla, []).append(observation)
+        grouped.setdefault(observation.target_casilla_id, []).append(observation)
     provenance_rows = [
         CasillaProvenance(
-            casilla=casilla,
+            casilla_id=casilla,
             category_id=None,
             transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
             subtotal=sum((_computable_income_amount(row) for row in rows), start=Decimal("0")),
@@ -432,7 +436,7 @@ def _classify_income_transaction(
 
     return RentaIncomeObservation(
         transaction_id=transaction_id,
-        target_casilla=_TARGET_CASILLA_INGRESOS,
+        target_casilla_id=_TARGET_CASILLA_INGRESOS,
         gross_amount=gross_amount,
         taxable_base_amount=taxable_base_amount,
         filing_date=filing_date,
@@ -479,18 +483,18 @@ def _income_casilla_aggregation(
     period: Period,
     observations: Sequence[RentaIncomeObservation],
 ) -> CasillaAggregation:
-    totals: dict[str, Decimal] = {}
+    totals: dict[CasillaId, Decimal] = {}
     provenance_rows: list[CasillaProvenance] = []
-    grouped: dict[str, list[RentaIncomeObservation]] = {}
+    grouped: dict[CasillaId, list[RentaIncomeObservation]] = {}
     for observation in observations:
-        totals[observation.target_casilla] = totals.get(
-            observation.target_casilla, Decimal("0")
+        totals[observation.target_casilla_id] = totals.get(
+            observation.target_casilla_id, Decimal("0")
         ) + _computable_income_amount(observation)
-        grouped.setdefault(observation.target_casilla, []).append(observation)
+        grouped.setdefault(observation.target_casilla_id, []).append(observation)
     for casilla, rows in sorted(grouped.items()):
         provenance_rows.append(
             CasillaProvenance(
-                casilla=casilla,
+                casilla_id=casilla,
                 category_id=None,
                 transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
                 subtotal=sum((_computable_income_amount(row) for row in rows), start=Decimal("0")),

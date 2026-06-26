@@ -29,6 +29,7 @@ from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 
 from ...core.hashing import sha256_hex
+from ...domain.calculations.registry import CasillaId
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos._errors import ModeloValidationError
 from ...domain.modelos._ledger_filing_snapshot import (
@@ -213,7 +214,9 @@ def compute_ledger_filing_evidence(
     )
 
 
-def project_manual_fact_basis_entries(inputs_snapshot: Mapping[str, str]) -> tuple[ManualFactBasisEntry, ...]:
+def project_manual_fact_basis_entries(
+    input_values_by_casilla_id: Mapping[CasillaId, str],
+) -> tuple[ManualFactBasisEntry, ...]:
     """Project operator-entered casilla inputs into :class:`ManualFactBasisEntry` entries.
 
     The calculation revision stores caller-supplied casilla inputs as rendered
@@ -221,8 +224,8 @@ def project_manual_fact_basis_entries(inputs_snapshot: Mapping[str, str]) -> tup
     row explains them.
     """
     return tuple(
-        ManualFactBasisEntry(casilla=casilla, value=value)
-        for casilla, value in sorted(inputs_snapshot.items())
+        ManualFactBasisEntry(casilla_id=casilla, value=value)
+        for casilla, value in sorted(input_values_by_casilla_id.items())
         if value.strip()
     )
 

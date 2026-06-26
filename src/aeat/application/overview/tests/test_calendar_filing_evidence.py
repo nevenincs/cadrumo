@@ -11,9 +11,15 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.sede import Declaracion
 from ....core import Period
-from ....domain.calculations.registry import ApplicabilityVerdict, CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    ApplicabilityVerdict,
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
 from ....domain.deadlines import ObligationStatus
 from ....domain.modelos import ExternalEvidence, ExternalEvidenceKind, ModeloRecord
+from ....tests.registry_observations import registry_grounded_observations
 from ...calculations._observations_repository import _ObservationEnvelopePayload
 from ...live._expedientes import PersistedExpedientesSnapshot
 from ...live._justificante import JustificanteCaptureSnapshot
@@ -46,6 +52,26 @@ from .test_calendar import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"overview filing evidence fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_OBSERVED_CASILLA: CasillaId = _casilla_id("01")
+
+
+def _observed_casilla_observations(value: Decimal):
+    return registry_grounded_observations(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        casilla_values={_OBSERVED_CASILLA: value},
+    )
 
 
 def _justificante_capture_snapshot(
@@ -633,7 +659,7 @@ def test_sede_calculation_observation_is_not_justificante_verification() -> None
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",
@@ -664,7 +690,7 @@ def test_official_calculation_observation_sources_are_calendar_submission_eviden
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind=source_kind,
@@ -696,7 +722,7 @@ def test_official_calculation_observation_source_with_matching_justificante_is_v
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_csv_register",
@@ -730,7 +756,7 @@ def test_verified_modelo_record_receipt_time_survives_calculation_observation_me
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",
@@ -773,7 +799,7 @@ def test_sede_calculation_observation_with_matching_justificante_metadata_is_ver
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",
@@ -807,7 +833,7 @@ def test_sede_calculation_observation_with_plural_justificante_metadata_is_verif
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",
@@ -836,7 +862,7 @@ def test_sede_calculation_observation_justificante_csv_match_is_case_insensitive
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",
@@ -865,7 +891,7 @@ def test_sede_calculation_observation_conflicting_case_equivalent_justificantes_
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",
@@ -897,7 +923,7 @@ def test_sede_calculation_observation_with_wrong_justificante_metadata_is_not_ve
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",
@@ -926,7 +952,7 @@ def test_sede_calculation_observation_without_metadata_is_not_submission_evidenc
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",
@@ -946,7 +972,7 @@ def test_sede_calculation_observation_with_non_alta_metadata_is_not_submission_e
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",
@@ -967,7 +993,7 @@ def test_sede_calculation_observation_without_register_reference_is_not_submissi
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",
@@ -993,7 +1019,7 @@ def test_sede_calculation_observation_without_authenticated_identity_is_ignored_
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",
@@ -1017,7 +1043,7 @@ def test_sede_calculation_observation_for_wrong_authenticated_identity_is_ignore
             modelo="303",
             filing_year=2025,
             period="1T",
-            observations=(CasillaObservation(casilla_id="01", value=Decimal("123.45")),),
+            observations=_observed_casilla_observations(Decimal("123.45")),
         ),
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind="aeat_sede_justificante",

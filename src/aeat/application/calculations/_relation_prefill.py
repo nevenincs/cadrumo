@@ -6,7 +6,7 @@ declares?" and this module answers by consulting a :class:`RegistrySnapshot`
 to enumerate the declared relations:
 
 1. Reading the revision's relations to determine `(source_modelo,
-   source_revision_selector, source_periods, source_output,
+   source_revision_selector, source_periods, source_casilla_id,
    aggregation.op)`.
 2. Scanning the local `CalculationObservationRepository` for prior
    filings matching the source quadruple.
@@ -39,12 +39,17 @@ from ...core import Modelo, Period
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.calculations.registry import (
+    BindingId,
+    CasillaId,
     RegistryModeloObservation,
     RegistryRelationSourceRequirement,
     RegistrySnapshot,
     RegistryValidationError,
+    RelationId,
     materialize_relation_binding_values,
     relation_source_requirements,
+    undeclared_casilla_ids,
+    validated_casilla_id,
 )
 from ...domain.iva_compensation import (
     IvaCompensationPeriodState,
@@ -65,16 +70,23 @@ _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _log = get_logger(__name__)
 
-#: The shared Modelo 303 source-output the two Modelo 390 year-end carry boxes
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="relation-prefill casilla constant")
+    except ValueError as exc:
+        raise RuntimeError(f"relation-prefill casilla constant {value!r} is not a CasillaId") from exc
+
+#: The shared Modelo 303 source casilla id the two Modelo 390 year-end carry boxes
 #: (97 / 662) fold. The two relations sum/copy this per-period casilla, but the
 #: 97-vs-662 split is a FIFO partition of the year's pending credit, not a
 #: per-period sum, so the relation path is OVERRIDDEN by the FIFO projection for
 #: these two bindings (ADR 2026-06-21-m390-iva-carry-boxes).
-_M303_COMPENSACION_GENERADA_SOURCE: Final = "iva.compensacion-generada-periodo"
-_303_GENERADA_ID: Final = "iva.compensacion-generada-periodo"
-_303_APLICADA_ID: Final = "iva.compensacion-aplicada-periodo"
-_303_DISPONIBLE_ID: Final = "iva.compensacion-disponible-fin-periodo"
-_303_POSTERIOR_ID: Final = "iva.compensacion-pendiente-periodos-posteriores"
+_M303_COMPENSACION_GENERADA_SOURCE: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
+_303_GENERADA_ID: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
+_303_APLICADA_ID: Final[CasillaId] = _casilla_id("iva.compensacion-aplicada-periodo")
+_303_DISPONIBLE_ID: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_303_POSTERIOR_ID: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
 _ZERO: Final = Decimal("0")
 
 
@@ -126,7 +138,7 @@ def _gather_observations_for_snapshot(
 
 
 def _provenance_note(
-    relation_id: str,
+    relation_id: RelationId,
     source_modelo: str,
     source_periods: tuple[str, ...],
     source_year: int,
@@ -396,11 +408,11 @@ def resolve_relations_from_local_store(
 def _resolve_available_relation_values(
     observations: tuple[RegistryModeloObservation, ...],
     *,
-    requirements_by_relation: dict[str, RegistryRelationSourceRequirement],
-) -> dict[str, Decimal]:
+    requirements_by_relation: dict[RelationId, RegistryRelationSourceRequirement],
+) -> dict[RelationId, Decimal]:
     """Resolve each relation requirement independently from available observations."""
     by_requirement = {requirement: requirement for requirement in requirements_by_relation.values()}
-    resolved: dict[str, Decimal] = {}
+    resolved: dict[RelationId, Decimal] = {}
     for requirement in by_requirement:
         try:
             value = _resolve_requirement_value(requirement, observations)
@@ -453,35 +465,35 @@ def _observed_requirement_values(
                 f"expected one observed filing {requirement.source_modelo!r}/"
                 f"{requirement.filing_year}/{source_period!r}, found {len(matches)}",
             )
-        value = matches[0].casilla_values.get(requirement.source_output)
+        value = matches[0].casilla_values.get(requirement.source_casilla_id)
         if value is None:
             raise RegistryValidationError(
-                f"requires observed output {requirement.source_output!r} from "
+                f"requires observed source casilla id {requirement.source_casilla_id!r} from "
                 f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}",
             )
         values.append(value)
     return tuple(values)
 
 
-def _formula_relation_ids(snapshot: RegistrySnapshot) -> frozenset[str]:
-    relation_ids: set[str] = set()
+def _formula_relation_ids(snapshot: RegistrySnapshot) -> frozenset[RelationId]:
+    relation_ids: set[RelationId] = set()
     for formula in snapshot.revision.formulas:
         _collect_expression_relation_ids(formula.expression, relation_ids)
     return frozenset(relation_ids)
 
 
-def _collect_expression_relation_ids(expression: object, relation_ids: set[str]) -> None:
+def _collect_expression_relation_ids(expression: object, relation_ids: set[RelationId]) -> None:
     relation_id = getattr(expression, "relation", None)
     if relation_id is not None:
-        relation_ids.add(str(relation_id))
+        relation_ids.add(relation_id)
     for arg in getattr(expression, "args", ()):
         _collect_expression_relation_ids(arg, relation_ids)
 
 
 def _unresolved_relation_diagnostics(
     *,
-    unresolved_relation_ids: frozenset[str],
-    requirements_by_relation: dict[str, RegistryRelationSourceRequirement],
+    unresolved_relation_ids: frozenset[RelationId],
+    requirements_by_relation: Mapping[RelationId, RegistryRelationSourceRequirement],
     resolver_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     diagnostics: list[CalculationSourceDiagnostic] = []
@@ -509,7 +521,7 @@ def _unresolved_relation_diagnostics(
                 relation_id=relation_id,
                 message=(
                     f"relation {relation_id!r} requires modelo {requirement.source_modelo} "
-                    f"{requirement.filing_year} periods {period_text} output {requirement.source_output}; "
+                    f"{requirement.filing_year} periods {period_text} output {requirement.source_casilla_id}; "
                     "the source filing is missing or incomplete"
                 ),
             ),
@@ -517,7 +529,7 @@ def _unresolved_relation_diagnostics(
     return tuple(diagnostics)
 
 
-def _observed_value(values: Mapping[str, Decimal], casilla_id: str) -> Decimal | None:
+def _observed_value(values: Mapping[CasillaId, Decimal], casilla_id: CasillaId) -> Decimal | None:
     return values.get(casilla_id)
 
 
@@ -529,8 +541,7 @@ def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation
         filing_year=observation.filing_year,
         period=observation.period,
     )
-    canonical_ids = frozenset(casilla.id for casilla in snapshot.revision.casillas)
-    invalid = tuple(sorted(set(observation.casilla_values) - canonical_ids))
+    invalid = undeclared_casilla_ids(snapshot.revision, observation.casilla_values)
     if invalid:
         raise RegistryValidationError(
             "Modelo 303 compensation observations must use canonical casilla.id values declared by "
@@ -575,34 +586,34 @@ def _period_state_from_303_observation(observation: RegistryModeloObservation) -
     )
 
 
-def _compensation_carry_binding_ids(snapshot: RegistrySnapshot) -> tuple[str | None, str | None]:
+def _compensation_carry_binding_ids(snapshot: RegistrySnapshot) -> tuple[BindingId | None, BindingId | None]:
     """Identify the annual carry binding ids for the FIFO partition.
 
     Resolved structurally from the revision's relations: both fold the shared
-    303 ``iva.compensacion-generada-periodo`` source-output;
+    303 ``iva.compensacion-generada-periodo`` source casilla id;
     ``iva.anual.compensacion-ultimo-periodo-97`` is the ``copy`` of the last
     period (its ``source_periods`` does not span the early quarters), and
     ``iva.anual.compensacion-generada-ejercicio-no-97`` is the ``sum`` of the
     non-last periods. Either binding id is ``None`` when the revision declares
     no such relation (every non-390 revision).
     """
-    last_period_binding_id: str | None = None
-    generated_not_in_last_binding_id: str | None = None
+    last_period_binding_id: BindingId | None = None
+    generated_not_in_last_binding_id: BindingId | None = None
     for relation in snapshot.revision.relations:
-        if relation.source_output != _M303_COMPENSACION_GENERADA_SOURCE:
+        if relation.source_casilla_id != _M303_COMPENSACION_GENERADA_SOURCE:
             continue
         op = str((relation.aggregation or {}).get("op", ""))
         if op == "copy":
-            last_period_binding_id = str(relation.target_binding)
+            last_period_binding_id = relation.target_binding
         elif op == "sum":
-            generated_not_in_last_binding_id = str(relation.target_binding)
+            generated_not_in_last_binding_id = relation.target_binding
     return last_period_binding_id, generated_not_in_last_binding_id
 
 
 def _fifo_compensation_carry_binding_values(
     snapshot: RegistrySnapshot,
     observations: tuple[RegistryModeloObservation, ...],
-) -> dict[str, Decimal]:
+) -> dict[BindingId, Decimal]:
     """Derive Modelo 390 annual carry binding values from the FIFO partition.
 
     The two Modelo 390 year-end carry boxes are ONE FIFO partition of the year's
@@ -629,7 +640,7 @@ def _fifo_compensation_carry_binding_values(
         states,
         filing_year=snapshot.filing_year,
     )
-    overrides: dict[str, Decimal] = {}
+    overrides: dict[BindingId, Decimal] = {}
     if last_period_binding_id is not None:
         overrides[last_period_binding_id] = partition.last_period_amount
     if generated_not_in_last_binding_id is not None:

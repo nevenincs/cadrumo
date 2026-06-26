@@ -15,6 +15,8 @@ from ._parser_boundary_support import (
     _MODELO_232_2018_SYNTHETIC_FIXTURE,
     _MODELO_347_SYNTHETIC_FIXTURE,
     _MODELO_720_SYNTHETIC_FIXTURE,
+    CasillaId,
+    _casilla_id,
     _expected_period,
     parse_declaracion,
 )
@@ -23,6 +25,30 @@ pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_inbound_adapter,
 ]
+
+_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_DECL_TIPO_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.tipo-ejercicio")
+_DECL_CNAE_CASILLA: CasillaId = _casilla_id("decl.cnae")
+_M115_CASILLA_01: CasillaId = _casilla_id("01")
+_M115_CASILLA_02: CasillaId = _casilla_id("02")
+_M115_CASILLA_03: CasillaId = _casilla_id("03")
+_M115_CASILLA_04: CasillaId = _casilla_id("04")
+_M115_CASILLA_05: CasillaId = _casilla_id("05")
+_M131_CASILLA_01: CasillaId = _casilla_id("01")
+_M131_CASILLA_02: CasillaId = _casilla_id("02")
+_M131_CASILLA_03: CasillaId = _casilla_id("03")
+_M131_CASILLA_04: CasillaId = _casilla_id("04")
+_M131_CASILLA_05: CasillaId = _casilla_id("05")
+_M131_CASILLA_06: CasillaId = _casilla_id("06")
+_M131_CASILLA_07: CasillaId = _casilla_id("07")
+_M131_CASILLA_08: CasillaId = _casilla_id("08")
+_M131_CASILLA_09: CasillaId = _casilla_id("09")
+_M131_CASILLA_10: CasillaId = _casilla_id("10")
+_M131_CASILLA_11: CasillaId = _casilla_id("11")
+_M131_CASILLA_12: CasillaId = _casilla_id("12")
+_M131_CASILLA_13: CasillaId = _casilla_id("13")
+_M131_CASILLA_14: CasillaId = _casilla_id("14")
+_M131_CASILLA_15: CasillaId = _casilla_id("15")
 
 
 def test_parser_extracts_modelo_720_synthetic_fixture_targets() -> None:
@@ -62,13 +88,16 @@ def test_parser_extracts_modelo_720_synthetic_fixture_targets() -> None:
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
     # Only decl.ejercicio is in the extraction profile — decl.tipo-declaracion removed.
-    assert set(values.keys()) == {"decl.ejercicio"}, f"expected exactly {{decl.ejercicio}}, got {set(values.keys())!r}"
+    assert set(values.keys()) == {_DECL_EJERCICIO_CASILLA}, (
+        f"expected exactly {{decl.ejercicio}}, got {set(values.keys())!r}"
+    )
 
     # decl.ejercicio: fixture prints "Ejercicio al que se refiere la informacion 2024";
     # parse_spanish_decimal("2024") = Decimal("2024").
     # Ground truth: aeat-dr-720 positions 5-8 "EJERCICIO" and Orden HAP/72/2013 Art. 7.
-    assert values["decl.ejercicio"] == Decimal("2024"), (
-        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got {values['decl.ejercicio']!r}"
+    assert values[_DECL_EJERCICIO_CASILLA] == Decimal("2024"), (
+        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got "
+        f"{values[_DECL_EJERCICIO_CASILLA]!r}"
     )
 
 
@@ -109,13 +138,16 @@ def test_parser_extracts_modelo_184_synthetic_fixture_targets() -> None:
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
     # Only decl.ejercicio is in the extraction profile — decl.tipo-declaracion removed.
-    assert set(values.keys()) == {"decl.ejercicio"}, f"expected exactly {{decl.ejercicio}}, got {set(values.keys())!r}"
+    assert set(values.keys()) == {_DECL_EJERCICIO_CASILLA}, (
+        f"expected exactly {{decl.ejercicio}}, got {set(values.keys())!r}"
+    )
 
     # decl.ejercicio: fixture prints "Ejercicio: 2024";
     # parse_spanish_decimal("2024") = Decimal("2024").
     # Ground truth: DR_Modelo_184_2025.pdf positions 5-8 "EJERCICIO".
-    assert values["decl.ejercicio"] == Decimal("2024"), (
-        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got {values['decl.ejercicio']!r}"
+    assert values[_DECL_EJERCICIO_CASILLA] == Decimal("2024"), (
+        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got "
+        f"{values[_DECL_EJERCICIO_CASILLA]!r}"
     )
 
 
@@ -187,9 +219,9 @@ def test_parser_extracts_modelo_232_synthetic_fixture_targets(
 
     # All three casillas defined by the M232 declaracion_pdf profile must be present.
     assert set(values.keys()) == {
-        "decl.ejercicio",
-        "decl.tipo-ejercicio",
-        "decl.cnae",
+        _DECL_EJERCICIO_CASILLA,
+        _DECL_TIPO_EJERCICIO_CASILLA,
+        _DECL_CNAE_CASILLA,
     }, f"expected exactly {{decl.ejercicio, decl.tipo-ejercicio, decl.cnae}}, got {set(values.keys())!r}"
 
     # decl.ejercicio: fixture prints "Ejercicio de devengo 2016" / "...2018";
@@ -197,24 +229,26 @@ def test_parser_extracts_modelo_232_synthetic_fixture_targets(
     # Ground truth: DR23200 row 9 "Ejercicio de devengo (EEEE)".
     from decimal import Decimal as _Decimal
 
-    assert values["decl.ejercicio"] == _Decimal(str(year)), (
+    assert values[_DECL_EJERCICIO_CASILLA] == _Decimal(str(year)), (
         f"decl.ejercicio: expected Decimal('{year}') from AEAT-grounded DR23200 fixture, "
-        f"got {values['decl.ejercicio']!r}"
+        f"got {values[_DECL_EJERCICIO_CASILLA]!r}"
     )
 
     # decl.tipo-ejercicio: fixture prints "Tipo de Ejercicio 1";
     # value_kind='enum' means the parser stores the raw token string.
     # Ground truth: DR23201 row 17 "2.Devengo - Tipo de Ejercicio".
-    assert values["decl.tipo-ejercicio"] is not None, "decl.tipo-ejercicio: expected a non-None extracted value"
+    assert values[_DECL_TIPO_EJERCICIO_CASILLA] is not None, (
+        "decl.tipo-ejercicio: expected a non-None extracted value"
+    )
 
     # decl.cnae: fixture prints "C.N.A.E. actividad principal 6201";
     # value_kind='text' means the parser stores the raw token string.
     # Ground truth: DR23201 row 20 "2.Devengo - C.N.A.E. actividad principal"
     # (NO "de la" connector — pattern fixed from original 'C\.N\.A\.E\.?\s+de\s+la\s+actividad\s+principal').
-    assert values["decl.cnae"] == "6201", (
+    assert values[_DECL_CNAE_CASILLA] == "6201", (
         f"decl.cnae: expected '6201' from AEAT-grounded DR23201 fixture "
         f"(DR field: 'C.N.A.E. actividad principal'), "
-        f"got {values['decl.cnae']!r}"
+        f"got {values[_DECL_CNAE_CASILLA]!r}"
     )
 
 
@@ -265,13 +299,16 @@ def test_parser_extracts_modelo_347_synthetic_fixture_targets() -> None:
 
     # Only decl.ejercicio is in the extraction profile — decl.tipo-declaracion removed
     # because M347 positions 121-122 are two separate single-character flags (like M720).
-    assert set(values.keys()) == {"decl.ejercicio"}, f"expected exactly {{decl.ejercicio}}, got {set(values.keys())!r}"
+    assert set(values.keys()) == {_DECL_EJERCICIO_CASILLA}, (
+        f"expected exactly {{decl.ejercicio}}, got {set(values.keys())!r}"
+    )
 
     # decl.ejercicio: fixture prints "Ejercicio: 2024";
     # parse_spanish_decimal("2024") = Decimal("2024").
     # Ground truth: AEAT DR positions 5-8 field name "EJERCICIO" (Orden HAC/1431/2025 p.1).
-    assert values["decl.ejercicio"] == Decimal("2024"), (
-        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got {values['decl.ejercicio']!r}"
+    assert values[_DECL_EJERCICIO_CASILLA] == Decimal("2024"), (
+        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got "
+        f"{values[_DECL_EJERCICIO_CASILLA]!r}"
     )
 
 
@@ -326,34 +363,50 @@ def test_parser_extracts_modelo_115_synthetic_fixture_targets() -> None:
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
     # All five casillas defined by the M115 declaracion_pdf profile must be present.
-    assert set(values.keys()) == {"01", "02", "03", "04", "05"}, (
+    assert set(values.keys()) == {
+        _M115_CASILLA_01,
+        _M115_CASILLA_02,
+        _M115_CASILLA_03,
+        _M115_CASILLA_04,
+        _M115_CASILLA_05,
+    }, (
         f"expected exactly {{01, 02, 03, 04, 05}}, got {set(values.keys())!r}"
     )
 
     # casilla 01 (perceptores): fixture prints "Numero de perceptores 3";
     # parse_spanish_decimal("3") = Decimal("3").
     # Ground truth: DR XLS row 16 sub-label "Numero perceptores".
-    assert values["01"] == Decimal("3"), f"casilla '01': expected Decimal('3'), got {values['01']!r}"
+    assert values[_M115_CASILLA_01] == Decimal("3"), (
+        f"casilla {_M115_CASILLA_01!r}: expected Decimal('3'), got {values[_M115_CASILLA_01]!r}"
+    )
 
     # casilla 02 (base): fixture prints "Base de retenciones e ingresos a cuenta 12.000,00";
     # parse_spanish_decimal("12.000,00") = Decimal("12000.00").
     # Ground truth: DR XLS row 17 sub-label "Base retenciones e ingresos a cuenta".
-    assert values["02"] == Decimal("12000.00"), f"casilla '02': expected Decimal('12000.00'), got {values['02']!r}"
+    assert values[_M115_CASILLA_02] == Decimal("12000.00"), (
+        f"casilla {_M115_CASILLA_02!r}: expected Decimal('12000.00'), got {values[_M115_CASILLA_02]!r}"
+    )
 
     # casilla 03 (retenciones): fixture prints "Retenciones e ingresos a cuenta 2.280,00";
     # parse_spanish_decimal("2.280,00") = Decimal("2280.00").
     # Ground truth: DR XLS row 18 sub-label "Retenciones e ingresos a cuenta".
-    assert values["03"] == Decimal("2280.00"), f"casilla '03': expected Decimal('2280.00'), got {values['03']!r}"
+    assert values[_M115_CASILLA_03] == Decimal("2280.00"), (
+        f"casilla {_M115_CASILLA_03!r}: expected Decimal('2280.00'), got {values[_M115_CASILLA_03]!r}"
+    )
 
     # casilla 04 (anteriores): fixture prints "Resultado de anteriores declaraciones 0,00";
     # parse_spanish_decimal("0,00") = Decimal("0.00").
     # Ground truth: DR XLS row 19 sub-label "Resultado anteriores declaraciones".
-    assert values["04"] == Decimal("0.00"), f"casilla '04': expected Decimal('0.00'), got {values['04']!r}"
+    assert values[_M115_CASILLA_04] == Decimal("0.00"), (
+        f"casilla {_M115_CASILLA_04!r}: expected Decimal('0.00'), got {values[_M115_CASILLA_04]!r}"
+    )
 
     # casilla 05 (resultado): fixture prints "Resultado a ingresar 2.280,00";
     # parse_spanish_decimal("2.280,00") = Decimal("2280.00").
     # Ground truth: DR XLS row 20 sub-label "Resultado a ingresar".
-    assert values["05"] == Decimal("2280.00"), f"casilla '05': expected Decimal('2280.00'), got {values['05']!r}"
+    assert values[_M115_CASILLA_05] == Decimal("2280.00"), (
+        f"casilla {_M115_CASILLA_05!r}: expected Decimal('2280.00'), got {values[_M115_CASILLA_05]!r}"
+    )
 
 
 def test_parser_extracts_modelo_131_casillas_from_synthetic_fixture() -> None:
@@ -377,22 +430,22 @@ def test_parser_extracts_modelo_131_casillas_from_synthetic_fixture() -> None:
     - 02, 07, 10, 13, 15: 100,00
     - 03, 04, 05, 06, 08, 09, 11, 12, 14: 0,00
     """
-    expected: dict[str, Decimal] = {
-        "01": Decimal("5000.00"),
-        "02": Decimal("100.00"),
-        "03": Decimal("0.00"),
-        "04": Decimal("0.00"),
-        "05": Decimal("0.00"),
-        "06": Decimal("0.00"),
-        "07": Decimal("100.00"),
-        "08": Decimal("0.00"),
-        "09": Decimal("0.00"),
-        "10": Decimal("100.00"),
-        "11": Decimal("0.00"),
-        "12": Decimal("0.00"),
-        "13": Decimal("100.00"),
-        "14": Decimal("0.00"),
-        "15": Decimal("100.00"),
+    expected: dict[CasillaId, Decimal] = {
+        _M131_CASILLA_01: Decimal("5000.00"),
+        _M131_CASILLA_02: Decimal("100.00"),
+        _M131_CASILLA_03: Decimal("0.00"),
+        _M131_CASILLA_04: Decimal("0.00"),
+        _M131_CASILLA_05: Decimal("0.00"),
+        _M131_CASILLA_06: Decimal("0.00"),
+        _M131_CASILLA_07: Decimal("100.00"),
+        _M131_CASILLA_08: Decimal("0.00"),
+        _M131_CASILLA_09: Decimal("0.00"),
+        _M131_CASILLA_10: Decimal("100.00"),
+        _M131_CASILLA_11: Decimal("0.00"),
+        _M131_CASILLA_12: Decimal("0.00"),
+        _M131_CASILLA_13: Decimal("100.00"),
+        _M131_CASILLA_14: Decimal("0.00"),
+        _M131_CASILLA_15: Decimal("100.00"),
     }
 
     filing = parse_declaracion(

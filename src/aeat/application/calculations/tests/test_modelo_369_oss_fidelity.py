@@ -53,11 +53,12 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import (
-    CasillaObservation,
+    CasillaId,
     RegistryCalculationResult,
     RegistryModeloObservation,
     calculate_registry_snapshot,
-    resolve_bound_casilla_inputs,
+    resolve_bound_inputs_by_casilla_id,
+    validated_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -73,10 +74,22 @@ _CLOCK_N = datetime(2024, 7, 31, 10, 0, 0, tzinfo=UTC)
 _CLOCK_N_PLUS_1 = datetime(2025, 7, 31, 10, 0, 0, tzinfo=UTC)
 
 #: The computed total casilla and its three bound destination leaves.
-_CASILLA_TOTAL = "iva.union.cuota-total"
-_CASILLA_DE_SERVICES = "iva.union.de.services-cuota"
-_CASILLA_FR_SERVICES = "iva.union.fr.services-cuota"
-_CASILLA_DE_GOODS = "iva.union.de.goods-distance-cuota"
+_CASILLA_TOTAL: CasillaId = validated_casilla_id(
+    "iva.union.cuota-total",
+    surface="test_modelo_369_oss_fidelity:_CASILLA_TOTAL",
+)
+_CASILLA_DE_SERVICES: CasillaId = validated_casilla_id(
+    "iva.union.de.services-cuota",
+    surface="test_modelo_369_oss_fidelity:_CASILLA_DE_SERVICES",
+)
+_CASILLA_FR_SERVICES: CasillaId = validated_casilla_id(
+    "iva.union.fr.services-cuota",
+    surface="test_modelo_369_oss_fidelity:_CASILLA_FR_SERVICES",
+)
+_CASILLA_DE_GOODS: CasillaId = validated_casilla_id(
+    "iva.union.de.goods-distance-cuota",
+    surface="test_modelo_369_oss_fidelity:_CASILLA_DE_GOODS",
+)
 
 #: The three ``ledger_oss_aggregation`` destination bindings whose facts the OSS
 #: portal sums per destination state. Supplying them as the per-destination
@@ -110,7 +123,7 @@ def _calculate_369(
     """
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=period)
     binding_values = dict(destination_cuotas)
-    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -130,7 +143,7 @@ def _registry_observation(
         modelo=_MODELO,
         filing_year=filing_year,
         period=period,
-        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
+        observations=result.observations,
     )
 
 

@@ -38,6 +38,7 @@ from ....core import Period
 from ....core.config import override_settings
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_profile_storage_root
+from .. import app as root_app
 from .._app_live import (
     _iva_remote_state_capture_lines,
     _live_iva_evidence_pull_command_timeout_ms,
@@ -195,6 +196,17 @@ class TestBorrador100Subgroup:
         assert shown.exit_code == 0, shown.output
         assert "binding_count\t1" in shown.output
         assert "state\tactive" in shown.output
+
+        shown_json = cli_runner.invoke(
+            root_app,
+            ["--format", "json", "app", "live", "borrador", "100", "view", snapshot_id],
+        )
+        assert shown_json.exit_code == 0, shown_json.output
+        payload = json.loads(shown_json.output)
+        assert payload["command"] == "app.live.borrador.100.view"
+        assert payload["result"]["binding_values"] == {
+            "renta-2025-modelo-111-retenciones-periodicas": "1000.00",
+        }
 
     def test_borrador_100_list_rejects_unknown_state(self, cli_runner: CliRunner) -> None:
         result = cli_runner.invoke(borrador_100_app, ["list", "--state", "old"])

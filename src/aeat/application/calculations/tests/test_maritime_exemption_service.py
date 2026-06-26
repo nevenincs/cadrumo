@@ -31,6 +31,11 @@ from .._maritime_exemption_service import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_ART_7P_LEGAL_REFS = ("ley-35-2006:art-7",)
+_REBECA_LEGAL_REFS = ("ley-19-1994:art-75",)
+_ART_7P_SOURCE_REFS = ("art-7p-foreign-work",)
+_REBECA_SOURCE_REFS = ("rebeca-50pct",)
+
 
 class TestResolveMaritimeExemptionArt7p:
     """Art. 7.p) pathway through the application service."""
@@ -51,28 +56,24 @@ class TestResolveMaritimeExemptionArt7p:
         assert len(result.observations) == 1
 
     def test_observation_carries_art7p_legal_refs(self) -> None:
-        """contract close gate: CLI JSON emit must include legal_refs for each observation."""
+        """Contract close gate: observations carry canonical legal ids."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
         obs = result.observations[0]
-        assert any("Art. 7.p)" in ref for ref in obs.legal_refs), (
-            f"legal_refs must carry Art. 7.p) reference, got {obs.legal_refs!r}"
-        )
-        assert any("BOE-A-2006-20764" in ref for ref in obs.legal_refs)
+        assert obs.legal_refs == _ART_7P_LEGAL_REFS
 
     def test_observation_carries_source_refs(self) -> None:
-        """contract close gate: source_refs must be populated for each observation."""
+        """Contract close gate: source_refs must be exact registry binding ids."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             annual_salary=Decimal("36500"),
             qualifying_days=100,
         )
         obs = result.observations[0]
-        assert obs.source_refs, "source_refs must not be empty"
-        assert "art-7p-foreign-work" in obs.source_refs
+        assert obs.source_refs == _ART_7P_SOURCE_REFS
 
     def test_observation_targets_renta_exenta_casilla(self) -> None:
         result = resolve_maritime_exemption(
@@ -130,23 +131,20 @@ class TestResolveMaritimeExemptionRebeca:
         assert len(result.observations) == 1
 
     def test_observation_carries_rebeca_legal_refs(self) -> None:
-        """contract close gate: legal_refs must include BOE-A-1994-15794 for REBECA."""
+        """Contract close gate: legal_refs must be canonical registry ids."""
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             gross_navigation_income=Decimal("30000"),
         )
         obs = result.observations[0]
-        combined = " ".join(obs.legal_refs)
-        assert "BOE-A-1994-15794" in combined, f"legal_refs must carry BOE-A-1994-15794, got {obs.legal_refs!r}"
-        assert "73" in combined
-        assert "75" in combined
+        assert obs.legal_refs == _REBECA_LEGAL_REFS
 
     def test_observation_carries_source_refs(self) -> None:
         result = resolve_maritime_exemption(
             facts=self._FACTS,
             gross_navigation_income=Decimal("30000"),
         )
-        assert "rebeca-50pct" in result.observations[0].source_refs
+        assert result.observations[0].source_refs == _REBECA_SOURCE_REFS
 
     def test_exempt_amount_is_50_percent(self) -> None:
         """Registry-authoritative fraction: 0.50 per Ley 19/1994 Arts. 73-75."""

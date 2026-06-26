@@ -21,9 +21,10 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core import Period
+from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
+from ....domain.calculations.registry import BindingId
 from ....domain.iva_compensation._reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
@@ -37,6 +38,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CLOCK = datetime(2026, 5, 21, 9, 0, 0, tzinfo=UTC)
 _TAXPAYER_NIF = "12345678Z"
+_DECL_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
+    "decl.ejercicio",
+    surface="_DECL_EJERCICIO_CASILLA",
+)
+_DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id(
+    "decl.periodo",
+    surface="_DECL_PERIODO_CASILLA",
+)
 
 
 @contextmanager
@@ -68,7 +77,7 @@ def _repositories():
     )
 
 
-def _modelo_303_engine_inputs() -> dict[str, Decimal]:
+def _modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
     return {
         "modelo-303-iva-repercutido-general-cuota": Decimal("1000.00"),
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
@@ -142,7 +151,7 @@ def test_modelo_303_declaration_year_resolves_from_work_unit_filing_year(tmp_pat
         period_date=date(2025, 3, 31),
         tmp_path=tmp_path,
     )
-    assert revision.casilla_values["decl.ejercicio"] == Decimal("2025")
+    assert revision.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2025")
 
 
 @pytest.mark.parametrize(
@@ -167,7 +176,7 @@ def test_modelo_303_declaration_period_resolves_from_work_unit_period(
         period_date=period_date,
         tmp_path=tmp_path,
     )
-    assert revision.casilla_values["decl.periodo"] == expected_ordinal
+    assert revision.casilla_values[_DECL_PERIODO_CASILLA] == expected_ordinal
 
 
 def test_modelo_303_declaration_casillas_carry_registry_provenance(tmp_path: Path) -> None:
@@ -184,13 +193,13 @@ def test_modelo_303_declaration_casillas_carry_registry_provenance(tmp_path: Pat
         tmp_path=tmp_path,
     )
     observations = {obs.casilla_id: obs for obs in revision.observations}
-    for casilla_id in ("decl.ejercicio", "decl.periodo"):
+    for casilla_id in (_DECL_EJERCICIO_CASILLA, _DECL_PERIODO_CASILLA):
         observation = observations[casilla_id]
         assert observation.formula_id is None
         assert observation.legal_refs
         assert observation.source_refs
-    assert observations["decl.ejercicio"].value == Decimal("2025")
-    assert observations["decl.periodo"].value == Decimal("2")
+    assert observations[_DECL_EJERCICIO_CASILLA].value == Decimal("2025")
+    assert observations[_DECL_PERIODO_CASILLA].value == Decimal("2")
 
 
 def test_modelo_303_declaration_year_distinguishes_two_filing_years(tmp_path: Path) -> None:
@@ -211,6 +220,9 @@ def test_modelo_303_declaration_year_distinguishes_two_filing_years(tmp_path: Pa
         period_date=date(2026, 3, 31),
         tmp_path=tmp_path / "y2026",
     )
-    assert revision_2024.casilla_values["decl.ejercicio"] == Decimal("2024")
-    assert revision_2026.casilla_values["decl.ejercicio"] == Decimal("2026")
-    assert revision_2024.casilla_values["decl.ejercicio"] != revision_2026.casilla_values["decl.ejercicio"]
+    assert revision_2024.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2024")
+    assert revision_2026.casilla_values[_DECL_EJERCICIO_CASILLA] == Decimal("2026")
+    assert (
+        revision_2024.casilla_values[_DECL_EJERCICIO_CASILLA]
+        != revision_2026.casilla_values[_DECL_EJERCICIO_CASILLA]
+    )

@@ -13,8 +13,9 @@ those inputs crash at ``BUILDING_DRAFT`` with either
 ``date_binding '...' has no supplied value`` (input absent) or
 ``input '...' must be a Decimal value`` (ISO date wrongly coerced through the
 Decimal channel). ``calculate_modelo_revision`` now persists the resolved
-date-bindings and relations onto the revision's ``binding_overrides`` snapshot,
-and ``build_draft`` routes them back onto their dedicated channels by registry
+date-bindings on the revision's ``binding_overrides`` snapshot and relations on
+``relation_overrides``; replay merges both into the flat input map, and
+``build_draft`` routes them back onto their dedicated channels by registry
 id-set — so the profile-independent verify replay reconstructs the identical
 draft.
 

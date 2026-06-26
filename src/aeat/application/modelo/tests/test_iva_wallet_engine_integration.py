@@ -16,7 +16,13 @@ from ....core import Period
 from ....core.config import AuthProviderKindSetting, Settings
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation, RegistrySnapshot
+from ....domain.calculations.registry import (
+    BindingId,
+    CasillaId,
+    RegistryModeloObservation,
+    RegistrySnapshot,
+    validated_casilla_id,
+)
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation._reconciliation import (
     IvaCompensationOverride,
@@ -37,6 +43,7 @@ from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepositor
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
     CalculationObservationRepository,
@@ -63,6 +70,22 @@ _TAXPAYER_NIF = "taxpayeralpha"
 _TARGET_YEAR = 2026
 _TARGET_PERIOD = "2T"
 _DECIDED_AT = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
+_M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
+_M303_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 
 def _period(filing_year: int, period: str) -> Period:
@@ -134,24 +157,16 @@ def _store_prior_303_compensation(
     filing_year: int = _TARGET_YEAR,
     period: str = "1T",
 ) -> None:
-    snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
-    casilla = next(item for item in snapshot.revision.casillas if item.id == "iva.compensacion-disponible-fin-periodo")
-    formula = next(
-        item for item in snapshot.revision.formulas if item.target == "iva.compensacion-disponible-fin-periodo"
-    )
     repo.save_observation(
         RegistryModeloObservation(
             modelo="303",
             filing_year=filing_year,
             period=period,
-            observations=(
-                CasillaObservation(
-                    casilla_id="iva.compensacion-disponible-fin-periodo",
-                    value=amount,
-                    formula_id=formula.id,
-                    legal_refs=tuple(casilla.legal_refs),
-                    source_refs=tuple(casilla.source_refs),
-                ),
+            observations=registry_grounded_observations(
+                modelo="303",
+                filing_year=filing_year,
+                period=period,
+                casilla_values={_M303_DISPONIBLE_CASILLA: amount},
             ),
         ),
         source_kind="aeat_sede_justificante",
@@ -194,7 +209,7 @@ def _workflow_profile(tax_id: str = _TAXPAYER_NIF) -> TaxpayerProfile:
     )
 
 
-def _modelo_303_engine_inputs() -> dict[str, Decimal]:
+def _modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
     return {
         "modelo-303-iva-repercutido-general-cuota": Decimal("1000.00"),
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
@@ -223,10 +238,12 @@ def _work_unit_and_revision_for_wallet_gate(
         period=target_period,
         revision_id="m303-wallet-gate-test",
     )
-    casilla_values = {"iva.compensacion-pendiente-periodos-anteriores": compensation_amount}
+    casilla_values: dict[CasillaId, Decimal] = {
+        _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: compensation_amount,
+    }
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
     )
@@ -245,9 +262,15 @@ def _work_unit_and_revision_for_wallet_gate(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
         state=state,
-        inputs_snapshot={},
+        input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        observations=registry_grounded_observations(
+            modelo="303",
+            filing_year=_TARGET_YEAR,
+            period=_TARGET_PERIOD,
+            casilla_values=casilla_values,
+        ),
         created_at=_DECIDED_AT,
         updated_at=_DECIDED_AT,
     )
@@ -332,13 +355,13 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
         )
 
         assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal("1200.00")
-        assert revision.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("1200.00")
-        assert revision.casilla_values["iva.compensacion-aplicada-periodo"] == Decimal("1000.00")
-        assert revision.casilla_values["iva.compensacion-pendiente-periodos-posteriores"] == Decimal("200.00")
-        assert revision.casilla_values["iva.resultado"] == Decimal("0.00")
-        assert revision.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("200.00")
+        assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("1200.00")
+        assert revision.casilla_values[_M303_COMPENSACION_APLICADA_CASILLA] == Decimal("1000.00")
+        assert revision.casilla_values[_M303_POSTERIOR_CASILLA] == Decimal("200.00")
+        assert revision.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("0.00")
+        assert revision.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("200.00")
         assert any(
-            obs.casilla_id == "iva.compensacion-aplicada-periodo" and obs.legal_refs and obs.source_refs
+            obs.casilla_id == _M303_COMPENSACION_APLICADA_CASILLA and obs.legal_refs and obs.source_refs
             for obs in revision.observations
         )
 
@@ -389,10 +412,10 @@ def test_no_seed_no_override_303_calculate_lazily_reconciles_local_zero_and_surf
 
     # Calculate proceeded (no ModeloIvaWalletReconciliationBlocked) and the prior
     # compensation is a computed zero, surfaced on the result.
-    assert revision.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("0.00")
+    assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0.00")
     # Non-silent: casilla 110 is present as an observation carrying its grounding.
     casilla_110_obs = next(
-        obs for obs in revision.observations if obs.casilla_id == "iva.compensacion-pendiente-periodos-anteriores"
+        obs for obs in revision.observations if obs.casilla_id == _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
     )
     assert casilla_110_obs.legal_refs, "casilla 110 must surface its LIVA legal_refs, not a silent zero"
     assert decision is not None
@@ -446,8 +469,8 @@ def test_first_period_zero_decision_feeds_real_modelo_303_engine_and_lifecycle_g
         )
 
         assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal("0")
-        assert revision.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("0.00")
-        assert revision.casilla_values["iva.compensacion-aplicada-periodo"] == Decimal("0.00")
+        assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0.00")
+        assert revision.casilla_values[_M303_COMPENSACION_APLICADA_CASILLA] == Decimal("0.00")
         decision = _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
         assert decision is not None
         assert decision.divergence == "first_period_zero"
@@ -633,10 +656,10 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tm
             clock=_DECIDED_AT,
         )
 
-        assert revision.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("1200.00")
-        assert revision.casilla_values["iva.compensacion-aplicada-periodo"] == Decimal("1000.00")
-        assert revision.casilla_values["iva.compensacion-pendiente-periodos-posteriores"] == Decimal("200.00")
-        assert revision.casilla_values["iva.resultado"] == Decimal("0.00")
+        assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("1200.00")
+        assert revision.casilla_values[_M303_COMPENSACION_APLICADA_CASILLA] == Decimal("1000.00")
+        assert revision.casilla_values[_M303_POSTERIOR_CASILLA] == Decimal("200.00")
+        assert revision.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("0.00")
         decision = _require_persisted_iva_compensation_decision_matches_revision(work_unit, revision)
         assert decision is not None
         assert decision.divergence == "wallet_only"
@@ -791,7 +814,7 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
             clock=_DECIDED_AT,
         )
 
-        assert revision.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("1200.00")
+        assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("1200.00")
 
 
 def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Path) -> None:
@@ -833,8 +856,8 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
 
         # NEGATIVE CONTROL: no override recorded -> no prior compensation, full result.
         baseline = _calculate()
-        assert baseline.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("0")
-        assert baseline.casilla_values["iva.resultado"] == Decimal("1000.00")
+        assert baseline.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
+        assert baseline.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("1000.00")
 
         decision = record_iva_compensation_override_for_bucket(
             bucket_id="operator",
@@ -849,9 +872,9 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
         # AFTER: the recorded override supersedes the first-period decision and the
         # FINAL result drops by the applied compensación.
         applied = _calculate()
-        assert applied.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("450.00")
-        assert applied.casilla_values["iva.compensacion-aplicada-periodo"] == Decimal("450.00")
-        assert applied.casilla_values["iva.resultado"] == Decimal("550.00")
+        assert applied.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("450.00")
+        assert applied.casilla_values[_M303_COMPENSACION_APLICADA_CASILLA] == Decimal("450.00")
+        assert applied.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("550.00")
 
 
 def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> None:
@@ -860,20 +883,28 @@ def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> 
     with _secure_backend(tmp_path):
         _store_operator_profile()
         work_unit, _ = _work_unit_and_revision_for_wallet_gate(compensation_amount=Decimal("450.00"))
-        casilla_values = {"iva.compensacion-pendiente-periodos-anteriores": Decimal("450.00")}
+        casilla_values: dict[CasillaId, Decimal] = {
+            _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Decimal("450.00"),
+        }
         sealed_revision = CalculationRevision.model_validate(
             {
                 "calculation_revision_id": derive_calculation_revision_id(
                     work_unit_id=work_unit.work_unit_id,
-                    inputs_snapshot={},
+                    input_values_by_casilla_id={},
                     binding_overrides={},
                     casilla_values=casilla_values,
                 ),
                 "work_unit_id": work_unit.work_unit_id,
                 "state": CalculationRevisionState.VERIFICADO_COMPLETO,
-                "inputs_snapshot": {},
+                "input_values_by_casilla_id": {},
                 "binding_overrides": {},
                 "casilla_values": casilla_values,
+                "observations": registry_grounded_observations(
+                    modelo="303",
+                    filing_year=_TARGET_YEAR,
+                    period=_TARGET_PERIOD,
+                    casilla_values=casilla_values,
+                ),
                 "created_at": _DECIDED_AT,
                 "updated_at": _DECIDED_AT,
                 "verified_at": _DECIDED_AT,
@@ -1022,10 +1053,10 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
             clock=_DECIDED_AT,
         )
 
-        assert revision.casilla_values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("450.00")
-        assert revision.casilla_values["iva.compensacion-aplicada-periodo"] == Decimal("450.00")
-        assert revision.casilla_values["iva.resultado"] == Decimal("550.00")
-        assert revision.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("0.00")
+        assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("450.00")
+        assert revision.casilla_values[_M303_COMPENSACION_APLICADA_CASILLA] == Decimal("450.00")
+        assert revision.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("550.00")
+        assert revision.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("0.00")
 
 
 def test_wallet_divergence_blocks_real_modelo_303_engine_before_persisting_revision(tmp_path: Path) -> None:

@@ -38,8 +38,10 @@ from .....core.errors import SiteHealthError
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....domain.calculations.registry import (
+    CasillaId,
     RegistryValidationError,
     RemoteOperation,
+    RentaWebOpenDisplayOverride,
     RentaWebOpenLivePayload,
     RentaWebOpenObservation,
     RentaWebOpenSyntheticProfile,
@@ -47,7 +49,7 @@ from .....domain.calculations.registry import (
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, BrowserSession, DefaultBrowserSession, default_browser_session_factory
-from ._adapter_utils import registry_failure_message
+from ._adapter_utils import registry_failure_message, require_playwright_page
 from ._browser_constants import PLAYWRIGHT_WAIT_NETWORKIDLE, default_viewport
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
@@ -94,33 +96,41 @@ class RentaWebOpenSedeDriver:
         self,
         payload: bytes,
         *,
-        expected: Mapping[str, object],
+        expected: Mapping[CasillaId, object],
     ) -> tuple[RemoteOperation, ...]:
         """Return the ordered sequence of remote operations this driver will perform.
 
         Deserialises ``payload`` via :func:`parse_renta_web_open_live_payload`
         and builds the :class:`RemoteOperation` list: navigate to the app URL,
         start the open simulator, fill the identification profile, accept,
-        apply any casilla overrides, navigate to the Resumen, scrape expected
-        summary labels, navigate to any extra casilla scrape targets, and
-        finally close the browser context.
+        apply any casilla-id-keyed overrides, navigate to the Resumen, scrape
+        summary labels declared by canonical casilla id, navigate to any extra
+        display-number scrape targets, and finally close the browser context.
         """
         live_payload = parse_renta_web_open_live_payload(payload)
+        _require_payload_covers_expected_casillas(live_payload, expected)
         operations: list[RemoteOperation] = [
             RemoteOperation(kind="http", method="GET", url=live_payload.app_url),
             RemoteOperation(kind="browser_action", action="start-open-simulator"),
             RemoteOperation(kind="browser_action", action="fill-synthetic-profile"),
             RemoteOperation(kind="browser_action", action="accept-identification"),
         ]
-        for casilla_number in sorted(live_payload.casilla_overrides):
-            operations.append(RemoteOperation(kind="browser_action", action=f"navigate-to-casilla:{casilla_number}"))
-            operations.append(RemoteOperation(kind="browser_action", action=f"apply-casilla-override:{casilla_number}"))
-        if live_payload.casilla_overrides:
+        for casilla_id, override in sorted(live_payload.display_overrides_by_casilla_id.items()):
+            display_number = override.display_number
+            operations.append(
+                RemoteOperation(kind="browser_action", action=f"navigate-to-display-number:{display_number}"),
+            )
+            operations.append(
+                RemoteOperation(kind="browser_action", action=f"apply-display-override:{casilla_id}"),
+            )
+        if live_payload.display_overrides_by_casilla_id:
             operations.append(RemoteOperation(kind="browser_action", action="navigate-to-resumen"))
-        for label in sorted(expected):
+        for label in sorted(live_payload.summary_labels_by_casilla_id.values()):
             operations.append(RemoteOperation(kind="browser_action", action=f"scrape-summary-field:{label}"))
-        for casilla_number in sorted(live_payload.scrape_casillas):
-            operations.append(RemoteOperation(kind="browser_action", action=f"navigate-to-casilla:{casilla_number}"))
+        for display_number in sorted(live_payload.scrape_display_numbers_by_casilla_id.values()):
+            operations.append(
+                RemoteOperation(kind="browser_action", action=f"navigate-to-display-number:{display_number}"),
+            )
         operations.append(RemoteOperation(kind="browser_action", action="close-browser-context"))
         return tuple(operations)
 
@@ -128,7 +138,7 @@ class RentaWebOpenSedeDriver:
         self,
         payload: bytes,
         *,
-        expected: Mapping[str, object],
+        expected: Mapping[CasillaId, object],
     ) -> RentaWebOpenObservation:
         """Run the async driver synchronously and return a :class:`RentaWebOpenObservation`.
 
@@ -147,7 +157,7 @@ class RentaWebOpenSedeDriver:
         self,
         payload: bytes,
         *,
-        expected: Mapping[str, object],
+        expected: Mapping[CasillaId, object],
     ) -> RentaWebOpenObservation:
         """Return a :class:`RentaWebOpenObservation` by delegating to the functional collector."""
         return await collect_renta_web_open_observation(payload, expected=expected, settings=self._settings)
@@ -156,20 +166,25 @@ class RentaWebOpenSedeDriver:
 async def collect_renta_web_open_observation(
     payload: bytes,
     *,
-    expected: Mapping[str, object],
+    expected: Mapping[CasillaId, object],
     settings: Settings | None = None,
 ) -> RentaWebOpenObservation:
     """Open the anonymous simulator, create a synthetic declaration, and return a :class:`RentaWebOpenObservation`."""
     live_payload = parse_renta_web_open_live_payload(payload)
+    _require_payload_covers_expected_casillas(live_payload, expected)
     browser_session = await default_browser_session_factory(settings or Settings())
     context = None
     try:
         page, context = await _open_renta_web_open_session(browser_session, live_payload=live_payload)
         await _drive_open_simulator_identification(page, live_payload=live_payload)
-        if live_payload.casilla_overrides:
-            await _apply_casilla_overrides(page, live_payload.casilla_overrides, timeout_ms=live_payload.timeout_ms)
+        if live_payload.display_overrides_by_casilla_id:
+            await _apply_display_overrides(
+                page,
+                live_payload.display_overrides_by_casilla_id,
+                timeout_ms=live_payload.timeout_ms,
+            )
             await _navigate_to_resumen(page, timeout_ms=live_payload.timeout_ms)
-        values = await _scrape_renta_web_open_values(page, live_payload=live_payload, expected=expected)
+        values = await _scrape_renta_web_open_values(page, live_payload=live_payload)
         return RentaWebOpenObservation(values=values, raw_evidence_locator=page.url)
     except (BrowserAdapterTypeError, SedeError, SiteHealthError, BrowserError):
         raise
@@ -204,15 +219,7 @@ async def _open_renta_web_open_session(
     inner ring.
     """
     context = await browser_session.create_context(storage_state={})
-    from playwright.async_api import Page as _Page
-
-    _raw_page = await context.new_page()
-    if not isinstance(_raw_page, _Page):
-        raise BrowserAdapterTypeError(
-            f"BrowserContext.new_page() did not return a Playwright Page; got {type(_raw_page)}",
-            context={"actual_type": type(_raw_page).__name__},
-        )
-    page: _Page = _raw_page
+    page = require_playwright_page(await context.new_page())
     await install_page_safety_net(page)
     await _playwright_stage(
         page.set_viewport_size(default_viewport()),
@@ -258,15 +265,14 @@ async def _scrape_renta_web_open_values(
     page: Page,
     *,
     live_payload: RentaWebOpenLivePayload,
-    expected: Mapping[str, object],
-) -> dict[str, str]:
-    """Scrape summary-label values + extra casilla form values into one dict.
+) -> dict[CasillaId, str]:
+    """Scrape summary-label values + extra form values by canonical casilla id.
 
-    The summary scrape reads the body text once and extracts each
-    expected label. The extra-casilla scrape navigates to each
-    requested casilla via the Buscar dialog and reads the input
-    value off the form page; values are recorded under the casilla
-    number so the audit gate's id-keyed coverage check resolves.
+    The summary scrape reads the body text once and extracts each label
+    declared in ``summary_labels_by_casilla_id``. The extra form scrape
+    navigates to each requested browser display number via the Buscar dialog
+    and reads the input value off the form page. All emitted values are keyed
+    by canonical ``casilla.id``.
     """
     body_text = await _playwright_stage(
         page.locator("body").inner_text(timeout=live_payload.timeout_ms),
@@ -274,16 +280,37 @@ async def _scrape_renta_web_open_values(
         description="Renta WEB Open body text",
         timeout_ms=live_payload.timeout_ms,
     )
-    values: dict[str, str] = {}
-    for label in sorted(expected):
+    values: dict[CasillaId, str] = {}
+    for casilla_id, label in sorted(live_payload.summary_labels_by_casilla_id.items()):
         observed = extract_renta_web_open_summary_value(body_text, label)
         if observed is not None:
-            values[label] = observed
-    for casilla_number in sorted(live_payload.scrape_casillas):
-        scraped = await _scrape_casilla_form_value(page, casilla_number, timeout_ms=live_payload.timeout_ms)
+            values[casilla_id] = observed
+    for casilla_id, display_number in sorted(live_payload.scrape_display_numbers_by_casilla_id.items()):
+        scraped = await _scrape_display_form_value(page, display_number, timeout_ms=live_payload.timeout_ms)
         if scraped is not None:
-            values[casilla_number] = scraped
+            values[casilla_id] = scraped
     return values
+
+
+def _require_payload_covers_expected_casillas(
+    live_payload: RentaWebOpenLivePayload,
+    expected: Mapping[CasillaId, object],
+) -> None:
+    expected_ids = frozenset(expected)
+    declared_ids = frozenset(live_payload.summary_labels_by_casilla_id) | frozenset(
+        live_payload.scrape_display_numbers_by_casilla_id,
+    )
+    if not declared_ids:
+        raise RegistryValidationError(
+            "Renta WEB Open live payload must declare summary_labels_by_casilla_id or "
+            "scrape_display_numbers_by_casilla_id keyed by canonical casilla.id",
+        )
+    missing = tuple(sorted(expected_ids - declared_ids))
+    if missing:
+        raise RegistryValidationError(
+            "Renta WEB Open live payload does not declare scrape coordinates for expected "
+            f"casilla.id values {missing!r}",
+        )
 
 
 def extract_renta_web_open_summary_value(body_text: str, label: str) -> str | None:
@@ -304,14 +331,14 @@ def extract_renta_web_open_summary_value(body_text: str, label: str) -> str | No
     return None
 
 
-async def _navigate_to_casilla(page: Page, casilla_number: str, *, timeout_ms: int) -> None:
-    """Open the Buscar casilla dialog, enter the casilla number, jump to the page.
+async def _navigate_to_display_number(page: Page, display_number: str, *, timeout_ms: int) -> None:
+    """Open the Buscar casilla dialog, enter the visible field number, jump to the page.
 
     On the Resumen view the "Buscar casilla" button lives on a secondary
     toolbar that is collapsed by default; we expand it via the
     "Mostrar opciones" toggle first. Once visible, clicking Buscar opens
     a modal dialog with a 4-char "Número de casilla" input and an
-    "Ir a la página" button. Typing a valid casilla number enables both
+    "Ir a la página" button. Typing a valid display number enables both
     the search button and the navigation button; clicking "Ir a la
     página" navigates the form to the page containing that casilla.
     """
@@ -327,22 +354,22 @@ async def _navigate_to_casilla(page: Page, casilla_number: str, *, timeout_ms: i
     else:
         await _click_expected(
             mostrar,
-            stage=f"navigate-to-casilla:{casilla_number}:mostrar-opciones",
+            stage=f"navigate-to-display-number:{display_number}:mostrar-opciones",
             description="Mostrar opciones toolbar expander",
             timeout_ms=_ELEMENT_WAIT_TIMEOUT_MS,
         )
     await _click_expected(
         page.locator('button[title="Buscar casilla"]').first,
-        stage=f"navigate-to-casilla:{casilla_number}:open-dialog",
+        stage=f"navigate-to-display-number:{display_number}:open-dialog",
         description="Buscar casilla button",
         timeout_ms=timeout_ms,
     )
     casilla_input = page.locator('input.estiloAlfanumerico[maxlength="4"]').first
     await _fill_expected(
         casilla_input,
-        casilla_number,
-        stage=f"navigate-to-casilla:{casilla_number}:type-number",
-        description="Buscar casilla number input",
+        display_number,
+        stage=f"navigate-to-display-number:{display_number}:type-number",
+        description="Buscar casilla display-number input",
         timeout_ms=timeout_ms,
     )
     # Pressing Enter (or Tab) commits the value and triggers ZK validation
@@ -353,7 +380,7 @@ async def _navigate_to_casilla(page: Page, casilla_number: str, *, timeout_ms: i
     await ir_pagina.wait_for(state="visible", timeout=timeout_ms)
     await _click_expected(
         ir_pagina,
-        stage=f"navigate-to-casilla:{casilla_number}:jump-to-page",
+        stage=f"navigate-to-display-number:{display_number}:jump-to-page",
         description="Ir a la página button",
         timeout_ms=timeout_ms,
     )
@@ -375,13 +402,13 @@ async def _navigate_to_resumen(page: Page, *, timeout_ms: int) -> None:
     )
 
 
-async def _locate_casilla_input(page: Page, casilla_number: str, *, timeout_ms: int) -> Locator:
-    """Locate the editable input for a given casilla number on the form page.
+async def _locate_display_number_input(page: Page, display_number: str, *, timeout_ms: int) -> Locator:
+    """Locate the editable input for a given visible form-field number.
 
     The Buscar casilla dialog's "Ir a la página" navigation auto-focuses
-    the target casilla's input field. We first try the focused-element
-    fast path, then fall back to a wider search by the casilla number's
-    nearby label text. ZK form widgets carry the casilla number as a
+    the target input field. We first try the focused-element fast path,
+    then fall back to a wider search by the display number's nearby
+    label text. ZK form widgets carry the display number as a
     sibling span/label rather than on the input itself.
     """
     # Fast path: the navigation auto-focuses the casilla input.
@@ -390,63 +417,64 @@ async def _locate_casilla_input(page: Page, casilla_number: str, *, timeout_ms: 
         await focused_input.wait_for(state="visible", timeout=_VISIBLE_PROBE_TIMEOUT_MS)
         return focused_input
     except Exception as exc:
-        logger.debug("focused-input fast path unavailable for %s: %s", casilla_number, exc, exc_info=True)
-    # Fallback: locate an input adjacent to a label containing the casilla number.
-    return page.locator(f"xpath=//*[normalize-space(text())='{casilla_number}']/following::input[1]").first
+        logger.debug("focused-input fast path unavailable for %s: %s", display_number, exc, exc_info=True)
+    # Fallback: locate an input adjacent to a label containing the display number.
+    return page.locator(f"xpath=//*[normalize-space(text())='{display_number}']/following::input[1]").first
 
 
-async def _apply_casilla_overrides(
+async def _apply_display_overrides(
     page: Page,
-    overrides: Mapping[str, str],
+    overrides_by_casilla_id: Mapping[CasillaId, RentaWebOpenDisplayOverride],
     *,
     timeout_ms: int,
 ) -> None:
-    """Apply each (casilla, value) override by navigating to the casilla and filling it.
+    """Apply each canonical-casilla override by navigating and filling it.
 
-    Uses the Buscar casilla dialog to jump to each casilla's page, then
-    fills the auto-focused input (or the input near the casilla number's
+    Uses the Buscar casilla dialog to jump to each display number's page, then
+    fills the auto-focused input (or the input near the display number's
     label) with the requested value.
     """
-    for casilla_number, value in overrides.items():
-        await _navigate_to_casilla(page, casilla_number, timeout_ms=timeout_ms)
-        locator = await _locate_casilla_input(page, casilla_number, timeout_ms=timeout_ms)
+    for casilla_id, override in overrides_by_casilla_id.items():
+        display_number = override.display_number
+        await _navigate_to_display_number(page, display_number, timeout_ms=timeout_ms)
+        locator = await _locate_display_number_input(page, display_number, timeout_ms=timeout_ms)
         await _fill_expected(
             locator,
-            value,
-            stage=f"apply-casilla-override:{casilla_number}",
-            description=f"casilla {casilla_number} input",
+            override.value,
+            stage=f"apply-display-override:{casilla_id}",
+            description=f"casilla.id {casilla_id} display-number {display_number} input",
             timeout_ms=timeout_ms,
         )
 
 
-async def _scrape_casilla_form_value(
+async def _scrape_display_form_value(
     page: Page,
-    casilla_number: str,
+    display_number: str,
     *,
     timeout_ms: int,
 ) -> str | None:
-    """Read the current value of one casilla's form input.
+    """Read the current value of one visible form-field input.
 
     Navigates to the casilla via the Buscar dialog, reads the input value,
     and returns the raw string. Returns None when the locator does not
     resolve (the casilla may be on a page that requires upstream inputs).
     """
     try:
-        await _navigate_to_casilla(page, casilla_number, timeout_ms=timeout_ms)
+        await _navigate_to_display_number(page, display_number, timeout_ms=timeout_ms)
     except SedeNavigationError as exc:
         logger.debug(
-            "renta web open: navigation to casilla %s failed; treating as unreadable (%s)",
-            casilla_number,
+            "renta web open: navigation to display number %s failed; treating as unreadable (%s)",
+            display_number,
             exc,
         )
         return None
     try:
-        locator = await _locate_casilla_input(page, casilla_number, timeout_ms=timeout_ms)
+        locator = await _locate_display_number_input(page, display_number, timeout_ms=timeout_ms)
         return await locator.input_value(timeout=timeout_ms)
     except (PlaywrightError, PlaywrightTimeoutError, BrowserError, SedeError) as exc:
         logger.debug(
-            "renta web open: input read for casilla %s failed; treating as unreadable (%s)",
-            casilla_number,
+            "renta web open: input read for display number %s failed; treating as unreadable (%s)",
+            display_number,
             exc,
         )
         return None

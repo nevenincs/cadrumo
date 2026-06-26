@@ -12,8 +12,8 @@ Audit data policy
 Run traces are audit artefacts; payloads will contain data that is
 sensitive in a tax / PII sense:
 
-* :attr:`FormFillPayload.value` is the literal casilla value — i.e. the
-  tax figure the operator put into an AEAT draft. Treat the file as
+* :attr:`FormFillPayload.value` is the literal form-field value — i.e.
+  the tax figure the operator put into an AEAT draft. Treat the file as
   containing tax-return data.
 * :attr:`NavigationPayload.url` / :attr:`NavigationPayload.description`
   capture the user's navigation path through AEAT sede. URLs may embed
@@ -77,7 +77,7 @@ class RunEventKind(StrEnum):
         STEP_START: Boundary marker entering a logical step.
         STEP_END: Boundary marker leaving a logical step.
         NAVIGATION: A page navigation inside the AEAT sede browser.
-        FORM_FILL: A casilla value written into an AEAT draft form.
+        FORM_FILL: A form-field value written into an AEAT draft form.
         ASSERTION: A workflow-level expectation evaluation.
         CACHE_HIT: Indicates a cached lookup served the request.
         ERROR: A captured failure surfaced during the run.
@@ -157,14 +157,14 @@ class FormFillPayload(BaseModel):
     Attributes:
         form_id: Identifier of the AEAT form being filled
             (e.g. ``"aeat-130"``).
-        casilla: Box (``casilla``) number within the form.
+        display_number: Browser-visible box number within the form.
         value: Literal value written to the box.
     """
 
     model_config = _STRICT_FROZEN
 
     form_id: str
-    casilla: str
+    display_number: str
     value: str
 
 

@@ -42,7 +42,11 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    validated_casilla_id,
+)
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import (
@@ -56,6 +60,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceDiagnostic
 from ...calculations._observations_repository import CalculationObservationRepository
@@ -79,7 +84,30 @@ _T1 = datetime(2026, 7, 10, 11, 0, tzinfo=UTC)
 
 _ADVISORY_REASON = "prior_payment_not_deducted"
 _MINORACION_ADVISORY_REASON = "prior_payment_minoracion_not_captured"
-_PRIOR_PAYMENT_CASILLA = "05"
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"M130 prior-payment advisory fixture key {value!r} is not a CasillaId") from exc
+
+
+_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = _casilla_id("0224")
+_M100_RENDIMIENTO_SOURCE_1479_CASILLA: CasillaId = _casilla_id("1479")
+_M100_RENDIMIENTO_SOURCE_1553_CASILLA: CasillaId = _casilla_id("1553")
+_M100_RENDIMIENTO_SOURCE_1577_CASILLA: CasillaId = _casilla_id("1577")
+_M130_INGRESOS_CASILLA: CasillaId = _casilla_id("01")
+_M130_PAGO_FRACCIONADO_PREVIO_CASILLA: CasillaId = _casilla_id("04")
+_PRIOR_PAYMENT_CASILLA: CasillaId = _casilla_id("05")
+_M130_RETENCIONES_CASILLA: CasillaId = _casilla_id("06")
+_M130_PAGO_FRACCIONADO_CASILLA: CasillaId = _casilla_id("07")
+_M130_AGRARIAN_VOLUME_CASILLA: CasillaId = _casilla_id("08")
+_M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = _casilla_id("10")
+_M130_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
+_M130_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
+_M130_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("19")
+_M130_SALDO_NEGATIVO_CASILLA: CasillaId = _casilla_id("saldo-negativo-fin-periodo")
 
 # The prior 1T pago fraccionado the casilla-05 carry deducts at 2T.
 _PRIOR_1T_CASILLA_07 = Decimal("200")
@@ -93,12 +121,12 @@ _PRIOR_1T_CASILLA_07 = Decimal("200")
 # fraccionados anteriores) is a BOUND carry (Stage 2) and likewise must not be
 # supplied. The manual inputs cover only the remaining non-source casillas;
 # casilla 01 folds from seeded income transactions.
-_MANUAL_INPUTS: dict[str, Decimal] = {
-    "06": Decimal("0"),
-    "08": Decimal("0"),
-    "10": Decimal("0"),
-    "16": Decimal("0"),
-    "18": Decimal("0"),
+_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
+    _M130_RETENCIONES_CASILLA: Decimal("0"),
+    _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+    _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+    _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+    _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
 
 # One INCOMING business EUR receipt seeded inside the relevant cumulative window
@@ -126,11 +154,16 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:
             modelo="100",
             filing_year=_PRIOR_YEAR,
             period="0A",
-            observations=(
-                CasillaObservation(casilla_id="0224", value=_PRIOR_YEAR_NET_INCOME),
-                CasillaObservation(casilla_id="1479", value=Decimal("0")),
-                CasillaObservation(casilla_id="1553", value=Decimal("0")),
-                CasillaObservation(casilla_id="1577", value=Decimal("0")),
+            observations=registry_grounded_observations(
+                modelo="100",
+                filing_year=_PRIOR_YEAR,
+                period="0A",
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                },
             ),
         ),
         source_kind=APP_FILING_SOURCE_KIND,
@@ -156,23 +189,28 @@ def _seed_prior_1t_m130_filing(
     * a ``Decimal`` -> casilla 16 is stored with that value (the "filed" shape;
       ``Decimal('0')`` is filed-zero, a silent no-op).
     """
-    casillas = [
-        CasillaObservation(casilla_id="01", value=Decimal("1500")),
-        CasillaObservation(casilla_id="04", value=_PRIOR_1T_CASILLA_07),
-        CasillaObservation(casilla_id="07", value=_PRIOR_1T_CASILLA_07),
-        CasillaObservation(casilla_id="19", value=_PRIOR_1T_CASILLA_07),
+    casillas = {
+        _M130_INGRESOS_CASILLA: Decimal("1500"),
+        _M130_PAGO_FRACCIONADO_PREVIO_CASILLA: _PRIOR_1T_CASILLA_07,
+        _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_1T_CASILLA_07,
+        _M130_RESULTADO_FINAL_CASILLA: _PRIOR_1T_CASILLA_07,
         # The 1T saldo-negativo-fin-periodo (= 0 for a positive 1T result) is
         # the anchor the casilla-15 carry binding reads at 2T; a complete
         # prior filing carries it so the 2T calculate resolves the carry.
-        CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=Decimal("0")),
-    ]
+        _M130_SALDO_NEGATIVO_CASILLA: Decimal("0"),
+    }
     if minoracion is not None:
-        casillas.append(CasillaObservation(casilla_id="16", value=minoracion))
+        casillas[_M130_HOME_DEDUCTION_CASILLA] = minoracion
     observation = RegistryModeloObservation(
         modelo="130",
         filing_year=_YEAR,
         period="1T",
-        observations=tuple(casillas),
+        observations=registry_grounded_observations(
+            modelo="130",
+            filing_year=_YEAR,
+            period="1T",
+            casilla_values=casillas,
+        ),
     )
     obs_repo.save_observation(observation, source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0)
     return observation

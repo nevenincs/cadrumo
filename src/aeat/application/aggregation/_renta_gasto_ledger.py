@@ -40,6 +40,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, PeriodKind
+from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.transactions import (
     Transaction,
     TransactionCatalogue,
@@ -59,7 +60,7 @@ from ._models import CasillaAggregation, CasillaProvenance
 # non-ledger gastos (amortizaciones, the estimación directa simplificada 5%
 # gastos de difícil justificación, cash-paid expenses) are a documented
 # follow-up (an operator adjustment folded into box 02) — see the F1 finding.
-_TARGET_CASILLA_GASTOS = "02"
+_TARGET_CASILLA_GASTOS: CasillaId = validated_casilla_id("02", surface="_TARGET_CASILLA_GASTOS")
 
 
 class RentaGastoLedgerAggregationIssueReason(StrEnum):
@@ -95,8 +96,8 @@ class RentaGastoLedgerAggregationIssue(BaseModel):
 class RentaGastoObservation(BaseModel):
     """One eligible OUTGOING deductible-expense ledger row.
 
-    Carries the typed deductible amount and the target casilla it feeds. The
-    domain registry resolver matches ``target_casilla`` against the binding
+    Carries the typed deductible amount and the target casilla id it feeds. The
+    domain registry resolver matches ``target_casilla_id`` against the binding
     selector and sums ``deductible_amount`` across all observations for that
     casilla, mirroring the income resolver's casilla-keyed fold.
 
@@ -109,7 +110,7 @@ class RentaGastoObservation(BaseModel):
     model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1, max_length=128)
-    target_casilla: str = Field(min_length=2, max_length=8)
+    target_casilla_id: CasillaId
     deductible_amount: Decimal = Field(ge=Decimal("0"))
     filing_date: date
 
@@ -315,7 +316,7 @@ def _classify_gasto_transaction(
     deductible_amount = transaction.taxable_base * proportion
     return RentaGastoObservation(
         transaction_id=transaction_id,
-        target_casilla=_TARGET_CASILLA_GASTOS,
+        target_casilla_id=_TARGET_CASILLA_GASTOS,
         deductible_amount=deductible_amount,
         filing_date=filing_date,
     )
@@ -325,16 +326,16 @@ def _gasto_casilla_aggregation(
     period: Period,
     observations: Sequence[RentaGastoObservation],
 ) -> CasillaAggregation:
-    totals: dict[str, Decimal] = {}
-    grouped: dict[str, list[RentaGastoObservation]] = {}
+    totals: dict[CasillaId, Decimal] = {}
+    grouped: dict[CasillaId, list[RentaGastoObservation]] = {}
     for observation in observations:
-        totals[observation.target_casilla] = (
-            totals.get(observation.target_casilla, Decimal("0")) + observation.deductible_amount
+        totals[observation.target_casilla_id] = (
+            totals.get(observation.target_casilla_id, Decimal("0")) + observation.deductible_amount
         )
-        grouped.setdefault(observation.target_casilla, []).append(observation)
+        grouped.setdefault(observation.target_casilla_id, []).append(observation)
     provenance_rows = [
         CasillaProvenance(
-            casilla=casilla,
+            casilla_id=casilla,
             category_id=None,
             transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
             subtotal=sum((row.deductible_amount for row in rows), start=Decimal("0")),
