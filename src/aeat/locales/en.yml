@@ -527,6 +527,7 @@ application:
       errors:
         active_profile_load_failed: 'The active filing profile could not be loaded:
           %{reason}.'
+        ambiguous_casilla_schema: application.filing.runtime.errors.ambiguous_casilla_schema
         blank_modelo_selection: Requested modelo selection must not contain blank
           modelo ids.
         filing_year_period_mismatch: application.filing.runtime.errors.filing_year_period_mismatch
@@ -666,13 +667,16 @@ application:
       calculate_binding_unknown: '--binding %{key} does not match any binding id in
         this revision. Accepted binding ids: %{accepted}. Use `aeat app modelo bindings
         list <MODELO>` to list valid binding ids.'
-      calculate_casilla_ambiguous: '--casilla %{key} matches multiple casillas in
-        this revision: %{candidates}. Supply the qualified PREFIX:NNNNN form to disambiguate.'
+      calculate_relation_unknown: '--relation %{key} does not match any relation
+        id in this revision. Accepted relation ids: %{accepted}.'
+      calculate_casilla_alias_refused: '--casilla %{key} is a printed casilla number
+        or form number, not a canonical casilla.id. Use the canonical casilla.id instead:
+        %{accepted}.'
       calculate_casilla_non_numeric: --casilla %{casilla_id} targets non-numeric data
         type %{data_type} (%{label}); use --binding or profile sources instead.
-      calculate_casilla_unknown: --casilla %{key} does not match any casilla number
-        in this revision. Use `aeat app modelo casillas <MODELO>` to list valid casilla
-        IDs.
+      calculate_casilla_unknown: --casilla %{key} is not a canonical casilla.id in
+        this revision. Use `aeat app modelo casillas <MODELO>` to list valid casilla.id
+        values.
       calculate_decimal_input_invalid: '%{flag} value for %{key} is not a decimal:
         %{value}'
       calculate_m184_share_sum_invalid: Modelo 184 member-row share percentages must
@@ -684,6 +688,9 @@ application:
         be supplied together.
       calculate_sal_inputs_incomplete: The SAL/SLL reserve-special inputs must all
         be supplied together.
+      calculate_semantic_role_ambiguous: The modelo revision has more than one casilla
+        with semantic role %{semantic_role}; the shortcut cannot choose a canonical
+        casilla.id safely.
       calculate_semantic_role_missing: The modelo revision has no casilla with semantic
         role %{semantic_role}.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
@@ -776,6 +783,10 @@ application:
         file until the declaration parser lands.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a work unit.
+      refund_election_not_eligible: Refund (devolver) was elected for Modelo %{modelo}
+        %{filing_year} %{period}, but a refund is only available in the year's last
+        filing period. Carry the credit forward (compensar), or make the election
+        in the last period.
       revision_pick_explicit_id_required: Explicit revision picks require calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id is only
         valid with the explicit revision selector.
@@ -865,6 +876,10 @@ application:
       modelo_200_base_imponible_determinada_cuando_resultado_positivo: The accounting
         result is positive but the taxable base (C552) is zero; review the taxable
         base determination.
+      modelo_200_bin_stock_cierre_reconcilia_roll_forward: The BIN closing stock (C671)
+        does not reconcile to the roll-forward (opening C670 minus applied C547 plus
+        the BIN generated this period); review the carryforward so future-year compensation
+        is not mis-stated.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: Total
         IVA deducible (cuota-deducible-total) is positive, but every official numbered
         box on the Diseño de Registros (29 interiores corrientes, 33 importaciones,
@@ -883,7 +898,6 @@ application:
         next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
           via the `aeat config profile edit` command. TRLIRNR Art. 10 requires non-EEA
           IRNR filers to declare a representative for AEAT communications.
-      modelo_200_bin_stock_cierre_reconcilia_roll_forward: 'The BIN closing stock (C671) does not reconcile to the roll-forward (opening C670 minus applied C547 plus the BIN generated this period); review the carryforward so future-year compensation is not mis-stated.'
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
@@ -996,8 +1010,8 @@ application:
         errors:
           seed_anchor_missing: The parity scenario input has no spreadsheet cell to
             seed.
-          unknown_casilla_numbers: The parity scenario references casilla numbers
-            that are not in the registry snapshot.
+          unknown_casilla_ids: The parity scenario references casilla ids that are
+            not in the registry snapshot.
       records:
         errors:
           address_mismatch: The spreadsheet cell address does not match its row and
@@ -1483,8 +1497,8 @@ cli:
         evidence_reference_id_help: Stable reference id of the imported evidence (justificante
           number, CSV register id, live capture id)
         filing_record_id_help: Stable filing-record identifier
-        import_casilla_help: Imported casilla value with CASILLA=DECIMAL syntax (repeatable;
-          at least one required)
+        import_casilla_help: Imported casilla value with CASILLA_ID=DECIMAL syntax
+          (repeatable; at least one required)
         import_help: Persist an externally-filed return as a baseline filing record
           carrying imported AEAT-attested evidence
         import_set_required: --set is required at least once for an import.
@@ -1592,8 +1606,8 @@ cli:
       project:
         binding_help: Additional M100 binding override as KEY=VALUE. Repeat for multiple.
           Retenciones bindings default to zero when not supplied.
-        casilla_help: Additional M100 casilla override as CASILLA=DECIMAL (e.g. 0513=1150
-          for age supplement). Repeat for multiple overrides.
+        casilla_help: Additional M100 casilla override as CASILLA_ID=DECIMAL (e.g.
+          0513=1150 for age supplement). Repeat for multiple overrides.
         ccaa_help: Autonomous community tax residence key for the M100 autonomic scale
           (e.g. cataluna, comunidad-valenciana). Must match the registry enum.
         no_m130_revisions: No M130 revisions for the specified year. Run `aeat app
@@ -1672,9 +1686,8 @@ cli:
           authorized.'
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
           revision
-        casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable). CASILLA
-          accepts the casilla id, the registry number, or the BOE printed casilla
-          number shown by `aeat app modelo casillas`.
+        casilla_help: Casilla value with CASILLA_ID=DECIMAL syntax (repeatable). CASILLA_ID
+          must be the canonical casilla.id shown by `aeat app modelo casillas`.
         casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
         causante_ccaa_help: CCAA of habitual residence of the deceased (ISD Modelo
           650/660) or CCAA where the transferred asset is located (ITPyAJD Modelo
@@ -1742,6 +1755,9 @@ cli:
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
         discard_yes_help: Explicitly confirm the discard operation
+        disposition_help: 'Modelo 303 negative-result disposition: compensar (carry
+          the credit forward, default) or devolver (request a refund; only in the
+          year''s last filing period for a non-REDEME taxpayer).'
         dt12_computation_error: 'DT12 computation error: %{message}'
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
@@ -1908,8 +1924,8 @@ cli:
           with registry revision {existing_revision}; requested {requested_revision}.
           Resume the existing work unit, discard it explicitly, or pass an exact id.
         set_not_decimal: The --set value must be a decimal; got {value}.
-        set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
-          at least one required)
+        set_override_help: Corrected casilla value with CASILLA_ID=DECIMAL syntax
+          (repeatable; at least one required)
         status_help: Show the metadata of one work unit
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
@@ -2481,8 +2497,8 @@ cli:
         explicitly (TRLIRNR RDLeg 5/2004 Art. 2 / Art. 10). Use a two-letter ISO 3166-1
         alpha-2 country code; only ES rows enter the IRNR base.
       system_state_not_assignable: 'Classification ''%{value}'' is set automatically
-        by aeat and cannot be assigned by hand. Choose one of: BUSINESS, PERSONAL,
-        MIXED, or omit --classification to leave the row unclassified.'
+        by the application and cannot be assigned by hand. Choose one of: BUSINESS,
+        PERSONAL, MIXED, or omit --classification to leave the row unclassified.'
       taxable_base_help: IVA-exclusive base amount
       usage_ratio_help: Usage-ratio id for proportional business use
       value_date_help: Value date (YYYY-MM-DD)
@@ -2604,8 +2620,8 @@ cli:
         or category lines. Re-run with --auto-split to separate them into independently-filable
         base and IVA children.
       system_state_not_assignable: 'Classification ''%{value}'' is set automatically
-        by aeat and cannot be assigned by hand. Choose one of: BUSINESS, PERSONAL,
-        MIXED.'
+        by the application and cannot be assigned by hand. Choose one of: BUSINESS,
+        PERSONAL, MIXED.'
       taxable_base_help: Taxable base amount
       vision_model_help: Override the local Ollama vision model for an image/scanned-invoice
         read (e.g. qwen2.5vl:7b); defaults to the configured model.
@@ -3601,8 +3617,8 @@ errors:
       100 borrador shape.
     error_calc_sheets_engine: The spreadsheet export engine encountered an unresolvable
       state while building the export plan.
-    error_calc_sheets_parity: The parity harness scenario references casilla numbers
-      that are not present in the registry snapshot.
+    error_calc_sheets_parity: The parity harness scenario references casilla ids that
+      are not present in the registry snapshot.
     error_calc_sheets_record: A spreadsheet record operation failed due to an invalid
       column index or malformed A1 address.
     error_calculations_registry: An error occurred loading, resolving or validating
@@ -4070,6 +4086,7 @@ errors:
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
     modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
     modelo_calculate_input: errors.refused.modelo_calculate_input
+    modelo_calculate_relation_input: errors.refused.modelo_calculate_relation_input
     modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
     modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
     modelo_calculation_revision_selector_ambiguous: The calculation revision selector
@@ -4229,6 +4246,12 @@ errors:
     refused_modelo_applicability_filter: An unknown applicability filter name was
       encountered in the registry. This is a registry-authoring error; update the
       filter dispatch table.
+    refused_modelo_refund_account_missing: A refund was requested but no refund account
+      is on file; AEAT cannot pay a devolución without an account. Configure a refund
+      account, or carry the credit forward (compensar).
+    refused_modelo_refund_election_not_eligible: A refund was requested for a period
+      where it is not available; only the year's last filing period permits a non-REDEME
+      refund.
     refused_modelo_workflow_gate: The workflow gate refused the filing transition.
       The declaration cannot be considered legally filed.
     refused_no_active_profile: This operation requires an active profile. Create or
