@@ -230,3 +230,15 @@ originating audit/plan.
   **Rule:** Registry binding/resolver families are extracted into per-family
   modules behind the package `__all__` facade; new families follow the established
   module shape rather than growing the monolith.
+
+## Status
+
+Accepted and FOUNDATIONAL — not reopened. This ADR hardened the REGISTRY-binding
+definition altitude (validation contract, typed `BindingAggregation`/op,
+`BindingSourceKind`, provenance parity). The bindings-architecture-unification sweep
+extends it in two respects, recorded in the canonical PHASE ADRs (not a central apex
+doc): the phase-2.1 `binding-source-kind-taxonomy-unification` ADR widens this ADR's
+`BindingSourceKind` from registry-only to the registry+mesh union; the future
+phase-2.3 (fold-in/relation) ADR applies this ADR's typed-aggregation discipline to
+relations (which it did not cover). Those phase ADRs are the canonical direction; this
+ADR's decisions remain in force.
