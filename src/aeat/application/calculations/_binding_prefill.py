@@ -351,7 +351,7 @@ def _gather_observations(
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     ):
-        req_key = (requirement.modelo, requirement.filing_year, requirement.period)
+        req_key = (requirement.source_modelo, requirement.filing_year, requirement.periods[0])
         if req_key in grouped_keys:
             _gather_grouped_member_observations(
                 req_key,
@@ -361,9 +361,9 @@ def _gather_observations(
             )
             continue
         gathered = _gather_single_key_observation(
-            requirement.modelo,
+            requirement.source_modelo,
             requirement.filing_year,
-            requirement.period,
+            requirement.periods[0],
             repository=repository,
             iva_history_repository=iva_history_repository,
         )
@@ -402,7 +402,7 @@ def _per_grupo_member_requirement_keys(revision: object, snapshot: RegistrySnaps
         period=snapshot.period,
     ):
         if any(bid in grouped_binding_ids for bid in requirement.binding_ids):
-            keys.add((requirement.modelo, requirement.filing_year, requirement.period))
+            keys.add((requirement.source_modelo, requirement.filing_year, requirement.periods[0]))
     return keys
 
 
@@ -548,8 +548,8 @@ def _requirements_by_binding(
         period=snapshot.period,
     ):
         for binding_id in requirement.binding_ids:
-            current = grouped.setdefault(binding_id, (requirement.modelo, requirement.filing_year, set()))
-            current[2].add(requirement.period)
+            current = grouped.setdefault(binding_id, (requirement.source_modelo, requirement.filing_year, set()))
+            current[2].add(requirement.periods[0])
     return {
         binding_id: (source_modelo, source_year, tuple(sorted(periods)))
         for binding_id, (source_modelo, source_year, periods) in grouped.items()

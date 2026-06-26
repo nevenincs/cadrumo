@@ -20,8 +20,8 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
+    RegistryFoldRequirement,
     RegistryModeloObservation,
-    RegistryRelationSourceRequirement,
     validated_casilla_id,
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
@@ -111,8 +111,10 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
         assert source_resolution.owned_sources == ("relation_prefill",)
         assert source_resolution.provenance
         assert all(item.source_kind == "relation_prefill" for item in source_resolution.provenance)
+        # RET-1: the perceptores relation is retired (decl.total-perceptores is now
+        # a distinct-NIF count from the retención store); only the monetary
+        # base/retenciones relations remain on the relation_prefill source.
         assert {item.source_ref for item in source_resolution.provenance} == {
-            "modelo-180-rel-115-perceptores-anual:2026:1T,2T,3T,4T",
             "modelo-180-rel-115-base-anual:2026:1T,2T,3T,4T",
             "modelo-180-rel-115-retenciones-anual:2026:1T,2T,3T,4T",
         }
@@ -290,12 +292,12 @@ def _modelo_130_pagos_observations(values_by_period: dict[str, Decimal]) -> tupl
 
 
 def _m130_pagos_requirement(
-    requirements: tuple[RegistryRelationSourceRequirement, ...],
-) -> RegistryRelationSourceRequirement:
+    requirements: tuple[RegistryFoldRequirement, ...],
+) -> RegistryFoldRequirement:
     return next(
         r
         for r in requirements
-        if r.source_modelo == "130" and r.source_casilla_id == _M130_RESULTADO_FINAL_CASILLA
+        if r.source_modelo == "130" and r.source_casilla_ids == (_M130_RESULTADO_FINAL_CASILLA,)
     )
 
 

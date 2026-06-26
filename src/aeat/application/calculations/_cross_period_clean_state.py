@@ -21,9 +21,8 @@ from ...core import Modelo, Period
 from ...domain.calculations.registry import (
     CasillaId,
     Modelo202Modality,
+    RegistryFoldRequirement,
     RegistryModeloObservation,
-    RegistryModeloObservationRequirement,
-    RegistryRelationSourceRequirement,
     RegistrySnapshot,
     ValidatedRegistryAuthority,
     previous_filing_observation_requirements,
@@ -894,31 +893,33 @@ def evaluate_cross_period_clean_state(
 
 
 def _requirements_from_previous_filing(
-    requirement: RegistryModeloObservationRequirement,
+    requirement: RegistryFoldRequirement,
     *,
     snapshot: RegistrySnapshot,
 ) -> Iterable[CrossPeriodDependencyRequirement]:
     grouped_keys = _per_grupo_member_requirement_keys(snapshot)
+    source_period = requirement.periods[0]
     yield CrossPeriodDependencyRequirement(
-        source_modelo=requirement.modelo,
+        source_modelo=requirement.source_modelo,
         filing_year=requirement.filing_year,
-        period=Period.from_year_and_code(requirement.filing_year, requirement.period),
+        period=Period.from_year_and_code(requirement.filing_year, source_period),
         source_casilla_ids=requirement.source_casilla_ids,
         origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
         origin_ids=requirement.binding_ids,
-        requires_member_fan_in=(requirement.modelo, requirement.filing_year, requirement.period) in grouped_keys,
+        requires_member_fan_in=(requirement.source_modelo, requirement.filing_year, source_period) in grouped_keys,
     )
 
 
 def _requirements_from_relation(
-    requirement: RegistryRelationSourceRequirement,
+    requirement: RegistryFoldRequirement,
 ) -> Iterable[CrossPeriodDependencyRequirement]:
+    source_casilla_id = requirement.source_casilla_ids[0]
     for period in requirement.periods:
         yield CrossPeriodDependencyRequirement(
             source_modelo=requirement.source_modelo,
             filing_year=requirement.filing_year,
             period=Period.from_year_and_code(requirement.filing_year, period),
-            source_casilla_ids=(requirement.source_casilla_id,),
+            source_casilla_ids=(source_casilla_id,),
             origin=CrossPeriodDependencyOrigin.REGISTRY_RELATION,
             origin_ids=requirement.relation_ids,
         )
@@ -939,7 +940,7 @@ def _per_grupo_member_requirement_keys(snapshot: RegistrySnapshot) -> set[tuple[
         period=snapshot.period,
     ):
         if any(binding_id in grouped_binding_ids for binding_id in requirement.binding_ids):
-            keys.add((requirement.modelo, requirement.filing_year, requirement.period))
+            keys.add((requirement.source_modelo, requirement.filing_year, requirement.periods[0]))
     return keys
 
 

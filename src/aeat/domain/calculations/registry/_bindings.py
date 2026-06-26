@@ -13,7 +13,6 @@ from ....core.aggregation import BindingAggregationOp, BindingSourceKind, Counte
 from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from ._binding_selector_utils import selector_against_model, selector_as_dict
 from ._bindings_previous_filing import (
-    RegistryModeloObservationRequirement,
     _PreviousModeloSelector,
     previous_filing_observation_requirements,
     previous_filing_source_reference,
@@ -126,7 +125,6 @@ __all__ = [
     "OssIossLedgerObservation",
     "RefundOperationObservation",
     "RegistryModeloObservation",
-    "RegistryModeloObservationRequirement",
     "RelatedPartyOperationObservation",
     "RentaExpenseObservationProtocol",
     "RentaGastoObservationProtocol",

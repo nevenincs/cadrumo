@@ -16,6 +16,7 @@ from .. import (
     calculate_registry_snapshot,
     load_registry_tree,
     relation_source_requirements,
+    resolve_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
 )
 
@@ -104,10 +105,11 @@ def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
     observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}
     for requirement in requirements:
-        source_casilla = source_casilla_ids[requirement.source_casilla_id]
+        source_casilla_id = requirement.source_casilla_ids[0]
+        source_casilla = source_casilla_ids[source_casilla_id]
         for index, period in enumerate(requirement.periods):
             value = _value_for(source_casilla.data_type, index)
-            observed_by_period.setdefault(period, {})[requirement.source_casilla_id] = value
+            observed_by_period.setdefault(period, {})[source_casilla_id] = value
     observations = tuple(
         registry_grounded_modelo_observation(
             modelo="123",
@@ -123,15 +125,18 @@ def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -
         filing_year=2025,
         period="0A",
     )
+    binding_values = {"modelo-193-123-perceptores-anual": Decimal("2")}
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={},
+        inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         date_context={"filing_period": date(2025, 12, 31)},
+        binding_values=binding_values,
         relation_values=relation_values,
     )
 
     entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
-    assert "modelo-193-rel-123-perceptores-anual" in entries_by_target["decl.total-perceptores"].operand_refs
+    assert "decl.total-perceptores" not in entries_by_target
+    assert result.values["decl.total-perceptores"] == Decimal("2")
     assert "modelo-193-rel-123-base-anual" in entries_by_target["decl.base-total"].operand_refs
     assert "modelo-193-rel-123-retenciones-anual" in entries_by_target["decl.retenciones-total"].operand_refs
 
