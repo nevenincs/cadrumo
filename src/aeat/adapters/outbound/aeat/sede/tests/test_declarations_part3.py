@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ......domain.calculations.registry import CasillaId, validated_casilla_id
 from ._declarations_support import (
     UTC,
     Decimal,
@@ -20,6 +21,13 @@ from ._declarations_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_M115_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("01", surface="_M115_PERCEPTORES_CASILLA")
+_M115_BASE_CASILLA: CasillaId = validated_casilla_id("02", surface="_M115_BASE_CASILLA")
+_M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03", surface="_M115_RETENCIONES_CASILLA")
+_M123_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("03", surface="_M123_PERCEPTORES_CASILLA")
+_M123_BASE_CASILLA: CasillaId = validated_casilla_id("06", surface="_M123_BASE_CASILLA")
+_M123_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("09", surface="_M123_RETENCIONES_CASILLA")
+_M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_FINAL_CASILLA")
 
 
 class TestFiledObservationRelations:
@@ -34,10 +42,10 @@ class TestFiledObservationRelations:
             for casilla in observation.casillas
         }
         missing = [
-            (requirement.source_modelo, requirement.filing_year, period, requirement.source_output)
+            (requirement.source_modelo, requirement.filing_year, period, requirement.source_casilla_id)
             for requirement in relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
             for period in requirement.periods
-            if (requirement.source_modelo, requirement.filing_year, period, requirement.source_output) not in available
+            if (requirement.source_modelo, requirement.filing_year, period, requirement.source_casilla_id) not in available
         ]
 
         assert not missing
@@ -113,7 +121,7 @@ class TestFiledObservationRelations:
             modelo="130",
             ejercicio=2025,
             period="1T",
-            casilla_values={"19": Decimal("1")},
+            casilla_values={_M130_RESULTADO_FINAL_CASILLA: Decimal("1")},
         )
 
         with pytest.raises(RegistryValidationError, match="found 2"):
@@ -128,10 +136,26 @@ class TestFiledObservationRelations:
     def test_annual_summary_relations_resolve_from_quarterly_filed_observations(self, filing_year: int) -> None:
         snapshot = _modelo_snapshot("180", filing_year=filing_year, period="0A")
         quarterly_values = {
-            "1T": {"01": Decimal("2"), "02": Decimal("100.10"), "03": Decimal("19.20")},
-            "2T": {"01": Decimal("3"), "02": Decimal("200.20"), "03": Decimal("38.40")},
-            "3T": {"01": Decimal("1"), "02": Decimal("50.00"), "03": Decimal("9.50")},
-            "4T": {"01": Decimal("4"), "02": Decimal("300.30"), "03": Decimal("57.60")},
+            "1T": {
+                _M115_PERCEPTORES_CASILLA: Decimal("2"),
+                _M115_BASE_CASILLA: Decimal("100.10"),
+                _M115_RETENCIONES_CASILLA: Decimal("19.20"),
+            },
+            "2T": {
+                _M115_PERCEPTORES_CASILLA: Decimal("3"),
+                _M115_BASE_CASILLA: Decimal("200.20"),
+                _M115_RETENCIONES_CASILLA: Decimal("38.40"),
+            },
+            "3T": {
+                _M115_PERCEPTORES_CASILLA: Decimal("1"),
+                _M115_BASE_CASILLA: Decimal("50.00"),
+                _M115_RETENCIONES_CASILLA: Decimal("9.50"),
+            },
+            "4T": {
+                _M115_PERCEPTORES_CASILLA: Decimal("4"),
+                _M115_BASE_CASILLA: Decimal("300.30"),
+                _M115_RETENCIONES_CASILLA: Decimal("57.60"),
+            },
         }
 
         resolved = resolve_relation_values_from_filed_declarations(
@@ -150,18 +174,38 @@ class TestFiledObservationRelations:
         )
 
         assert resolved == {
-            "modelo-180-rel-115-base-anual": sum(values["02"] for values in quarterly_values.values()),
-            "modelo-180-rel-115-perceptores-anual": sum(values["01"] for values in quarterly_values.values()),
-            "modelo-180-rel-115-retenciones-anual": sum(values["03"] for values in quarterly_values.values()),
+            "modelo-180-rel-115-base-anual": sum(values[_M115_BASE_CASILLA] for values in quarterly_values.values()),
+            "modelo-180-rel-115-perceptores-anual": sum(
+                values[_M115_PERCEPTORES_CASILLA] for values in quarterly_values.values()
+            ),
+            "modelo-180-rel-115-retenciones-anual": sum(
+                values[_M115_RETENCIONES_CASILLA] for values in quarterly_values.values()
+            ),
         }
 
     def test_modelo_193_relations_resolve_from_quarterly_filed_observations(self) -> None:
         snapshot = _modelo_snapshot("193", filing_year=2026, period="0A")
         quarterly_values = {
-            "1T": {"03": Decimal("5"), "06": Decimal("1201.00"), "09": Decimal("228.19")},
-            "2T": {"03": Decimal("4"), "06": Decimal("800.25"), "09": Decimal("152.05")},
-            "3T": {"03": Decimal("7"), "06": Decimal("999.75"), "09": Decimal("189.95")},
-            "4T": {"03": Decimal("6"), "06": Decimal("500.00"), "09": Decimal("95.00")},
+            "1T": {
+                _M123_PERCEPTORES_CASILLA: Decimal("5"),
+                _M123_BASE_CASILLA: Decimal("1201.00"),
+                _M123_RETENCIONES_CASILLA: Decimal("228.19"),
+            },
+            "2T": {
+                _M123_PERCEPTORES_CASILLA: Decimal("4"),
+                _M123_BASE_CASILLA: Decimal("800.25"),
+                _M123_RETENCIONES_CASILLA: Decimal("152.05"),
+            },
+            "3T": {
+                _M123_PERCEPTORES_CASILLA: Decimal("7"),
+                _M123_BASE_CASILLA: Decimal("999.75"),
+                _M123_RETENCIONES_CASILLA: Decimal("189.95"),
+            },
+            "4T": {
+                _M123_PERCEPTORES_CASILLA: Decimal("6"),
+                _M123_BASE_CASILLA: Decimal("500.00"),
+                _M123_RETENCIONES_CASILLA: Decimal("95.00"),
+            },
         }
 
         resolved = resolve_relation_values_from_filed_declarations(
@@ -180,9 +224,13 @@ class TestFiledObservationRelations:
         )
 
         assert resolved == {
-            "modelo-193-rel-123-perceptores-anual": sum(values["03"] for values in quarterly_values.values()),
-            "modelo-193-rel-123-base-anual": sum(values["06"] for values in quarterly_values.values()),
-            "modelo-193-rel-123-retenciones-anual": sum(values["09"] for values in quarterly_values.values()),
+            "modelo-193-rel-123-perceptores-anual": sum(
+                values[_M123_PERCEPTORES_CASILLA] for values in quarterly_values.values()
+            ),
+            "modelo-193-rel-123-base-anual": sum(values[_M123_BASE_CASILLA] for values in quarterly_values.values()),
+            "modelo-193-rel-123-retenciones-anual": sum(
+                values[_M123_RETENCIONES_CASILLA] for values in quarterly_values.values()
+            ),
         }
 
     def test_missing_relation_source_filing_is_rejected(self) -> None:
@@ -192,7 +240,11 @@ class TestFiledObservationRelations:
                 modelo="115",
                 ejercicio=2026,
                 period=period,
-                casilla_values={"01": Decimal("1"), "02": Decimal("10"), "03": Decimal("2")},
+                casilla_values={
+                    _M115_PERCEPTORES_CASILLA: Decimal("1"),
+                    _M115_BASE_CASILLA: Decimal("10"),
+                    _M115_RETENCIONES_CASILLA: Decimal("2"),
+                },
             )
             for period in ("1T", "2T", "3T")
         )
@@ -212,7 +264,11 @@ class TestFiledObservationRelations:
                 modelo="115",
                 ejercicio=2026,
                 period=period,
-                casilla_values={"01": Decimal("1"), "02": Decimal("10"), "03": Decimal("2")},
+                casilla_values={
+                    _M115_PERCEPTORES_CASILLA: Decimal("1"),
+                    _M115_BASE_CASILLA: Decimal("10"),
+                    _M115_RETENCIONES_CASILLA: Decimal("2"),
+                },
                 extraction_coverage={"submitted_file": 0.5} if period == "4T" else None,
             )
             for period in ("1T", "2T", "3T", "4T")

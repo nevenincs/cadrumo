@@ -8,12 +8,20 @@ from ._parser_boundary_support import (
     _MODELO_180_SYNTHETIC_FIXTURE,
     _MODELO_193_SYNTHETIC_FIXTURE,
     _MODELO_369_SYNTHETIC_FIXTURE,
+    CasillaId,
     Decimal,
+    _casilla_id,
     _expected_period,
     parse_declaracion,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+_DECL_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
+_DECL_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
+_DECL_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_DECL_PERIODO_CASILLA: CasillaId = _casilla_id("decl.periodo")
 
 
 def test_parser_extracts_modelo_180_synthetic_fixture_targets() -> None:
@@ -59,16 +67,16 @@ def test_parser_extracts_modelo_180_synthetic_fixture_targets() -> None:
 
     # All three casillas defined by the M180 declaracion_pdf profile must be present.
     assert set(values.keys()) == {
-        "decl.total-perceptores",
-        "decl.base-total",
-        "decl.retenciones-total",
+        _DECL_TOTAL_PERCEPTORES_CASILLA,
+        _DECL_BASE_TOTAL_CASILLA,
+        _DECL_RETENCIONES_TOTAL_CASILLA,
     }, f"expected exactly the three M180 profile casillas, got {set(values.keys())!r}"
 
     # decl.total-perceptores: fixture prints "Numero total de perceptores 3";
     # parse_spanish_decimal("3") = Decimal("3").
     # Ground truth: AEAT printed form "NUMERO TOTAL DE PERCEPTORES" (positions 136-144).
-    assert values["decl.total-perceptores"] == Decimal("3"), (
-        f"decl.total-perceptores: expected Decimal('3'), got {values['decl.total-perceptores']!r}"
+    assert values[_DECL_TOTAL_PERCEPTORES_CASILLA] == Decimal("3"), (
+        f"decl.total-perceptores: expected Decimal('3'), got {values[_DECL_TOTAL_PERCEPTORES_CASILLA]!r}"
     )
 
     # decl.base-total: fixture prints
@@ -76,8 +84,8 @@ def test_parser_extracts_modelo_180_synthetic_fixture_targets() -> None:
     # parse_spanish_decimal("12.000,00") = Decimal("12000.00").
     # Ground truth: AEAT printed form "BASE DE RETENCIONES E INGRESOS A CUENTA"
     # (positions 145-160, Orden HAP/1732/2014 p.5).
-    assert values["decl.base-total"] == Decimal("12000.00"), (
-        f"decl.base-total: expected Decimal('12000.00'), got {values['decl.base-total']!r}"
+    assert values[_DECL_BASE_TOTAL_CASILLA] == Decimal("12000.00"), (
+        f"decl.base-total: expected Decimal('12000.00'), got {values[_DECL_BASE_TOTAL_CASILLA]!r}"
     )
 
     # decl.retenciones-total: fixture prints
@@ -85,8 +93,8 @@ def test_parser_extracts_modelo_180_synthetic_fixture_targets() -> None:
     # parse_spanish_decimal("2.280,00") = Decimal("2280.00").
     # Ground truth: AEAT printed form "RETENCIONES E INGRESOS A CUENTA"
     # (positions 161-175, Orden HAP/1732/2014 p.6).
-    assert values["decl.retenciones-total"] == Decimal("2280.00"), (
-        f"decl.retenciones-total: expected Decimal('2280.00'), got {values['decl.retenciones-total']!r}"
+    assert values[_DECL_RETENCIONES_TOTAL_CASILLA] == Decimal("2280.00"), (
+        f"decl.retenciones-total: expected Decimal('2280.00'), got {values[_DECL_RETENCIONES_TOTAL_CASILLA]!r}"
     )
 
 
@@ -129,32 +137,32 @@ def test_parser_extracts_modelo_193_synthetic_fixture_targets() -> None:
 
     # All three casillas defined by the M193 declaracion_pdf profile must be present.
     assert set(values.keys()) == {
-        "decl.total-perceptores",
-        "decl.base-total",
-        "decl.retenciones-total",
+        _DECL_TOTAL_PERCEPTORES_CASILLA,
+        _DECL_BASE_TOTAL_CASILLA,
+        _DECL_RETENCIONES_TOTAL_CASILLA,
     }, f"expected exactly the three M193 profile casillas, got {set(values.keys())!r}"
 
     # decl.total-perceptores: fixture prints "Numero total de perceptores 2";
     # parse_spanish_decimal("2") = Decimal("2").
     # Ground truth: AEAT DR Tipo 1 positions 136-144 "NÚMERO TOTAL DE PERCEPTORES".
-    assert values["decl.total-perceptores"] == Decimal("2"), (
-        f"decl.total-perceptores: expected Decimal('2'), got {values['decl.total-perceptores']!r}"
+    assert values[_DECL_TOTAL_PERCEPTORES_CASILLA] == Decimal("2"), (
+        f"decl.total-perceptores: expected Decimal('2'), got {values[_DECL_TOTAL_PERCEPTORES_CASILLA]!r}"
     )
 
     # decl.base-total: fixture prints
     # "Base retenciones e ingresos a cuenta total 8.000,00";
     # parse_spanish_decimal("8.000,00") = Decimal("8000.00").
     # Ground truth: AEAT DR Tipo 1 positions 145-159 "BASE RETENCIONES E INGRESOS A CUENTA".
-    assert values["decl.base-total"] == Decimal("8000.00"), (
-        f"decl.base-total: expected Decimal('8000.00'), got {values['decl.base-total']!r}"
+    assert values[_DECL_BASE_TOTAL_CASILLA] == Decimal("8000.00"), (
+        f"decl.base-total: expected Decimal('8000.00'), got {values[_DECL_BASE_TOTAL_CASILLA]!r}"
     )
 
     # decl.retenciones-total: fixture prints
     # "Retenciones e ingresos a cuenta total 1.520,00";
     # parse_spanish_decimal("1.520,00") = Decimal("1520.00").
     # Ground truth: AEAT DR Tipo 1 positions 160-174 "RETENCIONES E INGRESOS A CUENTA".
-    assert values["decl.retenciones-total"] == Decimal("1520.00"), (
-        f"decl.retenciones-total: expected Decimal('1520.00'), got {values['decl.retenciones-total']!r}"
+    assert values[_DECL_RETENCIONES_TOTAL_CASILLA] == Decimal("1520.00"), (
+        f"decl.retenciones-total: expected Decimal('1520.00'), got {values[_DECL_RETENCIONES_TOTAL_CASILLA]!r}"
     )
 
 
@@ -206,22 +214,23 @@ def test_parser_extracts_modelo_369_synthetic_fixture_targets() -> None:
 
     # Both casillas defined by the M369 declaracion_pdf profile must be present.
     assert set(values.keys()) == {
-        "decl.ejercicio",
-        "decl.periodo",
+        _DECL_EJERCICIO_CASILLA,
+        _DECL_PERIODO_CASILLA,
     }, f"expected exactly {{decl.ejercicio, decl.periodo}}, got {set(values.keys())!r}"
 
     # decl.ejercicio: fixture prints "Ejercicio: 2024";
     # parse_spanish_decimal("2024") = Decimal("2024").
     # Ground truth: DR369e21.xlsx row 14 "2. Ejercicio y período. Ejercicio" and
     # AEAT manual section 2 heading "2. Ejercicio y periodo".
-    assert values["decl.ejercicio"] == Decimal("2024"), (
-        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got {values['decl.ejercicio']!r}"
+    assert values[_DECL_EJERCICIO_CASILLA] == Decimal("2024"), (
+        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, got "
+        f"{values[_DECL_EJERCICIO_CASILLA]!r}"
     )
 
     # decl.periodo: fixture prints "Periodo: 1T";
     # '1T' is not a valid Decimal so parse_spanish_decimal raises ValueError and
     # the parser stores the raw token as a string for value_kind='text' casillas.
     # Ground truth: DR369e21.xlsx row 16 "2. Ejercicio y período. Periodo".
-    assert values["decl.periodo"] == "1T", (
-        f"decl.periodo: expected '1T' from AEAT-grounded fixture, got {values['decl.periodo']!r}"
+    assert values[_DECL_PERIODO_CASILLA] == "1T", (
+        f"decl.periodo: expected '1T' from AEAT-grounded fixture, got {values[_DECL_PERIODO_CASILLA]!r}"
     )

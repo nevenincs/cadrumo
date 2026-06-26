@@ -33,6 +33,7 @@ from .....application.storage.calc_sheets import (
     TabName,
 )
 from .....core import Period
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .._calc_sheets_apply import (
     _build_structural_cleanup_requests,
     _coerce_cell_value,
@@ -45,12 +46,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _Sign = Literal["any", "non_negative", "non_positive"]
 
 
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"Google apply-adapter fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_TEST_CASILLA: CasillaId = _casilla_id("test.casilla")
+_ANY_CASILLA: CasillaId = _casilla_id("any.casilla")
+_SOME_CASILLA: CasillaId = _casilla_id("some.casilla")
+_IVA_COMPENSACION_ANTERIORES_CASILLA: CasillaId = _casilla_id("iva.compensacion-anteriores")
+_IVA_PRORRATA_PORCENTAJE_CASILLA: CasillaId = _casilla_id("iva.prorrata-porcentaje")
+_IVA_RESULTADO_NEGATIVO_CASILLA: CasillaId = _casilla_id("iva.resultado-negativo")
+
+
 def _make_constraint(
     *,
     sign: _Sign = "any",
     min_value: Decimal | None = None,
     max_value: Decimal | None = None,
-    casilla: str = "test.casilla",
+    casilla_id: CasillaId = _TEST_CASILLA,
     legal_refs: tuple[str, ...] = ("ley-x:art-1",),
 ) -> SheetCellConstraint:
     return SheetCellConstraint(
@@ -58,7 +74,7 @@ def _make_constraint(
         sign=sign,
         min_value=min_value,
         max_value=max_value,
-        casilla=casilla,
+        casilla_id=casilla_id,
         legal_refs=legal_refs,
     )
 
@@ -98,7 +114,7 @@ def test_coerce_cell_value_passes_string_through() -> None:
 
 
 def test_condition_non_negative_no_bounds_emits_greater_than_eq_zero() -> None:
-    constraint = _make_constraint(sign="non_negative", casilla="iva.compensacion-anteriores")
+    constraint = _make_constraint(sign="non_negative", casilla_id=_IVA_COMPENSACION_ANTERIORES_CASILLA)
     condition = _condition_for_constraint(constraint)
     assert condition is not None
     assert condition["type"] == "NUMBER_GREATER_THAN_EQ"
@@ -110,7 +126,7 @@ def test_condition_min_and_max_emit_number_between() -> None:
         sign="any",
         min_value=Decimal("10"),
         max_value=Decimal("100"),
-        casilla="iva.prorrata-porcentaje",
+        casilla_id=_IVA_PRORRATA_PORCENTAJE_CASILLA,
     )
     condition = _condition_for_constraint(constraint)
     assert condition is not None
@@ -127,7 +143,7 @@ def test_condition_non_negative_with_max_emits_number_between_at_zero_lower() ->
     constraint = _make_constraint(
         sign="non_negative",
         max_value=Decimal("100"),
-        casilla="iva.prorrata-porcentaje",
+        casilla_id=_IVA_PRORRATA_PORCENTAJE_CASILLA,
     )
     condition = _condition_for_constraint(constraint)
     assert condition is not None
@@ -137,7 +153,7 @@ def test_condition_non_negative_with_max_emits_number_between_at_zero_lower() ->
 
 
 def test_condition_non_positive_no_bounds_emits_less_than_eq_zero() -> None:
-    constraint = _make_constraint(sign="non_positive", casilla="iva.resultado-negativo")
+    constraint = _make_constraint(sign="non_positive", casilla_id=_IVA_RESULTADO_NEGATIVO_CASILLA)
     condition = _condition_for_constraint(constraint)
     assert condition is not None
     assert condition["type"] == "NUMBER_LESS_THAN_EQ"
@@ -147,7 +163,7 @@ def test_condition_non_positive_no_bounds_emits_less_than_eq_zero() -> None:
 def test_condition_unconstrained_returns_none() -> None:
     """sign='any' with no min / max → no data-validation rule needed."""
 
-    constraint = _make_constraint(sign="any", casilla="any.casilla")
+    constraint = _make_constraint(sign="any", casilla_id=_ANY_CASILLA)
     assert _condition_for_constraint(constraint) is None
 
 
@@ -159,11 +175,11 @@ def test_condition_unconstrained_returns_none() -> None:
 def test_input_message_renders_non_negative_sign() -> None:
     constraint = _make_constraint(
         sign="non_negative",
-        casilla="iva.compensacion-anteriores",
+        casilla_id=_IVA_COMPENSACION_ANTERIORES_CASILLA,
         legal_refs=("ley-37-1992:art-99",),
     )
     message = _input_message_for_constraint(constraint)
-    assert "iva.compensacion-anteriores" in message
+    assert _IVA_COMPENSACION_ANTERIORES_CASILLA in message
     assert "≥ 0" in message
     assert "ley-37-1992:art-99" in message
 
@@ -173,17 +189,17 @@ def test_input_message_renders_min_and_max_bounds() -> None:
         sign="any",
         min_value=Decimal("0"),
         max_value=Decimal("100"),
-        casilla="iva.prorrata-porcentaje",
+        casilla_id=_IVA_PRORRATA_PORCENTAJE_CASILLA,
         legal_refs=("ley-37-1992:art-104",),
     )
     message = _input_message_for_constraint(constraint)
-    assert "iva.prorrata-porcentaje" in message
+    assert _IVA_PRORRATA_PORCENTAJE_CASILLA in message
     assert "≥ 0" in message
     assert "≤ 100" in message
 
 
 def test_input_message_renders_any_when_no_bounds() -> None:
-    constraint = _make_constraint(sign="any", casilla="some.casilla")
+    constraint = _make_constraint(sign="any", casilla_id=_SOME_CASILLA)
     message = _input_message_for_constraint(constraint)
     assert "any" in message
 

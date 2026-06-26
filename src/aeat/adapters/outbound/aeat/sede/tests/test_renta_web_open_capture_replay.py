@@ -9,15 +9,12 @@ the unit-mode parity test
 picks it up automatically on subsequent runs.
 
 This is the capture half of the oracle-linkage gate. Each scenario
-declares the ``casilla_overrides`` it needs (e.g. ``{"0511": "2775.00"}``
-for the mínimo-aggregation case) and the ``scrape_casillas`` list of
-output casilla numbers the driver should record by navigating to each
-casilla's form page via the "Buscar casilla" dialog.
+declares canonical ``casilla.id`` keyed display overrides and scrape maps
+that point each casilla at the Renta WEB summary label or display number
+the driver should read.
 
-Once every chain-behaviour scenario carries a replay payload, the
-hygiene gate
-``test_every_renta_chain_scenario_has_renta_web_open_replay_payload``
-converts from soft to hard.
+Replay-mode parity loads the captured payloads through canonical
+``expected_by_casilla_id`` / ``observed_by_casilla_id`` maps.
 """
 
 from __future__ import annotations
@@ -28,13 +25,28 @@ from decimal import Decimal
 import pytest
 
 from ......core.resources import bundled_path
-from ......domain.calculations.registry import RentaWebOpenLivePayload, RentaWebOpenSyntheticProfile
+from ......domain.calculations.registry import (
+    CasillaId,
+    RentaWebOpenLivePayload,
+    RentaWebOpenSyntheticProfile,
+    validated_casilla_id,
+)
 from ......tests.live_gate import requires_live_enabled
 from .._renta_web_open import collect_renta_web_open_observation
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
 _REPLAY_DIR = bundled_path("corpus", "parity_replays", "renta_web_open")
+_RENTA_RESULTADO_CASILLA: CasillaId = validated_casilla_id("0670", surface="_RENTA_RESULTADO_CASILLA")
+_RENTA_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id(
+    "0610",
+    surface="_RENTA_CUOTA_DIFERENCIAL_CASILLA",
+)
+_RENTA_MINIMO_ESTATAL_CASILLA: CasillaId = validated_casilla_id("0519", surface="_RENTA_MINIMO_ESTATAL_CASILLA")
+_RENTA_MINIMO_AUTONOMICO_CASILLA: CasillaId = validated_casilla_id(
+    "0520",
+    surface="_RENTA_MINIMO_AUTONOMICO_CASILLA",
+)
 
 _BASELINE_EXPECTED: dict[str, Decimal] = {
     "Resultado de la declaración": Decimal("0.00"),
@@ -44,22 +56,41 @@ _BASELINE_EXPECTED: dict[str, Decimal] = {
 }
 
 # Maps the user-readable labels Renta WEB Open displays to the registry's
-# canonical casilla-number identifiers. Used to dual-key the persisted
-# replay payloads so the audit gates (which scan for casilla-id keys)
+# canonical casilla ids. Used to dual-key the persisted replay payloads
+# so the audit gates (which scan for casilla-id keys)
 # resolve coverage correctly without requiring label-aware lookups.
-_LABEL_TO_CASILLA: dict[str, str] = {
-    "Resultado de la declaración": "0670",
-    "Cuota diferencial": "0610",
-    "Mínimo personal y familiar. Parte estatal": "0519",
-    "Mínimo personal y familiar. Parte autonómica": "0520",
+_LABEL_TO_CASILLA: dict[str, CasillaId] = {
+    "Resultado de la declaración": _RENTA_RESULTADO_CASILLA,
+    "Cuota diferencial": _RENTA_CUOTA_DIFERENCIAL_CASILLA,
+    "Mínimo personal y familiar. Parte estatal": _RENTA_MINIMO_ESTATAL_CASILLA,
+    "Mínimo personal y familiar. Parte autonómica": _RENTA_MINIMO_AUTONOMICO_CASILLA,
 }
+_CASILLA_TO_LABEL: dict[CasillaId, str] = {casilla_id: label for label, casilla_id in _LABEL_TO_CASILLA.items()}
 
 
-async def _capture_baseline_observation() -> tuple[str, dict[str, str]]:
-    payload = RentaWebOpenLivePayload(timeout_ms=90_000).model_dump_json().encode("utf-8")
+def _casilla_id_from_payload(value: object, *, section_name: str) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"{section_name} key {value!r} is not a canonical casilla.id") from exc
+
+
+async def _capture_baseline_observation() -> tuple[str, dict[CasillaId, str]]:
+    payload = (
+        RentaWebOpenLivePayload(
+            timeout_ms=90_000,
+            summary_labels_by_casilla_id=_CASILLA_TO_LABEL,
+        )
+        .model_dump_json()
+        .encode("utf-8")
+    )
     observation = await collect_renta_web_open_observation(
         payload,
-        expected={label: str(value) for label, value in _BASELINE_EXPECTED.items()},
+        expected={
+            _LABEL_TO_CASILLA[label]: str(value)
+            for label, value in _BASELINE_EXPECTED.items()
+            if label in _LABEL_TO_CASILLA
+        },
     )
     return observation.raw_evidence_locator or "", observation.values
 
@@ -79,34 +110,35 @@ def test_capture_baseline_employee_replay_payload() -> None:
     _REPLAY_DIR.mkdir(parents=True, exist_ok=True)
     scenario_id = "modelo-100-2025-employee-default-minimo"
     payload_path = _REPLAY_DIR / f"{scenario_id}.json"
-    # Dual-key the payload: one block keyed by AEAT-readable labels (used by
-    # the oracle's `_compare_expected_field`) and one block keyed by registry
-    # casilla numbers (used by the per-formula coverage gate in
-    # test_schema_hygiene). The label-block carries the live Renta WEB Open
-    # observation; the casilla-block translates each label into its canonical
-    # casilla id via _LABEL_TO_CASILLA so audit metrics surface coverage at
-    # the registry level.
+    # Dual-key the payload: one block keyed by AEAT-readable labels for audit
+    # readability and one block keyed by registry casilla ids for the oracle
+    # matcher and coverage gates. The label block is legacy evidence only.
     expected_by_label = {label: str(value) for label, value in _BASELINE_EXPECTED.items()}
-    expected_by_casilla = {
+    expected_by_casilla_id = {
         _LABEL_TO_CASILLA[label]: str(value)
         for label, value in _BASELINE_EXPECTED.items()
         if label in _LABEL_TO_CASILLA
     }
-    observed_by_casilla = {
-        _LABEL_TO_CASILLA[label]: value for label, value in observed.items() if label in _LABEL_TO_CASILLA
+    observed_by_label = {
+        label: observed[casilla_id]
+        for casilla_id, label in _CASILLA_TO_LABEL.items()
+        if casilla_id in observed
     }
     document = {
         "expected": expected_by_label,
-        "observed": observed,
-        "expected_by_casilla": expected_by_casilla,
-        "observed_by_casilla": observed_by_casilla,
+        "observed": observed_by_label,
+        "expected_by_casilla_id": expected_by_casilla_id,
+        "observed_by_casilla_id": observed,
         "raw_evidence_locator": locator,
     }
     payload_path.write_text(json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8")
 
     assert payload_path.exists()
     persisted = json.loads(payload_path.read_text(encoding="utf-8"))
-    assert persisted["observed"] == observed
+    assert {
+        _casilla_id_from_payload(casilla_id, section_name="observed_by_casilla_id"): value
+        for casilla_id, value in persisted["observed_by_casilla_id"].items()
+    } == observed
 
 
 # Profile-variant scenarios that vary the synthetic identification
@@ -137,18 +169,19 @@ _PROFILE_VARIANT_CAPTURES: tuple[tuple[str, dict[str, str]], ...] = (
 )
 
 
-async def _capture_profile_variant_observation(profile_overrides: dict[str, str]) -> tuple[str, dict[str, str]]:
+async def _capture_profile_variant_observation(profile_overrides: dict[str, str]) -> tuple[str, dict[CasillaId, str]]:
     """Drive the live simulator with a varied synthetic profile."""
 
     payload = (
         RentaWebOpenLivePayload(
             timeout_ms=90_000,
             profile=RentaWebOpenSyntheticProfile.model_validate(profile_overrides),
+            summary_labels_by_casilla_id=_CASILLA_TO_LABEL,
         )
         .model_dump_json()
         .encode("utf-8")
     )
-    expected = dict.fromkeys(_BASELINE_EXPECTED, "0.00")
+    expected = dict.fromkeys(_CASILLA_TO_LABEL, "0.00")
     observation = await collect_renta_web_open_observation(payload, expected=expected)
     return observation.raw_evidence_locator or "", observation.values
 
@@ -184,22 +217,24 @@ def test_capture_profile_variant_replay_payload(
     # profile inputs. (The baseline default values in _BASELINE_EXPECTED
     # only apply to the default-profile capture; CCAA variants produce
     # different autonomic mínimos.)
-    expected_by_label = {label: _parse_spanish_decimal(value) for label, value in observed.items()}
-    expected_by_casilla = {
-        _LABEL_TO_CASILLA[label]: _parse_spanish_decimal(value)
-        for label, value in observed.items()
-        if label in _LABEL_TO_CASILLA
+    expected_by_label = {
+        label: _parse_spanish_decimal(observed[casilla_id])
+        for casilla_id, label in _CASILLA_TO_LABEL.items()
+        if casilla_id in observed
     }
-    observed_by_casilla = {
-        _LABEL_TO_CASILLA[label]: value for label, value in observed.items() if label in _LABEL_TO_CASILLA
+    expected_by_casilla_id = {
+        casilla_id: _parse_spanish_decimal(value) for casilla_id, value in observed.items()
+    }
+    observed_by_label = {
+        label: observed[casilla_id] for casilla_id, label in _CASILLA_TO_LABEL.items() if casilla_id in observed
     }
     document = {
         "scenario_id": scenario_id,
         "profile_overrides": profile_overrides,
         "expected": expected_by_label,
-        "observed": observed,
-        "expected_by_casilla": expected_by_casilla,
-        "observed_by_casilla": observed_by_casilla,
+        "observed": observed_by_label,
+        "expected_by_casilla_id": expected_by_casilla_id,
+        "observed_by_casilla_id": observed,
         "raw_evidence_locator": locator,
     }
     payload_path.write_text(json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8")

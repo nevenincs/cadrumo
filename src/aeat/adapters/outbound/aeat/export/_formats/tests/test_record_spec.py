@@ -14,6 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from .......core.external_constants import ISO_8859_1_ENCODING
+from .......domain.calculations.registry import CasillaId, validated_casilla_id
 from .._record_spec import (
     DateFmt,
     FieldKind,
@@ -27,6 +28,11 @@ from .._record_spec import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+_SEGMENT_QUALIFIED_BASE_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00552",
+    surface="_SEGMENT_QUALIFIED_BASE_CASILLA",
+)
+_DUPLICATE_FIELD_CASILLA: CasillaId = validated_casilla_id("01", surface="_DUPLICATE_FIELD_CASILLA")
 
 
 class TestRecordFieldSpec:
@@ -82,6 +88,17 @@ class TestRecordFieldSpec:
                     "unexpected_kwarg": "boom",
                 },
             )
+
+    def test_casilla_id_accepts_segment_qualified_canonical_id(self) -> None:
+        spec = record_field(
+            offset=1,
+            length=13,
+            field_id="LIQUIDACION_BASE",
+            casilla_id=_SEGMENT_QUALIFIED_BASE_CASILLA,
+            kind=FieldKind.CURRENCY,
+        )
+
+        assert spec.casilla_id == _SEGMENT_QUALIFIED_BASE_CASILLA
 
 
 class TestEncodeCurrency:
@@ -353,8 +370,20 @@ class TestValidateRecordSpecs:
 
     def test_duplicate_casilla_id_raises(self) -> None:
         bad = (
-            record_field(offset=1, length=13, field_id="A", casilla_id="01", kind=FieldKind.CURRENCY),
-            record_field(offset=14, length=13, field_id="B", casilla_id="01", kind=FieldKind.CURRENCY),
+            record_field(
+                offset=1,
+                length=13,
+                field_id="A",
+                casilla_id=_DUPLICATE_FIELD_CASILLA,
+                kind=FieldKind.CURRENCY,
+            ),
+            record_field(
+                offset=14,
+                length=13,
+                field_id="B",
+                casilla_id=_DUPLICATE_FIELD_CASILLA,
+                kind=FieldKind.CURRENCY,
+            ),
         )
         with pytest.raises(ValueError, match="duplicate casilla_id"):
             validate_record_specs(bad, total_length=26)

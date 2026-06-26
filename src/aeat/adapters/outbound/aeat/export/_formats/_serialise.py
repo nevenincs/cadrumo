@@ -24,6 +24,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
+from ......domain.calculations.registry import CasillaId
 from .._errors import AeatExportFormatError
 from ._record_spec import (
     FicheroBoeEncoding,
@@ -46,7 +47,7 @@ HeaderValue = str | date
 
 def serialise(
     *,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
     headers: Mapping[str, HeaderValue],
     specs: tuple[RecordFieldSpec, ...],
     encoding: FicheroBoeEncoding,
@@ -104,7 +105,7 @@ def _require_headers_present(headers: Mapping[str, HeaderValue], required_field_
 def _encode_field(
     spec: RecordFieldSpec,
     *,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
     headers: Mapping[str, HeaderValue],
     encoding: FicheroBoeEncoding,
 ) -> bytes:
@@ -134,7 +135,7 @@ def _encode_reserved_field(spec: RecordFieldSpec, *, encoding: FicheroBoeEncodin
 def _encode_currency_field(
     spec: RecordFieldSpec,
     *,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
     headers: Mapping[str, HeaderValue],
     encoding: FicheroBoeEncoding,
 ) -> bytes:
@@ -193,7 +194,7 @@ def _encode_text_field(
 
 def serialise_envelope(
     *,
-    casilla_values: Mapping[str, Decimal],
+    casilla_values: Mapping[CasillaId, Decimal],
     headers: Mapping[str, HeaderValue],
     segments: tuple[SegmentSpec, ...],
     encoding: FicheroBoeEncoding,

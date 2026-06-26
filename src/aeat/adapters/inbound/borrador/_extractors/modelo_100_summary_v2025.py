@@ -15,6 +15,7 @@ from typing import ClassVar
 
 from .....core import Modelo
 from .....core.time import now
+from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from ...pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
 from ...pdf._shared import ExtractedCasilla
 from ...pdf._utils import sha256_file, source_pdf_reference_path
@@ -86,7 +87,7 @@ class Modelo100ObservedV2025Extractor:
         observed, warnings = _observed_values(text)
         target_casilla_ids = {t.casilla_id for t in extraction_profile.target_casillas} if extraction_profile else None
         values: list[ExtractedCasilla] = []
-        matched_targets: set[str] = set()
+        matched_targets: set[CasillaId] = set()
         for casilla_id, value in sorted(observed.items()):
             if target_casilla_ids is not None and casilla_id not in target_casilla_ids:
                 continue
@@ -131,11 +132,14 @@ class Modelo100ObservedV2025Extractor:
         )
 
 
-def _observed_values(text: str) -> tuple[dict[str, Decimal], list[str]]:
-    observed: dict[str, Decimal] = {}
+def _observed_values(text: str) -> tuple[dict[CasillaId, Decimal], list[str]]:
+    observed: dict[CasillaId, Decimal] = {}
     warnings: list[str] = []
     for match in _CASILLA_VALUE_RE.finditer(text):
-        casilla_id = match.group("casilla_id")
+        casilla_id = validated_casilla_id(
+            match.group("casilla_id"),
+            surface="Modelo 100 borrador observed casilla id",
+        )
         if casilla_id in observed:
             warnings.append(f"casilla {casilla_id}: duplicate printed value ignored")
             continue

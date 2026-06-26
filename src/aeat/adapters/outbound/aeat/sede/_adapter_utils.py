@@ -27,7 +27,7 @@ from pydantic import BaseModel
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ._errors import SedeFailureMode, SedeParseError
+from ._errors import BrowserAdapterTypeError, SedeFailureMode, SedeParseError
 
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
@@ -83,6 +83,18 @@ def assert_query_browser_action_for(policy: RemoteStateGuardPolicy, action: str)
         action: Browser action label to validate (e.g. ``"open-groi-form"``).
     """
     assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action=action))
+
+
+def require_playwright_page(raw_page: object) -> Page:
+    """Return ``raw_page`` as a Playwright ``Page`` or raise a typed adapter error."""
+    from playwright.async_api import Page as _Page
+
+    if not isinstance(raw_page, _Page):
+        raise BrowserAdapterTypeError(
+            f"BrowserContext.new_page() did not return a Playwright Page; got {type(raw_page)}",
+            context={"actual_type": type(raw_page).__name__},
+        )
+    return raw_page
 
 
 def make_locate_helper(
@@ -235,4 +247,5 @@ __all__ = [
     "make_locate_helper",
     "normalize_response_text",
     "registry_failure_message",
+    "require_playwright_page",
 ]

@@ -6,6 +6,7 @@ import pytest
 
 from ._verification_chain_support import (
     FIXTURES_DIR,
+    CasillaId,
     Decimal,
     DeclaracionParseError,
     RegistryValidationError,
@@ -13,9 +14,80 @@ from ._verification_chain_support import (
     calculate_registry_snapshot,
     date,
     parse_declaracion,
+    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
+
+
+def _casilla_ids(*values: object) -> frozenset[CasillaId]:
+    return frozenset(_casilla_id(value) for value in values)
+
+
+_M100_INGRESOS_EXPLOTACION_CASILLA: CasillaId = _casilla_id("0171")
+_M100_BASE_LIQUIDABLE_GENERAL_CASILLA: CasillaId = _casilla_id("0505")
+_M100_CUOTA_ESTATAL_CASILLA: CasillaId = _casilla_id("0545")
+_M100_CUOTA_AUTONOMICA_CASILLA: CasillaId = _casilla_id("0546")
+_EXPECTED_CASILLAS_M100: frozenset[CasillaId] = _casilla_ids(
+    "0171",
+    "0180",
+    "0218",
+    "0223",
+    "0224",
+    "0226",
+    "0231",
+    "0235",
+    "0432",
+    "0500",
+    "0505",
+    "0510",
+    "0545",
+    "0546",
+    "0585",
+    "0586",
+    "0587",
+    "0595",
+    "0610",
+    "0670",
+)
+_M100_COMPUTED_CASILLAS: frozenset[CasillaId] = _casilla_ids(
+    "0180",
+    "0218",
+    "0223",
+    "0224",
+    "0226",
+    "0231",
+    "0235",
+    "0432",
+    "0500",
+    "0510",
+    "0545",
+    "0546",
+    "0585",
+    "0586",
+)
+_M100_CLOSURE_ASSERTION_CASILLAS: tuple[CasillaId, ...] = (
+    _M100_CUOTA_ESTATAL_CASILLA,
+    _M100_CUOTA_AUTONOMICA_CASILLA,
+    _casilla_id("0585"),
+    _casilla_id("0586"),
+)
+_M349_SUMMARY_CASILLAS: frozenset[CasillaId] = _casilla_ids(
+    "decl.numero-operadores",
+    "decl.importe-operaciones",
+    "decl.numero-rectificaciones",
+    "decl.importe-rectificaciones",
+)
+_DECL_EJERCICIO_CASILLA: CasillaId = _casilla_id("decl.ejercicio")
+_DECL_PERIODO_CASILLA: CasillaId = _casilla_id("decl.periodo")
+_DECL_EVENT_KIND_CASILLA: CasillaId = _casilla_id("decl.event-kind")
 
 
 def test_verification_chain_m100_parser_extracts_declaracion_pdf_casillas() -> None:
@@ -37,31 +109,6 @@ def test_verification_chain_m100_parser_extracts_declaracion_pdf_casillas() -> N
     of any closure impossible. See test_verification_chain_m100_engine_corpus_limited
     for the empirical confirmation of the sanitisation artefact.
     """
-    _EXPECTED_CASILLAS_M100 = frozenset(
-        {
-            "0171",
-            "0180",
-            "0218",
-            "0223",
-            "0224",
-            "0226",
-            "0231",
-            "0235",
-            "0432",
-            "0500",
-            "0505",
-            "0510",
-            "0545",
-            "0546",
-            "0585",
-            "0586",
-            "0587",
-            "0595",
-            "0610",
-            "0670",
-        },
-    )
-
     for year in (2021, 2022, 2023):
         pdf_path = FIXTURES_DIR / "justificantes" / "100" / f"{year}-0A.pdf"
         try:
@@ -138,27 +185,8 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     #   0510 = 0460 + 0506 + 0507; 0545 = 0532 + 0540 (tax bracket chain from 0505);
     #   0546 = 0533 + 0541 (autonomic bracket chain); 0585 = 0570 + deductions;
     #   0586 = 0571 + autonomic deductions.
-    _COMPUTED_M100 = frozenset(
-        {
-            "0180",
-            "0218",
-            "0223",
-            "0224",
-            "0226",
-            "0231",
-            "0235",
-            "0432",
-            "0500",
-            "0510",
-            "0545",
-            "0546",
-            "0585",
-            "0586",
-        },
-    )
-
-    inputs: dict[str, Decimal] = {
-        cid: val for cid, val in extracted.items() if cid not in _COMPUTED_M100 and isinstance(val, Decimal)
+    inputs: dict[CasillaId, Decimal] = {
+        cid: val for cid, val in extracted.items() if cid not in _M100_COMPUTED_CASILLAS and isinstance(val, Decimal)
     }
 
     snapshot = _registry_snapshot("100", year, "0A")
@@ -196,7 +224,7 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     engine_values = dict(result.values)
 
     # Engine MUST produce computed closure casillas: formula chain structural check.
-    for closure_id in ("0545", "0546", "0585", "0586"):
+    for closure_id in _M100_CLOSURE_ASSERTION_CASILLAS:
         assert engine_values.get(closure_id) is not None, (
             f"FORMULA-MISMATCH [M100/{year}-0A corpus-limited]: casilla {closure_id!r} absent "
             f"from engine result — formula evaluation order issue."
@@ -206,14 +234,14 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     # extracted values — this is the empirical CORPUS-LIMITED confirmation.
     # The engine computes from real tax bracket tables; the corpus has garbage values
     # (sanitised amount ~1,001,000 with appended box numbers).
-    engine_0545 = engine_values["0545"]
-    engine_0546 = engine_values["0546"]
-    extracted_0545 = extracted.get("0545")
-    extracted_0546 = extracted.get("0546")
+    engine_0545 = engine_values[_M100_CUOTA_ESTATAL_CASILLA]
+    engine_0546 = engine_values[_M100_CUOTA_AUTONOMICA_CASILLA]
+    extracted_0545 = extracted.get(_M100_CUOTA_ESTATAL_CASILLA)
+    extracted_0546 = extracted.get(_M100_CUOTA_AUTONOMICA_CASILLA)
 
     assert isinstance(engine_0545, Decimal) and engine_0545 > Decimal("0"), (
         f"CORPUS-LIMITED [M100/{year}-0A]: engine 0545 should be positive from bracket "
-        f"lookup on 0505={inputs.get('0505')!r}, got {engine_0545!r}"
+        f"lookup on 0505={inputs.get(_M100_BASE_LIQUIDABLE_GENERAL_CASILLA)!r}, got {engine_0545!r}"
     )
     assert engine_0545 != extracted_0545, (
         f"CORPUS-LIMITED [M100/{year}-0A]: engine 0545={engine_0545!r} == extracted "
@@ -226,9 +254,12 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
     )
 
     # Leaf input 0171 must be extracted by the declaracion_pdf profile.
-    assert "0171" in extracted, "PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' absent from extracted values."
-    assert isinstance(extracted["0171"], Decimal), (
-        f"PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' is not Decimal: {type(extracted['0171']).__name__!r}"
+    assert _M100_INGRESOS_EXPLOTACION_CASILLA in extracted, (
+        "PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' absent from extracted values."
+    )
+    assert isinstance(extracted[_M100_INGRESOS_EXPLOTACION_CASILLA], Decimal), (
+        "PARSER-GAP [M100/2021-0A corpus-limited]: casilla '0171' is not Decimal: "
+        f"{type(extracted[_M100_INGRESOS_EXPLOTACION_CASILLA]).__name__!r}"
     )
 
 
@@ -274,12 +305,9 @@ def test_verification_chain_m349_parser_extracts_declaracion_pdf_casillas() -> N
         pytest.fail(f"PARSER-GAP [M349/2024-1T]: parse_declaracion raised.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert set(extracted.keys()) == {
-        "decl.numero-operadores",
-        "decl.importe-operaciones",
-        "decl.numero-rectificaciones",
-        "decl.importe-rectificaciones",
-    }, f"PARSER-GAP [M349/2024-1T]: unexpected casilla set.\n  got: {sorted(extracted)}"
+    assert set(extracted.keys()) == _M349_SUMMARY_CASILLAS, (
+        f"PARSER-GAP [M349/2024-1T]: unexpected casilla set.\n  got: {sorted(extracted)}"
+    )
     for casilla_id, value in extracted.items():
         assert isinstance(value, Decimal), (
             f"PARSER-GAP [M349/2024-1T]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r} = {value!r}"
@@ -311,11 +339,12 @@ def test_verification_chain_m184_parser_extracts_declaracion_pdf_casillas() -> N
         pytest.fail(f"PARSER-GAP [M184/2024-0A]: parse_declaracion raised.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert "decl.ejercicio" in extracted, (
-        f"PARSER-GAP [M184/2024-0A]: 'decl.ejercicio' not extracted.\n  got: {sorted(extracted)}"
+    assert _DECL_EJERCICIO_CASILLA in extracted, (
+        f"PARSER-GAP [M184/2024-0A]: {_DECL_EJERCICIO_CASILLA!r} not extracted.\n  got: {sorted(extracted)}"
     )
-    assert isinstance(extracted["decl.ejercicio"], Decimal), (
-        f"PARSER-GAP [M184/2024-0A]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
+    assert isinstance(extracted[_DECL_EJERCICIO_CASILLA], Decimal), (
+        f"PARSER-GAP [M184/2024-0A]: {_DECL_EJERCICIO_CASILLA!r} not Decimal: "
+        f"{type(extracted[_DECL_EJERCICIO_CASILLA]).__name__!r}"
     )
 
 
@@ -344,11 +373,12 @@ def test_verification_chain_m347_parser_extracts_declaracion_pdf_casillas() -> N
         pytest.fail(f"PARSER-GAP [M347/2024-0A]: parse_declaracion raised.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert "decl.ejercicio" in extracted, (
-        f"PARSER-GAP [M347/2024-0A]: 'decl.ejercicio' not extracted.\n  got: {sorted(extracted)}"
+    assert _DECL_EJERCICIO_CASILLA in extracted, (
+        f"PARSER-GAP [M347/2024-0A]: {_DECL_EJERCICIO_CASILLA!r} not extracted.\n  got: {sorted(extracted)}"
     )
-    assert isinstance(extracted["decl.ejercicio"], Decimal), (
-        f"PARSER-GAP [M347/2024-0A]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
+    assert isinstance(extracted[_DECL_EJERCICIO_CASILLA], Decimal), (
+        f"PARSER-GAP [M347/2024-0A]: {_DECL_EJERCICIO_CASILLA!r} not Decimal: "
+        f"{type(extracted[_DECL_EJERCICIO_CASILLA]).__name__!r}"
     )
 
 
@@ -377,11 +407,12 @@ def test_verification_chain_m720_parser_extracts_declaracion_pdf_casillas() -> N
         pytest.fail(f"PARSER-GAP [M720/2024-0A]: parse_declaracion raised.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert "decl.ejercicio" in extracted, (
-        f"PARSER-GAP [M720/2024-0A]: 'decl.ejercicio' not extracted.\n  got: {sorted(extracted)}"
+    assert _DECL_EJERCICIO_CASILLA in extracted, (
+        f"PARSER-GAP [M720/2024-0A]: {_DECL_EJERCICIO_CASILLA!r} not extracted.\n  got: {sorted(extracted)}"
     )
-    assert isinstance(extracted["decl.ejercicio"], Decimal), (
-        f"PARSER-GAP [M720/2024-0A]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
+    assert isinstance(extracted[_DECL_EJERCICIO_CASILLA], Decimal), (
+        f"PARSER-GAP [M720/2024-0A]: {_DECL_EJERCICIO_CASILLA!r} not Decimal: "
+        f"{type(extracted[_DECL_EJERCICIO_CASILLA]).__name__!r}"
     )
 
 
@@ -411,11 +442,12 @@ def test_verification_chain_m840_parser_extracts_declaracion_pdf_casillas() -> N
         pytest.fail(f"PARSER-GAP [M840/2024-0A]: parse_declaracion raised.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert "decl.ejercicio" in extracted, (
-        f"PARSER-GAP [M840/2024-0A]: 'decl.ejercicio' not extracted.\n  got: {sorted(extracted)}"
+    assert _DECL_EJERCICIO_CASILLA in extracted, (
+        f"PARSER-GAP [M840/2024-0A]: {_DECL_EJERCICIO_CASILLA!r} not extracted.\n  got: {sorted(extracted)}"
     )
-    assert isinstance(extracted["decl.ejercicio"], Decimal), (
-        f"PARSER-GAP [M840/2024-0A]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
+    assert isinstance(extracted[_DECL_EJERCICIO_CASILLA], Decimal), (
+        f"PARSER-GAP [M840/2024-0A]: {_DECL_EJERCICIO_CASILLA!r} not Decimal: "
+        f"{type(extracted[_DECL_EJERCICIO_CASILLA]).__name__!r}"
     )
 
 
@@ -444,14 +476,15 @@ def test_verification_chain_m369_parser_extracts_declaracion_pdf_casillas() -> N
         pytest.fail(f"PARSER-GAP [M369/2024-1T]: parse_declaracion raised.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert "decl.ejercicio" in extracted, (
-        f"PARSER-GAP [M369/2024-1T]: 'decl.ejercicio' not extracted.\n  got: {sorted(extracted)}"
+    assert _DECL_EJERCICIO_CASILLA in extracted, (
+        f"PARSER-GAP [M369/2024-1T]: {_DECL_EJERCICIO_CASILLA!r} not extracted.\n  got: {sorted(extracted)}"
     )
-    assert isinstance(extracted["decl.ejercicio"], Decimal), (
-        f"PARSER-GAP [M369/2024-1T]: 'decl.ejercicio' not Decimal: {type(extracted['decl.ejercicio']).__name__!r}"
+    assert isinstance(extracted[_DECL_EJERCICIO_CASILLA], Decimal), (
+        f"PARSER-GAP [M369/2024-1T]: {_DECL_EJERCICIO_CASILLA!r} not Decimal: "
+        f"{type(extracted[_DECL_EJERCICIO_CASILLA]).__name__!r}"
     )
-    assert "decl.periodo" in extracted, (
-        f"PARSER-GAP [M369/2024-1T]: 'decl.periodo' not extracted.\n  got: {sorted(extracted)}"
+    assert _DECL_PERIODO_CASILLA in extracted, (
+        f"PARSER-GAP [M369/2024-1T]: {_DECL_PERIODO_CASILLA!r} not extracted.\n  got: {sorted(extracted)}"
     )
 
 
@@ -489,12 +522,11 @@ def test_verification_chain_m036_parser_extracts_event_kind_casilla() -> None:
         pytest.fail(f"PARSER-GAP [M036/2025-alta]: parse_declaracion raised.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert "decl.event-kind" in extracted, (
-        f"PARSER-GAP [M036/2025-alta]: 'decl.event-kind' not extracted.\n  got: {sorted(extracted)}"
+    assert _DECL_EVENT_KIND_CASILLA in extracted, (
+        f"PARSER-GAP [M036/2025-alta]: {_DECL_EVENT_KIND_CASILLA!r} not extracted.\n  got: {sorted(extracted)}"
     )
-    assert isinstance(extracted["decl.event-kind"], str), (
-        f"PARSER-GAP [M036/2025-alta]: 'decl.event-kind' not str: {type(extracted['decl.event-kind']).__name__!r}"
+    event_kind = extracted[_DECL_EVENT_KIND_CASILLA]
+    assert isinstance(event_kind, str), (
+        f"PARSER-GAP [M036/2025-alta]: {_DECL_EVENT_KIND_CASILLA!r} not str: {type(event_kind).__name__!r}"
     )
-    assert extracted["decl.event-kind"] == "Alta", (
-        f"PARSER-GAP [M036/2025-alta]: expected 'Alta', got {extracted['decl.event-kind']!r}"
-    )
+    assert event_kind == "Alta", f"PARSER-GAP [M036/2025-alta]: expected 'Alta', got {event_kind!r}"
