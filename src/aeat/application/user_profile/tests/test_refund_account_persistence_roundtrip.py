@@ -72,7 +72,7 @@ _IBAN_VALUE = "ES9121000418450200051332"
 # so the full foreign-bank block is exercised.
 #
 # ``sepa_marca`` is intentionally NOT a persisted operator fact: per the
-# ADR it is DERIVED at export from the account country (España / UE SEPA
+# decision record it is DERIVED at export from the account country (España / UE SEPA
 # / Resto Países), not entered or stored. Its schema field carries only
 # the DID export-header mapping the P02 composer writes into. Persisting
 # it here is therefore out of scope; the stored set is the genuine
