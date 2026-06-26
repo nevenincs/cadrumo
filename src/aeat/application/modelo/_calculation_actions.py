@@ -127,9 +127,13 @@ resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva
 #                                      sibling of the income resolver)
 #   ledger_oss_aggregation           — OssIossLedgerSourceResolver (S09)
 #   retenciones_aggregation          — RetencionesAggregationSourceResolver (RET-1):
-#                                      materialises the M180/190/193 distinct
+#                                      materialises the M180/M193 distinct
 #                                      perceptor-NIF count from the dedicated
 #                                      per-perceptor retención store
+#   withholding                      — WithholdingSourceResolver (#28):
+#                                      materialises the M190 distinct percepción
+#                                      count from the dedicated per-perceptor-clave
+#                                      withholding store
 #   collectible_invoice              — InvoiceCatalogueSourceResolver (S09)
 #   payable_invoice                  — InvoiceCatalogueSourceResolver (S09, declared no
 #                                      registry binding yet — live capacity headroom)
@@ -143,7 +147,7 @@ resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva
 #   manual_input                     — operator-supplied, never enrolled in resolver
 #
 # DEFERRED — no resolver yet; emit advisory instead of silently blanking (S10):
-#   withholding, atribucion_member, related_party_operation, foreign_asset, refund_operation
+#   atribucion_member, related_party_operation, foreign_asset, refund_operation
 _BUCKET_AGGREGATION_OWNED_SOURCES: frozenset[BindingSourceKind] = frozenset(
     {
         BindingSourceKind.LEDGER_IVA_AGGREGATION,
@@ -152,6 +156,7 @@ _BUCKET_AGGREGATION_OWNED_SOURCES: frozenset[BindingSourceKind] = frozenset(
         BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
         BindingSourceKind.LEDGER_OSS_AGGREGATION,
         BindingSourceKind.RETENCIONES_AGGREGATION,
+        BindingSourceKind.WITHHOLDING,
         BindingSourceKind.COLLECTIBLE_INVOICE,
         BindingSourceKind.PAYABLE_INVOICE,
         BindingSourceKind.PREVIOUS_FILING,
@@ -548,6 +553,7 @@ def _resolve_bucket_source_mesh(
         LedgerRentaIncomeAggregationSourceResolver,
         OssIossLedgerSourceResolver,
         RetencionesAggregationSourceResolver,
+        WithholdingSourceResolver,
         collect_unhandled_source_diagnostics,
         merge_source_resolutions,
     )
@@ -583,12 +589,17 @@ def _resolve_bucket_source_mesh(
             # pre-classified callers can still pass candidates directly through
             # the resolver constructor.
             OssIossLedgerSourceResolver(invoice_repository=invoice_repository).resolve(context),
-            # M180/190/193 distinct perceptor-NIF count (retenciones_aggregation):
+            # M180/M193 distinct perceptor-NIF count (retenciones_aggregation):
             # reads the dedicated per-perceptor retención store and materialises the
             # "número total de perceptores" box via the validated distinct-count
             # primitive — replacing the wrong sum-of-quarterly-M115-counts relation
             # (RET-1). Empty store on a declaring revision surfaces a no-silent advisory.
             RetencionesAggregationSourceResolver().resolve(context),
+            # M190 distinct percepción count (withholding): reads the dedicated
+            # per-perceptor-clave withholding store and materialises scalar
+            # withholding bindings. Empty store on a declaring revision surfaces
+            # a no-silent advisory while still materialising an explicit zero.
+            WithholdingSourceResolver().resolve(context),
             # M349 collectible / payable invoices (collectible_invoice,
             # payable_invoice).  Loads the encrypted invoice catalogue and resolves
             # binding values for intra-community transactions in scope.
