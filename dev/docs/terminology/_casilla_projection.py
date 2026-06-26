@@ -4,8 +4,9 @@ Projects every casilla of every modelo revision -- read through the
 validated registry authority (never raw TOML, per
 ``aeat-registry-authority-flow``) -- into a strict
 :class:`~dev.docs.terminology._search_record.CasillaSearchRecord`, then
-deduplicates across revisions by the ``(modelo, number, segmento)``
-identity.
+deduplicates across revisions by the canonical ``(modelo, casilla.id)``
+identity. ``number`` and ``segmento`` are projected as AEAT metadata only,
+never as the search-record identity.
 
 The calculation-grounding contract binds this compiler: EVERY casilla is
 emitted (input, bound, and computed alike -- never dropped), and each
@@ -90,16 +91,16 @@ def project_casilla_search_records(
 
     Returns:
         A ``(records, stats)`` pair: the deduplicated records sorted by
-        ``(modelo, number, segmento)`` and the raw-vs-deduplicated counts.
+        ``(modelo, casilla_id)`` and the raw-vs-deduplicated counts.
     """
     resolved = authority if authority is not None else bundled_authority()
     raw_rows = 0
-    by_key: dict[tuple[str, str, str], _RevisionCasilla] = {}
-    sources: dict[tuple[str, str, str], list[_RevisionCasilla]] = {}
+    by_key: dict[tuple[str, str], _RevisionCasilla] = {}
+    sources: dict[tuple[str, str], list[_RevisionCasilla]] = {}
 
     for entry in _walk_revision_casillas(resolved.modelos):
         raw_rows += 1
-        key = (entry.modelo.value, entry.casilla.number, entry.casilla.segmento or "")
+        key = (entry.modelo.value, entry.casilla.id)
         sources.setdefault(key, []).append(entry)
         incumbent = by_key.get(key)
         if incumbent is None or _is_later(entry, incumbent):
@@ -136,10 +137,10 @@ def project_modelo_casillas(
     """
     resolved = authority if authority is not None else bundled_authority()
     definition = resolved.modelo(modelo.value)
-    by_key: dict[tuple[str, str, str], _RevisionCasilla] = {}
-    sources: dict[tuple[str, str, str], list[_RevisionCasilla]] = {}
+    by_key: dict[tuple[str, str], _RevisionCasilla] = {}
+    sources: dict[tuple[str, str], list[_RevisionCasilla]] = {}
     for entry in _walk_modelo_casillas(modelo, definition):
-        key = (entry.modelo.value, entry.casilla.number, entry.casilla.segmento or "")
+        key = (entry.modelo.value, entry.casilla.id)
         sources.setdefault(key, []).append(entry)
         incumbent = by_key.get(key)
         if incumbent is None or _is_later(entry, incumbent):
@@ -192,6 +193,7 @@ def _build_record(entry: _RevisionCasilla, source_revisions: tuple[str, ...]) ->
         kind=SearchRecordKind.CASILLA,
         descriptions=descriptions,
         modelo=entry.modelo,
+        casilla_id=casilla.id,
         number=casilla.number,
         segmento=casilla.segmento,
         section=tuple(casilla.section),

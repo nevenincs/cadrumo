@@ -33,6 +33,7 @@ import pytest
 
 from aeat.core.config import PROJECT_ROOT
 from aeat.domain.calculations.registry import bundled_authority
+from dev.docs.terminology._search_record import SearchRecordKind
 from dev.docs.terminology._sweep import SweepResult, enumerate_query_vocabulary
 
 from ...terminology_handbook import load_terminology_handbook
@@ -40,6 +41,7 @@ from ...terminology_handbook import load_terminology_handbook
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _RELEVANCE_PATH = PROJECT_ROOT / "src" / "aeat" / "_data" / "terminology" / "relevance" / "relevance.json"
+_PARSEABLE_CASILLA_RECORD_ID_RE = re.compile(r"^casilla:[^:]+:.+")
 
 
 class _BuildSurfaces(TypedDict):
@@ -47,6 +49,7 @@ class _BuildSurfaces(TypedDict):
 
     concept_ids: set[str]
     casilla_modelos: set[str]
+    casilla_targets_by_record_id: dict[str, str]
     permalinks: set[str]
 
 
@@ -111,9 +114,14 @@ def build_surfaces() -> _BuildSurfaces:
     # Casilla modelos: every modelo with projected casilla records (read from
     # the same projection the resolver indexes, via the public projection API).
     from dev.docs.terminology._casilla_projection import project_casilla_search_records
+    from dev.docs.terminology._unified_record import to_search_record
 
     casilla_records, _stats = project_casilla_search_records(authority)
-    casilla_modelos = {record.modelo.value for record in casilla_records}
+    unified_casillas = tuple(to_search_record(record) for record in casilla_records)
+    casilla_modelos = {
+        unified.metadata.modelo for unified in unified_casillas if unified.metadata.modelo is not None
+    }
+    casilla_targets_by_record_id = {unified.id: unified.target for unified in unified_casillas}
     # Legal permalinks: every legal-catalogue permalink.
     permalinks = {
         str(entry.permalink) for entry in authority.catalogues.legal.values() if getattr(entry, "permalink", None)
@@ -121,6 +129,7 @@ def build_surfaces() -> _BuildSurfaces:
     return {
         "concept_ids": concept_ids,
         "casilla_modelos": casilla_modelos,
+        "casilla_targets_by_record_id": casilla_targets_by_record_id,
         "permalinks": permalinks,
     }
 
@@ -173,6 +182,8 @@ def _docs_source_exists(rel: str) -> bool:
     # The built page comes from a .md or .rst source (or is a generated cli/api page).
     if (docs / f"{rel}.md").is_file() or (docs / f"{rel}.rst").is_file():
         return True
+    if (docs / rel / "index.md").is_file() or (docs / rel / "index.rst").is_file():
+        return True
     # Generated surfaces (cli/, api/) are produced at build time from the live
     # tree; treat their presence as resolvable when the parent generator exists.
     return rel.startswith(("cli/", "api/"))
@@ -195,6 +206,42 @@ def test_every_target_resolves_in_the_current_build(
                 unresolved.append(f"{mapping.query!r} -> {target.record_id} -> {target.target}")
     assert not unresolved, "relevance targets that no longer resolve in the build (re-sweep needed):\n" + "\n".join(
         f"  - {u}" for u in sorted(set(unresolved))[:40]
+    )
+
+
+def test_casilla_targets_use_current_canonical_record_ids(
+    relevance: SweepResult,
+    build_surfaces: _BuildSurfaces,
+) -> None:
+    """Every shipped casilla target must match the current opaque projection.
+
+    The search record id is an opaque dedupe token. A shipped casilla target
+    must not encode a second parseable ``modelo:casilla`` reference; the
+    canonical identity is carried only by the projected record metadata.
+    """
+    projected = build_surfaces["casilla_targets_by_record_id"]
+    stale: list[str] = []
+    parseable: list[str] = []
+    for mapping in relevance.mappings:
+        for target in mapping.targets:
+            if target.kind is not SearchRecordKind.CASILLA:
+                continue
+            if _PARSEABLE_CASILLA_RECORD_ID_RE.fullmatch(target.record_id):
+                parseable.append(f"{mapping.query!r} -> {target.record_id}")
+            expected_target = projected.get(target.record_id)
+            if expected_target is None:
+                stale.append(f"{mapping.query!r} -> {target.record_id} is not a current projected casilla record id")
+                continue
+            if target.target != expected_target:
+                stale.append(
+                    f"{mapping.query!r} -> {target.record_id} target {target.target!r}, "
+                    f"expected {expected_target!r}",
+                )
+    assert not parseable, "casilla relevance record ids must be opaque, not parseable references:\n" + "\n".join(
+        f"  - {row}" for row in parseable[:40]
+    )
+    assert not stale, "casilla relevance targets are not canonical current casilla.id projections:\n" + "\n".join(
+        f"  - {row}" for row in stale[:40]
     )
 
 

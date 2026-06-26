@@ -54,7 +54,10 @@ _ConceptId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=2, max_length=64, pattern=r"^[a-z][a-z0-9-]*[a-z0-9]$"),
 ]
-# Typed reference into a registry entity, e.g. ``modelo:303`` / ``casilla:303:00440``.
+# Typed reference into a source entity, e.g. ``modelo:303`` or
+# ``iva-category:domestic_general_21``. Casilla references are deliberately not
+# accepted as scalar domain refs; a future casilla link must carry structured
+# ``modelo_id`` and ``casilla_id`` fields instead of another combined notation.
 _DomainRef = Annotated[
     str,
     StringConstraints(
@@ -287,6 +290,17 @@ class ConceptRecord(BaseModel):
     @classmethod
     def _parse_lifecycle(cls, value: object) -> object:
         return _coerce_str_enum(ConceptLifecycle, value)
+
+    @field_validator("domain_refs")
+    @classmethod
+    def _reject_scalar_casilla_refs(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        casilla_refs = tuple(ref for ref in value if ref.startswith("casilla:"))
+        if casilla_refs:
+            raise TerminologyValidationError(
+                "concept domain_refs must not use scalar casilla references; "
+                f"use a structured modelo_id/casilla_id surface instead: {casilla_refs!r}",
+            )
+        return value
 
     @model_validator(mode="after")
     def _validate_concept(self) -> Self:

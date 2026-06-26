@@ -20,10 +20,12 @@ hit, and a code hit rank comparably in the unified index.
 from __future__ import annotations
 
 from enum import StrEnum
+from hashlib import sha256
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from aeat.core.external_constants import OutputLanguage
+from aeat.domain.calculations.registry import CasillaId, ModeloId
 
 from ._casilla_projection import CasillaSearchRecord
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord
@@ -35,6 +37,7 @@ __all__ = [
     "RankingTier",
     "SearchRecord",
     "SearchRecordMetadata",
+    "casilla_search_record_id",
     "kind_base_weight",
     "normalise_ranking_weight",
     "to_search_record",
@@ -113,9 +116,10 @@ class SearchRecordMetadata(BaseModel):
 
     Every field is optional: a record populates only the fields its kind
     provides. Concepts carry ``concept_id`` / ``domain`` / ``lifecycle``;
-    casillas carry ``modelo`` / ``number`` / ``segmento`` / ``legal_refs`` /
-    ``source_refs`` / ``source_revisions``; CLI records carry ``command_path``
-    / ``registry_key`` / ``option_names``. This keeps the unified payload one
+    casillas carry canonical ``modelo`` / ``casilla_id`` plus display/export
+    metadata ``number`` / ``segmento`` and provenance ``legal_refs`` /
+    ``source_refs`` / ``source_revisions``; CLI records carry ``command_path`` /
+    ``registry_key`` / ``option_names``. This keeps the unified payload one
     shape while preserving the provenance the calculation-grounding contract
     requires (legal/source refs survive into the unified record).
     """
@@ -127,7 +131,8 @@ class SearchRecordMetadata(BaseModel):
     domain: str | None = Field(default=None, min_length=1, max_length=64)
     lifecycle: str | None = Field(default=None, min_length=1, max_length=32)
     # Casilla fields.
-    modelo: str | None = Field(default=None, min_length=1, max_length=8)
+    modelo: ModeloId | None = None
+    casilla_id: CasillaId | None = None
     number: str | None = Field(default=None, min_length=1, max_length=160)
     segmento: str | None = Field(default=None, min_length=1, max_length=32)
     source_revisions: tuple[str, ...] = ()
@@ -145,8 +150,10 @@ class SearchRecord(BaseModel):
 
     This is the shape the Pagefind ``addCustomRecord`` injection consumes:
     every projected kind funnels into it via :func:`to_search_record`, so the
-    index payload is uniform. ``id`` is stable and unique within a build;
-    ``descriptions`` is the four-language card text (``es`` invariant);
+    index payload is uniform. ``id`` is stable, unique within a build, and
+    opaque for casilla records; casilla consumers must use typed
+    ``metadata.modelo`` / ``metadata.casilla_id`` instead of parsing the record
+    id. ``descriptions`` is the four-language card text (``es`` invariant);
     ``target`` is the URL/anchor a palette result jumps to; ``ranking_weight``
     is normalised across kinds; ``metadata`` carries the typed kind-specific
     provenance.
@@ -206,6 +213,18 @@ def to_search_record(record: KindRecord, *, sweep_score: float | None = None) ->
     return _from_cli_option(record, sweep_score)
 
 
+def casilla_search_record_id(modelo: ModeloId, casilla_id: CasillaId) -> str:
+    """Return the opaque search-record id for one ``(modelo, casilla.id)`` pair.
+
+    The metadata fields are the only canonical casilla reference surface. The
+    record id exists for search-result dedupe and committed relevance stability,
+    so it must not create a second parseable ``modelo:casilla`` notation.
+    """
+
+    digest = sha256(f"{modelo}\0{casilla_id}".encode()).hexdigest()[:24]
+    return f"casilla-record:{digest}"
+
+
 def _from_concept(record: ConceptCardRecord, sweep_score: float | None) -> SearchRecord:
     title = _preferred_label(record) or record.concept_id
     aliases: list[str] = []
@@ -238,19 +257,18 @@ def _from_concept(record: ConceptCardRecord, sweep_score: float | None) -> Searc
 
 
 def _from_casilla(record: CasillaSearchRecord, sweep_score: float | None) -> SearchRecord:
-    segmento = record.segmento or ""
-    suffix = f":{segmento}" if segmento else ""
-    title = f"Modelo {record.modelo.value} · casilla {record.number}"
+    title = f"Modelo {record.modelo.value} · casilla {record.casilla_id}"
     return SearchRecord(
-        id=f"casilla:{record.modelo.value}:{record.number}{suffix}",
+        id=casilla_search_record_id(record.modelo.value, record.casilla_id),
         kind=SearchRecordKind.CASILLA,
         tier=RankingTier.NAVIGATION,
         title=title,
         descriptions=dict(record.descriptions),
-        target=f"search.html?q={record.modelo.value}+{record.number}",
+        target=f"search.html?q={record.modelo.value}+{record.casilla_id}",
         ranking_weight=normalise_ranking_weight(SearchRecordKind.CASILLA, sweep_score),
         metadata=SearchRecordMetadata(
             modelo=record.modelo.value,
+            casilla_id=record.casilla_id,
             number=record.number,
             segmento=record.segmento,
             source_revisions=record.source_revisions,

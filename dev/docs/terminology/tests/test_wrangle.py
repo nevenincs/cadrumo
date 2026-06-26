@@ -295,7 +295,8 @@ def test_wrangle_composes_all_corrections_and_extends_the_audit_trail() -> None:
 
     assert isinstance(result, WrangledResult)
     surviving_ids = {t.record.id for t in result.targets}
-    assert surviving_ids == {"casilla:303:01", "page:how-to/setup"} or "page:how-to/setup" in surviving_ids
+    expected_casilla_id = resolved[0].record.id
+    assert surviving_ids == {expected_casilla_id, "page:how-to/setup"}
     # Casilla dupe + locale dupe both collapsed.
     assert result.collapsed_count == 2
     reasons = {c.reason for c in result.collapsed}

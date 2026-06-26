@@ -16,7 +16,7 @@ surface records from the live command tree) and funnelled through the uniform
 injected once per language section it carries, with the per-language
 description as the searchable content, so Pagefind's es/en/ca/hu index splits
 each receive the record in their own language. Typed metadata (kind,
-concept id/domain, modelo/casilla number, command path) rides on the record
+concept id/domain, modelo/casilla.id, command path) rides on the record
 for the palette term card, and ``kind``/``domain`` filters let the palette
 narrow by surface.
 
