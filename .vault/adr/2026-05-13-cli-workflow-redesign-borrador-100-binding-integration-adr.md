@@ -129,3 +129,14 @@ they are not authoritative.
   precedence holds; superseded snapshots are rejected; source trace
   records the snapshot id for every borrador-sourced casilla; bucket
   event carries the snapshot reference.
+
+## Status
+
+Accepted and in force. The `borrador` source (a mesh-only source string with no
+`BindingSourceKind` member) and its parallel pre-mesh precedence ladder are reworked
+under the canonical PHASE ADRs (not a central apex doc): the phase-2.1
+`binding-source-kind-taxonomy-unification` ADR makes `borrador` a first-class typed
+`BindingSourceKind` member, and the future phase-2.2 (resolver-contract) ADR folds its
+pre-mesh precedence into the one resolver contract. The borrador-as-source decision
+here stands; those phase ADRs are the canonical source-kind / resolver-contract
+direction.
