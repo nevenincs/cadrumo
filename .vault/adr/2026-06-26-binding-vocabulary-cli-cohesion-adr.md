@@ -161,4 +161,54 @@ phase ENFORCES across the remaining homonyms) and the CLI-standard rules. If the
 `binding-selector-is-a-typed-union` candidate is authored at phase-2.4 review/codify —
 not now.
 
+## Amendment — G2 transport/compute separation
+
+This amendment sanctions, in scope, the one behaviour change G2 (W04.P07.S22) carries
+beyond pure rename: splitting `config google sync calc pull --compute` into two sibling
+verbs.
+
+The verb shape is RULE-DETERMINED, not a free UX choice. `aeat-cli-pull-and-file-standard`
+requires `pull` to mean "go read this from AEAT" — a TRANSPORT verb and nothing else.
+`calc pull --compute` violated that: the `--compute` flag multiplexed the Sheets transport
+(read operator-edited cells back from the workbook) with a compute step (run the shared
+registry engine over those cells and display the result). A `pull` verb that also computes
+is two intents under one word, the exact multiplexing the standard collapsed elsewhere.
+Under the standard the only conforming design is a two-verb split, so the separation is
+mandated by the rule, not chosen.
+
+The split:
+
+- **`calc pull`** keeps the Sheets TRANSPORT only — read operator-edited cells back from
+  the workbook into typed records (operator/binding/relation edits, optional row-set
+  assemblies). The `compute: bool` flag and its `_compute_pull_casillas` call are removed;
+  the `computed` block leaves the pull payload.
+- **`calc compute --spreadsheet-id <id>`** is a NEW sibling verb carrying the
+  Sheets-roundtrip compute: pull the operator-edited cells, run the shared engine
+  (`compute_from_pull` → `calculate_registry_snapshot`), and DISPLAY the computed casillas.
+  It persists NOTHING — read-only by construction, refusing a stale workbook stamp exactly
+  as `--compute` did.
+
+The compute path is SHARED, not divergent. Both the former `--compute` and `work calculate`
+terminate in `calculate_registry_snapshot`; this split does not fork the engine. What
+`calc compute` preserves is the Sheets-INPUT compute that `work calculate` structurally
+cannot do: `work calculate` computes from the bucket / local observation store and persists
+a revision, whereas `calc compute` computes from the operator's edited Sheet cells and
+persists nothing. The two are different INPUT sources into one engine, so retiring
+`--compute` without `calc compute` would drop a capability — hence the new verb rather than
+a bare flag removal.
+
+Operator-surface sweep (per `aeat-cli-pull-and-file-standard`, the fail-open trap): the new
+`config google sync calc compute` verb is added to the runtime write-policy allowlist
+alongside the retained `config google sync calc pull`; the locale subtree
+`cli.config.google.sync.calc.pull.compute_*` moves to `cli.config.google.sync.calc.compute.*`
+and gains the verb help, authored only through the locale CLI; the `computed` payload moves
+to a new `GoogleSyncCalcComputeResult` registered under `command="config.google.sync.calc.compute"`;
+the how-to docs and the generated CLI reference are swept. The two conformance gates
+(`test_documented_command_conformance.py`, `test_json_schema_conformance.py`) discover the
+new verb from the live Typer tree once it is registered, schema-bound, and documented.
+
+This is behaviour-affecting (a flag retires, a verb is born) and so is operator-visible and
+carries a code-review obligation at phase close; it is recorded here so the in-scope
+behaviour change is sanctioned rather than smuggled under "pure rename".
+
 

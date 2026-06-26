@@ -2286,6 +2286,10 @@ cli:
         activo
       sync:
         calc:
+          compute:
+            refused_stale: 'rechazo a calcular contra un libro cuyas marcas de metadatos no coinciden con el snapshot suministrado (metadata_match={metadata_match}); reexporte y vuelva a recuperar'
+            spreadsheet_id_help: 'Identificador del archivo de Drive del libro del que leer las ediciones del operador (debe pertenecer a la app y estar vinculado al snapshot suministrado)'
+          compute_help: 'Recupera las ediciones de las celdas del libro de calc-sheets, ejecuta el motor Decimal local sobre ellas y emite los valores calculados de las casillas (no persiste nada)'
           export:
             capability_disabled: La exportación a Google está desactivada para este
               perfil; actívala con 'aeat config profile capabilities set google_export
@@ -2304,17 +2308,12 @@ cli:
             year_help: Año de declaración (p. ej. 2025)
           export_help: Exporta la superficie de cálculo del registro para un modelo
             y período a una hoja de Google Sheets dentro de `aeat-vault/`
-          help: Superficie de cálculo esquema-a-hoja (exportar y recuperar)
+          help: 'Superficie de cálculo esquema-a-hoja (exportar, recuperar y calcular)'
           pull:
             assemble_observations_help: Tras recuperar, reensambla las celdas de filas
               de la pestaña Detalle en observaciones tipadas (perceptores, bienes
               en el extranjero, operaciones vinculadas, miembros de atribución, operaciones
               de devolución) y emítelas en el payload junto a los row_set_edits brutos
-            compute_help: Tras recuperar las ediciones, ejecuta el motor Decimal local
-              contra ellas y emite los valores calculados de las casillas
-            compute_refused_stale: rechazo a calcular contra un libro cuyas marcas
-              de metadatos no coinciden con el snapshot suministrado (metadata_match={metadata_match});
-              reexporte y vuelva a recuperar
             spreadsheet_id_help: Identificador del archivo de Drive del libro del
               que leer las ediciones del operador (debe estar marcado como propio
               de la app y vinculado al snapshot suministrado)

@@ -2196,6 +2196,10 @@ cli:
       status_help: Az aktív profil aktuális Google OAuth-munkamenet állapotának megjelenítése.
       sync:
         calc:
+          compute:
+            refused_stale: 'Elutasítva: nem számít olyan munkafüzet ellen, amelynek metaadatbélyegei nem egyeznek a megadott pillanatképpel (metadata_match={metadata_match}); exportálja újra, majd töltse vissza újra.'
+            spreadsheet_id_help: 'Az üzemeltetői szerkesztéseket tartalmazó munkafüzet Drive fájlazonosítója (az alkalmazás tulajdonában kell lennie, és a megadott pillanatképhez kell kötődnie)'
+          compute_help: 'Visszatölti a calc-sheets munkafüzet üzemeltetői cellaszerkesztéseit, lefuttatja rajtuk a helyi Decimal futásidőt, és kiadja a számított mezőértékeket (nem ment semmit)'
           export:
             capability_disabled: A Google-exportálás le van tiltva ehhez a profilhoz;
               engedélyezd az 'aeat config profile capabilities set google_export on'
@@ -2214,17 +2218,12 @@ cli:
             year_help: Benyújtási év (pl. 2025).
           export_help: A nyilvántartási számítási felület exportálása egy nyomtatvány+időszak
             kombinációhoz Google Sheets munkafüzetbe az üzemeltető `aeat-vault/` mappájában.
-          help: Séma-tábla számítási felület (exportálás és visszatöltés).
+          help: 'Séma-tábla számítási felület (exportálás, visszatöltés és számítás).'
           pull:
             assemble_observations_help: Visszatöltés után a Detalle-lap sorcsoportjait
               típusos megfigyelésekké állítja össze (kedvezményezettek, külföldi eszközök,
               kapcsolt felek műveletei, attribúciós tagok, visszatérítési műveletek),
               és azokat a hasznos adatban a nyers sor-szerkesztések mellett közli.
-            compute_help: Visszatöltés után a helyi Decimal futásidőt futtatja a visszatöltött
-              bemenetek ellen, és kiadja a számított mezőértékeket.
-            compute_refused_stale: 'Elutasítva: nem számít olyan munkafüzet ellen,
-              amelynek metaadatbélyegei nem egyeznek a megadott pillanatképpel (metadata_match={metadata_match});
-              exportálja újra, majd töltse vissza újra.'
             spreadsheet_id_help: Az üzemeltetői szerkesztéseket tartalmazó munkafüzet
               Drive-fájlazonosítója (az alkalmazásnak kell tulajdonolnia és a megadott
               pillanatképhez kell kötnie).

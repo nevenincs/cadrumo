@@ -2250,6 +2250,10 @@ cli:
         actiu
       sync:
         calc:
+          compute:
+            refused_stale: 'rebutjant calcular contra un llibre les marques de metadades del qual no coincideixen amb el snapshot subministrat (metadata_match={metadata_match}); reexporteu i torneu a recuperar'
+            spreadsheet_id_help: 'Identificador del fitxer de Drive del llibre del qual llegir les edicions de l''operador (ha de pertànyer a l''app i estar vinculat al snapshot subministrat)'
+          compute_help: 'Recupera les edicions de les cel·les del llibre de calc-sheets, executa el motor Decimal local sobre elles i emet els valors calculats de les caselles (no persisteix res)'
           export:
             capability_disabled: L'exportació a Google està desactivada per a aquest
               perfil; activa-la amb 'aeat config profile capabilities set google_export
@@ -2268,17 +2272,12 @@ cli:
             year_help: Any de declaració (p. ex. 2025)
           export_help: Exporta la superfície de càlcul del registre per a un model
             i període a un full de Google Sheets dins de `aeat-vault/`
-          help: Superfície de càlcul esquema-a-full (exportar i recuperar)
+          help: 'Superfície de càlcul esquema-a-full (exportar, recuperar i calcular)'
           pull:
             assemble_observations_help: Després de recuperar, reensambla les cel·les
               de files de la pestanya Detalle en observacions tipades (perceptors,
               béns a l'estranger, operacions vinculades, membres d'atribució, operacions
               de devolució) i emet-les al payload al costat dels row_set_edits crus
-            compute_help: Després de recuperar les edicions, executa el motor Decimal
-              local sobre elles i emet els valors calculats de les caselles
-            compute_refused_stale: rebutjant calcular contra un llibre les marques
-              de metadades del qual no coincideixen amb el snapshot subministrat (metadata_match={metadata_match});
-              reexporteu i torneu a recuperar
             spreadsheet_id_help: Identificador del fitxer de Drive del llibre del
               qual llegir les edicions de l'operador (ha d'estar marcat com a propi
               de l'app i lligat al snapshot subministrat)
