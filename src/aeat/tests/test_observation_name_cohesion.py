@@ -1,20 +1,15 @@
 """Structural gate: the ``*Observation`` family carries no cross-module homonyms.
 
-The bindings-vocabulary cohesion decision (phase 2.4, finding F6 E1-E2 of the
-``binding-vocabulary-cli-cohesion`` ADR) requires that every observation carrier
-be name-distinguishable by domain: a single ``*Observation`` class name must not
-be defined in two unrelated modules. Phase 2.4's reference grounding proved the
-discipline already holds at HEAD (a manual ``uniq -d`` over every
-``class *Observation`` returned empty), so the planned literal prefix-sweep
-(W03.P05) was a no-op — the carriers are already domain-qualified
+The bindings vocabulary requires every observation carrier to be
+name-distinguishable by domain: a single ``*Observation`` class name must not be
+defined in two unrelated modules. Existing carriers are domain-qualified
 (``WithholdingObservation``, ``IvaLedgerObservation``, ``InvoiceObservation``,
-``RentaDeductibleExpenseObservation``, ``CounterpartAggregationObservation`` …).
+``RentaDeductibleExpenseObservation``, ``CounterpartAggregationObservation``).
 
-This gate converts that one-off proof into a standing ``proven-by-gates``
-invariant: it walks the production source tree (tests excluded) and refuses any
+This gate walks the production source tree (tests excluded) and refuses any
 ``*Observation`` class name that is defined in more than one module. A future
-homonym — the exact fragmentation phase 2.4 closes — fails here loudly instead of
-silently re-overloading the vocabulary a semantic search relies on.
+homonym fails here loudly instead of silently overloading the vocabulary a
+semantic search relies on.
 """
 
 from __future__ import annotations
@@ -61,14 +56,13 @@ def _observation_class_definitions() -> dict[str, set[str]]:
 def test_observation_names_have_no_cross_module_homonyms() -> None:
     """No ``*Observation`` class name is defined in two unrelated modules.
 
-    Enforces the phase-2.4 F6 E1-E2 cohesion: the observation vocabulary is
-    domain-distinguishable by name. A homonym (same class name, two modules)
-    is the fragmentation this gate refuses.
+    The observation vocabulary is domain-distinguishable by name. A homonym
+    (same class name, two modules) is the fragmentation this gate refuses.
     """
     definitions = _observation_class_definitions()
     homonyms = {name: sorted(modules) for name, modules in definitions.items() if len(modules) > 1}
     assert not homonyms, (
-        "cross-module *Observation homonyms detected — the phase-2.4 F6 naming "
+        "cross-module *Observation homonyms detected — the observation naming "
         "cohesion is broken; give each carrier a domain-distinct name:\n"
         + "\n".join(f"  {name}: {mods}" for name, mods in sorted(homonyms.items()))
     )

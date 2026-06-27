@@ -15,7 +15,8 @@ _DEFAULT_MODULE_LINE_LIMIT = 1250
 _DEFAULT_CALLABLE_LINE_LIMIT = 180
 _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/aeat/application/modelo/tests/test_export.py": 1585,  # SPLIT-CANDIDATE (concurrent growth)
-    "src/aeat/domain/calculations/registry/tests/test_loader_directory_mode.py": 1380,  # SPLIT-CANDIDATE (concurrent growth)
+    # SPLIT-CANDIDATE (concurrent growth)
+    "src/aeat/domain/calculations/registry/tests/test_loader_directory_mode.py": 1380,
     "src/aeat/domain/calculations/registry/_workbook_parity.py": 1265,  # SPLIT-CANDIDATE (concurrent growth)
     "src/aeat/domain/calculations/registry/_formula_runtime.py": 1300,  # SPLIT-CANDIDATE (concurrent growth)
     "src/aeat/application/filing/tests/test_export.py": 1270,  # SPLIT-CANDIDATE (concurrent growth)

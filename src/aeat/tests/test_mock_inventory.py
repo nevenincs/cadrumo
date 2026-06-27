@@ -1,7 +1,7 @@
-"""Static guard: mock import inventory for production tests.
+"""Static guard: forbidden test-control import inventory for production tests.
 
 Walks every ``test_*.py`` and ``_test_*.py`` module under ``src/aeat/`` via AST
-and classifies each ``unittest.mock`` / ``pytest_mock`` import.
+and classifies each ``unittest`` / ``mock`` / ``pytest_mock`` import.
 
 Classification rules:
 - **Legitimate boundary mock**: the import is present to stub a third-party
@@ -12,7 +12,7 @@ Classification rules:
 - **Drift**: any mock import not in the documented set.
 
 Current inventory for durable replacement:
-  Zero ``unittest.mock`` or ``pytest_mock`` imports found under
+  Zero ``unittest``, ``mock``, or ``pytest_mock`` imports found under
   ``src/aeat/``.  The codebase uses constructor injection with inline
   callables for boundary-injection sites rather than the mock library.
 
@@ -44,8 +44,8 @@ _FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
 # Each entry requires a one-line justification comment here AND in the source.
 _DOCUMENTED_BOUNDARY_MOCKS: frozenset[tuple[str, str]] = frozenset()
 
-# Import module names that constitute a mock library usage.
-_MOCK_MODULE_PREFIXES = ("unittest.mock", "pytest_mock")
+# Import module names that constitute banned test-control usage.
+_FORBIDDEN_TEST_CONTROL_IMPORTS = ("unittest.mock", "unittest", "mock", "pytest_mock")
 
 
 def _discover_test_modules() -> list[Path]:
@@ -62,11 +62,11 @@ def _discover_test_modules() -> list[Path]:
     return sorted(collected)
 
 
-def _mock_imports(
+def _forbidden_test_control_imports(
     path: Path,
     tree: ast.AST | None = None,
 ) -> list[tuple[int, str]]:
-    """Return ``(lineno, module)`` for every mock-library import in *path*.
+    """Return ``(lineno, module)`` for every banned test-control import in *path*.
 
     When *tree* is supplied (test-loop path), reuse the cached AST. When
     omitted (single-file callers such as
@@ -84,22 +84,32 @@ def _mock_imports(
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                for prefix in _MOCK_MODULE_PREFIXES:
-                    if alias.name == prefix or alias.name.startswith(prefix + "."):
-                        hits.append((node.lineno, alias.name))
+                hit = _forbidden_import_name(alias.name)
+                if hit is not None:
+                    hits.append((node.lineno, hit))
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
-            for prefix in _MOCK_MODULE_PREFIXES:
-                if module == prefix or module.startswith(prefix + "."):
-                    hits.append((node.lineno, module))
-                    break
+            if module == "unittest" and any(alias.name == "mock" for alias in node.names):
+                hits.append((node.lineno, "unittest.mock"))
+                continue
+            hit = _forbidden_import_name(module)
+            if hit is not None:
+                hits.append((node.lineno, hit))
     return hits
+
+
+def _forbidden_import_name(import_name: str) -> str | None:
+    """Return the banned import prefix matched by *import_name*, if any."""
+    for prefix in _FORBIDDEN_TEST_CONTROL_IMPORTS:
+        if import_name == prefix or import_name.startswith(prefix + "."):
+            return prefix
+    return None
 
 
 def test_mock_imports_are_documented(
     source_tree_ast: Mapping[Path, ast.AST],
 ) -> None:
-    """Every mock-library import must be in the documented boundary-mock inventory.
+    """Every banned test-control import must be in the documented boundary-mock inventory.
 
     Consumes the session-scoped AST cache; falls back to per-file parse
     for modules absent from the cache (e.g. unparseable files).
@@ -110,7 +120,7 @@ def test_mock_imports_are_documented(
     for module_path in modules:
         relative = str(module_path.relative_to(_REPO_ROOT)).replace("\\", "/")
         tree = source_tree_ast.get(module_path)
-        for lineno, mock_module in _mock_imports(module_path, tree):
+        for lineno, mock_module in _forbidden_test_control_imports(module_path, tree):
             key = (relative, mock_module)
             if key in _DOCUMENTED_BOUNDARY_MOCKS:
                 _logger.debug(
@@ -123,7 +133,7 @@ def test_mock_imports_are_documented(
             violations.append(f"{relative}:{lineno}: import {mock_module}")
 
     assert not violations, (
-        "Undocumented mock-library imports found "
+        "Undocumented banned test-control imports found "
         "(add to _DOCUMENTED_BOUNDARY_MOCKS with justification, or remove):\n" + "\n".join(violations)
     )
 
@@ -133,7 +143,7 @@ def test_documented_boundary_mocks_still_present() -> None:
     for rel_path, mock_module in _DOCUMENTED_BOUNDARY_MOCKS:
         path = _REPO_ROOT / rel_path
         assert path.exists(), f"Documented mock references non-existent file: {rel_path}"
-        found = _mock_imports(path)
+        found = _forbidden_test_control_imports(path)
         found_modules = {m for _, m in found}
         assert mock_module in found_modules, (
             f"Documented mock ({rel_path}, {mock_module!r}) is stale — "

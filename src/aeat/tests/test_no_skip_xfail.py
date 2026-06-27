@@ -1,8 +1,9 @@
-"""Static guard: zero ``pytest.mark.skip`` / ``pytest.mark.xfail`` in production tests.
+"""Static guard: zero skip / xfail shortcuts in deterministic production tests.
 
 Walks every ``test_*.py`` and ``_test_*.py`` module under ``src/aeat/`` via AST
-and asserts that none carry ``pytest.mark.skip``, ``pytest.mark.skipif``, or
-``pytest.mark.xfail`` decorators.
+and asserts that deterministic modules carry no ``pytest.mark.skip``,
+``pytest.mark.skipif``, ``pytest.mark.xfail``, ``pytest.skip()``, or
+``pytest.xfail()`` shortcuts.
 
 Documented legitimate exceptions (environment-conditional guards):
 - ``src/aeat/core/observability/tests/test_sink.py`` — ``@pytest.mark.skipif(
@@ -32,19 +33,21 @@ _SRC_AEAT = Path(__file__).resolve().parents[1]
 _REPO_ROOT = _SRC_AEAT.parents[1]  # chore-476-restructure-execution
 _FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
 
-# Documented exceptions: (relative-to-repo path, marker name, justification).
+# Documented exceptions: (relative-to-repo path, marker/call name, justification).
 # Additions here require a follow-up remediation note and inline justification in the
 # source file.
 _DOCUMENTED_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset(
     {
         (
             "src/aeat/core/observability/tests/test_sink.py",
-            "skipif",
+            "pytest.mark.skipif",
         ),
     },
 )
 
 _FORBIDDEN_MARKERS = frozenset({"skip", "skipif", "xfail"})
+_FORBIDDEN_CALLS = frozenset({"pytest.skip", "pytest.xfail"})
+_LIVE_EXECUTION_MARKER = "aeat_live"
 
 
 def _discover_test_modules() -> list[Path]:
@@ -62,13 +65,14 @@ def _discover_test_modules() -> list[Path]:
 
 
 def _forbidden_marker_sites(path: Path) -> list[tuple[int, str]]:
-    """Return ``(lineno, marker_name)`` for every forbidden marker in *path*."""
+    """Return ``(lineno, marker_or_call_name)`` for every forbidden shortcut in *path*."""
     source = path.read_text(encoding="utf-8")
     try:
         tree = ast.parse(source, filename=str(path))
     except SyntaxError:
         return []
 
+    live_module = _LIVE_EXECUTION_MARKER in _module_execution_markers(tree)
     hits: list[tuple[int, str]] = []
     for node in ast.walk(tree):
         decorators: list[ast.expr] = []
@@ -88,45 +92,80 @@ def _forbidden_marker_sites(path: Path) -> list[tuple[int, str]]:
             mark_root = mark_attr.value
             if not isinstance(mark_root, ast.Name) or mark_root.id != "pytest":
                 continue
-            hits.append((dec.lineno, attr_chain.attr))
+            hits.append((dec.lineno, f"pytest.mark.{attr_chain.attr}"))
+
+        if isinstance(node, ast.Call):
+            call_name = _qualified_name(node.func)
+            if call_name not in _FORBIDDEN_CALLS:
+                continue
+            if call_name == "pytest.skip" and live_module:
+                continue
+            hits.append((node.lineno, call_name))
     return hits
 
 
-def test_no_skip_or_xfail_markers() -> None:
-    """Production test modules must not use skip / xfail markers."""
+def _module_execution_markers(tree: ast.AST) -> set[str]:
+    """Return module-level execution markers from a ``pytestmark = [...]`` assignment."""
+    markers: set[str] = set()
+    body = tree.body if isinstance(tree, ast.Module) else ()
+    for node in body:
+        if not isinstance(node, ast.Assign):
+            continue
+        if not any(isinstance(target, ast.Name) and target.id == "pytestmark" for target in node.targets):
+            continue
+        values: list[ast.expr] = list(node.value.elts) if isinstance(node.value, ast.List | ast.Tuple) else [node.value]
+        for value in values:
+            name = _qualified_name(value)
+            if name.startswith("pytest.mark."):
+                markers.add(name.removeprefix("pytest.mark."))
+    return markers
+
+
+def _qualified_name(node: ast.AST) -> str:
+    """Return a dotted qualified name for simple AST name/attribute chains."""
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        parent = _qualified_name(node.value)
+        return f"{parent}.{node.attr}" if parent else node.attr
+    return ""
+
+
+def test_no_skip_or_xfail_shortcuts() -> None:
+    """Deterministic production test modules must not use skip / xfail shortcuts."""
     modules = _discover_test_modules()
     violations: list[str] = []
 
     for module_path in modules:
         relative = str(module_path.relative_to(_REPO_ROOT)).replace("\\", "/")
         sites = _forbidden_marker_sites(module_path)
-        for lineno, marker_name in sites:
-            key = (relative, marker_name)
+        for lineno, marker_or_call_name in sites:
+            key = (relative, marker_or_call_name)
             if key in _DOCUMENTED_EXCEPTIONS:
                 _logger.debug(
-                    "skip/xfail exception allowed: path=%s, marker=%s, lineno=%d",
+                    "skip/xfail exception allowed: path=%s, marker_or_call=%s, lineno=%d",
                     relative,
-                    marker_name,
+                    marker_or_call_name,
                     lineno,
                 )
                 continue
-            violations.append(f"{relative}:{lineno}: @pytest.mark.{marker_name}")
+            violations.append(f"{relative}:{lineno}: {marker_or_call_name}")
 
     assert not violations, (
-        "Undocumented pytest.mark.skip / skipif / xfail found "
+        "Undocumented pytest skip / xfail shortcuts found "
         "(add to _DOCUMENTED_EXCEPTIONS with a durable rationale, or remove):\n" + "\n".join(violations)
     )
 
 
 def test_documented_exceptions_all_exist() -> None:
     """Every entry in _DOCUMENTED_EXCEPTIONS must still be present in source."""
-    for rel_path, marker_name in _DOCUMENTED_EXCEPTIONS:
+    for rel_path, marker_or_call_name in _DOCUMENTED_EXCEPTIONS:
         path = _REPO_ROOT / rel_path
         assert path.exists(), f"Documented exception references non-existent file: {rel_path}"
         sites = _forbidden_marker_sites(path)
         found_markers = {m for _, m in sites}
-        assert marker_name in found_markers, (
-            f"Documented exception ({rel_path}, {marker_name!r}) is stale — "
+        assert marker_or_call_name in found_markers, (
+            f"Documented exception ({rel_path}, {marker_or_call_name!r}) is stale — "
             f"marker not found in file (found: {sorted(found_markers)})"
         )
 
