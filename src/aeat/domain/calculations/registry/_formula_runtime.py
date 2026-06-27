@@ -209,6 +209,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     enum_binding_values: Mapping[BindingId, str] | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
     unresolved_relation_ids: tuple[RelationId, ...] = (),
+    unresolved_binding_ids: tuple[BindingId, ...] = (),
     date_binding_values: Mapping[BindingId, date] | None = None,
     text_inputs: Mapping[TextInputKey, TextInputValue] | None = None,
 ) -> RegistryCalculationResult:
@@ -243,6 +244,11 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             missing/incomplete but non-blocking. Formula targets depending on
             these ids are omitted instead of zero-contributed; relation ids not
             listed here remain hard validation errors when absent.
+        unresolved_binding_ids: Binding ids whose enrolled resolver ran for a
+            present source but produced no value (expected-but-missing).
+            Formula targets depending on these ids are omitted instead of
+            raising ``binding_value_missing``; binding ids not listed here
+            remain hard validation errors when absent from ``binding_values``.
         date_binding_values: Optional date-valued profile bindings (e.g.
             ``birth_date``) consumed by date-aware ops.
         text_inputs: Optional string-valued operator inputs keyed by casilla
@@ -267,6 +273,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     resolved_relations = relation_values or {}
     _reject_non_decimal(resolved_relations, "relation")
     resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
+    resolved_unresolved_bindings = frozenset(unresolved_binding_ids).difference(resolved_bindings)
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or {}
     resolved_text_inputs = _validated_text_input_casilla_ids(text_inputs or {})
 
@@ -288,6 +295,11 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             if not relation.target_periods or snapshot.period in relation.target_periods
         },
         "unresolved_relation",
+    )
+    _reject_unknown_external_values(
+        {binding_id: _ZERO for binding_id in resolved_unresolved_bindings},
+        {binding.id for binding in revision.bindings},
+        "unresolved_binding",
     )
     values, absent_by_design_casilla_ids = _initial_values(
         revision,
@@ -342,6 +354,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                     date_context=resolved_date_context,
                     relation_values=resolved_relations,
                     unresolved_relation_ids=resolved_unresolved_relations,
+                    unresolved_binding_ids=resolved_unresolved_bindings,
                     unresolved_casilla_ids=unresolved_casilla_ids,
                     operand_refs=operand_refs,
                     operand_casilla_refs=operand_casilla_refs,
@@ -448,6 +461,7 @@ def _evaluate_expression(
     operand_refs: list[str],
     operand_casilla_refs: list[CasillaId],
     operand_values: list[Decimal],
+    unresolved_binding_ids: frozenset[BindingId] = frozenset(),
     enum_binding_values: Mapping[BindingId, str] | None = None,
     date_binding_values: Mapping[BindingId, date] | None = None,
     filing_year: int = 0,
@@ -465,6 +479,7 @@ def _evaluate_expression(
             date_context=date_context,
             relation_values=relation_values,
             unresolved_relation_ids=unresolved_relation_ids,
+            unresolved_binding_ids=unresolved_binding_ids,
             unresolved_casilla_ids=unresolved_casilla_ids,
             operand_refs=operand_refs,
             operand_casilla_refs=operand_casilla_refs,
@@ -479,6 +494,7 @@ def _evaluate_expression(
         date_context=date_context,
         relation_values=relation_values,
         unresolved_relation_ids=unresolved_relation_ids,
+        unresolved_binding_ids=unresolved_binding_ids,
         unresolved_casilla_ids=unresolved_casilla_ids,
         operand_refs=operand_refs,
         operand_casilla_refs=operand_casilla_refs,
@@ -530,6 +546,7 @@ class _EvalContext:
     enum_binding_values: Mapping[BindingId, str]
     date_binding_values: Mapping[BindingId, date]
     filing_year: int
+    unresolved_binding_ids: frozenset[BindingId] = frozenset()
     text_values: Mapping[CasillaId, str] = field(default_factory=dict)
 
 
@@ -543,6 +560,7 @@ def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Deci
         date_context=ctx.date_context,
         relation_values=ctx.relation_values,
         unresolved_relation_ids=ctx.unresolved_relation_ids,
+        unresolved_binding_ids=ctx.unresolved_binding_ids,
         unresolved_casilla_ids=ctx.unresolved_casilla_ids,
         operand_refs=ctx.operand_refs,
         operand_casilla_refs=ctx.operand_casilla_refs,
@@ -1000,6 +1018,7 @@ def _evaluate_leaf(
     operand_refs: list[str],
     operand_casilla_refs: list[CasillaId],
     operand_values: list[Decimal],
+    unresolved_binding_ids: frozenset[BindingId] = frozenset(),
     date_binding_values: Mapping[BindingId, date] | None = None,
     filing_year: int = 0,
 ) -> Decimal:
@@ -1021,6 +1040,8 @@ def _evaluate_leaf(
         return value
     if expression.binding is not None:
         if expression.binding not in binding_values:
+            if expression.binding in unresolved_binding_ids:
+                raise _UnresolvedFormulaDependencyError((expression.binding,))
             raise RegistryValidationError(
                 f"binding {expression.binding!r} has no supplied value",
                 translated_message="errors.calc.binding_value_missing",
