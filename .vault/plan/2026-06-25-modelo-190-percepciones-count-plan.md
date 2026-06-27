@@ -7,15 +7,8 @@ modified: '2026-06-25'
 tier: L2
 related:
   - '[[2026-06-25-modelo-190-percepciones-count-adr]]'
+  - '[[2026-06-25-modelo-190-percepciones-count-research]]'
 ---
-
-
-
-
-
-
-
-
 # `modelo-190-percepciones-count` plan
 
 ### Phase `P01` - Producer-clave precondition

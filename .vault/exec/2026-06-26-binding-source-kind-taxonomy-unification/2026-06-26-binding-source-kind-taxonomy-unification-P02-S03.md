@@ -9,38 +9,8 @@ related:
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace binding-source-kind-taxonomy-unification with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
 
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S03 and 2026-06-26-binding-source-kind-taxonomy-unification-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Re-type owned_sources and both source_kind carriers to BindingSourceKind and ## Scope
-
-- `src/aeat/application/aggregation/_source_mesh.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Re-type owned_sources and both source_kind carriers to BindingSourceKind
 
@@ -50,7 +20,6 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 This record covers the whole of P02 (S03 narrowed plus the S04-S12 resolver and
 mesh-set re-typing) — commits `b4bde7d46` (S03), `1200e0532` (S06-S12), and
@@ -78,7 +47,6 @@ diagnostic channel carrying non-source-kind tokens.
 
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 STRICT_FROZEN_CONFIG (strict=True) blocks pydantic string-to-enum coercion, so
 re-typing the field alone would break every resolver still passing bare strings
