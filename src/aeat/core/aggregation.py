@@ -411,6 +411,41 @@ class RetencionScheme(StrEnum):
     CAPITAL_OTHER = "otros_capital_mobiliario"  # clave C (other capital income)
 
 
+class RetencionClave(StrEnum):
+    """Modelo 190 / 193 perceptor clave de percepción (the AEAT clave letter).
+
+    Closed catalogue of the retención perceptor clave codes A-L, grounded in the
+    Modelo 190 Diseño de Registros (Orden EHA/3127/2009, actualizada por Orden
+    HAC/1431/2025), campo CLAVE DE PERCEPCIÓN: A trabajo (empleados), B
+    pensionistas y haberes pasivos, C prestaciones o subsidios por desempleo, D
+    prestaciones por desempleo en pago único, E consejeros y administradores, F
+    cursos/conferencias/seminarios y obras, G actividades profesionales, H
+    actividades agrícolas/ganaderas/forestales y empresariales en estimación
+    objetiva, I actividades empresariales / propiedad intelectual e industrial, J
+    imputación de rentas por cesión de derechos de imagen, K premios y
+    aprovechamientos forestales, L rentas exentas y dietas exceptuadas de gravamen.
+    Modelo 193 reuses the A-D letters for its own concepts; the stored clave is the
+    LETTER and its per-modelo meaning is context, so a single letter catalogue
+    covers both. The member name equals its AEAT clave letter (value byte-identical
+    to the stored token). Declared in :mod:`aeat.core` as a closed value set per the
+    architecture contract. The M349 / M347 operation "clave" is a DISTINCT taxonomy
+    -- see :class:`OperationKind349` / :class:`OperationKind347`, not this enum.
+    """
+
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
+    E = "E"
+    F = "F"
+    G = "G"
+    H = "H"
+    I = "I"  # noqa: E741 -- AEAT clave letter; the member name IS the canonical token
+    J = "J"
+    K = "K"
+    L = "L"
+
+
 class OperationKind347(StrEnum):
     """Modelo 347 operation kinds (clave de operación).
 
