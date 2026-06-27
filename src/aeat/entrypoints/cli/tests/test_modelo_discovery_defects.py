@@ -5,7 +5,7 @@ pin the modelo / bindings discovery findings reported by the persona
 fleet:
 
 * ``work calculate --casilla`` refuses registry ``number`` / BOE form
-  aliases and requires the canonical casilla id.
+  metadata tokens and requires the canonical casilla id.
 * ``bindings list --missing`` consults the active profile and drops
   the bindings it already resolves.
 * ``bindings list --year`` (no ``--period``) resolves the revision
@@ -82,11 +82,11 @@ def _create_111_work_unit() -> str:
 
 
 # ---------------------------------------------------------------------------
-# D1 - printed-number aliases refused by work calculate
+# D1 - printed-number metadata tokens refused by work calculate
 # ---------------------------------------------------------------------------
 
 
-def test_work_calculate_rejects_registry_number_as_casilla_alias() -> None:
+def test_work_calculate_rejects_registry_number_as_casilla_reference() -> None:
     """``--casilla`` requires canonical ``casilla.id`` values."""
 
     _create_profile()

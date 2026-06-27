@@ -11,24 +11,12 @@ detailed :class:`CasillaObservation` data on command output.
 
 from __future__ import annotations
 
-import json
 from decimal import Decimal, InvalidOperation
 from typing import Annotated
 
 import click
 import typer
-from pydantic import BaseModel, ValidationError
 
-from ...application.aggregation import (
-    CounterpartObservation,
-    ForeignAssetIngestObservation,
-    PerModeloAggregationCommand,
-    RetencionObservation,
-    WithholdingObservation,
-    aggregate_per_modelo,
-    persist_retencion_observations,
-    persist_withholding_observations,
-)
 from ...application.modelo import (
     AmendmentEvidenceMissingError,
     AmendmentTargetStateError,
@@ -59,14 +47,15 @@ from ...application.modelo import (
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
 )
-from ...core import Modelo, Period, PeriodError
+from ...core import Period, PeriodError
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
 from ...core.errors import AeatError
-from ...core.external_constants import RETENCIONES_MODELOS, OutputLanguage
+from ...core.external_constants import OutputLanguage
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
 from ._common import activate_subcommand_output_language
+from ._modelo_aggregate_cli import register_aggregate_commands
 from ._modelo_audit_cli import audit_app as audit_app
 from ._modelo_audit_cli import register_audit_commands
 from ._modelo_cli_support import (
@@ -416,161 +405,7 @@ register_discovery_commands(
 )
 
 
-def _parse_typed_cli_observations[ObservationT: BaseModel](
-    values: list[str] | None,
-    *,
-    model: type[ObservationT],
-    flag: str,
-) -> tuple[ObservationT, ...]:
-    """Parse a list of raw JSON strings into typed observation models.
-
-    Each string must be a JSON object conforming to *model*'s schema.
-    ``typer.BadParameter`` is raised on JSON syntax errors, non-object
-    JSON, or pydantic validation failures so the CLI error boundary
-    presents a clear operator-facing refusal instead of an opaque
-    traceback.
-    """
-    parsed: list[ObservationT] = []
-    for raw in values or ():
-        try:
-            top = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            raise typer.BadParameter(tr("cli.app.modelo.aggregate.json_parse_error", flag=flag, pos=exc.pos)) from exc
-        if not isinstance(top, dict):
-            raise typer.BadParameter(tr("cli.app.modelo.aggregate.json_not_object", flag=flag))
-        try:
-            # model_validate_json uses pydantic's JSON-mode coercions (string →
-            # Decimal, string → StrEnum) even when the model declares strict=True
-            # at the Python-object boundary.
-            parsed.append(model.model_validate_json(raw))
-        except ValidationError as exc:
-            details = "; ".join(f"{'.'.join(str(s) for s in e['loc'])}: {e['msg']}" for e in exc.errors())
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.aggregate.json_validation_error",
-                    flag=flag,
-                    details=details,
-                ),
-            ) from exc
-    return tuple(parsed)
-
-
-@app.command(
-    "aggregate",
-    help=tr(
-        "cli.app.modelo.aggregate_help",
-        default=(
-            "Run the backend per-modelo aggregation service from explicit canonical observations "
-            "(ledger_transaction, purchase_invoice_evidence, payable_invoice, collectible_invoice)."
-        ),
-    ),
-)
-def aggregate_modelo(
-    ctx: typer.Context,
-    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.modelo.aggregate.modelo_help"))],
-    year: Annotated[int, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))],
-    period: Annotated[str, typer.Option("--period", help=tr("cli.app.modelo.aggregate.period_help"))],
-    retencion_observation: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--retencion-observation",
-            help=tr("cli.app.modelo.aggregate.retencion_observation_help"),
-        ),
-    ] = None,
-    counterpart_observation: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--counterpart-observation",
-            help=tr("cli.app.modelo.aggregate.counterpart_observation_help"),
-        ),
-    ] = None,
-    foreign_asset_observation: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--foreign-asset-observation",
-            help=tr("cli.app.modelo.aggregate.foreign_asset_observation_help"),
-        ),
-    ] = None,
-    withholding_observation: Annotated[
-        list[str] | None,
-        typer.Option(
-            "--withholding-observation",
-            help=tr("cli.app.modelo.aggregate.withholding_observation_help"),
-        ),
-    ] = None,
-) -> None:
-    """Delegate per-modelo aggregation execution to the backend service."""
-    command = PerModeloAggregationCommand(
-        modelo=modelo,
-        period=_resolve_year_period(year, period, modelo=modelo),
-        retencion_observations=_parse_typed_cli_observations(
-            retencion_observation,
-            model=RetencionObservation,
-            flag="--retencion-observation",
-        ),
-        counterpart_observations=_parse_typed_cli_observations(
-            counterpart_observation,
-            model=CounterpartObservation,
-            flag="--counterpart-observation",
-        ),
-        foreign_asset_observations=_parse_typed_cli_observations(
-            foreign_asset_observation,
-            model=ForeignAssetIngestObservation,
-            flag="--foreign-asset-observation",
-        ),
-        withholding_observations=_parse_typed_cli_observations(
-            withholding_observation,
-            model=WithholdingObservation,
-            flag="--withholding-observation",
-        ),
-    )
-    if command.modelo == Modelo.M190.value:
-        # Persist the per-perceptor-clave set to the dedicated encrypted store so the
-        # calculate path counts percepciones (distinct perceptor+clave+subclave) from
-        # the SAME observations this pull aggregates (#28, one source for both
-        # surfaces). Set-replace semantics: a re-pull that drops a percepción clears
-        # the stale row. The entrypoint owns the write; aggregate_per_modelo stays pure.
-        persist_withholding_observations(
-            modelo=command.modelo,
-            filing_year=command.period.filing_year,
-            period=command.period,
-            observations=command.withholding_observations,
-        )
-    if command.modelo in RETENCIONES_MODELOS:
-        # Persist the per-perceptor set to the dedicated encrypted store so the
-        # calculate path counts perceptors from the SAME observations this pull
-        # aggregates (RET-1, one source for both surfaces). Set-replace semantics:
-        # a re-pull that drops a perceptor clears the stale row. aggregate_per_modelo
-        # stays pure — the entrypoint owns the write.
-        persist_retencion_observations(
-            modelo=command.modelo,
-            filing_year=command.period.filing_year,
-            period=command.period,
-            observations=command.retencion_observations,
-        )
-    result = aggregate_per_modelo(command)
-    from ._common import _emit_envelope
-    from ._modelo_payloads import ModeloAggregateResult
-
-    source_kinds = ", ".join(source_kind.value for source_kind in result.source_kinds) or "-"
-    aggregate_result = ModeloAggregateResult(
-        modelo=result.modelo,
-        period=result.period,
-        provider=result.provider.value,
-        observation_count=result.log_fields.observation_count,
-        source_kinds=[sk.value for sk in result.source_kinds],
-        result_row_count=result.log_fields.result_row_count,
-    )
-    lines = [
-        "operation\tmodelo.aggregate",
-        f"modelo\t{result.modelo}",
-        f"period\t{result.period.registry_token}",
-        f"provider\t{result.provider.value}",
-        f"observation_count\t{result.log_fields.observation_count}",
-        f"source_kinds\t{source_kinds}",
-        f"result_row_count\t{result.log_fields.result_row_count}",
-    ]
-    _emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines)
+register_aggregate_commands(app, resolve_year_period=_resolve_year_period)
 
 
 work_app = create_work_app()
