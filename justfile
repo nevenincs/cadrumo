@@ -234,8 +234,12 @@ fix-rag:
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 
-# Run the unit test suite, ignoring workbook parity tests. Quiet progress; failures shown.
+# Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.
 test-unit:
+    @uv run pytest -q -n auto -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
+
+# Run the unit test suite serially for reruns after a parallel failure.
+test-unit-serial:
     @uv run pytest -q -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
 
 # Run the integration test suite. Quiet progress; failures shown.
