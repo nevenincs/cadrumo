@@ -6,7 +6,12 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import ResultDisposition, derive_result_disposition, modelo_has_codified_disposition
+from .....core import (
+    ResultDisposition,
+    derive_result_disposition,
+    modelo_has_codified_disposition,
+    result_disposition_casilla_ids,
+)
 from .....core.resources import bundled_path
 from .. import load_registry_tree
 
@@ -23,7 +28,17 @@ def test_codified_result_disposition_specs_resolve_against_bundled_revisions() -
             continue
         for revision_id, revision in modelo.revisions.items():
             checked_revisions.append(f"{modelo.id}:{revision_id}")
-            values = {casilla.id: Decimal("1") for casilla in revision.casillas}
+            declared_ids = {casilla.id for casilla in revision.casillas}
+            result_ids = result_disposition_casilla_ids(modelo.id)
+            assert result_ids is not None
+            revision_result_ids = tuple(casilla_id for casilla_id in result_ids if casilla_id in declared_ids)
+            if not revision_result_ids:
+                offences.append(
+                    f"modelo {modelo.id} revision {revision_id}: none of the codified result casilla ids "
+                    f"{result_ids!r} are declared by the bundled revision",
+                )
+                continue
+            values = {casilla_id: Decimal("1") for casilla_id in revision_result_ids}
             try:
                 disposition = derive_result_disposition(modelo.id, values)
             except Exception as exc:

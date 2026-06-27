@@ -46,9 +46,9 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     raises :class:`RegistryValidationError` listing every dangling reference.
     This is an existence gate only -- it does not alter any field types.
 
-    For union fields declared as ``TypedId | str`` (where the bare-``str``
-    arm is a legacy escape), the value is treated as a candidate typed-ID
-    and checked regardless of which arm is active.
+    Casilla references are checked only against declared canonical
+    ``casilla.id`` values; display numbers, form numbers, and export
+    field identifiers are never alternate lookup keys at this boundary.
     """
     checker = _IdReferenceChecker(snapshot)
     revision = snapshot.revision

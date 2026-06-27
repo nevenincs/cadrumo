@@ -81,6 +81,10 @@ def modelo_202_modality_from_inputs(
     wizard-free profile projection (``record_to_path_values``) in a non-CLI
     context where the wizard ``SETUP_FLOW`` catalogue is not registered. No
     fork: :func:`derive_modelo_202_modality` delegates here.
+
+    Returns:
+        :class:`Modelo202ModalityVerdict`: Derived modality, explanation, and
+        legal grounding.
     """
     if entity_type is None or entity_type is not EntityType.LEGAL_ENTITY:
         return Modelo202ModalityVerdict(

@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.resources import bundled_path
+from .. import CasillaId, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
 from .._errors import AmbiguousRevisionSelectionError, RegistryValidationError
 from .._queries import ModeloFormulaRow, RegistryQueryService
@@ -16,6 +17,8 @@ from .._schema import InputKind
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
+_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_INPUT_CASILLA")
+_TARGET_CASILLA: CasillaId = validated_casilla_id("02", surface="_TARGET_CASILLA")
 
 _MINIMAL_CATALOGUE_TOML = """\
 [legal."test-ley-001:art-1"]
@@ -188,12 +191,12 @@ def test_formula_row_rejects_legacy_input_casillas_key() -> None:
         ModeloFormulaRow.model_validate(
             {
                 "formula_id": "test.formula",
-                "target_casilla_id": "02",
-                "input_casillas": ("01",),
+                "target_casilla_id": _TARGET_CASILLA,
+                "input_casillas": (_INPUT_CASILLA,),
                 "input_bindings": (),
                 "input_parameters": (),
                 "input_relations": (),
-                "expression": {"casilla_id": "01"},
+                "expression": {"casilla_id": _INPUT_CASILLA},
                 "legal_refs": ("test-ley-001:art-1",),
                 "source_refs": ("test-source-001",),
             },
@@ -324,7 +327,7 @@ def test_binding_rows_report_decimal_input_channel_for_typed_enum_binding() -> N
 
 
 def test_input_casilla_id_map_exposes_only_canonical_ids() -> None:
-    """``input_casilla_id_map`` must not reintroduce printed-number aliases."""
+    """``input_casilla_id_map`` must not reintroduce printed-number references."""
 
     from .._runtime_graph import input_casilla_id_map
 

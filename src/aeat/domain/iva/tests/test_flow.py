@@ -283,7 +283,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     binding_flows: set[IvaFlowDirection] = set()
     # Walk the formula expression to find casilla operands
     for arg in devengada_formula.expression.args or ():
-        casilla_id = arg.casilla
+        casilla_id = arg.casilla_id
         if casilla_id is None or casilla_id not in casilla_to_binding:
             continue
         binding_id = casilla_to_binding[casilla_id]

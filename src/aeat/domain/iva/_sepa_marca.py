@@ -139,6 +139,9 @@ def derive_sepa_marca(*, iban: str | None, bank_country_code: str = "") -> SepaM
     The membership set is grounded in the European Payments Council SEPA
     scheme participant list (see the module docstring); this is a derivation,
     never an operator input.
+
+    Returns:
+        The derived :class:`SepaMarca`.
     """
     country = _account_country_code(iban=iban, bank_country_code=bank_country_code)
     if country == _SPAIN_COUNTRY_CODE:

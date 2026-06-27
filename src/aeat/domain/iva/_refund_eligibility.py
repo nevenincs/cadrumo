@@ -68,6 +68,9 @@ def refund_eligibility_reason(*, redeme_enrolled: bool, period: Period) -> Refun
     REDEME enrolment takes precedence (it makes the refund available every period);
     otherwise the last-period condition; otherwise ``NOT_ELIGIBLE`` (carry forward).
     The consumer maps the code to a grounded operator message.
+
+    Returns:
+        The :class:`RefundEligibilityReason` for the supplied period.
     """
     if redeme_enrolled:
         return RefundEligibilityReason.REDEME_INSCRIBED

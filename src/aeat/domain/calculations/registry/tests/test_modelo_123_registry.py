@@ -41,13 +41,13 @@ _M123_RETENCIONES_RESTO_CASILLA: CasillaId = _casilla_id("08")
 _M123_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("10")
 _M123_PREVIOUS_PERIOD_WITHHELD_CASILLA: CasillaId = _casilla_id("11")
 _M123_A_INGRESAR_CASILLA: CasillaId = _casilla_id("13")
-_M123_LEGACY_NPERCEPTORES_CASILLA: CasillaId = _casilla_id("01-legacy")
-_M123_LEGACY_BASE_CASILLA: CasillaId = _casilla_id("02-legacy")
-_M123_LEGACY_RETENCIONES_CASILLA: CasillaId = _casilla_id("03-legacy")
-_M123_LEGACY_REGULARIZACION_CASILLA: CasillaId = _casilla_id("04-legacy")
-_M123_LEGACY_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("05-legacy")
-_M123_LEGACY_RESULTADO_CASILLA: CasillaId = _casilla_id("06-legacy")
-_M123_LEGACY_INGRESO_CASILLA: CasillaId = _casilla_id("07-legacy")
+_M123_2019_2023_NPERCEPTORES_CASILLA: CasillaId = _casilla_id("01-legacy")
+_M123_2019_2023_BASE_CASILLA: CasillaId = _casilla_id("02-legacy")
+_M123_2019_2023_RETENCIONES_CASILLA: CasillaId = _casilla_id("03-legacy")
+_M123_2019_2023_REGULARIZACION_CASILLA: CasillaId = _casilla_id("04-legacy")
+_M123_2019_2023_PREVIOUS_RESULT_CASILLA: CasillaId = _casilla_id("05-legacy")
+_M123_2019_2023_RESULTADO_CASILLA: CasillaId = _casilla_id("06-legacy")
+_M123_2019_2023_INGRESO_CASILLA: CasillaId = _casilla_id("07-legacy")
 
 
 def _load_modelo(modelo_id: str):
@@ -266,16 +266,16 @@ def test_m123_legacy_casilla_06_invariant_to_nperceptores_and_base() -> None:
     result = calculate_registry_snapshot(
         snapshot,
         inputs={
-            _M123_LEGACY_NPERCEPTORES_CASILLA: Decimal("7"),
-            _M123_LEGACY_BASE_CASILLA: Decimal("42000.00"),
-            _M123_LEGACY_RETENCIONES_CASILLA: Decimal("100.00"),
-            _M123_LEGACY_REGULARIZACION_CASILLA: Decimal("0.00"),
-            _M123_LEGACY_PREVIOUS_RESULT_CASILLA: Decimal("0.00"),
-            _M123_LEGACY_INGRESO_CASILLA: Decimal("0.00"),
+            _M123_2019_2023_NPERCEPTORES_CASILLA: Decimal("7"),
+            _M123_2019_2023_BASE_CASILLA: Decimal("42000.00"),
+            _M123_2019_2023_RETENCIONES_CASILLA: Decimal("100.00"),
+            _M123_2019_2023_REGULARIZACION_CASILLA: Decimal("0.00"),
+            _M123_2019_2023_PREVIOUS_RESULT_CASILLA: Decimal("0.00"),
+            _M123_2019_2023_INGRESO_CASILLA: Decimal("0.00"),
         },
         date_context={"filing_period": date(2022, 12, 31)},
     )
-    casilla_06 = result.values[_M123_LEGACY_RESULTADO_CASILLA]
+    casilla_06 = result.values[_M123_2019_2023_RESULTADO_CASILLA]
     assert casilla_06 == Decimal("100.00"), (
         f"casilla 06-legacy (suma retenciones+regularizacion = [03]+[05]) "
         f"should be 100.00 (= retenciones + 0), got {casilla_06}; "

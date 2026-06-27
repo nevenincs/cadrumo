@@ -1,7 +1,7 @@
 """Retenciones-aggregation registry binding helpers (RET-1).
 
 The per-family module for the ``retenciones_aggregation`` binding source — the
-calc-mesh source that materialises the Modelo 180/190/193 "número total de
+calc-mesh source that materialises the Modelo 180/193 "número total de
 perceptores" DISTINCT-NIF count from the dedicated per-perceptor retención store.
 Extracted as its own family module per ``registry-resolver-family-extraction``;
 the cross-family validator dispatch in :mod:`._bindings` registers this family's
@@ -11,6 +11,9 @@ The materialisation depends on a :class:`_RetencionesPerceptorCountProtocol`
 (the scalar ``total_perceptors`` distinct-NIF count) rather than the
 application-layer ``RetencionesAggregation``, so the domain layer stays
 independent of the application aggregation service.
+
+The resolver walks the declared :class:`ModeloRevision` bindings and emits only
+canonical binding values for this source family.
 """
 
 from __future__ import annotations
@@ -63,7 +66,7 @@ def resolve_retenciones_aggregation_binding_values(
     revision: ModeloRevision,
     aggregation: _RetencionesPerceptorCountProtocol,
 ) -> dict[BindingId, Decimal]:
-    """Materialise every ``retenciones_aggregation`` binding on ``revision``.
+    """Materialise every ``retenciones_aggregation`` binding on a :class:`ModeloRevision`.
 
     Each such binding is the annual perceptor-count box; it materialises the
     validated distinct-NIF count (``aggregation.total_perceptors``) — never the sum

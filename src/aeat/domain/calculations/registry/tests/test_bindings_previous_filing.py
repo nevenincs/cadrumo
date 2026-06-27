@@ -44,7 +44,7 @@ def _span_selector() -> _PreviousModeloSelector:
     return _PreviousModeloSelector.model_validate(
         {
             "source_modelo": "130",
-            "source_casilla_ids": ("07",),
+            "source_casilla_ids": (_M130_PAGO_FRACCIONADO_CASILLA,),
             "prior_quarter_expanding_span": True,
             "max_year_delta": 0,
         },
@@ -105,7 +105,7 @@ def test_expanding_span_mutually_exclusive_with_offset() -> None:
         _PreviousModeloSelector.model_validate(
             {
                 "source_modelo": "130",
-                "source_casilla_ids": ("07",),
+                "source_casilla_ids": (_M130_PAGO_FRACCIONADO_CASILLA,),
                 "prior_quarter_expanding_span": True,
                 "source_period_offset_from_target": -1,
             },
@@ -117,7 +117,7 @@ def test_expanding_span_mutually_exclusive_with_source_periods() -> None:
         _PreviousModeloSelector.model_validate(
             {
                 "source_modelo": "130",
-                "source_casilla_ids": ("07",),
+                "source_casilla_ids": (_M130_PAGO_FRACCIONADO_CASILLA,),
                 "prior_quarter_expanding_span": True,
                 "source_periods": ("1T", "2T"),
             },
@@ -135,7 +135,7 @@ def _prior_pagos_binding() -> DataBindingDefinition:
         source=BindingSourceKind.PREVIOUS_FILING,
         selector={
             "source_modelo": "130",
-            "source_casilla_ids": ("07", "16"),
+            "source_casilla_ids": (_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
             "prior_quarter_expanding_span": True,
             "max_year_delta": 0,
         },

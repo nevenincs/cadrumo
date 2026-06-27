@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.application.aggregation import (
+from .....application.aggregation import (
     BindingSourceDisposition,
     build_binding_source_dispositions,
 )
@@ -34,12 +34,12 @@ from aeat.application.aggregation import (
 # pre-mesh tiers, and `manual_input`). It is consumed read-only here; the gate
 # asserts disposition coverage, not enrollment membership, so it tracks the live
 # truth without re-declaring it.
-from aeat.application.modelo._calculation_actions import _ENROLLED_SOURCE_KINDS
-from aeat.core import BindingSourceKind
-from aeat.domain.calculations.registry import InputKind
-from aeat.domain.calculations.registry._authority import bundled_authority
+from .....application.modelo._calculation_actions import _ENROLLED_SOURCE_KINDS
+from .....core import BindingSourceKind
+from .. import InputKind
+from .._authority import bundled_authority
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _representative_scope(period_selector) -> tuple[int, str]:
@@ -130,8 +130,7 @@ def test_every_bound_casilla_resolves_to_an_existing_binding() -> None:
     dangling = scan["dangling_binds"]
     assert not dangling, (
         "dangling BOUND-casilla binds detected — a bound casilla names a binding "
-        "absent from its revision (silent-blank on calculate):\n"
-        + "\n".join(f"  {entry}" for entry in dangling)
+        "absent from its revision (silent-blank on calculate):\n" + "\n".join(f"  {entry}" for entry in dangling)
     )
 
 
@@ -173,14 +172,11 @@ def test_breadth_scan_is_not_vacuous() -> None:
         f"expected >=15 modelos with at least one revision; scanned "
         f"{len(scan['modelos_scanned'])} — the authority may be mis-rooted"
     )
-    assert scan["revisions_scanned"] >= 15, (
-        f"expected >=15 revisions traversed; scanned {scan['revisions_scanned']}"
-    )
+    assert scan["revisions_scanned"] >= 15, f"expected >=15 revisions traversed; scanned {scan['revisions_scanned']}"
     assert scan["bound_casillas_scanned"] >= 50, (
         f"expected >=50 BOUND casillas across all modelos; scanned "
         f"{scan['bound_casillas_scanned']} — the bound-casilla surface vanished"
     )
     assert scan["bindings_scanned"] >= 50, (
-        f"expected >=50 bindings across all modelos; scanned "
-        f"{scan['bindings_scanned']} — the binding surface vanished"
+        f"expected >=50 bindings across all modelos; scanned {scan['bindings_scanned']} — the binding surface vanished"
     )
