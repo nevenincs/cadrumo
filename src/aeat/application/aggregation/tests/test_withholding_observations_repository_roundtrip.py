@@ -79,6 +79,30 @@ def test_withholding_observation_survives_encrypted_storage_roundtrip(tmp_path: 
         assert loaded == (original,)
 
 
+def test_corrupt_clave_or_subclave_refused_on_reload() -> None:
+    """Anti-tautology (#29): a persisted observation whose clave/subclave was
+    corrupted to an invalid token is REFUSED when reconstituted.
+
+    The repository deserialises each stored record through
+    ``WithholdingObservation`` validation (``model_validate`` -- the same path
+    ``load_observations`` runs), so a save-valid / load-corrupt regression cannot
+    pass silently now that ``clave`` is the typed RetencionClave and ``subclave`` is
+    numeric. If this ever passes with a corrupt token, every roundtrip above is
+    tautological.
+    """
+    valid = _observation(nif="11111111H", clave="A", subclave="01")
+
+    corrupt_clave = valid.model_dump()
+    corrupt_clave["clave"] = "ZZ"  # not an AEAT clave letter (A-L)
+    with pytest.raises(ValidationError):
+        WithholdingObservation.model_validate(corrupt_clave)
+
+    corrupt_subclave = valid.model_dump()
+    corrupt_subclave["subclave"] = "XX"  # subclave is numeric
+    with pytest.raises(ValidationError):
+        WithholdingObservation.model_validate(corrupt_subclave)
+
+
 def test_one_perceptor_two_claves_persist_as_distinct_percepciones(tmp_path: Path) -> None:
     """One perceptor under two claves persists as TWO distinct rows (percepciones key)."""
     with isolated_runtime_profile(tmp_path=tmp_path):

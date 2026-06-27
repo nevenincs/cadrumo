@@ -845,6 +845,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._semantic_role_resolution.AmbiguousSemanticRoleCasillaError",
+        ErrorCode(
+            code="REFUSED_MODELO_AMBIGUOUS_SEMANTIC_ROLE_CASILLA",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_ambiguous_semantic_role_casilla",
+            default_suggestion="Use the exact canonical casilla.id.",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._reconcile.ReconciliationEvidenceInvalidError",
         ErrorCode(
             code="REFUSED_RECONCILIATION_EVIDENCE_INVALID",

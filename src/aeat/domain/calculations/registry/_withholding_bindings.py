@@ -13,7 +13,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.aggregation import BindingAggregationOp, RowSetGroupingKind
+from ....core.aggregation import BindingAggregationOp, RetencionClave, RowSetGroupingKind
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
@@ -64,8 +64,8 @@ class WithholdingObservation(BaseModel):
     perceptor_legal_name: str = Field(default="", max_length=200)
     country_code: str = Field(default="ES", min_length=2, max_length=2)
     transaction_date: date
-    clave: str = Field(min_length=1, max_length=2)
-    subclave: str = Field(default="", max_length=4)
+    clave: RetencionClave
+    subclave: str = Field(default="", max_length=4, pattern=r"^[0-9]*$")
     percibido_dinerario: Decimal = Decimal("0")
     percibido_especie: Decimal = Decimal("0")
     retencion_practicada: Decimal = Decimal("0")
@@ -73,11 +73,19 @@ class WithholdingObservation(BaseModel):
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
 
-    @field_validator("clave")
+    @field_validator("clave", mode="before")
     @classmethod
-    def _clave_uppercase(cls, value: str) -> str:
-        if value != value.upper():
-            raise RegistryValidationError("withholding clave must be uppercase")
+    def _coerce_clave(cls, value: object) -> object:
+        """Hydrate the raw clave token to its :class:`RetencionClave` member.
+
+        The strict model config does not coerce ``str`` -> ``StrEnum``; the parser /
+        loader supplies the raw uppercase token (``"A"``), lifted here to
+        ``RetencionClave.A``. An unknown token (outside A-L, lowercase, or
+        multi-char) raises -- the closed-set hardening that replaces the former
+        uppercase-only check.
+        """
+        if isinstance(value, str) and not isinstance(value, RetencionClave):
+            return RetencionClave(value)
         return value
 
     @field_validator("percibido_dinerario", "percibido_especie", "retencion_practicada", "ingreso_a_cuenta")
@@ -96,7 +104,18 @@ class WithholdingObservationRequirement(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     binding_ids: tuple[BindingId, ...] = Field(min_length=1)
-    claves: tuple[str, ...] = ()
+    claves: tuple[RetencionClave, ...] = ()
+
+    @field_validator("claves", mode="before")
+    @classmethod
+    def _coerce_claves(cls, value: object) -> object:
+        """Hydrate each raw clave token to its :class:`RetencionClave` member (strict config)."""
+        if isinstance(value, (tuple, list)):
+            return tuple(
+                RetencionClave(item) if isinstance(item, str) and not isinstance(item, RetencionClave) else item
+                for item in value
+            )
+        return value
 
     _values_unique = field_validator("binding_ids", "claves")(unique_tuple("withholding requirement tuple"))
 

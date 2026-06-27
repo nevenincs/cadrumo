@@ -2,7 +2,8 @@
 
 Registry query and corpus validation services consume a
 :class:`ValidatedRegistryAuthority` as the single entry point for
-:class:`ModeloDefinition` instances, revision snapshots, and deadline windows.
+:class:`ModeloDefinition` instances, :class:`RegistrySnapshot` values, and
+deadline windows.
 The observation-persistence path reads captured filed state through the
 active-bucket encrypted observation store.
 """

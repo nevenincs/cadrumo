@@ -38,9 +38,9 @@ from .._calc_sheets_pull import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M303_PRINTED_RESULT_ALIAS_CASILLA: CasillaId = validated_casilla_id(
+_M303_PRINTED_RESULT_REFERENCE_CASILLA: CasillaId = validated_casilla_id(
     "69",
-    surface="_M303_PRINTED_RESULT_ALIAS_CASILLA",
+    surface="_M303_PRINTED_RESULT_REFERENCE_CASILLA",
 )
 
 
@@ -142,16 +142,16 @@ def test_compute_from_pull_refuses_stale_workbook() -> None:
     assert raised.value.suggestion == tr("adapters.google.calc_sheets.suggestions.reexport_then_pull")
 
 
-def test_compute_from_pull_refuses_printed_number_operator_edit_alias() -> None:
+def test_compute_from_pull_refuses_printed_number_operator_edit_reference() -> None:
     snapshot = _modelo_303_snapshot()
     pull = PullResult(
         spreadsheet_id="test-id",
         operator_edits=(
             *_operator_edits_for(snapshot, {}),
             OperatorEdit(
-                casilla_id=_M303_PRINTED_RESULT_ALIAS_CASILLA,
+                casilla_id=_M303_PRINTED_RESULT_REFERENCE_CASILLA,
                 display_number="69",
-                label="Printed alias for iva.resultado",
+                label="Printed reference for iva.resultado",
                 value=Decimal("0"),
             ),
         ),

@@ -61,7 +61,7 @@ _M303_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
 _M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
 _M303_RESULTADO_FINAL_CASILLA: CasillaId = _casilla_id("71")
 _M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_M303_PRINTED_COMPENSATION_ALIAS_CASILLA: CasillaId = _casilla_id("87")
+_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = _casilla_id("87")
 
 
 def test_authoritative_declaration_selection_uses_latest_alta_row_for_duplicate_period() -> None:
@@ -286,7 +286,7 @@ def test_registry_observation_from_filed_declaration_refuses_noncanonical_casill
         modelo="303",
         ejercicio=2024,
         period="4T",
-        casilla_values={_M303_PRINTED_COMPENSATION_ALIAS_CASILLA: Decimal("0")},
+        casilla_values={_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: Decimal("0")},
     )
 
     with pytest.raises(SedeParseError, match=r"canonical casilla\.id"):

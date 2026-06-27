@@ -24,9 +24,9 @@ _BUCKET_ID = "sede-observation"
 _AEAT = Settings.external_constants().aeat
 _DECLARATIONS_LISTING_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.declarations_listing}"
 _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_CASILLA")
-_M303_PRINTED_COMPENSATION_ALIAS_CASILLA: CasillaId = validated_casilla_id(
+_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = validated_casilla_id(
     "110",
-    surface="_M303_PRINTED_COMPENSATION_ALIAS_CASILLA",
+    surface="_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA",
 )
 
 
@@ -108,7 +108,7 @@ def test_store_rejects_artefact_body_that_does_not_match_metadata(
         )
 
 
-def test_store_rejects_observation_with_printed_number_casilla_alias(
+def test_store_rejects_observation_with_printed_number_casilla_reference(
     tmp_path: Path,
     active_storage: TestRuntimeProfile,
 ) -> None:
@@ -127,7 +127,7 @@ def test_store_rejects_observation_with_printed_number_casilla_alias(
         artefacts=(artefact,),
         casillas=(
             ObservedCasillaValue(
-                casilla_id=_M303_PRINTED_COMPENSATION_ALIAS_CASILLA,
+                casilla_id=_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA,
                 value="0.00",
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:casilla:110",

@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING
 
 from ...core import BindingSourceKind
 from ...core.time import now as _utc_now
-from ...domain._identifiers import canonical_decimal_string as _canonical_decimal_str
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
@@ -26,7 +25,6 @@ from ...domain.calculations.registry import (
     RelationId,
     calculate_registry_snapshot,
     casillas_by_id,
-    validated_casilla_id,
 )
 from ...domain.deadlines import IVARegime
 from ...domain.invoices import InvoiceCatalogueRepository
@@ -65,13 +63,9 @@ from ._action_errors import (
     WorkUnitRevisionDivergenceError,
 )
 from ._binding_resolution import (
-    lift_previous_filing_casilla_overrides_to_bindings,
-    reject_binding_channel_mismatch,
     resolve_available_bound_inputs_by_casilla_id,
-    resolve_borrador_source_tier,
-    resolve_declaration_period_inputs,
-    resolve_profile_source_tier,
 )
+from ._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from ._calculation_helpers import (
     build_typed_observations as _build_typed_observations,
 )
@@ -81,10 +75,14 @@ from ._calculation_helpers import (
 from ._calculation_helpers import (
     resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit,
 )
-from ._official_box_advisory import collect_official_box_unpopulated_diagnostics
-from ._prior_payment_advisory import (
-    collect_prior_payment_minoracion_not_captured_diagnostics,
-    collect_prior_payment_not_deducted_diagnostics,
+from ._calculation_resolution import (
+    build_calculation_replay_payloads as _build_calculation_replay_payloads,
+)
+from ._calculation_resolution import (
+    resolve_calculation_binding_channels as _resolve_calculation_binding_channels,
+)
+from ._calculation_resolution import (
+    resolve_calculation_inputs as _resolve_calculation_inputs,
 )
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._registry_resources import authority_via_resources as _authority_via_resources
@@ -270,6 +268,7 @@ def calculate_modelo_revision(
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
     unresolved_relation_ids: tuple[RelationId, ...] = (),
+    unresolved_binding_ids: tuple[BindingId, ...] = (),
     source_transaction_ids: tuple[str, ...] = (),
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -357,111 +356,44 @@ def calculate_modelo_revision(
         backend_binding_values=lower_precedence_binding_values,
         decision=iva_compensation_decision,
     )
-    from ..aggregation import CalculationSourceResolution, merge_source_resolutions_by_precedence
-
-    # Enroll the profile and borrador sources as first-class mesh resolutions and
-    # overlay the precedence ladder (lowest -> highest: profile, mesh backend,
-    # borrador, caller) through merge_source_resolutions_by_precedence. This is
-    # the explicit mesh-merge form of the historical
-    # {**profile, **backend, **borrador, **caller} dict-merge: each tier is a
-    # CalculationSourceResolution and a higher tier overrides a lower one. The
-    # backend mesh resolvers' values arrive via `lower_precedence_binding_values`
-    # (computed by _resolve_bucket_source_mesh); a caller --binding is highest.
-    borrador_resolution = resolve_borrador_source_tier(
-        bucket_id=work_unit.bucket_id,
+    channels = _resolve_calculation_binding_channels(
+        work_unit=work_unit,
         snapshot=snapshot,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        borrador_snapshot_id=borrador_snapshot_id,
+        casilla_inputs=casilla_inputs,
         caller_binding_values=caller_binding_values,
         caller_enum_binding_values=caller_enum_binding_values,
+        backend_binding_values=lower_precedence_binding_values,
+        borrador_snapshot_id=borrador_snapshot_id,
         borrador_snapshot_repository=borrador_snapshot_repository,
     )
-    profile_resolution = resolve_profile_source_tier(
-        bucket_id=work_unit.bucket_id,
-        snapshot=snapshot,
-        caller_binding_values=caller_binding_values,
-        caller_enum_binding_values=caller_enum_binding_values,
-        borrador_resolution=borrador_resolution,
-        backend_binding_values=lower_precedence_binding_values,
-    )
-    backend_tier = CalculationSourceResolution(
-        resolver_id="calculate_backend_bindings",
-        binding_values=dict(lower_precedence_binding_values),
-    )
-    caller_tier = CalculationSourceResolution(
-        resolver_id="calculate_caller_bindings",
-        binding_values=dict(caller_binding_values),
-        enum_binding_values=dict(caller_enum_binding_values),
-    )
-    merged = merge_source_resolutions_by_precedence(
-        (profile_resolution, backend_tier, borrador_resolution, caller_tier),
-    )
-    borrador_provenance = merged.borrador_provenance
-    resolved_bindings = dict(sorted(merged.binding_values.items()))
-    resolved_enum_bindings = dict(sorted(merged.enum_binding_values.items()))
-    resolved_date_bindings = dict(sorted(merged.date_binding_values.items()))
-    reject_binding_channel_mismatch(snapshot.revision, resolved_bindings, resolved_enum_bindings)
     resolved_relations = dict(relation_values or {})
-    # Promote operator casilla overrides for previous-filing-bound casillas into
-    # bindings (the relation target_binding materialisation already arrives via the
-    # backend mesh channel and is adjudicated by the mesh _claim_binding guard).
-    resolved_bindings = dict(
-        sorted(
-            lift_previous_filing_casilla_overrides_to_bindings(
-                snapshot.revision,
-                casilla_inputs,
-                resolved_bindings,
-            ).items(),
-        ),
-    )
-    resolved_inputs = dict(
-        sorted(
-            {
-                **resolve_declaration_period_inputs(
-                    snapshot.revision,
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period,
-                ),
-                **dict(backend_casilla_inputs or {}),
-                **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, resolved_bindings),
-                **casilla_inputs,
-            }.items(),
-        ),
+    resolved_inputs = _resolve_calculation_inputs(
+        revision=snapshot.revision,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        backend_casilla_inputs=backend_casilla_inputs,
+        resolved_bindings=channels.bindings,
+        casilla_inputs=casilla_inputs,
     )
 
     engine_result = calculate_registry_snapshot(
         snapshot,
         inputs=resolved_inputs,
         date_context={"filing_period": period_date},
-        binding_values=resolved_bindings,
-        enum_binding_values=resolved_enum_bindings,
+        binding_values=channels.bindings,
+        enum_binding_values=channels.enum_bindings,
         relation_values=resolved_relations,
         unresolved_relation_ids=unresolved_relation_ids,
-        date_binding_values=resolved_date_bindings or None,
+        unresolved_binding_ids=unresolved_binding_ids,
+        date_binding_values=channels.date_bindings or None,
     )
 
-    input_values_by_casilla_id: dict[CasillaId, str] = dict(
-        sorted(
-            (
-                validated_casilla_id(k, surface="calculate_modelo_revision.input_values_by_casilla_id"),
-                _canonical_decimal_str(v),
-            )
-            for k, v in resolved_inputs.items()
-        ),
-    )
-    binding_overrides: dict[BindingId, str] = dict(
-        sorted(
-            [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
-            + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
-            # Persist date-binding inputs with the other BindingId-keyed replay
-            # values. Relations ride the separate relation_overrides channel
-            # below so a BindingId map never carries RelationId keys.
-            + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()],
-        ),
-    )
-    relation_overrides: dict[RelationId, str] = dict(
-        sorted((k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items()),
+    replay_payloads = _build_calculation_replay_payloads(
+        resolved_inputs=resolved_inputs,
+        resolved_bindings=channels.bindings,
+        resolved_enum_bindings=channels.enum_bindings,
+        resolved_date_bindings=channels.date_bindings,
+        resolved_relations=resolved_relations,
     )
     casilla_values = dict(engine_result.values)
     typed_observations = _build_typed_observations(engine_result=engine_result, snapshot=snapshot)
@@ -471,15 +403,13 @@ def calculate_modelo_revision(
         work_unit_id=work_unit_id,
         work_unit=work_unit,
         work_units=work_units,
-        input_values_by_casilla_id=input_values_by_casilla_id,
-        binding_overrides=binding_overrides,
-        relation_overrides=relation_overrides,
+        input_values_by_casilla_id=replay_payloads.input_values_by_casilla_id,
+        binding_overrides=replay_payloads.binding_overrides,
+        relation_overrides=replay_payloads.relation_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
-        borrador_snapshot_id=borrador_provenance.snapshot_id if borrador_provenance is not None else None,
-        bindings_sourced_from_borrador=(
-            borrador_provenance.bindings_sourced if borrador_provenance is not None else ()
-        ),
+        borrador_snapshot_id=channels.borrador_snapshot_id,
+        bindings_sourced_from_borrador=channels.bindings_sourced_from_borrador,
         observations=typed_observations,
         detail_rows=detail_rows,
         formula_count=len(engine_result.entries),
@@ -633,6 +563,7 @@ def _resolve_bucket_source_mesh(
     """
     from ..aggregation import (
         CalculationSourceContext,
+        CalculationSourceDiagnostic,
         LedgerIvaAggregationSourceResolver,
         LedgerRentaExpenseAggregationSourceResolver,
         LedgerRentaGastoAggregationSourceResolver,
@@ -721,7 +652,13 @@ def _resolve_bucket_source_mesh(
     # pre-mesh-handled source kinds (profile, borrador, iva_wallet_decision).
     # DEFERRED_SOURCE_KINDS are NOT on the manual_sources allowlist so they still
     # emit an advisory.
-    _pre_mesh_handled: frozenset[str] = frozenset({"profile", "borrador", "iva_wallet_decision"})
+    _pre_mesh_handled: frozenset[BindingSourceKind] = frozenset(
+        {
+            BindingSourceKind.PROFILE,
+            BindingSourceKind.BORRADOR,
+            BindingSourceKind.IVA_WALLET_DECISION,
+        },
+    )
     _handled = frozenset(source_resolution.owned_sources) | _pre_mesh_handled
     _unhandled_diagnostics = collect_unhandled_source_diagnostics(
         snapshot.revision,
@@ -732,7 +669,88 @@ def _resolve_bucket_source_mesh(
         source_resolution = source_resolution.model_copy(
             update={"diagnostics": source_resolution.diagnostics + _unhandled_diagnostics},
         )
+    # Expected-but-missing binding gap (no-silent-under-declaration): a directly
+    # casilla-bound binding whose enrolled resolver RAN (its source kind is in the
+    # merged owned_sources, i.e. the source was present and resolved) but produced
+    # NO value for that binding would otherwise fall through to a silent zero on
+    # the initial-value path (binding not in binding_values, source not the
+    # observation-backed previous_filing/relation_prefill carve-out). Mark those
+    # ids unresolved so the formula leaf escapes non-blocking (mirroring the
+    # relation channel) AND surface an INFORMATIONAL advisory. A binding whose
+    # source is ABSENT (not in owned_sources) is a legitimate zero — the taxpayer
+    # has no such data — and stays silent.
+    _expected_missing = _expected_but_missing_binding_ids(
+        snapshot.revision,
+        owned_sources=frozenset(source_resolution.owned_sources),
+        resolved_binding_values=source_resolution.binding_values,
+    )
+    if _expected_missing:
+        _missing_diagnostics = tuple(
+            CalculationSourceDiagnostic(
+                reason="unresolved_binding",
+                source_kind=str(source),
+                binding_id=binding_id,
+                casilla_id=casilla_id,
+                message=(
+                    f"binding {binding_id!r} (casilla {casilla_id!r}) declares present source "
+                    f"{source!r} whose resolver produced no value; the bound casilla would "
+                    "otherwise default to a silent zero. Supply the source records before filing."
+                ),
+            )
+            for binding_id, casilla_id, source in _expected_missing
+        )
+        source_resolution = source_resolution.model_copy(
+            update={
+                "unresolved_binding_ids": tuple(sorted({b for b, _c, _s in _expected_missing})),
+                "diagnostics": source_resolution.diagnostics + _missing_diagnostics,
+            },
+        )
     return source_resolution
+
+
+# Binding sources whose unresolved slot is ALREADY handled non-silently elsewhere
+# and must NOT be re-flagged as an expected-but-missing silent zero:
+#   - previous_filing / relation_prefill: the initial-value path treats an
+#     unresolved slot of these as absent-by-design (operator-manual fallback) or
+#     the relation channel already surfaces its own diagnostic;
+#   - manual_input: the operator supplies the value directly.
+_NON_SILENT_BOUND_BINDING_SOURCES: frozenset[str] = frozenset(
+    {"previous_filing", "relation_prefill", "manual_input"},
+)
+
+
+def _expected_but_missing_binding_ids(
+    revision: ModeloRevision,
+    *,
+    owned_sources: frozenset[BindingSourceKind],
+    resolved_binding_values: Mapping[BindingId, Decimal],
+) -> tuple[tuple[BindingId, CasillaId, BindingSourceKind], ...]:
+    """Return (binding_id, casilla_id, source) for casilla-bound bindings whose present source resolved no value.
+
+    A binding qualifies when (1) it is the binding of a ``BOUND`` casilla, (2) its
+    source kind is in ``owned_sources`` (the resolver RAN for a present source),
+    (3) it produced no value (absent from ``resolved_binding_values``), and (4) its
+    source is not one of the non-silent carve-outs already handled by the
+    initial-value path or the relation channel. The absent-source case (source not
+    in ``owned_sources``) is a legitimate zero and is deliberately excluded.
+    """
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    missing: list[tuple[BindingId, CasillaId, BindingSourceKind]] = []
+    for casilla in revision.casillas:
+        if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
+            continue
+        binding = bindings_by_id.get(casilla.binding)
+        if binding is None:
+            continue
+        source = binding.source
+        if str(source) in _NON_SILENT_BOUND_BINDING_SOURCES:
+            continue
+        if source not in owned_sources:
+            continue
+        if binding.id in resolved_binding_values:
+            continue
+        missing.append((binding.id, casilla.id, source))
+    return tuple(missing)
 
 
 def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -885,10 +903,18 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         for relation_id in source_resolution.unresolved_relation_ids
         if relation_id not in caller_relation_ids
     )
+    # A caller --binding override of an expected-but-missing binding RESOLVES it,
+    # so drop it from the unresolved set and its advisory (mirrors the relation
+    # caller-override carve-out above).
+    caller_binding_ids = frozenset((binding_values or {}).keys())
+    unresolved_binding_ids = tuple(
+        binding_id for binding_id in source_resolution.unresolved_binding_ids if binding_id not in caller_binding_ids
+    )
     source_diagnostics = tuple(
         diagnostic
         for diagnostic in source_resolution.diagnostics
-        if diagnostic.relation_id is None or diagnostic.relation_id not in caller_relation_ids
+        if (diagnostic.relation_id is None or diagnostic.relation_id not in caller_relation_ids)
+        and (diagnostic.binding_id is None or diagnostic.binding_id not in caller_binding_ids)
     )
     revision = calculate_modelo_revision(
         work_unit_id,
@@ -904,6 +930,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         borrador_snapshot_id=borrador_snapshot_id,
         relation_values=merged_relation_values,
         unresolved_relation_ids=unresolved_relation_ids,
+        unresolved_binding_ids=unresolved_binding_ids,
         source_transaction_ids=tuple(source_resolution.source_transaction_ids),
         filing_period_date=filing_period_date,
         work_unit_repository=wu_repo,
@@ -913,49 +940,14 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         detail_rows=detail_rows,
         clock=clock,
     )
-    # Stage 1 advisory (no-silent-under-declaration): a ledger-driven calculate
-    # folds cuota into the semantic aggregate layer while the official
-    # Diseño-de-Registros numbered boxes (manual, the cells the human transcribes
-    # to the AEAT sede) stay zero. Surface that contradiction as a non-blocking
-    # advisory, reusing the revision's ADVISORY implies_any_nonzero predicates as
-    # the single total→constituent mapping so it cannot drift from the verify gate.
-    official_box_diagnostics = collect_official_box_unpopulated_diagnostics(
+    advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         snapshot.revision,
         revision.casilla_values,
-    )
-    source_diagnostics = source_diagnostics + official_box_diagnostics
-    # Stage 1 advisory (no-silent-under-declaration): Modelo 130 is cumulative
-    # from the start of the ejercicio, but casilla 05 ("Pagos fraccionados
-    # anteriores") is a manual cell with no binding — a cumulative 2T/3T/4T
-    # calculate never auto-deducts the prior trimestre's pago fraccionado, so the
-    # operator over-pays (RD 439/2007 art. 110; casilla 07 = 04 - 05 - 06). The
-    # advisory fires only when a prior-trimestre M130 filing for the same
-    # ejercicio actually exists in the catalogue, so a true first-obligation
-    # filer (whose casilla 05 is legitimately null) stays silent.
-    from ..calculations import CalculationObservationRepository
-
-    prior_payment_observation_repository = CalculationObservationRepository()
-    prior_payment_diagnostics = collect_prior_payment_not_deducted_diagnostics(
-        revision.casilla_values,
         modelo=work_unit.modelo,
         period_token=work_unit.period.registry_token,
         filing_year=work_unit.filing_year,
-        observation_repository=prior_payment_observation_repository,
     )
-    source_diagnostics = source_diagnostics + prior_payment_diagnostics
-    # Stage-2 honesty (no-silent-under-declaration): once casilla 05 is a bound
-    # carry, a prior filing that carries casilla 07 but no casilla-16 entry is
-    # "not captured" - the carry treats the absent minoración as zero, so surface
-    # the gap rather than silently dropping it (ADR
-    # 2026-06-13-modelo-130-pagos-fraccionados-carry, casilla-16
-    # filed-zero-vs-not-captured).
-    minoracion_diagnostics = collect_prior_payment_minoracion_not_captured_diagnostics(
-        modelo=work_unit.modelo,
-        period_token=work_unit.period.registry_token,
-        filing_year=work_unit.filing_year,
-        observation_repository=prior_payment_observation_repository,
-    )
-    source_diagnostics = source_diagnostics + minoracion_diagnostics
+    source_diagnostics = source_diagnostics + advisory_diagnostics
     return BucketAggregationCalculationResult(
         revision=revision,
         source_diagnostics=source_diagnostics,

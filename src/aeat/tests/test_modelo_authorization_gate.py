@@ -35,7 +35,6 @@ single-year, missing-test, or contract-less entry turns the gate RED.
 from __future__ import annotations
 
 import ast
-from pathlib import Path
 
 import pytest
 
@@ -47,6 +46,7 @@ from ..core.access_gate import (
     AuthorizationState,
 )
 from ..core.resources import resources
+from ._inventory import repo_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -56,10 +56,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: asserting nothing. Detected via AST — a comment or string literal mentioning
 #: the name does NOT satisfy the check; only an ``ast.Call`` node does.
 _ENROLLMENT_CONTRACT_CALL = assert_enrollment_matches_manifest.__name__
-
-#: Repository root: this file lives at ``src/aeat/tests/`` so the repo root is
-#: four parents up. Used to resolve manifest-declared ``enrolling_test`` paths.
-_REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def _ast_has_call_to(source: str, func_name: str) -> bool:
@@ -172,7 +168,7 @@ def test_authorization_coverage_report_and_validity(capsys: pytest.CaptureFixtur
             f"manifest entry {entry.modelo!r} claims fewer than {MIN_DISTINCT_RENTA_YEARS} "
             f"distinct renta years: {entry.renta_years!r}"
         )
-        test_path = _REPO_ROOT / entry.enrolling_test
+        test_path = repo_path(entry.enrolling_test)
         assert test_path.is_file(), (
             f"manifest entry {entry.modelo!r} names enrolling_test {entry.enrolling_test!r}, "
             f"which does not exist at {test_path}"

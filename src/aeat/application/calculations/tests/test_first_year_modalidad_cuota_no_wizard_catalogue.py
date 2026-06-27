@@ -139,7 +139,7 @@ def test_first_year_modalidad_cuota_resolves_without_wizard_catalogue(tmp_path: 
     COMPUTES; pre-#30 the swallowed ``WizardCatalogueNotRegisteredError`` left the
     flag False, the date None, and the casilla ABSENT.
     """
-    child = subprocess.run(  # noqa: S603 - executable is sys.executable; argv is a fixed in-module script constant
+    child = subprocess.run(  # noqa - fixed executable and in-module script constant
         [sys.executable, "-c", _CHILD_SCRIPT, str(tmp_path)],
         capture_output=True,
         text=True,

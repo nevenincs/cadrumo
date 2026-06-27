@@ -18,9 +18,9 @@ observation store, real registry authority, real calculation engine, real
 relation resolver, real source mesh — no mocks/skips/xfail):
 
 * ``test_modelo_180_115_fold_in_fires_on_live_calculate`` proves the fold-in now
-  populates the M180 annual output casillas from the four filed M115 quarters,
-  and asserts the values equal the summed quarters (wiring invariant grounded in
-  the AEAT resumen instructions, not a reproduction of the formula under test).
+  populates the M180 monetary annual output casillas from the four filed M115
+  quarters, while the perceptor count comes from the dedicated per-perceptor
+  retención store.
 
 * ``test_relation_target_collision_refused_by_mesh_guard`` proves a second
   resolver claiming the same relation-materialised target binding is refused
@@ -39,6 +39,7 @@ import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
+from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -53,6 +54,8 @@ from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation._errors import AggregationValidationError
+from ...aggregation._retencion_observations_repository import RetencionObservationRepository
+from ...aggregation._retenciones import RetencionObservation, RetencionScheme
 from ...aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceResolution,
@@ -114,6 +117,8 @@ _QUARTERS: dict[str, dict[CasillaId, Decimal]] = {
     },
 }
 
+_M180_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
+
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
@@ -153,17 +158,42 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[Ca
     return totals
 
 
+def _retencion_observation(nif: str) -> RetencionObservation:
+    return RetencionObservation(
+        source_kind="ledger_transaction",
+        source_object_id=f"retencion-{nif}",
+        perceptor_nif=nif,
+        perceptor_name="Arrendador Ejemplo SL",
+        scheme=RetencionScheme.URBAN_RENTAL,
+        taxable_base=Decimal("1000.00"),
+        retencion_amount=Decimal("190.00"),
+        accrued_on=f"{_YEAR}-03-15",
+    )
+
+
+def _seed_180_retencion_observations() -> Decimal:
+    period = Period.from_year_and_code(_YEAR, "0A")
+    RetencionObservationRepository().replace_observations(
+        modelo="180",
+        filing_year=_YEAR,
+        period=period,
+        observations=[_retencion_observation(nif) for nif in _M180_PERCEPTOR_NIFS],
+        source_kind="aggregate_pull",
+    )
+    return Decimal(len(set(_M180_PERCEPTOR_NIFS)))
+
+
 def test_modelo_180_115_fold_in_fires_on_live_calculate(secure_objects: SecureObjectRepository) -> None:
     """The M180 annual ← M115 quarterly fold-in populates on the live calculate path.
 
     With four 115 quarters recorded as filed observations, a live calculate of
-    the M180 annual draws the relation values through the enrolled
-    ``RelationPrefillSourceResolver`` and the three M180 output casillas equal
-    the summed 115 quarters. Before relation enrollment these casillas were a
-    silent blank.
+    the M180 annual draws the monetary relation values through the enrolled
+    ``RelationPrefillSourceResolver``. The count casilla is resolved separately
+    through the ``retenciones_aggregation`` source.
     """
     obs_repo = CalculationObservationRepository()
     expected = _seed_115_quarters(obs_repo=obs_repo)
+    expected_perceptor_count = _seed_180_retencion_observations()
 
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
@@ -190,8 +220,9 @@ def test_modelo_180_115_fold_in_fires_on_live_calculate(secure_objects: SecureOb
     )
 
     casilla_values = result.revision.casilla_values
-    # Fold-in fires: each output equals the summed 115 quarters (was blank before).
-    assert casilla_values[_M180_TOTAL_PERCEPTORES_CASILLA] == expected[_M115_PERCEPTORES_CASILLA]
+    # Fold-in fires for the monetary outputs. The perceptor count is a separate
+    # retenciones_aggregation binding over the real per-perceptor store.
+    assert casilla_values[_M180_TOTAL_PERCEPTORES_CASILLA] == expected_perceptor_count
     assert casilla_values[_M180_BASE_TOTAL_CASILLA] == expected[_M115_BASE_CASILLA]
     assert casilla_values[_M180_RETENCIONES_TOTAL_CASILLA] == expected[_M115_RETENCIONES_CASILLA]
     # Non-vacuous: the summed base must be strictly positive so a silent blank
@@ -231,7 +262,7 @@ def test_relation_target_collision_refused_by_mesh_guard(secure_objects: SecureO
     colliding_binding_id = next(iter(relation_resolution.binding_values))
     rival = CalculationSourceResolution(
         resolver_id="rival_resolver",
-        owned_sources=("manual_input",),
+        owned_sources=(BindingSourceKind.MANUAL_INPUT,),
         binding_values={colliding_binding_id: Decimal("99999.99")},
     )
 

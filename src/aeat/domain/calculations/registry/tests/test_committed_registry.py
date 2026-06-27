@@ -12,6 +12,7 @@ from .. import (
     CasillaId,
     calculate_registry_snapshot,
     parse_export_payload,
+    resolve_bound_inputs_by_casilla_id,
     resolve_export_layout,
     resolve_relation_values,
     validated_casilla_id,
@@ -255,19 +256,13 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
     assert legal_ref in snapshot.legal
 
 
-def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_modelo_115_relations(
+def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_modelo_115_relations_and_count_binding(
     registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
 ) -> None:
     snapshot = registry_snapshot("180", 2026, "0A")
     relation_values = resolve_relation_values(
         snapshot.revision,
         {
-            "modelo-180-rel-115-perceptores-anual": (
-                Decimal("1"),
-                Decimal("1"),
-                Decimal("2"),
-                Decimal("1"),
-            ),
             "modelo-180-rel-115-base-anual": (
                 Decimal("250.10"),
                 Decimal("749.90"),
@@ -282,16 +277,18 @@ def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_m
             ),
         },
     )
+    binding_values = {"modelo-180-115-perceptores-anual": Decimal("2")}
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={},
+        inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         date_context={"filing_period": date(2026, 12, 31)},
+        binding_values=binding_values,
         relation_values=relation_values,
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
-    assert set(entries) == {"decl.total-perceptores", "decl.base-total", "decl.retenciones-total"}
-    assert entries["decl.total-perceptores"].operand_refs == ("modelo-180-rel-115-perceptores-anual",)
+    assert set(entries) == {"decl.base-total", "decl.retenciones-total"}
+    assert result.values["decl.total-perceptores"] == binding_values["modelo-180-115-perceptores-anual"]
     assert entries["decl.base-total"].operand_refs == ("modelo-180-rel-115-base-anual",)
     assert entries["decl.retenciones-total"].operand_refs == ("modelo-180-rel-115-retenciones-anual",)
 

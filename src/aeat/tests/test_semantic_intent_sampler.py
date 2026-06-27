@@ -32,13 +32,12 @@ from pathlib import Path
 
 import pytest
 
-from ..core.paths import PROJECT_ROOT
+from ._inventory import SRC_AEAT, ast_for_path, discover_test_modules, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SAMPLE_SEED = 47
 _SAMPLE_SIZE = 20
-_SRC_ROOT = PROJECT_ROOT / "src" / "aeat"
 
 # Keywords that signal the test asserts incidental shape rather than behaviour.
 # Presence of ONLY these keywords (without domain-behaviour keywords) is a
@@ -101,14 +100,13 @@ _BEHAVIOUR_KEYWORDS: frozenset[str] = frozenset(
 
 def _collect_test_files() -> list[Path]:
     """Return all test_*.py files under src/aeat/ sorted for determinism."""
-    return sorted(p for p in _SRC_ROOT.rglob("test_*.py") if "__pycache__" not in p.parts)
+    return list(discover_test_modules())
 
 
 def _extract_test_function_names(path: Path) -> list[str]:
     """Return test function names from ``path`` via AST parsing."""
-    try:
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-    except SyntaxError:
+    tree = ast_for_path(path)
+    if tree is None:
         return []
     return [
         node.name
@@ -133,6 +131,18 @@ def _sample_test_files(seed: int, size: int) -> list[Path]:
     rng = random.Random(seed)
     sample_size = min(size, len(all_files))
     return rng.sample(all_files, sample_size)
+
+
+def _drift_candidates(paths: list[Path]) -> list[tuple[str, str]]:
+    """Return semantic-intent drift candidates for the supplied test files."""
+    drift_candidates: list[tuple[str, str]] = []
+    for path in paths:
+        names = _extract_test_function_names(path)
+        rel = repo_relative(path)
+        for name in names:
+            if _has_drift_indicator(name):
+                drift_candidates.append((rel, name))
+    return drift_candidates
 
 
 def test_sampler_produces_stable_deterministic_sample() -> None:
@@ -166,7 +176,7 @@ def test_sampler_output_covers_multiple_packages() -> None:
     """
     sample = _sample_test_files(_SAMPLE_SEED, _SAMPLE_SIZE)
     # Subpackage = first segment after 'aeat' in the path.
-    subpackages = {p.relative_to(_SRC_ROOT).parts[0] if p.relative_to(_SRC_ROOT).parts else "root" for p in sample}
+    subpackages = {p.relative_to(SRC_AEAT).parts[0] if p.relative_to(SRC_AEAT).parts else "root" for p in sample}
     assert len(subpackages) >= 2, (
         f"Sample only covers {len(subpackages)} top-level subpackage(s): "
         f"{sorted(subpackages)}.  The sampler is not providing breadth coverage."
@@ -184,15 +194,8 @@ def test_sampler_records_drift_candidates_without_failing() -> None:
     error and produces a reproducible, non-crashing output.
     """
     sample = _sample_test_files(_SAMPLE_SEED, _SAMPLE_SIZE)
-    drift_candidates: list[tuple[str, str]] = []
-    for path in sample:
-        names = _extract_test_function_names(path)
-        rel = path.relative_to(PROJECT_ROOT).as_posix()
-        for name in names:
-            if _has_drift_indicator(name):
-                drift_candidates.append((rel, name))
+    drift_candidates_a = _drift_candidates(sample)
+    drift_candidates_b = _drift_candidates(sample)
 
-    # The sampler must complete without raising.  The candidate list may be
-    # empty (all sampled tests are well-named) or non-empty (review
-    # targets).  Both outcomes are acceptable at this gate.
-    assert isinstance(drift_candidates, list)
+    assert drift_candidates_a == drift_candidates_b
+    assert all(rel.startswith("src/aeat/") and name.startswith("test_") for rel, name in drift_candidates_a)

@@ -557,7 +557,7 @@ def test_parse_typed_cli_observations_round_trips_valid_json() -> None:
 
     from ....application.aggregation._retenciones import RetencionObservation
     from ....core.aggregation import RetencionScheme
-    from .._modelo import _parse_typed_cli_observations
+    from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
     raw = (
         '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'
@@ -584,7 +584,7 @@ def test_parse_typed_cli_observations_rejects_invalid_json_syntax() -> None:
     import typer as _typer
 
     from ....application.aggregation._retenciones import RetencionObservation
-    from .._modelo import _parse_typed_cli_observations
+    from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
     with pytest.raises(_typer.BadParameter):
         _parse_typed_cli_observations(["{not: json}"], model=RetencionObservation, flag="--retencion-observation")
@@ -595,7 +595,7 @@ def test_parse_typed_cli_observations_rejects_non_object_json() -> None:
     import typer as _typer
 
     from ....application.aggregation._retenciones import RetencionObservation
-    from .._modelo import _parse_typed_cli_observations
+    from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
     with pytest.raises(_typer.BadParameter):
         _parse_typed_cli_observations(
@@ -614,7 +614,7 @@ def test_parse_typed_cli_observations_rejects_schema_violation() -> None:
     import typer as _typer
 
     from ....application.aggregation._retenciones import RetencionObservation
-    from .._modelo import _parse_typed_cli_observations
+    from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
     missing_scheme = (
         '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'

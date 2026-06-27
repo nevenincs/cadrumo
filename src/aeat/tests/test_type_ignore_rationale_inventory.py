@@ -48,14 +48,13 @@ To clean up a known-violating site:
 
 from __future__ import annotations
 
-import pathlib
 import re
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+from ._inventory import aeat_relative, production_python_files
 
-_SRC_ROOT = pathlib.Path(__file__).parent.parent
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 # Recognised rationale marker token prefixes (any one satisfies the rule).
 _MARKER_TOKENS: tuple[str, ...] = (
@@ -99,10 +98,7 @@ _KNOWN_VIOLATING_LINES: frozenset[tuple[str, int]] = frozenset(
 def _collect_violations() -> list[tuple[str, int]]:
     """Walk all production files; return (rel_path, lineno) pairs lacking markers."""
     violations: list[tuple[str, int]] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
-        name = path.name
-        if name.startswith("test_") or name.endswith("_test.py") or "tests" in path.parts:
-            continue
+    for path in production_python_files():
         try:
             source = path.read_text(encoding="utf-8", errors="replace")
         except OSError:
@@ -119,8 +115,7 @@ def _collect_violations() -> list[tuple[str, int]]:
             start = max(0, i - _CONTEXT_LINES)
             if any(any(m in prev for m in _MARKER_TOKENS) for prev in lines[start:i]):
                 continue
-            rel = path.relative_to(_SRC_ROOT).as_posix()
-            violations.append((rel, lineno))
+            violations.append((aeat_relative(path), lineno))
     return violations
 
 

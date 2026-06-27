@@ -23,19 +23,19 @@ from __future__ import annotations
 import json
 import re
 import tomllib
-from pathlib import Path
 
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
+from ._inventory import repo_path
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-CONFIG_PATH = PROJECT_ROOT / "release-please-config.json"
-MANIFEST_PATH = PROJECT_ROOT / ".release-please-manifest.json"
-CHANGELOG_PATH = PROJECT_ROOT / "CHANGELOG.md"
-PYPROJECT_PATH = PROJECT_ROOT / "pyproject.toml"
-INIT_PATH = PROJECT_ROOT / "src" / "aeat" / "__init__.py"
+CONFIG_PATH = repo_path("release-please-config.json")
+MANIFEST_PATH = repo_path(".release-please-manifest.json")
+CHANGELOG_PATH = repo_path("CHANGELOG.md")
+PYPROJECT_PATH = repo_path("pyproject.toml")
+INIT_PATH = repo_path("src/aeat/__init__.py")
 
 
 class ChangelogSection(BaseModel):
@@ -161,7 +161,7 @@ def test_version_surfaces_agree() -> None:
 
 def test_no_release_please_github_actions_workflow() -> None:
     """GitHub Actions is disabled on this repo — no release-please workflow may exist."""
-    workflow = PROJECT_ROOT / ".github" / "workflows" / "release-please.yml"
+    workflow = repo_path(".github/workflows/release-please.yml")
     assert not workflow.exists(), (
         f"{workflow} must not exist: release-please runs LOCALLY only on this repo "
         "(GitHub Actions is permanently disabled)."

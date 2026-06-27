@@ -23,9 +23,12 @@ from __future__ import annotations
 import ast
 import re
 from collections import defaultdict
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
+
+from ._inventory import SRC_AEAT, ast_for_path, module_name, production_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -65,31 +68,9 @@ CORE_STRUCTS: dict[str, str] = {
     "ModeloRecord": "aeat.domain.modelos._filing_record",
 }
 
-_SRC_ROOT = Path(__file__).resolve().parents[2]  # .../src
-_PKG_ROOT = _SRC_ROOT / "aeat"
-
 # A Sphinx cross-reference role capturing the referenced symbol's final segment,
 # e.g. ``:class:`aeat.domain.filing.ModeloRevision``` -> ``ModeloRevision``.
 _ROLE = re.compile(r":(?:mod|class|func|meth|obj|data|attr|exc|paramref):`[^`]*?([A-Za-z_][A-Za-z0-9_]*)`")
-
-
-def _module_name(path: Path) -> str:
-    """Return the dotted module name for a source file under ``src/``."""
-    rel = path.relative_to(_SRC_ROOT).with_suffix("")
-    parts = list(rel.parts)
-    if parts[-1] == "__init__":
-        parts = parts[:-1]
-    return ".".join(parts)
-
-
-def _is_in_scope(path: Path) -> bool:
-    """Exclude tests, conftest, and non-source data trees from the gate."""
-    posix = path.as_posix()
-    return not (path.name.startswith("test_") or path.name == "conftest.py" or "/tests/" in posix or "/_data/" in posix)
-
-
-def _source_files() -> list[Path]:
-    return [p for p in _PKG_ROOT.rglob("*.py") if _is_in_scope(p)]
 
 
 def _imported_anchors(tree: ast.AST) -> set[str]:
@@ -126,7 +107,7 @@ def test_core_struct_anchors_are_unambiguous() -> None:
     """Every declared anchor resolves to exactly one class at its canonical module."""
     problems: list[str] = []
     for name, dotted in CORE_STRUCTS.items():
-        base = _SRC_ROOT / Path(*dotted.split("."))
+        base = SRC_AEAT.parent / Path(*dotted.split("."))
         # A canonical home is either a module file or a package __init__.
         path = base.with_suffix(".py")
         if not path.is_file():
@@ -140,15 +121,14 @@ def test_core_struct_anchors_are_unambiguous() -> None:
     assert not problems, "core-struct anchor set is stale:\n  " + "\n  ".join(problems)
 
 
-def test_modules_that_use_a_core_struct_link_it() -> None:
+def test_modules_that_use_a_core_struct_link_it(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """A module importing a core struct must cross-link it in a docstring."""
     violations: dict[str, list[str]] = defaultdict(list)
-    for path in _source_files():
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except SyntaxError:  # pragma: no cover - a parse failure is its own gate's concern
+    for path in production_python_files():
+        tree = ast_for_path(path, source_tree_ast)
+        if tree is None:
             continue
-        module = _module_name(path)
+        module = module_name(path)
         linked = _linked_anchors(tree)
         for anchor in _imported_anchors(tree):
             if CORE_STRUCTS[anchor] == module:
@@ -181,7 +161,7 @@ def _annotation_names(node: ast.AST) -> set[str]:
     return names
 
 
-def test_public_functions_link_anchor_parameters() -> None:
+def test_public_functions_link_anchor_parameters(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """A documented public function taking a core struct as a parameter links it.
 
     The spine is highest-signal at a function's own boundary: if a parameter is
@@ -189,12 +169,11 @@ def test_public_functions_link_anchor_parameters() -> None:
     reader following the signature lands on the canonical definition.
     """
     violations: dict[str, list[str]] = defaultdict(list)
-    for path in _source_files():
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except SyntaxError:  # pragma: no cover - syntax is its own gate's concern
+    for path in production_python_files():
+        tree = ast_for_path(path, source_tree_ast)
+        if tree is None:
             continue
-        module = _module_name(path)
+        module = module_name(path)
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue

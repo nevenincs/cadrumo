@@ -53,7 +53,7 @@ def _casilla_id(value: object) -> CasillaId:
 _IVA_DEVENGADO_CASILLA: CasillaId = _casilla_id("iva.cuota-devengada-total")
 _IVA_DEDUCIBLE_CASILLA: CasillaId = _casilla_id("iva.cuota-deducible-total")
 _IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
-_M303_PRINTED_RESULT_ALIAS_CASILLA: CasillaId = _casilla_id("69")
+_M303_PRINTED_RESULT_REFERENCE_CASILLA: CasillaId = _casilla_id("69")
 _M130_ABSENT_BY_DESIGN_CASILLA: CasillaId = _casilla_id("15")
 _M130_PAYMENT_BASE_CASILLA: CasillaId = _casilla_id("14")
 
@@ -128,10 +128,10 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
         assert loaded_computed.legal_refs == ("liva.art-94",)
 
 
-def test_calculation_observation_repository_rejects_printed_number_alias(
+def test_calculation_observation_repository_rejects_printed_number_reference(
     tmp_path: Path,
 ) -> None:
-    """Persisting calculation history must reject printed-number casilla aliases."""
+    """Persisting calculation history must reject printed-number casilla references."""
 
     observation = RegistryModeloObservation(
         modelo="303",
@@ -139,7 +139,7 @@ def test_calculation_observation_repository_rejects_printed_number_alias(
         period="1T",
         observations=(
             CasillaObservation(
-                casilla_id=_M303_PRINTED_RESULT_ALIAS_CASILLA,
+                casilla_id=_M303_PRINTED_RESULT_REFERENCE_CASILLA,
                 value=Decimal("1.00"),
                 legal_refs=("liva.art-94",),
                 source_refs=("aeat.iva.2025",),
@@ -161,7 +161,7 @@ def test_calculation_observation_repository_rejects_printed_number_alias(
         assert raised.value.context["modelo"] == "303"
         assert raised.value.context["filing_year"] == 2025
         assert raised.value.context["period"] == "1T"
-        assert raised.value.context["casilla_ids"] == (_M303_PRINTED_RESULT_ALIAS_CASILLA,)
+        assert raised.value.context["casilla_ids"] == (_M303_PRINTED_RESULT_REFERENCE_CASILLA,)
         assert repo.load_observation("303", Period.from_year_and_code(2025, "1T")) is None
 
 
@@ -177,8 +177,8 @@ def test_calculation_observation_repository_rejects_printed_operand_casilla_ref(
                 casilla_id=_IVA_RESULTADO_CASILLA,
                 value=Decimal("1.00"),
                 formula_id="iva.formula.resultado",
-                operand_refs=(_M303_PRINTED_RESULT_ALIAS_CASILLA,),
-                operand_casilla_refs=(_M303_PRINTED_RESULT_ALIAS_CASILLA,),
+                operand_refs=(_M303_PRINTED_RESULT_REFERENCE_CASILLA,),
+                operand_casilla_refs=(_M303_PRINTED_RESULT_REFERENCE_CASILLA,),
                 operand_values=(Decimal("1.00"),),
                 legal_refs=("liva.art-94",),
                 source_refs=("aeat.iva.2025",),
@@ -199,9 +199,9 @@ def test_calculation_observation_repository_rejects_printed_operand_casilla_ref(
         assert raised.value.context["modelo"] == "303"
         assert raised.value.context["filing_year"] == 2025
         assert raised.value.context["period"] == "1T"
-        assert raised.value.context["casilla_ids"] == (_M303_PRINTED_RESULT_ALIAS_CASILLA,)
+        assert raised.value.context["casilla_ids"] == (_M303_PRINTED_RESULT_REFERENCE_CASILLA,)
         assert raised.value.context["observation_casilla_ids"] == ()
-        assert raised.value.context["operand_casilla_refs"] == (_M303_PRINTED_RESULT_ALIAS_CASILLA,)
+        assert raised.value.context["operand_casilla_refs"] == (_M303_PRINTED_RESULT_REFERENCE_CASILLA,)
         assert repo.load_observation("303", Period.from_year_and_code(2025, "1T")) is None
 
 

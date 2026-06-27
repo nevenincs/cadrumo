@@ -8,7 +8,15 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ._generate_base import _SEDE_ORIGIN
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="justificante fixture casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"justificante fixture casilla key {value!r} is not a canonical casilla.id") from exc
 
 
 @dataclass(frozen=True)
@@ -151,10 +159,10 @@ class _Modelo123Fixture:
     periodo: str
     tax_id: str
     full_name: str
-    casillas: tuple[tuple[str, str, str], ...]  # (casilla_id, printed_number, spanish_formatted_amount)
+    render_rows: tuple[tuple[CasillaId, str, str], ...]  # (casilla_id, printed_number, spanish_formatted_amount)
 
 
-_MODELO_123_2024_CASILLAS: tuple[tuple[str, str, str], ...] = (
+_MODELO_123_2024_RENDER_ROWS: tuple[tuple[CasillaId, str, str], ...] = (
     # 2024-y-siguientes revision: 14 casillas.
     # Amounts chosen to satisfy all 5 registry formulas:
     #   [03] = [01] + [02]  =  5,00 + 3,00 = 8,00
@@ -163,35 +171,35 @@ _MODELO_123_2024_CASILLAS: tuple[tuple[str, str, str], ...] = (
     #   [12] = [09] + [11]  =  2.850,00 + 0,00 = 2.850,00
     #   [14] = [12] - [13]  =  2.850,00 - 0,00 = 2.850,00
     # Integer casillas use NN,00 format so SPANISH_AMOUNT_GROUP regex (requires comma) matches.
-    ("01", "01", "5,00"),
-    ("02", "02", "3,00"),
-    ("03", "03", "8,00"),
-    ("04", "04", "10.000,00"),
-    ("05", "05", "5.000,00"),
-    ("06", "06", "15.000,00"),
-    ("07", "07", "1.900,00"),
-    ("08", "08", "950,00"),
-    ("09", "09", "2.850,00"),
-    ("10", "10", "0,00"),
-    ("11", "11", "0,00"),
-    ("12", "12", "2.850,00"),
-    ("13", "13", "0,00"),
-    ("14", "14", "2.850,00"),
+    (_casilla_id("01"), "01", "5,00"),
+    (_casilla_id("02"), "02", "3,00"),
+    (_casilla_id("03"), "03", "8,00"),
+    (_casilla_id("04"), "04", "10.000,00"),
+    (_casilla_id("05"), "05", "5.000,00"),
+    (_casilla_id("06"), "06", "15.000,00"),
+    (_casilla_id("07"), "07", "1.900,00"),
+    (_casilla_id("08"), "08", "950,00"),
+    (_casilla_id("09"), "09", "2.850,00"),
+    (_casilla_id("10"), "10", "0,00"),
+    (_casilla_id("11"), "11", "0,00"),
+    (_casilla_id("12"), "12", "2.850,00"),
+    (_casilla_id("13"), "13", "0,00"),
+    (_casilla_id("14"), "14", "2.850,00"),
 )
 
-_MODELO_123_2023_LEGACY_CASILLAS: tuple[tuple[str, str, str], ...] = (
+_MODELO_123_2023_LEGACY_RENDER_ROWS: tuple[tuple[CasillaId, str, str], ...] = (
     # 2019-2023 legacy revision: 8 casillas (internal ids have -legacy suffix).
     # Display prefix is the plain digit (01..08).
     # Amounts satisfy: [06]=[03]+[05]=1.520,00+0,00=1.520,00, [08]=[06]-[07]=1.520,00-0,00=1.520,00
     # Integer casilla uses N,00 format so SPANISH_AMOUNT_GROUP regex (requires comma) matches.
-    ("01-legacy", "01", "4,00"),
-    ("02-legacy", "02", "8.000,00"),
-    ("03-legacy", "03", "1.520,00"),
-    ("04-legacy", "04", "0,00"),
-    ("05-legacy", "05", "0,00"),
-    ("06-legacy", "06", "1.520,00"),
-    ("07-legacy", "07", "0,00"),
-    ("08-legacy", "08", "1.520,00"),
+    (_casilla_id("01-legacy"), "01", "4,00"),
+    (_casilla_id("02-legacy"), "02", "8.000,00"),
+    (_casilla_id("03-legacy"), "03", "1.520,00"),
+    (_casilla_id("04-legacy"), "04", "0,00"),
+    (_casilla_id("05-legacy"), "05", "0,00"),
+    (_casilla_id("06-legacy"), "06", "1.520,00"),
+    (_casilla_id("07-legacy"), "07", "0,00"),
+    (_casilla_id("08-legacy"), "08", "1.520,00"),
 )
 
 _MODELO_123_FIXTURES: tuple[_Modelo123Fixture, ...] = (
@@ -201,7 +209,7 @@ _MODELO_123_FIXTURES: tuple[_Modelo123Fixture, ...] = (
         periodo="1T",
         tax_id="Y0000001S",
         full_name="DEMO EMPRESA SL",
-        casillas=_MODELO_123_2024_CASILLAS,
+        render_rows=_MODELO_123_2024_RENDER_ROWS,
     ),
     _Modelo123Fixture(
         filename="123/2023-1T.pdf",
@@ -209,7 +217,7 @@ _MODELO_123_FIXTURES: tuple[_Modelo123Fixture, ...] = (
         periodo="1T",
         tax_id="Y0000001S",
         full_name="DEMO EMPRESA SL",
-        casillas=_MODELO_123_2023_LEGACY_CASILLAS,
+        render_rows=_MODELO_123_2023_LEGACY_RENDER_ROWS,
     ),
 )
 
@@ -249,7 +257,7 @@ def _draw_modelo_123(c: canvas.Canvas, fixture: _Modelo123Fixture) -> None:
     y -= 10 * mm
     # Casilla block: printed AEAT box number at line start, amount on the same line.
     # The parser resolves this printed number back to the canonical registry casilla_id.
-    for _casilla_id, printed_number, amount in fixture.casillas:
+    for _casilla_id, printed_number, amount in fixture.render_rows:
         c.drawString(20 * mm, y, f"{printed_number}  {amount}")
         y -= 6 * mm
     y -= 4 * mm
@@ -488,10 +496,10 @@ class _Modelo131Fixture:
     periodo: str
     tax_id: str
     full_name: str
-    casillas: tuple[tuple[str, str, str], ...]  # (box_number, label_text, spanish_amount)
+    printed_rows: tuple[tuple[str, str, str], ...]  # (box_number, label_text, spanish_amount)
 
 
-_MODELO_131_CASILLAS: tuple[tuple[str, str, str], ...] = (
+_MODELO_131_PRINTED_ROWS: tuple[tuple[str, str, str], ...] = (
     # Box number, label text (from modelo-131-instrucciones.html), sanitized amount
     # Layout: line-end box number like M130 tabular form.
     # Ground truth: AEAT instructions "Casilla 01. Consignaremos... suma de rendimientos netos"
@@ -523,7 +531,7 @@ _MODELO_131_FIXTURES: tuple[_Modelo131Fixture, ...] = (
         periodo="1T",
         tax_id="Y0000001S",
         full_name="DEMO AUTONOMO EO",
-        casillas=_MODELO_131_CASILLAS,
+        printed_rows=_MODELO_131_PRINTED_ROWS,
     ),
 )
 
@@ -573,7 +581,7 @@ def _draw_modelo_131(c: canvas.Canvas, fixture: _Modelo131Fixture) -> None:
     # The dots (periods) and trailing box number mirror the M130 tabular layout
     # where box numbers appear at the end of label rows.  The numeric_casilla
     # regex (^\\s*NN\\b...<amount>$) requires NN at LINE START and cannot match.
-    for box_num, label, amount in fixture.casillas:
+    for box_num, label, amount in fixture.printed_rows:
         dots = "." * max(2, 60 - len(label) - len(box_num) - len(amount))
         c.drawString(20 * mm, y, f"{label} {dots} {box_num}  {amount}")
         y -= 6 * mm

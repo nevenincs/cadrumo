@@ -28,10 +28,11 @@ from pathlib import Path
 
 import pytest
 
+from ._inventory import REPO_ROOT, SRC_AEAT
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
-_DATA_ROOT = _PROJECT_ROOT / "src" / "aeat" / "_data"
+_DATA_ROOT = SRC_AEAT / "_data"
 _WHEEL_DATA_PREFIX = "aeat/_data"
 
 
@@ -46,7 +47,7 @@ def _git_ls_files_data() -> list[str]:
             "src/aeat/_data/registry",
             "src/aeat/_data/terminology",
         ],
-        cwd=_PROJECT_ROOT,
+        cwd=REPO_ROOT,
         capture_output=True,
         text=True,
         check=True,
@@ -84,7 +85,7 @@ def built_wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
     out_dir = tmp_path_factory.mktemp("wheel-out")
     subprocess.run(
         ["uv", "build", "--wheel", "--out-dir", str(out_dir)],
-        cwd=_PROJECT_ROOT,
+        cwd=REPO_ROOT,
         capture_output=True,
         text=True,
         check=True,

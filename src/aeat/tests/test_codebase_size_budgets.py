@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
-from ..core.paths import PROJECT_ROOT
+from ._inventory import package_ast_items, package_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -15,7 +16,8 @@ _DEFAULT_MODULE_LINE_LIMIT = 1250
 _DEFAULT_CALLABLE_LINE_LIMIT = 180
 _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/aeat/application/modelo/tests/test_export.py": 1585,  # SPLIT-CANDIDATE (concurrent growth)
-    "src/aeat/domain/calculations/registry/tests/test_loader_directory_mode.py": 1380,  # SPLIT-CANDIDATE (concurrent growth)
+    # SPLIT-CANDIDATE (concurrent growth)
+    "src/aeat/domain/calculations/registry/tests/test_loader_directory_mode.py": 1380,
     "src/aeat/domain/calculations/registry/_workbook_parity.py": 1265,  # SPLIT-CANDIDATE (concurrent growth)
     "src/aeat/domain/calculations/registry/_formula_runtime.py": 1300,  # SPLIT-CANDIDATE (concurrent growth)
     "src/aeat/application/filing/tests/test_export.py": 1270,  # SPLIT-CANDIDATE (concurrent growth)
@@ -70,12 +72,11 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
 
 
 def _aeat_python_files() -> tuple[Path, ...]:
-    root = PROJECT_ROOT / "src" / "aeat"
-    return tuple(path for path in sorted(root.rglob("*.py")) if "__pycache__" not in path.parts)
+    return package_python_files(include_data=True)
 
 
 def _relative(path: Path) -> str:
-    return path.relative_to(PROJECT_ROOT).as_posix()
+    return repo_relative(path)
 
 
 def test_tracked_python_modules_do_not_exceed_line_budgets() -> None:
@@ -90,13 +91,12 @@ def test_tracked_python_modules_do_not_exceed_line_budgets() -> None:
     assert offenders == [], "Python module size budget exceeded:\n  " + "\n  ".join(offenders)
 
 
-def test_tracked_production_callables_do_not_exceed_line_budgets() -> None:
+def test_tracked_production_callables_do_not_exceed_line_budgets(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     offenders: list[str] = []
-    for path in _aeat_python_files():
+    for path, tree in package_ast_items(source_tree_ast, include_data=True):
         relative = _relative(path)
         if "/tests/" in relative:
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue

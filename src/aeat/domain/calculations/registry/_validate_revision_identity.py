@@ -9,9 +9,6 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
-from ._casilla_membership import declared_casilla_ids
-from ._ids import CasillaId
-
 if TYPE_CHECKING:
     from ._schema import ModeloRevision
 
@@ -83,11 +80,6 @@ def _emit_combined_primary_id_failures(
             failures.append(f"{prefix}: duplicate registry id {duplicate!r} shared by {', '.join(owners)}")
 
 
-def _resolvable_casilla_references(revision: ModeloRevision) -> frozenset[CasillaId]:
-    """Return canonical ``casilla.id`` tokens resolvable within ``revision``."""
-    return declared_casilla_ids(revision)
-
-
 def _emit_duplicate_export_ref_failures(
     failures: list[str],
     prefix: str,
@@ -106,7 +98,7 @@ def _emit_duplicate_export_ref_failures(
 
 
 def revision_reference_identity_failures(prefix: str, revision: ModeloRevision) -> tuple[str, ...]:
-    """Return revision identity failures that would make any reference ambiguous."""
+    """Return :class:`ModeloRevision` identity failures that make references ambiguous."""
     failures: list[str] = []
     ids_by_kind = _collect_record_id_lists(revision)
     _emit_per_kind_duplicate_failures(failures, prefix, ids_by_kind)
@@ -117,6 +109,7 @@ def revision_reference_identity_failures(prefix: str, revision: ModeloRevision) 
 
 
 def revision_casilla_identity_failures(prefix: str, revision: ModeloRevision) -> tuple[str, ...]:
+    """Return :class:`ModeloRevision` casilla identity failures."""
     failures: list[str] = []
     _emit_casilla_metadata_uniqueness_failures(failures, prefix, revision)
     _emit_ambiguous_bare_casilla_id_failures(failures, prefix, revision)

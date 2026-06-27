@@ -550,7 +550,7 @@ def _with_derived_303_compensation_available_observation(
         return observation
     if generated is not None:
         snapshot = resources().modelos.authority.snapshot(
-            "303",
+            Modelo.M303.value,
             filing_year=observation.ejercicio,
             period=observation.period.registry_token,
         )

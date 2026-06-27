@@ -44,6 +44,18 @@ _M303_REGIMEN_GENERAL_RESULT_CASILLA: CasillaId = validated_casilla_id(
     "iva.resultado-regimen-general",
     surface="_M303_REGIMEN_GENERAL_RESULT_CASILLA",
 )
+_M200_AMBIGUOUS_PRINTED_NUMBER: CasillaId = validated_casilla_id(
+    "00562",
+    surface="_M200_AMBIGUOUS_PRINTED_NUMBER",
+)
+_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA: CasillaId = validated_casilla_id(
+    "DP200010:00562",
+    surface="_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA",
+)
+_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00562",
+    surface="_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA",
+)
 
 
 def _profile() -> ModeloTestProfile:
@@ -119,14 +131,14 @@ def test_build_draft_rejects_whitespace_padded_casilla_input_key() -> None:
         )
 
 
-def test_build_draft_rejects_printed_number_alias_for_semantic_casilla_id() -> None:
-    """A printed number must not be accepted as a filing input casilla alias."""
+def test_build_draft_rejects_printed_number_for_semantic_casilla_id() -> None:
+    """A printed number must not be accepted as a filing input casilla reference."""
     period = Period.from_year_and_code(2026, "1T")
     snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
     casilla = next(c for c in snapshot.revision.casillas if c.id == _M303_PREVIOUS_COMPENSATION_CASILLA)
     assert casilla.number != casilla.id
 
-    with pytest.raises(ModeloBuilderError, match="casilla metadata aliases are not accepted") as exc_info:
+    with pytest.raises(ModeloBuilderError, match="non-canonical casilla reference tokens are not accepted") as exc_info:
         build_draft(
             modelo="303",
             period=period,
@@ -140,14 +152,33 @@ def test_build_draft_rejects_printed_number_alias_for_semantic_casilla_id() -> N
     assert "iva.compensacion-pendiente-periodos-anteriores" in str(exc_info.value)
 
 
-def test_build_draft_rejects_export_ref_alias_for_semantic_casilla_id() -> None:
-    """An export field reference must not be accepted as a filing input casilla alias."""
+def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
+    """A reused printed number must fail before any filing calculation can run."""
+    period = Period.from_year_and_code(2024, "0A")
+
+    with pytest.raises(ModeloBuilderError, match="is ambiguous") as exc_info:
+        build_draft(
+            modelo="200",
+            period=period,
+            profile=_profile(),
+            inputs={
+                _M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("100.00"),
+            },
+            schema_provider=build_runtime_schema_provider(modelos=("200",), filing_year=2024, period=period),
+        )
+
+    assert _M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA in str(exc_info.value)
+    assert _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA in str(exc_info.value)
+
+
+def test_build_draft_rejects_export_ref_for_semantic_casilla_id() -> None:
+    """An export field reference must not be accepted as a filing input casilla reference."""
     period = Period.from_year_and_code(2026, "1T")
     snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period=period.code, on=date(2026, 4, 1))
     casilla = next(c for c in snapshot.revision.casillas if c.id == _M303_REGIMEN_GENERAL_RESULT_CASILLA)
     export_ref = next(ref for ref in casilla.export_refs if ref != casilla.id)
 
-    with pytest.raises(ModeloBuilderError, match="casilla metadata aliases are not accepted") as exc_info:
+    with pytest.raises(ModeloBuilderError, match="non-canonical casilla reference tokens are not accepted") as exc_info:
         build_draft(
             modelo="303",
             period=period,

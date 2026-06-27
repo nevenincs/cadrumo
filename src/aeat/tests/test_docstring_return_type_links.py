@@ -23,14 +23,14 @@ from __future__ import annotations
 import ast
 import re
 from collections import defaultdict
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+from ._inventory import ast_for_path, module_name, production_python_files
 
-_SRC_ROOT = Path(__file__).resolve().parents[2]
-_PKG_ROOT = _SRC_ROOT / "aeat"
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _ROLE = re.compile(r":(?:class|obj|meth|func|data|attr|exc):`[^`]*?([A-Za-z_][A-Za-z0-9_]*)`")
 
@@ -65,19 +65,6 @@ _RETURN_TYPE_LINK_BASELINE: frozenset[tuple[str, str]] = frozenset(
 )
 
 
-def _is_in_scope(path: Path) -> bool:
-    posix = path.as_posix()
-    return not (path.name.startswith("test_") or path.name == "conftest.py" or "/tests/" in posix or "/_data/" in posix)
-
-
-def _module_name(path: Path) -> str:
-    rel = path.relative_to(_SRC_ROOT).with_suffix("")
-    parts = list(rel.parts)
-    if parts[-1] == "__init__":
-        parts = parts[:-1]
-    return ".".join(parts)
-
-
 def _annotation_names(node: ast.AST) -> set[str]:
     """Return every bare identifier appearing in a (possibly nested) annotation."""
     names: set[str] = set()
@@ -89,15 +76,12 @@ def _annotation_names(node: ast.AST) -> set[str]:
     return names
 
 
-def _linkable_classes() -> set[str]:
+def _linkable_classes(source_tree_ast: Mapping[Path, ast.AST]) -> set[str]:
     """Public aeat classes with exactly one canonical definition (documentable)."""
     counts: dict[str, int] = defaultdict(int)
-    for path in _PKG_ROOT.rglob("*.py"):
-        if not _is_in_scope(path):
-            continue
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except SyntaxError:
+    for path in production_python_files():
+        tree = ast_for_path(path, source_tree_ast)
+        if tree is None:
             continue
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
@@ -105,18 +89,15 @@ def _linkable_classes() -> set[str]:
     return {name for name, n in counts.items() if n == 1}
 
 
-def test_public_functions_link_their_aeat_return_type() -> None:
+def test_public_functions_link_their_aeat_return_type(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """A documented public function must cross-link an aeat-typed return annotation."""
-    linkable = _linkable_classes()
+    linkable = _linkable_classes(source_tree_ast)
     violations: set[tuple[str, str]] = set()
-    for path in _PKG_ROOT.rglob("*.py"):
-        if not _is_in_scope(path):
+    for path in production_python_files():
+        tree = ast_for_path(path, source_tree_ast)
+        if tree is None:
             continue
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except SyntaxError:
-            continue
-        module = _module_name(path)
+        module = module_name(path)
         for node in ast.walk(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue

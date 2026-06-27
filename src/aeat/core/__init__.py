@@ -59,6 +59,7 @@ from ._result_disposition import (
     ResultDisposition,
     derive_result_disposition,
     modelo_has_codified_disposition,
+    result_disposition_casilla_ids,
     result_disposition_is_refund,
 )
 from ._tax_domain import TaxDomain
@@ -120,6 +121,7 @@ __all__: list[str] = [
     "require_optional_extra",
     "resolve_active_bucket_id",
     "resolve_repository_bucket_id",
+    "result_disposition_casilla_ids",
     "result_disposition_is_refund",
     "to_str_keyed_dict",
     "validated_casilla_id",

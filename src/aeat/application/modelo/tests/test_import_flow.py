@@ -96,6 +96,7 @@ def _casilla_id(value: object) -> CasillaId:
 _IMPORT_INCOME_CASILLA: CasillaId = _casilla_id("01")
 _IMPORT_EXPENSE_CASILLA: CasillaId = _casilla_id("02")
 _UNKNOWN_IMPORT_CASILLA: CasillaId = _casilla_id("9999")
+_M303_PRINTED_RESULT_TOKEN: CasillaId = _casilla_id("69")
 _M111_AMENDMENT_CASILLA: CasillaId = _casilla_id("01")
 _M111_EMPLOYMENT_WITHHELD_CASILLA: CasillaId = _casilla_id("03")
 _M111_PROFESSIONAL_WITHHELD_CASILLA: CasillaId = _casilla_id("06")
@@ -482,6 +483,39 @@ def test_import_refuses_casilla_ids_not_in_registry(repos: _Repos) -> None:
     casillas_obj = exc_info.value.context.get("casillas", [])
     assert isinstance(casillas_obj, (list, tuple))
     assert _UNKNOWN_IMPORT_CASILLA in casillas_obj
+
+
+def test_import_refuses_printed_number_metadata_token(repos: _Repos) -> None:
+    """External imports must not treat a printed number as a casilla reference."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo="303",
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "1T"),
+        revision_id="2023-y-siguientes",
+        repository=wu_repo,
+        clock=_T0,
+    )
+
+    with pytest.raises(ExternalModeloImportError, match="non-canonical reference tokens") as exc_info:
+        import_external_filing_evidence(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_values={_M303_PRINTED_RESULT_TOKEN: Decimal("100")},
+            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_reference_id="JUST-PRINTED-NUMBER",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T1,
+        )
+
+    assert exc_info.value.translated_message == "application.modelo.errors.external_import_unknown_casillas"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context.get("casillas") == [_M303_PRINTED_RESULT_TOKEN]
+    assert "iva.resultado" in str(exc_info.value)
 
 
 def test_import_refuses_non_string_casilla_keys_without_coercion(repos: _Repos) -> None:

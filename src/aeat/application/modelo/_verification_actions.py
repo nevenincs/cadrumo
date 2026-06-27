@@ -635,10 +635,12 @@ def _cross_period_expected_member_sets_from_profile(
 def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | None:
     """Whether the taxpayer files actividad-económica pagos fraccionados (130/131).
 
-    ``True`` when the profile declares actividad-económica income; ``False`` when it declares
-    income categories that exclude it (a salaried/rental-only filer never files 130/131);
-    ``None`` when income categories are undeclared (fail-closed: the 130/131 dependency stays
-    enforced). LIRPF art. 99 / RIRPF art. 109.
+    Reads the :class:`TaxpayerProfile` income-category declarations. ``True``
+    when the profile declares actividad-económica income; ``False`` when it
+    declares income categories that exclude it (a salaried/rental-only filer
+    never files 130/131); ``None`` when income categories are undeclared
+    (fail-closed: the 130/131 dependency stays enforced). LIRPF art. 99 /
+    RIRPF art. 109.
     """
     if not profile.irpf_income_categories:
         return None

@@ -5,11 +5,14 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from .. import CasillaId, validated_casilla_id
 from .._errors import RegistryValidationError
 from .._relations import _derive_offset_source_anchor, _derive_offset_source_period
 from .._schema import RelationDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_IVA_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado", surface="_IVA_RESULTADO_CASILLA")
 
 
 def _relation(**overrides: object) -> RelationDefinition:
@@ -19,7 +22,7 @@ def _relation(**overrides: object) -> RelationDefinition:
         "dependency_role": "direct_calculation",
         "source_modelo": "303",
         "source_revision_selector": {"filing_year_delta": 0},
-        "source_casilla_id": "iva.resultado",
+        "source_casilla_id": _IVA_RESULTADO_CASILLA,
         "target_binding": "iva.previo",
         "period_alignment": {"mode": "previous_quarter"},
         "legal_refs": ("ley-37-1992:art-99",),

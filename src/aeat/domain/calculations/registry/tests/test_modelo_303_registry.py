@@ -281,10 +281,23 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
 
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     assert result == {
+        "modelo-303-iva-repercutido-general-base": Decimal("1000"),
         "modelo-303-iva-repercutido-general-cuota": Decimal("210"),
+        "modelo-303-iva-repercutido-reducido-base": Decimal("200"),
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("20"),
+        "modelo-303-iva-repercutido-super-reducido-base": Decimal("100"),
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("4"),
+        "modelo-303-iva-soportado-interiores-base": Decimal("300"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("63"),
+        # This fixture has no recargo-charged repercutido rows, so the
+        # recargo-equivalencia tier bindings resolve to zero.
+        "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
+        "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),
+        "modelo-303-recargo-equivalencia-super-reducido-cuota": Decimal("0"),
+        # The reverse-charge AIC row is not an intra-community supply, and this
+        # fixture has no export rows, so casillas 59/60 resolve to zero.
+        "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
+        "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
         # No third-country import rows in this observation set, so the import
         # deducible binding resolves to zero.
         "modelo-303-iva-soportado-importaciones-cuota": Decimal("0"),

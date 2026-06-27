@@ -9,6 +9,7 @@ import pytest
 from .....core import BindingSourceKind, Period
 from ..._export_field_kind import CasillaFieldKind
 from .. import CasillaId, validated_casilla_id
+from .._schema import SourceCitation
 from .._schema_input_kind import InputKind
 from ._referential_integrity_support import (
     _DUMMY_LEGAL_ID,
@@ -72,11 +73,16 @@ _SEGMENTED_LIQUIDACION_ALT_CASILLA: CasillaId = validated_casilla_id(
     "DP200014:00562-alt",
     surface="_SEGMENTED_LIQUIDACION_ALT_CASILLA",
 )
-_SEGMENTED_EXPORT_oIELD_CASILLA: CasillaId = validated_casilla_id(
+_SEGMENTED_EXPORT_FIELD_CASILLA: CasillaId = validated_casilla_id(
     "DP200014:00592",
-    surface="_SEGMENTED_EXPORT_oIELD_CASILLA",
+    surface="_SEGMENTED_EXPORT_FIELD_CASILLA",
 )
-_BARE_EXPORT_oIELD_CASILLA: CasillaId = validated_casilla_id("00592", surface="_BARE_EXPORT_oIELD_CASILLA")
+_BARE_EXPORT_FIELD_CASILLA: CasillaId = validated_casilla_id("00592", surface="_BARE_EXPORT_FIELD_CASILLA")
+_DUMMY_FORMULA_CITATION = SourceCitation(source_ref=_DUMMY_SOURCE_ID, required_text=("test formula source",))
+_FORMULA_REVISION_APPLICATION_LINKS = (
+    _minimal_application_link("filing"),
+    _minimal_application_link("calculation").model_copy(update={"id": "al.test.calculation"}),
+)
 
 
 def test_committed_registry_passes_referential_integrity(
@@ -714,8 +720,7 @@ def test_single_segment_numeric_casilla_id_reference_resolves() -> None:
     that id and whose target is a computed casilla must validate with no
     unknown-casilla failure.
     """
-    from .._schema import FormulaDefinition, FormulaExpression
-    from .._validate import RegistryValidator
+    from .. import RegistryValidator
 
     input_casilla = _segmented_casilla(_NUMERIC_CASILLA_01, "01", None)
     computed_casilla = _segmented_casilla(_NUMERIC_CASILLA_02, "02", None).model_copy(
@@ -727,16 +732,14 @@ def test_single_segment_numeric_casilla_id_reference_resolves() -> None:
         expression=FormulaExpression(casilla_id=_NUMERIC_CASILLA_01),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
+        source_citations=(_DUMMY_FORMULA_CITATION,),
     )
-    revision = _minimal_revision(casillas=(input_casilla, computed_casilla), formulas=(formula,))
-    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
-        _minimal_modelo(revision),
-        revision,
+    revision = _minimal_revision(
+        casillas=(input_casilla, computed_casilla),
+        formulas=(formula,),
+        application_links=_FORMULA_REVISION_APPLICATION_LINKS,
     )
-    casilla_resolution_failures = [f for f in failures if "unknown casilla" in f]
-    assert casilla_resolution_failures == [], (
-        f"single-segment numeric casilla id reference must resolve; got: {casilla_resolution_failures}"
-    )
+    RegistryValidator(_minimal_catalogues()).validate_modelo(_minimal_modelo(revision))
 
 
 def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> None:
@@ -748,8 +751,7 @@ def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> Non
     forcing the formula to name the intended occurrence by its
     segment-qualified id.
     """
-    from .._schema import FormulaDefinition, FormulaExpression
-    from .._validate import RegistryValidator
+    from .. import RegistryValidator
 
     liquidacion = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
     ecpn = _segmented_casilla(_SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
@@ -762,56 +764,42 @@ def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> Non
         expression=FormulaExpression(casilla_id=_BARE_REUSED_NUMBER_CASILLA),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
+        source_citations=(_DUMMY_FORMULA_CITATION,),
     )
     revision = _minimal_revision(
         casillas=(liquidacion, ecpn, target_casilla_def),
         formulas=(formula,),
+        application_links=_FORMULA_REVISION_APPLICATION_LINKS,
     )
-    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
-        _minimal_modelo(revision),
-        revision,
-    )
-    unknown_casilla_failures = [f for f in failures if "unknown casilla '00562'" in f]
-    assert unknown_casilla_failures, (
-        f"an ambiguous cross-segment bare-number reference must fail to resolve; got failures: {failures}"
-    )
+    with pytest.raises(RegistryValidationError, match="unknown casilla '00562'"):
+        RegistryValidator(_minimal_catalogues()).validate_modelo(_minimal_modelo(revision))
 
 
 def test_reused_number_with_bare_canonical_id_fails() -> None:
     """A reused printed number cannot leave one casilla addressable by the bare number."""
-    from .._validate import RegistryValidator
+    from .. import RegistryValidator
 
     ecpn = _segmented_casilla(_BARE_REUSED_NUMBER_CASILLA, "00562", None)
     liquidacion = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
     revision = _minimal_revision(casillas=(ecpn, liquidacion))
-    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
-        _minimal_modelo(revision),
-        revision,
-    )
-    assert any("ambiguous bare casilla ids ['00562']" in failure for failure in failures), (
-        f"a reused printed number must not keep a bare canonical casilla id; got failures: {failures}"
-    )
+    with pytest.raises(RegistryValidationError, match=r"ambiguous bare casilla ids \['00562'\]"):
+        RegistryValidator(_minimal_catalogues()).validate_modelo(_minimal_modelo(revision))
 
 
 def test_casilla_id_cannot_equal_another_casilla_display_token() -> None:
     """A token cannot be one casilla's id and another casilla's display metadata."""
-    from .._validate import RegistryValidator
+    from .. import RegistryValidator
 
     canonical_owner = _segmented_casilla(_BARE_REUSED_NUMBER_CASILLA, "00563", None)
     display_owner = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
     revision = _minimal_revision(casillas=(canonical_owner, display_owner))
-    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
-        _minimal_modelo(revision),
-        revision,
-    )
-    assert any("casilla reference token '00562' is ambiguous" in failure for failure in failures), (
-        f"a casilla.id/display-token collision must fail; got failures: {failures}"
-    )
+    with pytest.raises(RegistryValidationError, match="casilla reference token '00562' is ambiguous"):
+        RegistryValidator(_minimal_catalogues()).validate_modelo(_minimal_modelo(revision))
 
 
 def test_casilla_display_token_cannot_equal_binding_id() -> None:
     """Casilla metadata tokens cannot collide with non-casilla registry ids."""
-    from .._validate import RegistryValidator
+    from .. import RegistryValidator
 
     display_owner = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
     binding = DataBindingDefinition(
@@ -829,15 +817,11 @@ def test_casilla_display_token_cannot_equal_binding_id() -> None:
     )
     revision = _minimal_revision(casillas=(display_owner,), bindings=(binding,))
 
-    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
-        _minimal_modelo(revision),
-        revision,
-    )
-
-    assert any(
-        "casilla reference token '00562' is ambiguous; it is binding id '00562'" in failure
-        for failure in failures
-    ), f"a casilla metadata/binding-id collision must fail; got failures: {failures}"
+    with pytest.raises(
+        RegistryValidationError,
+        match="casilla reference token '00562' is ambiguous; it is binding id '00562'",
+    ):
+        RegistryValidator(_minimal_catalogues()).validate_modelo(_minimal_modelo(revision))
 
 
 def test_snapshot_builder_rejects_ambiguous_selected_revision_identity() -> None:
@@ -859,8 +843,7 @@ def test_bare_number_reference_does_not_resolve_when_id_is_segment_qualified() -
     revision, a reference to a segment-qualified casilla must name the
     canonical ``casilla.id``.
     """
-    from .._schema import FormulaDefinition, FormulaExpression
-    from .._validate import RegistryValidator
+    from .. import RegistryValidator
 
     sole_occurrence = _segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
     target_casilla_def = _segmented_casilla(_SEGMENTED_TARGET_CASILLA, "00999", "DP200014").model_copy(
@@ -872,37 +855,27 @@ def test_bare_number_reference_does_not_resolve_when_id_is_segment_qualified() -
         expression=FormulaExpression(casilla_id=_BARE_REUSED_NUMBER_CASILLA),
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
+        source_citations=(_DUMMY_FORMULA_CITATION,),
     )
     revision = _minimal_revision(
         casillas=(sole_occurrence, target_casilla_def),
         formulas=(formula,),
+        application_links=_FORMULA_REVISION_APPLICATION_LINKS,
     )
-    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
-        _minimal_modelo(revision),
-        revision,
-    )
-    unknown_casilla_failures = [f for f in failures if "unknown casilla '00562'" in f]
-    assert unknown_casilla_failures, (
-        "a printed number must not resolve to a segment-qualified casilla id; "
-        f"got failures: {failures}"
-    )
+    with pytest.raises(RegistryValidationError, match="unknown casilla '00562'"):
+        RegistryValidator(_minimal_catalogues()).validate_modelo(_minimal_modelo(revision))
 
 
 def test_duplicate_export_field_ownership_fails() -> None:
     """An export field can be declared by exactly one casilla."""
-    from .._validate import RegistryValidator
+    from .. import RegistryValidator
 
-    first = _segmented_casilla(_SEGMENTED_EXPORT_oIELD_CASILLA, "00592", "DP200014").model_copy(
+    first = _segmented_casilla(_SEGMENTED_EXPORT_FIELD_CASILLA, "00592", "DP200014").model_copy(
         update={"export_refs": ("modelo-200-page-014b-casilla-00592",)},
     )
-    second = _segmented_casilla(_BARE_EXPORT_oIELD_CASILLA, "00592", None).model_copy(
+    second = _segmented_casilla(_BARE_EXPORT_FIELD_CASILLA, "00592", None).model_copy(
         update={"export_refs": ("modelo-200-page-014b-casilla-00592",)},
     )
     revision = _minimal_revision(casillas=(first, second))
-    failures = RegistryValidator(_minimal_catalogues())._validate_revision(
-        _minimal_modelo(revision),
-        revision,
-    )
-    assert any("is declared by multiple casillas" in failure for failure in failures), (
-        f"duplicate export field ownership must fail; got: {failures}"
-    )
+    with pytest.raises(RegistryValidationError, match="is declared by multiple casillas"):
+        RegistryValidator(_minimal_catalogues()).validate_modelo(_minimal_modelo(revision))

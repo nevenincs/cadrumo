@@ -34,6 +34,7 @@ from ....domain.modelos._calculation_repository import CalculationRevisionCatalo
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
+from ...aggregation._source_mesh import CalculationSourceResolution
 from ...user_profile import UserProfileLifecycleRepository
 from .. import calculate_modelo_revision, create_work_unit
 from .._actions import ModeloError
@@ -54,7 +55,7 @@ _SYNTHETIC_DECIMAL_PROFILE_BINDING: BindingId = "test-profile-business-ratio-dec
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 
 
-def _sourced_binding_ids(result: object) -> set[BindingId]:
+def _sourced_binding_ids(result: CalculationSourceResolution) -> set[BindingId]:
     """The set of bindings the profile satisfied across the three engine channels.
 
     ``resolve_profile_sourced_bindings`` now returns the canonical

@@ -151,7 +151,11 @@ class ReconciliationEvidenceInvalidError(AeatError):
     """
 
 
-def _evidence_invalid_refusal(exc: BaseException) -> ReconciliationEvidenceInvalidError:
+def _evidence_invalid_refusal(
+    exc: BaseException,
+    *,
+    source_ref: str,
+) -> ReconciliationEvidenceInvalidError:
     """Translate a justificante parse failure into a clean typed refusal.
 
     The parser raises with a redacted, parser-internal message (e.g.
@@ -165,8 +169,9 @@ def _evidence_invalid_refusal(exc: BaseException) -> ReconciliationEvidenceInval
     chain preserves the original parse error for logs.
     """
     return ReconciliationEvidenceInvalidError(
+        f"reconciliation evidence {source_ref!r} could not be parsed",
         translated_message="errors.refused.reconciliation_evidence_invalid",
-        context={"parse_failure": type(exc).__name__},
+        context={"parse_failure": type(exc).__name__, "source_ref": source_ref},
         suggestion="aeat app modelo reconcile file WORK_UNIT_ID --file PATH/TO/justificante.pdf",
     )
 
@@ -219,7 +224,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     try:
         justificante = parse_justificante(command.source_path)
     except JustificanteParseError as exc:
-        raise _evidence_invalid_refusal(exc) from exc
+        raise _evidence_invalid_refusal(exc, source_ref=str(command.source_path)) from exc
     return _reconcile_parsed_justificante(
         work_unit_id=command.work_unit_id,
         source_kind=command.source_kind,
@@ -247,7 +252,7 @@ def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloR
     try:
         justificante = parse_justificante_bytes(command.source_bytes)
     except JustificanteParseError as exc:
-        raise _evidence_invalid_refusal(exc) from exc
+        raise _evidence_invalid_refusal(exc, source_ref=command.source_ref) from exc
     return _reconcile_parsed_justificante(
         work_unit_id=command.work_unit_id,
         source_kind=command.source_kind,

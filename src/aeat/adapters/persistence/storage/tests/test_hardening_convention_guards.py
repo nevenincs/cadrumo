@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import ast
 import importlib
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
 from .....core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
-from .....core.paths import PROJECT_ROOT
 from .....locales.manager import LocaleManager
+from .....tests._inventory import SRC_AEAT, ast_for_path, package_ast_items, qualified_name, repo_path, repo_relative
 from ..errors import SecureStorageError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -65,9 +66,11 @@ _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
 }
 
 
-def test_bucket_session_cleanup_observability_does_not_use_suppression_markers() -> None:
-    path = PROJECT_ROOT / "src/aeat/adapters/persistence/storage/master_key/_bucket_session.py"
-    function = _function_named(path, "_evict_engine")
+def test_bucket_session_cleanup_observability_does_not_use_suppression_markers(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
+    path = repo_path("src/aeat/adapters/persistence/storage/master_key/_bucket_session.py")
+    function = _function_named(path, "_evict_engine", source_tree_ast)
     segment = _source_segment(path, function)
 
     assert "# noqa" not in segment
@@ -77,23 +80,27 @@ def test_bucket_session_cleanup_observability_does_not_use_suppression_markers()
     assert not any(_call_has_keyword(node, "exc_info") for node in ast.walk(function) if isinstance(node, ast.Call))
 
 
-def test_named_bucket_settings_derivation_stays_in_core_settings_boundary() -> None:
-    runtime_path = PROJECT_ROOT / "src/aeat/adapters/persistence/storage/runtime.py"
-    route_path = PROJECT_ROOT / "src/aeat/core/_config_storage_route.py"
+def test_named_bucket_settings_derivation_stays_in_core_settings_boundary(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
+    runtime_path = repo_path("src/aeat/adapters/persistence/storage/runtime.py")
+    route_path = repo_path("src/aeat/core/_config_storage_route.py")
 
     runtime_text = runtime_path.read_text(encoding="utf-8")
     assert "__pydantic_fields_set__" not in runtime_text
     assert "settings_for_active_profile_bucket" in runtime_text
 
-    config_function = _function_named(route_path, "settings_for_bucket_route")
+    config_function = _function_named(route_path, "settings_for_bucket_route", source_tree_ast)
     config_segment = _source_segment(route_path, config_function)
     assert "__pydantic_fields_set__" in config_segment
     assert "aeat_database_url" in config_segment
 
 
-def test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model() -> None:
-    path = PROJECT_ROOT / "src/aeat/application/user_profile/_profile_repository.py"
-    function = _function_named(path, "_default_kdf_params")
+def test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
+    path = repo_path("src/aeat/application/user_profile/_profile_repository.py")
+    function = _function_named(path, "_default_kdf_params", source_tree_ast)
     calls = [node for node in ast.walk(function) if isinstance(node, ast.Call)]
 
     assert any(_is_kdf_default_to_manifest_call(call) for call in calls)
@@ -105,13 +112,14 @@ def test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model() 
     )
 
 
-def test_production_secure_object_repository_construction_stays_runtime_owned() -> None:
+def test_production_secure_object_repository_construction_stays_runtime_owned(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
     offences: list[str] = []
-    for path in _iter_aeat_python_sources():
-        relative = path.relative_to(PROJECT_ROOT).as_posix()
+    for path, tree in package_ast_items(source_tree_ast, include_data=True):
+        relative = repo_relative(path)
         if _is_test_surface(relative):
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         constructors = _secure_object_repository_constructor_names(tree)
         module_aliases = _secure_object_repository_module_aliases(tree)
         for node in ast.walk(tree):
@@ -134,13 +142,12 @@ def test_production_secure_object_repository_construction_stays_runtime_owned() 
     assert offences == []
 
 
-def test_explicit_database_route_test_setup_stays_approved() -> None:
+def test_explicit_database_route_test_setup_stays_approved(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     offences: list[str] = []
-    for path in _iter_aeat_python_sources():
-        relative = path.relative_to(PROJECT_ROOT).as_posix()
+    for path, tree in package_ast_items(source_tree_ast, include_data=True):
+        relative = repo_relative(path)
         if not _is_test_setup_surface(relative):
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         if not _uses_explicit_database_route(tree):
             continue
         if relative not in _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES:
@@ -149,18 +156,21 @@ def test_explicit_database_route_test_setup_stays_approved() -> None:
     assert offences == []
 
 
-def test_hardening_test_surfaces_do_not_reintroduce_shortcut_markers() -> None:
+def test_hardening_test_surfaces_do_not_reintroduce_shortcut_markers(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
     offences: list[str] = []
     for relative in _HARDENING_TEST_SURFACES:
-        path = PROJECT_ROOT / relative
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        path = repo_path(relative)
+        tree = ast_for_path(path, source_tree_ast)
+        assert tree is not None, f"{relative}: source must be parseable"
         constants = _collect_string_bindings(tree)
         os_aliases = _collect_os_aliases(tree)
         environ_aliases = _collect_environ_aliases(tree)
         for node in ast.walk(tree):
             if _is_pytest_skip_or_xfail_marker(node):
                 assert isinstance(node, (ast.expr, ast.stmt))
-                offences.append(f"{relative}:{node.lineno}: {_qualified_name(node)}")
+                offences.append(f"{relative}:{node.lineno}: {qualified_name(node)}")
             if (
                 isinstance(node, ast.Call)
                 and _is_environment_call(node, constants, os_aliases, environ_aliases)
@@ -180,10 +190,6 @@ def test_hardening_test_surfaces_do_not_reintroduce_shortcut_markers() -> None:
                 assert isinstance(node, (ast.Import, ast.ImportFrom))
                 offences.append(f"{relative}:{node.lineno}: mock import")
     assert offences == []
-
-
-def _iter_aeat_python_sources() -> tuple[Path, ...]:
-    return tuple(sorted((PROJECT_ROOT / "src/aeat").rglob("*.py")))
 
 
 def _is_test_surface(relative: str) -> bool:
@@ -257,7 +263,7 @@ def _is_secure_object_repository_constructor_call(
         return node.func.id in constructors
     if not isinstance(node.func, ast.Attribute) or node.func.attr != "SecureObjectRepository":
         return False
-    return _qualified_name(node.func.value) in module_aliases
+    return qualified_name(node.func.value) in module_aliases
 
 
 def _uses_explicit_database_route(tree: ast.AST) -> bool:
@@ -312,12 +318,17 @@ def test_secure_storage_error_registry_bindings_have_locale_keys() -> None:
     assert offences == []
 
 
-def _function_named(path: Path, name: str) -> ast.FunctionDef | ast.AsyncFunctionDef:
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+def _function_named(
+    path: Path,
+    name: str,
+    source_tree_ast: Mapping[Path, ast.AST] | None = None,
+) -> ast.FunctionDef | ast.AsyncFunctionDef:
+    tree = ast_for_path(path, source_tree_ast)
+    assert tree is not None, f"{repo_relative(path)} must be parseable"
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == name:
             return node
-    raise AssertionError(f"{path.relative_to(PROJECT_ROOT).as_posix()} does not define {name}")
+    raise AssertionError(f"{repo_relative(path)} does not define {name}")
 
 
 def _source_segment(path: Path, node: ast.AST) -> str:
@@ -332,17 +343,6 @@ def _call_name(node: ast.expr) -> str:
         return node.id
     if isinstance(node, ast.Attribute):
         return node.attr
-    return ""
-
-
-def _qualified_name(node: ast.AST) -> str:
-    if isinstance(node, ast.Call):
-        return _qualified_name(node.func)
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        parent = _qualified_name(node.value)
-        return f"{parent}.{node.attr}" if parent else node.attr
     return ""
 
 
@@ -374,7 +374,7 @@ def _is_kdf_default_to_manifest_call(node: ast.Call) -> bool:
 
 
 def _is_pytest_skip_or_xfail_marker(node: ast.AST) -> bool:
-    name = _qualified_name(node)
+    name = qualified_name(node)
     return name in {
         "pytest.skip",
         "pytest.mark.skip",
@@ -435,7 +435,7 @@ def _is_environment_call(
     os_aliases: set[str],
     environ_aliases: set[str],
 ) -> bool:
-    qualified = _qualified_name(node.func)
+    qualified = qualified_name(node.func)
     os_functions = {f"{alias}.{name}" for alias in os_aliases for name in ("getenv", "putenv", "unsetenv")}
     if qualified in os_functions or qualified == "getenv":
         return True
@@ -532,8 +532,8 @@ def _iter_error_subclasses(root: type[AeatError]) -> set[type[AeatError]]:
 
 
 def _locale_key_map() -> dict[str, set[str]]:
-    locales_dir = PROJECT_ROOT / "src/aeat/locales"
-    manager = LocaleManager(PROJECT_ROOT / "src/aeat", locales_dir)
+    locales_dir = SRC_AEAT / "locales"
+    manager = LocaleManager(SRC_AEAT, locales_dir)
     return {
         locale_path.name: manager.get_yaml_keys(manager.load_locale(locale_path))
         for locale_path in sorted(locales_dir.glob("*.yml"))

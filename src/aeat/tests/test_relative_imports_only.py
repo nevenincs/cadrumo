@@ -15,14 +15,12 @@ from the AST on every run, so it cannot go stale.
 from __future__ import annotations
 
 import ast
-from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+from ._inventory import ast_for_path, package_python_files, repo_relative
 
-_SRC_ROOT = Path(__file__).resolve().parents[2]
-_PKG_ROOT = _SRC_ROOT / "aeat"
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _absolute_self_imports(tree: ast.AST) -> list[tuple[int, str]]:
@@ -42,17 +40,11 @@ def _absolute_self_imports(tree: ast.AST) -> list[tuple[int, str]]:
 def test_no_absolute_self_imports_in_aeat_package() -> None:
     """No source file under ``src/aeat`` may import the ``aeat`` package absolutely."""
     violations: list[str] = []
-    for path in sorted(_PKG_ROOT.rglob("*.py")):
-        # The _data/ tree carries pytest-collected fixtures that live outside any
-        # importable package (no __init__.py chain), so relative imports are
-        # invalid there and absolute imports are correct.
-        if "/_data/" in path.as_posix():
+    for path in package_python_files():
+        tree = ast_for_path(path)
+        if tree is None:
             continue
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except SyntaxError:  # pragma: no cover - syntax is its own gate's concern
-            continue
-        rel = path.relative_to(_SRC_ROOT).as_posix()
+        rel = repo_relative(path).removeprefix("src/")
         for lineno, statement in _absolute_self_imports(tree):
             violations.append(f"  {rel}:{lineno}  {statement}")
 

@@ -25,6 +25,8 @@ from ._casilla_membership import undeclared_casilla_ids
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
 from ._formula_initial_values import initial_values as _initial_values
 from ._formula_initial_values import materialise_observations as _materialise_observations
+from ._formula_text_inputs import validate_text_input_targets as _validate_text_input_targets
+from ._formula_text_inputs import validated_text_input_casilla_ids as _validated_text_input_casilla_ids
 from ._ids import BindingId, CasillaId, FormulaId, ParameterId, RelationId, validated_casilla_id
 from ._runtime_graph import formula_evaluation_order
 from ._schema import (
@@ -209,6 +211,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     enum_binding_values: Mapping[BindingId, str] | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
     unresolved_relation_ids: tuple[RelationId, ...] = (),
+    unresolved_binding_ids: tuple[BindingId, ...] = (),
     date_binding_values: Mapping[BindingId, date] | None = None,
     text_inputs: Mapping[TextInputKey, TextInputValue] | None = None,
 ) -> RegistryCalculationResult:
@@ -243,6 +246,11 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             missing/incomplete but non-blocking. Formula targets depending on
             these ids are omitted instead of zero-contributed; relation ids not
             listed here remain hard validation errors when absent.
+        unresolved_binding_ids: Binding ids whose enrolled resolver ran for a
+            present source but produced no value (expected-but-missing).
+            Formula targets depending on these ids are omitted instead of
+            raising ``binding_value_missing``; binding ids not listed here
+            remain hard validation errors when absent from ``binding_values``.
         date_binding_values: Optional date-valued profile bindings (e.g.
             ``birth_date``) consumed by date-aware ops.
         text_inputs: Optional string-valued operator inputs keyed by casilla
@@ -267,6 +275,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     resolved_relations = relation_values or {}
     _reject_non_decimal(resolved_relations, "relation")
     resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
+    resolved_unresolved_bindings = frozenset(unresolved_binding_ids).difference(resolved_bindings)
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or {}
     resolved_text_inputs = _validated_text_input_casilla_ids(text_inputs or {})
 
@@ -289,6 +298,11 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         },
         "unresolved_relation",
     )
+    _reject_unknown_external_values(
+        {binding_id: _ZERO for binding_id in resolved_unresolved_bindings},
+        {binding.id for binding in revision.bindings},
+        "unresolved_binding",
+    )
     values, absent_by_design_casilla_ids = _initial_values(
         revision,
         resolved_inputs,
@@ -298,28 +312,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     formulas = {formula.target_casilla_id: formula for formula in revision.formulas}
     parameters = {parameter.id: parameter for parameter in revision.parameters}
     casillas_by_id = _casillas_by_id(revision)
-    # Text-input casillas (e.g. an IRNR ``tipo_renta`` enum string) flow
-    # through a dedicated string-keyed channel into the eval context;
-    # the Decimal ``values`` map carries a Decimal(0) placeholder for
-    # the same casilla via ``_initial_values`` so existing
-    # value-coverage invariants stay intact. Reject unknown casilla ids
-    # and ids that point at non-text casillas so a caller's typo cannot
-    # silently strand the input.
-    text_casilla_ids = {casilla_id for casilla_id, casilla in casillas_by_id.items() if casilla.data_type == "text"}
-    unknown_text_inputs = sorted(set(resolved_text_inputs).difference(casillas_by_id))
-    if unknown_text_inputs:
-        raise RegistryValidationError(
-            f"unknown text_input casilla ids: {unknown_text_inputs!r}",
-            translated_message="errors.calc.unknown_text_input_casillas",
-            context={"casilla_ids": ",".join(unknown_text_inputs)},
-        )
-    mistyped_text_inputs = sorted(set(resolved_text_inputs).difference(text_casilla_ids))
-    if mistyped_text_inputs:
-        raise RegistryValidationError(
-            f"text_input supplied for non-text casilla ids: {mistyped_text_inputs!r}",
-            translated_message="errors.calc.text_input_non_text_casillas",
-            context={"casilla_ids": ",".join(mistyped_text_inputs)},
-        )
+    _validate_text_input_targets(resolved_text_inputs, casillas_by_id=casillas_by_id)
     # Per-casilla provenance accumulator. Formula-computed casillas overwrite
     # the input/bound placeholder with the full operand lineage; non-computed
     # casillas keep the registry-sourced legal_refs/source_refs.
@@ -342,6 +335,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                     date_context=resolved_date_context,
                     relation_values=resolved_relations,
                     unresolved_relation_ids=resolved_unresolved_relations,
+                    unresolved_binding_ids=resolved_unresolved_bindings,
                     unresolved_casilla_ids=unresolved_casilla_ids,
                     operand_refs=operand_refs,
                     operand_casilla_refs=operand_casilla_refs,
@@ -448,6 +442,7 @@ def _evaluate_expression(
     operand_refs: list[str],
     operand_casilla_refs: list[CasillaId],
     operand_values: list[Decimal],
+    unresolved_binding_ids: frozenset[BindingId] = frozenset(),
     enum_binding_values: Mapping[BindingId, str] | None = None,
     date_binding_values: Mapping[BindingId, date] | None = None,
     filing_year: int = 0,
@@ -465,6 +460,7 @@ def _evaluate_expression(
             date_context=date_context,
             relation_values=relation_values,
             unresolved_relation_ids=unresolved_relation_ids,
+            unresolved_binding_ids=unresolved_binding_ids,
             unresolved_casilla_ids=unresolved_casilla_ids,
             operand_refs=operand_refs,
             operand_casilla_refs=operand_casilla_refs,
@@ -479,6 +475,7 @@ def _evaluate_expression(
         date_context=date_context,
         relation_values=relation_values,
         unresolved_relation_ids=unresolved_relation_ids,
+        unresolved_binding_ids=unresolved_binding_ids,
         unresolved_casilla_ids=unresolved_casilla_ids,
         operand_refs=operand_refs,
         operand_casilla_refs=operand_casilla_refs,
@@ -530,6 +527,7 @@ class _EvalContext:
     enum_binding_values: Mapping[BindingId, str]
     date_binding_values: Mapping[BindingId, date]
     filing_year: int
+    unresolved_binding_ids: frozenset[BindingId] = frozenset()
     text_values: Mapping[CasillaId, str] = field(default_factory=dict)
 
 
@@ -543,6 +541,7 @@ def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Deci
         date_context=ctx.date_context,
         relation_values=ctx.relation_values,
         unresolved_relation_ids=ctx.unresolved_relation_ids,
+        unresolved_binding_ids=ctx.unresolved_binding_ids,
         unresolved_casilla_ids=ctx.unresolved_casilla_ids,
         operand_refs=ctx.operand_refs,
         operand_casilla_refs=ctx.operand_casilla_refs,
@@ -1000,6 +999,7 @@ def _evaluate_leaf(
     operand_refs: list[str],
     operand_casilla_refs: list[CasillaId],
     operand_values: list[Decimal],
+    unresolved_binding_ids: frozenset[BindingId] = frozenset(),
     date_binding_values: Mapping[BindingId, date] | None = None,
     filing_year: int = 0,
 ) -> Decimal:
@@ -1021,6 +1021,8 @@ def _evaluate_leaf(
         return value
     if expression.binding is not None:
         if expression.binding not in binding_values:
+            if expression.binding in unresolved_binding_ids:
+                raise _UnresolvedFormulaDependencyError((expression.binding,))
             raise RegistryValidationError(
                 f"binding {expression.binding!r} has no supplied value",
                 translated_message="errors.calc.binding_value_missing",
@@ -1193,37 +1195,6 @@ def _validated_decimal_input_casilla_ids[InputKey, InputValue](
             raise RegistryValidationError(f"input {key!r} must be a Decimal")
         resolved_inputs[key] = value
     return resolved_inputs
-
-
-def _validated_text_input_casilla_ids[InputKey, InputValue](
-    text_inputs: Mapping[InputKey, InputValue],
-) -> dict[CasillaId, str]:
-    invalid = tuple(repr(key) for key in text_inputs if not isinstance(key, str))
-    if invalid:
-        raise RegistryValidationError(
-            f"text_input keys must be canonical casilla.id strings: {sorted(invalid)!r}",
-            translated_message="errors.calc.unknown_text_input_casillas",
-            context={"casilla_ids": ",".join(sorted(invalid))},
-        )
-    malformed: list[str] = []
-    canonical_text_inputs: dict[CasillaId, InputValue] = {}
-    for key in text_inputs:
-        try:
-            canonical_text_inputs[validated_casilla_id(key, surface="text_input casilla.id")] = text_inputs[key]
-        except ValueError:
-            malformed.append(str(key))
-    if malformed:
-        raise RegistryValidationError(
-            f"text_input keys must be canonical casilla.id strings: {sorted(malformed)!r}",
-            translated_message="errors.calc.unknown_text_input_casillas",
-            context={"casilla_ids": ",".join(sorted(malformed))},
-        )
-    resolved_text_inputs: dict[CasillaId, str] = {}
-    for key, value in canonical_text_inputs.items():
-        if not isinstance(value, str) or not value:
-            raise RegistryValidationError(f"text_input {key!r} must be a non-empty string")
-        resolved_text_inputs[key] = value
-    return resolved_text_inputs
 
 
 def _reject_non_string[Key](values: Mapping[Key, str], label: str) -> None:

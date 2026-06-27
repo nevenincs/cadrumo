@@ -5,14 +5,14 @@ Modelo 115 is the quarterly retención-arrendamiento autoliquidación (RD
 withholder files 1T–4T each year, declaring the number of perceptores
 (casilla 01), the rental base (casilla 02, manual), and the 19 % withholding
 computed from base (casilla 03, formula). Modelo 180 is the annual resumen:
-it aggregates the four quarters' three key figures via
-``source = "previous_filing"`` relations (``annual_summary``, ``op=sum``),
-binding ids ``modelo-180-115-perceptores-anual``,
-``modelo-180-115-base-anual``, and ``modelo-180-115-retenciones-anual``
-(Orden HAP/1732/2014, Orden HFP/1284/2023 art. 7, RD 439/2007 art. 108).
-The 180 formulae are pure op=copy from those relations into three output
-casillas: ``decl.total-perceptores``, ``decl.base-total``,
-``decl.retenciones-total``.
+it aggregates the four quarters' monetary figures via
+``source = "relation_prefill"`` relations (``annual_summary``, ``op=sum``),
+binding ids ``modelo-180-115-base-anual`` and
+``modelo-180-115-retenciones-anual``. ``decl.total-perceptores`` is a
+``retenciones_aggregation`` binding over the dedicated per-perceptor store,
+because summing quarterly perceptor counts double-counts recurring perceptors.
+The 180 monetary formulae are pure op=copy from those relations into
+``decl.base-total`` and ``decl.retenciones-total``.
 
 This module is the multi-year-renta authorization enrollment for Modelo 180.
 It drives the REAL backend (real encrypted-SQLite observation store, the real
@@ -21,12 +21,13 @@ no mocks) across two distinct renta years (2025, 2026): it computes all four
 quarterly 115 filings for each year, records each as a filed observation,
 resolves the annual 180 relations for each year, and asserts:
 
-1. The 180 relation values equal the arithmetic sum of the corresponding 115
-   quarterly casillas (wiring invariant, not formula under test).
+1. The 180 monetary relation values equal the arithmetic sum of the
+   corresponding 115 quarterly casillas (wiring invariant, not formula under
+   test).
 2. Year isolation: the Year 2 180 relation resolver draws only from Year 2
    115 observations, ignoring Year 1 records in the same repository.
-3. The calculated 180 output casillas match the resolved relation values
-   (op=copy threading).
+3. The calculated 180 monetary output casillas match the resolved relation
+   values (op=copy threading).
 
 Both calculated resumen years are recorded through the
 :class:`EnrollmentRecorder` and cross-checked against the authorization
@@ -34,11 +35,12 @@ manifest via :func:`assert_enrollment_matches_manifest`.
 
 Grounding (non-tautological): the 115 casilla 03 (retenciones) is produced
 by the registry engine from the manual base (19 % × casilla 02). The 180
-assertion is the *wiring* invariant — each 180 output equals the sum across
-all four 115 quarters — grounded in the AEAT form instructions (resúmenes de
-retenciones: "suma de los importes del período"). The test uses distinct
-values per quarter and per year so a cross-year or cross-quarter contamination
-fails loudly. No hand-computed expectation reproduces the formula under test.
+assertion is the *wiring* invariant — each monetary 180 output equals the sum
+across all four 115 quarters — grounded in the AEAT form instructions
+(resúmenes de retenciones: "suma de los importes del período"). The test uses
+distinct values per quarter and per year so a cross-year or cross-quarter
+contamination fails loudly. No hand-computed expectation reproduces the formula
+under test.
 """
 
 from __future__ import annotations
@@ -194,7 +196,7 @@ def _calculate_180(
     """Run the REAL 180 annual calculation from resolved relations; return result + count."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_180, filing_year=filing_year, period="0A")
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
-    binding_values = {**relation_binding_values}
+    binding_values = {**relation_binding_values, "modelo-180-115-perceptores-anual": Decimal("2")}
     inputs = {
         **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
     }
@@ -216,8 +218,8 @@ def _compute_year_115_totals(
 ) -> dict[CasillaId, Decimal]:
     """Calculate all four 115 quarters for a year, persist observations, return casilla sums.
 
-    The returned dict holds ``{casilla_id: sum_over_1T_2T_3T_4T}`` for the
-    casilla ids the 180 relations aggregate (01, 02, 03).
+    The returned dict includes the seeded 115 c01 count for quarterly-engine
+    sanity, but the 180 relations aggregate only c02 base and c03 retenciones.
     """
     totals: dict[CasillaId, Decimal] = {
         _M115_PERCEPTORES_CASILLA: Decimal("0"),
@@ -270,7 +272,11 @@ def test_modelo_180_relation_prefill_aggregates_115_quarters(tmp_path: Path) -> 
     resolved: dict[RelationId, Decimal] = {
         item.relation: item.value for item in prefill.values if item.value is not None
     }
-    assert resolved["modelo-180-rel-115-perceptores-anual"] == expected[_M115_PERCEPTORES_CASILLA]
+    # RET-1: decl.total-perceptores no longer aggregates from the M115 quarters
+    # (the quarterly sum double-counted a perceptor paid in >1 quarter). It is now
+    # a distinct-NIF count from the dedicated retención store, so the perceptores
+    # relation is retired; only the monetary base/retenciones totals still sum M115.
+    assert "modelo-180-rel-115-perceptores-anual" not in resolved
     assert resolved["modelo-180-rel-115-base-anual"] == expected[_M115_BASE_CASILLA]
     assert resolved["modelo-180-rel-115-retenciones-anual"] == expected[_M115_RETENCIONES_CASILLA]
 
@@ -293,7 +299,7 @@ def test_modelo_180_year_isolation_ignores_prior_year_observations(tmp_path: Pat
     resolved: dict[RelationId, Decimal] = {
         item.relation: item.value for item in prefill.values if item.value is not None
     }
-    assert resolved["modelo-180-rel-115-perceptores-anual"] == expected_n1[_M115_PERCEPTORES_CASILLA]
+    assert "modelo-180-rel-115-perceptores-anual" not in resolved
     assert resolved["modelo-180-rel-115-base-anual"] == expected_n1[_M115_BASE_CASILLA]
     assert resolved["modelo-180-rel-115-retenciones-anual"] == expected_n1[_M115_RETENCIONES_CASILLA]
 
@@ -353,13 +359,15 @@ def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         result_n1, produced_n1 = _calculate_180(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1)
         recorder_180.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
-    # Wiring invariant Year N: each 180 output casilla == summed 115 quarters.
-    assert result_n.values[_M180_TOTAL_PERCEPTORES_CASILLA] == expected_n[_M115_PERCEPTORES_CASILLA]
+    # Wiring invariant Year N: the monetary 180 outputs equal the summed 115
+    # quarters. decl.total-perceptores is no longer a M115 aggregate — RET-1
+    # sources it as a distinct-NIF count from the retención store (tested in
+    # test_retenciones / test_retenciones_aggregation_resolver), so it is not
+    # asserted against the quarterly sum here.
     assert result_n.values[_M180_BASE_TOTAL_CASILLA] == expected_n[_M115_BASE_CASILLA]
     assert result_n.values[_M180_RETENCIONES_TOTAL_CASILLA] == expected_n[_M115_RETENCIONES_CASILLA]
 
     # Wiring invariant Year N+1: year-isolated, correct aggregate.
-    assert result_n1.values[_M180_TOTAL_PERCEPTORES_CASILLA] == expected_n1[_M115_PERCEPTORES_CASILLA]
     assert result_n1.values[_M180_BASE_TOTAL_CASILLA] == expected_n1[_M115_BASE_CASILLA]
     assert result_n1.values[_M180_RETENCIONES_TOTAL_CASILLA] == expected_n1[_M115_RETENCIONES_CASILLA]
 

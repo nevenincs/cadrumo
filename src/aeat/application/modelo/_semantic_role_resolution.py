@@ -1,4 +1,8 @@
-"""Single-casilla semantic-role resolution for modelo application services."""
+"""Single-casilla semantic-role resolution for modelo application services.
+
+Snapshot-backed callers pass a :class:`RegistrySnapshot` so semantic roles
+resolve only to declared canonical ``casilla.id`` values for that revision.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +10,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from ...domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
+from ...domain.modelos._errors import ModeloError
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,7 +32,7 @@ class SemanticRoleCasillaAmbiguity:
         }
 
 
-class AmbiguousSemanticRoleCasillaError(ValueError):
+class AmbiguousSemanticRoleCasillaError(ModeloError, ValueError):
     """Raised when a semantic-role resolver would emit an arbitrary casilla id."""
 
     def __init__(self, ambiguity: SemanticRoleCasillaAmbiguity) -> None:
@@ -38,11 +43,12 @@ class AmbiguousSemanticRoleCasillaError(ValueError):
         if ambiguity.revision_id is not None:
             scope.append(f"revision {ambiguity.revision_id}")
         scope_text = " ".join(scope) or "registry revision"
-        super().__init__(
+        message = (
             f"{scope_text} resolves semantic_role={ambiguity.semantic_role!r} "
             f"to multiple casillas {ambiguity.casilla_ids!r}; a semantic-role "
-            "casilla reference must resolve to exactly one canonical casilla.id",
+            "casilla reference must resolve to exactly one canonical casilla.id"
         )
+        super().__init__(message, context=ambiguity.context())
 
 
 def casilla_id_for_unique_semantic_role(snapshot: RegistrySnapshot, semantic_role: str) -> CasillaId | None:
@@ -51,6 +57,10 @@ def casilla_id_for_unique_semantic_role(snapshot: RegistrySnapshot, semantic_rol
     ``None`` means the concrete revision does not declare the role. Multiple
     matches are refused because returning one would silently convert a non-
     canonical reference into an arbitrary canonical ``casilla.id``.
+
+    Args:
+        snapshot: The :class:`RegistrySnapshot` whose revision is inspected.
+        semantic_role: Semantic role token to resolve.
     """
     return casilla_id_for_unique_revision_semantic_role(
         snapshot.revision,

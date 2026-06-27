@@ -12,14 +12,14 @@ casillas are computed by the engine:
 where 01/04/07 are the dividendos-y-participaciones sub-totals and
 02/05/08 are the resto-de-rentas sub-totals (all manual).
 
-Modelo 193 is the annual resumen: it aggregates the four quarters' casillas
-03, 06, 09 via ``source = "previous_filing"`` relations (``annual_summary``,
-``op=sum``), binding ids ``modelo-193-123-perceptores-anual``,
-``modelo-193-123-base-anual``, and ``modelo-193-123-retenciones-anual``
-(Orden EHA/3377/2011 art. 1, RD 439/2007 art. 108, Ley 35/2006 arts. 25,
-99, 101, Ley 58/2003 art. 93). The 193 formulae are pure op=copy from those
-three relations into three output casillas: ``decl.total-perceptores``,
-``decl.base-total``, ``decl.retenciones-total``.
+Modelo 193 is the annual resumen: it aggregates the four quarters' monetary
+casillas 06 and 09 via ``source = "relation_prefill"`` relations
+(``annual_summary``, ``op=sum``), binding ids
+``modelo-193-123-base-anual`` and ``modelo-193-123-retenciones-anual``.
+``decl.total-perceptores`` is a ``retenciones_aggregation`` binding over the
+dedicated per-perceptor store, because summing quarterly perceptor counts
+double-counts recurring perceptors. The 193 monetary formulae are pure op=copy
+from those relations into ``decl.base-total`` and ``decl.retenciones-total``.
 
 This module is the multi-year-renta authorization enrollment for Modelo 193.
 It drives the REAL backend (real encrypted-SQLite observation store, the real
@@ -31,7 +31,7 @@ cross-checked against the authorization manifest via
 
 Grounding (non-tautological): the 123 computed casillas 03/06/09 are produced
 by the registry engine from the manual sub-inputs. The 193 assertion is the
-*wiring* invariant — each 193 output casilla equals the sum of the
+*wiring* invariant — each monetary 193 output casilla equals the sum of the
 corresponding 123 quarterly computed values — grounded in the AEAT form
 instructions (BOE-modelo-193-2011-form). Distinct per-quarter values per year
 ensure cross-contamination between years or periods fails loudly. No expected
@@ -240,7 +240,7 @@ def _calculate_193(
     """Run the REAL 193 annual calculation from resolved relations; return result + count."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_193, filing_year=filing_year, period="0A")
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
-    binding_values = {**relation_binding_values}
+    binding_values = {**relation_binding_values, "modelo-193-123-perceptores-anual": Decimal("3")}
     inputs = {
         **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
     }
@@ -262,8 +262,9 @@ def _compute_year_123_totals(
 ) -> dict[CasillaId, Decimal]:
     """Calculate all four 123 quarters, persist observations, return casilla sums.
 
-    Returns a dict with the summed computed values for casillas 03, 06, 09 —
-    the casillas the 193 relations aggregate.
+    Returns a dict with the summed computed values for casillas 03, 06, 09. The
+    193 relations aggregate c06/c09; c03 remains here as a quarterly-engine
+    sanity signal, not as the annual perceptor source.
     """
     totals: dict[CasillaId, Decimal] = {
         _M123_RENTAS_TOTAL_CASILLA: Decimal("0"),
@@ -319,7 +320,9 @@ def test_modelo_193_relation_prefill_aggregates_123_quarters(tmp_path: Path) -> 
     resolved: dict[RelationId, Decimal] = {
         item.relation: item.value for item in prefill.values if item.value is not None
     }
-    assert resolved["modelo-193-rel-123-perceptores-anual"] == expected[_M123_RENTAS_TOTAL_CASILLA]
+    # RET-1: decl.total-perceptores is now a distinct-NIF count from the retención
+    # store, so the perceptores relation is retired; only base/retenciones sum M123.
+    assert "modelo-193-rel-123-perceptores-anual" not in resolved
     assert resolved["modelo-193-rel-123-base-anual"] == expected[_M123_BASE_TOTAL_CASILLA]
     assert resolved["modelo-193-rel-123-retenciones-anual"] == expected[_M123_RETENCIONES_TOTAL_CASILLA]
 
@@ -341,7 +344,7 @@ def test_modelo_193_year_isolation_ignores_prior_year_observations(tmp_path: Pat
     resolved: dict[RelationId, Decimal] = {
         item.relation: item.value for item in prefill.values if item.value is not None
     }
-    assert resolved["modelo-193-rel-123-perceptores-anual"] == expected_n1[_M123_RENTAS_TOTAL_CASILLA]
+    assert "modelo-193-rel-123-perceptores-anual" not in resolved
     assert resolved["modelo-193-rel-123-base-anual"] == expected_n1[_M123_BASE_TOTAL_CASILLA]
     assert resolved["modelo-193-rel-123-retenciones-anual"] == expected_n1[_M123_RETENCIONES_TOTAL_CASILLA]
 
@@ -399,13 +402,14 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         result_n1, produced_n1 = _calculate_193(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1)
         recorder_193.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
-    # Wiring invariant Year N: each 193 output == summed 123 quarterly totals.
-    assert result_n.values[_M193_TOTAL_PERCEPTORES_CASILLA] == expected_n[_M123_RENTAS_TOTAL_CASILLA]
+    # Wiring invariant Year N: the monetary 193 outputs == summed 123 quarterly
+    # totals. decl.total-perceptores is no longer a M123 aggregate — RET-1 sources
+    # it as a distinct-NIF count from the retención store (tested separately), so it
+    # is not asserted against the quarterly sum here.
     assert result_n.values[_M193_BASE_TOTAL_CASILLA] == expected_n[_M123_BASE_TOTAL_CASILLA]
     assert result_n.values[_M193_RETENCIONES_TOTAL_CASILLA] == expected_n[_M123_RETENCIONES_TOTAL_CASILLA]
 
     # Wiring invariant Year N+1 (year-isolated):
-    assert result_n1.values[_M193_TOTAL_PERCEPTORES_CASILLA] == expected_n1[_M123_RENTAS_TOTAL_CASILLA]
     assert result_n1.values[_M193_BASE_TOTAL_CASILLA] == expected_n1[_M123_BASE_TOTAL_CASILLA]
     assert result_n1.values[_M193_RETENCIONES_TOTAL_CASILLA] == expected_n1[_M123_RETENCIONES_TOTAL_CASILLA]
 

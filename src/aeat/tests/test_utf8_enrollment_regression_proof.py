@@ -17,21 +17,15 @@ Assertions
 
 from __future__ import annotations
 
-import pathlib
-import re
+from pathlib import Path
 
 import pytest
 
+from ._inventory import SRC_AEAT, aeat_relative, bare_utf8_literal_violations, non_test_package_python_files
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent.parent
-
-_BARE_UTF8_PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(r'encoding="utf-8"'),
-    re.compile(r'\.encode\("utf-8"\)'),
-    re.compile(r'\.decode\("utf-8"\)'),
-)
-_HASH_ALLOWLIST_TOKENS = frozenset({"hashlib", "hmac", "sha256", "sha1", "md5"})
+_SRC_ROOT = SRC_AEAT
 
 # Files enrolled by this regression proof that must now be zero-violation.
 _ENROLLED_FILES: tuple[str, ...] = (
@@ -45,33 +39,10 @@ _ENROLLED_FILES: tuple[str, ...] = (
 _BASELINE_ENROLLED_COUNT = 11
 
 
-def _is_hash_site(line: str) -> bool:
-    return any(token in line for token in _HASH_ALLOWLIST_TOKENS)
-
-
-def _non_hash_utf8_violations(path: pathlib.Path) -> list[tuple[int, str]]:
-    violations: list[tuple[int, str]] = []
-    source = path.read_text(encoding="utf-8", errors="replace")
-    for lineno, line in enumerate(source.splitlines(), start=1):
-        if _is_hash_site(line):
-            continue
-        if any(pat.search(line) for pat in _BARE_UTF8_PATTERNS):
-            violations.append((lineno, line.strip()))
-    return violations
-
-
-def _all_production_files() -> list[pathlib.Path]:
+def _all_production_files() -> tuple[Path, ...]:
     """Mirror the scan logic from test_utf8_enrollment_inventory."""
     _scan_excludes = frozenset({"core/external_constants.py"})
-    files: list[pathlib.Path] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
-        rel = path.relative_to(_SRC_ROOT).as_posix()
-        if path.name.startswith("test_"):
-            continue
-        if rel in _scan_excludes:
-            continue
-        files.append(path)
-    return files
+    return non_test_package_python_files(include_data=True, scan_excludes=_scan_excludes)
 
 
 class TestEnrolledFilesZeroViolations:
@@ -81,7 +52,7 @@ class TestEnrolledFilesZeroViolations:
     def test_zero_violations(self, rel_path: str) -> None:
         path = _SRC_ROOT / rel_path
         assert path.exists(), f"Enrolled file missing from tree: {rel_path}"
-        violations = _non_hash_utf8_violations(path)
+        violations = bare_utf8_literal_violations(path)
         assert violations == [], (
             f"{rel_path} still contains {len(violations)} non-hash bare utf-8 literal(s):\n"
             + "\n".join(f"  line {ln}: {snippet!r}" for ln, snippet in violations)
@@ -101,7 +72,7 @@ class TestInventoryTestCoversFullTree:
 
     def test_scan_includes_enrolled_files(self) -> None:
         production_files = _all_production_files()
-        scanned_rels = {p.relative_to(_SRC_ROOT).as_posix() for p in production_files}
+        scanned_rels = {aeat_relative(p) for p in production_files}
         missing = [f for f in _ENROLLED_FILES if f not in scanned_rels]
         assert missing == [], (
             f"Full-tree inventory scan excludes enrolled files: {missing}. "

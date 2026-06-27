@@ -193,25 +193,20 @@ def _collect_parameter_refs(expression: FormulaExpression, refs: list[ParameterI
         _collect_parameter_refs(arg, refs)
 
 
-# The resolver / alias-map / evaluation-order builders below intentionally
-# carry NO memoization, for the same reason the expression walkers above do
-# not: a prior implementation keyed module-global caches on ``id(revision)``,
-# but CPython reuses an object's address after garbage collection, so a fresh
-# short-lived revision could collide with a stale entry left by a now-collected
-# revision and receive the wrong resolver / order. ``ModeloRevision`` is frozen
-# but not hashable (it nests ``FormulaExpression`` whose ``dispatch_table`` is a
-# ``Mapping``), and same-coordinate revisions differ under ``model_copy`` (so a
-# coordinate key is unsafe too). Each build is a single pass over the casilla /
-# formula set — cheap — so they simply recompute on every call.
-
-
-def _casilla_reference_resolver(revision: ModeloRevision) -> dict[CasillaId, CasillaId]:
-    """Return the id-only casilla lookup used by runtime graph builders."""
-    return {casilla.id: casilla.id for casilla in revision.casillas}
+# The id-map / evaluation-order builders below intentionally carry NO
+# memoization, for the same reason the expression walkers above do not: a prior
+# implementation keyed module-global caches on ``id(revision)``, but CPython
+# reuses an object's address after garbage collection, so a fresh short-lived
+# revision could collide with a stale entry left by a now-collected revision and
+# receive the wrong order. ``ModeloRevision`` is frozen but not hashable (it
+# nests ``FormulaExpression`` whose ``dispatch_table`` is a ``Mapping``), and
+# same-coordinate revisions differ under ``model_copy`` (so a coordinate key is
+# unsafe too). Each build is a single pass over the casilla / formula set —
+# cheap — so they simply recompute on every call.
 
 
 def input_casilla_id_map(revision: ModeloRevision) -> dict[CasillaId, CasillaId]:
-    """Return the canonical casilla id map for operator-supplied input."""
+    """Return the canonical casilla id map for a :class:`ModeloRevision` input."""
     return {casilla.id: casilla.id for casilla in revision.casillas}
 
 
@@ -225,17 +220,13 @@ def formula_evaluation_order(revision: ModeloRevision) -> tuple[CasillaId, ...]:
     Args:
         revision: The :class:`ModeloRevision` whose formulas to topologically sort.
     """
-    resolver = _casilla_reference_resolver(revision)
-    computed_targets = {
-        resolver.get(formula.target_casilla_id, formula.target_casilla_id) for formula in revision.formulas
-    }
+    computed_targets = {formula.target_casilla_id for formula in revision.formulas}
     sorter: TopologicalSorter[CasillaId] = TopologicalSorter()
     for formula in revision.formulas:
-        target = resolver.get(formula.target_casilla_id, formula.target_casilla_id)
         dependencies = [
-            resolved
+            casilla
             for casilla in expression_casilla_refs(formula.expression)
-            if (resolved := resolver.get(casilla, casilla)) in computed_targets
+            if casilla in computed_targets
         ]
-        sorter.add(target, *dependencies)
+        sorter.add(formula.target_casilla_id, *dependencies)
     return tuple(sorter.static_order())

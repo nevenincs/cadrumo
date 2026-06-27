@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from ....adapters.outbound.aeat.auth import BrowserSessionFactory
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+_SEDE_URL = f"{Settings.external_constants().aeat.domains.sede}/"
 
 
 class _ScriptedAuthProvider:
@@ -160,14 +161,14 @@ def _session() -> AeatSession:
             dni_nie="12345678Z",
             used_non_qr_fallback=True,
             verification_code="ABC",
-            landing_url="https://sede.agenciatributaria.gob.es/",
+            landing_url=_SEDE_URL,
         ),
     )
 
 
 def _assertion(valid: bool = True) -> AeatLoginAssertion:
     return AeatLoginAssertion(
-        target_url="https://sede.agenciatributaria.gob.es/",
+        target_url=_SEDE_URL,
         is_valid=valid,
         provider_kind=AuthProviderKind.CLAVE_MOVIL,
         identity_nif="12345678Z",
@@ -177,7 +178,7 @@ def _assertion(valid: bool = True) -> AeatLoginAssertion:
         error_message=None if valid else "invalid live assertion",
         assertion_detail=ClaveMovilLoginAssertionDetail(
             session_cookie_present=valid,
-            landing_url="https://sede.agenciatributaria.gob.es/",
+            landing_url=_SEDE_URL,
         ),
     )
 

@@ -989,6 +989,9 @@ def unsupported_ledger_renta_gasto_observations(
     False-fire guard: a zero-``deductible_amount`` observation contributes
     nothing whether or not it is routed and is excluded; only a non-zero
     declarable gasto reaching no casilla is surfaced.
+
+    Returns:
+        Unsupported :class:`RentaGastoObservationProtocol` observations.
     """
     supported_casillas = frozenset(
         _renta_ledger_gasto_selector(binding).target_casilla_id

@@ -23,6 +23,7 @@ from .. import (
     ResultDisposition,
     derive_result_disposition,
     modelo_has_codified_disposition,
+    result_disposition_casilla_ids,
     validated_casilla_id,
 )
 from ..errors import CoreValidationError
@@ -43,9 +44,8 @@ _M131_RESULT_CASILLA: Final[CasillaId] = _casilla_id("15")
 _M111_RESULT_CASILLA: Final[CasillaId] = _casilla_id("30")
 _M115_RESULT_CASILLA: Final[CasillaId] = _casilla_id("05")
 _M123_RESULT_CASILLA: Final[CasillaId] = _casilla_id("14")
-_M123_LEGACY_RESULT_CASILLA: Final[CasillaId] = _casilla_id("08-legacy")
+_M123_2019_2023_RESULT_CASILLA: Final[CasillaId] = _casilla_id("08-legacy")
 _M200_RESULT_CASILLA: Final[CasillaId] = _casilla_id("DP200014B:00599")
-_M200_REJECTED_ALIAS_CASILLA: Final[CasillaId] = _casilla_id("00599")
 _M202_402_RESULT_CASILLA: Final[CasillaId] = _casilla_id("03")
 _M202_403_RESULT_CASILLA: Final[CasillaId] = _casilla_id("34")
 
@@ -99,7 +99,7 @@ def test_retenciones_positive_is_ingreso_else_negativa() -> None:
     assert derive_result_disposition("111", _values(_M111_RESULT_CASILLA, "0")) is ResultDisposition.NEGATIVA
     assert derive_result_disposition("115", _values(_M115_RESULT_CASILLA, "0")) is ResultDisposition.NEGATIVA
     assert derive_result_disposition("123", _values(_M123_RESULT_CASILLA, "12.00")) is ResultDisposition.INGRESO
-    assert derive_result_disposition("123", _values(_M123_LEGACY_RESULT_CASILLA, "12.00")) is (
+    assert derive_result_disposition("123", _values(_M123_2019_2023_RESULT_CASILLA, "12.00")) is (
         ResultDisposition.INGRESO
     )
 
@@ -120,10 +120,10 @@ def test_m200_credit_is_devolucion_not_compensacion() -> None:
     assert derive_result_disposition("200", _values(_M200_RESULT_CASILLA, "0")) is ResultDisposition.NEGATIVA
 
 
-def test_m200_bare_result_number_is_rejected_as_non_canonical_alias() -> None:
-    """M200 result disposition must not resolve a bare display number alias."""
-    with pytest.raises(CoreValidationError, match=r"non-canonical casilla\.id alias '00599'"):
-        derive_result_disposition("200", _values(_M200_REJECTED_ALIAS_CASILLA, "5000.00"))
+def test_disposition_rejects_non_result_casilla_values() -> None:
+    """The core disposition helper only accepts its declared result casilla ids."""
+    with pytest.raises(CoreValidationError, match=r"non-result casilla\.id values '19'"):
+        derive_result_disposition("303", {_M303_RESULT_CASILLA: Decimal("1"), _M130_RESULT_CASILLA: Decimal("2")})
 
 
 def test_m202_active_modality_result_drives_ingreso_or_negativa() -> None:
@@ -144,6 +144,7 @@ def test_uncodified_modelo_returns_none_not_a_guess() -> None:
     """A modelo without a codified spec returns None so the caller applies a
     documented fallback rather than a guessed disposition."""
     assert derive_result_disposition("390", _values(_M303_RESULT_CASILLA, "-1000.00")) is None
+    assert result_disposition_casilla_ids("303") == (_M303_RESULT_CASILLA,)
     assert modelo_has_codified_disposition("303") is True
     assert modelo_has_codified_disposition("200") is True
     assert modelo_has_codified_disposition("202") is True

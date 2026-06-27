@@ -32,15 +32,16 @@ from __future__ import annotations
 
 import ast
 from collections import deque
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
-from ..core.paths import PROJECT_ROOT
+from ._inventory import SRC_AEAT, ast_for_path, module_name, package_python_files, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = PROJECT_ROOT / "src" / "aeat"
+_SRC_ROOT = SRC_AEAT
 
 # Modules exempted from the pairing requirement.  Each entry is a
 # POSIX path relative to PROJECT_ROOT.  Add a one-line justification
@@ -99,10 +100,8 @@ def _collect_production_modules() -> list[Path]:
     """Return every non-test, non-exempt Python module under src/aeat/."""
     return [
         p
-        for p in sorted(_SRC_ROOT.rglob("*.py"))
-        if not p.name.startswith("test_")
-        and "__pycache__" not in p.parts
-        and not _is_exempt(p.relative_to(PROJECT_ROOT).as_posix())
+        for p in package_python_files(include_data=True)
+        if not p.name.startswith("test_") and "__pycache__" not in p.parts and not _is_exempt(repo_relative(p))
     ]
 
 
@@ -137,11 +136,7 @@ def _module_path_for_dotted(dotted: str) -> Path | None:
 
 def _file_to_dotted(file_path: Path) -> str:
     """Convert a file under ``src/aeat/`` to its dotted module name."""
-    rel = file_path.relative_to(_SRC_ROOT.parent)  # relative to src/
-    parts = list(rel.with_suffix("").parts)
-    if parts and parts[-1] == "__init__":
-        parts.pop()
-    return ".".join(parts)
+    return module_name(file_path)
 
 
 def _resolve_relative(current_dotted: str, level: int, module: str | None) -> str | None:
@@ -176,20 +171,15 @@ def _resolve_relative(current_dotted: str, level: int, module: str | None) -> st
     return ".".join(ancestor)
 
 
-def _aeat_imports_in(file_path: Path) -> set[str]:
+def _aeat_imports_in(file_path: Path, source_tree_ast: Mapping[Path, ast.AST] | None = None) -> set[str]:
     """Return absolute ``aeat.*`` dotted names imported by ``file_path``.
 
     For ``from X import Y, Z`` the returned set includes ``X``, ``X.Y``,
     and ``X.Z``; the caller resolves each candidate to a file via
     :func:`_module_path_for_dotted` and silently drops non-module names.
     """
-    try:
-        source = file_path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
-        return set()
-    try:
-        tree = ast.parse(source, filename=str(file_path))
-    except SyntaxError:
+    tree = ast_for_path(file_path, source_tree_ast)
+    if tree is None:
         return set()
 
     current_dotted = _file_to_dotted(file_path)
@@ -215,12 +205,12 @@ def _collect_test_entrypoints() -> list[Path]:
     """Return every ``test_*.py`` and ``conftest.py`` under ``src/aeat/``."""
     return [
         p
-        for p in sorted(_SRC_ROOT.rglob("*.py"))
+        for p in package_python_files(include_data=True)
         if "__pycache__" not in p.parts and (p.name.startswith("test_") or p.name == "conftest.py")
     ]
 
 
-def _transitively_reachable_from_tests() -> set[Path]:
+def _transitively_reachable_from_tests(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> set[Path]:
     """Return the set of production module paths reachable from any test.
 
     The closure starts at every test/conftest entrypoint, follows static
@@ -232,7 +222,7 @@ def _transitively_reachable_from_tests() -> set[Path]:
     queue: deque[Path] = deque(_collect_test_entrypoints())
     while queue:
         current = queue.popleft()
-        for dotted in _aeat_imports_in(current):
+        for dotted in _aeat_imports_in(current, source_tree_ast):
             target = _module_path_for_dotted(dotted)
             if target is None or target in seen:
                 continue
@@ -256,9 +246,9 @@ def _has_import_graph_coverage(module: Path, reachable: set[Path]) -> bool:
     return False
 
 
-def test_import_graph_helper_recognises_aggregator_pattern() -> None:
+def test_import_graph_helper_recognises_aggregator_pattern(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Positive control: portal entries are covered via _registry aggregator."""
-    reachable = _transitively_reachable_from_tests()
+    reachable = _transitively_reachable_from_tests(source_tree_ast)
     # _registry.py imports every portal entry; test_registry.py imports
     # _registry. The closure must therefore include at least one of the
     # portal entry files even though no test_*.py sits next to them.
@@ -278,7 +268,7 @@ def test_import_graph_helper_skips_orphan_modules() -> None:
     assert _module_path_for_dotted("os.path") is None
 
 
-def test_every_production_module_is_reachable_from_a_test() -> None:
+def test_every_production_module_is_reachable_from_a_test(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Canonical coverage gate. No allowlist.
 
     Every production module under ``src/aeat/`` (minus the narrow
@@ -304,12 +294,12 @@ def test_every_production_module_is_reachable_from_a_test() -> None:
     behavior coverage, not gate green-ness.
     """
     production_modules = _collect_production_modules()
-    reachable = _transitively_reachable_from_tests()
+    reachable = _transitively_reachable_from_tests(source_tree_ast)
     gaps: list[str] = []
     for module in production_modules:
         if _has_import_graph_coverage(module, reachable):
             continue
-        gaps.append(module.relative_to(PROJECT_ROOT).as_posix())
+        gaps.append(repo_relative(module))
 
     assert not gaps, (
         f"Coverage gaps detected ({len(gaps)} modules).\n"

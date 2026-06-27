@@ -42,6 +42,10 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DECLARATIONS_LISTING_URL = aeat_url("www6", configured_path("sede_paths", "declarations_listing"))
+_UNKNOWN_CONSTRUCT_MEMBER_CASILLA: CasillaId = validated_casilla_id(
+    "0000-ghost",
+    surface="_UNKNOWN_CONSTRUCT_MEMBER_CASILLA",
+)
 
 
 @cache
@@ -828,7 +832,9 @@ def test_construct_reader_rejects_unknown_member_id_at_runtime() -> None:
     modelo = modelos_by_id["100"]
     revision = modelo.revisions["2025"]
     construct = next(item for item in revision.constructs if item.casilla_ids)
-    mutated_construct = construct.model_copy(update={"casilla_ids": (*construct.casilla_ids, "0000-ghost")})
+    mutated_construct = construct.model_copy(
+        update={"casilla_ids": (*construct.casilla_ids, _UNKNOWN_CONSTRUCT_MEMBER_CASILLA)},
+    )
     mutated_revision = revision.model_copy(
         update={
             "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs),
@@ -837,7 +843,7 @@ def test_construct_reader_rejects_unknown_member_id_at_runtime() -> None:
 
     with pytest.raises(
         RegistrySnapshotError,
-        match=rf"construct '{construct.id}' references unknown casilla '0000-ghost'",
+        match=rf"construct '{construct.id}' references unknown casilla '{_UNKNOWN_CONSTRUCT_MEMBER_CASILLA}'",
     ):
         resolve_construct(mutated_revision, construct.id)
 

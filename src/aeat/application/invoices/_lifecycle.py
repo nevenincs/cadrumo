@@ -54,6 +54,9 @@ def resolve_catalogue_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> I
     Raises:
         InvoiceNotFoundError: when no invoice matches the id or prefix.
         InvoiceValidationError: when a prefix matches more than one invoice.
+
+    Returns:
+        The resolved :class:`Invoice`.
     """
     trimmed = invoice_id.strip()
     if not trimmed:
@@ -87,7 +90,11 @@ def resolve_catalogue_invoice_from_repository(
     invoice_id: str,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> Invoice:
-    """Load the catalogue and resolve one invoice by id or unambiguous prefix."""
+    """Load the catalogue and resolve one invoice by id or unambiguous prefix.
+
+    Returns:
+        The resolved :class:`Invoice`.
+    """
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     return resolve_catalogue_invoice(repo.load(), invoice_id)
 

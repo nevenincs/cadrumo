@@ -56,6 +56,18 @@ _BORRADOR_IDENTITY_CASILLA: CasillaId = validated_casilla_id("0100", surface="_B
 _M100_TEXT_CASILLA: CasillaId = validated_casilla_id("0001", surface="_M100_TEXT_CASILLA")
 _M100_NUMERIC_CASILLA: CasillaId = validated_casilla_id("0003", surface="_M100_NUMERIC_CASILLA")
 _M303_RESULT_CASILLA: CasillaId = validated_casilla_id("iva.resultado", surface="_M303_RESULT_CASILLA")
+_M200_AMBIGUOUS_PRINTED_NUMBER: CasillaId = validated_casilla_id(
+    "00562",
+    surface="_M200_AMBIGUOUS_PRINTED_NUMBER",
+)
+_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA: CasillaId = validated_casilla_id(
+    "DP200010:00562",
+    surface="_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA",
+)
+_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00562",
+    surface="_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA",
+)
 
 
 @pytest.fixture
@@ -100,20 +112,35 @@ def test_validate_casilla_input_ids_rejects_non_string_keys_without_coercion() -
         validate_casilla_input_ids(snapshot.revision, {1: Decimal("1")})
 
 
-def test_validate_casilla_input_ids_rejects_printed_number_alias_for_semantic_id() -> None:
+def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> None:
     snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
     result_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M303_RESULT_CASILLA)
     assert result_casilla.number == "69"
     assert result_casilla.id != result_casilla.number
     assert result_casilla.number not in {casilla.id for casilla in snapshot.revision.casillas}
 
-    with pytest.raises(RegistryValidationError, match="unknown or alias keys") as raised:
+    with pytest.raises(RegistryValidationError, match="non-canonical reference tokens are not accepted") as raised:
         validate_casilla_input_ids(snapshot.revision, {result_casilla.number: Decimal("1")})
 
     assert raised.value.context == {
         "casilla_ids": result_casilla.number,
         "revision_id": snapshot.revision.id,
     }
+    assert "iva.resultado" in str(raised.value)
+
+
+def test_validate_casilla_input_ids_rejects_ambiguous_reused_printed_number() -> None:
+    snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period="0A")
+
+    with pytest.raises(RegistryValidationError, match="is ambiguous") as raised:
+        validate_casilla_input_ids(snapshot.revision, {_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("1")})
+
+    assert raised.value.context == {
+        "casilla_ids": _M200_AMBIGUOUS_PRINTED_NUMBER,
+        "revision_id": snapshot.revision.id,
+    }
+    assert _M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA in str(raised.value)
+    assert _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA in str(raised.value)
 
 
 def test_validate_casilla_input_ids_rejects_decimal_value_for_non_numeric_casilla() -> None:

@@ -4,7 +4,7 @@ The :class:`RetencionesAggregationSourceResolver` reads the persisted per-percep
 observations (P01 store) and materialises the Modelo 180 "número total de
 perceptores" box with the validated DISTINCT-NIF count — never the sum of
 quarterly aggregate counts. An empty store on a revision that declares the
-perceptor-count binding surfaces a no-silent advisory, never a silent zero.
+perceptor-count binding raises before a zero count can be persisted.
 
 The test revision is the real Modelo 180 revision with its perceptor-count binding
 re-pointed to the ``retenciones_aggregation`` source (the P03 cutover, simulated
@@ -22,6 +22,7 @@ from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....tests.secure_sql import isolated_runtime_profile
+from .._errors import AggregationValidationError
 from .._modelo_bindings import RetencionesAggregationSourceResolver
 from .._retencion_observations_repository import RetencionObservationRepository
 from .._retenciones import RetencionObservation, RetencionScheme
@@ -95,27 +96,38 @@ def test_resolver_materialises_distinct_perceptor_count(tmp_path: Path) -> None:
         }
 
 
-def test_resolver_empty_store_surfaces_advisory_not_silent_zero(tmp_path: Path) -> None:
-    """An empty store on positive activity surfaces a no-silent advisory, never a silent 0."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        resolution = RetencionesAggregationSourceResolver().resolve(_context(_m180_revision_with_retenciones_source()))
+def test_resolver_empty_store_fails_before_silent_zero(tmp_path: Path) -> None:
+    """An empty store on a declaring revision refuses calculation, never materialises 0."""
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path),
+        pytest.raises(AggregationValidationError) as exc_info,
+    ):
+        RetencionesAggregationSourceResolver().resolve(_context(_m180_revision_with_retenciones_source()))
 
-        # No silent 0: the count binding is NOT materialised.
-        assert resolution.binding_values == {}
-        # Exactly one advisory diagnostic naming the gap + the remedy.
-        assert len(resolution.diagnostics) == 1
-        diagnostic = resolution.diagnostics[0]
-        assert diagnostic.source_kind == "retenciones_aggregation"
-        assert "no\n" not in diagnostic.message
-        assert "per-perceptor retención observations are persisted" in diagnostic.message
-        assert "aeat app modelo aggregate --retencion-observation" in diagnostic.message
+    assert exc_info.value.translated_message == "aggregation.retenciones.errors.perceptor_observations_missing"
+    context = exc_info.value.context or {}
+    assert context["modelo"] == "180"
+    assert context["period"] == "0A"
+    assert "--retencion-observation" in (exc_info.value.suggestion or "")
 
 
 def test_resolver_is_silent_when_revision_declares_no_retenciones_binding(tmp_path: Path) -> None:
-    """A revision without a retenciones_aggregation binding resolves empty (no false advisory)."""
+    """A revision without a retenciones_aggregation binding resolves empty (no false advisory).
+
+    Modelo 303 (IVA) declares no retenciones_aggregation binding. (M180/M193 DO
+    declare it after the RET-1 P03 re-stamp, so this uses a non-retenciones modelo.)
+    """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        snapshot = resources().modelos.authority.snapshot("180", filing_year=2024, period="0A")
-        resolution = RetencionesAggregationSourceResolver().resolve(_context(snapshot.revision))
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=2024, period="1T")
+        resolution = RetencionesAggregationSourceResolver().resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="303",
+                filing_year=2024,
+                period=Period.from_year_and_code(2024, "1T"),
+                revision=snapshot.revision,
+            ),
+        )
 
         assert resolution.binding_values == {}
         assert resolution.diagnostics == ()

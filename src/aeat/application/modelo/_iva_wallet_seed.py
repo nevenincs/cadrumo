@@ -350,7 +350,8 @@ def record_iva_compensation_override_for_bucket(
 ) -> IvaCompensationReconciliationDecision:
     """Record an explicit taxpayer override for Modelo 303 prior compensation.
 
-    Returns the persisted ``taxpayer_override`` reconciliation decision.
+    Returns the persisted :class:`IvaCompensationReconciliationDecision` with the
+    ``taxpayer_override`` source.
 
     The Modelo 303 reconciliation refuses to AUTO-apply a seeded or local-recurrence
     prior-compensation balance when no live AEAT wallet evidence is available; the

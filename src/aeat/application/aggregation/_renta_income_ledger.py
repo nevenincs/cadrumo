@@ -255,7 +255,11 @@ def aggregate_renta_m100_income_ledger_from_repositories(
     period: Period,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
 ) -> RentaIncomeLedgerAggregation:
-    """Load the catalogue and aggregate the annual Modelo 100 actividad income."""
+    """Load the catalogue and aggregate the annual Modelo 100 actividad income.
+
+    Returns:
+        The :class:`RentaIncomeLedgerAggregation` for the requested annual period.
+    """
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
@@ -279,6 +283,9 @@ def aggregate_renta_m100_income_ledger(
     flows) over the FULL ejercicio (Jan 1 to Dec 31 of ``period.year``) and targets
     the M100 "Ingresos de explotación" leaf (0171) instead of the M130 cumulative
     casilla. ``period`` must be the annual period.
+
+    Returns:
+        The :class:`RentaIncomeLedgerAggregation` built from eligible transactions.
     """
     if period.kind is not PeriodKind.ANNUAL:
         raise AggregationPeriodError(

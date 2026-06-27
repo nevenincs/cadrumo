@@ -99,8 +99,6 @@ _M200_REFUND_RESULT_CASILLA: CasillaId = validated_casilla_id(
     "DP200014B:00599",
     surface="_M200_REFUND_RESULT_CASILLA",
 )
-
-
 def _casilla_id_from_payload(value: object) -> CasillaId:
     return validated_casilla_id(value, surface="test casilla id")
 
@@ -161,10 +159,13 @@ def _seed_revision(
     casilla_values: dict[CasillaId, Decimal] | None = None,
 ) -> tuple[str, str]:
     casilla_values = dict(casilla_values or {})
-    revision_id_suffix = state.value.lower()[:3]
-    base = revision_id_suffix + "0" * (63 - len(revision_id_suffix))
-    revision_id = "r" + base
     typed_period = Period.from_year_and_code(filing_year, period)
+    snapshot = resources().modelos.authority.snapshot(
+        modelo,
+        filing_year=filing_year,
+        period=typed_period.registry_token,
+    )
+    revision_id = snapshot.revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -220,13 +221,17 @@ _RESULT_DISPOSITION_TEST_CLOCK = datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC)
 
 
 def _result_disposition_work_unit(*, modelo: str, period: Period) -> WorkUnit:
-    revision_id = f"{modelo}-{period.filing_year}-{period.registry_token}-result-disposition"
+    snapshot = resources().modelos.authority.snapshot(
+        modelo,
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    )
     work_unit_id = derive_work_unit_id(
         bucket_id="operator",
         modelo=modelo,
         filing_year=period.filing_year,
         period=period,
-        revision_id=revision_id,
+        revision_id=snapshot.revision.id,
     )
     return WorkUnit(
         work_unit_id=work_unit_id,
@@ -234,7 +239,7 @@ def _result_disposition_work_unit(*, modelo: str, period: Period) -> WorkUnit:
         modelo=ModeloCode(modelo),
         filing_year=period.filing_year,
         period=period,
-        revision_id=revision_id,
+        revision_id=snapshot.revision.id,
         name=f"{modelo}-{period.filing_year}-{period.registry_token}",
         created_at=_RESULT_DISPOSITION_TEST_CLOCK,
         updated_at=_RESULT_DISPOSITION_TEST_CLOCK,
@@ -283,9 +288,9 @@ def test_resolve_modelo_result_disposition_maps_m303_result_to_disposition() -> 
     from .._result_disposition_resolution import resolve_modelo_result_disposition
 
     ordinary = _profile()  # redeme_enrolled defaults to False; no refund election
-    period = Period.from_year_and_code(2024, "1T")
+    quarterly_period = Period.from_year_and_code(2024, "1T")
 
-    def _disp(modelo: str, casilla_values: dict[CasillaId, Decimal]) -> str:
+    def _disp(modelo: str, casilla_values: dict[CasillaId, Decimal], period: Period) -> str:
         work_unit = _result_disposition_work_unit(modelo=modelo, period=period)
         revision = _result_disposition_revision(work_unit=work_unit, casilla_values=casilla_values)
         return resolve_modelo_result_disposition(
@@ -295,18 +300,22 @@ def test_resolve_modelo_result_disposition_maps_m303_result_to_disposition() -> 
             period=period,
         ).value
 
-    assert _disp("303", {_M303_RESULT_CASILLA: Decimal("357.00")}) == "I"
-    assert _disp("303", {_M303_RESULT_CASILLA: Decimal("-210.00")}) == "C"
-    assert _disp("303", {_M303_RESULT_CASILLA: Decimal("0.00")}) == "N"
+    assert _disp("303", {_M303_RESULT_CASILLA: Decimal("357.00")}, quarterly_period) == "I"
+    assert _disp("303", {_M303_RESULT_CASILLA: Decimal("-210.00")}, quarterly_period) == "C"
+    assert _disp("303", {_M303_RESULT_CASILLA: Decimal("0.00")}, quarterly_period) == "N"
     # A missing result casilla defaults to zero -> negativa (N), not ingreso.
-    assert _disp("303", {}) == "N"
+    assert _disp("303", {}, quarterly_period) == "N"
     # M130 (IRPF pago fraccionado) is codified: a credit is B (resultado a deducir).
-    assert _disp("130", {_M130_RESULT_CASILLA: Decimal("-50.00")}) == "B"
+    assert _disp("130", {_M130_RESULT_CASILLA: Decimal("-50.00")}, quarterly_period) == "B"
     # M200 (IS annual) is codified: a refund (negative 00599) is D (devolución), not I.
-    assert _disp("200", {_M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")}) == "D"
+    assert _disp(
+        "200",
+        {_M200_REFUND_RESULT_CASILLA: Decimal("-1000.00")},
+        Period.from_year_and_code(2024, "0A"),
+    ) == "D"
     # A modelo without a codified spec falls back to the ingreso disposition
     # (documented provisional fallback), not a crash.
-    assert _disp("390", {_M303_RESULT_CASILLA: Decimal("-1000.00")}) == "I"
+    assert _disp("390", {}, Period.from_year_and_code(2026, "0A")) == "I"
 
 
 def test_resolve_modelo_result_disposition_redeme_upgrades_m303_carry_to_devolucion() -> None:

@@ -106,6 +106,8 @@ from ._applicability_modelo202 import (
     modelo_202_modality_from_inputs,
 )
 from ._applicability_payer_facts import PayerFact, payer_fact_holds
+from ._applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
+from ._applicability_routes import TaxRoute
 
 _SEED_COVERAGE_NOTICE = (
     "Seed coverage only — the modelos in this table are the core "
@@ -1117,49 +1119,6 @@ def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
     if profile.entity_type is EntityType.NATURAL_PERSON:
         return bool(profile.irpf_income_categories)
     return True
-
-
-class TaxRoute(StrEnum):
-    """The tax branch a taxpayer profile routes to — corporate-entity ADR §4.
-
-    The ``entity_type`` axis selects the *tax*, and the tax selects the
-    modelos, the calendar, and the calculation chain. There are exactly
-    three substantive branches plus an explicit "cannot route" state.
-
-    Attributes:
-        IRPF: A natural person — routes to the IRPF path (Modelo
-            100 / 130 / 303, the IRPF tarifa).
-        IMPUESTO_SOCIEDADES: A legal entity — routes to the Impuesto
-            sobre Sociedades path (Modelo 200 / 202, the LIS Art. 29
-            rate scale). The engine never runs an IRPF cuota for it.
-        ATTRIBUTION_PASS_THROUGH: An attribution entity — runs no IS
-            and no IRPF cuota of its own; the income is taxed in the
-            members' returns. Its own obligation is the informational
-            Modelo 184.
-        INCOMPLETE: The ``entity_type`` is undeclared. The engine
-            refuses to guess and never defaults to a tax — a wrong tax
-            is worse than an incomplete answer (corporate-entity ADR
-            §4, parent ADR's safe default).
-    """
-
-    IRPF = "irpf"
-    IMPUESTO_SOCIEDADES = "impuesto_sociedades"
-    ATTRIBUTION_PASS_THROUGH = "attribution_pass_through"
-    INCOMPLETE = "incomplete"
-
-
-_TAX_ROUTE_FOR_ENTITY_TYPE: dict[EntityType, TaxRoute] = {
-    EntityType.NATURAL_PERSON: TaxRoute.IRPF,
-    EntityType.LEGAL_ENTITY: TaxRoute.IMPUESTO_SOCIEDADES,
-    EntityType.ATTRIBUTION_ENTITY: TaxRoute.ATTRIBUTION_PASS_THROUGH,
-}
-"""The entity-type → tax-route table (corporate-entity ADR §4).
-
-A closed mapping over every :class:`EntityType`. ``entity_type is
-None`` (undeclared) is handled separately by :func:`derive_tax_route`
-and yields :attr:`TaxRoute.INCOMPLETE` — the engine never defaults a
-tax.
-"""
 
 
 def derive_tax_route(profile: TaxpayerProfile) -> TaxRoute:

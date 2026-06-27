@@ -391,6 +391,8 @@ aggregation:
         de fuentes no pueden contener blancos.
       source_transaction_ids_duplicate: Los identificadores de transacción del mallado
         de fuentes deben ser únicos.
+      unresolved_binding_ids_blank: aggregation.source_mesh.errors.unresolved_binding_ids_blank
+      unresolved_binding_ids_duplicate: aggregation.source_mesh.errors.unresolved_binding_ids_duplicate
       unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
       unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
 application:

@@ -16,13 +16,13 @@ from ...application.calculations import (
     evaluate_cross_period_clean_state,
 )
 from ...application.modelo import (
-    derive_taxpayer_files_economic_activity,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloCalculationRevisionSelector,
     ModeloRefundElectionNotEligibleError,
     ModeloVerifySelector,
     WorkUnitNotFoundError,
+    derive_taxpayer_files_economic_activity,
     file_modelo_revision,
     verify_modelo_revision,
 )

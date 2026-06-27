@@ -33,14 +33,14 @@ Exclusions
 from __future__ import annotations
 
 import ast
-import pathlib
 from collections.abc import Mapping
+from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+from ._inventory import aeat_relative, production_ast_items
 
-_SRC_ROOT = pathlib.Path(__file__).parent.parent
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 # Marker token prefixes — any of these in a preceding line satisfies the rule.
 _MARKER_TOKENS: tuple[str, ...] = (
@@ -128,7 +128,7 @@ def _preceding_lines_have_marker(source_lines: list[str], func_lineno: int) -> b
 
 
 def _collect_violations(
-    source_tree_ast: Mapping[pathlib.Path, ast.AST],
+    source_tree_ast: Mapping[Path, ast.AST],
 ) -> list[tuple[str, int]]:
     """Walk all production files and return (rel_path, lineno) pairs without markers.
 
@@ -139,19 +139,11 @@ def _collect_violations(
     per-test filter.
     """
     violations: list[tuple[str, int]] = []
-    for path in sorted(source_tree_ast):
-        try:
-            path.relative_to(_SRC_ROOT)
-        except ValueError:
-            continue
-        name = path.name
-        if name.startswith("test_") or name.endswith("_test.py") or "tests" in path.parts:
-            continue
+    for path, tree in production_ast_items(source_tree_ast):
         try:
             source_lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
         except OSError:
             continue
-        tree = source_tree_ast[path]
         for node in ast.walk(tree):
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
@@ -159,13 +151,13 @@ def _collect_violations(
                 continue
             if _preceding_lines_have_marker(source_lines, node.lineno):
                 continue
-            rel = path.relative_to(_SRC_ROOT).as_posix()
+            rel = aeat_relative(path)
             violations.append((rel, node.lineno))
     return violations
 
 
 def test_no_new_any_param_without_rationale(
-    source_tree_ast: Mapping[pathlib.Path, ast.AST],
+    source_tree_ast: Mapping[Path, ast.AST],
 ) -> None:
     """New parameter-level ``Any`` annotations must carry an inline rationale marker.
 

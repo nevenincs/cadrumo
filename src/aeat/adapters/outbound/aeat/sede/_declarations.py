@@ -47,6 +47,7 @@ from .....core.time import now
 # of a Modelo 100 revision fails loudly if that check is unregistered, so
 # the M100 routing referential-integrity gate runs on this declarations path.
 from .....domain.calculations.registry import (
+    CasillaId,
     RegistrySnapshot,
     RegistryValidationError,
     RemoteStateGuardPolicy,
@@ -1008,7 +1009,7 @@ async def capture_previous_filing_observations(
             )
             observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
             observation = _with_derived_303_compensation_available_observation(observation)
-            observed_casillas = {casilla.casilla_id for casilla in observation.casillas}
+            observed_casillas: set[CasillaId] = {casilla.casilla_id for casilla in observation.casillas}
             missing = sorted(set(requirement.source_casilla_ids).difference(observed_casillas))
             if missing:
                 raise SedeParseError(
@@ -1041,7 +1042,7 @@ async def capture_relation_source_observations(
         playwright: Optional pre-started Playwright instance.
         artefact_sink: Optional callable storing each captured artefact.
     """
-    required_source_casilla_ids: dict[tuple[str, int, str], set[str]] = {}
+    required_source_casilla_ids: dict[tuple[str, int, str], set[CasillaId]] = {}
     for requirement in relation_source_requirements(revision, filing_year=filing_year, period=period.registry_token):
         for source_period in requirement.periods:
             key = (requirement.source_modelo, requirement.filing_year, source_period)
@@ -1061,7 +1062,7 @@ async def capture_relation_source_observations(
             )
             observation = await register.capture_observation(declaration, artefact_sink=artefact_sink)
             observation = _with_derived_303_compensation_available_observation(observation)
-            observed_casillas = {casilla.casilla_id for casilla in observation.casillas}
+            observed_casillas: set[CasillaId] = {casilla.casilla_id for casilla in observation.casillas}
             missing = sorted(source_casilla_ids.difference(observed_casillas))
             if missing:
                 raise SedeParseError(

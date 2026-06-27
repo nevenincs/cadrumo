@@ -27,6 +27,7 @@ from ....domain.calculations.registry import (
     RegistrySnapshot,
     ValidatedRegistryAuthority,
     revision_reference_identity_failures,
+    validated_casilla_id,
 )
 from ....domain.filing import ModeloBuilderError
 from ..runtime import (
@@ -42,6 +43,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _TEST_MODELO = "130"
 _TEST_YEAR = 2026
 _TEST_PERIOD = Period.from_year_and_code(_TEST_YEAR, "1T")
+_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_CASILLA_01")
+_CASILLA_02: CasillaId = validated_casilla_id("02", surface="_CASILLA_02")
+_MISSING_INPUT_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_INPUT_CASILLA")
 
 
 def _source_casilla_refs() -> dict[CasillaId, tuple[str, ...]]:
@@ -187,7 +191,7 @@ def test_registry_casilla_schema_rejects_generic_id_key() -> None:
     with pytest.raises(ValidationError):
         RegistryCasillaSchema.model_validate(
             {
-                "id": "01",
+                "id": _CASILLA_01,
                 "value_type": "decimal",
                 "required": False,
                 "formula": None,
@@ -202,7 +206,7 @@ def test_registry_casilla_schema_rejects_legacy_formula_inputs_key() -> None:
     with pytest.raises(ValidationError, match="formula_inputs"):
         RegistryCasillaSchema.model_validate(
             {
-                "casilla_id": "01",
+                "casilla_id": _CASILLA_01,
                 "value_type": "decimal",
                 "required": False,
                 "formula": None,
@@ -214,19 +218,23 @@ def test_registry_casilla_schema_rejects_legacy_formula_inputs_key() -> None:
 
 
 def test_registry_casilla_collection_rejects_duplicate_casilla_ids() -> None:
-    casilla = _registry_casilla_schema("01")
+    casilla = _registry_casilla_schema(_CASILLA_01)
 
     with pytest.raises(ModeloBuilderError, match=r"duplicate casilla\.id") as exc_info:
         RegistryCasillaCollection(
             casillas=(casilla, casilla.model_copy()),
             schema_version="registry:test:rev",
-        )
+    )
     assert exc_info.value.translated_message == "application.filing.runtime.errors.ambiguous_casilla_schema"
-    assert exc_info.value.context == {"schema_version": "registry:test:rev", "casilla_ids": "01"}
+    assert exc_info.value.context == {"schema_version": "registry:test:rev", "casilla_ids": _CASILLA_01}
 
 
 def test_registry_casilla_collection_rejects_dangling_formula_inputs() -> None:
-    computed = _registry_casilla_schema("02", formula="test.formula", formula_input_casilla_ids=("missing",))
+    computed = _registry_casilla_schema(
+        _CASILLA_02,
+        formula="test.formula",
+        formula_input_casilla_ids=(_MISSING_INPUT_CASILLA,),
+    )
 
     with pytest.raises(
         ModeloBuilderError,
@@ -234,7 +242,10 @@ def test_registry_casilla_collection_rejects_dangling_formula_inputs() -> None:
     ) as exc_info:
         RegistryCasillaCollection(casillas=(computed,), schema_version="registry:test:rev")
     assert exc_info.value.translated_message == "application.filing.runtime.errors.ambiguous_casilla_schema"
-    assert exc_info.value.context == {"schema_version": "registry:test:rev", "casilla_ids": "02: missing"}
+    assert exc_info.value.context == {
+        "schema_version": "registry:test:rev",
+        "casilla_ids": f"{_CASILLA_02}: {_MISSING_INPUT_CASILLA}",
+    }
 
 
 def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> None:

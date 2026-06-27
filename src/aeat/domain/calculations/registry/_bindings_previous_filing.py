@@ -34,7 +34,6 @@ class _RegistryModeloObservationLike(Protocol):
     def casilla_values(self) -> Mapping[CasillaId, Decimal]: ...
 
 
-
 @dataclass(frozen=True, slots=True)
 class PreviousFilingSourceReference:
     """Canonical source reference extracted from a typed previous-filing selector."""
@@ -45,7 +44,7 @@ class PreviousFilingSourceReference:
 
 
 def previous_filing_source_reference(binding: DataBindingDefinition) -> PreviousFilingSourceReference:
-    """Return the typed source reference for a ``previous_filing`` binding."""
+    """Return the :class:`PreviousFilingSourceReference` for a ``previous_filing`` binding."""
     selector = _previous_filing_selector(binding)
     return PreviousFilingSourceReference(
         source_modelo=selector.source_modelo,

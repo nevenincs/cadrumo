@@ -31,12 +31,20 @@ import pytest
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path
-from .. import RegistryCatalogues, RegistryValidator, load_registry_tree
+from .. import CasillaId, RegistryCatalogues, RegistryValidator, load_registry_tree, validated_casilla_id
 from .._bindings import _BINDING_VALIDATOR_REGISTRY, validate_binding_selector_shape
 from .._errors import RegistryValidationError
 from .._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id(
+    "05",
+    surface="_M130_PAGOS_FRACCIONADOS_CASILLA",
+)
+_M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("07", surface="_M130_RESULTADO_PREVIO_CASILLA")
 
 
 def _committed_modelo_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -128,20 +136,20 @@ _FAMILY_CASES: tuple[
     (
         "ledger_renta_income_aggregation",
         "ledger_renta_income_aggregation",
-        {"modelo": "130", "target_casilla_id": "01", "fact": "gross_income_sum"},
+        {"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "gross_income_sum"},
         BindingAggregationOp.SUM,
         # An unknown fact value trips the typed selector Literal at build time
         # (a shape violation is also a build-time rejection, not resolve-only).
-        {"modelo": "130", "target_casilla_id": "01", "fact": "not_a_real_fact"},
+        {"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "not_a_real_fact"},
         BindingAggregationOp.SUM,
     ),
     (
         "ledger_renta_gasto_aggregation",
         "ledger_renta_gasto_aggregation",
-        {"modelo": "130", "target_casilla_id": "02", "fact": "deductible_amount_sum"},
+        {"modelo": "130", "target_casilla_id": _M130_GASTOS_CASILLA, "fact": "deductible_amount_sum"},
         BindingAggregationOp.SUM,
         # An unknown fact value trips the typed selector Literal at build time.
-        {"modelo": "130", "target_casilla_id": "02", "fact": "not_a_real_fact"},
+        {"modelo": "130", "target_casilla_id": _M130_GASTOS_CASILLA, "fact": "not_a_real_fact"},
         BindingAggregationOp.SUM,
     ),
     (
@@ -189,10 +197,14 @@ _FAMILY_CASES: tuple[
     (
         "previous_filing",
         "previous_filing",
-        {"source_modelo": "130", "source_casilla_id": "05"},
+        {"source_modelo": "130", "source_casilla_id": _M130_PAGOS_FRACCIONADOS_CASILLA},
         BindingAggregationOp.COPY,
         # copy requires exactly one source casilla; two violates the invariant.
-        {"source_modelo": "130", "period": "0A", "source_casilla_ids": ("05", "07")},
+        {
+            "source_modelo": "130",
+            "period": "0A",
+            "source_casilla_ids": (_M130_PAGOS_FRACCIONADOS_CASILLA, _M130_RESULTADO_PREVIO_CASILLA),
+        },
         BindingAggregationOp.COPY,
     ),
 )
@@ -253,7 +265,7 @@ def test_malformed_binding_of_each_family_rejected_at_registry_build(
 def test_renta_gasto_binding_rejects_legacy_target_casilla_key() -> None:
     binding = _build_binding(
         source="ledger_renta_gasto_aggregation",
-        selector={"modelo": "130", "target_casilla": "02", "fact": "deductible_amount_sum"},
+        selector={"modelo": "130", "target_casilla": _M130_GASTOS_CASILLA, "fact": "deductible_amount_sum"},
         op=BindingAggregationOp.SUM,
     )
 

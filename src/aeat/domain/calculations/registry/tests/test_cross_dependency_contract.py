@@ -7,10 +7,12 @@ from functools import lru_cache
 
 import pytest
 
+from .....core.aggregation import RelationAggregationOp
 from .....core.resources import bundled_path
 from .. import binding_source_casilla_ids
 from .._errors import RegistryValidationError
 from .._loader import load_registry_tree
+from .._relation_aggregation import relation_aggregation_op
 from .._relations import relation_source_requirements
 from .._runtime_graph import expression_relation_refs
 from .._schema import (
@@ -103,7 +105,7 @@ def _assert_periodic_to_annual_summary_contract(relation, *, scope: str) -> None
     assert relation.kind == "annual_summary", scope
     assert relation.target_periods == ("0A",), scope
     assert len(relation.source_periods) > 1, scope
-    assert (relation.aggregation or {}).get("op") == "sum", scope
+    assert relation_aggregation_op(relation) == RelationAggregationOp.SUM, scope
 
 
 def _assert_instalment_to_final_settlement_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
@@ -261,7 +263,7 @@ def _assert_relation_binding_mirrors_source(*, binding, relation, scope: str) ->
     if selector_periods is not None:
         assert selector_periods == relation.source_periods, scope
     binding_op = binding.aggregation.op if binding.aggregation is not None else None
-    assert binding_op == (relation.aggregation or {}).get("op")
+    assert binding_op == relation_aggregation_op(relation)
 
 
 def test_formula_relation_dependencies_carry_relation_legal_basis() -> None:

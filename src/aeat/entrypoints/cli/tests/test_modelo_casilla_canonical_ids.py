@@ -5,7 +5,7 @@ No mocks. The tests exercise canonical casilla-id validation through the
 full ``work calculate`` command path.
 
 Coverage:
-* Metadata aliases that are not canonical casilla ids are refused.
+* Display/export metadata tokens that are not canonical casilla ids are refused.
 * An unknown token surfaces a helpful error and names the token.
 * A canonical semantic id reaches the engine unchanged.
 """
@@ -91,11 +91,11 @@ def _create_303_work_unit() -> str:
 
 
 # ---------------------------------------------------------------------------
-# Printed-number aliases are refused
+# Printed-number metadata tokens are refused
 # ---------------------------------------------------------------------------
 
 
-def test_printed_number_alias_is_refused(
+def test_printed_number_metadata_token_is_refused(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
     """A printed number is not accepted when it differs from ``casilla.id``."""
@@ -117,7 +117,7 @@ def test_printed_number_alias_is_refused(
     assert "69" in output
 
 
-def test_export_ref_alias_is_refused(
+def test_export_ref_metadata_token_is_refused(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
     """An export field id is not accepted as an alternate casilla reference."""

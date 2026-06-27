@@ -38,27 +38,20 @@ Exclusions
 
 from __future__ import annotations
 
-import pathlib
-import re
+from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-_SRC_ROOT = pathlib.Path(__file__).parent.parent
-_DEV_ROOT = _SRC_ROOT.parent.parent / "dev"
-
-# Patterns that indicate a bare UTF-8 literal (string form only).
-_BARE_UTF8_PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(r'encoding="utf-8"'),
-    re.compile(r'\.encode\("utf-8"\)'),
-    re.compile(r'\.decode\("utf-8"\)'),
+from ._inventory import (
+    REPO_ROOT,
+    aeat_relative,
+    bare_utf8_literal_violations,
+    non_test_package_python_files,
 )
 
-# Lines on which any of these substrings appear are exempted because the
-# UTF-8 encoding is required by the hash/HMAC protocol, not the
-# application's text I/O conventions.
-_HASH_ALLOWLIST_TOKENS = frozenset({"hashlib", "hmac", "sha256", "sha1", "md5", "hasher"})
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_DEV_ROOT = REPO_ROOT / "dev"
 
 # Files excluded from the scan entirely (not subject to the ratchet).
 _SCAN_EXCLUDES: frozenset[str] = frozenset(
@@ -156,34 +149,9 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
 )
 
 
-def _is_hash_site(line: str) -> bool:
-    """Return True when the line contains a hash/HMAC function call."""
-    return any(token in line for token in _HASH_ALLOWLIST_TOKENS)
-
-
-def _bare_utf8_violations(path: pathlib.Path) -> list[tuple[int, str]]:
-    """Return (lineno, line) pairs where a bare UTF-8 literal survives."""
-    violations: list[tuple[int, str]] = []
-    source = path.read_text(encoding="utf-8", errors="replace")
-    for lineno, line in enumerate(source.splitlines(), start=1):
-        if _is_hash_site(line):
-            continue
-        if any(pat.search(line) for pat in _BARE_UTF8_PATTERNS):
-            violations.append((lineno, line.strip()))
-    return violations
-
-
-def _all_production_files() -> list[pathlib.Path]:
+def _all_production_files() -> tuple[Path, ...]:
     """Return all non-test Python files under src/aeat/, excluding the constant module."""
-    files: list[pathlib.Path] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
-        rel = path.relative_to(_SRC_ROOT).as_posix()
-        if path.name.startswith("test_") or "tests" in path.parts:
-            continue
-        if rel in _SCAN_EXCLUDES:
-            continue
-        files.append(path)
-    return files
+    return non_test_package_python_files(include_data=True, scan_excludes=_SCAN_EXCLUDES)
 
 
 def test_no_bare_utf8_literals_in_production_files() -> None:
@@ -206,11 +174,11 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
     production_files = _all_production_files()
 
     for path in production_files:
-        rel = path.relative_to(_SRC_ROOT).as_posix()
+        rel = aeat_relative(path)
         if rel in _KNOWN_VIOLATING_FILES:
             # Pre-existing backlog — covered by future cleanup campaigns.
             continue
-        module_violations = _bare_utf8_violations(path)
+        module_violations = bare_utf8_literal_violations(path)
         for lineno, snippet in module_violations:
             violations.append(f"{rel}:{lineno} — {snippet!r}")
 
@@ -232,7 +200,7 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
 # ---------------------------------------------------------------------------
 # The following 4 sites use .encode('utf-8') fed directly into hashlib.sha256
 # on the same logical line.  They are exempt from the bare-literal check via
-# ``_is_hash_site()`` above (matches ``sha256`` on the same line).  The
+# ``bare_utf8_literal_violations()`` above (matches ``sha256`` on the same line).  The
 # exemption is intentional: the encoding is fixed by the SHA-256 protocol and
 # mechanical substitution with UTF_8_ENCODING adds no value.
 #
@@ -248,7 +216,7 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
 #   application/modelo/_borrador_binding.py:223
 #       hashlib.sha256(result.borrador_snapshot_id.encode('utf-8')).hexdigest()
 #
-# If the hash-allowlist criteria in ``_HASH_ALLOWLIST_TOKENS`` are ever
+# If the hash-allowlist criteria in ``UTF8_HASH_ALLOWLIST_TOKENS`` are ever
 # narrowed, these 4 sites must be reviewed and either enrolled in
 # ``_KNOWN_VIOLATING_FILES`` or migrated to ``UTF_8_ENCODING``.
 
@@ -270,7 +238,7 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
 _DEV_KNOWN_VIOLATING: frozenset[str] = frozenset()
 
 
-def _all_dev_files() -> list[pathlib.Path]:
+def _all_dev_files() -> list[Path]:
     """Return all Python tooling files under dev/ (recursive, non-test, non-init)."""
     if not _DEV_ROOT.is_dir():
         return []
@@ -297,7 +265,7 @@ def test_no_bare_utf8_literals_in_dev() -> None:
     for path in dev_files:
         if path.name in _DEV_KNOWN_VIOLATING:
             continue
-        module_violations = _bare_utf8_violations(path)
+        module_violations = bare_utf8_literal_violations(path)
         for lineno, snippet in module_violations:
             violations.append(f"{path.name}:{lineno} — {snippet!r}")
 

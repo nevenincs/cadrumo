@@ -1,7 +1,7 @@
 """Regression-test ratchet: every public-surface field referencing the language axis must consume OutputLanguage.
 
 The output-language typing contract requires every field on public surfaces
-(settings, profile, CLI arguments, data-class fields)
+(settings, CLI arguments, data-class fields)
 referencing the output language axis must either consume `OutputLanguage` directly
 or carry an explicit exemption comment. Internal helpers (cache keys,
 normalisation functions) are exempt by name.
@@ -57,27 +57,10 @@ def test_settings_layer_output_language_typed_or_exempt() -> None:
     )
 
 
-def test_profile_output_language_typed_or_exempt() -> None:
-    """Profile fields referencing language must consume OutputLanguage or be exempted."""
-    profile_file = Path(__file__).resolve().parents[2] / "profile.py"
-    if not profile_file.exists():
-        pytest.skip(f"{profile_file} does not exist")
-
-    src = _read_file(profile_file)
-    fields = _find_language_axis_fields(src)
-
-    for line_num, line in fields:
-        if "str" in line and "output_language" in line.lower():
-            assert "# exempt:" in line, (
-                f"{profile_file}:{line_num} has bare str output-language field without exemption: {line.strip()}"
-            )
-
-
 def test_cli_sites_output_language_typed_or_exempt() -> None:
     """CLI Typer flag arguments must type output_language as OutputLanguage."""
     cli_dir = Path(__file__).resolve().parents[3] / "entrypoints" / "cli"
-    if not cli_dir.exists():
-        pytest.skip(f"{cli_dir} does not exist")
+    assert cli_dir.exists(), f"{cli_dir} must exist"
 
     for py_file in cli_dir.glob("*.py"):
         if py_file.name.startswith("test_"):

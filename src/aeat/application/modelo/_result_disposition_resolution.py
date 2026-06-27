@@ -17,19 +17,36 @@ reuses the codified per-modelo result→code derivation
 eligibility gate (:func:`~aeat.domain.iva.refund_disposition_available`); it does
 not duplicate either.
 
+Before resolving the result, the persisted :class:`CalculationRevision` value map
+is checked against the law-determined registry :class:`ModeloRevision`, so
+printed numbers, export refs, and ambiguous metadata tokens fail before they can
+influence the disposition.
+
 Legal basis (Modelo 303 refund election): RD 1624/1992 (RIVA) art. 30 (Registro
 de devolución mensual); Ley 37/1992 (LIVA) art. 116 (the monthly-refund right).
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from decimal import Decimal
+
 from ...core import (
+    CasillaId,
     Modelo,
     Period,
     RefundElection,
     ResultDisposition,
     derive_result_disposition,
+    result_disposition_casilla_ids,
     result_disposition_is_refund,
+)
+from ...core.errors import CoreValidationError
+from ...core.resources import resources
+from ...domain.calculations.registry import (
+    ModeloRevision,
+    casilla_noncanonical_reference_targets,
+    declared_casilla_ids,
 )
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.iva import (
@@ -89,7 +106,10 @@ def resolve_modelo_result_disposition(
             ``DEVOLVER`` but the period is not a lawful refund period for a
             non-REDEME taxpayer.
     """
-    base = derive_result_disposition(work_unit.modelo, revision.casilla_values)
+    base = derive_result_disposition(
+        work_unit.modelo,
+        _result_disposition_values_for_revision(work_unit=work_unit, revision=revision, period=period),
+    )
     if base is None:
         return DECLARATION_TYPE_FALLBACK
     return _apply_modelo_303_refund_election(
@@ -99,6 +119,89 @@ def resolve_modelo_result_disposition(
         period=period,
         refund_election=refund_election,
     )
+
+
+def _result_disposition_values_for_revision(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    period: Period,
+) -> Mapping[CasillaId, Decimal]:
+    """Validate a full revision value map and return only result casilla ids."""
+    snapshot = resources().modelos.authority.snapshot(
+        str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=period.registry_token,
+    )
+    if snapshot.revision.id != work_unit.revision_id:
+        raise CoreValidationError(
+            f"result disposition for work unit {work_unit.work_unit_id!r} resolved registry revision "
+            f"{snapshot.revision.id!r}, but the work unit was created against {work_unit.revision_id!r}",
+            context={
+                "modelo": str(work_unit.modelo),
+                "filing_year": str(work_unit.filing_year),
+                "period": period.registry_token,
+                "work_unit_revision_id": work_unit.revision_id,
+                "resolved_revision_id": snapshot.revision.id,
+            },
+        )
+    _reject_non_revision_casilla_values(
+        modelo=str(work_unit.modelo),
+        revision_id=snapshot.revision.id,
+        casilla_values=revision.casilla_values,
+        declared_ids=declared_casilla_ids(snapshot.revision),
+        registry_revision=snapshot.revision,
+    )
+    result_ids = result_disposition_casilla_ids(str(work_unit.modelo))
+    if result_ids is None:
+        return {}
+    return {
+        casilla_id: revision.casilla_values[casilla_id]
+        for casilla_id in result_ids
+        if casilla_id in revision.casilla_values
+    }
+
+
+def _reject_non_revision_casilla_values(
+    *,
+    modelo: str,
+    revision_id: str,
+    casilla_values: Mapping[CasillaId, Decimal],
+    declared_ids: frozenset[CasillaId],
+    registry_revision: ModeloRevision,
+) -> None:
+    noncanonical_details: list[str] = []
+    unknown_ids: list[CasillaId] = []
+    for casilla_id in sorted(casilla_values):
+        if casilla_id in declared_ids:
+            continue
+        noncanonical_targets = casilla_noncanonical_reference_targets(registry_revision, casilla_id)
+        if noncanonical_targets:
+            noncanonical_details.append(_format_noncanonical_casilla_reference(casilla_id, noncanonical_targets))
+            continue
+        unknown_ids.append(casilla_id)
+
+    if noncanonical_details:
+        details = "; ".join(noncanonical_details)
+        raise CoreValidationError(
+            f"result disposition for modelo {modelo!r} revision {revision_id!r} received "
+            f"non-canonical casilla reference tokens, not canonical casilla.id values: {details}",
+            context={"modelo": modelo, "revision_id": revision_id, "casilla_refs": details},
+        )
+    if unknown_ids:
+        unknown = ", ".join(repr(casilla_id) for casilla_id in unknown_ids)
+        raise CoreValidationError(
+            f"result disposition for modelo {modelo!r} revision {revision_id!r} received "
+            f"unknown casilla.id values: {unknown}",
+            context={"modelo": modelo, "revision_id": revision_id, "casilla_ids": unknown},
+        )
+
+
+def _format_noncanonical_casilla_reference(token: str, targets: tuple[CasillaId, ...]) -> str:
+    rendered_targets = ", ".join(repr(target) for target in targets)
+    if len(targets) > 1:
+        return f"{token!r} is ambiguous; candidate casilla.id values: {rendered_targets}"
+    return f"{token!r} -> {rendered_targets}"
 
 
 def revision_is_refund_disposition(

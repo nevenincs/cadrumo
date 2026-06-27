@@ -42,9 +42,10 @@ def resolve_borrador_source_tier(
 ) -> CalculationSourceResolution:
     """Resolve the borrador precedence tier as a :class:`CalculationSourceResolution`.
 
-    Enrolls the borrador source through the source mesh: the returned resolution
-    carries the typed ``borrador_provenance`` (snapshot id + sourced-binding
-    trace) the persistence boundary consumes.
+    The :class:`RegistrySnapshot` supplies the revision and modelo identity used
+    to resolve the borrador source through the source mesh; the returned
+    resolution carries the typed ``borrador_provenance`` (snapshot id +
+    sourced-binding trace) the persistence boundary consumes.
     """
     return _resolve_borrador_bindings_for_calculation(
         bucket_id=bucket_id,
@@ -70,8 +71,9 @@ def resolve_profile_source_tier(
 ) -> CalculationSourceResolution:
     """Resolve the profile precedence tier as a :class:`CalculationSourceResolution`.
 
-    Enrolls ``source = "profile"`` bindings through the source mesh. Profile is
-    the LOWEST precedence tier, so every binding the caller, borrador, or mesh
+    The :class:`RegistrySnapshot` identifies the revision whose
+    ``source = "profile"`` bindings are enrolled through the source mesh. Profile
+    is the LOWEST precedence tier, so every binding the caller, borrador, or mesh
     backend already supplied is excluded here (the profile resolver never
     overrides a higher tier).
     """
@@ -103,7 +105,7 @@ def reject_binding_channel_mismatch(
     binding_values: Mapping[BindingId, Decimal],
     enum_binding_values: Mapping[BindingId, str],
 ) -> None:
-    """Public re-home of the engine-channel-mismatch refusal (see private impl)."""
+    """Reject values supplied on the wrong channel for a :class:`ModeloRevision`."""
     _reject_binding_channel_mismatch(revision, binding_values, enum_binding_values)
 
 
@@ -112,7 +114,7 @@ def lift_previous_filing_casilla_overrides_to_bindings(
     casilla_inputs: Mapping[CasillaId, Decimal],
     resolved_bindings: Mapping[BindingId, Decimal],
 ) -> dict[BindingId, Decimal]:
-    """Public re-home of the previous-filing casilla-override lift (see private impl)."""
+    """Promote previous-filing casilla overrides declared by a :class:`ModeloRevision`."""
     return _lift_previous_filing_casilla_overrides_to_bindings(revision, casilla_inputs, resolved_bindings)
 
 
@@ -122,7 +124,7 @@ def resolve_declaration_period_inputs(
     filing_year: int,
     period: _Period,
 ) -> dict[CasillaId, Decimal]:
-    """Public re-home of the declaration-period informational-input resolution."""
+    """Resolve declaration-period informational inputs for a :class:`ModeloRevision`."""
     return _resolve_declaration_period_inputs(revision, filing_year=filing_year, period=period)
 
 

@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.errors import DecryptionError
+from ....core import BindingSourceKind
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import CasillaId, load_registry_tree, validated_casilla_id
 from .. import (
@@ -33,7 +34,7 @@ _IVA_REPERCUTIDO_GENERAL_CASILLA: CasillaId = validated_casilla_id(
 def test_source_resolution_contract_is_strict_and_serializable() -> None:
     resolution = CalculationSourceResolution(
         resolver_id="ledger-iva",
-        owned_sources=("ledger_iva_aggregation",),
+        owned_sources=(BindingSourceKind.LEDGER_IVA_AGGREGATION,),
         binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("21.00")},
         enum_binding_values={"profile-ccaa": "madrid"},
         date_binding_values={"profile-birth-date": date(1980, 1, 31)},
@@ -168,12 +169,12 @@ def test_owned_sources_unknown_token_is_rejected_by_the_typed_field() -> None:
 def test_source_resolution_merge_rejects_duplicate_binding_ownership() -> None:
     left = CalculationSourceResolution(
         resolver_id="ledger-iva",
-        owned_sources=("ledger_iva_aggregation",),
+        owned_sources=(BindingSourceKind.LEDGER_IVA_AGGREGATION,),
         binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("21.00")},
     )
     right = CalculationSourceResolution(
         resolver_id="manual-bridge",
-        owned_sources=("manual_input",),
+        owned_sources=(BindingSourceKind.MANUAL_INPUT,),
         binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
     )
 
@@ -191,12 +192,12 @@ def test_source_resolution_merge_rejects_duplicate_binding_ownership() -> None:
 def test_source_resolution_merge_rejects_duplicate_bound_casilla_ownership() -> None:
     left = CalculationSourceResolution(
         resolver_id="ledger-iva",
-        owned_sources=("ledger_iva_aggregation",),
+        owned_sources=(BindingSourceKind.LEDGER_IVA_AGGREGATION,),
         bound_inputs_by_casilla_id={_IVA_REPERCUTIDO_GENERAL_CASILLA: Decimal("21.00")},
     )
     right = CalculationSourceResolution(
         resolver_id="invoice",
-        owned_sources=("payable_invoice",),
+        owned_sources=(BindingSourceKind.PAYABLE_INVOICE,),
         bound_inputs_by_casilla_id={_IVA_REPERCUTIDO_GENERAL_CASILLA: Decimal("99.00")},
     )
 
@@ -214,12 +215,12 @@ def test_source_resolution_merge_rejects_duplicate_bound_casilla_ownership() -> 
 def test_source_resolution_merge_rejects_duplicate_relation_ownership() -> None:
     left = CalculationSourceResolution(
         resolver_id="relation-prefill",
-        owned_sources=("relation_prefill",),
+        owned_sources=(BindingSourceKind.RELATION_PREFILL,),
         relation_values={"modelo-180-rel-115-base-anual": Decimal("2128.75")},
     )
     right = CalculationSourceResolution(
         resolver_id="aeat-live",
-        owned_sources=("previous_filing",),
+        owned_sources=(BindingSourceKind.PREVIOUS_FILING,),
         relation_values={"modelo-180-rel-115-base-anual": Decimal("99.00")},
     )
 
@@ -237,12 +238,12 @@ def test_source_resolution_merge_rejects_duplicate_relation_ownership() -> None:
 def test_source_resolution_merge_rejects_duplicate_binding_across_value_channels() -> None:
     left = CalculationSourceResolution(
         resolver_id="profile",
-        owned_sources=("profile",),
+        owned_sources=(BindingSourceKind.PROFILE,),
         date_binding_values={"profile-birth-date": date(1980, 1, 31)},
     )
     right = CalculationSourceResolution(
         resolver_id="manual-bridge",
-        owned_sources=("manual_input",),
+        owned_sources=(BindingSourceKind.MANUAL_INPUT,),
         binding_values={"profile-birth-date": Decimal("1.00")},
     )
 
@@ -274,7 +275,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
     relation_input = Decimal("38.49")
     ledger_resolution = CalculationSourceResolution(
         resolver_id="ledger-iva",
-        owned_sources=("ledger_iva_aggregation",),
+        owned_sources=(BindingSourceKind.LEDGER_IVA_AGGREGATION,),
         binding_values={"binding-decimal": binding_input},
         relation_values={"relation-decimal": relation_input},
         date_binding_values={"profile-birth-date": date(1980, 1, 31)},
@@ -286,7 +287,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
             ledger_resolution,
             CalculationSourceResolution(
                 resolver_id="profile",
-                owned_sources=("profile",),
+                owned_sources=(BindingSourceKind.PROFILE,),
                 enum_binding_values={"profile-ccaa": "madrid"},
                 diagnostics=(diagnostic,),
             ),
@@ -294,7 +295,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
     )
 
     assert merged.resolver_id == "source_mesh"
-    assert merged.owned_sources == ("ledger_iva_aggregation", "profile")
+    assert merged.owned_sources == (BindingSourceKind.LEDGER_IVA_AGGREGATION, BindingSourceKind.PROFILE)
     assert merged.binding_values["binding-decimal"] == ledger_resolution.binding_values["binding-decimal"]
     assert merged.relation_values["relation-decimal"] == ledger_resolution.relation_values["relation-decimal"]
     assert merged.date_binding_values["profile-birth-date"] == date(1980, 1, 31)
@@ -328,8 +329,8 @@ def test_storage_degradation_resolution_emits_diagnostic_and_debug_log(
     with caplog.at_level("DEBUG", logger="aeat.application.aggregation._source_mesh"):
         resolution = storage_degradation_resolution(
             resolver_id="ledger-iva",
-            owned_sources=("ledger_iva_aggregation",),
-            source_kinds=("ledger_iva_aggregation",),
+            owned_sources=(BindingSourceKind.LEDGER_IVA_AGGREGATION,),
+            source_kinds=(BindingSourceKind.LEDGER_IVA_AGGREGATION,),
             error=error,
         )
 
