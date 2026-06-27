@@ -1,4 +1,9 @@
-"""Application services for registry corpus projections."""
+"""Application services for registry corpus projections.
+
+Manual verification can receive a :class:`ValidatedRegistryAuthority` so manual
+casilla references are checked against the same validated registry authority as
+runtime registry workflows.
+"""
 
 from __future__ import annotations
 
@@ -632,6 +637,14 @@ def verify_registry_manual(
     locale: str | None = None,
 ) -> RegistryManualVerificationReport:
     """Verify one local manual part and return a typed application report.
+
+    Args:
+        command: Manual verification command to execute.
+        settings: Optional application settings override.
+        registry_authority: Optional :class:`ValidatedRegistryAuthority` used to
+            validate manual casilla references against registry snapshots.
+        topic_catalogue: Optional topic catalogue used to attach topic projections.
+        locale: Optional output locale for topic projection text.
 
     Returns a :class:`RegistryManualVerificationReport` with verification
     findings for the requested manual part.

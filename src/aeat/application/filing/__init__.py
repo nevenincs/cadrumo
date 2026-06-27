@@ -52,7 +52,7 @@ from ...domain.calculations.registry import (
     calculate_registry_snapshot as _calculate_registry_snapshot,
 )
 from ...domain.calculations.registry import (
-    casilla_metadata_aliases as _casilla_metadata_aliases,
+    casilla_noncanonical_reference_tokens as _casilla_noncanonical_reference_tokens,
 )
 from ...domain.calculations.registry import (
     declared_casilla_ids as _declared_casilla_ids,
@@ -410,13 +410,16 @@ def _validate_filing_input_keys(
             f"{', '.join(repr(key) for key in sorted(padded))}",
         )
 
-    aliases = _casilla_metadata_aliases(snapshot.revision)
-    supplied_aliases = tuple(key for key in inputs if key in aliases)
-    if supplied_aliases:
-        details = "; ".join(f"{key!r} -> {', '.join(aliases[key])}" for key in sorted(supplied_aliases))
+    noncanonical_tokens = _casilla_noncanonical_reference_tokens(snapshot.revision)
+    supplied_noncanonical = tuple(key for key in inputs if key in noncanonical_tokens)
+    if supplied_noncanonical:
+        details = "; ".join(
+            _format_noncanonical_casilla_reference(key, noncanonical_tokens[key])
+            for key in sorted(supplied_noncanonical)
+        )
         raise ModeloBuilderError(
             "filing input keys must use canonical casilla.id values; "
-            f"casilla metadata aliases are not accepted: {details}",
+            f"non-canonical casilla reference tokens are not accepted: {details}",
         )
 
     unknown = tuple(key for key in inputs if key not in accepted_ids)
@@ -426,6 +429,14 @@ def _validate_filing_input_keys(
             f"registry:{snapshot.modelo.id}:{snapshot.revision.id}; unknown keys: "
             f"{', '.join(repr(key) for key in sorted(unknown))}",
         )
+
+
+def _format_noncanonical_casilla_reference(token: str, targets: tuple[_CasillaId, ...]) -> str:
+    rendered_targets = ", ".join(targets)
+    if len(targets) > 1:
+        return f"{token!r} is ambiguous; candidate casilla.id values: {rendered_targets}"
+    return f"{token!r} -> {rendered_targets}"
+
 
 def _date_inputs_for_ids(inputs: ModeloInputs, input_ids: set[_BindingId]) -> dict[_BindingId, date]:
     """Extract ISO-date-shaped inputs for ``input_ids`` as ``date`` values."""

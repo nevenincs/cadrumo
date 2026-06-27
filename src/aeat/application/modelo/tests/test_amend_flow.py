@@ -101,6 +101,8 @@ _AMEND_CARRY_FORWARD_CASILLA: CasillaId = _casilla_id("15")
 _AMEND_HOME_DEDUCTION_CASILLA: CasillaId = _casilla_id("16")
 _AMEND_PRIOR_RETURN_RESULT_CASILLA: CasillaId = _casilla_id("18")
 _UNKNOWN_AMEND_CASILLA: CasillaId = _casilla_id("9999")
+_M303_RESULT_CASILLA: CasillaId = _casilla_id("iva.resultado")
+_M303_PRINTED_RESULT_TOKEN: CasillaId = _casilla_id("69")
 
 
 @pytest.fixture
@@ -117,16 +119,23 @@ def repos(tmp_path: Path) -> Generator[_Repos]:
         yield wu, cr, fr, vr, bv
 
 
-def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:
+def _seed_work_unit(
+    wu_repo: WorkUnitCatalogueRepository,
+    *,
+    modelo: str = "130",
+    filing_year: int = 2026,
+    period_code: str = "1T",
+    revision_id: str = "2019-y-siguientes",
+) -> WorkUnit:
     """Modelo 130 1T 2026 — registry-resolvable so the formula engine
     in ``calculate_modelo_revision`` has a snapshot to operate on."""
 
     return create_work_unit(
         bucket_id="default",
-        modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2019-y-siguientes",
+        modelo=modelo,
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, period_code),
+        revision_id=revision_id,
         repository=wu_repo,
         clock=_T0,
     )
@@ -141,12 +150,22 @@ def _seed_external_baseline(
     repos_tuple: _Repos,
     *,
     casilla_values: dict[CasillaId, Decimal],
+    modelo: str = "130",
+    filing_year: int = 2026,
+    period_code: str = "1T",
+    revision_id_value: str = "2019-y-siguientes",
 ) -> tuple[WorkUnit, CalculationRevision, ModeloRecord]:
     """Seed a CURRENT filing record carrying ``external_evidence`` plus
     its underlying calculation revision and work unit."""
 
     wu_repo, cr_repo, fr_repo, _, _ = repos_tuple
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(
+        wu_repo,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_code=period_code,
+        revision_id=revision_id_value,
+    )
 
     inputs: dict[CasillaId, str] = {}
     overrides_map: dict[str, str] = {}
@@ -541,6 +560,39 @@ def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos: _Repos)
     casillas_obj = exc_info.value.context.get("casillas", [])
     assert isinstance(casillas_obj, (list, tuple))
     assert _UNKNOWN_AMEND_CASILLA in casillas_obj
+
+
+def test_amend_refuses_printed_number_metadata_token(repos: _Repos) -> None:
+    """Amendment overrides must not treat a printed number as a casilla reference."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _, _, baseline = _seed_external_baseline(
+        repos,
+        modelo="303",
+        filing_year=2025,
+        period_code="1T",
+        revision_id_value="2023-y-siguientes",
+        casilla_values={_M303_RESULT_CASILLA: Decimal("100")},
+    )
+
+    with pytest.raises(AmendmentOverrideCasillaError, match="non-canonical reference tokens") as exc_info:
+        amend_modelo_revision(
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_M303_PRINTED_RESULT_TOKEN: Decimal("50")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="printed number override rejected",
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T4,
+        )
+
+    assert exc_info.value.translated_message == "application.modelo.errors.amendment_unknown_casillas"
+    assert exc_info.value.context is not None
+    assert exc_info.value.context.get("casillas") == [_M303_PRINTED_RESULT_TOKEN]
+    assert "iva.resultado" in str(exc_info.value)
 
 
 def test_amend_refuses_non_string_override_casilla_keys_without_coercion(repos: _Repos) -> None:

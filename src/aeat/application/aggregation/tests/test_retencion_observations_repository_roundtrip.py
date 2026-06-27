@@ -3,7 +3,7 @@
 Persists per-perceptor :class:`RetencionObservation` records at
 ``SensitivityClass.FINANCIAL`` keyed by ``(modelo, filing_year, period,
 sha256(perceptor_nif), scheme)`` — the DEDICATED store the calc-mesh
-perceptor-count resolver reads so Modelo 180/190/193 count perceptors distinctly.
+perceptor-count resolver reads so Modelo 180/193 count perceptors distinctly.
 
 Anti-tautology: a populated observation carries every field non-default and two
 distinct perceptors plus a same-NIF/two-scheme pair; a save-drops-field or

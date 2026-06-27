@@ -85,9 +85,9 @@ _M390_COMPENSACION_ULTIMO_PERIODO_CASILLA: CasillaId = _casilla_id("iva.anual.co
 _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: CasillaId = _casilla_id(
     "iva.anual.compensacion-generada-ejercicio-no-97",
 )
-_M303_PRINTED_PERIOD_RESULT_ALIAS_CASILLA: CasillaId = _casilla_id("69")
-_M303_PRINTED_COMPENSATION_ALIAS_CASILLA: CasillaId = _casilla_id("87")
-_M390_PRINTED_LAST_PERIOD_COMPENSATION_ALIAS_CASILLA: CasillaId = _casilla_id("97")
+_M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA: CasillaId = _casilla_id("69")
+_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA: CasillaId = _casilla_id("87")
+_M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA: CasillaId = _casilla_id("97")
 
 
 def _state(
@@ -870,12 +870,12 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
         assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_status": "seeded"}
 
 
-def test_iva_compensation_state_from_filed_observation_refuses_printed_number_aliases() -> None:
+def test_iva_compensation_state_from_filed_observation_refuses_printed_number_references() -> None:
     observation = _filed_observation(modelo="303").model_copy(
         update={
             "casillas": (
                 ObservedCasillaValue(
-                    casilla_id=_M303_PRINTED_PERIOD_RESULT_ALIAS_CASILLA,
+                    casilla_id=_M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,
                     value="-25.00",
                     source_artefact_kind="submitted_file",
                     source_locator="submitted-file:casilla-69",
@@ -892,7 +892,7 @@ def test_iva_compensation_state_from_filed_observation_refuses_printed_number_al
         "modelo": "303",
         "revision": "2023-y-siguientes",
         "period": "4T",
-        "casilla_ids": (_M303_PRINTED_PERIOD_RESULT_ALIAS_CASILLA,),
+        "casilla_ids": (_M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,),
     }
 
 
@@ -901,7 +901,7 @@ def test_iva_compensation_state_validates_ignored_justificante_casilla_ids() -> 
         update={
             "casillas": (
                 ObservedCasillaValue(
-                    casilla_id=_M303_PRINTED_PERIOD_RESULT_ALIAS_CASILLA,
+                    casilla_id=_M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,
                     value="-25.00",
                     source_artefact_kind="justificante_pdf",
                     source_locator="justificante-pdf:casilla-69",
@@ -918,11 +918,11 @@ def test_iva_compensation_state_validates_ignored_justificante_casilla_ids() -> 
         "modelo": "303",
         "revision": "2023-y-siguientes",
         "period": "4T",
-        "casilla_ids": (_M303_PRINTED_PERIOD_RESULT_ALIAS_CASILLA,),
+        "casilla_ids": (_M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,),
     }
 
 
-def test_iva_compensation_annual_summary_refuses_printed_number_aliases() -> None:
+def test_iva_compensation_annual_summary_refuses_printed_number_references() -> None:
     observation = _filed_390_observation(
         last_period_compensation=Decimal("100.00"),
         generated_not_in_last_period=Decimal("50.00"),
@@ -930,7 +930,7 @@ def test_iva_compensation_annual_summary_refuses_printed_number_aliases() -> Non
         update={
             "casillas": (
                 ObservedCasillaValue(
-                    casilla_id=_M390_PRINTED_LAST_PERIOD_COMPENSATION_ALIAS_CASILLA,
+                    casilla_id=_M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA,
                     value="100.00",
                     source_artefact_kind="submitted_file",
                     source_locator="submitted-file:390:97",
@@ -947,11 +947,11 @@ def test_iva_compensation_annual_summary_refuses_printed_number_aliases() -> Non
         "modelo": "390",
         "revision": "2010-y-siguientes",
         "period": "0A",
-        "casilla_ids": (_M390_PRINTED_LAST_PERIOD_COMPENSATION_ALIAS_CASILLA,),
+        "casilla_ids": (_M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA,),
     }
 
 
-def test_relation_prefill_fifo_state_refuses_printed_number_compensation_aliases() -> None:
+def test_relation_prefill_fifo_state_refuses_printed_number_compensation_references() -> None:
     from .._relation_prefill import _fifo_compensation_carry_binding_values
 
     snapshot = resources().modelos.authority.snapshot("390", filing_year=2026, period="0A")
@@ -967,7 +967,7 @@ def test_relation_prefill_fifo_state_refuses_printed_number_compensation_aliases
         period="4T",
         observations=(
             generated_observation,
-            generated_observation.model_copy(update={"casilla_id": _M303_PRINTED_COMPENSATION_ALIAS_CASILLA}),
+            generated_observation.model_copy(update={"casilla_id": _M303_PRINTED_COMPENSATION_REFERENCE_CASILLA}),
         ),
     )
 

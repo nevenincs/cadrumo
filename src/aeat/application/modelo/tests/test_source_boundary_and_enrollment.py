@@ -9,7 +9,7 @@ OssIossLedgerSourceResolver (M369 OSS/IOSS), and InvoiceCatalogueSourceResolver
 (M349 collectible_invoice) are enrolled in the live merge_source_resolutions tuple
 so they fire on their modelos.
 
-Deferred source kinds: the five deferred source kinds (withholding, atribucion_member,
+Deferred source kinds: the four deferred source kinds (atribucion_member,
 related_party_operation, foreign_asset, refund_operation) produce an
 'unhandled_binding_source' advisory on source_diagnostics rather than a silent blank,
 and are NOT on the manual_sources allowlist.
@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.invoices import InvoiceCatalogueRepository
@@ -373,11 +373,17 @@ def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
 
 
 def test_s10_deferred_source_kinds_are_enumerated_and_non_empty() -> None:
-    """DEFERRED_SOURCE_KINDS is non-empty and contains the five expected kinds."""
+    """DEFERRED_SOURCE_KINDS is non-empty and contains the expected deferred kinds."""
     expected = frozenset(
-        {"withholding", "atribucion_member", "related_party_operation", "foreign_asset", "refund_operation"},
+        {
+            BindingSourceKind.ATRIBUCION_MEMBER,
+            BindingSourceKind.RELATED_PARTY_OPERATION,
+            BindingSourceKind.FOREIGN_ASSET,
+            BindingSourceKind.REFUND_OPERATION,
+        },
     )
     assert expected.issubset(DEFERRED_SOURCE_KINDS), f"Missing deferred kinds: {expected - DEFERRED_SOURCE_KINDS}"
+    assert BindingSourceKind.WITHHOLDING not in DEFERRED_SOURCE_KINDS
 
 
 @pytest.mark.parametrize(
@@ -401,9 +407,9 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
     We use M184 (atribucion_member) and M720 (foreign_asset) as representatives:
     both have no formula relations, so a fresh-bucket calculate does not crash on a
     missing relation operand and the unhandled-source advisory path is isolated cleanly.
-    The withholding deferred kind (M190/M193) is asserted separately in
-    test_s27_withholding_deferred_advisory_fires (those revisions DO carry relation
-    operands that raise on an empty bucket, orthogonal to the advisory contract here).
+    The withholding kind moved out of the deferred set when
+    WithholdingSourceResolver was enrolled; M190/M193 empty-store behavior is
+    asserted in the annual reconciliation and withholding-resolver tests.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
@@ -443,47 +449,36 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
     )
 
 
-def test_s27_withholding_deferred_advisory_fires() -> None:
-    """M190 'withholding' per-perceptor bindings surface the unhandled-source advisory.
-
-    The withholding source kind is the per-perceptor detalle rollup.  It is
-    deferred-with-advisory, NOT built.  The per-perceptor rows exist only in
-    the Sheets detalle tab (assemble_withholding_observations reads calc-sheet cells), and
-    the transaction ledger carries no retencion/perceptor breakdown, so a live .resolve()
-    would have no source to read — a built resolver would be an empty design-only shell.
-    The annual M190<-M111 / M193<-M123 totals are relation edges (live), distinct
-    from this per-perceptor source kind.  A real ledger-derived withholding build is a future
-    feature needing its own ingest surface (counterparty + retencion modelling).
-
-    Asserted via the direct collect_unhandled boundary (not the full calculate path):
-    M190/M193 carry relation operands that raise RegistryValidationError on a fresh empty
-    bucket (no prior M111/M123 filing), orthogonal to the advisory contract.  The boundary
-    layer is the correct structural seam for proving the deferred kind is never a silent blank.
-    """
+def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
+    """M190 'withholding' bindings are handled by the enrolled withholding resolver."""
     from ...aggregation import collect_unhandled_source_diagnostics
 
     revision = _revision("190", "2024-y-siguientes")
     assert any(str(b.source) == "withholding" for b in revision.bindings), (
         "M190 2024-y-siguientes must declare withholding bindings for this test to be non-vacuous"
     )
-    # The live _handled set: relation_prefill is owned (enrolled resolver), withholding is not.
-    handled = frozenset({"relation_prefill", "profile", "borrador", "iva_wallet_decision"})
+    handled = frozenset(
+        {
+            BindingSourceKind.RELATION_PREFILL,
+            BindingSourceKind.PROFILE,
+            BindingSourceKind.BORRADOR,
+            BindingSourceKind.IVA_WALLET_DECISION,
+            BindingSourceKind.WITHHOLDING,
+        },
+    )
     unhandled = collect_unhandled_source_diagnostics(
         revision,
         handled_sources=handled,
-        manual_sources=frozenset({"manual_input"}),
+        manual_sources=frozenset({BindingSourceKind.MANUAL_INPUT}),
     )
     withholding_advisories = [
         d for d in unhandled if d.source_kind == "withholding" and d.reason == "unhandled_binding_source"
     ]
-    assert withholding_advisories, (
-        "S27: expected 'unhandled_binding_source' advisory for every withholding binding "
-        f"but got none. unhandled={unhandled}"
+    assert not withholding_advisories, (
+        "S27: withholding is enrolled and must not appear as unhandled; "
+        f"unhandled={unhandled}"
     )
-    assert all(d.binding_id for d in withholding_advisories)
-    # withholding must NOT be silenced onto the manual_sources allowlist.
-    assert "withholding" not in frozenset({"manual_input"})
-    assert "withholding" in DEFERRED_SOURCE_KINDS
+    assert BindingSourceKind.WITHHOLDING not in DEFERRED_SOURCE_KINDS
 
 
 # ---------------------------------------------------------------------------
