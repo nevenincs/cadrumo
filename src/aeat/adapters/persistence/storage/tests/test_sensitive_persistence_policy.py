@@ -65,11 +65,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tempfile.NamedTemporaryFile",
     ): "registry corpus PDF-text cache; writes public AEAT manual text only, no user data",
     (
-        "src/aeat/domain/calculations/registry/_authority.py",
-        "_load_authority",
-        "validated_cache_path.write_text",
-    ): "registry validation cache marker; writes the literal 'validated' string only",
-    (
         "src/aeat/domain/calculations/registry/_loader.py",
         "_load_registry_tree_cached",
         "tempfile.NamedTemporaryFile",

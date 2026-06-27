@@ -23,6 +23,7 @@ from ._verification_chain_support import (
     calculate_registry_snapshot,
     date,
     parse_declaracion,
+    resolve_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
     validated_casilla_id,
 )
@@ -76,6 +77,10 @@ _DECL_SUMMARY_ASSERTION_CASILLAS: tuple[CasillaId, ...] = (
     _DECL_BASE_TOTAL_CASILLA,
     _DECL_RETENCIONES_TOTAL_CASILLA,
 )
+_DECL_MONETARY_SUMMARY_CASILLAS: tuple[CasillaId, ...] = (
+    _DECL_BASE_TOTAL_CASILLA,
+    _DECL_RETENCIONES_TOTAL_CASILLA,
+)
 _M115_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("01")
 _M115_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("02")
 _M115_RETENCIONES_CASILLA: CasillaId = _casilla_id("03")
@@ -106,6 +111,10 @@ _M123_2024_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
     _casilla_id("12"),
     _casilla_id("14"),
 )
+_M180_PERCEPTORES_BINDING: BindingId = "modelo-180-115-perceptores-anual"
+_M180_RETIRED_PERCEPTORES_RELATION = "modelo-180-rel-115-perceptores-anual"
+_M193_PERCEPTORES_BINDING: BindingId = "modelo-193-123-perceptores-anual"
+_M193_RETIRED_PERCEPTORES_RELATION = "modelo-193-rel-123-perceptores-anual"
 _M131_CLOSURE_CASILLAS: tuple[CasillaId, ...] = (
     _casilla_id("07"),
     _casilla_id("10"),
@@ -303,33 +312,29 @@ def test_verification_chain_m180_parser_extracts_declaracion_pdf_casillas() -> N
         )
 
 
-def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_relation_values() -> None:
-    """Engine recomputes M180 annual closure casillas from M115 quarterly relation values.
+def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_relations_and_binding() -> None:
+    """Engine recomputes M180 annual closure casillas from M115 relations and binding values.
 
     GROUNDED authority: synthetic M180 fixture at
     src/aeat/tests/fixtures/justificantes/180/2024-0A.pdf, derived from
     AEAT Orden HAP/1732/2014 printed form structure.  The fixture prints:
-      decl.total-perceptores = 3    (sum of M115 casilla 01 across 4 quarters)
-      decl.base-total        = 12 000.00  (sum of M115 casilla 02 across 4 quarters)
-      decl.retenciones-total =  2 280.00  (sum of M115 casilla 03 across 4 quarters)
+      decl.total-perceptores = 3       (dedicated annual perceptor binding)
+      decl.base-total        = 12000.00 (sum of M115 casilla 02 across 4 quarters)
+      decl.retenciones-total =  2280.00 (sum of M115 casilla 03 across 4 quarters)
 
     Legal grounding: Ley 35/2006 art.99; RD 439/2007 arts.100,108,109;
     Orden HAP/1732/2014 art.2; Orden HFP/1284/2023 art.7.
 
     Chain:
       1. Parse the 2024-0A M180 fixture → extracted closure values.
-      2. Build M115 quarterly observations (4 quarters, filing year 2024)
-         whose sum matches each extracted M180 total:
-           Q1 casilla 01=1, 02=3 000.00, 03=570.00
-           Q2 casilla 01=1, 02=3 000.00, 03=570.00
-           Q3 casilla 01=1, 02=3 000.00, 03=570.00
-           Q4 casilla 01=0, 02=3 000.00, 03=570.00   ← sum 01=3, 02=12000, 03=2280
+      2. Build M115 quarterly observations whose monetary sums match the M180 totals.
       3. Resolve relation_values via resolve_relation_values_from_observations.
-      4. calculate_registry_snapshot(M180 snapshot, inputs={}, relation_values=...).
-      5. Assert engine values == extracted values for all 3 closure casillas.
+      4. Supply decl.total-perceptores through modelo-180-115-perceptores-anual.
+      5. calculate_registry_snapshot(M180 snapshot, bound inputs, binding_values, relation_values).
+      6. Assert perceptor count is bound, and monetary totals are relation-derived.
 
-    Verdict: VERIFIED — the M115→M180 cross-modelo relation binding resolves
-    and the engine aggregation formula chain is functionally correct.
+    Verdict: VERIFIED — the M115→M180 monetary relation chain resolves without
+    resurrecting the retired quarterly perceptor-count relation.
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "180" / "2024-0A.pdf"
 
@@ -346,11 +351,16 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
-    # Build M115 quarterly observations whose sum matches the M180 fixture totals.
-    # Values chosen so that sum(Q1..Q4) equals each extracted M180 closure value.
-    # M115 casilla 01 (integer): 1+1+1+0 = 3 == extracted["decl.total-perceptores"]
-    # M115 casilla 02 (money):   3000+3000+3000+3000 = 12000.00 == extracted["decl.base-total"]
-    # M115 casilla 03 (money):   570+570+570+570 = 2280.00 == extracted["decl.retenciones-total"]
+    perceptor_binding_value = Decimal("3")
+    extracted_perceptors = extracted.get(_DECL_TOTAL_PERCEPTORES_CASILLA)
+    assert extracted_perceptors == perceptor_binding_value, (
+        f"PARSER-GAP [M180/2024-0A engine]: fixture printed {_DECL_TOTAL_PERCEPTORES_CASILLA!r} "
+        f"as {extracted_perceptors!r}, expected {perceptor_binding_value!r}."
+    )
+
+    # Build M115 quarterly observations whose monetary sums match the M180 fixture totals.
+    # The quarterly perceptor source casilla is intentionally present in the observations
+    # to prove the resolver does not emit the retired perceptor-count relation.
     _m115_quarterly: dict[str, dict[CasillaId, Decimal]] = {
         "1T": {
             _M115_TOTAL_PERCEPTORES_CASILLA: Decimal("1"),
@@ -403,13 +413,20 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
             f"RegistryValidationError — M115→M180 relation chain is structurally broken.\n"
             f"  error: {exc}",
         )
+    assert _M180_RETIRED_PERCEPTORES_RELATION not in relation_values, (
+        f"BINDING-GAP [M180/2024-0A engine]: retired quarterly perceptor relation "
+        f"{_M180_RETIRED_PERCEPTORES_RELATION!r} was resolved. Perceptor count must flow through "
+        f"{_M180_PERCEPTORES_BINDING!r}."
+    )
 
     # Run the calculation engine.
+    binding_values: dict[BindingId, Decimal] = {_M180_PERCEPTORES_BINDING: perceptor_binding_value}
     try:
         result = calculate_registry_snapshot(
             snapshot,
-            inputs={},
+            inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
             date_context={"filing_period": date(2024, 12, 31)},
+            binding_values=binding_values,
             relation_values=relation_values,
         )
     except RegistryValidationError as exc:
@@ -417,13 +434,25 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
             f"BINDING-GAP [M180/2024-0A engine]: calculate_registry_snapshot raised "
             f"RegistryValidationError — engine could not recompute from supplied relation_values.\n"
             f"  error: {exc}\n"
+            f"  binding_values keys: {sorted(binding_values)}\n"
             f"  relation_values keys: {sorted(relation_values)}",
         )
 
     # Assert engine closure values match AEAT-grounded extracted values.
     engine_values = dict(result.values)
+    entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
 
-    for casilla_id in _DECL_SUMMARY_ASSERTION_CASILLAS:
+    assert _DECL_TOTAL_PERCEPTORES_CASILLA not in entries_by_target, (
+        f"FORMULA-MISMATCH [M180/2024-0A engine]: {_DECL_TOTAL_PERCEPTORES_CASILLA!r} was produced "
+        "by a formula entry, but this casilla must be bound."
+    )
+    assert engine_values.get(_DECL_TOTAL_PERCEPTORES_CASILLA) == perceptor_binding_value, (
+        f"FORMULA-MISMATCH [M180/2024-0A engine]: engine resolved {_DECL_TOTAL_PERCEPTORES_CASILLA!r} "
+        f"as {engine_values.get(_DECL_TOTAL_PERCEPTORES_CASILLA)!r}, expected binding "
+        f"{_M180_PERCEPTORES_BINDING!r} value {perceptor_binding_value!r}."
+    )
+
+    for casilla_id in _DECL_MONETARY_SUMMARY_CASILLAS:
         extracted_value = extracted.get(casilla_id)
         engine_value = engine_values.get(casilla_id)
         assert extracted_value is not None, (
@@ -440,6 +469,7 @@ def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_re
             f"FORMULA-MISMATCH [M180/2024-0A engine]: engine recomputed {casilla_id!r} as "
             f"{engine_value!r} but AEAT-printed fixture shows {extracted_value!r}.\n"
             f"  diff: {engine_value - extracted_value!r}\n"
+            f"  binding_values supplied: {binding_values}\n"
             f"  relation_values supplied: {relation_values}"
         )
 
@@ -762,37 +792,33 @@ def test_verification_chain_m193_parser_extracts_declaracion_pdf_casillas() -> N
         )
 
 
-def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_relation_values() -> None:
-    """Engine recomputes M193 annual closure casillas from M123 quarterly relation values.
+def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_relations_and_binding() -> None:
+    """Engine recomputes M193 annual closure casillas from M123 relations and binding values.
 
     GROUNDED authority: synthetic M193 fixture at
     src/aeat/tests/fixtures/justificantes/193/2024-0A.pdf.  The fixture prints:
-      decl.total-perceptores = 2     (sum of M123 casilla 03 across 4 quarters)
-      decl.base-total        = 8 000.00  (sum of M123 casilla 06 across 4 quarters)
-      decl.retenciones-total = 1 520.00  (sum of M123 casilla 09 across 4 quarters)
+      decl.total-perceptores = 2      (dedicated annual perceptor binding)
+      decl.base-total        = 8000.00 (sum of M123 casilla 06 across 4 quarters)
+      decl.retenciones-total = 1520.00 (sum of M123 casilla 09 across 4 quarters)
 
     Legal grounding: Ley 35/2006 art.25, art.99; RD 439/2007 art.109, art.108,
     art.90, art.101; Orden EHA/3377/2011 art.1; Ley 58/2003 art.93.
 
     Chain:
       1. Parse the 2024-0A M193 fixture → extracted closure values.
-      2. Build M123 quarterly observations (4 quarters, filing year 2024)
-         whose sum matches each extracted M193 total:
-           Q1 casilla 03=2, 06=2000.00, 09=380.00
-           Q2 casilla 03=0, 06=2000.00, 09=380.00
-           Q3 casilla 03=0, 06=2000.00, 09=380.00
-           Q4 casilla 03=0, 06=2000.00, 09=380.00  ← sum 03=2, 06=8000, 09=1520
+      2. Build M123 quarterly observations whose monetary sums match the M193 totals.
       3. Resolve relation_values via resolve_relation_values_from_observations.
-      4. calculate_registry_snapshot(M193 snapshot, inputs={}, relation_values=...).
-      5. Assert engine values == extracted values for all 3 closure casillas.
+      4. Supply decl.total-perceptores through modelo-193-123-perceptores-anual.
+      5. calculate_registry_snapshot(M193 snapshot, bound inputs, binding_values, relation_values).
+      6. Assert perceptor count is bound, and monetary totals are relation-derived.
 
     NOTE: The relation uses M123 2024-y-siguientes casillas 03, 06, 09 which are
     all computed by the engine (not manual inputs). The observations must supply
     them directly as CasillaObservation (representing engine-computed outputs from
     prior quarterly filing runs), not as engine inputs for the current run.
 
-    Verdict: VERIFIED — the M123→M193 cross-modelo relation binding resolves
-    and the engine aggregation formula chain is functionally correct.
+    Verdict: VERIFIED — the M123→M193 monetary relation chain resolves without
+    resurrecting the retired quarterly perceptor-count relation.
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "193" / "2024-0A.pdf"
 
@@ -808,10 +834,19 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
 
-    # Build M123 quarterly observations whose sum matches the M193 fixture totals.
+    perceptor_binding_value = Decimal("2")
+    extracted_perceptors = extracted.get(_DECL_TOTAL_PERCEPTORES_CASILLA)
+    assert extracted_perceptors == perceptor_binding_value, (
+        f"PARSER-GAP [M193/2024-0A engine]: fixture printed {_DECL_TOTAL_PERCEPTORES_CASILLA!r} "
+        f"as {extracted_perceptors!r}, expected {perceptor_binding_value!r}."
+    )
+
+    # Build M123 quarterly observations whose monetary sums match the M193 fixture totals.
     # M123 casilla 03 = total-rentas (01+02); casilla 06 = total-base (04+05);
     # casilla 09 = total-retenciones (07+08).
-    # Q1: 03=2, 06=2000.00, 09=380.00  (all values in decl.total-perceptores come from 1Q here)
+    # The total-rentas source is intentionally present to prove the resolver does
+    # not emit the retired perceptor-count relation.
+    # Q1: 03=2, 06=2000.00, 09=380.00
     # Q2-Q4: 03=0, 06=2000.00, 09=380.00
     # Sums: 03 → 2, 06 → 8000.00, 09 → 1520.00
     _m123_quarterly: dict[str, dict[CasillaId, Decimal]] = {
@@ -865,12 +900,19 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
             f"RegistryValidationError — M123→M193 relation chain is structurally broken.\n"
             f"  error: {exc}",
         )
+    assert _M193_RETIRED_PERCEPTORES_RELATION not in relation_values, (
+        f"BINDING-GAP [M193/2024-0A engine]: retired quarterly perceptor relation "
+        f"{_M193_RETIRED_PERCEPTORES_RELATION!r} was resolved. Perceptor count must flow through "
+        f"{_M193_PERCEPTORES_BINDING!r}."
+    )
 
+    binding_values: dict[BindingId, Decimal] = {_M193_PERCEPTORES_BINDING: perceptor_binding_value}
     try:
         result = calculate_registry_snapshot(
             snapshot,
-            inputs={},
+            inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
             date_context={"filing_period": date(2024, 12, 31)},
+            binding_values=binding_values,
             relation_values=relation_values,
         )
     except RegistryValidationError as exc:
@@ -878,12 +920,24 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
             f"BINDING-GAP [M193/2024-0A engine]: calculate_registry_snapshot raised "
             f"RegistryValidationError — engine could not recompute from supplied relation_values.\n"
             f"  error: {exc}\n"
+            f"  binding_values keys: {sorted(binding_values)}\n"
             f"  relation_values keys: {sorted(relation_values)}",
         )
 
     engine_values = dict(result.values)
+    entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
 
-    for casilla_id in _DECL_SUMMARY_ASSERTION_CASILLAS:
+    assert _DECL_TOTAL_PERCEPTORES_CASILLA not in entries_by_target, (
+        f"FORMULA-MISMATCH [M193/2024-0A engine]: {_DECL_TOTAL_PERCEPTORES_CASILLA!r} was produced "
+        "by a formula entry, but this casilla must be bound."
+    )
+    assert engine_values.get(_DECL_TOTAL_PERCEPTORES_CASILLA) == perceptor_binding_value, (
+        f"FORMULA-MISMATCH [M193/2024-0A engine]: engine resolved {_DECL_TOTAL_PERCEPTORES_CASILLA!r} "
+        f"as {engine_values.get(_DECL_TOTAL_PERCEPTORES_CASILLA)!r}, expected binding "
+        f"{_M193_PERCEPTORES_BINDING!r} value {perceptor_binding_value!r}."
+    )
+
+    for casilla_id in _DECL_MONETARY_SUMMARY_CASILLAS:
         extracted_value = extracted.get(casilla_id)
         engine_value = engine_values.get(casilla_id)
         assert extracted_value is not None, (
@@ -900,5 +954,6 @@ def test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_re
             f"FORMULA-MISMATCH [M193/2024-0A engine]: engine recomputed {casilla_id!r} as "
             f"{engine_value!r} but AEAT-printed fixture shows {extracted_value!r}.\n"
             f"  diff: {engine_value - extracted_value!r}\n"
+            f"  binding_values supplied: {binding_values}\n"
             f"  relation_values supplied: {relation_values}"
         )
