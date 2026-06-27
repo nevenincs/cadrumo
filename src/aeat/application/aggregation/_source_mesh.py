@@ -57,6 +57,7 @@ CalculationSourceDiagnosticReason = Literal[
     "official_box_unpopulated",
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",
+    "settlement_not_computed",
 ]
 
 # Source kinds that are explicitly deferred — no mesh resolver is built yet, but

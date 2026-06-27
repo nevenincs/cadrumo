@@ -92,6 +92,7 @@ from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_i
 from ._registry_resources import authority_via_resources as _authority_via_resources
 from ._registry_resources import registry_root as _registry_root
 from ._revision_persistence import persist_calculation_revision
+from ._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import RegistrySnapshot
@@ -989,6 +990,15 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         observation_repository=prior_payment_observation_repository,
     )
     source_diagnostics = source_diagnostics + minoracion_diagnostics
+    # Stage-1 structural advisory (no-silent-under-declaration / #24-A): a
+    # settlement-bearing revision whose terminal liquidación casilla is a manual
+    # input (not computed) populates the inputs but never computes the final
+    # liquidación on this revision -- M100 2020-2023 (manual cuota resultante) is
+    # the live case. The STRUCTURAL complement to the value-level implies_nonzero
+    # settlement predicate the verify gate runs when the settlement IS computed
+    # (#24-B / #38); grounded in the loaded casilla input_kind, not the numbers.
+    settlement_diagnostics = collect_settlement_not_computed_diagnostics(snapshot.revision)
+    source_diagnostics = source_diagnostics + settlement_diagnostics
     return BucketAggregationCalculationResult(
         revision=revision,
         source_diagnostics=source_diagnostics,
