@@ -856,6 +856,8 @@ legal_refs = [
     "ley-37-1992:art-13",
     "ley-37-1992:art-15",
     "ley-37-1992:art-17",
+    "ley-37-1992:art-21",
+    "ley-37-1992:art-25",
     "ley-37-1992:art-84",
     "ley-37-1992:art-88",
     "ley-37-1992:art-90",
@@ -873,6 +875,7 @@ legal_refs = [
     "ley-37-1992:art-108",
     "ley-37-1992:art-109",
     "ley-37-1992:art-110",
+    "ley-37-1992:art-161",
 ]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 casilla_ids = [
@@ -915,6 +918,11 @@ bindings = [
     "modelo-303-iva-autorepercutido-interior-devengado-cuota",
     "modelo-303-iva-autorepercutido-interior-deducible-cuota",
     "modelo-303-compensacion-pendiente-anteriores",
+    "modelo-303-recargo-equivalencia-general-cuota",
+    "modelo-303-recargo-equivalencia-reducido-cuota",
+    "modelo-303-recargo-equivalencia-super-reducido-cuota",
+    "modelo-303-casilla-59-entregas-intracomunitarias-base",
+    "modelo-303-casilla-60-exportaciones-base",
     "modelo-303-iva-repercutido-general-base",
     "modelo-303-iva-repercutido-reducido-base",
     "modelo-303-iva-repercutido-super-reducido-base",
@@ -932,6 +940,32 @@ filing_schedules = ["modelo-303-trimestral"]
 source_ref = "aeat-dr-303-2025"
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3786-2008:art-1", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+# Informativa base-imponible boxes (entregas intracomunitarias exentas, casilla
+# 59; exportaciones exentas, casilla 60) became computed projection targets when
+# their ledger_iva_aggregation bindings landed; they join the calculation closure.
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "59"
+number = "59"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "60"
+number = "60"
+
+# Recargo de equivalencia cuota casillas join the calculation closure once their
+# ledger_iva_aggregation recargo_amount_sum bindings landed (LIVA art. 161 tiers:
+# general 5.2%, reducido 1.4%, super-reducido 0.5%).
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "158"
+number = "158"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "21"
+number = "21"
+
+[[revisions.2009-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "24"
+number = "24"
 
 # Regimen-general per-tier base casillas (01 super-reducido 4%, 04 reducido 10%,
 # 07 general 21%) and the deducible soportado-interiores base (28) join the
