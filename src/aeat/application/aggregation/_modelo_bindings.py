@@ -41,7 +41,6 @@ from ._renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from ._retencion_observations_repository import RetencionObservationRepository
 from ._retenciones import (
     aggregate_retenciones_180,
-    aggregate_retenciones_190,
     aggregate_retenciones_193,
 )
 from ._source_mesh import (
@@ -436,17 +435,21 @@ def _revision_has_binding_source(revision: ModeloRevision, source: str) -> bool:
     return any(binding.source == source for binding in revision.bindings)
 
 
-def _empty_source_resolution(resolver_id: str, owned_sources: tuple[str, ...]) -> CalculationSourceResolution:
+def _empty_source_resolution(
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> CalculationSourceResolution:
     return CalculationSourceResolution(resolver_id=resolver_id, owned_sources=owned_sources)
 
 
 #: The annual retenciones-summary modelos whose "número total de perceptores" box
 #: this source materialises, mapped to their validated distinct-NIF aggregator. The
 #: quarterly retenciones modelos (111/115/123) carry no perceptor-count box and are
-#: deliberately absent.
+#: deliberately absent. Modelo 190 is not included: its annual count is
+#: "percepciones", a distinct perceptor/clave/subclave figure, not RET-1's
+#: distinct-NIF perceptor count.
 _RETENCIONES_PERCEPTOR_COUNT_AGGREGATORS = {
     Modelo.M180.value: aggregate_retenciones_180,
-    Modelo.M190.value: aggregate_retenciones_190,
     Modelo.M193.value: aggregate_retenciones_193,
 }
 
@@ -456,8 +459,8 @@ class RetencionesAggregationSourceResolver:
 
     Reads the bucket-scoped per-perceptor retención observations
     (:class:`RetencionObservationRepository`) for the modelo's annual window and
-    materialises the Modelo 180/190/193 "número total de perceptores" box with the
-    validated DISTINCT-NIF count (``aggregate_retenciones_{180,190,193}``'s
+    materialises the Modelo 180/193 "número total de perceptores" box with the
+    validated DISTINCT-NIF count (``aggregate_retenciones_{180,193}``'s
     ``total_perceptors``) — replacing the wrong sum-of-quarterly-M115-counts
     relation. The pull and calculate surfaces read this one store
     (one-aggregation-path).
@@ -488,26 +491,17 @@ class RetencionesAggregationSourceResolver:
                 error=exc,
             )
         if not observations:
-            # No-silent-under-declaration: the revision declares the perceptor-count
-            # binding but no per-perceptor observations are persisted. NEVER silently
-            # materialise a zero count — surface an advisory naming the gap + remedy
-            # so the operator supplies the type-2 perceptor records before filing.
-            return CalculationSourceResolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                diagnostics=(
-                    CalculationSourceDiagnostic(
-                        reason="source_issue",
-                        source_kind="retenciones_aggregation",
-                        resolver_id=self.resolver_id,
-                        message=(
-                            f"Modelo {context.modelo} declares a perceptor-count binding but no "
-                            f"per-perceptor retención observations are persisted for "
-                            f"{context.period.registry_token} {context.filing_year}; the distinct "
-                            "perceptor count is not materialised. Supply the per-perceptor records "
-                            "(`aeat app modelo aggregate --retencion-observation`) before filing."
-                        ),
-                    ),
+            raise AggregationValidationError(
+                t("aggregation.retenciones.errors.perceptor_observations_missing"),
+                context={
+                    "modelo": str(context.modelo),
+                    "filing_year": str(context.filing_year),
+                    "period": context.period.registry_token,
+                    "source_kind": "retenciones_aggregation",
+                },
+                suggestion=(
+                    "Supply the per-perceptor retención observations "
+                    "(`aeat app modelo aggregate --retencion-observation`) before calculating."
                 ),
             )
         aggregation = aggregator(tuple(observations), period=context.period)

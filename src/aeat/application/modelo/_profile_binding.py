@@ -36,6 +36,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel
 
+from ...core import BindingSourceKind
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
@@ -63,6 +64,7 @@ from ..aggregation._source_mesh import (
 )
 
 _PROFILE_RESOLVER_ID = "profile"
+_PROFILE_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)
 
 
 class ProfileBindingResolutionError(ModeloError):
@@ -383,7 +385,7 @@ def resolve_profile_sourced_bindings(
         )
     ]
     if not profile_bindings:
-        return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=("profile",))
+        return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)
 
     record = profile_record
     if record is None:
@@ -392,7 +394,7 @@ def resolve_profile_sourced_bindings(
         try:
             record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
         except ProfileNotFoundError:
-            return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=("profile",))
+            return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)
     profile_record_fingerprint = _profile_record_fingerprint(record)
 
     resolved_schema = schema if schema is not None else load_user_profile_schema()
@@ -425,13 +427,13 @@ def resolve_profile_sourced_bindings(
     fingerprint = profile_record_fingerprint if sourced else None
     return CalculationSourceResolution(
         resolver_id=_PROFILE_RESOLVER_ID,
-        owned_sources=("profile",),
+        owned_sources=_PROFILE_OWNED_SOURCES,
         binding_values=decimal_values,
         enum_binding_values=enum_values,
         date_binding_values=date_values,
         provenance=tuple(
             CalculationSourceProvenance(
-                source_kind="profile",
+                source_kind=BindingSourceKind.PROFILE.value,
                 source_ref=f"profile:{bucket_id}:binding:{binding_id}",
                 fingerprint=fingerprint,
             )

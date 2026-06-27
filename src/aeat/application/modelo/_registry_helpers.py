@@ -16,6 +16,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistryValidationError,
     VerificationPredicateDefinition,
+    casilla_noncanonical_reference_targets,
     casillas_by_id,
     undeclared_casilla_ids,
     validated_casilla_id,
@@ -91,10 +92,21 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
         )
     unknown = undeclared_casilla_ids(revision, canonical_inputs)
     if unknown:
+        noncanonical, unknown_only = _noncanonical_casilla_reference_details(revision, unknown)
+        if noncanonical:
+            details = "; ".join(
+                _format_noncanonical_casilla_reference(casilla_id, targets)
+                for casilla_id, targets in sorted(noncanonical.items())
+            )
+            raise RegistryValidationError(
+                f"casilla input keys must be canonical casilla.id values for revision {revision.id!r}; "
+                f"non-canonical reference tokens are not accepted: {details}",
+                context={"casilla_ids": ",".join(sorted(noncanonical)), "revision_id": revision.id},
+            )
         raise RegistryValidationError(
             f"casilla input keys must be canonical casilla.id values for revision {revision.id!r}; "
-            f"unknown or alias keys: {unknown!r}",
-            context={"casilla_ids": ",".join(unknown), "revision_id": revision.id},
+            f"unknown casilla.id values: {unknown_only!r}",
+            context={"casilla_ids": ",".join(unknown_only), "revision_id": revision.id},
         )
     non_decimal = sorted(
         casilla_id
@@ -131,6 +143,26 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
             },
         )
     return {casilla_id: value for casilla_id, value in canonical_inputs.items() if isinstance(value, Decimal)}
+
+
+def _format_noncanonical_casilla_reference(token: str, targets: tuple[CasillaId, ...]) -> str:
+    rendered_targets = ", ".join(targets)
+    if len(targets) > 1:
+        return f"{token!r} is ambiguous; candidate casilla.id values: {rendered_targets}"
+    return f"{token!r} -> {rendered_targets}"
+
+
+def _noncanonical_casilla_reference_details(
+    revision: ModeloRevision,
+    casilla_ids: tuple[CasillaId, ...],
+) -> tuple[dict[CasillaId, tuple[CasillaId, ...]], tuple[CasillaId, ...]]:
+    noncanonical = {
+        casilla_id: targets
+        for casilla_id in casilla_ids
+        if (targets := casilla_noncanonical_reference_targets(revision, casilla_id))
+    }
+    unknown = tuple(casilla_id for casilla_id in casilla_ids if casilla_id not in noncanonical)
+    return noncanonical, unknown
 
 
 def reject_unknown_override_casillas[CasillaKey](
@@ -181,13 +213,30 @@ def reject_unknown_override_casillas[CasillaKey](
         )
     unknown = undeclared_casilla_ids(snapshot.revision, canonical_overrides)
     if unknown:
+        noncanonical, unknown_only = _noncanonical_casilla_reference_details(snapshot.revision, unknown)
+        if noncanonical:
+            details = "; ".join(
+                _format_noncanonical_casilla_reference(casilla_id, targets)
+                for casilla_id, targets in sorted(noncanonical.items())
+            )
+            raise AmendmentOverrideCasillaError(
+                f"amendment override casillas must use canonical casilla.id values; "
+                f"non-canonical reference tokens are not accepted: {details}",
+                translated_message="application.modelo.errors.amendment_unknown_casillas",
+                context={
+                    "modelo": modelo,
+                    "filing_year": filing_year,
+                    "period": period.registry_token,
+                    "casillas": sorted(noncanonical),
+                },
+            )
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_unknown_casillas",
             context={
                 "modelo": modelo,
                 "filing_year": filing_year,
                 "period": period.registry_token,
-                "casillas": unknown,
+                "casillas": unknown_only,
             },
         )
     return canonical_overrides
@@ -238,13 +287,30 @@ def reject_unknown_import_casillas[CasillaKey](
         )
     unknown = undeclared_casilla_ids(snapshot.revision, canonical_values)
     if unknown:
+        noncanonical, unknown_only = _noncanonical_casilla_reference_details(snapshot.revision, unknown)
+        if noncanonical:
+            details = "; ".join(
+                _format_noncanonical_casilla_reference(casilla_id, targets)
+                for casilla_id, targets in sorted(noncanonical.items())
+            )
+            raise ExternalModeloImportError(
+                f"external import casillas must use canonical casilla.id values; "
+                f"non-canonical reference tokens are not accepted: {details}",
+                translated_message="application.modelo.errors.external_import_unknown_casillas",
+                context={
+                    "modelo": modelo,
+                    "filing_year": filing_year,
+                    "period": period.registry_token,
+                    "casillas": sorted(noncanonical),
+                },
+            )
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_unknown_casillas",
             context={
                 "modelo": modelo,
                 "filing_year": filing_year,
                 "period": period.registry_token,
-                "casillas": unknown,
+                "casillas": unknown_only,
             },
         )
     return snapshot, canonical_values

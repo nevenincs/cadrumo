@@ -21,7 +21,7 @@ from ...domain.calculations.registry import (
     CasillaId,
     ModeloRevision,
     RelationId,
-    casilla_metadata_alias_targets,
+    casilla_noncanonical_reference_targets,
     declared_casilla_ids,
     enum_consumed_binding_ids,
     revision_date_binding_ids,
@@ -392,15 +392,23 @@ def _validated_canonical_casilla_id(key: str, revision: ModeloRevision) -> Casil
     if key in known_ids:
         return key
 
-    metadata_alias_matches = casilla_metadata_alias_targets(revision, key)
-    if metadata_alias_matches:
-        accepted = ", ".join(metadata_alias_matches)
+    noncanonical_targets = casilla_noncanonical_reference_targets(revision, key)
+    if noncanonical_targets:
+        accepted = ", ".join(noncanonical_targets)
+        if len(noncanonical_targets) > 1:
+            raise ModeloCalculateCasillaInputError(
+                f"--casilla {key!r} is not a canonical casilla.id and is ambiguous. "
+                f"Candidate casilla.id values: {accepted}. "
+                "Supply the exact canonical casilla.id.",
+                context={"key": key, "accepted": accepted},
+                translated_message="application.modelo.errors.calculate_casilla_noncanonical_refused",
+            )
         raise ModeloCalculateCasillaInputError(
             f"--casilla {key!r} is a printed casilla number or form number or export reference, "
             "not a canonical casilla.id. "
             f"Use the canonical casilla.id instead: {accepted}.",
             context={"key": key, "accepted": accepted},
-            translated_message="application.modelo.errors.calculate_casilla_alias_refused",
+            translated_message="application.modelo.errors.calculate_casilla_noncanonical_refused",
         )
 
     accepted_hint = ", ".join(sorted(known_ids)[:20])

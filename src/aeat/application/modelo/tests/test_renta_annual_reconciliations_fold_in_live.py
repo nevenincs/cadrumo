@@ -8,18 +8,21 @@ quarterly source filings (1T-4T) through the enrolled
 :class:`RelationPrefillSourceResolver`:
 
 * **Modelo 180** (revision ``2023-y-siguientes``) folds **Modelo 115** quarterly
-  retención-de-alquileres filings. Source casilla ids ``01`` (perceptores),
-  ``02`` (base), ``03`` (retenciones) → target casillas
-  ``decl.total-perceptores`` / ``decl.base-total`` / ``decl.retenciones-total``
-  via the ``copy``-from-relation formulas.
+  retención-de-alquileres monetary filings. Source casilla ids ``02`` (base)
+  and ``03`` (retenciones) feed ``decl.base-total`` /
+  ``decl.retenciones-total`` via ``copy``-from-relation formulas.
+  ``decl.total-perceptores`` comes from the dedicated per-perceptor retención
+  store, because quarterly perceptor counts double-count recurring perceptors.
 * **Modelo 190** (revision ``2024-y-siguientes``) folds **Modelo 111** quarterly
-  retención-rendimientos-del-trabajo filings. Nine percepciones-count source
-  casilla ids sum into ``decl.total-percepciones``, nine importe casilla ids into
-  ``decl.percepciones-total``, and output ``28`` copies into
-  ``decl.retenciones-total``.
+  retención-rendimientos-del-trabajo monetary filings. Nine importe casilla ids
+  sum into ``decl.percepciones-total``, output ``28`` copies into
+  ``decl.retenciones-total``, and ``decl.total-percepciones`` comes from the
+  withholding detalle source because quarterly perceptor counts double-count
+  recurring percepciones.
 * **Modelo 193** (revision ``2024-y-siguientes``) folds **Modelo 123** quarterly
-  retención-capital-mobiliario filings. Source casilla ids ``03`` (perceptores),
-  ``06`` (base), ``09`` (retenciones) → the same three declarante casillas.
+  retención-capital-mobiliario monetary filings. Source casilla ids ``06``
+  (base), ``09`` (retenciones) feed the monetary declarante casillas; the
+  perceptor count comes from the dedicated per-perceptor retención store.
 
 Each source quarter is seeded as a filed observation through the production
 observation-persistence API
@@ -29,20 +32,22 @@ source_kind, over a real encrypted-SQLite object store
 (:class:`SecureObjectRepository` + :class:`EphemeralMasterKeyProvider` via
 :func:`isolated_runtime_profile`). No mocks, stubs, skips, or xfail.
 
-The aggregation assertions (annual casilla == sum of the four DISTINCT seeded
-quarterly inputs) are fold-WIRING invariants, not tautologies: the seeded
+The relation aggregation assertions (annual monetary casilla == sum of the four
+DISTINCT seeded quarterly inputs) are fold-WIRING invariants, not tautologies: the seeded
 per-quarter values are distinct non-equal known Decimals, so an off-by-quarter,
 a single-quarter copy, a silent blank, or a coincidental sum cannot satisfy the
 assertion. The test does not recompute any registry IRPF formula — it proves
 the enrolled relation resolver wires the four prior periodic filings through to
-each annual declarante casilla.
+each annual monetary declarante casilla. Perceptor counts are asserted against
+real persisted per-perceptor records instead.
 
 Both M190 and M193 additionally declare ``source = "withholding"`` per-perceptor
-detalle bindings (the tipo-2 row producers) that are deferred with advisory:
-no resolver is enrolled, so the live calculate's ``source_diagnostics`` carries
-an ``unhandled_binding_source`` advisory naming ``withholding``. That advisory
-is EXPECTED and is asserted present alongside the clean relation fold — M190/M193
-are deliberately NOT the empty-diagnostics shape that M180 (relation-only) is.
+detalle bindings (the tipo-2 row producers). The live withholding resolver is
+enrolled; when the dedicated per-perceptor-clave store is empty, it materialises
+an explicit zero and emits a ``source_issue`` diagnostic naming ``withholding``.
+That diagnostic is EXPECTED and is asserted present alongside the clean relation
+fold — M190/M193 are deliberately NOT the empty-diagnostics shape that M180 has
+after its retenciones_aggregation and monetary relations are both satisfied.
 """
 
 from __future__ import annotations
@@ -68,6 +73,8 @@ from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
+from ...aggregation._retencion_observations_repository import RetencionObservationRepository
+from ...aggregation._retenciones import RetencionObservation, RetencionScheme
 from ...calculations._observations_repository import CalculationObservationRepository
 from .. import (
     BucketAggregationCalculationResult,
@@ -160,7 +167,7 @@ def _calculate_annual(
     These annual summary modelos declare no ``profile`` bindings and no caller
     inputs other than the relation-folded values; the only bindings are the
     ``relation_prefill`` reconciliations (folded by the enrolled resolver from
-    the seeded source store) and, for M190/M193, the deferred ``withholding``
+    the seeded source store) and, for M190/M193, the enrolled ``withholding``
     detalle bindings. No ``binding_values`` are supplied so the live mesh is the
     sole value source.
     """
@@ -202,12 +209,36 @@ def _assert_distinct_positive(values: dict[str, Decimal]) -> Decimal:
     return total
 
 
+def _assert_empty_withholding_store_source_issue(result: BucketAggregationCalculationResult, *, modelo: str) -> None:
+    """Assert enrolled withholding resolver reports an empty detail store loudly."""
+    assert not any(
+        diag.source_kind == _WITHHOLDING_SOURCE and diag.reason == "unhandled_binding_source"
+        for diag in result.source_diagnostics
+    ), (
+        f"M{modelo} withholding is enrolled and must not surface as unhandled; "
+        f"source_diagnostics: {result.source_diagnostics}"
+    )
+    withholding_issues = [
+        diag
+        for diag in result.source_diagnostics
+        if diag.source_kind == _WITHHOLDING_SOURCE and diag.reason == "source_issue"
+    ]
+    assert withholding_issues, (
+        f"M{modelo} must surface a 'source_issue' advisory when the enrolled withholding "
+        f"resolver finds no per-perceptor-clave observations; source_diagnostics: {result.source_diagnostics}"
+    )
+    assert all(diag.resolver_id == _WITHHOLDING_SOURCE for diag in withholding_issues)
+    assert all(diag.binding_id is None for diag in withholding_issues)
+    assert all("zero" in diag.message for diag in withholding_issues)
+
+
 # ---------------------------------------------------------------------------
-# Modelo 180 <- Modelo 115 (perceptores / base / retenciones), relation-only.
+# Modelo 180 <- Modelo 115 monetary relations + retenciones distinct count.
 # ---------------------------------------------------------------------------
 
-# Four DISTINCT non-equal quarterly values per M115 output. M115 c01 is an
-# integer perceptor count; c02 (base) and c03 (retenciones) are money.
+# Four DISTINCT non-equal quarterly values per M115 monetary output. M115 c01 is
+# still seeded as source evidence, but M180 no longer consumes it for the annual
+# perceptor count.
 _M115_C01_PERCEPTORES = {"1T": Decimal("1"), "2T": Decimal("2"), "3T": Decimal("3"), "4T": Decimal("4")}
 _M115_C02_BASE = {
     "1T": Decimal("1000.00"),
@@ -221,21 +252,56 @@ _M115_C03_RETENCIONES = {
     "3T": Decimal("142.55"),
     "4T": Decimal("570.00"),
 }
+_M180_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
+
+
+def _retencion_observation(nif: str, *, scheme: RetencionScheme, source_prefix: str) -> RetencionObservation:
+    return RetencionObservation(
+        source_kind="ledger_transaction",
+        source_object_id=f"{source_prefix}-{nif}",
+        perceptor_nif=nif,
+        perceptor_name="Perceptor Ejemplo",
+        scheme=scheme,
+        taxable_base=Decimal("1000.00"),
+        retencion_amount=Decimal("190.00"),
+        accrued_on=f"{_YEAR}-03-15",
+    )
+
+
+def _seed_retencion_perceptors(
+    *,
+    modelo: str,
+    scheme: RetencionScheme,
+    nifs: tuple[str, ...],
+) -> Decimal:
+    RetencionObservationRepository().replace_observations(
+        modelo=modelo,
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
+        observations=[
+            _retencion_observation(nif, scheme=scheme, source_prefix=f"retencion-{modelo}") for nif in nifs
+        ],
+        source_kind="aggregate_pull",
+    )
+    return Decimal(len(set(nifs)))
 
 
 def test_m180_folds_in_four_m115_quarters_on_live_calculate(secure_objects: SecureObjectRepository) -> None:
     """E2E: four filed M115 quarters fold into the M180 annual declarante totals.
 
-    Each M180 declarante casilla is a ``copy`` of its annual_summary relation,
-    whose ``sum`` aggregation folds the four seeded M115 quarters. The three
-    annual casillas equal the per-output four-quarter sums. M180 declares only
-    ``relation_prefill`` bindings, so the live resolution is clean — no
-    ``source_diagnostics`` at all.
+    The M180 monetary declarante casillas are ``copy`` formulas over
+    annual_summary relations whose ``sum`` aggregation folds the four seeded M115
+    quarters. The perceptor count is resolved through ``retenciones_aggregation``.
+    With both sources supplied, the live resolution is clean.
     """
     obs_repo = CalculationObservationRepository()
-    expected_perceptores = _assert_distinct_positive(_M115_C01_PERCEPTORES)
     expected_base = _assert_distinct_positive(_M115_C02_BASE)
     expected_retenciones = _assert_distinct_positive(_M115_C03_RETENCIONES)
+    expected_perceptores = _seed_retencion_perceptors(
+        modelo="180",
+        scheme=RetencionScheme.URBAN_RENTAL,
+        nifs=_M180_RETENCION_PERCEPTOR_NIFS,
+    )
     for period in _QUARTERS:
         _seed_quarterly_filing(
             obs_repo=obs_repo,
@@ -252,8 +318,8 @@ def test_m180_folds_in_four_m115_quarters_on_live_calculate(secure_objects: Secu
 
     values = result.revision.casilla_values
     assert Decimal(values[_DECL_PERCEPTORES]) == expected_perceptores, (
-        f"M180 {_DECL_PERCEPTORES} must fold the four M115 c01 quarters "
-        f"(sum {expected_perceptores}); got {values[_DECL_PERCEPTORES]}"
+        f"M180 {_DECL_PERCEPTORES} must use the persisted distinct perceptor count "
+        f"({expected_perceptores}); got {values[_DECL_PERCEPTORES]}"
     )
     assert Decimal(values[_DECL_BASE]) == expected_base, (
         f"M180 {_DECL_BASE} must fold the four M115 c02 quarters (sum {expected_base}); got {values[_DECL_BASE]}"
@@ -267,22 +333,15 @@ def test_m180_folds_in_four_m115_quarters_on_live_calculate(secure_objects: Secu
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
     # M180 has no withholding detalle bindings, so the whole resolution is clean.
     assert result.source_diagnostics == (), (
-        f"M180 source_diagnostics must be clean (relation-only); got {result.source_diagnostics}"
+        f"M180 source_diagnostics must be clean; got {result.source_diagnostics}"
     )
 
 
 # ---------------------------------------------------------------------------
-# Modelo 190 <- Modelo 111 (percepciones counts / importes / retenciones),
-# relation fold + deferred withholding detalle advisory.
+# Modelo 190 <- Modelo 111 (importes / retenciones),
+# relation fold + enrolled withholding detalle advisory.
 # ---------------------------------------------------------------------------
 
-# The nine percepciones-count source casilla ids (M111 c01,04,07,10,13,16,19,22,25)
-# sum into decl.total-percepciones. Distinct integers across outputs AND
-# quarters so the 36-term fold is unmistakable.
-_M190_PERCEPCION_OUTPUTS: tuple[CasillaId, ...] = tuple(
-    validated_casilla_id(value, surface="_M190_PERCEPCION_OUTPUTS")
-    for value in ("01", "04", "07", "10", "13", "16", "19", "22", "25")
-)
 # The nine importe source casilla ids (M111 c02,05,08,11,14,17,20,23,26) sum into
 # decl.percepciones-total.
 _M190_IMPORTE_OUTPUTS: tuple[CasillaId, ...] = tuple(
@@ -302,31 +361,25 @@ def _m190_seed_value(output: CasillaId, period: str) -> Decimal:
     wrong-quarter fold cannot reproduce the per-casilla expected sum.
     """
     quarter_index = _QUARTERS.index(period) + 1
-    # Percepción counts are integers; importe / retenciones are money. Both axes
-    # are distinct per (output, quarter); the leading digit is the output index
-    # and the trailing the quarter index.
+    # Monetary relation inputs are distinct per (output, quarter); the leading
+    # digit is the output index and the trailing the quarter index.
     base = (int(output) * 100) + quarter_index
-    if output in _M190_PERCEPCION_OUTPUTS:
-        return Decimal(base)
     return Decimal(base) + Decimal("0.50")
 
 
 def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """E2E: four filed M111 quarters fold into M190 annual totals; withholding advisory present.
+    """E2E: four filed M111 quarters fold into M190 monetary totals; withholding advisory present.
 
-    The nine percepciones-count relations sum into ``decl.total-percepciones``,
-    the nine importe relations into ``decl.percepciones-total``, and the
-    retenciones relation (output ``28``) into ``decl.retenciones-total``. Each
-    annual casilla equals the exact 36-term (9 outputs x 4 quarters) or 4-term
-    (retenciones) sum of the distinct seeded inputs. Because M190 also declares
-    the deferred ``withholding`` per-perceptor detalle bindings, the live
-    calculate carries an ``unhandled_binding_source`` advisory for
-    ``withholding`` — asserted present (NOT empty diagnostics).
+    The nine importe relations sum into ``decl.percepciones-total`` and the
+    retenciones relation (output ``28``) into ``decl.retenciones-total``. The
+    annual count ``decl.total-percepciones`` is withholding-backed; with an empty
+    detail store the enrolled resolver materialises an explicit zero and emits a
+    ``source_issue`` advisory.
     """
     obs_repo = CalculationObservationRepository()
-    all_outputs = (*_M190_PERCEPCION_OUTPUTS, *_M190_IMPORTE_OUTPUTS, _M190_RETENCIONES_OUTPUT)
+    all_outputs = (*_M190_IMPORTE_OUTPUTS, _M190_RETENCIONES_OUTPUT)
     for period in _QUARTERS:
         _seed_quarterly_filing(
             obs_repo=obs_repo,
@@ -335,10 +388,6 @@ def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
             casilla_values={output: _m190_seed_value(output, period) for output in all_outputs},
         )
 
-    expected_percepciones_count = sum(
-        (_m190_seed_value(output, period) for output in _M190_PERCEPCION_OUTPUTS for period in _QUARTERS),
-        Decimal("0"),
-    )
     expected_percepciones_amount = sum(
         (_m190_seed_value(output, period) for output in _M190_IMPORTE_OUTPUTS for period in _QUARTERS),
         Decimal("0"),
@@ -347,20 +396,18 @@ def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
         (_m190_seed_value(_M190_RETENCIONES_OUTPUT, period) for period in _QUARTERS),
         Decimal("0"),
     )
-    # Sanity: the three expected totals are strictly positive and mutually
-    # distinct, so a cross-wired fold (perceptores summed into importe, etc.)
-    # would red the per-casilla assertions below.
-    assert expected_percepciones_count > Decimal("0")
+    # Sanity: the monetary expected totals are strictly positive and distinct, so
+    # a cross-wired fold would red the per-casilla assertions below.
     assert expected_percepciones_amount > Decimal("0")
     assert expected_retenciones > Decimal("0")
-    assert len({expected_percepciones_count, expected_percepciones_amount, expected_retenciones}) == 3
+    assert expected_percepciones_amount != expected_retenciones
 
     result = _calculate_annual(secure_objects, modelo="190")
 
     values = result.revision.casilla_values
-    assert Decimal(values[_DECL_PERCEPCIONES_COUNT]) == expected_percepciones_count, (
-        f"M190 {_DECL_PERCEPCIONES_COUNT} must fold the nine percepciones-count outputs over four quarters "
-        f"(sum {expected_percepciones_count}); got {values[_DECL_PERCEPCIONES_COUNT]}"
+    assert Decimal(values[_DECL_PERCEPCIONES_COUNT]) == Decimal("0"), (
+        f"M190 {_DECL_PERCEPCIONES_COUNT} must come from withholding detalle and materialise zero "
+        f"when the detail store is empty; got {values[_DECL_PERCEPCIONES_COUNT]}"
     )
     assert Decimal(values[_DECL_PERCEPCIONES_AMOUNT]) == expected_percepciones_amount, (
         f"M190 {_DECL_PERCEPCIONES_AMOUNT} must fold the nine importe outputs over four quarters "
@@ -373,28 +420,17 @@ def test_m190_folds_in_four_m111_quarters_with_withholding_advisory(
 
     # The relation fold is clean (claimed source, no diagnostic names it)...
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
-    # ...but the deferred withholding detalle bindings MUST surface the
-    # advisory (NOT empty diagnostics — that is the M180 relation-only case).
-    withholding_advisories = [
-        diag
-        for diag in result.source_diagnostics
-        if diag.source_kind == _WITHHOLDING_SOURCE and diag.reason == "unhandled_binding_source"
-    ]
-    assert withholding_advisories, (
-        "M190 must surface an 'unhandled_binding_source' advisory for the deferred 'withholding' "
-        f"detalle bindings; source_diagnostics: {result.source_diagnostics}"
-    )
-    assert all(diag.binding_id for diag in withholding_advisories)
-    assert all(_WITHHOLDING_SOURCE in diag.message for diag in withholding_advisories)
+    _assert_empty_withholding_store_source_issue(result, modelo="190")
 
 
 # ---------------------------------------------------------------------------
 # Modelo 193 <- Modelo 123 (perceptores / base / retenciones),
-# relation fold + deferred withholding detalle advisory.
+# relation fold + enrolled withholding detalle advisory.
 # ---------------------------------------------------------------------------
 
-# Four DISTINCT non-equal quarterly values per M123 output. M123 c03 is an
-# integer perceptor count; c06 (base) and c09 (retenciones) are money.
+# Four DISTINCT non-equal quarterly values per M123 monetary output. M123 c03 is
+# still seeded as source evidence, but M193 no longer consumes it for the annual
+# perceptor count.
 _M123_C03_PERCEPTORES = {"1T": Decimal("5"), "2T": Decimal("7"), "3T": Decimal("11"), "4T": Decimal("13")}
 _M123_C06_BASE = {
     "1T": Decimal("4000.00"),
@@ -408,6 +444,7 @@ _M123_C09_RETENCIONES = {
     "3T": Decimal("1710.04"),
     "4T": Decimal("63.28"),
 }
+_M193_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("33333333P", "44444444A", "55555555K")
 
 
 def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
@@ -415,17 +452,21 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
 ) -> None:
     """E2E: four filed M123 quarters fold into M193 annual totals; withholding advisory present.
 
-    Each M193 declarante casilla is a ``copy`` of its annual_summary relation,
-    whose ``sum`` aggregation folds the four seeded M123 quarters (output ``03``
-    perceptores, ``06`` base, ``09`` retenciones). Because M193 also declares the
-    deferred ``withholding`` tipo-2 detalle bindings, the live calculate carries
-    an ``unhandled_binding_source`` advisory for ``withholding`` — asserted
-    present alongside the clean relation fold (NOT empty diagnostics).
+    M193 monetary declarante casillas are ``copy`` formulas over annual_summary
+    relations whose ``sum`` aggregation folds the four seeded M123 quarters
+    (outputs ``06`` base and ``09`` retenciones). The perceptor count is resolved
+    through ``retenciones_aggregation``. Because M193 also declares
+    ``withholding`` tipo-2 detalle bindings, the enrolled withholding resolver
+    emits a ``source_issue`` advisory when the detail store is empty.
     """
     obs_repo = CalculationObservationRepository()
-    expected_perceptores = _assert_distinct_positive(_M123_C03_PERCEPTORES)
     expected_base = _assert_distinct_positive(_M123_C06_BASE)
     expected_retenciones = _assert_distinct_positive(_M123_C09_RETENCIONES)
+    expected_perceptores = _seed_retencion_perceptors(
+        modelo="193",
+        scheme=RetencionScheme.CAPITAL_INTEREST,
+        nifs=_M193_RETENCION_PERCEPTOR_NIFS,
+    )
     for period in _QUARTERS:
         _seed_quarterly_filing(
             obs_repo=obs_repo,
@@ -442,8 +483,8 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
 
     values = result.revision.casilla_values
     assert Decimal(values[_DECL_PERCEPTORES]) == expected_perceptores, (
-        f"M193 {_DECL_PERCEPTORES} must fold the four M123 c03 quarters "
-        f"(sum {expected_perceptores}); got {values[_DECL_PERCEPTORES]}"
+        f"M193 {_DECL_PERCEPTORES} must use the persisted distinct perceptor count "
+        f"({expected_perceptores}); got {values[_DECL_PERCEPTORES]}"
     )
     assert Decimal(values[_DECL_BASE]) == expected_base, (
         f"M193 {_DECL_BASE} must fold the four M123 c06 quarters (sum {expected_base}); got {values[_DECL_BASE]}"
@@ -454,14 +495,4 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
     )
 
     assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
-    withholding_advisories = [
-        diag
-        for diag in result.source_diagnostics
-        if diag.source_kind == _WITHHOLDING_SOURCE and diag.reason == "unhandled_binding_source"
-    ]
-    assert withholding_advisories, (
-        "M193 must surface an 'unhandled_binding_source' advisory for the deferred 'withholding' "
-        f"detalle bindings; source_diagnostics: {result.source_diagnostics}"
-    )
-    assert all(diag.binding_id for diag in withholding_advisories)
-    assert all(_WITHHOLDING_SOURCE in diag.message for diag in withholding_advisories)
+    _assert_empty_withholding_store_source_issue(result, modelo="193")

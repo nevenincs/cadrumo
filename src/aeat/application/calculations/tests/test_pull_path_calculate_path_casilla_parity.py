@@ -10,7 +10,9 @@ cross-path comparison.  The relation-canonicalisation work centralised relation 
   :class:`~aeat.application.calculations._relation_prefill.RelationPrefillSourceResolver`
   in its ``merge_source_resolutions`` mesh, which delegates to
   :func:`~aeat.application.calculations._relation_prefill.resolve_relations_from_local_store`
-  before calling the formula engine.
+  before calling the formula engine. The M180 perceptor count is a separate
+  RET-1 ``retenciones_aggregation`` source, so the parity path seeds and
+  resolves that source explicitly instead of summing quarterly counts.
 
 * The **standalone relay path** calls ``resolve_relations_from_local_store``
   directly and feeds its output into :func:`calculate_registry_snapshot`.
@@ -36,8 +38,9 @@ regression:
     "equal".
 
     Real adapters: real encrypted SQLite, real ``CalculationObservationRepository``,
-    real ``CalculationRevisionCatalogueRepository``, real registry authority,
-    real formula engine.  No mocks, no skips, no xfail.
+    real ``CalculationRevisionCatalogueRepository``, real retención observation
+    repository, real registry authority, real formula engine.  No mocks, no
+    skips, no xfail.
 """
 
 from __future__ import annotations
@@ -57,6 +60,7 @@ from ....domain.calculations.registry import (
     InputKind,
     RegistryModeloObservation,
     calculate_registry_snapshot,
+    resolve_bound_inputs_by_casilla_id,
     validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogueRepository
@@ -64,6 +68,9 @@ from ....domain.modelos._calculation_repository import CalculationRevisionCatalo
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
 from ....tests.secure_sql import isolated_runtime_profile
+from ...aggregation import RetencionesAggregationSourceResolver
+from ...aggregation._retencion_observations_repository import RetencionObservationRepository
+from ...aggregation._retenciones import RetencionObservation, RetencionScheme
 from ...aggregation._source_mesh import CalculationSourceContext
 from ...modelo import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -95,6 +102,7 @@ _M115_ANTERIORES_CASILLA: CasillaId = _casilla_id("04")
 _M180_TOTAL_PERCEPTORES_CASILLA: CasillaId = _casilla_id("decl.total-perceptores")
 _M180_BASE_TOTAL_CASILLA: CasillaId = _casilla_id("decl.base-total")
 _M180_RETENCIONES_TOTAL_CASILLA: CasillaId = _casilla_id("decl.retenciones-total")
+_M180_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
 
 # Distinct per-quarter bases so cross-quarter contamination surfaces
 # as a mismatch rather than a false-positive cancellation.
@@ -169,6 +177,31 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[C
     return totals
 
 
+def _retencion_observation(nif: str) -> RetencionObservation:
+    return RetencionObservation(
+        source_kind="ledger_transaction",
+        source_object_id=f"retencion-{nif}",
+        perceptor_nif=nif,
+        perceptor_name="Arrendador Ejemplo SL",
+        scheme=RetencionScheme.URBAN_RENTAL,
+        taxable_base=Decimal("1000.00"),
+        retencion_amount=Decimal("190.00"),
+        accrued_on=f"{_YEAR}-03-15",
+    )
+
+
+def _seed_180_retencion_observations() -> Decimal:
+    RetencionObservationRepository().replace_observations(
+        modelo="180",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        observations=tuple(_retencion_observation(nif) for nif in _M180_PERCEPTOR_NIFS),
+        source_kind="aggregate_pull",
+        captured_at=_T0,
+    )
+    return Decimal(len(set(_M180_PERCEPTOR_NIFS)))
+
+
 def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_values(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -196,6 +229,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     """
     obs_repo = CalculationObservationRepository()
     expected_totals = _seed_115_observations(obs_repo)
+    expected_perceptors = _seed_180_retencion_observations()
 
     # Non-vacuous gate: the summed base must be strictly positive so a silent
     # blank masquerading as "equal" fails here.
@@ -232,9 +266,9 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
 
     # ── PATH B: standalone relay path ─────────────────────────────────────────
     # RelationPrefillSourceResolver calls resolve_relations_from_local_store
-    # internally and materialises the resolved values.  We then pass the resolved
-    # relation_values into calculate_registry_snapshot — the same function the
-    # live path ultimately calls.
+    # internally and materialises the monetary relation values. The RET-1
+    # perceptor count comes from the same RetencionesAggregationSourceResolver
+    # that the live mesh uses.
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="180",
@@ -247,16 +281,17 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
         repository=obs_repo,
         registry_snapshot=snap_180,
     ).resolve(context)
+    retenciones_resolution = RetencionesAggregationSourceResolver().resolve(context)
 
+    relay_binding_values = {**relay_resolution.binding_values, **retenciones_resolution.binding_values}
     relay_inputs = {
-        c.id: Decimal("0")
-        for c in snap_180.revision.casillas
-        if c.input_kind not in (InputKind.COMPUTED, InputKind.INFORMATIONAL)
+        **resolve_bound_inputs_by_casilla_id(snap_180.revision, relay_binding_values),
+        **{c.id: Decimal("0") for c in snap_180.revision.casillas if c.input_kind is InputKind.MANUAL},
     }
     relay_engine_result = calculate_registry_snapshot(
         snap_180,
         inputs=relay_inputs,
-        binding_values=relay_resolution.binding_values,
+        binding_values=relay_binding_values,
         date_context={"filing_period": date(_YEAR, 12, 31)},
         relation_values=relay_resolution.relation_values,
     )
@@ -288,7 +323,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     # (sumar los cuatro trimestres = total anual), not from the formula under
     # test — the expected values are computed from the same registry engine
     # applied to the four quarters, making them an oracle, not a tautology.
-    assert live_as_decimal[_M180_TOTAL_PERCEPTORES_CASILLA] == expected_totals[_M115_PERCEPTORES_CASILLA]
+    assert live_as_decimal[_M180_TOTAL_PERCEPTORES_CASILLA] == expected_perceptors
     assert live_as_decimal[_M180_BASE_TOTAL_CASILLA] == expected_totals[_M115_BASE_CASILLA]
     assert live_as_decimal[_M180_RETENCIONES_TOTAL_CASILLA] == expected_totals[_M115_RETENCIONES_CASILLA]
 

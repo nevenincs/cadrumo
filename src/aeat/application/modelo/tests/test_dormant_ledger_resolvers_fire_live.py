@@ -45,11 +45,10 @@ registry formula is re-evaluated. Real encrypted-SQLite via
 :class:`EphemeralMasterKeyProvider`, real catalogue repositories, real registry
 authority, real calculation engine, real source mesh. No mocks/stubs/skips/xfail.
 
-Also pins the five deferred detalle source kinds: each emits the standing
-``unhandled_binding_source`` advisory rather than a silent blank. withholding /
-atribucion_member / foreign_asset are covered in
-``test_source_boundary_and_enrollment``; related_party_operation (M232) and
-refund_operation (M360) are pinned here so all five are covered.
+Also pins the remaining deferred detalle source kinds: each emits the standing
+``unhandled_binding_source`` advisory rather than a silent blank. atribucion_member
+/ foreign_asset are covered in ``test_source_boundary_and_enrollment``;
+related_party_operation (M232) and refund_operation (M360) are pinned here.
 """
 
 from __future__ import annotations
@@ -718,11 +717,11 @@ def test_deferred_detalle_kinds_emit_unhandled_advisory_not_silent_blank(
     rather than a silent blank, and must NOT sit on the manual_sources allowlist.
 
     Asserted via the ``collect_unhandled_source_diagnostics`` boundary (mirroring
-    ``test_s27_withholding_deferred_advisory_fires``): these revisions carry
-    row-producer relation operands and the full calculate path is orthogonal to
-    the advisory contract under test. With withholding / atribucion_member /
-    foreign_asset pinned in test_source_boundary_and_enrollment, this covers the
-    full set of five DEFERRED_SOURCE_KINDS.
+    the source-boundary tests): these revisions carry row-producer relation
+    operands and the full calculate path is orthogonal to the advisory contract
+    under test. With atribucion_member / foreign_asset pinned in
+    test_source_boundary_and_enrollment, this covers the remaining deferred
+    DEFERRED_SOURCE_KINDS. Withholding is now enrolled separately.
     """
     from ...aggregation import DEFERRED_SOURCE_KINDS, collect_unhandled_source_diagnostics
 

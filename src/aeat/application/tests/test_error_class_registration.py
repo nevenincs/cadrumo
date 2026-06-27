@@ -13,11 +13,12 @@ depending on broad exception swallowing.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from pydantic import BaseModel
 
+from ...core import BindingSourceKind
 from ...core.errors import (
     ERROR_REGISTRY,
     AeatError,
@@ -195,7 +196,10 @@ def test_source_mesh_error_raised_on_blank_owned_source() -> None:
     from ..aggregation._source_mesh import CalculationSourceResolution, SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
-        CalculationSourceResolution(resolver_id="ledger", owned_sources=("  ",))
+        CalculationSourceResolution(
+            resolver_id="ledger",
+            owned_sources=cast("tuple[BindingSourceKind, ...]", ("  ",)),
+        )
 
 
 def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
@@ -204,7 +208,10 @@ def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
     from ..aggregation._source_mesh import CalculationSourceResolution, SourceMeshError
 
     with pytest.raises((SourceMeshError, ValidationError)):
-        CalculationSourceResolution(resolver_id="ledger", owned_sources=("bank", "bank"))
+        CalculationSourceResolution(
+            resolver_id="ledger",
+            owned_sources=cast("tuple[BindingSourceKind, ...]", ("bank", "bank")),
+        )
 
 
 # ---------------------------------------------------------------------------

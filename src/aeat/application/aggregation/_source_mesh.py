@@ -437,7 +437,9 @@ def merge_source_resolutions_by_precedence(
     *,
     resolver_id: str = "source_mesh_precedence",
 ) -> CalculationSourceResolution:
-    """Overlay ordered resolution tiers into one :class:`CalculationSourceResolution` by precedence: later tiers win on collision.
+    """Overlay tiers into one :class:`CalculationSourceResolution`.
+
+    Later tiers win on collision.
 
     Unlike :func:`merge_source_resolutions` (which is EXCLUSIVE: a binding claimed
     by two resolvers in one tier is a hard ``AggregationValidationError``), this

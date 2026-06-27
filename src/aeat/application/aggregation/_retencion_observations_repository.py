@@ -1,4 +1,4 @@
-"""Encrypted persistence for per-perceptor retención records (Modelo 180/190/193).
+"""Encrypted persistence for per-perceptor retención records (Modelo 180/193).
 
 The DEDICATED store the retenciones-summary family reads to count perceptors
 DISTINCTLY. Modelo 180 casilla ``decl.total-perceptores`` ("Número total de
@@ -198,6 +198,9 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
         validated distinct-count primitive. An empty tuple means no per-perceptor
         records were persisted for the window — the resolver MUST surface a
         no-silent advisory rather than materialising a zero count.
+
+        Returns:
+            Persisted :class:`RetencionObservation` records for the requested window.
         """
         safe_repository_id(modelo, context="modelo")
         return tuple(

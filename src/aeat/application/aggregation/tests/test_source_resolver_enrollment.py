@@ -59,6 +59,7 @@ _ENROLLED_SOURCE_MESH_RESOLVERS = frozenset(
         "aeat.application.aggregation.OssIossLedgerSourceResolver",
         "aeat.application.aggregation.ProfileSourceResolver",
         "aeat.application.aggregation.RetencionesAggregationSourceResolver",
+        "aeat.application.aggregation.WithholdingSourceResolver",
         "aeat.application.calculations.IvaWalletDecisionSourceResolver",
         "aeat.application.calculations.PreviousFilingSourceResolver",
         "aeat.application.calculations.RelationPrefillSourceResolver",

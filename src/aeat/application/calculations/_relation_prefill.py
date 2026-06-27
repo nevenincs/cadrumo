@@ -45,6 +45,7 @@ from ...application.storage.calc_sheets._records import RelationValue, RelationV
 from ...core import BindingSourceKind, Modelo, Period
 from ...core.aggregation import RelationAggregationOp
 from ...core.logging import get_logger
+from ...core.parsing import parse_iso8601_date
 from ...core.time import now
 from ...domain.calculations.registry import (
     BindingId,
@@ -89,6 +90,7 @@ def _casilla_id(value: object) -> CasillaId:
         return validated_casilla_id(value, surface="relation-prefill casilla constant")
     except ValueError as exc:
         raise RuntimeError(f"relation-prefill casilla constant {value!r} is not a CasillaId") from exc
+
 
 #: The shared Modelo 303 source casilla id the two Modelo 390 year-end carry boxes
 #: (97 / 662) fold. The two relations sum/copy this per-period casilla, but the
@@ -191,12 +193,7 @@ def _profile_path_values_for_bucket(bucket_id: str) -> dict[str, str] | None:
 
 def _parse_canonical_iso_date(raw: str | None) -> date | None:
     """Parse a canonical ISO-8601 ``censo.*`` date projection value, or ``None``."""
-    if not raw:
-        return None
-    try:
-        return date.fromisoformat(raw)
-    except ValueError:
-        return None
+    return parse_iso8601_date(raw)
 
 
 def _parse_canonical_decimal(raw: str | None) -> Decimal | None:
