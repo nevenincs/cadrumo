@@ -10,10 +10,8 @@ related:
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]"
   - "[[2026-05-20-calculation-source-connectivity-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
+  - '[[2026-06-26-binding-resolver-contract-unification-research]]'
 ---
-
-
-
 # `binding-resolver-contract-unification` adr: `resolver-contract unification: one source-resolver port and one result envelope across the calculate mesh` | (**status:** `proposed`)
 
 > PROPOSED — design-ahead for coordinator review, authored while phase-2.1 code is
