@@ -22,6 +22,9 @@ from .....domain.calculations.registry import (
     RegistryModeloObservation as RegistryModeloObservation,
 )
 from .....domain.calculations.registry import (
+    resolve_bound_inputs_by_casilla_id as resolve_bound_inputs_by_casilla_id,
+)
+from .....domain.calculations.registry import (
     resolve_relation_values_from_observations as resolve_relation_values_from_observations,
 )
 from .....tests import FIXTURES_DIR
