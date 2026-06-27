@@ -22,7 +22,7 @@ from ....application.aggregation import (
 )
 from ....core import Modelo, Period
 from ....tests.secure_sql import isolated_runtime_profile
-from .._modelo import _parse_typed_cli_observations
+from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
