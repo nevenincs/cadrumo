@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from ._casilla_membership import casillas_by_id
+from ._casilla_membership import casillas_by_id, declared_casilla_ids
 from ._ids import BindingId, CasillaId, RelationId
 from ._schema import (
     AlgorithmBindingDefinition,
@@ -33,7 +33,7 @@ from ._schema import (
     VerificationExpectationDefinition,
     WorkbookParityReference,
 )
-from ._validate_revision_identity import _collect_record_id_lists, _resolvable_casilla_references
+from ._validate_revision_identity import _collect_record_id_lists
 
 
 @dataclass(frozen=True)
@@ -129,7 +129,7 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
     relation_by_id = {relation.id: relation for relation in revision.relations}
     parameter_by_id = {parameter.id: parameter for parameter in revision.parameters}
     provider_by_id = {provider.id: provider for provider in revision.algorithm_providers}
-    casillas = set(_resolvable_casilla_references(revision))
+    casillas = set(declared_casilla_ids(revision))
     bindings = set(binding_by_id)
     relations = set(relation_by_id)
     parameters = set(parameter_by_id)

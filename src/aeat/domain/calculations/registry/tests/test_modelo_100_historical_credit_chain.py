@@ -23,6 +23,7 @@ from __future__ import annotations
 import pytest
 
 from .....core.resources import bundled_path
+from .. import CasillaId, validated_casilla_id
 from .._loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -30,22 +31,36 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _YEARS = ("2020", "2021", "2022", "2023")
 
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test_modelo_100_historical_credit_chain casilla id")
+    except ValueError as exc:
+        raise AssertionError(
+            f"historical credit-chain fixture casilla key {value!r} is not a canonical casilla.id",
+        ) from exc
+
+
+_C0596 = _casilla_id("0596")
+_C0597 = _casilla_id("0597")
+_C0609 = _casilla_id("0609")
+
 # The credit casillas the total-pagos-a-cuenta formula sums (form-native order).
 _CREDIT_SUM_CASILLAS = (
-    "0592",
-    "0593",
-    "0594",
-    "0596",
-    "0597",
-    "0598",
-    "0599",
-    "0600",
-    "0601",
-    "0602",
-    "0603",
-    "0604",
-    "0605",
-    "0606",
+    _casilla_id("0592"),
+    _casilla_id("0593"),
+    _casilla_id("0594"),
+    _C0596,
+    _C0597,
+    _casilla_id("0598"),
+    _casilla_id("0599"),
+    _casilla_id("0600"),
+    _casilla_id("0601"),
+    _casilla_id("0602"),
+    _casilla_id("0603"),
+    _casilla_id("0604"),
+    _casilla_id("0605"),
+    _casilla_id("0606"),
 )
 
 
@@ -61,7 +76,7 @@ def _m100_revision(year: str):
 def test_0609_is_computed_by_the_total_pagos_formula(year: str) -> None:
     """0609 is a computed casilla whose formula sums the credit casillas."""
     revision = _m100_revision(year)
-    c0609 = next((c for c in revision.casillas if c.id == "0609"), None)
+    c0609 = next((c for c in revision.casillas if c.id == _C0609), None)
     assert c0609 is not None, f"M100 {year} casilla 0609 missing"
     assert getattr(c0609, "input_kind", None) == "computed", (
         f"M100 {year} 0609 must be computed (was {getattr(c0609, 'input_kind', None)!r})"
@@ -71,7 +86,7 @@ def test_0609_is_computed_by_the_total_pagos_formula(year: str) -> None:
 
     formula = next((f for f in revision.formulas if f.id == expected_formula), None)
     assert formula is not None, f"M100 {year} formula {expected_formula!r} missing"
-    assert formula.target_casilla_id == "0609"
+    assert formula.target_casilla_id == _C0609
     summed = tuple(arg.casilla_id for arg in formula.expression.args)
     assert summed == _CREDIT_SUM_CASILLAS, (
         f"M100 {year} total-pagos formula must sum the credit casillas in order; got {summed!r}"
@@ -84,8 +99,8 @@ def test_credit_casillas_bind_their_retencion_relations(year: str) -> None:
     revision = _m100_revision(year)
     binding_ids = {b.id for b in revision.bindings}
 
-    c0596 = next((c for c in revision.casillas if c.id == "0596"), None)
-    c0597 = next((c for c in revision.casillas if c.id == "0597"), None)
+    c0596 = next((c for c in revision.casillas if c.id == _C0596), None)
+    c0597 = next((c for c in revision.casillas if c.id == _C0597), None)
     assert c0596 is not None and c0597 is not None
 
     assert getattr(c0596, "input_kind", None) == "bound"

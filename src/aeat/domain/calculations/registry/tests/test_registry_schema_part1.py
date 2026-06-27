@@ -377,10 +377,10 @@ def test_validator_rejects_formula_target_mismatch() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
     formula = revision.formulas[0]
-    mismatched_formula = formula.model_copy(update={"target_casilla_id": "01"})
+    mismatched_formula = formula.model_copy(update={"target_casilla_id": _NUMERIC_CASILLA_01})
     mutated = revision.model_copy(update={"formulas": (mismatched_formula, *revision.formulas[1:])})
 
-    with pytest.raises(RegistryValidationError, match="targeting '01'"):
+    with pytest.raises(RegistryValidationError, match=f"targeting '{_NUMERIC_CASILLA_01}'"):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 

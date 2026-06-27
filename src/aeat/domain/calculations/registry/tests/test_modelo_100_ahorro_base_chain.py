@@ -37,8 +37,10 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.aggregation import RelationAggregationOp
 from .. import CasillaId, RegistrySnapshot, calculate_registry_snapshot, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
+from .._relation_aggregation import relation_aggregation_op
 from .._relations import resolve_relation_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -269,7 +271,7 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
         m100_2025_snapshot.revision,
         {
             relation.id: (
-                Decimal("0") if (str((relation.aggregation or {}).get("op", "copy")) == "copy") else (Decimal("0"),)
+                Decimal("0") if relation_aggregation_op(relation) == RelationAggregationOp.COPY else (Decimal("0"),)
             )
             for relation in m100_2025_snapshot.revision.relations
         },

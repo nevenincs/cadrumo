@@ -47,7 +47,7 @@ def _expected(
     *,
     value: Decimal,
     operand_refs: tuple[object, ...] = (),
-    operand_casilla_refs: tuple[object, ...] | None = None,
+    operand_casilla_refs: tuple[CasillaId, ...] | None = None,
     legal_refs: tuple[str, ...] = (),
     source_refs: tuple[str, ...] = (),
 ) -> RegistryScenarioExpectedOutput:
@@ -58,7 +58,7 @@ def _expected(
         target_casilla_id=_casilla_id(target),
         value=value,
         operand_refs=_operand_refs(*operand_refs),
-        operand_casilla_refs=_operand_casilla_refs(*expected_operand_casilla_refs),
+        operand_casilla_refs=expected_operand_casilla_refs,
         legal_refs=legal_refs,
         source_refs=source_refs,
     )
@@ -152,7 +152,7 @@ def test_registry_scenario_reports_trace_contract_mismatches() -> None:
                     "0222",
                     value=Decimal("2000.00"),
                     operand_refs=_operand_refs("0180", "missing-operand"),
-                    operand_casilla_refs=("0180",),
+                    operand_casilla_refs=_operand_casilla_refs("0180"),
                 ),
             ),
         },
@@ -179,7 +179,7 @@ def test_registry_scenario_reports_operand_casilla_ref_mismatches() -> None:
                     "0222",
                     value=Decimal("2000.00"),
                     operand_refs=("0179",),
-                    operand_casilla_refs=("0179",),
+                    operand_casilla_refs=_operand_casilla_refs("0179"),
                 ),
             ),
         },
@@ -295,7 +295,17 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                 "0180",
                 value=Decimal("1200.00"),
                 operand_refs=_operand_refs("0171", "0172", "0173", "0174", "0175", "0176", "0177", "0178", "0179"),
-                operand_casilla_refs=("0171", "0172", "0173", "0174", "0175", "0176", "0177", "0178", "0179"),
+                operand_casilla_refs=_operand_casilla_refs(
+                    "0171",
+                    "0172",
+                    "0173",
+                    "0174",
+                    "0175",
+                    "0176",
+                    "0177",
+                    "0178",
+                    "0179",
+                ),
                 legal_refs=("ley-35-2006:art-27", "ley-35-2006:art-28", "orden-hac-277-2026:art-3"),
             ),
             _expected(
@@ -311,7 +321,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                     "0180",
                     "0220",
                 ),
-                operand_casilla_refs=("0180", "0220"),
+                operand_casilla_refs=_operand_casilla_refs("0180", "0220"),
                 source_refs=(
                     "aeat-dr-100-2025-dictionary",
                     "aeat-dr-100-2025-xsd",
@@ -323,7 +333,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                 "0235",
                 value=Decimal("825.00"),
                 operand_refs=_operand_refs("0231", "0232", "0233", "0234", "0237"),
-                operand_casilla_refs=("0231", "0232", "0233", "0234", "0237"),
+                operand_casilla_refs=_operand_casilla_refs("0231", "0232", "0233", "0234", "0237"),
             ),
             _expected(
                 "0604",
@@ -354,7 +364,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                     "0605",
                     "0606",
                 ),
-                operand_casilla_refs=(
+                operand_casilla_refs=_operand_casilla_refs(
                     "0592",
                     "0593",
                     "0594",
@@ -410,7 +420,7 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
                     "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
                     "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
                 ),
-                operand_casilla_refs=("0180", "0218"),
+                operand_casilla_refs=_operand_casilla_refs("0180", "0218"),
                 legal_refs=("ley-35-2006:art-30", "rd-439-2007:art-30", "orden-hac-277-2026:art-3"),
             ),
             _expected(
@@ -423,7 +433,7 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
                     "0180",
                     "0223",
                 ),
-                operand_casilla_refs=("0180", "0223"),
+                operand_casilla_refs=_operand_casilla_refs("0180", "0223"),
             ),
         ),
     )
@@ -464,7 +474,7 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
                     "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
                     "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-cap",
                 ),
-                operand_casilla_refs=("0180", "0218"),
+                operand_casilla_refs=_operand_casilla_refs("0180", "0218"),
             ),
             _expected(
                 "0224",
@@ -475,7 +485,7 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
                     "0180",
                     "0223",
                 ),
-                operand_casilla_refs=("0180", "0223"),
+                operand_casilla_refs=_operand_casilla_refs("0180", "0223"),
             ),
         ),
     )
@@ -553,7 +563,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
                     "0147",
                     "0148",
                 ),
-                operand_casilla_refs=(
+                operand_casilla_refs=_operand_casilla_refs(
                     "0102",
                     "0104",
                     "0107",
@@ -583,7 +593,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
                 "0154",
                 value=Decimal("7000.00"),
                 operand_refs=_operand_refs("0149", "0150", "0151", "0152"),
-                operand_casilla_refs=("0149", "0150", "0151", "0152"),
+                operand_casilla_refs=_operand_casilla_refs("0149", "0150", "0151", "0152"),
                 legal_refs=(
                     "ley-35-2006:art-22",
                     "ley-35-2006:art-23",
@@ -597,7 +607,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
                 operand_refs=_operand_refs(
                     "0089",
                 ),
-                operand_casilla_refs=("0089",),
+                operand_casilla_refs=_operand_casilla_refs("0089"),
                 legal_refs=("ley-35-2006:art-22", "orden-hac-277-2026:art-3"),
             ),
             _expected(
@@ -606,7 +616,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
                 operand_refs=_operand_refs(
                     "0154",
                 ),
-                operand_casilla_refs=("0154",),
+                operand_casilla_refs=_operand_casilla_refs("0154"),
                 legal_refs=(
                     "ley-35-2006:art-22",
                     "ley-35-2006:art-23",
@@ -620,7 +630,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
                 operand_refs=_operand_refs(
                     "0153",
                 ),
-                operand_casilla_refs=("0153",),
+                operand_casilla_refs=_operand_casilla_refs("0153"),
                 legal_refs=(
                     "ley-35-2006:art-99",
                     "rd-439-2007:art-100",
@@ -710,14 +720,14 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
                 "0587",
                 value=Decimal("15000.00"),
                 operand_refs=_operand_refs("0585", "0586"),
-                operand_casilla_refs=("0585", "0586"),
+                operand_casilla_refs=_operand_casilla_refs("0585", "0586"),
                 legal_refs=("orden-hac-277-2026:art-3",),
             ),
             _expected(
                 "0595",
                 value=Decimal("13500.00"),
                 operand_refs=_operand_refs("0587", "0588", "0414", "0589", "0590", "0591"),
-                operand_casilla_refs=("0587", "0588", "0414", "0589", "0590", "0591"),
+                operand_casilla_refs=_operand_casilla_refs("0587", "0588", "0414", "0589", "0590", "0591"),
                 legal_refs=("ley-35-2006:art-99", "orden-hac-277-2026:art-3"),
             ),
             _expected(
@@ -739,7 +749,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
                     "0605",
                     "0606",
                 ),
-                operand_casilla_refs=(
+                operand_casilla_refs=_operand_casilla_refs(
                     "0592",
                     "0593",
                     "0594",
@@ -761,7 +771,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
                 "0610",
                 value=Decimal("11590.00"),
                 operand_refs=_operand_refs("0595", "0609"),
-                operand_casilla_refs=("0595", "0609"),
+                operand_casilla_refs=_operand_casilla_refs("0595", "0609"),
                 legal_refs=("ley-35-2006:art-99", "orden-hac-277-2026:art-3"),
                 source_refs=("aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"),
             ),
@@ -787,7 +797,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
                     "0666",
                     "0669",
                 ),
-                operand_casilla_refs=(
+                operand_casilla_refs=_operand_casilla_refs(
                     "0610",
                     "0611",
                     "0612",
