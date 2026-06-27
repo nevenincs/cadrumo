@@ -48,6 +48,7 @@ CalculationSourceDiagnosticReason = Literal[
     "duplicate_bound_casilla_owner",
     "duplicate_relation_owner",
     "source_issue",
+    "unresolved_binding",
     "storage_degraded",
     "unhandled_binding_source",
     "unrouted_observation",
@@ -209,6 +210,7 @@ class CalculationSourceResolution(BaseModel):
     date_binding_values: Mapping[BindingId, date] = Field(default_factory=dict)
     relation_values: Mapping[RelationId, Decimal] = Field(default_factory=dict)
     unresolved_relation_ids: tuple[RelationId, ...] = Field(default_factory=tuple)
+    unresolved_binding_ids: tuple[BindingId, ...] = Field(default_factory=tuple)
     bound_inputs_by_casilla_id: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
     # Typed borrador provenance. Carried only by the borrador resolution
@@ -296,6 +298,16 @@ class CalculationSourceResolution(BaseModel):
             raise SourceMeshError("aggregation.source_mesh.errors.unresolved_relation_ids_duplicate")
         return tuple(sorted(normalized))
 
+    @field_validator("unresolved_binding_ids")
+    @classmethod
+    def _freeze_unresolved_binding_ids(cls, value: tuple[BindingId, ...]) -> tuple[BindingId, ...]:
+        normalized = tuple(item.strip() for item in value)
+        if any(not item for item in normalized):
+            raise SourceMeshError("aggregation.source_mesh.errors.unresolved_binding_ids_blank")
+        if len(normalized) != len(set(normalized)):
+            raise SourceMeshError("aggregation.source_mesh.errors.unresolved_binding_ids_duplicate")
+        return tuple(sorted(normalized))
+
     @field_validator("bound_inputs_by_casilla_id")
     @classmethod
     def _freeze_bound_inputs_by_casilla_id(cls, value: Mapping[CasillaId, Decimal]) -> Mapping[CasillaId, Decimal]:
@@ -329,6 +341,10 @@ class CalculationSourceResolution(BaseModel):
 
     @field_serializer("unresolved_relation_ids")
     def _serialize_unresolved_relation_ids(self, value: tuple[RelationId, ...]) -> tuple[RelationId, ...]:
+        return tuple(value)
+
+    @field_serializer("unresolved_binding_ids")
+    def _serialize_unresolved_binding_ids(self, value: tuple[BindingId, ...]) -> tuple[BindingId, ...]:
         return tuple(value)
 
     @field_serializer("bound_inputs_by_casilla_id")
@@ -377,6 +393,7 @@ def merge_source_resolutions(
     date_binding_values: dict[BindingId, date] = {}
     relation_values: dict[RelationId, Decimal] = {}
     unresolved_relation_ids: set[RelationId] = set()
+    unresolved_binding_ids: set[BindingId] = set()
     bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = {}
     source_transaction_ids: set[str] = set()
     diagnostics: list[CalculationSourceDiagnostic] = []
@@ -397,17 +414,21 @@ def merge_source_resolutions(
         provenance.extend(resolution.provenance)
         source_transaction_ids.update(resolution.source_transaction_ids)
         unresolved_relation_ids.update(resolution.unresolved_relation_ids)
+        unresolved_binding_ids.update(resolution.unresolved_binding_ids)
         if resolution.borrador_provenance is not None:
             borrador_provenance = resolution.borrador_provenance
         for binding_id, value in resolution.binding_values.items():
             _claim_binding(binding_owners, binding_id, resolution.resolver_id)
             binding_values[binding_id] = value
+            unresolved_binding_ids.discard(binding_id)
         for binding_id, value in resolution.enum_binding_values.items():
             _claim_binding(binding_owners, binding_id, resolution.resolver_id)
             enum_binding_values[binding_id] = value
+            unresolved_binding_ids.discard(binding_id)
         for binding_id, value in resolution.date_binding_values.items():
             _claim_binding(binding_owners, binding_id, resolution.resolver_id)
             date_binding_values[binding_id] = value
+            unresolved_binding_ids.discard(binding_id)
         for relation_id, value in resolution.relation_values.items():
             _claim_relation(relation_owners, relation_id, resolution.resolver_id)
             relation_values[relation_id] = value
@@ -424,6 +445,11 @@ def merge_source_resolutions(
         date_binding_values=date_binding_values,
         relation_values=relation_values,
         unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
+        unresolved_binding_ids=tuple(
+            sorted(
+                unresolved_binding_ids.difference(binding_values, enum_binding_values, date_binding_values),
+            ),
+        ),
         bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
         source_transaction_ids=tuple(sorted(source_transaction_ids)),
         borrador_provenance=borrador_provenance,
@@ -459,6 +485,7 @@ def merge_source_resolutions_by_precedence(
     date_binding_values: dict[BindingId, date] = {}
     relation_values: dict[RelationId, Decimal] = {}
     unresolved_relation_ids: set[RelationId] = set()
+    unresolved_binding_ids: set[BindingId] = set()
     bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = {}
     source_transaction_ids: set[str] = set()
     diagnostics: list[CalculationSourceDiagnostic] = []
@@ -472,6 +499,7 @@ def merge_source_resolutions_by_precedence(
         provenance.extend(tier.provenance)
         source_transaction_ids.update(tier.source_transaction_ids)
         unresolved_relation_ids.update(tier.unresolved_relation_ids)
+        unresolved_binding_ids.update(tier.unresolved_binding_ids)
         if tier.borrador_provenance is not None:
             borrador_provenance = tier.borrador_provenance
         # Precedence overlay: later tier wins (dict update), no exclusive claim.
@@ -491,6 +519,11 @@ def merge_source_resolutions_by_precedence(
         date_binding_values=date_binding_values,
         relation_values=relation_values,
         unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
+        unresolved_binding_ids=tuple(
+            sorted(
+                unresolved_binding_ids.difference(binding_values, enum_binding_values, date_binding_values),
+            ),
+        ),
         bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
         source_transaction_ids=tuple(sorted(source_transaction_ids)),
         borrador_provenance=borrador_provenance,

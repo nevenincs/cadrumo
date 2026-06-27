@@ -272,6 +272,7 @@ def calculate_modelo_revision(
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
     unresolved_relation_ids: tuple[RelationId, ...] = (),
+    unresolved_binding_ids: tuple[BindingId, ...] = (),
     source_transaction_ids: tuple[str, ...] = (),
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -387,6 +388,7 @@ def calculate_modelo_revision(
         enum_binding_values=channels.enum_bindings,
         relation_values=resolved_relations,
         unresolved_relation_ids=unresolved_relation_ids,
+        unresolved_binding_ids=unresolved_binding_ids,
         date_binding_values=channels.date_bindings or None,
     )
 
@@ -565,6 +567,7 @@ def _resolve_bucket_source_mesh(
     """
     from ..aggregation import (
         CalculationSourceContext,
+        CalculationSourceDiagnostic,
         LedgerIvaAggregationSourceResolver,
         LedgerRentaExpenseAggregationSourceResolver,
         LedgerRentaGastoAggregationSourceResolver,
@@ -670,7 +673,88 @@ def _resolve_bucket_source_mesh(
         source_resolution = source_resolution.model_copy(
             update={"diagnostics": source_resolution.diagnostics + _unhandled_diagnostics},
         )
+    # Expected-but-missing binding gap (no-silent-under-declaration): a directly
+    # casilla-bound binding whose enrolled resolver RAN (its source kind is in the
+    # merged owned_sources, i.e. the source was present and resolved) but produced
+    # NO value for that binding would otherwise fall through to a silent zero on
+    # the initial-value path (binding not in binding_values, source not the
+    # observation-backed previous_filing/relation_prefill carve-out). Mark those
+    # ids unresolved so the formula leaf escapes non-blocking (mirroring the
+    # relation channel) AND surface an INFORMATIONAL advisory. A binding whose
+    # source is ABSENT (not in owned_sources) is a legitimate zero — the taxpayer
+    # has no such data — and stays silent.
+    _expected_missing = _expected_but_missing_binding_ids(
+        snapshot.revision,
+        owned_sources=frozenset(source_resolution.owned_sources),
+        resolved_binding_values=source_resolution.binding_values,
+    )
+    if _expected_missing:
+        _missing_diagnostics = tuple(
+            CalculationSourceDiagnostic(
+                reason="unresolved_binding",
+                source_kind=str(source),
+                binding_id=binding_id,
+                casilla_id=casilla_id,
+                message=(
+                    f"binding {binding_id!r} (casilla {casilla_id!r}) declares present source "
+                    f"{source!r} whose resolver produced no value; the bound casilla would "
+                    "otherwise default to a silent zero. Supply the source records before filing."
+                ),
+            )
+            for binding_id, casilla_id, source in _expected_missing
+        )
+        source_resolution = source_resolution.model_copy(
+            update={
+                "unresolved_binding_ids": tuple(sorted({b for b, _c, _s in _expected_missing})),
+                "diagnostics": source_resolution.diagnostics + _missing_diagnostics,
+            },
+        )
     return source_resolution
+
+
+# Binding sources whose unresolved slot is ALREADY handled non-silently elsewhere
+# and must NOT be re-flagged as an expected-but-missing silent zero:
+#   - previous_filing / relation_prefill: the initial-value path treats an
+#     unresolved slot of these as absent-by-design (operator-manual fallback) or
+#     the relation channel already surfaces its own diagnostic;
+#   - manual_input: the operator supplies the value directly.
+_NON_SILENT_BOUND_BINDING_SOURCES: frozenset[str] = frozenset(
+    {"previous_filing", "relation_prefill", "manual_input"},
+)
+
+
+def _expected_but_missing_binding_ids(
+    revision: ModeloRevision,
+    *,
+    owned_sources: frozenset[BindingSourceKind],
+    resolved_binding_values: Mapping[BindingId, Decimal],
+) -> tuple[tuple[BindingId, CasillaId, BindingSourceKind], ...]:
+    """Return (binding_id, casilla_id, source) for casilla-bound bindings whose present source resolved no value.
+
+    A binding qualifies when (1) it is the binding of a ``BOUND`` casilla, (2) its
+    source kind is in ``owned_sources`` (the resolver RAN for a present source),
+    (3) it produced no value (absent from ``resolved_binding_values``), and (4) its
+    source is not one of the non-silent carve-outs already handled by the
+    initial-value path or the relation channel. The absent-source case (source not
+    in ``owned_sources``) is a legitimate zero and is deliberately excluded.
+    """
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    missing: list[tuple[BindingId, CasillaId, BindingSourceKind]] = []
+    for casilla in revision.casillas:
+        if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
+            continue
+        binding = bindings_by_id.get(casilla.binding)
+        if binding is None:
+            continue
+        source = binding.source
+        if str(source) in _NON_SILENT_BOUND_BINDING_SOURCES:
+            continue
+        if source not in owned_sources:
+            continue
+        if binding.id in resolved_binding_values:
+            continue
+        missing.append((binding.id, casilla.id, source))
+    return tuple(missing)
 
 
 def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -823,10 +907,20 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         for relation_id in source_resolution.unresolved_relation_ids
         if relation_id not in caller_relation_ids
     )
+    # A caller --binding override of an expected-but-missing binding RESOLVES it,
+    # so drop it from the unresolved set and its advisory (mirrors the relation
+    # caller-override carve-out above).
+    caller_binding_ids = frozenset((binding_values or {}).keys())
+    unresolved_binding_ids = tuple(
+        binding_id
+        for binding_id in source_resolution.unresolved_binding_ids
+        if binding_id not in caller_binding_ids
+    )
     source_diagnostics = tuple(
         diagnostic
         for diagnostic in source_resolution.diagnostics
-        if diagnostic.relation_id is None or diagnostic.relation_id not in caller_relation_ids
+        if (diagnostic.relation_id is None or diagnostic.relation_id not in caller_relation_ids)
+        and (diagnostic.binding_id is None or diagnostic.binding_id not in caller_binding_ids)
     )
     revision = calculate_modelo_revision(
         work_unit_id,
@@ -842,6 +936,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         borrador_snapshot_id=borrador_snapshot_id,
         relation_values=merged_relation_values,
         unresolved_relation_ids=unresolved_relation_ids,
+        unresolved_binding_ids=unresolved_binding_ids,
         source_transaction_ids=tuple(source_resolution.source_transaction_ids),
         filing_period_date=filing_period_date,
         work_unit_repository=wu_repo,

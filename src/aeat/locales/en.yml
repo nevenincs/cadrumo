@@ -349,6 +349,8 @@ aggregation:
       owned_sources_duplicate: Source mesh owned sources must be unique.
       source_transaction_ids_blank: Source mesh transaction ids must not contain blanks.
       source_transaction_ids_duplicate: Source mesh transaction ids must be unique.
+      unresolved_binding_ids_blank: aggregation.source_mesh.errors.unresolved_binding_ids_blank
+      unresolved_binding_ids_duplicate: aggregation.source_mesh.errors.unresolved_binding_ids_duplicate
       unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
       unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
 application:
