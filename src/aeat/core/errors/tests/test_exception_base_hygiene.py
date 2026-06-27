@@ -29,6 +29,10 @@ _ALLOWLIST = {
         "private formula-runtime control-flow sentinel; caught inside calculate_registry_snapshot "
         "to omit non-blocking unresolved formula targets and never raised across the public boundary"
     ),
+    "aeat.adapters.outbound.aeat._playwright.PlaywrightError": (
+        "optional-extra fallback alias for playwright.async_api.Error; it must match the third-party "
+        "exception shape when Playwright is absent and is only caught/wrapped by adapter boundaries"
+    ),
 }
 
 
