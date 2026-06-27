@@ -7,15 +7,6 @@ casilla_ids = ["decl.total-percepciones", "decl.percepciones-total", "decl.reten
 formulas = ["modelo-190-percepciones-total", "modelo-190-retenciones-total"]
 bindings = [
     "modelo-190-percepciones-anual",
-    "modelo-190-111-trabajo-dinerario-percepciones-anual",
-    "modelo-190-111-trabajo-especie-percepciones-anual",
-    "modelo-190-111-actividades-dinerario-percepciones-anual",
-    "modelo-190-111-actividades-especie-percepciones-anual",
-    "modelo-190-111-premios-dinerario-percepciones-anual",
-    "modelo-190-111-premios-especie-percepciones-anual",
-    "modelo-190-111-ganancias-dinerario-percepciones-anual",
-    "modelo-190-111-ganancias-especie-percepciones-anual",
-    "modelo-190-111-derechos-imagen-percepciones-anual",
     "modelo-190-111-trabajo-dinerario-importe-anual",
     "modelo-190-111-trabajo-especie-importe-anual",
     "modelo-190-111-actividades-dinerario-importe-anual",
