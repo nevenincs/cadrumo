@@ -13,12 +13,22 @@ from decimal import Decimal
 
 import pytest
 
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ._generate import (
     _format_spanish_decimal,
     _render_borrador_pdf,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+_BASE_LIQUIDABLE_GENERAL_CASILLA: CasillaId = validated_casilla_id(
+    "0505",
+    surface="_BASE_LIQUIDABLE_GENERAL_CASILLA",
+)
+_CUOTA_INTEGRA_ESTATAL_CASILLA: CasillaId = validated_casilla_id(
+    "0545",
+    surface="_CUOTA_INTEGRA_ESTATAL_CASILLA",
+)
 
 
 def test_format_spanish_decimal_uses_comma_and_dot_separators() -> None:
@@ -41,8 +51,8 @@ def test_render_borrador_pdf_emits_valid_pdf_bytes() -> None:
     without writing to disk."""
 
     casilla_values = {
-        "0505": Decimal("30000.00"),
-        "0545": Decimal("3450.00"),
+        _BASE_LIQUIDABLE_GENERAL_CASILLA: Decimal("30000.00"),
+        _CUOTA_INTEGRA_ESTATAL_CASILLA: Decimal("3450.00"),
     }
     pdf_bytes = _render_borrador_pdf(year=2024, casilla_values=casilla_values)
 
