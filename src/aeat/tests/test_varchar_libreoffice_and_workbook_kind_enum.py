@@ -19,15 +19,16 @@ they enforce the extraction discipline rather than any runtime calculation.
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
-from ..core.paths import PROJECT_ROOT
+from ._inventory import SRC_AEAT, ast_for_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SRC_AEAT = PROJECT_ROOT / "src" / "aeat"
+_SRC_AEAT = SRC_AEAT
 
 _SECURE_OBJECTS_PATH = _SRC_AEAT / "adapters" / "persistence" / "storage" / "sql" / "secure_objects.py"
 _WORKBOOK_PARITY_PATH = _SRC_AEAT / "domain" / "calculations" / "registry" / "_workbook_parity.py"
@@ -45,7 +46,11 @@ _WORKBOOK_KIND_MEMBERS: frozenset[str] = frozenset(
 )
 
 
-def _bare_string_literals_in_file(path: Path, target: str) -> list[int]:
+def _bare_string_literals_in_file(
+    path: Path,
+    target: str,
+    source_tree_ast: Mapping[Path, ast.AST] | None = None,
+) -> list[int]:
     """Return line numbers where ``target`` appears as a bare string constant.
 
     Walks the AST of ``path`` and reports every ``ast.Constant`` node whose
@@ -53,7 +58,8 @@ def _bare_string_literals_in_file(path: Path, target: str) -> list[int]:
     statement of a module / class / function body when they are an
     ``ast.Expr`` wrapping a ``Constant``).
     """
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    tree = ast_for_path(path, source_tree_ast)
+    assert tree is not None, f"{path} must be parseable"
     docstring_nodes: set[int] = _collect_docstring_ids(tree)
     hits: list[int] = []
     for node in ast.walk(tree):
@@ -74,9 +80,13 @@ def _collect_docstring_ids(tree: ast.AST) -> set[int]:
     return ids
 
 
-def _workbook_kind_enum_members(path: Path) -> frozenset[str]:
+def _workbook_kind_enum_members(
+    path: Path,
+    source_tree_ast: Mapping[Path, ast.AST] | None = None,
+) -> frozenset[str]:
     """Return the StrEnum member values declared for WorkbookKind in ``path``."""
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    tree = ast_for_path(path, source_tree_ast)
+    assert tree is not None, f"{path} must be parseable"
     for node in ast.walk(tree):
         if not isinstance(node, ast.ClassDef) or node.name != "WorkbookKind":
             continue
@@ -92,14 +102,14 @@ def _workbook_kind_enum_members(path: Path) -> frozenset[str]:
     return frozenset()
 
 
-def test_no_bare_varchar64_in_secure_objects() -> None:
+def test_no_bare_varchar64_in_secure_objects(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """All VARCHAR(64) references in secure_objects.py must use _VARCHAR_64.
 
     Exactly one occurrence is permitted: the constant's own module-level
     assignment (``_VARCHAR_64: Final[str] = "VARCHAR(64)"``).  Every other
     site must reference the constant, not repeat the bare literal.
     """
-    hits = _bare_string_literals_in_file(_SECURE_OBJECTS_PATH, "VARCHAR(64)")
+    hits = _bare_string_literals_in_file(_SECURE_OBJECTS_PATH, "VARCHAR(64)", source_tree_ast)
     assert len(hits) <= 1, (
         f"Bare 'VARCHAR(64)' literal found in {_SECURE_OBJECTS_PATH.name} at lines {hits}. "
         "Only the _VARCHAR_64 constant definition may carry the bare literal; "
@@ -107,7 +117,7 @@ def test_no_bare_varchar64_in_secure_objects() -> None:
     )
 
 
-def test_no_bare_libreoffice_engine_in_workbook_parity() -> None:
+def test_no_bare_libreoffice_engine_in_workbook_parity(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """All 'libreoffice-headless' references must use _ENGINE_LIBREOFFICE.
 
     The only allowed occurrence is the constant's own assignment; callsites
@@ -115,7 +125,7 @@ def test_no_bare_libreoffice_engine_in_workbook_parity() -> None:
     by virtue of them being the canonical constant definition, not duplicate
     literal dispersal.  We assert zero hits *outside* the definition line.
     """
-    hits = _bare_string_literals_in_file(_WORKBOOK_PARITY_PATH, "libreoffice-headless")
+    hits = _bare_string_literals_in_file(_WORKBOOK_PARITY_PATH, "libreoffice-headless", source_tree_ast)
     # Two occurrences are structural: the Literal type alias definition and
     # the _ENGINE_LIBREOFFICE assignment.  Both are on module-level definition
     # lines, not callsites.  We allow at most those two.
@@ -145,9 +155,9 @@ def test_workbook_kind_is_strenum_with_all_members() -> None:
     )
 
 
-def test_workbook_kind_enum_members_in_ast() -> None:
+def test_workbook_kind_enum_members_in_ast(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """All six WorkbookKind values must appear as class-body assignments in source."""
-    enrolled = _workbook_kind_enum_members(_WORKBOOK_PARITY_TYPES_PATH)
+    enrolled = _workbook_kind_enum_members(_WORKBOOK_PARITY_TYPES_PATH, source_tree_ast)
     missing = _WORKBOOK_KIND_MEMBERS - enrolled
     assert not missing, (
         f"WorkbookKind class body in {_WORKBOOK_PARITY_TYPES_PATH.name} "

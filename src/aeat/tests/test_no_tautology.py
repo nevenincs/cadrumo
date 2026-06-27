@@ -30,28 +30,11 @@ from pathlib import Path
 import pytest
 
 from ..core.logging import get_logger
+from ._inventory import ast_for_path, discover_test_modules, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _logger = get_logger(__name__)
-
-_SRC_AEAT = Path(__file__).resolve().parent.parent
-_REPO_ROOT = _SRC_AEAT.parents[1]  # chore-476-restructure-execution
-_FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
-
-
-def _discover_test_modules() -> list[Path]:
-    globs = ("**/test_*.py", "**/_test_*.py")
-    collected: set[Path] = set()
-    for glob in globs:
-        for path in _SRC_AEAT.glob(glob):
-            if path.name == "__init__.py":
-                continue
-            try:
-                path.relative_to(_FIXTURES_DIR)
-            except ValueError:
-                collected.add(path)
-    return sorted(collected)
 
 
 def _is_tautological_assert(node: ast.AST) -> bool:
@@ -111,7 +94,7 @@ def _tautological_sites(
             hits.append((lineno, snippet))
             _logger.warning(
                 "tautological assertion detected: %s:%d %s",
-                str(path.relative_to(_REPO_ROOT)).replace("\\", "/"),
+                repo_relative(path),
                 lineno,
                 snippet,
             )
@@ -128,20 +111,14 @@ def test_no_tautological_assertions(source_tree_ast: Mapping[Path, ast.AST]) -> 
     time) fall back to a per-test ``ast.parse`` so the ratchet remains
     truthful for malformed files.
     """
-    modules = _discover_test_modules()
+    modules = discover_test_modules()
     violations: list[str] = []
 
     for module_path in modules:
-        relative = str(module_path.relative_to(_REPO_ROOT)).replace("\\", "/")
-        tree = source_tree_ast.get(module_path)
+        relative = repo_relative(module_path)
+        tree = ast_for_path(module_path, source_tree_ast)
         if tree is None:
-            try:
-                tree = ast.parse(
-                    module_path.read_text(encoding="utf-8"),
-                    filename=str(module_path),
-                )
-            except (OSError, SyntaxError):
-                continue
+            continue
         for lineno, snippet in _tautological_sites(module_path, tree):
             violations.append(f"{relative}:{lineno}: {snippet}")
 
@@ -185,5 +162,5 @@ def test_detection_is_non_trivial() -> None:
 
 def test_discovery_found_modules() -> None:
     """Guardrail: the discovery walk must find at least one test module."""
-    modules = _discover_test_modules()
+    modules = discover_test_modules()
     assert modules, "No test modules discovered — check glob roots."

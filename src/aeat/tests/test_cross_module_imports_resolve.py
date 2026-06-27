@@ -26,22 +26,14 @@ from __future__ import annotations
 
 import ast
 import importlib
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
 
+from ._inventory import SRC_AEAT, package_ast_items
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-SRC_AEAT = Path(__file__).resolve().parents[1]
-
-
-def _python_sources() -> Iterator[Path]:
-    """Yield every committed `.py` file under ``src/aeat/`` excluding caches."""
-    for path in SRC_AEAT.rglob("*.py"):
-        if "__pycache__" in path.parts:
-            continue
-        yield path
 
 
 def _is_type_checking_block(node: ast.AST) -> bool:
@@ -107,7 +99,7 @@ def _walk_import_from(tree: ast.AST) -> Iterator[ast.ImportFrom]:
             yield node
 
 
-def _collect_import_pairs() -> list[tuple[Path, str, str]]:
+def _collect_import_pairs(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> list[tuple[Path, str, str]]:
     """Walk every aeat source and yield ``(source_file, module, name)`` import triples.
 
     Only ``from aeat.X import Y`` (absolute) and relative imports
@@ -116,13 +108,7 @@ def _collect_import_pairs() -> list[tuple[Path, str, str]]:
     no-wildcard hygiene is a separate concern.
     """
     triples: list[tuple[Path, str, str]] = []
-    for source in _python_sources():
-        try:
-            tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
-        except SyntaxError:
-            # A pre-existing syntax error in the worktree is a separate
-            # diagnostic surface; let other gates report it.
-            continue
+    for source, tree in package_ast_items(source_tree_ast, include_data=True):
         for node in _walk_import_from(tree):
             resolved = _resolve_relative_module(source, node.level, node.module) if node.level > 0 else node.module
             if not resolved or not resolved.startswith("aeat"):
@@ -132,9 +118,6 @@ def _collect_import_pairs() -> list[tuple[Path, str, str]]:
                     continue
                 triples.append((source, resolved, alias.name))
     return triples
-
-
-_IMPORT_TRIPLES: list[tuple[Path, str, str]] = _collect_import_pairs()
 
 
 # Committed-baseline allow-list of broken cross-module imports the gate
@@ -147,6 +130,12 @@ _IMPORT_TRIPLES: list[tuple[Path, str, str]] = _collect_import_pairs()
 # entries as the underlying breakage is fixed; the gate is fully green
 # once this set is empty.
 _BASELINE_BROKEN_IMPORTS: frozenset[tuple[str, str, str]] = frozenset(set())
+
+
+@pytest.fixture(scope="module")
+def aeat_import_triples(source_tree_ast: Mapping[Path, ast.AST]) -> list[tuple[Path, str, str]]:
+    """Collect import triples once per module from the shared source AST cache."""
+    return _collect_import_pairs(source_tree_ast)
 
 
 def _check_triple(triple: tuple[Path, str, str]) -> str | None:
@@ -180,7 +169,9 @@ def _check_triple(triple: tuple[Path, str, str]) -> str | None:
     return f"{source.relative_to(SRC_AEAT.parent).as_posix()}::{module}::{name}"
 
 
-def test_aeat_cross_module_imports_resolve_against_baseline() -> None:
+def test_aeat_cross_module_imports_resolve_against_baseline(
+    aeat_import_triples: list[tuple[Path, str, str]],
+) -> None:
     """Every ``from aeat.X import Y`` triple resolves, modulo the committed baseline.
 
     Walks every parsed import triple, classifies it as resolvable or
@@ -197,7 +188,7 @@ def test_aeat_cross_module_imports_resolve_against_baseline() -> None:
     broken consumer is encountered.
     """
     live_breakage: set[tuple[str, str, str]] = set()
-    for triple in _IMPORT_TRIPLES:
+    for triple in aeat_import_triples:
         source, module, name = triple
         if _check_triple(triple) is None:
             continue
@@ -219,15 +210,17 @@ def test_aeat_cross_module_imports_resolve_against_baseline() -> None:
     assert not failure_lines, "\n" + "\n".join(failure_lines)
 
 
-def test_at_least_one_aeat_cross_module_import_was_collected() -> None:
+def test_at_least_one_aeat_cross_module_import_was_collected(
+    aeat_import_triples: list[tuple[Path, str, str]],
+) -> None:
     """Sanity: the AST walk found import triples to validate.
 
     Guards against a future refactor that silently breaks the source
     discovery (e.g. renaming ``src/aeat`` or changing the package
     layout) and turns the gate into a zero-row no-op.
     """
-    assert len(_IMPORT_TRIPLES) > 100, (
-        f"Cross-module import scan found only {len(_IMPORT_TRIPLES)} import triples — "
+    assert len(aeat_import_triples) > 100, (
+        f"Cross-module import scan found only {len(aeat_import_triples)} import triples — "
         f"the source-tree walk probably broke. Expected hundreds of "
         f"``from aeat.X import Y`` statements across the package."
     )
@@ -254,7 +247,7 @@ _INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
 }
 
 
-def _collect_init_missing_from_all() -> list[tuple[str, str]]:
+def _collect_init_missing_from_all(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> list[tuple[str, str]]:
     """For each ``__init__.py`` under src/aeat/, return public-import names absent from ``__all__``.
 
     The contract: any name (a) imported into the package's
@@ -265,12 +258,8 @@ def _collect_init_missing_from_all() -> list[tuple[str, str]]:
     files without ``__all__`` are exempt (nothing to drift against).
     """
     findings: list[tuple[str, str]] = []
-    for source in _python_sources():
+    for source, tree in package_ast_items(source_tree_ast, include_data=True):
         if source.name != "__init__.py":
-            continue
-        try:
-            tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
-        except SyntaxError:
             continue
         all_names = _extract_all_assignment(tree)
         if all_names is None:
@@ -324,7 +313,7 @@ def _extract_all_assignment(tree: ast.AST) -> set[str] | None:
     return None
 
 
-def test_init_public_imports_appear_in_all_against_baseline() -> None:
+def test_init_public_imports_appear_in_all_against_baseline(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Every public name imported into an ``__init__.py`` from a sibling must be in ``__all__``.
 
     Catches the half-export pattern: a package imports a public name
@@ -344,7 +333,7 @@ def test_init_public_imports_appear_in_all_against_baseline() -> None:
     a file's count cannot grow without the gate failing, and any
     shrink must be locked in by trimming the cap.
     """
-    live_findings = _collect_init_missing_from_all()
+    live_findings = _collect_init_missing_from_all(source_tree_ast)
     live_counts: dict[str, int] = {}
     for path, _name in live_findings:
         live_counts[path] = live_counts.get(path, 0) + 1

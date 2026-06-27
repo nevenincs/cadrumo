@@ -65,6 +65,7 @@ from ._action_errors import (
 from ._binding_resolution import (
     resolve_available_bound_inputs_by_casilla_id,
 )
+from ._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from ._calculation_helpers import (
     build_typed_observations as _build_typed_observations,
 )
@@ -83,16 +84,10 @@ from ._calculation_resolution import (
 from ._calculation_resolution import (
     resolve_calculation_inputs as _resolve_calculation_inputs,
 )
-from ._official_box_advisory import collect_official_box_unpopulated_diagnostics
-from ._prior_payment_advisory import (
-    collect_prior_payment_minoracion_not_captured_diagnostics,
-    collect_prior_payment_not_deducted_diagnostics,
-)
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._registry_resources import authority_via_resources as _authority_via_resources
 from ._registry_resources import registry_root as _registry_root
 from ._revision_persistence import persist_calculation_revision
-from ._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import RegistrySnapshot
@@ -913,9 +908,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     # caller-override carve-out above).
     caller_binding_ids = frozenset((binding_values or {}).keys())
     unresolved_binding_ids = tuple(
-        binding_id
-        for binding_id in source_resolution.unresolved_binding_ids
-        if binding_id not in caller_binding_ids
+        binding_id for binding_id in source_resolution.unresolved_binding_ids if binding_id not in caller_binding_ids
     )
     source_diagnostics = tuple(
         diagnostic
@@ -947,58 +940,14 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         detail_rows=detail_rows,
         clock=clock,
     )
-    # Stage 1 advisory (no-silent-under-declaration): a ledger-driven calculate
-    # folds cuota into the semantic aggregate layer while the official
-    # Diseño-de-Registros numbered boxes (manual, the cells the human transcribes
-    # to the AEAT sede) stay zero. Surface that contradiction as a non-blocking
-    # advisory, reusing the revision's ADVISORY implies_any_nonzero predicates as
-    # the single total→constituent mapping so it cannot drift from the verify gate.
-    official_box_diagnostics = collect_official_box_unpopulated_diagnostics(
+    advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         snapshot.revision,
         revision.casilla_values,
-    )
-    source_diagnostics = source_diagnostics + official_box_diagnostics
-    # Stage 1 advisory (no-silent-under-declaration): Modelo 130 is cumulative
-    # from the start of the ejercicio, but casilla 05 ("Pagos fraccionados
-    # anteriores") is a manual cell with no binding — a cumulative 2T/3T/4T
-    # calculate never auto-deducts the prior trimestre's pago fraccionado, so the
-    # operator over-pays (RD 439/2007 art. 110; casilla 07 = 04 - 05 - 06). The
-    # advisory fires only when a prior-trimestre M130 filing for the same
-    # ejercicio actually exists in the catalogue, so a true first-obligation
-    # filer (whose casilla 05 is legitimately null) stays silent.
-    from ..calculations import CalculationObservationRepository
-
-    prior_payment_observation_repository = CalculationObservationRepository()
-    prior_payment_diagnostics = collect_prior_payment_not_deducted_diagnostics(
-        revision.casilla_values,
         modelo=work_unit.modelo,
         period_token=work_unit.period.registry_token,
         filing_year=work_unit.filing_year,
-        observation_repository=prior_payment_observation_repository,
     )
-    source_diagnostics = source_diagnostics + prior_payment_diagnostics
-    # Stage-2 honesty (no-silent-under-declaration): once casilla 05 is a bound
-    # carry, a prior filing that carries casilla 07 but no casilla-16 entry is
-    # "not captured" - the carry treats the absent minoración as zero, so surface
-    # the gap rather than silently dropping it (ADR
-    # 2026-06-13-modelo-130-pagos-fraccionados-carry, casilla-16
-    # filed-zero-vs-not-captured).
-    minoracion_diagnostics = collect_prior_payment_minoracion_not_captured_diagnostics(
-        modelo=work_unit.modelo,
-        period_token=work_unit.period.registry_token,
-        filing_year=work_unit.filing_year,
-        observation_repository=prior_payment_observation_repository,
-    )
-    source_diagnostics = source_diagnostics + minoracion_diagnostics
-    # Stage-1 structural advisory (no-silent-under-declaration / #24-A): a
-    # settlement-bearing revision whose terminal liquidación casilla is a manual
-    # input (not computed) populates the inputs but never computes the final
-    # liquidación on this revision -- M100 2020-2023 (manual cuota resultante) is
-    # the live case. The STRUCTURAL complement to the value-level implies_nonzero
-    # settlement predicate the verify gate runs when the settlement IS computed
-    # (#24-B / #38); grounded in the loaded casilla input_kind, not the numbers.
-    settlement_diagnostics = collect_settlement_not_computed_diagnostics(snapshot.revision)
-    source_diagnostics = source_diagnostics + settlement_diagnostics
+    source_diagnostics = source_diagnostics + advisory_diagnostics
     return BucketAggregationCalculationResult(
         revision=revision,
         source_diagnostics=source_diagnostics,

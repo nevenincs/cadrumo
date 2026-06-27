@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 from typing import NamedTuple
 
 import pytest
 
+from .....tests._inventory import ast_for_path, package_python_files, repo_relative
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 class _Violation(NamedTuple):
-    path: Path
+    path: str
     line: int
     constructor: str
 
@@ -68,14 +71,15 @@ _INJECTION_KEYWORDS: frozenset[str] = frozenset(
 )
 
 
-def test_ephemeral_master_key_tests_isolate_default_secure_object_repository() -> None:
+def test_ephemeral_master_key_tests_isolate_default_secure_object_repository(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
     """Ephemeral keys must not write through the process-default SQL repository."""
 
-    root = _repo_root()
     violations: list[_Violation] = []
-    for path in _iter_test_modules(root / "src" / "aeat"):
-        source = path.read_text(encoding="utf-8")
-        tree = ast.parse(source, filename=str(path))
+    for path in _iter_test_modules():
+        tree = ast_for_path(path, source_tree_ast)
+        assert tree is not None, f"{repo_relative(path)} must be parseable"
         if not _uses_ephemeral_master_key(tree):
             continue
         risky_calls = _default_sql_backed_constructor_calls(tree)
@@ -83,7 +87,7 @@ def test_ephemeral_master_key_tests_isolate_default_secure_object_repository() -
             continue
         if _has_autouse_temp_database_isolation(tree):
             continue
-        relative_path = path.relative_to(root)
+        relative_path = repo_relative(path)
         violations.extend(_Violation(relative_path, line, constructor) for line, constructor in risky_calls)
 
     assert not violations, "\n".join(
@@ -95,16 +99,16 @@ def test_ephemeral_master_key_tests_isolate_default_secure_object_repository() -
     )
 
 
-def test_database_operating_passphrases_use_core_test_setting() -> None:
+def test_database_operating_passphrases_use_core_test_setting(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Database-backed tests must not carry local master-key passphrase literals."""
 
-    root = _repo_root()
     violations: list[str] = []
-    for path in _iter_test_modules(root / "src" / "aeat"):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    for path in _iter_test_modules():
+        tree = ast_for_path(path, source_tree_ast)
+        assert tree is not None, f"{repo_relative(path)} must be parseable"
         if not _operates_database_storage(tree):
             continue
-        relative_path = path.relative_to(root).as_posix()
+        relative_path = repo_relative(path)
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
                 continue
@@ -124,21 +128,12 @@ def test_database_operating_passphrases_use_core_test_setting() -> None:
     )
 
 
-def _repo_root() -> Path:
-    for parent in Path(__file__).resolve().parents:
-        if (parent / "pyproject.toml").exists():
-            return parent
-    msg = "could not locate repository root"
-    raise AssertionError(msg)
-
-
-def _iter_test_modules(root: Path) -> tuple[Path, ...]:
-    paths = {
-        *root.rglob("test_*.py"),
-        *root.rglob("*_test.py"),
-        *root.rglob("conftest.py"),
-    }
-    return tuple(sorted(path for path in paths if ".venv" not in path.parts))
+def _iter_test_modules() -> tuple[Path, ...]:
+    return tuple(
+        path
+        for path in package_python_files(include_data=True)
+        if path.name.startswith("test_") or path.name.endswith("_test.py") or path.name == "conftest.py"
+    )
 
 
 def _uses_ephemeral_master_key(tree: ast.AST) -> bool:

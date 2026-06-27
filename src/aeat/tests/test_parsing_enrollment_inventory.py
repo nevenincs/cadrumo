@@ -19,14 +19,16 @@ Exclusions
 from __future__ import annotations
 
 import ast
-import pathlib
 from collections.abc import Iterator, Mapping
+from pathlib import Path
 
 import pytest
 
+from ._inventory import SRC_AEAT, production_ast_items, production_python_files, repo_relative
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent.parent
+_SRC_ROOT = SRC_AEAT
 
 # Canonical modules that are allowed to use these primitives directly.
 _CANONICAL_MODULES: frozenset[str] = frozenset(
@@ -37,9 +39,7 @@ _CANONICAL_MODULES: frozenset[str] = frozenset(
 )
 
 
-def _is_excluded(path: pathlib.Path) -> bool:
-    if path.name.startswith("test_"):
-        return True
+def _is_excluded(path: Path) -> bool:
     # The canonical implementation modules are exempted by definition.
     if path.name in _CANONICAL_MODULES:
         try:
@@ -91,7 +91,7 @@ _INLINE_BOOL_PATTERNS: tuple[str, ...] = (
 )
 
 
-def _inline_bool_violations(path: pathlib.Path, lines: list[str]) -> list[str]:
+def _inline_bool_violations(path: Path, lines: list[str]) -> list[str]:
     """Return ``file:line`` strings for inline bool-parsing patterns."""
     hits: list[str] = []
     for lineno, line in enumerate(lines, start=1):
@@ -100,8 +100,7 @@ def _inline_bool_violations(path: pathlib.Path, lines: list[str]) -> list[str]:
             continue
         for pattern in _INLINE_BOOL_PATTERNS:
             if pattern in line:
-                rel = path.relative_to(_SRC_ROOT.parent.parent)
-                hits.append(f"{rel}:{lineno}")
+                hits.append(f"{repo_relative(path)}:{lineno}")
                 break
     return hits
 
@@ -112,7 +111,7 @@ def _inline_bool_violations(path: pathlib.Path, lines: list[str]) -> list[str]:
 
 
 def _collect_fromisoformat_violations(
-    source_tree_ast: Mapping[pathlib.Path, ast.AST] | None = None,
+    source_tree_ast: Mapping[Path, ast.AST] | None = None,
 ) -> list[str]:
     """Return ``file:line`` strings for bare ``date.fromisoformat()`` calls.
 
@@ -122,37 +121,17 @@ def _collect_fromisoformat_violations(
     callers.
     """
     violations: list[str] = []
-    if source_tree_ast is None:
-        for path in sorted(_SRC_ROOT.rglob("*.py")):
-            if _is_excluded(path):
-                continue
-            source = path.read_text(encoding="utf-8", errors="replace")
-            try:
-                tree = ast.parse(source, filename=str(path))
-            except SyntaxError:
-                continue
-            for lineno in _fromisoformat_call_linenos(tree):
-                rel = path.relative_to(_SRC_ROOT.parent.parent)
-                violations.append(f"{rel}:{lineno}")
-        return violations
-
-    for path in sorted(source_tree_ast):
+    for path, tree in production_ast_items(source_tree_ast):
         if _is_excluded(path):
             continue
-        try:
-            path.relative_to(_SRC_ROOT)
-        except ValueError:
-            continue
-        tree = source_tree_ast[path]
         for lineno in _fromisoformat_call_linenos(tree):
-            rel = path.relative_to(_SRC_ROOT.parent.parent)
-            violations.append(f"{rel}:{lineno}")
+            violations.append(f"{repo_relative(path)}:{lineno}")
     return violations
 
 
 def _collect_inline_bool_violations() -> list[str]:
     violations: list[str] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
+    for path in production_python_files():
         if _is_excluded(path):
             continue
         source = path.read_text(encoding="utf-8", errors="replace")
@@ -167,7 +146,7 @@ def _collect_inline_bool_violations() -> list[str]:
 
 
 def test_no_bare_date_fromisoformat(
-    source_tree_ast: Mapping[pathlib.Path, ast.AST],
+    source_tree_ast: Mapping[Path, ast.AST],
 ) -> None:
     """Zero ``date.fromisoformat(`` calls survive in production modules.
 

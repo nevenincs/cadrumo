@@ -21,8 +21,6 @@ Covers:
 from __future__ import annotations
 
 import logging
-import stat
-import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -372,7 +370,6 @@ class TestSinkEmitFailureWarningIsScrubbed:
             module="aeat.core.observability.test_sink",
         )
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="chmod write-protection unreliable for non-admin on Windows")
     def test_emit_failure_warning_scrubs_sensitive_exc_text(
         self,
         tmp_path: Path,
@@ -380,21 +377,15 @@ class TestSinkEmitFailureWarningIsScrubbed:
     ) -> None:
         """Force a write error, confirm the warning's exc_text is scrubbed.
 
-        Embeds a bearer token in the exception chain by monkey-patching the
-        target file's permissions to trigger an OSError whose message would
-        carry a token-shaped fragment, then verifies the captured WARNING
-        record has had its exc_text processed (no raw ``Bearer`` token).
+        Makes the target JSONL path a directory so the real file open fails
+        on every platform, then verifies the captured WARNING routes through
+        the module logger with the secret-scrubbing filter attached.
         """
         run_id = "0123456789abcdef"
         target = tmp_path / run_id / "events.jsonl"
-        target.parent.mkdir(parents=True)
-        # Write once to create the file, then lock it against further writes.
-        target.write_text("", encoding="utf-8")
-        target.chmod(stat.S_IREAD)
+        target.mkdir(parents=True)
 
         sink = JsonlRunSink(target, run_id=run_id)
-        # Pre-open the handle — the lazy open will succeed (file exists and
-        # is readable); the subsequent write will raise PermissionError.
         try:
             record = logging.LogRecord(
                 name="aeat.test",
@@ -410,7 +401,6 @@ class TestSinkEmitFailureWarningIsScrubbed:
             with caplog.at_level(logging.WARNING, logger="aeat.core.observability._sink"):
                 sink.emit(record)
         finally:
-            target.chmod(stat.S_IREAD | stat.S_IWRITE)
             sink.close()
 
         warning_records = [r for r in caplog.records if r.levelno == logging.WARNING]
@@ -435,49 +425,3 @@ class TestSinkEmitFailureWarningIsScrubbed:
         assert any(isinstance(f, SecretScrubbingFilter) for f in sink_logger.filters), (
             "the logger used by _sink must carry SecretScrubbingFilter"
         )
-
-    def test_emit_failure_on_read_only_target_directory(
-        self,
-        tmp_path: Path,
-        caplog: pytest.LogCaptureFixture,
-    ) -> None:
-        """Sink emitting to a path where the JSONL is a directory raises OSError.
-
-        This is the cross-platform variant: making the target path a directory
-        causes open("a") to raise IsADirectoryError / PermissionError on every
-        OS.  The WARNING produced must come from
-        ``aeat.core.observability._sink`` — confirming the module-level logger
-        is wired correctly.
-        """
-        run_id = "fedcba9876543210"
-        # Make the target path itself a directory so open() in append mode
-        # raises an error on all platforms (IsADirectoryError on POSIX,
-        # PermissionError on Windows).
-        target = tmp_path / run_id / "events.jsonl"
-        target.mkdir(parents=True)
-
-        sink = JsonlRunSink.__new__(JsonlRunSink)
-        logging.Handler.__init__(sink, level=logging.DEBUG)
-        sink._target = target
-        sink._run_id = run_id
-        sink._handle = None
-        sink._lock = __import__("threading").Lock()
-
-        record = logging.LogRecord(
-            name="aeat.test",
-            level=logging.INFO,
-            pathname=__file__,
-            lineno=0,
-            msg="run event",
-            args=None,
-            exc_info=None,
-        )
-        record.run_event = self._event(run_id)
-
-        with caplog.at_level(logging.WARNING, logger="aeat.core.observability._sink"):
-            sink.emit(record)
-
-        warning_records = [r for r in caplog.records if r.levelno == logging.WARNING]
-        assert warning_records, "sink must emit a WARNING when _open() fails"
-        assert warning_records[0].name == "aeat.core.observability._sink"
-        assert "jsonl run sink emit failed" in warning_records[0].getMessage()

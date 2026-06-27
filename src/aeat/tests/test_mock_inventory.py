@@ -30,14 +30,11 @@ from pathlib import Path
 import pytest
 
 from ..core.logging import get_logger
+from ._inventory import ast_for_path, discover_test_modules, repo_path, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _logger = get_logger(__name__)
-
-_SRC_AEAT = Path(__file__).resolve().parent.parent
-_REPO_ROOT = _SRC_AEAT.parents[1]  # chore-476-restructure-execution
-_FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
 
 # Documented boundary-mock sites.
 # Format: (repo-relative path, module imported).
@@ -48,38 +45,10 @@ _DOCUMENTED_BOUNDARY_MOCKS: frozenset[tuple[str, str]] = frozenset()
 _FORBIDDEN_TEST_CONTROL_IMPORTS = ("unittest.mock", "unittest", "mock", "pytest_mock")
 
 
-def _discover_test_modules() -> list[Path]:
-    globs = ("**/test_*.py", "**/_test_*.py")
-    collected: set[Path] = set()
-    for glob in globs:
-        for path in _SRC_AEAT.glob(glob):
-            if path.name == "__init__.py":
-                continue
-            try:
-                path.relative_to(_FIXTURES_DIR)
-            except ValueError:
-                collected.add(path)
-    return sorted(collected)
-
-
 def _forbidden_test_control_imports(
-    path: Path,
-    tree: ast.AST | None = None,
+    tree: ast.AST,
 ) -> list[tuple[int, str]]:
-    """Return ``(lineno, module)`` for every banned test-control import in *path*.
-
-    When *tree* is supplied (test-loop path), reuse the cached AST. When
-    omitted (single-file callers such as
-    ``test_documented_boundary_mocks_still_present``), fall back to a
-    per-call parse so the helper signature stays single-path compatible.
-    """
-    if tree is None:
-        source = path.read_text(encoding="utf-8")
-        try:
-            tree = ast.parse(source, filename=str(path))
-        except SyntaxError:
-            return []
-
+    """Return ``(lineno, module)`` for every banned test-control import in *tree*."""
     hits: list[tuple[int, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -114,13 +83,15 @@ def test_mock_imports_are_documented(
     Consumes the session-scoped AST cache; falls back to per-file parse
     for modules absent from the cache (e.g. unparseable files).
     """
-    modules = _discover_test_modules()
+    modules = discover_test_modules()
     violations: list[str] = []
 
     for module_path in modules:
-        relative = str(module_path.relative_to(_REPO_ROOT)).replace("\\", "/")
-        tree = source_tree_ast.get(module_path)
-        for lineno, mock_module in _forbidden_test_control_imports(module_path, tree):
+        relative = repo_relative(module_path)
+        tree = ast_for_path(module_path, source_tree_ast)
+        if tree is None:
+            continue
+        for lineno, mock_module in _forbidden_test_control_imports(tree):
             key = (relative, mock_module)
             if key in _DOCUMENTED_BOUNDARY_MOCKS:
                 _logger.debug(
@@ -141,9 +112,10 @@ def test_mock_imports_are_documented(
 def test_documented_boundary_mocks_still_present() -> None:
     """Every entry in _DOCUMENTED_BOUNDARY_MOCKS must still appear in source."""
     for rel_path, mock_module in _DOCUMENTED_BOUNDARY_MOCKS:
-        path = _REPO_ROOT / rel_path
+        path = repo_path(rel_path)
         assert path.exists(), f"Documented mock references non-existent file: {rel_path}"
-        found = _forbidden_test_control_imports(path)
+        tree = ast_for_path(path)
+        found = _forbidden_test_control_imports(tree) if tree is not None else []
         found_modules = {m for _, m in found}
         assert mock_module in found_modules, (
             f"Documented mock ({rel_path}, {mock_module!r}) is stale — "
@@ -153,5 +125,5 @@ def test_documented_boundary_mocks_still_present() -> None:
 
 def test_discovery_found_modules() -> None:
     """Guardrail: the discovery walk must find at least one test module."""
-    modules = _discover_test_modules()
+    modules = discover_test_modules()
     assert modules, "No test modules discovered — check glob roots."

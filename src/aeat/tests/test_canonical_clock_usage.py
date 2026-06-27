@@ -27,16 +27,18 @@ the caller passes nothing.
 
 from __future__ import annotations
 
-import pathlib
 import re
+from pathlib import Path
 
 import pytest
 
+from ._inventory import SRC_AEAT, production_python_files, repo_relative
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent.parent
+_SRC_ROOT = SRC_AEAT
 _CLOCK_MODULE = _SRC_ROOT / "core" / "time" / "_clock.py"
-_TEST_INFRA_MODULES: frozenset[pathlib.Path] = frozenset(
+_TEST_INFRA_MODULES: frozenset[Path] = frozenset(
     {
         _SRC_ROOT / "adapters" / "persistence" / "storage" / "envelope" / "_repository_test_suite.py",
         _SRC_ROOT / "tests" / "secure_sql.py",
@@ -51,9 +53,7 @@ _VIOLATION_PATTERNS: tuple[str, ...] = (
 )
 
 
-def _is_excluded(path: pathlib.Path) -> bool:
-    if path.name.startswith("test_") or "tests" in path.parts:
-        return True
+def _is_excluded(path: Path) -> bool:
     if path in _TEST_INFRA_MODULES:
         return True
     try:
@@ -65,9 +65,8 @@ def _is_excluded(path: pathlib.Path) -> bool:
 
 def _collect_violations() -> list[str]:
     """Return repo-relative ``path:lineno`` strings for every inline clock call."""
-    repo_root = _SRC_ROOT.parent.parent
     violations: list[str] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
+    for path in production_python_files():
         if _is_excluded(path):
             continue
         try:
@@ -89,8 +88,7 @@ def _collect_violations() -> list[str]:
                     pre = code_part[:pattern_idx].rstrip()
                     if pre and pre[-1] in ('"', "'", "`"):
                         continue
-                rel = path.relative_to(repo_root).as_posix()
-                violations.append(f"{rel}:{lineno}")
+                violations.append(f"{repo_relative(path)}:{lineno}")
                 break
     return violations
 

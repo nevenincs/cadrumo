@@ -3,41 +3,45 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
 from typing import override
 
 import pytest
 
-from .....core.external_constants import UTF_8_ENCODING
+from .....tests._inventory import (
+    SRC_AEAT,
+    ast_for_path,
+    non_test_package_python_files,
+    non_test_python_files_under,
+    repo_relative,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_ROOT = Path(__file__).resolve().parents[6]
 _SENSITIVE_SURFACES = (
-    _ROOT / "src" / "aeat" / "application" / "review",
-    _ROOT / "src" / "aeat" / "application" / "workflow" / "_persistence.py",
-    _ROOT / "src" / "aeat" / "application" / "auth",
-    _ROOT / "src" / "aeat" / "application" / "setup",
-    _ROOT / "src" / "aeat" / "application" / "filing" / "_history_repository.py",
-    _ROOT / "src" / "aeat" / "application" / "workflow" / "_persistence.py",
-    _ROOT / "src" / "aeat" / "domain" / "filing" / "_repository.py",
-    _ROOT / "src" / "aeat" / "domain" / "filing" / "_complementaria_repository.py",
-    _ROOT / "src" / "aeat" / "domain" / "attachments" / "_repository.py",
-    _ROOT / "src" / "aeat" / "domain" / "invoices",
-    _ROOT / "src" / "aeat" / "domain" / "justificante" / "_repository.py",
-    _ROOT / "src" / "aeat" / "domain" / "submission" / "_repository.py",
-    _ROOT / "src" / "aeat" / "domain" / "transactions",
-    _ROOT / "src" / "aeat" / "domain" / "usage_ratios" / "_service.py",
-    _ROOT / "src" / "aeat" / "adapters" / "persistence" / "profile",
-    _ROOT / "src" / "aeat" / "adapters" / "outbound" / "aeat" / "auth",
-    _ROOT / "src" / "aeat" / "adapters" / "outbound" / "aeat" / "sede" / "_observation_store.py",
-    _ROOT / "src" / "aeat" / "adapters" / "outbound" / "google",
-    _ROOT / "src" / "aeat" / "adapters" / "outbound" / "llm",
-    _ROOT / "src" / "aeat" / "entrypoints" / "cli" / "oauth.py",
-    _ROOT / "src" / "aeat" / "entrypoints" / "cli" / "_ledger.py",
+    SRC_AEAT / "application" / "review",
+    SRC_AEAT / "application" / "workflow" / "_persistence.py",
+    SRC_AEAT / "application" / "auth",
+    SRC_AEAT / "application" / "setup",
+    SRC_AEAT / "application" / "filing" / "_history_repository.py",
+    SRC_AEAT / "domain" / "filing" / "_repository.py",
+    SRC_AEAT / "domain" / "filing" / "_complementaria_repository.py",
+    SRC_AEAT / "domain" / "attachments" / "_repository.py",
+    SRC_AEAT / "domain" / "invoices",
+    SRC_AEAT / "domain" / "justificante" / "_repository.py",
+    SRC_AEAT / "domain" / "submission" / "_repository.py",
+    SRC_AEAT / "domain" / "transactions",
+    SRC_AEAT / "domain" / "usage_ratios" / "_service.py",
+    SRC_AEAT / "adapters" / "persistence" / "profile",
+    SRC_AEAT / "adapters" / "outbound" / "aeat" / "auth",
+    SRC_AEAT / "adapters" / "outbound" / "aeat" / "sede" / "_observation_store.py",
+    SRC_AEAT / "adapters" / "outbound" / "google",
+    SRC_AEAT / "adapters" / "outbound" / "llm",
+    SRC_AEAT / "entrypoints" / "cli" / "oauth.py",
+    SRC_AEAT / "entrypoints" / "cli" / "_ledger.py",
 )
-_PRODUCTION_ROOT = _ROOT / "src" / "aeat"
 _FORBIDDEN_CALLS = {
     "write_text",
     "write_bytes",
@@ -283,21 +287,11 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
 
 
 def _iter_python_files(path: Path) -> list[Path]:
-    if path.is_file():
-        return [path]
-    return sorted(
-        candidate
-        for candidate in path.rglob("*.py")
-        if not (candidate.name.startswith("test_") or candidate.name.startswith("_test_") or "tests" in candidate.parts)
-    )
+    return list(non_test_python_files_under(path, include_data=True))
 
 
 def _iter_production_python_files() -> list[Path]:
-    return sorted(
-        candidate
-        for candidate in _PRODUCTION_ROOT.rglob("*.py")
-        if not (candidate.name.startswith("test_") or candidate.name.startswith("_test_") or "tests" in candidate.parts)
-    )
+    return list(non_test_package_python_files(include_data=True))
 
 
 def _call_name(node: ast.Call) -> str | None:
@@ -375,7 +369,7 @@ class _FileWriteVisitor(ast.NodeVisitor):
         ):
             self.calls.append(
                 (
-                    self.path.relative_to(_ROOT).as_posix(),
+                    repo_relative(self.path),
                     self.function_stack[-1] if self.function_stack else "<module>",
                     dotted or name or "<unknown>",
                 ),
@@ -385,7 +379,8 @@ class _FileWriteVisitor(ast.NodeVisitor):
 
 @cache
 def _function_spans(path: Path) -> tuple[tuple[int, int, str], ...]:
-    tree = ast.parse(path.read_text(encoding=UTF_8_ENCODING), filename=str(path))
+    tree = ast_for_path(path)
+    assert tree is not None, f"{repo_relative(path)} must be parseable"
     spans: list[tuple[int, int, str]] = []
     for node in ast.walk(tree):
         if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
@@ -405,22 +400,25 @@ def _function_for_line(path: Path, line_number: int) -> str:
     return best_name
 
 
-def test_sensitive_financial_surfaces_do_not_bypass_secure_object_backend() -> None:
+def test_sensitive_financial_surfaces_do_not_bypass_secure_object_backend(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
     """Financial/tax state must not write plaintext or file-envelope payloads directly."""
 
     violations: list[str] = []
     for surface in _SENSITIVE_SURFACES:
         for path in _iter_python_files(surface):
-            violations.extend(_sensitive_surface_violations(path))
+            violations.extend(_sensitive_surface_violations(path, source_tree_ast))
     assert violations == []
 
 
-def _sensitive_surface_violations(path: Path) -> list[str]:
+def _sensitive_surface_violations(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> list[str]:
     """Return every forbidden-text + forbidden-call offence in one source file."""
-    text = path.read_text(encoding=UTF_8_ENCODING)
-    relative = path.relative_to(_ROOT).as_posix()
+    text = path.read_text(encoding="utf-8")
+    relative = repo_relative(path)
     violations = [f"{relative}: contains {token!r}" for token in _FORBIDDEN_TEXT if token in text]
-    tree = ast.parse(text, filename=str(path))
+    tree = ast_for_path(path, source_tree_ast)
+    assert tree is not None, f"{relative} must be parseable"
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
             violations.extend(_sensitive_call_violations(node, path=path, relative=relative))
@@ -441,12 +439,13 @@ def _sensitive_call_violations(node: ast.Call, *, path: Path, relative: str) -> 
     return offences
 
 
-def test_production_file_write_inventory_is_reviewed() -> None:
+def test_production_file_write_inventory_is_reviewed(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Any new production file writer must be classified before merge."""
 
     observed: set[tuple[str, str, str]] = set()
     for path in _iter_production_python_files():
-        tree = ast.parse(path.read_text(encoding=UTF_8_ENCODING), filename=str(path))
+        tree = ast_for_path(path, source_tree_ast)
+        assert tree is not None, f"{repo_relative(path)} must be parseable"
         visitor = _FileWriteVisitor(path)
         visitor.visit(tree)
         observed.update(visitor.calls)

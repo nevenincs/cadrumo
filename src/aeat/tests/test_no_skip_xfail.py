@@ -5,73 +5,34 @@ and asserts that deterministic modules carry no ``pytest.mark.skip``,
 ``pytest.mark.skipif``, ``pytest.mark.xfail``, ``pytest.skip()``, or
 ``pytest.xfail()`` shortcuts.
 
-Documented legitimate exceptions (environment-conditional guards):
-- ``src/aeat/core/observability/tests/test_sink.py`` — ``@pytest.mark.skipif(
-  sys.platform == "win32", ...)`` guards a file-permission test that requires
-  POSIX chmod semantics; the guard is platform-conditional, not a behaviour
-  mask.
-
-Each exception MUST be accompanied by an inline justification comment in the
-source file.  The exception set is the authoritative inventory; additions
-require a corresponding durable remediation note.
+Live modules may use ``pytest.skip()`` only after carrying the ``aeat_live``
+execution marker; deterministic unit tests have no skip / xfail exception set.
 """
 
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
 from ..core.logging import get_logger
+from ._inventory import ast_for_path, discover_test_modules, qualified_name, repo_path, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _logger = get_logger(__name__)
 
-_SRC_AEAT = Path(__file__).resolve().parents[1]
-_REPO_ROOT = _SRC_AEAT.parents[1]  # chore-476-restructure-execution
-_FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
-
-# Documented exceptions: (relative-to-repo path, marker/call name, justification).
-# Additions here require a follow-up remediation note and inline justification in the
-# source file.
-_DOCUMENTED_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset(
-    {
-        (
-            "src/aeat/core/observability/tests/test_sink.py",
-            "pytest.mark.skipif",
-        ),
-    },
-)
+_DOCUMENTED_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset()
 
 _FORBIDDEN_MARKERS = frozenset({"skip", "skipif", "xfail"})
 _FORBIDDEN_CALLS = frozenset({"pytest.skip", "pytest.xfail"})
 _LIVE_EXECUTION_MARKER = "aeat_live"
 
 
-def _discover_test_modules() -> list[Path]:
-    globs = ("**/test_*.py", "**/_test_*.py")
-    collected: set[Path] = set()
-    for glob in globs:
-        for path in _SRC_AEAT.glob(glob):
-            if path.name == "__init__.py":
-                continue
-            try:
-                path.relative_to(_FIXTURES_DIR)
-            except ValueError:
-                collected.add(path)
-    return sorted(collected)
-
-
-def _forbidden_marker_sites(path: Path) -> list[tuple[int, str]]:
-    """Return ``(lineno, marker_or_call_name)`` for every forbidden shortcut in *path*."""
-    source = path.read_text(encoding="utf-8")
-    try:
-        tree = ast.parse(source, filename=str(path))
-    except SyntaxError:
-        return []
-
+def _forbidden_marker_sites(tree: ast.AST) -> list[tuple[int, str]]:
+    """Return ``(lineno, marker_or_call_name)`` for every forbidden shortcut in *tree*."""
     live_module = _LIVE_EXECUTION_MARKER in _module_execution_markers(tree)
     hits: list[tuple[int, str]] = []
     for node in ast.walk(tree):
@@ -95,7 +56,7 @@ def _forbidden_marker_sites(path: Path) -> list[tuple[int, str]]:
             hits.append((dec.lineno, f"pytest.mark.{attr_chain.attr}"))
 
         if isinstance(node, ast.Call):
-            call_name = _qualified_name(node.func)
+            call_name = qualified_name(node.func)
             if call_name not in _FORBIDDEN_CALLS:
                 continue
             if call_name == "pytest.skip" and live_module:
@@ -115,30 +76,23 @@ def _module_execution_markers(tree: ast.AST) -> set[str]:
             continue
         values: list[ast.expr] = list(node.value.elts) if isinstance(node.value, ast.List | ast.Tuple) else [node.value]
         for value in values:
-            name = _qualified_name(value)
+            name = qualified_name(value)
             if name.startswith("pytest.mark."):
                 markers.add(name.removeprefix("pytest.mark."))
     return markers
 
 
-def _qualified_name(node: ast.AST) -> str:
-    """Return a dotted qualified name for simple AST name/attribute chains."""
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        parent = _qualified_name(node.value)
-        return f"{parent}.{node.attr}" if parent else node.attr
-    return ""
-
-
-def test_no_skip_or_xfail_shortcuts() -> None:
+def test_no_skip_or_xfail_shortcuts(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Deterministic production test modules must not use skip / xfail shortcuts."""
-    modules = _discover_test_modules()
+    modules = discover_test_modules()
     violations: list[str] = []
 
     for module_path in modules:
-        relative = str(module_path.relative_to(_REPO_ROOT)).replace("\\", "/")
-        sites = _forbidden_marker_sites(module_path)
+        relative = repo_relative(module_path)
+        tree = ast_for_path(module_path, source_tree_ast)
+        if tree is None:
+            continue
+        sites = _forbidden_marker_sites(tree)
         for lineno, marker_or_call_name in sites:
             key = (relative, marker_or_call_name)
             if key in _DOCUMENTED_EXCEPTIONS:
@@ -160,9 +114,10 @@ def test_no_skip_or_xfail_shortcuts() -> None:
 def test_documented_exceptions_all_exist() -> None:
     """Every entry in _DOCUMENTED_EXCEPTIONS must still be present in source."""
     for rel_path, marker_or_call_name in _DOCUMENTED_EXCEPTIONS:
-        path = _REPO_ROOT / rel_path
+        path = repo_path(rel_path)
         assert path.exists(), f"Documented exception references non-existent file: {rel_path}"
-        sites = _forbidden_marker_sites(path)
+        tree = ast_for_path(path)
+        sites = _forbidden_marker_sites(tree) if tree is not None else []
         found_markers = {m for _, m in sites}
         assert marker_or_call_name in found_markers, (
             f"Documented exception ({rel_path}, {marker_or_call_name!r}) is stale — "
@@ -172,5 +127,5 @@ def test_documented_exceptions_all_exist() -> None:
 
 def test_discovery_found_modules() -> None:
     """Guardrail: the discovery walk must find at least one test module."""
-    modules = _discover_test_modules()
+    modules = discover_test_modules()
     assert modules, "No test modules discovered — check glob roots."
