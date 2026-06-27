@@ -18,15 +18,16 @@ Asserts that:
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from pathlib import Path
 
 import pytest
 
-from ..core.paths import PROJECT_ROOT
+from ._inventory import SRC_AEAT, package_python_files, regex_line_hits, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_SRC_ROOT = PROJECT_ROOT / "src" / "aeat"
+_SRC_ROOT = SRC_AEAT
 
 # ---------------------------------------------------------------------------
 # Helpers shared across assertions
@@ -47,37 +48,22 @@ _UTF8_ALLOWLIST: frozenset[Path] = frozenset(
 )
 
 
-def _production_py_files() -> list[Path]:
+def _production_py_files() -> tuple[Path, ...]:
     """Return all non-test Python source files under src/aeat/."""
-    return [
+    return tuple(
         p
-        for p in _SRC_ROOT.rglob("*.py")
+        for p in package_python_files(include_data=True)
         if not any(part.startswith("test_") or part == "__pycache__" for part in p.parts)
-    ]
+    )
 
 
 def _scan(
-    files: list[Path],
+    files: Iterable[Path],
     pattern: re.Pattern[str],
     *,
     skip_comment_lines: bool = True,
 ) -> list[str]:
-    hits: list[str] = []
-    for path in files:
-        try:
-            text = path.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue
-        lines = text.splitlines()
-        for match in pattern.finditer(text):
-            line_no = text[: match.start()].count("\n") + 1
-            if skip_comment_lines and line_no <= len(lines):
-                stripped = lines[line_no - 1].lstrip()
-                if stripped.startswith("#"):
-                    continue
-            relative = path.relative_to(PROJECT_ROOT).as_posix()
-            hits.append(f"{relative}:{line_no}: {match.group(0)!r}")
-    return hits
+    return regex_line_hits(files, pattern, skip_comment_lines=skip_comment_lines)
 
 
 # ---------------------------------------------------------------------------
@@ -168,7 +154,7 @@ def test_utf8_encoding_enrolled_files_have_no_bare_literals() -> None:
     hits: list[str] = []
     for path in _UTF8_ENROLLED_FILES:
         if not path.is_file():
-            hits.append(f"MISSING: {path.relative_to(PROJECT_ROOT).as_posix()}")
+            hits.append(f"MISSING: {repo_relative(path)}")
             continue
         file_hits = _scan([path], _RE_BARE_ENCODING_KWARG) + _scan([path], _RE_BARE_ENCODE_DECODE)
         hits.extend(file_hits)

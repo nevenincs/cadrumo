@@ -25,6 +25,8 @@ from ._casilla_membership import undeclared_casilla_ids
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
 from ._formula_initial_values import initial_values as _initial_values
 from ._formula_initial_values import materialise_observations as _materialise_observations
+from ._formula_text_inputs import validate_text_input_targets as _validate_text_input_targets
+from ._formula_text_inputs import validated_text_input_casilla_ids as _validated_text_input_casilla_ids
 from ._ids import BindingId, CasillaId, FormulaId, ParameterId, RelationId, validated_casilla_id
 from ._runtime_graph import formula_evaluation_order
 from ._schema import (
@@ -310,28 +312,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     formulas = {formula.target_casilla_id: formula for formula in revision.formulas}
     parameters = {parameter.id: parameter for parameter in revision.parameters}
     casillas_by_id = _casillas_by_id(revision)
-    # Text-input casillas (e.g. an IRNR ``tipo_renta`` enum string) flow
-    # through a dedicated string-keyed channel into the eval context;
-    # the Decimal ``values`` map carries a Decimal(0) placeholder for
-    # the same casilla via ``_initial_values`` so existing
-    # value-coverage invariants stay intact. Reject unknown casilla ids
-    # and ids that point at non-text casillas so a caller's typo cannot
-    # silently strand the input.
-    text_casilla_ids = {casilla_id for casilla_id, casilla in casillas_by_id.items() if casilla.data_type == "text"}
-    unknown_text_inputs = sorted(set(resolved_text_inputs).difference(casillas_by_id))
-    if unknown_text_inputs:
-        raise RegistryValidationError(
-            f"unknown text_input casilla ids: {unknown_text_inputs!r}",
-            translated_message="errors.calc.unknown_text_input_casillas",
-            context={"casilla_ids": ",".join(unknown_text_inputs)},
-        )
-    mistyped_text_inputs = sorted(set(resolved_text_inputs).difference(text_casilla_ids))
-    if mistyped_text_inputs:
-        raise RegistryValidationError(
-            f"text_input supplied for non-text casilla ids: {mistyped_text_inputs!r}",
-            translated_message="errors.calc.text_input_non_text_casillas",
-            context={"casilla_ids": ",".join(mistyped_text_inputs)},
-        )
+    _validate_text_input_targets(resolved_text_inputs, casillas_by_id=casillas_by_id)
     # Per-casilla provenance accumulator. Formula-computed casillas overwrite
     # the input/bound placeholder with the full operand lineage; non-computed
     # casillas keep the registry-sourced legal_refs/source_refs.
@@ -1214,37 +1195,6 @@ def _validated_decimal_input_casilla_ids[InputKey, InputValue](
             raise RegistryValidationError(f"input {key!r} must be a Decimal")
         resolved_inputs[key] = value
     return resolved_inputs
-
-
-def _validated_text_input_casilla_ids[InputKey, InputValue](
-    text_inputs: Mapping[InputKey, InputValue],
-) -> dict[CasillaId, str]:
-    invalid = tuple(repr(key) for key in text_inputs if not isinstance(key, str))
-    if invalid:
-        raise RegistryValidationError(
-            f"text_input keys must be canonical casilla.id strings: {sorted(invalid)!r}",
-            translated_message="errors.calc.unknown_text_input_casillas",
-            context={"casilla_ids": ",".join(sorted(invalid))},
-        )
-    malformed: list[str] = []
-    canonical_text_inputs: dict[CasillaId, InputValue] = {}
-    for key in text_inputs:
-        try:
-            canonical_text_inputs[validated_casilla_id(key, surface="text_input casilla.id")] = text_inputs[key]
-        except ValueError:
-            malformed.append(str(key))
-    if malformed:
-        raise RegistryValidationError(
-            f"text_input keys must be canonical casilla.id strings: {sorted(malformed)!r}",
-            translated_message="errors.calc.unknown_text_input_casillas",
-            context={"casilla_ids": ",".join(sorted(malformed))},
-        )
-    resolved_text_inputs: dict[CasillaId, str] = {}
-    for key, value in canonical_text_inputs.items():
-        if not isinstance(value, str) or not value:
-            raise RegistryValidationError(f"text_input {key!r} must be a non-empty string")
-        resolved_text_inputs[key] = value
-    return resolved_text_inputs
 
 
 def _reject_non_string[Key](values: Mapping[Key, str], label: str) -> None:

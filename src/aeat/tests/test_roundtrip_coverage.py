@@ -46,11 +46,11 @@ from __future__ import annotations
 
 import pytest
 
-from ..core.paths import PROJECT_ROOT
+from ._inventory import repo_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-# Canonical inventory: (boundary_label, roundtrip_test_path_relative_to_PROJECT_ROOT)
+# Canonical inventory: (boundary_label, roundtrip_test_path_relative_to_repo_root)
 # Each entry represents one persistence boundary and its roundtrip test file.
 # Multiple entries for the same boundary are allowed when multiple roundtrip
 # tests cover different aspects.
@@ -172,7 +172,7 @@ def test_persistence_boundary_roundtrip_tests_exist() -> None:
     """
     missing: list[str] = []
     for boundary_label, rel_path in _BOUNDARY_ROUNDTRIP_INVENTORY:
-        full_path = PROJECT_ROOT / rel_path
+        full_path = repo_path(rel_path)
         if not full_path.exists():
             missing.append(f"{boundary_label!r} -> {rel_path}")
 

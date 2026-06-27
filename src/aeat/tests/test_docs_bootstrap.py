@@ -8,16 +8,15 @@ a page without the build noticing.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+
+from ._inventory import repo_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-_DOCS = _REPO_ROOT / "docs"
+_DOCS = repo_path("docs")
 
-_README = _REPO_ROOT / "README.md"
+_README = repo_path("README.md")
 _GUIDES = ("architecture", "authoring-guide")
 
 

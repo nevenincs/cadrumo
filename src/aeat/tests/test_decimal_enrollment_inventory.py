@@ -19,14 +19,16 @@ Exclusions (permanent)
 
 from __future__ import annotations
 
-import pathlib
 import re
+from pathlib import Path
 
 import pytest
 
+from ._inventory import SRC_AEAT, production_python_files, repo_relative
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = pathlib.Path(__file__).parent.parent
+_SRC_ROOT = SRC_AEAT
 
 # Canonical modules exempt from their own rules.
 _ROUNDING_MODULE = _SRC_ROOT / "core" / "money" / "__init__.py"
@@ -41,17 +43,14 @@ _QUANTIZE_PATTERN = re.compile(
 _DECIMAL_STR_PATTERN = re.compile(r"Decimal\s*\(\s*str\s*\(")
 
 
-def _is_excluded(path: pathlib.Path) -> bool:
-    if path.name.startswith("test_"):
-        return True
+def _is_excluded(path: Path) -> bool:
     return path in (_ROUNDING_MODULE, _COERCE_MODULE)
 
 
 def _collect_quantize_violations() -> list[str]:
     """Return repo-relative ``path:lineno`` strings for every inline quantize call."""
-    repo_root = _SRC_ROOT.parent.parent
     violations: list[str] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
+    for path in production_python_files():
         if _is_excluded(path):
             continue
         try:
@@ -64,16 +63,14 @@ def _collect_quantize_violations() -> list[str]:
                 continue
             code_part = line.split("#")[0]
             if _QUANTIZE_PATTERN.search(code_part):
-                rel = path.relative_to(repo_root).as_posix()
-                violations.append(f"{rel}:{lineno}")
+                violations.append(f"{repo_relative(path)}:{lineno}")
     return violations
 
 
 def _collect_decimal_str_violations() -> list[str]:
     """Return repo-relative ``path:lineno`` strings for every bare Decimal(str()) call."""
-    repo_root = _SRC_ROOT.parent.parent
     violations: list[str] = []
-    for path in sorted(_SRC_ROOT.rglob("*.py")):
+    for path in production_python_files():
         if _is_excluded(path):
             continue
         try:
@@ -86,8 +83,7 @@ def _collect_decimal_str_violations() -> list[str]:
                 continue
             code_part = line.split("#")[0]
             if _DECIMAL_STR_PATTERN.search(code_part):
-                rel = path.relative_to(repo_root).as_posix()
-                violations.append(f"{rel}:{lineno}")
+                violations.append(f"{repo_relative(path)}:{lineno}")
     return violations
 
 

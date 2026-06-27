@@ -18,9 +18,11 @@ from pathlib import Path
 
 import pytest
 
+from ._inventory import SRC_AEAT, production_ast_items
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_SRC_ROOT = Path(__file__).parent.parent
+_SRC_ROOT = SRC_AEAT
 _CANONICAL_UTC_MODULE = _SRC_ROOT / "core" / "time" / "_utc.py"
 
 # Pattern matched against the raw source text before AST walk, for speed.
@@ -85,18 +87,10 @@ def test_no_inline_tzinfo_guards_in_production_code(
     violations: list[str] = []
     canonical_utc = _CANONICAL_UTC_MODULE.resolve()
 
-    for py_file in _SRC_ROOT.rglob("*.py"):
+    for py_file, tree in production_ast_items(source_tree_ast):
         # Skip the canonical UTC module — it is the allowed home.
         if py_file.resolve() == canonical_utc:
             continue
-        # Skip test files — they may assert on the guard's absence or
-        # construct deliberate naive datetimes to exercise the boundary.
-        if py_file.name.startswith("test_") or py_file.name.endswith("_test.py"):
-            continue
-        # Skip conftest files.
-        if py_file.name == "conftest.py":
-            continue
-        tree = source_tree_ast.get(py_file)
         if _file_has_inline_tzinfo_guard(py_file, tree):
             violations.append(str(py_file.relative_to(_SRC_ROOT.parent)))
 

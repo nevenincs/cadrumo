@@ -236,23 +236,23 @@ fix-rag:
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.
 test-unit:
-    @uv run pytest -q -n auto -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -n auto -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
 
 # Run the unit test suite serially for reruns after a parallel failure.
 test-unit-serial:
-    @uv run pytest -q -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity
 
 # Run the integration test suite. Quiet progress; failures shown.
 test-integration:
-    @uv run pytest -q -m integration
+    @uv run --no-sync pytest -q -m integration
 
 # Run the live test suite. Quiet progress; failures shown.
 test-live:
-    @uv run pytest -q -m aeat_live
+    @uv run --no-sync pytest -q -m aeat_live
 
 # Run the produce, verify, and export end-to-end smoke tests.
 test-smoke:
-    uv run pytest src/aeat/application/modelo/tests/test_file_flow_calculation.py src/aeat/application/modelo/tests/test_file_flow_verify.py src/aeat/application/modelo/tests/test_file_flow_filing.py src/aeat/application/modelo/tests/test_export.py -v
+    uv run --no-sync pytest src/aeat/application/modelo/tests/test_file_flow_calculation.py src/aeat/application/modelo/tests/test_file_flow_verify.py src/aeat/application/modelo/tests/test_file_flow_filing.py src/aeat/application/modelo/tests/test_export.py -v
 
 # Run the LibreOffice workbook parity tests.
 test-workbook-parity:
@@ -261,13 +261,13 @@ test-workbook-parity:
 # Run the unit test suite with coverage report and fail-under check. Quiet progress.
 [unix]
 test-coverage:
-    @uv run pytest -q --cov=aeat --cov-report=term-missing --cov-fail-under=60
+    @uv run --no-sync pytest -q --cov=aeat --cov-report=term-missing --cov-fail-under=60
 
 [windows]
 test-coverage:
     #!pwsh
     $ErrorActionPreference = 'Stop'
-    uv run pytest -q --cov=aeat --cov-report=term-missing --cov-fail-under=60
+    uv run --no-sync pytest -q --cov=aeat --cov-report=term-missing --cov-fail-under=60
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # ── Advisory audits ──────────────────────────────────────────────────────────

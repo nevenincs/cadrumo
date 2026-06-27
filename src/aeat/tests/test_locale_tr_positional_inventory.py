@@ -38,15 +38,14 @@ Exclusions
 from __future__ import annotations
 
 import ast
-import pathlib
 from collections.abc import Iterator, Mapping
+from pathlib import Path
 
 import pytest
 
+from ._inventory import production_ast_items, repo_relative
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-
-_SRC_ROOT = pathlib.Path(__file__).parent.parent
 
 # Exception class names that are NOT AeatError subclasses and therefore
 # do not need the translated_message pattern (Typer/Click/stdlib classes).
@@ -119,7 +118,7 @@ def _raise_positional_tr_violations(tree: ast.AST) -> Iterator[tuple[int, str]]:
 
 
 def _collect_violations(
-    source_tree_ast: Mapping[pathlib.Path, ast.AST] | None = None,
+    source_tree_ast: Mapping[Path, ast.AST] | None = None,
 ) -> list[str]:
     """Walk every production module under ``src/aeat/`` and collect violations.
 
@@ -134,36 +133,14 @@ def _collect_violations(
     callers.
     """
     violations: list[str] = []
-    if source_tree_ast is None:
-        for path in sorted(_SRC_ROOT.rglob("*.py")):
-            if path.name.startswith("test_"):
-                continue
-            rel = path.relative_to(_SRC_ROOT.parent.parent)
-            source = path.read_text(encoding="utf-8", errors="replace")
-            try:
-                tree = ast.parse(source, filename=str(path))
-            except SyntaxError:
-                continue
-            for lineno, description in _raise_positional_tr_violations(tree):
-                violations.append(f"{rel}:{lineno} — {description}")
-        return violations
-
-    for path in sorted(source_tree_ast):
-        if path.name.startswith("test_"):
-            continue
-        try:
-            path.relative_to(_SRC_ROOT)
-        except ValueError:
-            continue
-        rel = path.relative_to(_SRC_ROOT.parent.parent)
-        tree = source_tree_ast[path]
+    for path, tree in production_ast_items(source_tree_ast):
         for lineno, description in _raise_positional_tr_violations(tree):
-            violations.append(f"{rel}:{lineno} — {description}")
+            violations.append(f"{repo_relative(path)}:{lineno} — {description}")
     return violations
 
 
 def test_no_aeat_error_raise_with_positional_tr(
-    source_tree_ast: Mapping[pathlib.Path, ast.AST],
+    source_tree_ast: Mapping[Path, ast.AST],
 ) -> None:
     """Every production module must have zero raise-with-positional-tr() violations.
 

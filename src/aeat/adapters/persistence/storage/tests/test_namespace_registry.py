@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -10,8 +11,7 @@ from pydantic import ValidationError
 
 from .....core.classification import SensitivityClass
 from .....core.errors import ERROR_REGISTRY, build_error_envelope
-from .....core.external_constants import UTF_8_ENCODING
-from .....core.paths import PROJECT_ROOT
+from .....tests._inventory import ast_for_path, package_python_files, repo_relative
 from .. import (
     AEAT_BROWSER_SESSION_NAMESPACE,
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
@@ -566,9 +566,11 @@ def test_secure_object_namespace_logical_path_uses_registered_sql_grammar() -> N
     assert marker.as_posix() == "db:/secure_objects/aeat.domain.attachments.blobs"
 
 
-def test_every_discovered_production_secure_object_namespace_is_registered() -> None:
+def test_every_discovered_production_secure_object_namespace_is_registered(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
     registered = {definition.namespace for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
-    discovered = _discover_production_secure_object_namespaces()
+    discovered = _discover_production_secure_object_namespaces(source_tree_ast)
 
     assert {
         ATTACHMENT_BLOB_NAMESPACE.namespace,
@@ -603,10 +605,11 @@ _SECURE_BOUND_CLASS_NAMES = {
 }
 
 
-def _discover_production_secure_object_namespaces() -> set[str]:
+def _discover_production_secure_object_namespaces(source_tree_ast: Mapping[Path, ast.AST]) -> set[str]:
     namespaces: set[str] = set()
     for path in _iter_aeat_production_sources():
-        tree = ast.parse(path.read_text(encoding=UTF_8_ENCODING), filename=str(path))
+        tree = ast_for_path(path, source_tree_ast)
+        assert tree is not None, f"{repo_relative(path)} must be parseable"
         bindings = _collect_namespace_value_bindings(tree)
         namespaces.update(_namespace_values_from_assignments(tree, bindings))
         for node in ast.walk(tree):
@@ -619,14 +622,14 @@ def _iter_aeat_production_sources() -> tuple[Path, ...]:
     return tuple(
         sorted(
             path
-            for path in (PROJECT_ROOT / "src/aeat").rglob("*.py")
+            for path in package_python_files(include_data=True)
             if not _is_test_surface(path) and path.name != "_namespace_registry.py"
         ),
     )
 
 
 def _is_test_surface(path: Path) -> bool:
-    relative = path.relative_to(PROJECT_ROOT).as_posix()
+    relative = repo_relative(path)
     return (
         path.name.startswith("test_")
         or path.name == "conftest.py"

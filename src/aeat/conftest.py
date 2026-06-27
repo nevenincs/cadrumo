@@ -31,6 +31,7 @@ import pytest
 # guard. Documented in #158 entry 2 and ADR pending under
 # session-honest-followups P03.S19.
 from .core.external_constants import UTF_8_ENCODING
+from .tests._inventory import package_python_files
 
 _SRC_AEAT_ROOT: Path = Path(__file__).resolve().parent
 """Root of the ``src/aeat/`` source tree (the directory hosting this conftest)."""
@@ -54,13 +55,7 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
     the policy is per-test.
     """
     cache: dict[Path, ast.AST] = {}
-    for path in _SRC_AEAT_ROOT.rglob("*.py"):
-        if "__pycache__" in path.parts:
-            continue
-        if ".venv" in path.parts:
-            continue
-        if "_data" in path.parts:
-            continue
+    for path in package_python_files():
         try:
             source = path.read_text(encoding=UTF_8_ENCODING, errors="replace")
         except OSError:
