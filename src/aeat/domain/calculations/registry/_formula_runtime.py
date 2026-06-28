@@ -23,8 +23,15 @@ from ._bindings import CasillaObservation
 from ._casilla_membership import casillas_by_id as _casillas_by_id
 from ._casilla_membership import undeclared_casilla_ids
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
-from ._formula_initial_values import initial_values as _initial_values
-from ._formula_initial_values import materialise_observations as _materialise_observations
+from ._formula_initial_values import (
+    binding_values_with_absent_by_design_defaults as _binding_values_with_absent_by_design_defaults,
+)
+from ._formula_initial_values import (
+    initial_values as _initial_values,
+)
+from ._formula_initial_values import (
+    materialise_observations as _materialise_observations,
+)
 from ._formula_text_inputs import validate_text_input_targets as _validate_text_input_targets
 from ._formula_text_inputs import validated_text_input_casilla_ids as _validated_text_input_casilla_ids
 from ._ids import BindingId, CasillaId, FormulaId, ParameterId, RelationId, validated_casilla_id
@@ -285,7 +292,13 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         else date(snapshot.filing_year, 12, 31)
     )
     resolved_date_context.setdefault("filing_period", default_filing_date)
-    resolved_bindings = binding_values or {}
+    supplied_bindings = binding_values or {}
+    _reject_non_decimal(supplied_bindings, "binding")
+    resolved_bindings = _binding_values_with_absent_by_design_defaults(
+        revision,
+        supplied_bindings,
+        target_period=snapshot.period,
+    )
     _reject_non_decimal(resolved_bindings, "binding")
     resolved_enum_bindings = enum_binding_values or {}
     _reject_non_string(resolved_enum_bindings, "enum_binding")
@@ -323,7 +336,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     values, absent_by_design_casilla_ids = _initial_values(
         revision,
         resolved_inputs,
-        binding_values=resolved_bindings,
+        binding_values=supplied_bindings,
         target_period=snapshot.period,
     )
     formulas = {formula.target_casilla_id: formula for formula in revision.formulas}

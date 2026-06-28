@@ -91,9 +91,10 @@ _M303_COMPENSACION_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
     "iva.compensacion-pendiente-periodos-anteriores",
 )
+_M130_DIFERENCIA_PREVIA_CASILLA: CasillaId = _casilla_id("14")
 
-# The M130 carry binding casilla 15 lifts. Casilla 15 (input_kind=bound) reads its
-# value from this previous_filing binding; the carried saldo-negativo flows through it.
+# The M130 carry binding feeds computed casilla 15. Calculation caps the raw
+# previous_filing saldo-negativo at the current positive C14 before it flows through.
 _CARRY_BINDING_ID = "modelo-130-resultados-negativos-anteriores"
 
 # Inputs that drive Modelo 130 1T to a NEGATIVE Diferencia (casilla 17):
@@ -114,7 +115,6 @@ _NEGATIVE_1T_INPUTS: dict[CasillaId, Decimal] = {
     _M130_WITHHELD_CASILLA: Decimal("0"),
     _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
     _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-    _M130_CARRY_FORWARD_CASILLA: Decimal("0"),
     _M130_HOME_DEDUCTION_CASILLA: Decimal("5000"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
@@ -292,9 +292,10 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(rep
     )
 
     carried_casilla_15 = Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
-    assert carried_casilla_15 == carried_seed, (
-        f"2T casilla 15 must auto-carry the filed 1T saldo-negativo {carried_seed}; got {carried_casilla_15}"
-    )
+    c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
+    assert Decimal(result.revision.binding_overrides[_CARRY_BINDING_ID]) == carried_seed
+    assert carried_seed > c14 > Decimal("0")
+    assert carried_casilla_15 == c14
 
 
 def test_first_year_activity_start_calculate_scopes_prior_year_m100_binding(repos: _Repos) -> None:
@@ -317,7 +318,10 @@ def test_first_year_activity_start_calculate_scopes_prior_year_m100_binding(repo
     assert Decimal(result.revision.binding_overrides["irpf.previous_year_economic_activity_net_income"]) == Decimal(
         "0",
     )
-    assert Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA]) == carried_seed
+    c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
+    assert Decimal(result.revision.binding_overrides[_CARRY_BINDING_ID]) == carried_seed
+    assert carried_seed > c14 > Decimal("0")
+    assert Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA]) == c14
 
 
 def test_app_filing_source_kind_is_not_official_evidence() -> None:
@@ -442,9 +446,10 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repo
     )
 
     casilla_15 = Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA])
-    assert casilla_15 == override_value, (
-        f"caller --binding {override_value} must override the auto-carried {carried_seed}; got {casilla_15}"
-    )
+    c14 = Decimal(result.revision.casilla_values[_M130_DIFERENCIA_PREVIA_CASILLA])
+    assert Decimal(result.revision.binding_overrides[_CARRY_BINDING_ID]) == override_value
+    assert override_value > c14 > Decimal("0")
+    assert casilla_15 == c14
 
 
 def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> None:
