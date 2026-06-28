@@ -849,6 +849,54 @@ withholding. The current CLI also makes M100 employment withholding casillas and
 activity-mode/category selection hard to discover. Those are retained as UX and
 workflow design debt, not recoded as hidden assumptions.
 
+### wave-thirteen-persona-campaign | high | Export replay, profile import, and annual guidance defects were separated from backlog
+
+Wave thirteen kept the corrected campaign shape: the coordinator stayed in the
+coder role, while persona subagents operated only the CLI from blank storage
+roots. Source triage was separate, read-only, and RAG-first. Elena exercised an
+employed-plus-autonomous annual Modelo 100 path; Ramon exercised M308/M309
+AD-HOC and annual closure probes; Ines exercised profile bundle export/import;
+Marco exercised M349 foreign-operator rows. Personas created or imported
+profiles, entered or imported business records, classified rows, calculated,
+verified, locally filed or exported where supported, and manually compared
+period and annual figures. Export bytes were treated as visual sanity evidence,
+not as proof that the CLI matched the BOE structure.
+
+Marco's M349 run reached calculate, verify, local file, and fichero export, but
+visual record inspection found the exported operator VAT field duplicated the
+country prefix (`DEDE...` and `FRFR...`). Source triage confirmed this as a real
+export defect: the row model correctly accepts prefixed VAT identifiers for
+operator input, while the fixed-width export has a separate country-code slot
+and must write only the VAT number subfield. Commit `fb6d0d662` added a shared
+M349 export normalizer, replayed filed row inputs through it, and asserted
+500-byte record positions for country code and stripped VAT number.
+
+Elena's M100 run separated a small implementation defect from larger annual UX
+debt. `ledger list --year 2025` leaked the internal
+`ledger-period-year-pairing` diagnostic even though the supported full-year
+filter is `--period 0A --year 2025` or matching `--filter` pairs. Commit
+`eeb2de989` keeps the fail-closed parser behavior but renders operator-facing
+annual guidance. The M100 salary and withholding problem remains backlog:
+gross employment income and retentions cannot be inferred from a net bank
+deposit, and casillas `0003` and `0596` remain hard for a CLI-only user to
+discover.
+
+Ines proved the profile bundle happy path, then tampered exported bundles. The
+previous import guard refused an invalid present tax id, but did not make the
+single full `identity.tax_id` fact an explicit import boundary for missing,
+blank, non-string, or duplicate values. Commit `d18a8e0b6` now requires exactly
+one nonblank string tax id and validates its Spanish checksum before the bundle
+can register a profile. This hardens the confidence-loss surface where a broken
+profile could otherwise enter persistent storage and fail later inside modelo
+work.
+
+Ramon's AD-HOC and annual probes were deliberately not recoded into hidden
+assumptions. M309 still needs grounded event-date or transaction-selection
+semantics before it can become a smooth AD-HOC workflow, and M100 annual
+guidance still needs clearer relation/casilla discovery. Source triage also
+kept Marco's GB/XI M349 country-code concern and `filing-record list --modelo`
+discoverability concern as backlog rather than legal assumptions.
+
 ## Recommendations
 
 Implemented and reviewed in this wave:
@@ -1002,6 +1050,19 @@ Implemented and reviewed in this wave:
   `src/aeat/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py`,
   and CLI calculation fixture hardening in
   `src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py`.
+- M349 fichero-BOE VAT-number subfield stripping in
+  `src/aeat/domain/modelos/_row_models.py`,
+  `src/aeat/application/modelo/_revision_replay_inputs.py`,
+  `src/aeat/application/modelo/_export.py`, and
+  `src/aeat/domain/calculations/registry/_invoice_bindings.py`, with row-model,
+  replay, invoice-binding, registry, and CLI export coverage.
+- Ledger bare-year filter guidance in
+  `src/aeat/entrypoints/cli/_ledger_list.py`, with real CLI filter coverage in
+  `src/aeat/entrypoints/cli/tests/test_ledger_list_filter.py`.
+- Profile bundle import tax-id hard gate in
+  `src/aeat/entrypoints/cli/_config/_profile_bundle.py`, with real bundle
+  tamper coverage in
+  `src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py`.
 
 Verification passed:
 
@@ -1096,6 +1157,11 @@ Verification passed:
 - Wave-twelve M200 display-rate grounding: `uv run --no-sync pytest src/aeat/domain/calculations/registry/tests/test_modelo_200_tipo_gravamen_dispatch.py src/aeat/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py -q`
 - Wave-twelve M200 CLI calculation regression: `uv run --no-sync pytest -m "integration or unit" src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py -q --tb=short`
 - Wave-twelve M200 ruff/diff check: `uv run --no-sync ruff check src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py src/aeat/domain/calculations/registry/tests/test_modelo_200_tipo_gravamen_dispatch.py src/aeat/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py`; `git diff --check` on the scoped M200 registry/test files and the CLI calculation test reported only Git CRLF normalization warnings before staging, and cached diff check was clean before commit.
+- Wave-thirteen M349 export-prefix regression: `uv run --no-sync pytest src/aeat/domain/modelos/tests/test_row_models.py src/aeat/application/modelo/tests/test_revision_replay_inputs.py src/aeat/domain/calculations/registry/tests/test_invoice_bindings.py src/aeat/domain/calculations/registry/tests/test_modelo_349_registry.py src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py -q --tb=short -m "unit or integration"`.
+- Wave-thirteen ledger annual-filter guidance: `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_ledger_list_filter.py -q --tb=short -m integration` and `uv run --no-sync pytest src/aeat/application/review/tests/test_filter.py -q --tb=short`.
+- Wave-thirteen profile bundle tax-id import gate: `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py -q --tb=short -m integration`.
+- Wave-thirteen focused ruff checks passed for the touched M349, ledger-list,
+  and profile-bundle implementation and test files.
 
 Independent read-only reviews reported no findings for the IVA wallet patch,
 the Modelo 202 modality gate, the stage-1 readiness hardening, the M390 export
@@ -1145,11 +1211,17 @@ Residual backlog:
 - Improve M349 row-entry help and validation wording so `razon_social` is
   discoverable and raw Pydantic documentation URLs do not leak into
   taxpayer-facing refusal text.
+- Ground M349 GB/XI country-code validation against the current authoritative
+  intra-community rules before tightening accepted prefixes beyond the existing
+  local BOE code-set checks.
 - Reword overview status so `Borradores 0` cannot be mistaken for lost modelo
   work units when the work-unit store contains active drafts.
 - Clarify local export versus local filing versus official/imported filing
   evidence in cross-period dependency guidance, especially for M130/M100 annual
   carry paths.
+- Make filing-record list filtering discoverable from the CLI surface; Marco's
+  persona expected `filing-record list --modelo` even though the current command
+  does not accept that option.
 - Add earlier applicability/preflight refusal for pure recargo-equivalence
   retailer profiles on M303/M390, or otherwise make the unsupported-retailer
   boundary explicit before work creation.
