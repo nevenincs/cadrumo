@@ -24,18 +24,14 @@ valid_from = 2024-01-01
 # the `modelo-200-tipo-gravamen-por-forma-juridica` formula, keyed on
 # the `modelo-200-2024-profile-legal-entity-form` profile binding.
 #
-# The micro-empresa rate is a TWO-BRACKET scale, not a flat scalar:
-# LIS art. 29.1 charges 17 % on the 0-50.000 EUR base tranche and
-# 20 % on the rest for periods initiated in 2025, and 19 % / 21 %
-# for periods initiated in 2026 (AEAT Manual de Sociedades "Tipos de
-# gravamen vigentes"; AEAT folleto actividades economicas 4.3). It is
-# encoded as a `bracket_table` parameter so a base amount resolves to
-# its cuota directly. `lookup_parameter_by_entity_type` requires a
-# scalar parameter and so cannot dispatch the micro-empresa bracket
-# table; routing a `pyme` profile through the cuota formula needs a
-# `lookup_bracket_by_entity_type` runtime op, deferred to a follow-on
-# slice. The corrected bracket data lands here regardless so no
-# consumer can read the previous (wrong) flat 23 % value.
+# The micro-empresa rate is a TWO-BRACKET scale, not a flat scalar.
+# For periods initiated in 2025, LIS DT 44ª sets the transitional
+# 21 % / 22 % scale; for periods initiated in 2026, it sets 19 % / 21 %.
+# The final LIS art. 29.1 17 % / 20 % scale is not the 2025 window.
+# This is encoded as a `bracket_table` parameter so a base amount
+# resolves to its cuota directly. `lookup_parameter_by_entity_type`
+# requires a scalar parameter and so cannot dispatch the micro-empresa
+# bracket table; the cuota formula uses `lookup_bracket_by_entity_type`.
 
 [[revisions."2024-y-siguientes".parameters]]
 id = "is.modelo-200.tipo-gravamen-pyme"
@@ -92,6 +88,38 @@ valid_to = 2026-12-31
 lower_bound = "50000"
 fixed_addition = "9500"
 marginal_rate = "0.21"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
+
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.tipo-gravamen-pyme-display"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:dt-44", "ley-31-2022:art-39"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+# Scalar echo for casilla 00558 when the cuota path uses the micro-empresa
+# bracket. It reports the first-tranche rate for the filing period; casilla
+# 00562 remains the authority for tranche arithmetic.
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "23"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "21"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "19"
+date_axis = "filing_period"
 valid_from = 2026-01-01
 valid_to = 2026-12-31
 
@@ -252,6 +280,63 @@ marginal_rate = "0.21"
 valid_from = 2026-01-01
 valid_to = 2026-12-31
 
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.cuota-integra-bracket-erd-art101"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-101", "ley-27-2014:dt-44"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+# Cuota íntegra for true ERD entities under LIS art. 101 (INCN < 10M and
+# not qualifying for the INCN < 1M micro-empresa scale). DT 44ª phases the
+# post-2025 art. 29 ERD rate from 24 % to 21 %; art. 29 supplies the final
+# 20 % rate from 2029. 2024 keeps the pre-DT44 general 25 % rate.
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.25"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.24"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.23"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.22"
+valid_from = 2027-01-01
+valid_to = 2027-12-31
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.21"
+valid_from = 2028-01-01
+valid_to = 2028-12-31
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.20"
+valid_from = 2029-01-01
+
 # LIS Art. 29 newly-created-entity 15 % rate (first two profit-making
 # periods). Layered on top of the sub-form by the cuota-integra formula
 # via an `if_then_else` predicate over the
@@ -297,6 +382,52 @@ required_text = ["tipo de gravamen"]
 value = "23"
 date_axis = "filing_period"
 valid_from = 2023-01-01
+
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.tipo-gravamen-erd-art101"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-101", "ley-27-2014:dt-44"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "25"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "24"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "23"
+date_axis = "filing_period"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "22"
+date_axis = "filing_period"
+valid_from = 2027-01-01
+valid_to = 2027-12-31
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "21"
+date_axis = "filing_period"
+valid_from = 2028-01-01
+valid_to = 2028-12-31
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "20"
+date_axis = "filing_period"
+valid_from = 2029-01-01
 
 [[revisions."2024-y-siguientes".parameters]]
 id = "is.modelo-200.tipo-gravamen-non-profit-special-regime"

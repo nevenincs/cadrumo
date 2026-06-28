@@ -95,13 +95,15 @@ required_text = [
 #   1. New-entity override (LIS Art. 29 par. 4, Ley 27/2014): if the
 #      period state flag `new_entity_first_two_profit_periods` is set,
 #      casilla 00558 = 15 % regardless of sub-form.
-#   2. ERD lane (Ley 31/2022 Art. 39, periods from 2023): if the
-#      prior-period INCN is below 1.000.000 EUR, sl/sa/sal/sll/
-#      sociedad_civil_mercantil/other entities take the ERD 23 % rate;
-#      cooperativas and entidades sin fines lucrativos retain their
-#      special rates (20 % and 10 %) even when the INCN threshold is
-#      met.
-#   3. General sub-form lane: sl/sa/sal/sll/scm/other → 25 %;
+#   2. Micro-empresa lane: if prior-period INCN is below 1.000.000 EUR,
+#      general-rate forms resolve through the dated first-tranche display
+#      scalar that mirrors the bracket schedule used by cuota íntegra.
+#      Cooperativas and entidades sin fines lucrativos retain their special
+#      rates (20 % and 10 %) even when the INCN threshold is met.
+#   3. ERD art.101 lane: if prior-period INCN is below 10.000.000 EUR,
+#      general-rate forms resolve through the DT 44ª art.101 schedule
+#      (2025-2028) and the final art.29 ERD rate from 2029.
+#   4. General sub-form lane: sl/sa/sal/sll/scm/other → 25 %;
 #      cooperativas fiscalmente protegidas → 20 %; entidades sin fines
 #      lucrativos → 10 %.
 #
@@ -136,33 +138,53 @@ expression = { op = "if_then_else", args = [
             { literal = "0" },
             { binding = "modelo-200-2024-profile-legal-entity-form" },
             { dispatch_table_entries = [
-                { key = "sl", parameter = "is.modelo-200.tipo-gravamen-erd" },
-                { key = "sa", parameter = "is.modelo-200.tipo-gravamen-erd" },
-                { key = "sal", parameter = "is.modelo-200.tipo-gravamen-erd" },
-                { key = "sll", parameter = "is.modelo-200.tipo-gravamen-erd" },
-                { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-erd" },
-                { key = "other", parameter = "is.modelo-200.tipo-gravamen-erd" },
+                { key = "sl", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
+                { key = "sa", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
+                { key = "sal", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
+                { key = "sll", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
+                { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
+                { key = "other", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
                 { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" },
                 { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" },
             ] },
         ] },
-        { op = "lookup_parameter_by_entity_type", args = [
-            { literal = "0" },
-            { binding = "modelo-200-2024-profile-legal-entity-form" },
-            { dispatch_table_entries = [
-                { key = "sl", parameter = "is.modelo-200.tipo-gravamen-general" },
-                { key = "sa", parameter = "is.modelo-200.tipo-gravamen-general" },
-                { key = "sal", parameter = "is.modelo-200.tipo-gravamen-general" },
-                { key = "sll", parameter = "is.modelo-200.tipo-gravamen-general" },
-                { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-general" },
-                { key = "other", parameter = "is.modelo-200.tipo-gravamen-general" },
-                { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" },
-                { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" },
+        { op = "if_then_else", args = [
+            { op = "less_than", args = [
+                { binding = "modelo-200-2024-profile-incn-prior-12-months" },
+                { literal = "10000000" },
+            ] },
+            { op = "lookup_parameter_by_entity_type", args = [
+                { literal = "0" },
+                { binding = "modelo-200-2024-profile-legal-entity-form" },
+                { dispatch_table_entries = [
+                    { key = "sl", parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
+                    { key = "sa", parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
+                    { key = "sal", parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
+                    { key = "sll", parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
+                    { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
+                    { key = "other", parameter = "is.modelo-200.tipo-gravamen-erd-art101" },
+                    { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" },
+                    { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" },
+                ] },
+            ] },
+            { op = "lookup_parameter_by_entity_type", args = [
+                { literal = "0" },
+                { binding = "modelo-200-2024-profile-legal-entity-form" },
+                { dispatch_table_entries = [
+                    { key = "sl", parameter = "is.modelo-200.tipo-gravamen-general" },
+                    { key = "sa", parameter = "is.modelo-200.tipo-gravamen-general" },
+                    { key = "sal", parameter = "is.modelo-200.tipo-gravamen-general" },
+                    { key = "sll", parameter = "is.modelo-200.tipo-gravamen-general" },
+                    { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-general" },
+                    { key = "other", parameter = "is.modelo-200.tipo-gravamen-general" },
+                    { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" },
+                    { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" },
+                ] },
             ] },
         ] },
     ] },
 ] }
-legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-31-2022:art-39"]
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-101", "ley-27-2014:dt-44", "ley-31-2022:art-39"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
@@ -181,21 +203,19 @@ required_text = [
 #      layers ON TOP of the sub-form dispatch via the outer
 #      `if_then_else` predicate over
 #      `modelo-200-2024-profile-new-entity-flag`.
-#   2. ERD lane (Ley 31/2022 Art. 39, LIS Art. 29.1): if the prior-12-
-#      months INCN is below 1.000.000 EUR, general-rate forms
-#      (sl / sa / sal / sll / sociedad_civil_mercantil / other) resolve
-#      against the ERD bracket `is.modelo-200.cuota-integra-bracket-erd`
-#      (flat 23 % from 2023, matching Ley 31/2022 Art. 39 rate).
+#   2. Micro-empresa lane: if prior-period INCN is below 1.000.000 EUR,
+#      general-rate forms (sl / sa / sal / sll /
+#      sociedad_civil_mercantil / other) resolve against the
+#      micro-empresa bracket table `is.modelo-200.tipo-gravamen-pyme`.
+#      The same parameter carries the 2024 flat 23 % row and the LIS
+#      DT 44ª two-tranche transition (21/22 in 2025, 19/21 in 2026).
 #      Cooperativas fiscalmente protegidas and entidades sin fines
 #      lucrativos retain their own special-rate brackets even when INCN
-#      < 1M. The two-tranche micro-empresa scale
-#      `is.modelo-200.tipo-gravamen-pyme` (21/22 in 2025, 19/21 in 2026,
-#      per LIS DT 44ª transitional schedule, Ley 7/2024)
-#      applies to the micro-empresa threshold (INCN < 1M AND 2025+
-#      periods); for 2024 the pyme bracket holds a single flat 23 %
-#      row which is identical in value to the ERD bracket — the ERD
-#      bracket is preferred here for semantic accuracy and provenance.
-#   3. Sub-form lane (LIS Art. 29.1-3): otherwise the base resolves
+#      < 1M.
+#   3. ERD art.101 lane: if INCN is below 10.000.000 EUR, general-rate
+#      forms resolve through `is.modelo-200.cuota-integra-bracket-erd-art101`
+#      for the DT 44ª 2025-2028 transition and the final art.29 rate from 2029.
+#   4. Sub-form lane (LIS Art. 29.1-3): otherwise the base resolves
 #      against the sub-form's single-row bracket — general 25 %,
 #      cooperativa fiscalmente protegida 20 %, entidad sin fines
 #      lucrativos 10 %.
@@ -235,34 +255,54 @@ expression = { op = "if_then_else", args = [
             { casilla_id = "DP200014:01330" },
             { binding = "modelo-200-2024-profile-legal-entity-form" },
             { dispatch_table_entries = [
-                { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
-                { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
-                { key = "sal", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
-                { key = "sll", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
-                { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
-                { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
+                { key = "sl", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sa", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sal", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sll", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "other", parameter = "is.modelo-200.tipo-gravamen-pyme" },
                 { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-cooperative-protected" },
                 { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime" },
             ] },
         ] },
-        { op = "lookup_bracket_by_entity_type", args = [
-            { casilla_id = "DP200014:01330" },
-            { binding = "modelo-200-2024-profile-legal-entity-form" },
-            { dispatch_table_entries = [
-                { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-general" },
-                { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-general" },
-                { key = "sal", parameter = "is.modelo-200.cuota-integra-bracket-general" },
-                { key = "sll", parameter = "is.modelo-200.cuota-integra-bracket-general" },
-                { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-general" },
-                { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-general" },
-                { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-cooperative-protected" },
-                { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime" },
+        { op = "if_then_else", args = [
+            { op = "less_than", args = [
+                { binding = "modelo-200-2024-profile-incn-prior-12-months" },
+                { literal = "10000000" },
+            ] },
+            { op = "lookup_bracket_by_entity_type", args = [
+                { casilla_id = "DP200014:01330" },
+                { binding = "modelo-200-2024-profile-legal-entity-form" },
+                { dispatch_table_entries = [
+                    { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" },
+                    { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" },
+                    { key = "sal", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" },
+                    { key = "sll", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" },
+                    { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" },
+                    { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-erd-art101" },
+                    { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-cooperative-protected" },
+                    { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime" },
+                ] },
+            ] },
+            { op = "lookup_bracket_by_entity_type", args = [
+                { casilla_id = "DP200014:01330" },
+                { binding = "modelo-200-2024-profile-legal-entity-form" },
+                { dispatch_table_entries = [
+                    { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+                    { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+                    { key = "sal", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+                    { key = "sll", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+                    { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+                    { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+                    { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-cooperative-protected" },
+                    { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime" },
+                ] },
             ] },
         ] },
     ] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-29"]
+legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-29", "ley-27-2014:art-101", "ley-27-2014:dt-44"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
