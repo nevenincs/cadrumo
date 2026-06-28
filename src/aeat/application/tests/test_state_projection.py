@@ -47,8 +47,8 @@ from ..modelo._actions import create_work_unit, discard_work_unit
 from ..overview import build_overview_status_report
 from ..state_projection import (
     ModeloReadinessRequest,
-    _modelo_requires_ledger_preflight,
     build_operator_state_projection,
+    modelo_requires_ledger_preflight,
 )
 from ..user_profile._testing import register_minimal_profile
 from ..wizard import WIZARD_FLOWS
@@ -62,7 +62,7 @@ _PROFILE_SPAN_OPEN = False
 
 
 @pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path) -> Iterator[None]:
+def isolated_storage(tmp_path: Path) -> Iterator[None]:
     """Bind a real isolated filesystem root per test."""
 
     global _ACTIVE_STORAGE_STACK, _PROFILE_SPAN_OPEN
@@ -299,7 +299,7 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
         modelo_readiness_requests=(
             ModeloReadinessRequest(
                 modelo="303",
-                revision_id="2009-y-siguientes",
+                revision_id="2023-y-siguientes",
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
             ),
@@ -307,13 +307,38 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers() -> None:
     )
 
     readiness = projection.modelo_readiness[0]
-    assert readiness.profile_ready is True
+    assert readiness.registry_ready is True
     assert readiness.ledger_preflight_required is True
     assert readiness.ledger_ready is False
     assert readiness.ready is False
     assert readiness.ledger_period == Period.from_year_and_code(2026, "1T")
     assert readiness.ledger_checked_transaction_count == 1
     assert [issue.reason.value for issue in readiness.ledger_issues] == ["missing_category"]
+
+
+def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period() -> None:
+    bucket_id = _register_active_profile()
+
+    projection = build_operator_state_projection(
+        modelo_readiness_requests=(
+            ModeloReadinessRequest(
+                modelo="309",
+                revision_id="2004-y-siguientes",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "AD-HOC"),
+            ),
+        ),
+    )
+
+    readiness = projection.modelo_readiness[0]
+    assert readiness.profile_id == bucket_id
+    assert readiness.registry_ready is True
+    assert readiness.ledger_preflight_required is True
+    assert readiness.ledger_ready is False
+    assert readiness.ready is False
+    assert readiness.ledger_period == Period.from_year_and_code(2026, "AD-HOC")
+    assert readiness.ledger_checked_transaction_count == 0
+    assert [issue.reason.value for issue in readiness.ledger_issues] == ["unsupported_period"]
 
 
 def test_modelo_readiness_without_period_uses_annual_period() -> None:
@@ -345,7 +370,7 @@ def test_missing_registry_snapshot_ledger_preflight_skip_is_debug_logged(
     )
 
     with caplog.at_level(logging.DEBUG, logger="aeat.application.state_projection"):
-        required = _modelo_requires_ledger_preflight(request)
+        required = modelo_requires_ledger_preflight(request)
 
     assert required is False
     assert any(
