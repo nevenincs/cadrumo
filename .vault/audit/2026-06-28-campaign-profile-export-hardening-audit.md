@@ -937,6 +937,33 @@ legal-entity `identity.legal_name`, attribution-entity `identity.name`, or
 natural-person `identity.name` plus `identity.surnames`. Bundle import still
 keeps the prior exactly-one-valid-tax-id gate.
 
+### wave-fifteen-persona-campaign | high | Bulk mixed-use classification and XI scope separated
+
+Wave fifteen restarted the campaign with fresh CLI-only personas for an
+autonomous natural person, a small S.L.U., and EU/XI operator evidence, plus
+read-only triage for ledger bulk classification and Northern Ireland M349
+scope. Personas again used only public CLI commands and scratch storage roots.
+
+Ledger triage found Clara's reported `ledger classify --from-csv` partial-state
+timeout stale against current HEAD: `bulk_classify_from_csv` already loads once,
+mutates an in-memory catalogue, and saves once, with a 270-row scale regression
+covering that contract. The real remaining defect was narrower: bulk CSV could
+carry `business_pct` for `MIXED` rows but not the `usage_ratio_id` proportional
+reference that preflight requires. Commit `53a0b0ddc` adds optional
+`usage_ratio_id` to `BulkClassifyRow`, passes it through the shared
+`ManualLedgerTransactionPatch` path, stamps bulk lineage as
+`aeat app ledger classify --from-csv`, updates four-locale help and how-to
+wording, and adds positive and negative CLI regressions for saved and unknown
+usage-ratio references.
+
+XI/Northern-Ireland triage found no defect in
+`--counterparty-eu-member-state xi`: that option is intentionally typed as one
+of the current EU member states, while XI is a Northern Ireland VAT/NIF prefix
+for specific Modelo 349 goods cases. Bundled AEAT/BOE corpus and external AEAT
+and BOE checks agree that XI belongs in a separate M349 country-prefix workflow
+with goods-only and period/key constraints, not as an EU member-state enum
+member. That remains legal/workflow backlog before implementation.
+
 ## Recommendations
 
 Implemented and reviewed in this wave:
@@ -1065,6 +1092,14 @@ Implemented and reviewed in this wave:
   `src/aeat/entrypoints/cli/_ledger.py`, and
   `src/aeat/locales/{ca,en,es,hu}.yml`, with real CLI persistence coverage in
   `src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`.
+- Bulk `ledger classify --from-csv` mixed-use proportionality parity in
+  `src/aeat/application/ledger/_models.py`,
+  `src/aeat/application/ledger/_actions_classification.py`,
+  `src/aeat/entrypoints/cli/_ledger_classify_cli.py`, and
+  `src/aeat/locales/{ca,en,es,hu}.yml`, with positive and negative real CLI
+  coverage in `src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
+  and guide updates in `docs/how-to/classify-transactions.md` and
+  `docs/how-to/classify-with-llm.md`.
 - Recargo-equivalence ledger preflight wording/direction hardening in
   `src/aeat/application/ledger/_preflight.py`, with focused coverage in
   `src/aeat/application/ledger/tests/test_preflight_anomaly.py`.
@@ -1237,6 +1272,17 @@ Verification passed:
   `uv run --no-sync ruff check` on the touched profile/wizard/import/test files,
   `uv run --no-sync python -m aeat.locales scaffold --check`, and
   `uv run --no-sync python -m aeat.locales audit`.
+- Wave-fifteen bulk mixed-use CSV classify regression:
+  `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`.
+- Wave-fifteen bulk classify scale regression:
+  `uv run --no-sync pytest -q src/aeat/application/ledger/tests/test_bulk_classify_scale.py`.
+- Wave-fifteen docs conformance:
+  `uv run --no-sync pytest -q -m "integration or hex_entrypoint or not integration" src/aeat/entrypoints/cli/tests/test_educational_docs_conformance.py src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`.
+- Wave-fifteen ledger ruff, locale, and diff checks:
+  `uv run --no-sync ruff check src/aeat/application/ledger/_models.py src/aeat/application/ledger/_actions_classification.py src/aeat/entrypoints/cli/_ledger_classify_cli.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`,
+  `uv run --no-sync python -m aeat.locales scaffold --check`,
+  `uv run --no-sync python -m aeat.locales audit`, and `git diff --check`
+  over the touched ledger/doc/locale files.
 
 Independent read-only reviews reported no findings for the IVA wallet patch,
 the Modelo 202 modality gate, the stage-1 readiness hardening, the M390 export
@@ -1252,7 +1298,10 @@ overview review found hygiene issues that were fixed before verification, and
 the M130 pre-activity review found no correctness issues.
 The wave-fourteen profile-baseline review found the full-flow edit bypass and
 baseline-incomplete test fixtures before commit; both were corrected and covered
-before `e33403257` landed.
+before `e33403257` landed. The wave-fifteen bulk-classify review found no
+blocking issues and one non-blocking missing negative test for invalid
+`usage_ratio_id`; that validator regression was added before `53a0b0ddc`
+landed.
 
 Full-suite verification was intentionally not claimed because this shared
 worktree carries extensive unrelated WIP.
@@ -1300,18 +1349,15 @@ Residual backlog:
 - Add earlier applicability/preflight refusal for pure recargo-equivalence
   retailer profiles on M303/M390, or otherwise make the unsupported-retailer
   boundary explicit before work creation.
-- Investigate `ledger classify --from-csv` timeout/non-atomic partial
-  application under medium-sized persona CSVs, and make proportional-use
-  `usage_ratio_id` readiness guidance discoverable before modelo calculation.
 - Fix M308 `AD-HOC` consistency so describe/create/calculate use the same
   period boundary or fail closed at the first CLI boundary.
 - Extend M309 `AD-HOC` fail-closed handling beyond the ledger-preflight
   boundary into calculate/guidance, so operators never receive impossible
   ledger CLI commands; true M309 support needs grounded event-date or
   transaction-selection semantics.
-- Decide whether profile import should refuse schema-valid but filing-incomplete
-  profiles at import time; profile create now fails hard before persistence, and
-  edit/patch remains available for repairing existing profiles.
+- Add a repair/report path for legacy filing-incomplete profiles that were
+  created before profile create/edit/import started refusing incomplete filing
+  baselines.
 - Rename or split `config profile validate` output so schema validity cannot
   read as filing readiness, and prefer profile display names over bucket ids in
   readiness repair suggestions.
