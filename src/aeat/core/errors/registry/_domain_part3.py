@@ -481,6 +481,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.modelos._row_models.Modelo349CountryPrefixContextError",
+        ErrorCode(
+            code="REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_349_country_prefix_context",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.modelos._row_models.Modelo347ThresholdError",
         ErrorCode(
             code="REFUSED_MODELO_347_THRESHOLD",

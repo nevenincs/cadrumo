@@ -4678,6 +4678,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    modelo_349_country_prefix_context: 'El model 349 rebutja el prefix de pais {country_code} per a la clau d''operacio {clave_operacion} en {filing_year}/{period}: {reason}. Fonament: instruccions AEAT Brexit IVA NIF-IVA / model 349.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'

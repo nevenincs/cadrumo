@@ -254,7 +254,7 @@ _M349_SERVICE_CLAVES = frozenset({"S", "I"})
 _M349_2021_FIRST_PERIODS = frozenset({"01", "1M", "1T"})
 
 
-class Modelo349CountryPrefixContextError(ValueError):
+class Modelo349CountryPrefixContextError(AeatError, ValueError):
     """A Modelo 349 country prefix is invalid for the filing context."""
 
     def __init__(
@@ -272,9 +272,14 @@ class Modelo349CountryPrefixContextError(ValueError):
         self.period = period
         self.reason = reason
         super().__init__(
-            "Modelo 349 country prefix "
-            f"{country_code!r} is not valid for clave {clave_operacion!r} in {filing_year}/{period}: {reason}. "
-            "Authority: AEAT Brexit IVA NIF-IVA / Modelo 349 instructions.",
+            translated_message="errors.refused.modelo_349_country_prefix_context",
+            context={
+                "country_code": country_code,
+                "clave_operacion": clave_operacion,
+                "filing_year": filing_year,
+                "period": period,
+                "reason": reason,
+            },
         )
 
 

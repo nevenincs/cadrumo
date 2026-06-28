@@ -4728,6 +4728,7 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    modelo_349_country_prefix_context: 'El Modelo 349 rechaza el prefijo de pais {country_code} para la clave de operacion {clave_operacion} en {filing_year}/{period}: {reason}. Fundamento: instrucciones AEAT Brexit IVA NIF-IVA / Modelo 349.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
