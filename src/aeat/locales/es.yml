@@ -5100,6 +5100,8 @@ wizard:
         help: Código postal del domicilio fiscal
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
+      monedas-virtuales-extranjero-above-threshold:
+        help: Monedas virtuales en el extranjero superan el umbral del Modelo 721
       cloud-evidence-upload:
         help: Permitir subir evidencia sensible a proveedores LLM en la nube (desactivado
           por defecto).
@@ -5291,6 +5293,8 @@ wizard:
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Bienes en el extranjero superan el umbral legal
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Monedas virtuales en el extranjero superan el umbral del Modelo 721
       does-intracomunitario:
         prompt: Realiza operaciones intracomunitarias
       has-employees:

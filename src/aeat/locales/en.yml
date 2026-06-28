@@ -4791,6 +4791,8 @@ wizard:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
+      monedas-virtuales-extranjero-above-threshold:
+        help: Virtual currencies held abroad above Modelo 721 threshold
       cloud-evidence-upload:
         help: Allow uploading sensitive evidence to cloud LLM providers (off by default).
       country-of-fiscal-residence:
@@ -4971,6 +4973,8 @@ wizard:
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Foreign-held assets above legal threshold
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Virtual currencies held abroad above Modelo 721 threshold
       does-intracomunitario:
         prompt: Conducts intracomunitario operations
       has-employees:

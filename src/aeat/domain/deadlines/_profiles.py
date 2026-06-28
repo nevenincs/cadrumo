@@ -90,6 +90,10 @@ def taxpayer_profile_from_mapping(
         ("pays_capital_income_with_retencion", "withholding.pays_capital_income_with_retencion"),
         ("does_intracomunitario", "iva.does_intracomunitario"),
         ("bienes_extranjero_above_threshold", "obligations.bienes_extranjero_above_threshold"),
+        (
+            "monedas_virtuales_extranjero_above_threshold",
+            "obligations.monedas_virtuales_extranjero_above_threshold",
+        ),
         ("enrollment.large_company", "censo.large_company"),
         ("enrollment.public_administration_budget_gt_6000000", "censo.public_administration_budget_gt_6000000"),
     ):
@@ -142,6 +146,7 @@ def taxpayer_profile_from_mapping(
         does_intracomunitario=typed.does_intracomunitario,
         third_party_transactions_above_347_threshold=typed.third_party_transactions_above_347_threshold,
         bienes_extranjero_above_threshold=typed.bienes_extranjero_above_threshold,
+        monedas_virtuales_extranjero_above_threshold=typed.monedas_virtuales_extranjero_above_threshold,
         iva=ModeloIVAProfile(
             roi_enrolled=typed.iva_roi_enrolled,
             oss_enrolled=typed.iva_oss_enrolled,

@@ -757,6 +757,16 @@ effective_dated = true
 description = "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold."
 schedule_predicates = ["bienes_extranjero_above_threshold"]
 
+[[sections.fields]]
+key = "monedas_virtuales_extranjero_above_threshold"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Modelo 721 eligibility: virtual currencies held abroad declared above the legal threshold."
+model_selectors = ["monedas_virtuales_extranjero_above_threshold"]
+schedule_predicates = ["monedas_virtuales_extranjero_above_threshold"]
+
 [[sections]]
 key = "filing_export"
 title = "Filing and export context"

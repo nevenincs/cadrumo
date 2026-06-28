@@ -253,6 +253,35 @@ def test_general_regime_profile_with_bienes_declared_modelo_720_applicable() -> 
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
 
 
+def test_modelo_721_uses_crypto_abroad_threshold_not_modelo_720_bienes_fact() -> None:
+    """M721 cannot inherit M720's bienes-en-el-extranjero threshold fact.
+
+    The two obligations have separate subject matter. A taxpayer can
+    have no Modelo 720 bienes/derechos above threshold while still
+    holding Modelo 721 virtual currencies abroad above threshold.
+    """
+
+    base_profile = TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
+        iva_regime=IVARegime.GENERAL,
+        bienes_extranjero_above_threshold=False,
+        monedas_virtuales_extranjero_above_threshold=False,
+    )
+
+    assert derive_modelo_applicability(base_profile, "720").verdict is ApplicabilityVerdict.INCOMPLETE
+    base_721 = derive_modelo_applicability(base_profile, "721")
+    assert base_721.verdict is ApplicabilityVerdict.INCOMPLETE
+    assert "ley-58-2003:da-18" in base_721.legal_refs
+    assert "orden-hfp-886-2023:art-2" in base_721.legal_refs
+
+    crypto_profile = base_profile.model_copy(update={"monedas_virtuales_extranjero_above_threshold": True})
+
+    assert derive_modelo_applicability(crypto_profile, "720").verdict is ApplicabilityVerdict.INCOMPLETE
+    assert derive_modelo_applicability(crypto_profile, "721").verdict is ApplicabilityVerdict.APPLICABLE
+
+
 def test_impatriado_exemption_does_not_affect_other_modelos() -> None:
     """The impatriado pre-check is scoped strictly to M720.
 

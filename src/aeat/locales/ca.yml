@@ -5050,6 +5050,8 @@ wizard:
         help: Codi postal del domicili fiscal
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
+      monedas-virtuales-extranjero-above-threshold:
+        help: Monedes virtuals a l'estranger superen el llindar del Modelo 721
       cloud-evidence-upload:
         help: Permetre pujar evidència sensible a proveïdors LLM al núvol (desactivat
           per defecte).
@@ -5236,6 +5238,8 @@ wizard:
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Béns a l'estranger superen el llindar legal
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Monedes virtuals a l'estranger superen el llindar del Modelo 721
       does-intracomunitario:
         prompt: Realitza operacions intracomunitàries
       has-employees:

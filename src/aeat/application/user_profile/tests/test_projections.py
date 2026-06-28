@@ -6,6 +6,7 @@ import pytest
 
 from ....domain.deadlines._models import IVARegime
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ...wizard import _catalogue as _wizard_catalogue  # noqa: F401  (registration side effect)
 from .. import (
     facts_to_values,
     projection_for_taxpayer,
@@ -121,3 +122,26 @@ def test_record_to_values_emits_bare_key_for_third_party_threshold() -> None:
     assert values["third_party_transactions_above_347_threshold"] == "true"
     # The prefixed key must NOT appear (no dual-key emission).
     assert "obligations.third_party_transactions_above_347_threshold" not in values
+
+
+def test_crypto_abroad_threshold_projects_to_taxpayer_profile() -> None:
+    """Modelo 721's threshold is distinct from Modelo 720's foreign-assets fact."""
+
+    record = UserProfileRecord(
+        profile_id="operator",
+        display_name="Operator",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="obligations.bienes_extranjero_above_threshold", value=False),
+            UserProfileFact(path="obligations.monedas_virtuales_extranjero_above_threshold", value=True),
+        ),
+    )
+
+    values = record_to_values(record)
+    profile = projection_for_taxpayer(record)
+
+    assert values["monedas_virtuales_extranjero_above_threshold"] == "true"
+    assert "obligations.monedas_virtuales_extranjero_above_threshold" not in values
+    assert profile.bienes_extranjero_above_threshold is False
+    assert profile.monedas_virtuales_extranjero_above_threshold is True

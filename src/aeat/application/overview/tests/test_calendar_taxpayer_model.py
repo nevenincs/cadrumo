@@ -533,6 +533,27 @@ def test_calendar_natural_person_shows_irpf_not_corporate() -> None:
     assert surfaced.isdisjoint({"200", "202"})
 
 
+def test_calendar_suppresses_modelo_721_without_crypto_abroad_threshold() -> None:
+    """A default foreign-asset false profile must not receive active M721 rows."""
+
+    profile = TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
+        iva_regime=IVARegime.GENERAL,
+        bienes_extranjero_above_threshold=False,
+        monedas_virtuales_extranjero_above_threshold=False,
+    )
+    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 3, 31))
+
+    cal = build_overview_calendar(profile, rng, today=date(2025, 1, 15), show_suppressed=True)
+
+    assert "721" not in {entry.modelo for entry in cal.entries}
+    suppressed_721 = [entry for entry in cal.suppressed_entries if entry.modelo == "721"]
+    assert suppressed_721
+    assert {entry.verdict.value for entry in suppressed_721} == {"incomplete"}
+
+
 def test_calendar_attribution_entity_is_shown_no_cuota_obligation() -> None:
     """An attribution entity's calendar lists no IS and no IRPF cuota.
 
