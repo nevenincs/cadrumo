@@ -68,6 +68,32 @@ def _stored_transaction(transaction_id: str) -> Any:
     return TransactionCatalogueRepository(bucket_id=bucket_id).load().transactions[transaction_id]
 
 
+def _classify_with_tax_facts(transaction_id: str) -> None:
+    result = invoke_cached_cli(
+        [
+            "app",
+            "ledger",
+            "classify",
+            transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "software_suscripcion",
+            "--taxable-base",
+            "82.64",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "17.36",
+            "--iva-category",
+            "domestic_general_21",
+            "--irpf-category",
+            "actividades_economicas_directa_simplificada",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+
 def _import_many_transactions(tmp_path: Path, *, count: int) -> list[str]:
     lines = ["Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"]
     for idx in range(1, count + 1):
@@ -506,6 +532,59 @@ def test_classify_from_csv_persists_iva_facts(tmp_path: Path) -> None:
     assert by_id[tx2]["taxable_base"] is None
     assert by_id[tx2]["iva_rate"] is None
     assert by_id[tx2]["iva_amount"] is None
+
+
+def test_classify_from_csv_preserves_existing_tax_facts_when_columns_omitted(tmp_path: Path) -> None:
+    """Partial classification CSV rows must not clear facts they do not mention."""
+    tx1, _tx2 = _import_two_transactions(tmp_path)
+    _classify_with_tax_facts(tx1)
+
+    csv_file = tmp_path / "classification_only.csv"
+    csv_file.write_text(
+        f"transaction_id,classification,category_id\n{tx1},BUSINESS,material_oficina\n",
+        encoding="utf-8",
+    )
+
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+
+    assert result.exit_code == 0, result.output
+    row = {r["transaction_id"]: r for r in _list_transactions()}[tx1]
+    assert row["business_classification"] == "BUSINESS"
+    assert row["category_id"] == "material_oficina"
+    assert row["taxable_base"] == "82.64"
+    assert row["iva_rate"] == "0.21"
+    assert row["iva_amount"] == "17.36"
+    assert row["iva_category"] == "domestic_general_21"
+    assert row["irpf_category"] == "actividades_economicas_directa_simplificada"
+
+
+def test_classify_from_csv_blank_optional_tax_cells_preserve_existing_values(tmp_path: Path) -> None:
+    """Blank optional CSV cells behave as omitted cells, not destructive clears."""
+    tx1, _tx2 = _import_two_transactions(tmp_path)
+    _classify_with_tax_facts(tx1)
+
+    csv_file = tmp_path / "blank_tax_cells.csv"
+    csv_file.write_text(
+        "transaction_id,classification,category_id,taxable_base,iva_rate,iva_amount,iva_category,irpf_category\n"
+        f"{tx1},BUSINESS,material_oficina,,,,,\n",
+        encoding="utf-8",
+    )
+
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+
+    assert result.exit_code == 0, result.output
+    row = {r["transaction_id"]: r for r in _list_transactions()}[tx1]
+    assert row["business_classification"] == "BUSINESS"
+    assert row["category_id"] == "material_oficina"
+    assert row["taxable_base"] == "82.64"
+    assert row["iva_rate"] == "0.21"
+    assert row["iva_amount"] == "17.36"
+    assert row["iva_category"] == "domestic_general_21"
+    assert row["irpf_category"] == "actividades_economicas_directa_simplificada"
 
 
 def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> None:
