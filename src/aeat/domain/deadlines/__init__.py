@@ -78,6 +78,8 @@ from ._models import (
     Schedule,
     TaxpayerProfile,
     evaluate_multiple_pagadores_obligation,
+    irnr_representante_fiscal_required,
+    is_ue_eee_country_code,
 )
 from ._plazo import resolve_filing_closes_on
 from ._profiles import taxpayer_profile_from_mapping
@@ -125,7 +127,9 @@ __all__ = [
     "compute_obligation_schedule",
     "evaluate_multiple_pagadores_obligation",
     "explain",
+    "irnr_representante_fiscal_required",
     "is_business_day",
+    "is_ue_eee_country_code",
     "load_holiday_calendar",
     "load_recargo_bands",
     "next_business_day",

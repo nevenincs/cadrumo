@@ -8,15 +8,15 @@ declarations: ``Modelo184MemberRow``, ``Modelo232VinculadaRow``,
 regulatory constant owned by ``core.external_constants`` (``M347_THRESHOLD_EUR``),
 consumed directly from there.
 
-This module uses :class:`CalculationRevision` and :class:`ModeloRecord`
-for persistence operations.
+This module re-exports :class:`CalculationRevision` and :class:`ModeloRecord`
+alongside their catalogues so application services can address calculation and
+filing persistence through the domain aggregate.
 
 The package also hosts, as submodules imported by their consumers directly, the
 domain-layer modelo persistence and identity core: the calculation, filing, and
 verification repositories, calculation revisions, filing records, verification
 reports, and work units.
 
-Use of :class:`CalculationRevision`, :class:`ModeloRecord` for compliance.
 """
 
 from __future__ import annotations

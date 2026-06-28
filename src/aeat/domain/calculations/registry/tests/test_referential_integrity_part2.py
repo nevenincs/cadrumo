@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .. import CasillaId, validated_casilla_id
+from .._schema import CasillaContinuidadEvolutionDefinition, RegistryCatalogues
 from .._schema_input_kind import InputKind
 from ._referential_integrity_support import (
     _DUMMY_LEGAL_ID,
@@ -13,13 +14,19 @@ from ._referential_integrity_support import (
     CasillaDefinition,
     RegistryValidationError,
     ValidationError,
+    _build_snapshot_with_missing_legal,
+    _build_snapshot_with_missing_source,
     _completeness_manifest,
     _minimal_casilla,
     _minimal_catalogues,
+    _minimal_legal_ref,
     _minimal_modelo,
     _minimal_revision,
+    _minimal_source_ref,
     _segmented_casilla,
     _single_segment_casilla,
+    _snapshot_for_revision,
+    check_all_id_references,
     freeze_toml,
 )
 
@@ -38,6 +45,10 @@ _SEGMENTED_TARGET_CASILLA: CasillaId = validated_casilla_id(
     "DP200014:00999",
     surface="_SEGMENTED_TARGET_CASILLA",
 )
+_MISSING_LEGAL_ID = "lirpf:art-99"
+_MISSING_SOURCE_ID = "aeat-missing-source"
+_EXTRA_LEGAL_ID = "lirpf:art-88"
+_EXTRA_SOURCE_ID = "aeat-extra-source"
 
 
 def test_segment_qualified_reference_resolves_across_segments() -> None:
@@ -322,6 +333,158 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
     source = [f for f in failures if "casilla.id '01'" in f and "without source_refs" in f]
     assert legal, f"ungrounded required casilla must be reported without legal_refs; got: {failures}"
     assert source, f"ungrounded required casilla must be reported without source_refs; got: {failures}"
+
+
+def test_completeness_manifest_refs_must_resolve_in_registry_validation() -> None:
+    """Manifest-level legal/source refs are load-blocking catalogue references."""
+    from .._validate import RegistryValidator
+
+    manifest = _completeness_manifest(
+        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+    ).model_copy(
+        update={
+            "legal_refs": (_MISSING_LEGAL_ID,),
+            "source_ref": _MISSING_SOURCE_ID,
+            "source_refs": (_MISSING_SOURCE_ID,),
+        },
+    )
+    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+        update={"completeness_manifest": manifest},
+    )
+
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(_minimal_modelo(revision), revision)
+
+    assert any(
+        "calculation-completeness manifest references unknown legal id 'lirpf:art-99'" in failure
+        for failure in failures
+    ), f"manifest legal_refs must be checked against the legal catalogue; got: {failures}"
+    assert any(
+        "calculation-completeness manifest references unknown source id 'aeat-missing-source'" in failure
+        for failure in failures
+    ), f"manifest source_refs must be checked against the source catalogue; got: {failures}"
+
+
+def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation() -> None:
+    """Continuity-evolution legal/source refs are load-blocking catalogue references."""
+    from .._validate import RegistryValidator
+
+    evolution = CasillaContinuidadEvolutionDefinition(
+        id="test-continuidad-2024-2025",
+        continuidad_id="test.continuidad",
+        from_revision="2024",
+        to_revision="2025",
+        evolution_kind="label_evolved",
+        legal_refs=(_MISSING_LEGAL_ID,),
+        source_refs=(_MISSING_SOURCE_ID,),
+    )
+    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+        update={"casilla_continuidad_evolutions": (evolution,)},
+    )
+
+    failures = RegistryValidator(_minimal_catalogues())._validate_revision(_minimal_modelo(revision), revision)
+
+    assert any(
+        "casilla continuidad evolution 'test-continuidad-2024-2025' references unknown legal id 'lirpf:art-99'"
+        in failure
+        for failure in failures
+    ), f"continuity evolution legal_refs must be checked against the legal catalogue; got: {failures}"
+    assert any(
+        "casilla continuidad evolution 'test-continuidad-2024-2025' references unknown source id "
+        "'aeat-missing-source'" in failure
+        for failure in failures
+    ), f"continuity evolution source_refs must be checked against the source catalogue; got: {failures}"
+
+
+def test_snapshot_carries_manifest_and_continuity_refs() -> None:
+    """Slice snapshots retain manifest and continuity-evolution legal/source evidence."""
+    manifest = _completeness_manifest(
+        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+    ).model_copy(
+        update={
+            "legal_refs": (_EXTRA_LEGAL_ID,),
+            "source_ref": _EXTRA_SOURCE_ID,
+            "source_refs": (_EXTRA_SOURCE_ID,),
+        },
+    )
+    evolution = CasillaContinuidadEvolutionDefinition(
+        id="test-continuidad-2024-2025",
+        continuidad_id="test.continuidad",
+        from_revision="2024",
+        to_revision="2025",
+        evolution_kind="legal_refs_evolved",
+        legal_refs=(_EXTRA_LEGAL_ID,),
+        source_refs=(_EXTRA_SOURCE_ID,),
+    )
+    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+        update={
+            "completeness_manifest": manifest,
+            "casilla_continuidad_evolutions": (evolution,),
+        },
+    )
+    catalogues = RegistryCatalogues(
+        legal={
+            _DUMMY_LEGAL_ID: _minimal_legal_ref(),
+            _EXTRA_LEGAL_ID: _minimal_legal_ref().model_copy(update={"id": _EXTRA_LEGAL_ID}),
+        },
+        sources={
+            _DUMMY_SOURCE_ID: _minimal_source_ref(),
+            _EXTRA_SOURCE_ID: _minimal_source_ref().model_copy(update={"id": _EXTRA_SOURCE_ID}),
+        },
+    )
+
+    snapshot = _snapshot_for_revision(_minimal_modelo(revision), catalogues, revision)
+
+    assert _EXTRA_LEGAL_ID in snapshot.legal
+    assert _EXTRA_SOURCE_ID in snapshot.sources
+    check_all_id_references(snapshot)
+
+
+def test_snapshot_integrity_checks_completeness_manifest_refs() -> None:
+    """Snapshot integrity rejects manifest refs missing from the slice catalogue."""
+    manifest = _completeness_manifest(
+        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+    ).model_copy(update={"legal_refs": (_DUMMY_LEGAL_ID, _MISSING_LEGAL_ID)})
+    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+        update={"completeness_manifest": manifest},
+    )
+    snapshot = _build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
+
+    with pytest.raises(RegistryValidationError, match=r"calculation_completeness_manifest\.legal_refs"):
+        check_all_id_references(snapshot)
+
+
+def test_snapshot_integrity_checks_completeness_manifest_source_ref() -> None:
+    """Snapshot integrity rejects a manifest source_ref missing from the slice catalogue."""
+    manifest = _completeness_manifest(
+        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+    ).model_copy(update={"source_ref": _MISSING_SOURCE_ID, "source_refs": (_MISSING_SOURCE_ID,)})
+    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+        update={"completeness_manifest": manifest},
+    )
+    snapshot = _build_snapshot_with_missing_source(revision, _MISSING_SOURCE_ID)
+
+    with pytest.raises(RegistryValidationError, match=r"calculation_completeness_manifest\.source_ref"):
+        check_all_id_references(snapshot)
+
+
+def test_snapshot_integrity_checks_casilla_continuidad_evolution_refs() -> None:
+    """Snapshot integrity rejects continuity-evolution refs missing from the slice catalogue."""
+    evolution = CasillaContinuidadEvolutionDefinition(
+        id="test-continuidad-2024-2025",
+        continuidad_id="test.continuidad",
+        from_revision="2024",
+        to_revision="2025",
+        evolution_kind="label_evolved",
+        legal_refs=(_DUMMY_LEGAL_ID, _MISSING_LEGAL_ID),
+        source_refs=(_DUMMY_SOURCE_ID,),
+    )
+    revision = _minimal_revision(casillas=(_minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+        update={"casilla_continuidad_evolutions": (evolution,)},
+    )
+    snapshot = _build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
+
+    with pytest.raises(RegistryValidationError, match=r"casilla_continuidad_evolution test-continuidad-2024-2025"):
+        check_all_id_references(snapshot)
 
 
 def test_filing_modelo_with_formula_passes_invariant() -> None:

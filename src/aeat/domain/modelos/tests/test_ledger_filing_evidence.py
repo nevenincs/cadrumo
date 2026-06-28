@@ -101,4 +101,4 @@ def test_ledger_filing_evidence_records_are_frozen_and_strict() -> None:
         )
 
     with pytest.raises(ValidationError, match="frozen"):
-        row.amount = Decimal("2.00")  # type: ignore[misc]
+        row.__setattr__("amount", Decimal("2.00"))

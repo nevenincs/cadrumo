@@ -39,6 +39,18 @@ def validate_casilla_section(
     for casilla in revision.casillas:
         failures.extend(_missing_refs(prefix, f"casilla {casilla.id}", casilla.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, f"casilla {casilla.id}", casilla.source_refs, source_refs, "source"))
+        if casilla.constraints is not None:
+            constraint_owner = f"casilla {casilla.id} constraints"
+            failures.extend(
+                _missing_refs(prefix, constraint_owner, casilla.constraints.legal_refs, legal_refs, "legal"),
+            )
+            failures.extend(
+                _missing_refs(prefix, constraint_owner, casilla.constraints.source_refs, source_refs, "source"),
+            )
+        for alias in casilla.aliases:
+            alias_owner = f"casilla {casilla.id} alias {alias.label!r}"
+            failures.extend(_missing_refs(prefix, alias_owner, alias.legal_refs, legal_refs, "legal"))
+            failures.extend(_missing_refs(prefix, alias_owner, alias.source_refs, source_refs, "source"))
         if casilla.formula is not None and casilla.formula not in formulas:
             failures.append(f"{prefix}: casilla {casilla.id!r} references unknown formula {casilla.formula!r}")
         if (
@@ -128,6 +140,13 @@ def validate_parameter_section(
             ),
         )
         failures.extend(validate_dated_values(prefix, parameter.id, parameter.values))
+        for row in parameter.convenio_rates:
+            row_owner = (
+                f"parameter {parameter.id} convenio_rate "
+                f"{row.country_code}/{row.tipo_renta}/{row.valid_from.isoformat()}"
+            )
+            failures.extend(_missing_refs(prefix, row_owner, row.legal_refs, legal_refs, "legal"))
+            failures.extend(evidence.require_legal_authority_refs(prefix, row_owner, row.legal_refs))
 
 
 def validate_binding_section(

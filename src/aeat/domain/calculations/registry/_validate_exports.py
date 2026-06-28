@@ -80,6 +80,12 @@ def _validate_export_record(
             f"{prefix}: export record {record.id!r} requires unknown positive casilla "
             f"{record.requires_positive_casilla_id!r}",
         )
+    for row_field, casilla_id in record.row_field_casilla_ids.items():
+        if casilla_id not in casillas:
+            failures.append(
+                f"{prefix}: export record {record.id!r} row_field_casilla_ids.{row_field} "
+                f"references unknown casilla {casilla_id!r}",
+            )
     for field in record.fields:
         _validate_export_field(
             failures,

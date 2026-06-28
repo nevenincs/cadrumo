@@ -21,9 +21,9 @@ from ._schema import (
     SourceReference,
 )
 from ._validate_cache import (
-    _CATALOGUE_FAILURE_CACHE,
-    _MODELO_VALIDATION_CACHE,
-    _REGISTRY_VALIDATION_CACHE,
+    CATALOGUE_FAILURE_CACHE,
+    MODELO_VALIDATION_CACHE,
+    REGISTRY_VALIDATION_CACHE,
 )
 from ._validate_evidence import EvidenceValidator
 from ._validate_registry_scope import validate_registry_scope
@@ -86,6 +86,10 @@ class RegistryValidator:
         if failures:
             raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
 
+    @property
+    def justificante_corpus_root(self) -> Path | None:
+        return self._justificante_corpus_root
+
     def _source_root_key(self) -> str | None:
         return str(self._source_root.expanduser().resolve()) if self._source_root is not None else None
 
@@ -97,12 +101,19 @@ class RegistryValidator:
         )
 
     def _cached_modelo_failures(self, modelo: ModeloDefinition) -> tuple[str, ...]:
-        cache_key = (id(modelo), id(self._legal), id(self._sources), self._source_root_key(), self._corpus_root_key())
-        cached = _MODELO_VALIDATION_CACHE.get(cache_key)
+        cache_key = (
+            id(modelo),
+            id(self._legal),
+            id(self._sources),
+            self._source_root_key(),
+            self._corpus_root_key(),
+            self._catalogue_corpus_strict,
+        )
+        cached = MODELO_VALIDATION_CACHE.get(cache_key)
         if cached is not None and cached[0] is modelo and cached[1] is self._legal and cached[2] is self._sources:
             return cached[3]
         failures = tuple(self._validate_modelo(modelo, validate_catalogues=True))
-        _MODELO_VALIDATION_CACHE[cache_key] = (modelo, self._legal, self._sources, failures)
+        MODELO_VALIDATION_CACHE[cache_key] = (modelo, self._legal, self._sources, failures)
         return failures
 
     def _validate_catalogues(self) -> tuple[str, ...]:
@@ -110,7 +121,7 @@ class RegistryValidator:
             return self._catalogue_failures
         source_root_key = self._source_root_key()
         cache_key = (id(self._legal), id(self._sources), source_root_key, self._catalogue_corpus_strict)
-        cached = _CATALOGUE_FAILURE_CACHE.get(cache_key)
+        cached = CATALOGUE_FAILURE_CACHE.get(cache_key)
         if cached is not None and cached[0] is self._legal and cached[1] is self._sources:
             self._catalogue_failures = cached[2]
             return self._catalogue_failures
@@ -130,7 +141,7 @@ class RegistryValidator:
             except RegistryValidationError as exc:
                 failures.append(str(exc))
         self._catalogue_failures = tuple(failures)
-        _CATALOGUE_FAILURE_CACHE[cache_key] = (self._legal, self._sources, self._catalogue_failures)
+        CATALOGUE_FAILURE_CACHE[cache_key] = (self._legal, self._sources, self._catalogue_failures)
         return self._catalogue_failures
 
     def _validate_modelo(self, modelo: ModeloDefinition, *, validate_catalogues: bool) -> list[str]:
@@ -159,8 +170,9 @@ class RegistryValidator:
             id(self._sources),
             self._source_root_key(),
             self._corpus_root_key(),
+            self._catalogue_corpus_strict,
         )
-        cached = _REGISTRY_VALIDATION_CACHE.get(cache_key)
+        cached = REGISTRY_VALIDATION_CACHE.get(cache_key)
         if cached is not None and cached[0] == modelo_tuple and cached[1] is self._legal and cached[2] is self._sources:
             if cached[3]:
                 raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in cached[3]))
@@ -173,9 +185,9 @@ class RegistryValidator:
         failures.extend(validate_registry_scope(modelo_tuple))
 
         if failures:
-            _REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, tuple(failures))
+            REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, tuple(failures))
             raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
-        _REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, ())
+        REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, ())
 
     def _validate_user_profile_contract(self, modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
         from ...user_profile._loader import load_user_profile_schema

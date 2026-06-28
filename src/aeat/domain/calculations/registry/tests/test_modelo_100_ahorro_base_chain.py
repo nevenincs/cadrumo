@@ -2,8 +2,10 @@
 
 Defect #181 (quadruple-confirmed): the formula ``renta-{year}-base-imponible-del-ahorro``
 was missing casilla 0041 (suma de rendimientos reducidos del capital mobiliario) as a
-summand.  The fix adds ``{ casilla = "0041" }`` as the first arg of the sum expression
-in both the 2024 and 2025 formula TOMLs.
+summand.  The registry fix adds ``{ casilla = "0041" }`` as the first arg of the sum
+expression in every M100 revision currently shipped by the registry (2020-2025); this
+module keeps live calculation coverage for 2024 and 2025, while
+``test_modelo_100_registry`` pins the all-revision structural invariant.
 
 Oracle authority
 ----------------

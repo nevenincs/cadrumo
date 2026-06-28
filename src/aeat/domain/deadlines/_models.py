@@ -11,7 +11,7 @@ from :mod:`aeat.domain.deadlines`.
 from __future__ import annotations
 
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Annotated, Self
 
@@ -369,6 +369,18 @@ class CrossPeriodGroupMemberRoster(BaseModel):
         return self
 
 
+def is_ue_eee_country_code(country_code: str | None) -> bool:
+    """Return True when ``country_code`` is in the EU + EEA country set."""
+    if country_code is None:
+        return False
+    return country_code.upper() in UE_EEA_COUNTRY_CODES
+
+
+def irnr_representante_fiscal_required(country_code: str | None) -> bool:
+    """Return True when an IRNR fiscal residence country requires representante fiscal."""
+    return country_code is not None and not is_ue_eee_country_code(country_code)
+
+
 class TaxpayerProfile(BaseModel):
     """The profile of a Spanish taxpayer for filing-deadline computation.
 
@@ -457,6 +469,9 @@ class TaxpayerProfile(BaseModel):
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
     uses_objective_estimation_irpf: bool = False
+    objective_estimation_prior_year_gross_income_eur: Decimal | None = None
+    objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None = None
+    objective_estimation_prior_year_purchases_eur: Decimal | None = None
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
@@ -569,6 +584,29 @@ class TaxpayerProfile(BaseModel):
             return frozenset(value)
         return value
 
+    @field_validator(
+        "objective_estimation_prior_year_gross_income_eur",
+        "objective_estimation_prior_year_invoice_gross_income_eur",
+        "objective_estimation_prior_year_purchases_eur",
+        mode="before",
+    )
+    @classmethod
+    def _coerce_objective_estimation_decimal(cls, value: object) -> object:
+        """Accept JSON-serialised Decimals for declared EO volume facts."""
+        if value is None or isinstance(value, Decimal):
+            return value
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped:
+                return None
+            try:
+                return Decimal(stripped)
+            except InvalidOperation as exc:
+                raise DeadlineValidationError(
+                    "objective-estimation declared volume must be a decimal"
+                ) from exc
+        return value
+
     @model_validator(mode="after")
     def _check_objective_estimation_consistency(self) -> Self:
         """Reject a regime that contradicts ``uses_objective_estimation_irpf``.
@@ -642,8 +680,7 @@ class TaxpayerProfile(BaseModel):
         """
         if (
             self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
-            and not self.ue_eee_status
-            and self.country_of_fiscal_residence is not None
+            and irnr_representante_fiscal_required(self.country_of_fiscal_residence)
         ):
             nif_missing = self.representante_fiscal_nif is None
             nombre_missing = self.representante_fiscal_nombre is None
@@ -712,7 +749,7 @@ class TaxpayerProfile(BaseModel):
         """
         if self.country_of_fiscal_residence is None:
             return False
-        return self.country_of_fiscal_residence.upper() in UE_EEA_COUNTRY_CODES
+        return is_ue_eee_country_code(self.country_of_fiscal_residence)
 
     @property
     def convenio_aplicable(self) -> str | None:
@@ -731,7 +768,7 @@ class TaxpayerProfile(BaseModel):
         - España-Francia: BOE-A-1997-21331
         - España-EE.UU.: BOE-A-1990-28246
         - España-Países Bajos: BOE-A-1972-674
-        - España-Marruecos: BOE-A-1985-13340
+        - España-Marruecos: BOE-A-1985-9280
         """
         if self.country_of_fiscal_residence is None:
             return None
@@ -792,7 +829,7 @@ _CONVENIO_BY_COUNTRY: dict[str, str] = {
     "FR": "BOE-A-1997-21331 España-Francia",
     "US": "BOE-A-1990-28246 España-EE.UU.",
     "NL": "BOE-A-1972-674 España-Países Bajos",
-    "MA": "BOE-A-1985-13340 España-Marruecos",
+    "MA": "BOE-A-1985-9280 España-Marruecos",
 }
 
 

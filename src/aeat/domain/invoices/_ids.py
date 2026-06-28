@@ -1,11 +1,11 @@
-"""Typed-id alias for invoice domain records.
+"""Typed id alias for :class:`Invoice` records.
 
-`InvoiceId` pins the hex-64 sha-256 shape ``derive_invoice_id`` mints
-for every persisted invoice. The alias lives in the invoice domain
-package because the invoice domain owns both the minting algorithm and
-the persisted-record shape; consumers in `application.ledger`,
-`application.invoices`, and the CLI payload surface import the alias
-under its public name (`InvoiceId`) per ADR Rule 4.
+:data:`InvoiceId` pins the hex-64 sha-256 shape
+:func:`derive_invoice_id` mints for every persisted :class:`Invoice`.
+The alias lives in the invoice domain package because the invoice domain
+owns both the minting algorithm and the persisted-record shape; consumers
+in :mod:`aeat.application.ledger` and the CLI payload surface import the
+alias under its public name per ADR Rule 4.
 """
 
 from __future__ import annotations

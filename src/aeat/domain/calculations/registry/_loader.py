@@ -64,7 +64,7 @@ _CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
 )
 ModeloSourceLayout = Literal["single_file", "directory"]
 ModeloRevisionSourceLayout = Literal["revision_file", "fragment_directory"]
-_REGISTRY_TREE_CACHE_SCHEMA_VERSION = "binding-selector-typed-enum-v3"
+_REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -901,6 +901,24 @@ def _validate_catalogue_section[T: BaseModel](
     return out
 
 
+def _validate_legal_parameter_refs(
+    scope: Path,
+    *,
+    parameters: Mapping[str, LegalParameter],
+    legal: Mapping[str, LegalReference],
+) -> None:
+    failures = [
+        f"legal parameter {parameter_id!r} references unknown legal id {legal_ref!r}"
+        for parameter_id, parameter in sorted(parameters.items())
+        for legal_ref in parameter.legal_refs
+        if legal_ref not in legal
+    ]
+    if failures:
+        raise RegistryLoadError(
+            f"{scope}: unresolved legal parameter references:\n" + "\n".join(f" - {failure}" for failure in failures),
+        )
+
+
 def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
     """Load only the legal-parameter catalogue from ``root/legal/*.toml``.
 
@@ -912,9 +930,9 @@ def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
 
     This function reuses :func:`load_catalogue_file` (already
     Pydantic-validated and ``lru_cache``-deduplicated) and walks only
-    ``root/legal/*.toml``. Modelo parsing, binding validation, and
-    cross-catalogue checks do not run; for that, callers must use
-    :func:`load_registry_tree`.
+    ``root/legal/*.toml``. Modelo parsing and binding validation do not
+    run; the legal refs carried by returned parameters are still resolved
+    against the legal catalogue.
 
     Args:
         root: Repository ``registry/aeat`` directory.
@@ -928,13 +946,16 @@ def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
     """
     resolved = root.resolve()
     legal_dir = resolved / "legal"
+    legal: dict[str, LegalReference] = {}
     parameters: dict[str, LegalParameter] = {}
     for path in sorted(legal_dir.glob("*.toml")):
         catalogue = load_catalogue_file(path)
         overlap = set(parameters).intersection(catalogue.parameters)
         if overlap:
             raise RegistryLoadError(f"{path}: duplicate parameter ids {sorted(overlap)!r}")
+        legal.update(catalogue.legal)
         parameters.update(catalogue.parameters)
+    _validate_legal_parameter_refs(legal_dir, parameters=parameters, legal=legal)
     return parameters
 
 
@@ -1135,17 +1156,17 @@ def _modelo_directory_fingerprints(entry: Path) -> tuple[tuple[str, int, int], .
     return tuple(fingerprints)
 
 
-def _registry_disk_cache_enabled() -> bool:
+def registry_disk_cache_enabled() -> bool:
     """Whether the cross-process ``/tmp`` registry pickle is read/written.
 
     Disabled under pytest (``PYTEST_CURRENT_TEST`` / ``PYTEST_XDIST_WORKER`` set):
     the pickle is keyed by file mtime and SHARED across pytest-xdist worker
     processes, so a parallel run could serve a stale/transient compiled registry
     from one worker to another -- a test-isolation race (#44). The per-process
-    :func:`lru_cache` on :func:`_load_registry_tree_cached` still memoises within a
-    worker, so in-run perf is unaffected and each worker compiles from the current
-    TOML. Production loads the registry once at startup with no concurrent edits,
-    so it keeps the disk cache.
+    :func:`functools.lru_cache` on :func:`_load_registry_tree_cached` still
+    memoises within a worker, so in-run perf is unaffected and each worker
+    compiles from the current TOML. Production loads the registry once at
+    startup with no concurrent edits, so it keeps the disk cache.
     """
     import os
 
@@ -1164,7 +1185,7 @@ def _load_registry_tree_cached(
     import tempfile
 
     cache_path: Path | None = None
-    if _registry_disk_cache_enabled():
+    if registry_disk_cache_enabled():
         hasher = hashlib.sha256()
         hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
         hasher.update(root.encode("utf-8"))
@@ -1222,6 +1243,7 @@ def _load_shared_catalogue_files(legal_dir: Path) -> RegistryCatalogues:
         legal.update(catalogue.legal)
         sources.update(catalogue.sources)
         parameters.update(catalogue.parameters)
+    _validate_legal_parameter_refs(legal_dir, parameters=parameters, legal=legal)
     return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
 
 

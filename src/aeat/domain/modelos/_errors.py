@@ -1,4 +1,11 @@
-"""Domain errors for AEAT modelo codes."""
+"""Domain errors for AEAT modelo records and calculations.
+
+:class:`ModeloValidationError` is raised by :class:`ModeloCode` and
+:class:`WorkUnit` invariant checks; :class:`PensionReduccionError` reports
+invalid fiscal-reduction inputs, and :func:`raise_catalogue_integrity_error`
+normalises repository integrity failures into typed :class:`ModeloError`
+subclasses.
+"""
 
 from __future__ import annotations
 

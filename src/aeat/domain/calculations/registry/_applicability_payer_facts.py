@@ -1,6 +1,7 @@
 """Payer-fact predicates for modelo applicability rules.
 
-Use of :class:`TaxpayerProfile` for compliance.
+Each :class:`TaxpayerProfile` boolean answers one payer or trade fact used by
+the modelo applicability rule table.
 """
 
 from __future__ import annotations
@@ -25,7 +26,8 @@ class PayerFact(StrEnum):
 def payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
     """Return whether ``profile`` positively declares the payer ``fact``.
 
-    Use of :class:`TaxpayerProfile` for compliance.
+    The supplied :class:`TaxpayerProfile` provides the boolean field backing the
+    requested :class:`PayerFact`.
     """
     match fact:
         case PayerFact.PAYS_WITHHELD_INCOME:

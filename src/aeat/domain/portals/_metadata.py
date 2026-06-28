@@ -1,4 +1,9 @@
-"""Strict pydantic model for a single portal's metadata."""
+"""Define :class:`PortalMetadata` for one :class:`Portal` catalogue entry.
+
+The model binds each URL to its :class:`PortalHost`,
+:class:`PortalCategory`, accepted :class:`AuthMethod` values, and
+:class:`UrlStability` tier before registry assembly.
+"""
 
 from __future__ import annotations
 

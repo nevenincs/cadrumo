@@ -1,6 +1,7 @@
 """Withholding row-set binding helpers.
 
-Use of :class:`ModeloRevision` for compliance.
+Withholding-source bindings declared on a :class:`ModeloRevision` are resolved
+from per-perceptor withholding observations into scalar values or row outputs.
 """
 
 from __future__ import annotations
@@ -185,7 +186,8 @@ def withholding_binding_requirements(
 ) -> tuple[WithholdingObservationRequirement, ...]:
     """Return :class:`WithholdingObservationRequirement` slices needed by ``revision``'s withholding bindings.
 
-    Uses :class:`ModeloRevision` for binding introspection.
+    The :class:`ModeloRevision` is introspected for withholding bindings and
+    grouped by the clave filters their selectors declare.
     """
     grouped: dict[tuple[str, ...], set[BindingId]] = {}
     for binding in revision.bindings:
@@ -220,7 +222,8 @@ def resolve_withholding_binding_values(
 ) -> dict[BindingId, Decimal]:
     """Resolve scalar withholding-source bindings into Decimal aggregates.
 
-    Use of :class:`ModeloRevision` for compliance.
+    The :class:`ModeloRevision` contributes scalar withholding bindings; row
+    producer bindings are handled by ``resolve_withholding_binding_row_values``.
     """
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
@@ -262,7 +265,8 @@ def resolve_withholding_binding_row_values(
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer withholding bindings into per-row indexed values.
 
-    Use of :class:`ModeloRevision` for compliance.
+    The :class:`ModeloRevision` contributes row-field withholding bindings,
+    which are grouped into deterministic per-row output slots.
     """
     available = tuple(observations)
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}

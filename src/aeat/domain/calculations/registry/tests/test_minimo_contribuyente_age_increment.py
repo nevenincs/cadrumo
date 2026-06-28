@@ -11,10 +11,10 @@ Anti-tautology: a birth_date that crosses an age threshold must change the
 computed 0511 value; the test verifies strict inequality so a broken formula
 that always returns the same value cannot pass.
 
-These tests use load_registry_tree + _build_validated_snapshot +
-calculate_registry_snapshot directly, bypassing ValidatedRegistryAuthority
-corpus-citation validation.  The goal is to verify that the age-at-year-end
-formula operator evaluates correctly -- not to audit registry integrity.
+These tests use load_registry_tree + build_snapshot + calculate_registry_snapshot
+directly, bypassing ValidatedRegistryAuthority corpus-citation validation.  The
+goal is to verify that the age-at-year-end formula operator evaluates correctly
+-- not to audit registry integrity.
 """
 
 from __future__ import annotations
@@ -27,10 +27,9 @@ from functools import cache
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaId, validated_casilla_id
+from .. import CasillaId, RegistrySnapshot, build_snapshot, validated_casilla_id
 from .._formula_runtime import calculate_registry_snapshot
 from .._loader import load_registry_tree
-from .._snapshot import _build_validated_snapshot  # type: ignore[reportPrivateUsage]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -51,12 +50,13 @@ def _registry():
     return {m.id: m for m in modelos}, catalogues
 
 
-def _snapshot(filing_year: int):
+def _snapshot(filing_year: int) -> RegistrySnapshot:
     """Build an M100 snapshot for the given filing_year, bypassing corpus validation."""
     modelos_by_id, catalogues = _registry()
-    return _build_validated_snapshot(
+    return build_snapshot(
         modelos_by_id["100"],
         catalogues,
+        source_root=_SOURCE_ROOT,
         filing_year=filing_year,
         period="0A",
     )

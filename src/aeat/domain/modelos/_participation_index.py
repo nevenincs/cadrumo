@@ -151,7 +151,7 @@ def upsert_transaction_participation(
     index: TransactionRevisionParticipationIndex,
     participation: TransactionRevisionParticipation,
 ) -> TransactionRevisionParticipationIndex:
-    """Return a new index with ``participation`` merged into the transaction's entry.
+    """Return a new :class:`TransactionRevisionParticipationIndex` with ``participation`` merged.
 
     The merge is keyed by ``calculation_revision_id``: an existing entry for the
     same revision is REPLACED in place (so a verified-then-filed transition
@@ -206,7 +206,7 @@ class TransactionParticipationIndexRepository:
 
     @property
     def secure_object_repository(self) -> SecureObjectRepository:
-        """Return the secure-object backend used by this repository."""
+        """Return the :class:`SecureObjectRepository` backend used by this repository."""
         return self._objects
 
     def exists(self, transaction_id: str) -> bool:

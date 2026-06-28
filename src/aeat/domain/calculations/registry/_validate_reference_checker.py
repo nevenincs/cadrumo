@@ -24,6 +24,8 @@ class IdReferenceChecker:
     """
 
     __slots__ = (
+        "algorithm_binding_ids",
+        "algorithm_provider_ids",
         "application_link_ids",
         "binding_ids",
         "casilla_data_types",
@@ -36,6 +38,7 @@ class IdReferenceChecker:
         "export_layout_ids",
         "extraction_profile_ids",
         "failures",
+        "filing_schedule_ids",
         "formula_ids",
         "legal_ids",
         "parameter_ids",
@@ -56,6 +59,8 @@ class IdReferenceChecker:
         self.formula_ids = {f.id for f in revision.formulas}
         self.parameter_ids = {p.id for p in revision.parameters}
         self.binding_ids = {b.id for b in revision.bindings}
+        self.algorithm_provider_ids = {p.id for p in revision.algorithm_providers}
+        self.algorithm_binding_ids = {b.id for b in revision.algorithm_bindings}
         self.relation_ids = {r.id for r in revision.relations}
         self.export_layout_ids = {lay.id for lay in revision.export_layouts}
         self.export_field_ids = {
@@ -67,6 +72,7 @@ class IdReferenceChecker:
         self.verification_expectation_ids = {e.id for e in revision.verification_expectations}
         self.application_link_ids = {lk.id for lk in revision.application_links}
         self.deadline_window_ids = {dw.id for dw in revision.deadline_windows}
+        self.filing_schedule_ids = {schedule.id for schedule in revision.filing_schedules}
         self.support_removal_decision_ids = {d.id for d in revision.support_removal_decisions}
         self.construct_ids = {c.id for c in revision.constructs}
         self.dependency_classification_ids = {dc.id for dc in revision.dependency_classifications}

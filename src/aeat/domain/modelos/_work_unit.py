@@ -1,5 +1,9 @@
 """Modelo work-unit value records.
 
+:class:`WorkUnit` and :class:`WorkUnitCatalogue` bind a :class:`ModeloCode`,
+:class:`Period`, :class:`BucketId`, and :data:`WorkUnitId` into the
+operator-facing handle addressed by :func:`derive_work_unit_id`.
+
 A modelo work unit is a stable, bucket-scoped handle over one
 calculation revision of a specific (modelo, year, period). It is
 the operator-facing object the modelo workflow verbs

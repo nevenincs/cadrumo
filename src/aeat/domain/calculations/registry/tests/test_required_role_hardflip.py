@@ -2,7 +2,7 @@
 
 `_validate_required_role_declarations` enforces that casillas
 matching any registered label pattern declare the canonical role.
-The pattern set today covers filing_year only (corpus-complete).
+The pattern set covers only corpus-complete label families.
 
 `collect_casillas_by_semantic_role` returns the cross-reference
 mapping role -> tuple of (modelo, revision, casilla) for downstream
@@ -73,6 +73,21 @@ class TestRequiredRoleHardflip:
             semantic_role="filing_year",
         )
         m = _modelo("180", "2023", [c])
+        assert _validate_required_role_declarations([m]) == ()
+
+    @pytest.mark.parametrize(
+        ("label", "semantic_role"),
+        (
+            ("Base imponible general", "irpf_base_imponible_general"),
+            (
+                "Base imponible imputada",
+                "irpf_re_agrup_interes_economico_base_imponible_imputada",
+            ),
+        ),
+    )
+    def test_base_imponible_labels_require_split_roles(self, label: str, semantic_role: str) -> None:
+        c = _casilla(label=label, data_type="decimal", semantic_role=semantic_role)
+        m = _modelo("100", "2025", [c])
         assert _validate_required_role_declarations([m]) == ()
 
     def test_label_match_without_role_fails(self) -> None:

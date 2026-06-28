@@ -1,4 +1,9 @@
-"""Narrow exceptions for the bucket-event-history domain."""
+"""Narrow exceptions for the bucket-event-history domain.
+
+:class:`BucketEventValidationError` protects :class:`BucketEvent` and
+:class:`BucketEventHistoryCatalogue` invariants, while the maintenance errors
+cover operator-facing bucket browse, export, import, rename, and delete flows.
+"""
 
 from __future__ import annotations
 

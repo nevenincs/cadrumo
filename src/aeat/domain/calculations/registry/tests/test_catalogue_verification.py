@@ -22,6 +22,11 @@ from .._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_FORMAL_WITHHOLDING_MODELOS = frozenset({"111", "115", "123", "180", "190", "193"})
+_M100_WITHHOLDING_IMPORT_SECTIONS = frozenset({"bindings", "relations", "dependency_classifications"})
+_FORMAL_WITHHOLDING_ARTICLE_REF = "rd-439-2007:art-108"
+_FRACTIONAL_PAYMENT_ARTICLE_REF = "rd-439-2007:art-109"
+
 
 def _catalogues() -> RegistryCatalogues:
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
@@ -156,6 +161,111 @@ def test_renta_economic_activity_legal_basis_links_to_corpus() -> None:
         "ley-35-2006:art-32",
     }.issubset(catalogues.legal)
     verify_legal_catalogue(catalogues.legal, source_root=bundled_path())
+
+
+def test_ley_31_2022_da_70_rib_reference_links_to_bundled_boe_corpus() -> None:
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    reference = catalogues.legal["ley-31-2022:da-70"]
+
+    assert reference.corpus_ref == "corpus/normatives/html/ley-31-2022-da-70.html#da-70"
+    assert reference.permalink.endswith("#da-70")
+    assert reference.required_text == (
+        "Reserva para inversiones en las Illes Balears",
+        "El importe de la reserva pendiente de materialización",
+        "Los contribuyentes del Impuesto sobre la Renta de las Personas Físicas",
+        "tendrán derecho a una deducción en la cuota íntegra",
+    )
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+
+def test_rd_439_art_109_legal_basis_links_to_pago_fraccionado_corpus() -> None:
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    reference = catalogues.legal["rd-439-2007:art-109"]
+
+    assert reference.corpus_ref == "corpus/normatives/html/rd-439-2007-art-109.html#a109"
+    assert reference.notes is not None
+    assert "obligados al pago fraccionado" in reference.notes.lower()
+    assert "obligaciones formales del retenedor" not in reference.notes.lower()
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+
+    corpus = json.loads(bundled_path("corpus", "normatives", "rd-439-2007.json").read_text(encoding="utf-8"))
+    article_109 = next(article for article in corpus["articulos"] if article["numero"] == "109")
+
+    assert article_109["titulo"]["es"] == "Obligados al pago fraccionado"
+    assert "autoliquidar e ingresar pagos fraccionados" in article_109["summary"]["es"]
+    assert "obligaciones formales" not in article_109["summary"]["es"].lower()
+
+
+def test_formal_withholding_modelos_do_not_cite_fractional_payment_article() -> None:
+    modelos_root = bundled_path("registry", "aeat", "modelos")
+    offenders: list[str] = []
+    missing_formal_article: list[str] = []
+
+    for modelo_id in sorted(_FORMAL_WITHHOLDING_MODELOS):
+        modelo_root = modelos_root / modelo_id
+        assert modelo_root.is_dir(), modelo_id
+        has_formal_article = False
+
+        for path in sorted(modelo_root.rglob("*.toml")):
+            text = path.read_text(encoding="utf-8")
+            if _FRACTIONAL_PAYMENT_ARTICLE_REF in text:
+                offenders.append(path.relative_to(modelos_root).as_posix())
+            if _FORMAL_WITHHOLDING_ARTICLE_REF in text:
+                has_formal_article = True
+
+        if not has_formal_article:
+            missing_formal_article.append(modelo_id)
+
+    assert offenders == []
+    assert missing_formal_article == []
+
+
+def test_modelo_100_withholding_imports_use_formal_withholding_article() -> None:
+    modelo_root = bundled_path("registry", "aeat", "modelos", "100")
+    offenders: list[str] = []
+    missing_formal_article: list[str] = []
+    checked: list[str] = []
+
+    for path in sorted(modelo_root.rglob("*.toml")):
+        if not (set(path.parts) & _M100_WITHHOLDING_IMPORT_SECTIONS):
+            continue
+
+        text = path.read_text(encoding="utf-8")
+        if "retenciones" not in text.lower():
+            continue
+        if not any(f'source_modelo = "{modelo_id}"' in text for modelo_id in _FORMAL_WITHHOLDING_MODELOS):
+            continue
+
+        rel_path = path.relative_to(modelo_root).as_posix()
+        checked.append(rel_path)
+        if _FRACTIONAL_PAYMENT_ARTICLE_REF in text:
+            offenders.append(rel_path)
+        if _FORMAL_WITHHOLDING_ARTICLE_REF not in text:
+            missing_formal_article.append(rel_path)
+
+    assert len(checked) == 72
+    assert offenders == []
+    assert missing_formal_article == []
+
+
+def test_modelo_100_retention_credit_formulas_do_not_cite_fractional_payment_article() -> None:
+    modelo_root = bundled_path("registry", "aeat", "modelos", "100")
+    offenders: list[str] = []
+    checked: list[str] = []
+
+    for path in sorted(modelo_root.rglob("formulas/*.toml")):
+        text = path.read_text(encoding="utf-8")
+        formula_id = next((line for line in text.splitlines() if line.startswith("id = ")), "")
+        if "retenciones" not in formula_id.lower():
+            continue
+
+        rel_path = path.relative_to(modelo_root).as_posix()
+        checked.append(rel_path)
+        if _FRACTIONAL_PAYMENT_ARTICLE_REF in text:
+            offenders.append(rel_path)
+
+    assert "revisions/2025/formulas/0068-renta-2025-retenciones-arrendamientos-urbanos.toml" in checked
+    assert offenders == []
 
 
 def _legal_reference(
@@ -390,9 +500,10 @@ def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
 
     pdf_path = tmp_path / "corpus" / "manuals" / "renta" / "2020" / "part1" / "source.pdf"
     pdf_path.parent.mkdir(parents=True)
-    pdf_path.write_bytes(b"dummy pdf bytes that satisfy file presence")
+    payload = b"%PDF-1.4 manual structure sample bytes"
+    pdf_path.write_bytes(payload)
 
-    sha = hashlib.sha256(b"dummy pdf bytes that satisfy file presence").hexdigest()
+    sha = hashlib.sha256(payload).hexdigest()
 
     source = SourceReference(
         id="aeat-renta-2020-manual-parte1",
@@ -401,7 +512,7 @@ def test_verify_source_file_checks_manual_structure(tmp_path: Path) -> None:
         kind="manual_pdf",
         corpus_path="corpus/manuals/renta/2020/part1/source.pdf",
         sha256=sha,
-        bytes=len(b"dummy pdf bytes that satisfy file presence"),
+        bytes=len(payload),
         retrieved_at=date(2026, 5, 6),
         source_url=f"{Settings.external_constants().aeat.domains.sede}/Manual.pdf",
         review_status="reviewed",

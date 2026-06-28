@@ -50,7 +50,8 @@ from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, Validatio
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
 from .._identifiers import canonical_decimal_string as _canonical_decimal
-from ..calculations.registry import BindingId, CasillaId, CasillaObservation, RelationId, validated_casilla_id
+from ..calculations.registry._bindings import CasillaObservation
+from ..calculations.registry._ids import BindingId, CasillaId, RelationId, validated_casilla_id
 from ._errors import ModeloError, ModeloValidationError
 from ._ids import CalculationRevisionId, WorkUnitId
 from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
@@ -177,8 +178,7 @@ def derive_calculation_revision_id(
         ),
         "overrides": dict(
             sorted(
-                (_validated_binding_id(k, surface="binding_overrides"), v.strip())
-                for k, v in binding_overrides.items()
+                (_validated_binding_id(k, surface="binding_overrides"), v.strip()) for k, v in binding_overrides.items()
             ),
         ),
         "outputs": _outputs_for_hash_from_mapping(casilla_values),

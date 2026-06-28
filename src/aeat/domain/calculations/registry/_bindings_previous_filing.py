@@ -1,12 +1,15 @@
 """Previous-filing binding selectors, requirements, and resolvers.
 
-Use of :class:`ModeloRevision` for compliance.
+The :class:`ModeloRevision` supplies ``previous_filing`` binding declarations;
+this module turns those selectors into source-observation requirements and
+resolved binding values.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
 
@@ -61,7 +64,9 @@ def previous_filing_observation_requirements(
 ) -> tuple[RegistryFoldRequirement, ...]:
     """Return :class:`RegistryFoldRequirement` records needed by direct previous-filing bindings.
 
-    Use of :class:`ModeloRevision` for compliance.
+    The :class:`ModeloRevision` is scanned for direct ``previous_filing``
+    bindings, and each selector becomes a source modelo/year/period
+    requirement.
     """
     binding_ids_by_key: dict[tuple[str, int, str], set[BindingId]] = {}
     source_casilla_ids_by_key: dict[tuple[str, int, str], set[CasillaId]] = {}
@@ -185,14 +190,23 @@ def _resolve_binding_values(
     *,
     filing_year: int,
     period: str,
+    activity_start_date: date | None = None,
 ) -> list[Decimal] | None:
     selector = _previous_filing_selector(binding)
     required_anchors = selector.required_period_anchors_for_target(period)
     if not required_anchors:
         return None
     values: list[Decimal] = []
+    scoped_pre_activity = False
     for period_year_delta, required_period in required_anchors:
         expected_year = filing_year + selector.filing_year_delta + period_year_delta
+        if _anchor_strictly_before_activity_start(
+            expected_year,
+            required_period,
+            activity_start_date=activity_start_date,
+        ):
+            scoped_pre_activity = True
+            continue
         values.extend(
             _resolve_anchor_values(
                 binding,
@@ -202,6 +216,8 @@ def _resolve_binding_values(
                 required_period=required_period,
             ),
         )
+    if not values and scoped_pre_activity:
+        return _zero_values_for_scoped_out_binding(selector)
     return values
 
 
@@ -211,19 +227,31 @@ def resolve_previous_filing_binding_values(
     *,
     filing_year: int,
     period: str,
+    activity_start_date: date | None = None,
+    excluded_binding_ids: frozenset[BindingId] | None = None,
 ) -> dict[BindingId, Decimal]:
     """Resolve direct previous-filing bindings from observed filed declarations.
 
-    Use of :class:`ModeloRevision` for compliance.
+    The :class:`ModeloRevision` supplies the binding selectors and aggregation
+    operators; ``observations`` supply the filed casilla values they fold.
     """
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
+    excluded = excluded_binding_ids or frozenset()
     for binding in revision.bindings:
+        if binding.id in excluded:
+            continue
         if binding.source != "previous_filing":
             continue
         if not _is_direct_previous_filing_binding(binding):
             continue
-        values = _resolve_binding_values(binding, available, filing_year=filing_year, period=period)
+        values = _resolve_binding_values(
+            binding,
+            available,
+            filing_year=filing_year,
+            period=period,
+            activity_start_date=activity_start_date,
+        )
         if values is None:
             continue
         resolved[binding.id] = _aggregate_previous_filing_binding(
@@ -232,6 +260,26 @@ def resolve_previous_filing_binding_values(
             source_casilla_ids=_previous_filing_source_ids(_previous_filing_selector(binding)),
         )
     return resolved
+
+
+def _anchor_strictly_before_activity_start(
+    expected_year: int,
+    required_period: str,
+    *,
+    activity_start_date: date | None,
+) -> bool:
+    """Return whether a source period ended before the taxpayer's activity started."""
+    if activity_start_date is None:
+        return False
+    filing_period = filing_period_from_scope(expected_year, required_period)
+    if filing_period is None or not filing_period.has_date_span():
+        return False
+    return filing_period.end_date < activity_start_date
+
+
+def _zero_values_for_scoped_out_binding(selector: _PreviousModeloSelector) -> list[Decimal]:
+    """Return a neutral zero vector matching the binding's source-casilla shape."""
+    return [Decimal("0")] * max(1, len(_previous_filing_source_ids(selector)))
 
 
 class _PreviousModeloSelector(BaseModel):

@@ -21,6 +21,7 @@ from .. import RegistryCatalogues, RegistryValidationError
 from .._loader import load_registry_tree
 from .._schema import ExtractionProfileDefinition, ModeloDefinition
 from .._validate import RegistryValidator
+from ._gate_support import catalogues_for_m130_gate_tests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,7 +32,7 @@ _DATA_ROOT = bundled_path()
 @cache
 def _committed_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    return next(m for m in modelos if m.id == "130"), catalogues
+    return next(m for m in modelos if m.id == "130"), catalogues_for_m130_gate_tests(catalogues)
 
 
 def _committed_profile(
@@ -57,7 +58,12 @@ def _validator_with_corpus(corpus_root: Path, catalogues: RegistryCatalogues) ->
         catalogues,
         source_root=bundled_path(),
         justificante_corpus_root=corpus_root,
+        catalogue_corpus_strict=False,
     )
+
+
+def _validator_from_data_root(catalogues: RegistryCatalogues) -> RegistryValidator:
+    return RegistryValidator(catalogues, source_root=_DATA_ROOT, catalogue_corpus_strict=False)
 
 
 def _build_mutated_modelo(
@@ -69,6 +75,22 @@ def _build_mutated_modelo(
     return modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
 
 
+def _write_corpus_pdf_fixture(corpus_root: Path) -> None:
+    fixture_dir = corpus_root / "130"
+    fixture_dir.mkdir(parents=True)
+    (fixture_dir / "2024-1T.pdf").write_bytes(b"%PDF-1.4 corpus fixture sample")
+
+
+def _assert_justificante_corpus_root(
+    validator: RegistryValidator,
+    *,
+    missing_message: str,
+) -> Path:
+    corpus_root = validator.justificante_corpus_root
+    assert corpus_root is not None, missing_message
+    return corpus_root
+
+
 # --- (a) fixture exists + neither flag → FAIL --------------------------------
 
 
@@ -76,9 +98,7 @@ def test_fixture_exists_no_flags_fails(tmp_path: Path) -> None:
     """Corpus fixture present, both flags False: the round-trip gate must reject the profile."""
     modelo, catalogues = _committed_130()
     corpus_root = tmp_path / "justificantes"
-    fixture_dir = corpus_root / "130"
-    fixture_dir.mkdir(parents=True)
-    (fixture_dir / "2024-1T.pdf").write_bytes(b"%PDF-1.4 stub")
+    _write_corpus_pdf_fixture(corpus_root)
 
     profile = _committed_profile(provisional=False, round_trip_verified=False)
     mutated_modelo = _build_mutated_modelo(modelo, profile)
@@ -95,9 +115,7 @@ def test_fixture_exists_round_trip_verified_passes(tmp_path: Path) -> None:
     """corpus_round_trip_verified=True + verification_source set: gate must pass cleanly."""
     modelo, catalogues = _committed_130()
     corpus_root = tmp_path / "justificantes"
-    fixture_dir = corpus_root / "130"
-    fixture_dir.mkdir(parents=True)
-    (fixture_dir / "2024-1T.pdf").write_bytes(b"%PDF-1.4 stub")
+    _write_corpus_pdf_fixture(corpus_root)
 
     profile = _committed_profile(
         provisional=False,
@@ -118,9 +136,7 @@ def test_fixture_exists_provisional_flag_passes(tmp_path: Path) -> None:
     """Corpus fixture present, provisional_pending_specimen=True: gate must pass (opt-out wins)."""
     modelo, catalogues = _committed_130()
     corpus_root = tmp_path / "justificantes"
-    fixture_dir = corpus_root / "130"
-    fixture_dir.mkdir(parents=True)
-    (fixture_dir / "2024-1T.pdf").write_bytes(b"%PDF-1.4 stub")
+    _write_corpus_pdf_fixture(corpus_root)
 
     profile = _committed_profile(provisional=True, round_trip_verified=False)
     mutated_modelo = _build_mutated_modelo(modelo, profile)
@@ -141,14 +157,15 @@ def test_corpus_root_derived_from_bundled_path() -> None:
     injected directly — the validator must derive it from source_root.
     """
     _modelo, catalogues = _committed_130()
-    validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
-    assert validator._justificante_corpus_root is not None, (
-        "corpus root derivation from bundled_path() returned None; the round-trip gate is disabled in production"
+    validator = _validator_from_data_root(catalogues)
+    corpus_root = _assert_justificante_corpus_root(
+        validator,
+        missing_message=(
+            "corpus root derivation from bundled_path() returned None; the round-trip gate is disabled in production"
+        ),
     )
-    assert validator._justificante_corpus_root.is_dir(), (
-        f"derived corpus root {validator._justificante_corpus_root} is not a directory"
-    )
-    assert validator._justificante_corpus_root.name == "justificantes"
+    assert corpus_root.is_dir(), f"derived corpus root {corpus_root} is not a directory"
+    assert corpus_root.name == "justificantes"
 
 
 def test_round_trip_gate_fires_via_production_path() -> None:
@@ -169,10 +186,13 @@ def test_round_trip_gate_fires_via_production_path() -> None:
     mutated_modelo = _build_mutated_modelo(modelo, profile)
 
     # Production wiring: no justificante_corpus_root injected
-    validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
-    assert validator._justificante_corpus_root is not None, (
-        "corpus root derivation returned None; gate would be silently disabled — "
-        "fix the derivation in _validate.py before this test can exercise the gate"
+    validator = _validator_from_data_root(catalogues)
+    _assert_justificante_corpus_root(
+        validator,
+        missing_message=(
+            "corpus root derivation returned None; gate would be silently disabled — "
+            "fix the derivation in _validate.py before this test can exercise the gate"
+        ),
     )
     with pytest.raises(RegistryValidationError, match="corpus_round_trip_verified"):
         validator.validate_modelo(mutated_modelo)
@@ -193,10 +213,13 @@ def test_round_trip_gate_provisional_flag_silences_via_production_path() -> None
     profile = _committed_profile(provisional=True, round_trip_verified=False)
     mutated_modelo = _build_mutated_modelo(modelo, profile)
 
-    validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
-    assert validator._justificante_corpus_root is not None, (
-        "corpus root derivation returned None; gate is silently disabled — "
-        "the provisional-flag opt-out cannot be verified against the derived path"
+    validator = _validator_from_data_root(catalogues)
+    _assert_justificante_corpus_root(
+        validator,
+        missing_message=(
+            "corpus root derivation returned None; gate is silently disabled — "
+            "the provisional-flag opt-out cannot be verified against the derived path"
+        ),
     )
     # No exception raised: provisional flag opts out of the round-trip gate
     validator.validate_modelo(mutated_modelo)
@@ -221,10 +244,13 @@ def test_round_trip_gate_verified_profile_passes_via_production_path() -> None:
     )
     mutated_modelo = _build_mutated_modelo(modelo, profile)
 
-    validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
-    assert validator._justificante_corpus_root is not None, (
-        "corpus root derivation returned None; gate is silently disabled — "
-        "the verified-profile pass cannot be confirmed against the derived path"
+    validator = _validator_from_data_root(catalogues)
+    _assert_justificante_corpus_root(
+        validator,
+        missing_message=(
+            "corpus root derivation returned None; gate is silently disabled — "
+            "the verified-profile pass cannot be confirmed against the derived path"
+        ),
     )
     # No exception raised: verified + verification_source satisfies both gates
     validator.validate_modelo(mutated_modelo)
@@ -266,9 +292,7 @@ def test_corpus_round_trip_verified_without_verification_source_fails(tmp_path: 
     """corpus_round_trip_verified=True but verification_source=None must fail the gate."""
     modelo, catalogues = _committed_130()
     corpus_root = tmp_path / "justificantes"
-    fixture_dir = corpus_root / "130"
-    fixture_dir.mkdir(parents=True)
-    (fixture_dir / "2024-1T.pdf").write_bytes(b"%PDF-1.4 stub")
+    _write_corpus_pdf_fixture(corpus_root)
 
     profile = _committed_profile(provisional=False, round_trip_verified=True, verification_source=None)
     mutated_modelo = _build_mutated_modelo(modelo, profile)
@@ -294,9 +318,7 @@ def test_corpus_round_trip_verified_with_each_verification_source_passes(
     """corpus_round_trip_verified=True with any valid verification_source enum value must pass."""
     modelo, catalogues = _committed_130()
     corpus_root = tmp_path / "justificantes"
-    fixture_dir = corpus_root / "130"
-    fixture_dir.mkdir(parents=True)
-    (fixture_dir / "2024-1T.pdf").write_bytes(b"%PDF-1.4 stub")
+    _write_corpus_pdf_fixture(corpus_root)
 
     profile = _committed_profile(
         provisional=False,
@@ -327,9 +349,10 @@ def test_verification_source_gate_fires_via_production_path() -> None:
     mutated_modelo = _build_mutated_modelo(modelo, profile)
 
     # Production wiring: no justificante_corpus_root injected
-    validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
-    assert validator._justificante_corpus_root is not None, (
-        "corpus root derivation returned None; gate would be silently disabled"
+    validator = _validator_from_data_root(catalogues)
+    _assert_justificante_corpus_root(
+        validator,
+        missing_message="corpus root derivation returned None; gate would be silently disabled",
     )
     with pytest.raises(RegistryValidationError, match="verification_source"):
         validator.validate_modelo(mutated_modelo)
@@ -345,9 +368,7 @@ def test_corpus_round_trip_not_verified_with_no_verification_source_is_dormant(
     """
     modelo, catalogues = _committed_130()
     corpus_root = tmp_path / "justificantes"
-    fixture_dir = corpus_root / "130"
-    fixture_dir.mkdir(parents=True)
-    (fixture_dir / "2024-1T.pdf").write_bytes(b"%PDF-1.4 stub")
+    _write_corpus_pdf_fixture(corpus_root)
 
     profile = _committed_profile(provisional=False, round_trip_verified=False, verification_source=None)
     mutated_modelo = _build_mutated_modelo(modelo, profile)
