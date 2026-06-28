@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0676"
+number = "0676"
+label = "Resultado a ingresar como consecuencia de la tramitación de autoliquidaciones anteriores o liquidaciones administrativas correspondientes al ejercicio 2025"
+section = ["resultados", "regularizacion_res"]
+semantic_role = "irpf_regularizacion_autoliquidaciones_anteriores_ingresar"
+legal_refs = ["ley-35-2006:art-97", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

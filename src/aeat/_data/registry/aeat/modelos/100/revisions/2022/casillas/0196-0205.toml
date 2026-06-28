@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0205"
+number = "0205"
+label = "IVA soportado (por ejemplo, recargo de equivalencia y/o compensación de agricultura, ganadería y pesca)"
+section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
+semantic_role = "irpf_ed_iva_soportado"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

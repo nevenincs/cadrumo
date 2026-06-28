@@ -1,16 +1,22 @@
-"""Portal: Documentos pendientes de firma."""
+"""Registry entry for the documents-awaiting-signature portfolio (portafirmas).
+
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_MIS_DOCUMENTOS_PENDIENTES_FIRMA`` under
+:class:`PortalCategory` ``CONSULTATION``, exposed as :data:`ENTRY`
+and consumed by :data:`aeat.domain.portals.PORTAL_REGISTRY`.
+"""
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_MIS_DOCUMENTOS_PENDIENTES_FIRMA,
-    url="https://sede.agenciatributaria.gob.es/Sede/gestiones/presentacion-portafirmas.html",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_MIS_DOCUMENTOS_PENDIENTES_FIRMA),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.CONSULTATION,
     auth_methods=(
         AuthMethod.CERTIFICATE,
@@ -18,10 +24,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Documentos pendientes de firma",
-        "en": "Documents awaiting signature",
-        "hu": "Aláírásra váró dokumentumok",
-    },
-    purpose_es="Portafirmas: documentos en espera de firma electrónica del contribuyente.",
+    label="entries.portal_mis_documentos_pendientes_firma.label",
+    purpose="entries.portal_mis_documentos_pendientes_firma.purpose",
 )
+"""Portal entry for the portafirmas (documents awaiting electronic signature)."""

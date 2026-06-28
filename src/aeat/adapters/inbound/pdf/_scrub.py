@@ -1,8 +1,8 @@
-"""Deterministic PII scrubbing for AEAT filing PDFs (EPIC #305).
+"""Deterministic PII scrubbing for AEAT filing PDFs.
 
-Real filings carry Kent's NIF, real amounts, his name, an AEAT-assigned
-CSV, and occasionally his IBAN / address. Committing any of that to a
-test corpus is a PII leak.
+Real filings carry the operator's NIF, real amounts, their name, an
+AEAT-assigned CSV, and occasionally their IBAN / address. Committing
+any of that to a test corpus is a PII leak.
 
 This module deterministically rewrites a source PDF so the output
 carries synthetic but structurally-faithful replacements — same digit
@@ -27,7 +27,7 @@ recording provenance + consent.
 
 The library is **never invoked at runtime** from production code — only
 from contributor-local workflows (``just scrub-from-drive``) and
-``src/aeat/_pdf_import/test_scrub.py`` tests.
+``src/aeat/adapters/inbound/pdf/test_scrub.py`` tests.
 """
 
 from __future__ import annotations
@@ -35,13 +35,17 @@ from __future__ import annotations
 import hashlib
 import random
 import re
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-from ._errors import PdfFilingImportError
+from ....core import STRICT_FROZEN_CONFIG
+from ....core.hashing import sha256_hex
+from ....core.time import now
+from ....domain.justificante import PdfModeloImportError
+from ._utils import sha256_file
 
 SCRUB_VERSION = "1.0.0"
 
@@ -61,7 +65,7 @@ _EMAIL_RE = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
 _CP_RE = re.compile(r"\b(?:CP\s*|C\.P\.\s*)[0-9]{5}\b")
 # Name regex — only match when prefixed by a known label. Keeps the scrubber
 # from eating AEAT section headings like "AGENCIA TRIBUTARIA" or
-# "RESULTADO A INGRESAR" (audit M1).
+# "RESULTADO A INGRESAR".
 _NAME_PREFIX_GROUP = (
     r"(?:Apellidos y nombre|Apellidos|Nombre|Declarante|Titular|"
     r"Razon social|Razón social|Empresa)"
@@ -82,14 +86,14 @@ _SCRUB_EMAIL = "demo@example.invalid"
 _SCRUB_CP = "CP 00000"
 
 
-class ScrubError(PdfFilingImportError):
+class ScrubError(PdfModeloImportError):
     """Raised when scrubbing cannot produce a safe output."""
 
 
 class ScrubSidecar(BaseModel):
     """Provenance + consent record for one scrubbed L2 fixture file."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     original_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     scrubbed_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -113,7 +117,7 @@ def _rng_from_filename(filename: str) -> random.Random:
     numerics); it is never used as a cryptographic primitive.
     """
     seed = hashlib.sha256(filename.encode("utf-8")).digest()
-    return random.Random(int.from_bytes(seed[:8], "big"))  # noqa: S311
+    return random.Random(int.from_bytes(seed[:8], "big"))
 
 
 def _scrub_amount(match: re.Match[str], rng: random.Random) -> str:
@@ -135,7 +139,7 @@ def _scrub_amount(match: re.Match[str], rng: random.Random) -> str:
 
 def _scrub_csv(match: re.Match[str], filename: str) -> str:
     """Replace a CSV with a deterministic 16-char upper-alphanum synthetic."""
-    seed = hashlib.sha256(f"{filename}:{SCRUB_VERSION}:csv".encode()).hexdigest().upper()
+    seed = sha256_hex(f"{filename}:{SCRUB_VERSION}:csv".encode()).upper()
     alphanum = re.sub(r"[^A-Z0-9]", "", seed)
     return alphanum[:16]
 
@@ -143,7 +147,7 @@ def _scrub_csv(match: re.Match[str], filename: str) -> str:
 def _scrub_pid(match: re.Match[str], filename: str) -> str:
     """Replace a presentation ID with a deterministic synthetic of matching length."""
     original = match.group("pid")
-    seed = hashlib.sha256(f"{filename}:{SCRUB_VERSION}:pid:{original}".encode()).hexdigest().upper()
+    seed = sha256_hex(f"{filename}:{SCRUB_VERSION}:pid:{original}".encode()).upper()
     alphanum = re.sub(r"[^A-Z0-9]", "", seed)
     return alphanum[: len(original)]
 
@@ -220,7 +224,7 @@ def scrub_text(
         scrubbed = _PRESENTATION_ID_RE.sub(lambda m: _scrub_pid(m, filename), scrubbed)
         touched.append("presentation_id")
 
-    # Names — only when prefixed by a known AEAT label (audit M1). This
+    # Names — only when prefixed by a known AEAT label. This
     # preserves the label prefix and rewrites only the trailing name tokens
     # so section headings like "RESULTADO A INGRESAR" survive.
     if _NAME_RE.search(scrubbed):
@@ -242,23 +246,14 @@ def compute_sidecar(
 ) -> ScrubSidecar:
     """Build a :class:`ScrubSidecar` describing one scrub run."""
     return ScrubSidecar(
-        original_sha256=_sha256_file(original_path),
-        scrubbed_sha256=_sha256_file(scrubbed_path),
+        original_sha256=sha256_file(original_path),
+        scrubbed_sha256=sha256_file(scrubbed_path),
         scrub_version=SCRUB_VERSION,
-        scrubbed_at=datetime.now(tz=UTC),
+        scrubbed_at=now(),
         fields_touched=fields_touched,
         consent_revocable_until=consent_revocable_until,
         original_filename=original_path.name,
     )
-
-
-def _sha256_file(path: Path) -> str:
-    """Return the lowercase hex sha-256 of ``path``'s bytes."""
-    h = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(65536), b""):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 __all__ = [

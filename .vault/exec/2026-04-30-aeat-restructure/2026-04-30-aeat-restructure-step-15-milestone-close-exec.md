@@ -3,10 +3,11 @@ tags:
   - "#exec"
   - "#aeat-restructure"
 date: 2026-05-01
+modified: '2026-05-01'
 related:
   - "[[2026-04-30-aeat-restructure-adr]]"
   - "[[2026-04-30-aeat-restructure-plan]]"
-  - "[[2026-04-30-aeat-restructure-summary]]"
+  - "[[2026-04-30-aeat-restructure-summary-exec]]"
 ---
 
 # 2026-04-30-aeat-restructure step-15 milestone close
@@ -27,8 +28,8 @@ by Steps 9-14.
 | criterion | verified Step 8 | re-verified Step 15 |
 |-----------|-----------------|---------------------|
 | Hexagonal layout in place | ✓ | ✓ |
-| Import-linter contract clean | ✓ | ✓ |
-| Public-surface shims working | ✓ (verify_shims exit 0) | ✓ |
+| Boundary diagnostics clean; `import-linter` not ordinary-delivery gate | ✓ | ✓ |
+| Public-surface hard cutover | ✓ (canonical imports verified) | ✓ |
 | End-to-end behavioural smoke test | ✓ | ✓ |
 | Type-checker clean run | ✓ | ✓ |
 | Migration-script correctness fixture | ✓ | ✓ |
@@ -53,11 +54,9 @@ Step-13 follow-up issues are labelled and triaged:
 
 ## shim-removal schedule
 
-Per ADR Shim deprecation contract: shim removal is eligible at the
-second minor release after introduction. With this milestone landing
-0.1.0 -> 0.1.1, shim removal eligibility opens at 0.1.3. An auto-
-generated removal PR is scheduled for the corresponding release
-window.
+None. The planned shim-retention path was superseded by hard cutover:
+root compatibility modules were not retained, and imports now target
+canonical layered modules directly.
 
 ## report to owner
 

@@ -1,0 +1,99 @@
+[[revisions."2019-y-siguientes".extraction_profiles]]
+id = "modelo-111-export-record"
+surface = "export_record"
+artefact_kind = "submitted_file"
+accepted_artefact_kinds = ["submitted_file"]
+parser = "aeat.domain.calculations.registry.parse_export_payload"
+target_casillas = [
+    {casilla_id = "01", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "02", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "03", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "04", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "05", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "06", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "07", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "08", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "09", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "10", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "11", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "12", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "13", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "14", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "15", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "16", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "17", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "18", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "19", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "20", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "21", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "22", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "23", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "24", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "25", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "26", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "27", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "28", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "29", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "30", match_strategy = "numeric_casilla", value_kind = "amount"},
+]
+confidence = "strict"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+
+[[revisions."2019-y-siguientes".extraction_profiles]]
+id = "modelo-111-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaracion"
+accepted_artefact_kinds = ["declaration_pdf"]
+corpus_round_trip_verified = true
+verification_source = "real_aeat_corpus_pdf"
+parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+# M111 layout: three-column table on page 2.  Column A box numbers at x0~264
+# (left column, e.g. casillas 01/04/07), Column B at x0~347 (middle column,
+# e.g. casillas 02/05/08), Column C at x0~461 (right column, e.g. casillas
+# 03/06/09 and summary casillas 28/30).  Each column has its value word
+# immediately to the right; value_x_max prevents matching the next column's
+# box number when the cell is empty.  Casilla 29 (Autoliquidación negativa)
+# is a checkbox field — excluded from bbox extraction (not an amount).
+# min_coverage=0 accepts partial filings where only some casillas are filled.
+target_casillas = [
+    # Column A: anchor x0 250-290, value must be left of col-B x0=347
+    {casilla_id = "01", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^01$", value_offset = "right_of_number", anchor_x_min = 250.0, anchor_x_max = 290.0, value_x_max = 345.0}},
+    {casilla_id = "04", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^04$", value_offset = "right_of_number", anchor_x_min = 250.0, anchor_x_max = 290.0, value_x_max = 345.0}},
+    {casilla_id = "07", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^07$", value_offset = "right_of_number", anchor_x_min = 250.0, anchor_x_max = 290.0, value_x_max = 345.0}},
+    {casilla_id = "10", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^10$", value_offset = "right_of_number", anchor_x_min = 250.0, anchor_x_max = 290.0, value_x_max = 345.0}},
+    {casilla_id = "13", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^13$", value_offset = "right_of_number", anchor_x_min = 250.0, anchor_x_max = 290.0, value_x_max = 345.0}},
+    {casilla_id = "16", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^16$", value_offset = "right_of_number", anchor_x_min = 250.0, anchor_x_max = 290.0, value_x_max = 345.0}},
+    {casilla_id = "19", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^19$", value_offset = "right_of_number", anchor_x_min = 250.0, anchor_x_max = 290.0, value_x_max = 345.0}},
+    {casilla_id = "22", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^22$", value_offset = "right_of_number", anchor_x_min = 250.0, anchor_x_max = 290.0, value_x_max = 345.0}},
+    {casilla_id = "25", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^25$", value_offset = "right_of_number", anchor_x_min = 250.0, anchor_x_max = 290.0, value_x_max = 345.0}},
+    # Column B: anchor x0 330-370, value must be left of col-C x0=461
+    {casilla_id = "02", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^02$", value_offset = "right_of_number", anchor_x_min = 330.0, anchor_x_max = 370.0, value_x_max = 459.0}},
+    {casilla_id = "05", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^05$", value_offset = "right_of_number", anchor_x_min = 330.0, anchor_x_max = 370.0, value_x_max = 459.0}},
+    {casilla_id = "08", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^08$", value_offset = "right_of_number", anchor_x_min = 330.0, anchor_x_max = 370.0, value_x_max = 459.0}},
+    {casilla_id = "11", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^11$", value_offset = "right_of_number", anchor_x_min = 330.0, anchor_x_max = 370.0, value_x_max = 459.0}},
+    {casilla_id = "14", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^14$", value_offset = "right_of_number", anchor_x_min = 330.0, anchor_x_max = 370.0, value_x_max = 459.0}},
+    {casilla_id = "17", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^17$", value_offset = "right_of_number", anchor_x_min = 330.0, anchor_x_max = 370.0, value_x_max = 459.0}},
+    {casilla_id = "20", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^20$", value_offset = "right_of_number", anchor_x_min = 330.0, anchor_x_max = 370.0, value_x_max = 459.0}},
+    {casilla_id = "23", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^23$", value_offset = "right_of_number", anchor_x_min = 330.0, anchor_x_max = 370.0, value_x_max = 459.0}},
+    {casilla_id = "26", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^26$", value_offset = "right_of_number", anchor_x_min = 330.0, anchor_x_max = 370.0, value_x_max = 459.0}},
+    # Column C: anchor x0 450-490, values at x0~539 (no upper bound needed)
+    {casilla_id = "03", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^03$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 490.0}},
+    {casilla_id = "06", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^06$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 490.0}},
+    {casilla_id = "09", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^09$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 490.0}},
+    {casilla_id = "12", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^12$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 490.0}},
+    {casilla_id = "15", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^15$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 490.0}},
+    {casilla_id = "18", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^18$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 490.0}},
+    {casilla_id = "21", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^21$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 490.0}},
+    {casilla_id = "24", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^24$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 490.0}},
+    {casilla_id = "27", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^27$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 490.0}},
+    {casilla_id = "28", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^28$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 490.0}},
+    {casilla_id = "30", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^30$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 490.0}},
+]
+confidence = "strict"
+min_coverage = "0"
+failure_semantics = "fail_hard"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]

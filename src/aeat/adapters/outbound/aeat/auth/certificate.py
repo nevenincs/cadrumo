@@ -1,15 +1,20 @@
-"""PKCS#12 client-certificate authentication for AEAT Sede Electrónica.
+"""PKCS#12 client-certificate records and checks for AEAT Sede Electrónica.
 
 This module is the public surface for certificate-based authentication
 against the Spanish tax authority's Sede Electrónica. Callers import
 exclusively from :mod:`aeat.adapters.outbound.aeat.auth`; the backend implementations live in
 the private :mod:`aeat.adapters.outbound.aeat.auth._certificate_backends` package.
 
-Design constraints (see
-``.vault/adr/2026-04-12-cert-auth-adr.md``):
+:class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` consumes this
+surface by loading a :class:`CertificateBundle` into a :class:`LoadedCertificate`,
+recording :class:`CertificateHealth`, deriving the taxpayer NIF/NIE through
+:func:`extract_nif_from_subject`, and storing :class:`HandshakeResult` evidence
+in certificate-backed sessions.
+
+Design constraints:
 
 * All boundary records are pydantic v2 ``BaseModel`` with
-  ``model_config = ConfigDict(strict=True, frozen=True)``.
+  ``model_config`` set to the shared strict, frozen project config.
 * Cert passphrases are :class:`pydantic.SecretStr`. The secret value is
   materialised only at the exact TLS-handshake boundary and is never
   logged, persisted, or serialised by ``model_dump``.
@@ -18,25 +23,34 @@ Design constraints (see
   so they can never be leaked via ``model_dump`` or ``repr``.
 * All errors inherit from :class:`aeat.core.errors.AeatError` via
   :class:`CertificateError`.
+
+See Also:
+    :class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner`
+    for wiring :class:`LoadedCertificate` into browser contexts, and
+    :func:`aeat.adapters.outbound.aeat.auth.describe_certificate_provider`
+    for the provider summary built from :class:`CertificateHealth`.
 """
 
 from __future__ import annotations
 
-import os
 import re
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, override, runtime_checkable
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
+from pydantic import BaseModel, Field, PrivateAttr, SecretStr
 
-from .....core.errors import AeatError
+from .....core import STRICT_FROZEN_CONFIG
+from .....core.config import CertificateBackend
+from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
+from .....core.time._utc import coerce_utc_aware
+from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthError, AuthValidationError
 
 if TYPE_CHECKING:
     from ._certificate_backends._base import _CertBackend
@@ -47,20 +61,25 @@ log = get_logger(__name__)
 # ── Errors ──────────────────────────────────────────────────────────────────
 
 
-class CertificateError(AeatError):
-    """Base class for every certificate-auth domain error."""
+class CertificateError(AuthError):
+    """Base class for every certificate-auth domain error.
+
+    Subclasses remain catchable through the shared :class:`AuthError` branch
+    while preserving certificate-specific causes for loading, password,
+    health, handshake, and subject-identity failures.
+    """
 
 
 class CertificateLoadError(CertificateError):
-    """Raised when PKCS#12 bytes cannot be parsed at all."""
+    """Raised when :func:`load_certificate` cannot parse PKCS#12 bytes."""
 
 
 class CertificatePasswordError(CertificateError):
-    """Raised when the passphrase env var is missing/empty or wrong."""
+    """Raised when :class:`CertificateBundle.password` is empty or wrong."""
 
 
 class CertificateExpiredError(CertificateError):
-    """Raised when a loaded certificate's ``not_after`` is in the past."""
+    """Raised when :func:`load_certificate` sees an elapsed ``not_after``."""
 
 
 class CertificatePreExpiryError(CertificateError):
@@ -100,65 +119,10 @@ class CertificateNifParseError(CertificateError):
     """
 
 
-class AeatLoginAssertionError(CertificateError):
-    """Raised when a post-auth verification attempt cannot be produced.
-
-    Distinct from a *negative* assertion result (which returns a
-    :class:`AeatLoginAssertion` with ``is_valid=False``). This
-    exception fires when the assertion cannot even be built — for
-    example a Playwright context is missing the thumbprint marker,
-    the authenticator was never authenticated, or a structural
-    precondition failed before the navigation could complete.
-    """
-
-
-class AeatSessionExpiredError(CertificateError):
-    """Raised when an authenticated AEAT session is no longer usable.
-
-    Three conditions feed this error:
-
-    1. An :class:`AeatSession` whose ``idle_deadline`` has elapsed
-       (``is_stale`` returns True) is passed to
-       :meth:`AeatAuthenticator.verify_login`.
-    2. A single :meth:`AeatAuthenticator.reauthenticate` attempt
-       still yields ``certificate_recognised=False``; the caller
-       MUST NOT loop and MUST raise this upwards.
-    3. An HTTP 401 / 403 surfaced by a downstream live-read call
-       site that consumed the session.
-
-    The error deliberately does not carry the session instance —
-    callers re-derive authentication from ``Settings`` rather than
-    retry with stale state.
-    """
-
-
-class AeatLiveReadNotEnabledError(AeatError):
-    """Raised when live-read access is required but the gate is shut.
-
-    Emitted by :meth:`AeatAccessGate.require_live_read` when
-    ``AEAT_LIVE_TESTS_ENABLED`` is not set to ``"1"``. The existing
-    per-test ``if os.environ[...] != "1": pytest.skip(...)``
-    boilerplate is not replaced — this error gives non-test callers
-    (future live-read CLI commands, sync runners) a typed failure
-    shape.
-    """
+# AeatLoginAssertionError and AeatSessionExpiredError are now in ._errors
 
 
 # ── Enums ───────────────────────────────────────────────────────────────────
-
-
-class CertificateBackend(StrEnum):
-    """Closed catalogue of supported certificate backends.
-
-    Attributes:
-        PLAYWRIGHT_CONTEXT: Primary. Supply the PKCS#12 to
-            ``browser.new_context(client_certificates=[...])``.
-        HTTPX_FALLBACK: Verify-only. Perform a direct mTLS handshake
-            via ``httpx`` for CI smoke tests.
-    """
-
-    PLAYWRIGHT_CONTEXT = "PLAYWRIGHT_CONTEXT"
-    HTTPX_FALLBACK = "HTTPX_FALLBACK"
 
 
 class CertificateHealthSeverity(StrEnum):
@@ -188,28 +152,37 @@ class CertificateHealthSeverity(StrEnum):
 class CertificateBundle(BaseModel):
     """Operator-supplied pointer at a PKCS#12 bundle on disk.
 
-    The password is referenced by *env var name*, never as a literal.
-    The actual secret value is read at load time via :func:`os.environ`
-    and wrapped in :class:`pydantic.SecretStr` from that point forward.
+    :func:`load_certificate` turns this pointer into a
+    :class:`LoadedCertificate`. The selected :class:`CertificateBackend`
+    determines which private backend later consumes the loaded certificate.
+
+    The PKCS#12 passphrase is carried directly as a
+    :class:`pydantic.SecretStr` so callers no longer have to round-trip
+    the secret through ``os.environ``. The secret is materialised
+    only at the exact PKCS#12-decode boundary and is never logged,
+    persisted, or serialised by ``model_dump``.
 
     Attributes:
         path: Filesystem path to the ``.p12`` / ``.pfx`` bundle.
-        password_env_var: Name of the environment variable holding the
-            passphrase. Never the passphrase itself.
+        password: PKCS#12 passphrase as a :class:`SecretStr`.
         friendly_name: Optional human-readable label for logs.
         backend: Which backend should consume this bundle.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     path: Path
-    password_env_var: str = Field(min_length=1)
+    password: SecretStr
     friendly_name: str | None = None
     backend: CertificateBackend
 
 
 class LoadedCertificate(BaseModel):
     """A parsed, validated, in-memory PKCS#12 certificate.
+
+    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` uses this
+    record for NIF/NIE extraction, :class:`CertificateHealth` evaluation,
+    :class:`HandshakeResult` creation, and browser-context provisioning.
 
     Public fields are safe to log and serialise. Secret material
     (raw PKCS#12 bytes, parsed private key, passphrase) lives in
@@ -230,7 +203,7 @@ class LoadedCertificate(BaseModel):
         backend: Backend this cert should be handed to.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     subject: str
     issuer: str
@@ -252,11 +225,16 @@ class LoadedCertificate(BaseModel):
         Args:
             now: Timezone-aware reference time. Defaults to
                 :func:`datetime.now` in UTC.
+
+        Returns:
+            True when the certificate has expired relative to ``now``.
         """
         reference = now if now is not None else datetime.now(UTC)
         return reference > self.not_after
 
+    @override
     def __repr__(self) -> str:  # pragma: no cover - trivial
+        """Return a developer-readable string showing subject, issuer, thumbprint, and backend."""
         return (
             f"LoadedCertificate(subject={self.subject!r}, "
             f"issuer={self.issuer!r}, "
@@ -273,7 +251,9 @@ class CertificateHealth(BaseModel):
     critical thresholds sourced from
     :class:`aeat.core.config.Settings`. The record never carries any
     secret material; it is safe to log, persist, or surface to the
-    CLI.
+    CLI. :func:`evaluate_loaded_certificate_health` computes this from an
+    existing :class:`LoadedCertificate`; :func:`health` computes it from a
+    bundle path while preserving the expired-certificate reporting path.
 
     Attributes:
         subject: RFC-4514 subject DN.
@@ -291,7 +271,7 @@ class CertificateHealth(BaseModel):
         evaluated_at: Timezone-aware reference timestamp.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     subject: str
     issuer: str
@@ -308,6 +288,10 @@ class CertificateHealth(BaseModel):
 class HandshakeResult(BaseModel):
     """Structured outcome of a :func:`verify_handshake` attempt.
 
+    Successful certificate sessions persist this result inside
+    :class:`aeat.adapters.outbound.aeat.auth._authenticator_persistence.PersistedSessionMetadata`
+    so resumed sessions can preserve the original mTLS probe evidence.
+
     Attributes:
         success: Whether the TLS handshake completed successfully.
         status_code: HTTP status returned by the verify URL (0 if the
@@ -320,7 +304,7 @@ class HandshakeResult(BaseModel):
             ``success=False``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     success: bool
     status_code: int
@@ -347,37 +331,21 @@ class _BrowserContextLike(Protocol):
 # ── Loader ──────────────────────────────────────────────────────────────────
 
 
-def _read_password_from_env(env_var: str) -> SecretStr:
-    """Read ``env_var`` and wrap its value in :class:`SecretStr`.
-
-    Raises :class:`CertificatePasswordError` if the variable is unset
-    or empty.
-    """
-    raw = os.environ.get(env_var)
-    if not raw:
-        raise CertificatePasswordError(
-            f"environment variable {env_var!r} is unset or empty; "
-            "set it to the PKCS#12 passphrase before calling load_certificate()"
-        )
-    return SecretStr(raw)
-
-
-def _ensure_utc(value: datetime) -> datetime:
-    """Coerce a naive datetime to UTC-aware (PKCS#12 datetimes vary)."""
-    if value.tzinfo is None:
-        return value.replace(tzinfo=UTC)
-    return value.astimezone(UTC)
-
-
 def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
     """Load and validate a PKCS#12 bundle from disk.
 
-    The passphrase is read from ``os.environ[bundle.password_env_var]``;
-    if the env var is unset or empty a :class:`CertificatePasswordError`
-    is raised *before* any file I/O. On a successful load the returned
-    :class:`LoadedCertificate` carries the raw PKCS#12 bytes and a
-    parsed private-key handle in :class:`PrivateAttr` fields so the
-    backends can consume them without a second on-disk round-trip.
+    This is the canonical decode path for certificate auth. It feeds
+    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator`, operator
+    probes, and backend provisioning surfaces with the same
+    :class:`LoadedCertificate` contract.
+
+    The passphrase is unwrapped from ``bundle.password`` at the
+    PKCS#12-decode boundary only. An empty :class:`SecretStr` raises
+    :class:`CertificatePasswordError` *before* any file I/O. On a
+    successful load the returned :class:`LoadedCertificate` carries the
+    raw PKCS#12 bytes and a parsed private-key handle in
+    :class:`PrivateAttr` fields so the backends can consume them
+    without a second on-disk round-trip.
 
     Args:
         bundle: Operator-supplied :class:`CertificateBundle`.
@@ -387,11 +355,16 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
         to log; secret material is never serialised.
 
     Raises:
-        CertificatePasswordError: Env var unset/empty or wrong password.
+        CertificatePasswordError: Empty passphrase or wrong passphrase.
         CertificateLoadError: PKCS#12 bytes cannot be parsed.
         CertificateExpiredError: Certificate's validity has elapsed.
     """
-    password = _read_password_from_env(bundle.password_env_var)
+    raw_password = bundle.password.get_secret_value()
+    if not raw_password:
+        raise CertificatePasswordError(
+            f"passphrase for PKCS#12 bundle at {bundle.path} is empty; "
+            "construct CertificateBundle with a non-empty SecretStr password.",
+        )
 
     try:
         raw_bytes = bundle.path.read_bytes()
@@ -399,12 +372,12 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
         raise CertificateLoadError(f"could not read PKCS#12 bundle at {bundle.path}: {exc}") from exc
 
     try:
-        parsed = pkcs12.load_pkcs12(raw_bytes, password.get_secret_value().encode("utf-8"))
+        parsed = pkcs12.load_pkcs12(raw_bytes, raw_password.encode(UTF_8_ENCODING))
     except ValueError as exc:
         message = str(exc).lower()
         if "invalid password" in message or "mac verify" in message:
             raise CertificatePasswordError(
-                f"wrong passphrase for PKCS#12 bundle at {bundle.path} (env var {bundle.password_env_var!r})"
+                f"wrong passphrase for PKCS#12 bundle at {bundle.path}",
             ) from exc
         raise CertificateLoadError(f"could not parse PKCS#12 bundle at {bundle.path}: malformed bytes") from exc
 
@@ -412,13 +385,13 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
         raise CertificateLoadError(f"PKCS#12 bundle at {bundle.path} contains no end-entity certificate")
 
     x509_cert = parsed.cert.certificate
-    not_before = _ensure_utc(x509_cert.not_valid_before_utc)
-    not_after = _ensure_utc(x509_cert.not_valid_after_utc)
+    not_before = coerce_utc_aware(x509_cert.not_valid_before_utc)
+    not_after = coerce_utc_aware(x509_cert.not_valid_after_utc)
 
     friendly_name: str | None = bundle.friendly_name
     if friendly_name is None and parsed.cert.friendly_name is not None:
         try:
-            friendly_name = parsed.cert.friendly_name.decode("utf-8")
+            friendly_name = parsed.cert.friendly_name.decode(UTF_8_ENCODING)
         except UnicodeDecodeError:
             friendly_name = None
 
@@ -435,19 +408,17 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
     )
 
     object.__setattr__(loaded, "_pkcs12_bytes", raw_bytes)
-    object.__setattr__(loaded, "_password", password)
+    object.__setattr__(loaded, "_password", bundle.password)
     object.__setattr__(loaded, "_private_key_handle", parsed.key)
 
     if loaded.is_expired():
         raise CertificateExpiredError(
-            f"certificate for subject {loaded.subject!r} expired at {loaded.not_after.isoformat()}"
+            f"certificate for subject {loaded.subject!r} expired at {loaded.not_after.isoformat()}",
         )
 
     log.info(
-        "Loaded PKCS#12 certificate: subject=%s thumbprint=%s friendly_name=%s backend=%s",
-        loaded.subject,
+        "loaded PKCS#12 certificate: thumbprint=%s backend=%s",
         loaded.sha256_thumbprint,
-        loaded.friendly_name,
         loaded.backend.value,
     )
     return loaded
@@ -497,8 +468,9 @@ def evaluate_loaded_certificate_health(
     """Compute a :class:`CertificateHealth` from an already-loaded cert.
 
     The helper exists so callers that have already paid the PKCS#12
-    decode cost (e.g. :class:`aeat.application.workflow.WorkflowEngine`) can reuse
-    the parsed record rather than re-reading the bundle from disk.
+    decode cost, such as :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator`
+    or operator probes, can reuse the parsed record rather than re-reading the
+    bundle from disk.
 
     Args:
         cert: A previously-loaded :class:`LoadedCertificate`.
@@ -511,15 +483,15 @@ def evaluate_loaded_certificate_health(
         A frozen :class:`CertificateHealth` record.
 
     Raises:
-        ValueError: If ``critical_days <= 0`` or ``warn_days <= critical_days``.
+        AuthValidationError: If ``critical_days <= 0`` or ``warn_days <= critical_days``.
     """
     if critical_days <= 0:
-        raise ValueError(f"critical_days must be positive, got {critical_days}")
+        raise AuthValidationError(f"critical_days must be positive, got {critical_days}")
     if warn_days <= critical_days:
-        raise ValueError(f"warn_days ({warn_days}) must be strictly greater than critical_days ({critical_days})")
-    evaluated_at = now if now is not None else datetime.now(UTC)
-    if evaluated_at.tzinfo is None:
-        evaluated_at = evaluated_at.replace(tzinfo=UTC)
+        raise AuthValidationError(
+            f"warn_days ({warn_days}) must be strictly greater than critical_days ({critical_days})",
+        )
+    evaluated_at = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
     delta_seconds = (cert.not_after - evaluated_at).total_seconds()
     # Floor division keeps "one second before expiry" at 0 days → EXPIRED.
     days_until_expiry = int(delta_seconds // 86400)
@@ -545,7 +517,7 @@ def evaluate_loaded_certificate_health(
 def health(
     path: Path,
     *,
-    password_env_var: str,
+    password: SecretStr,
     warn_days: int,
     critical_days: int,
     backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
@@ -558,13 +530,13 @@ def health(
     an expired certificate — it returns a
     :class:`CertificateHealth` record with severity
     :attr:`CertificateHealthSeverity.EXPIRED` instead. Genuine load
-    failures (missing passphrase, corrupt bytes, I/O) still raise the
+    failures (empty passphrase, corrupt bytes, I/O) still raise the
     matching :class:`CertificateError` subclass, because those are not
     pre-expiry conditions.
 
     Args:
         path: Filesystem path to the PKCS#12 bundle.
-        password_env_var: Name of the env var holding the passphrase.
+        password: PKCS#12 passphrase as a :class:`SecretStr`.
         warn_days: Warning threshold in days (see
             :func:`evaluate_loaded_certificate_health`).
         critical_days: Critical threshold in days.
@@ -577,12 +549,14 @@ def health(
         A frozen :class:`CertificateHealth` record.
 
     Raises:
-        CertificatePasswordError: Env var unset/empty or wrong password.
-        CertificateLoadError: PKCS#12 bytes cannot be parsed.
+        CertificateExpiredError: When the certificate has expired and the raw bytes
+            cannot be re-decoded for the health report.
+        CertificateLoadError: When the PKCS#12 bytes cannot be re-decoded for an
+            expired-cert health report.
     """
     bundle = CertificateBundle(
         path=path,
-        password_env_var=password_env_var,
+        password=password,
         friendly_name=friendly_name,
         backend=backend,
     )
@@ -595,22 +569,19 @@ def health(
         # minimal x509 decode here. A second decode failure is
         # surfaced as CertificateLoadError rather than swallowed, to
         # honour the "never-crash on pre-expiry path" contract.
-        password = _read_password_from_env(password_env_var)
         try:
             raw_bytes = path.read_bytes()
-            parsed = pkcs12.load_pkcs12(raw_bytes, password.get_secret_value().encode("utf-8"))
+            parsed = pkcs12.load_pkcs12(raw_bytes, password.get_secret_value().encode(UTF_8_ENCODING))
         except (OSError, ValueError) as exc:
             raise CertificateLoadError(
-                f"could not re-decode PKCS#12 bundle at {path} for expired-cert health report: {exc}"
+                f"could not re-decode PKCS#12 bundle at {path} for expired-cert health report: {exc}",
             ) from exc
         if parsed.cert is None or parsed.cert.certificate is None:  # pragma: no cover - defended above
             raise
         x509_cert = parsed.cert.certificate
-        not_before = _ensure_utc(x509_cert.not_valid_before_utc)
-        not_after = _ensure_utc(x509_cert.not_valid_after_utc)
-        evaluated_at = now if now is not None else datetime.now(UTC)
-        if evaluated_at.tzinfo is None:
-            evaluated_at = evaluated_at.replace(tzinfo=UTC)
+        not_before = coerce_utc_aware(x509_cert.not_valid_before_utc)
+        not_after = coerce_utc_aware(x509_cert.not_valid_after_utc)
+        evaluated_at = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
         delta_seconds = (not_after - evaluated_at).total_seconds()
         days_until_expiry = int(delta_seconds // 86400)
         return CertificateHealth(
@@ -650,7 +621,7 @@ def _normalise_candidate(candidate: str) -> str:
 
 
 def _iter_rdn_values(subject: str, oid: x509.ObjectIdentifier) -> list[str]:
-    """Return every attribute value in ``subject`` matching ``oid``.
+    r"""Return every attribute value in ``subject`` matching ``oid``.
 
     Parses the subject via
     :meth:`cryptography.x509.Name.from_rfc4514_string`, which handles
@@ -667,7 +638,7 @@ def _iter_rdn_values(subject: str, oid: x509.ObjectIdentifier) -> list[str]:
 
 
 def extract_nif_from_subject(cert: LoadedCertificate) -> str:
-    """Return the FNMT taxpayer identifier encoded in ``cert``'s subject.
+    r"""Return the FNMT taxpayer identifier encoded in ``cert``'s subject.
 
     FNMT *persona física* certificates carry the subject's NIF or
     NIE in the ``serialNumber`` RDN (OID ``2.5.4.5``), optionally
@@ -688,9 +659,9 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
     Raises:
         CertificateNifParseError: When the subject contains no
             recognisable DNI / NIE identifier, or when the value
-            present is a CIF (legal-entity) — this project is
-            explicitly autónomo-only and does not support
-            *persona jurídica* certificates.
+            present is a CIF (legal-entity). Certificate auth here
+            accepts individual taxpayer certificates and rejects
+            organization certificates rather than guessing an identity.
     """
     subject = cert.subject
 
@@ -699,8 +670,8 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
         if _CIF_RE.match(candidate):
             raise CertificateNifParseError(
                 f"subject serialNumber {candidate!r} looks like a CIF "
-                "(legal-entity). This project supports autónomo "
-                "(persona física) certificates only."
+                "(legal-entity). This project supports individual taxpayer "
+                "(persona física) certificates only.",
             )
         if _DNI_RE.match(candidate) or _NIE_RE.match(candidate):
             return candidate
@@ -715,7 +686,7 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
     raise CertificateNifParseError(
         f"cannot parse a DNI or NIE from certificate subject "
         f"{subject!r}; expected serialNumber or CN to carry "
-        "a valid persona-física identifier"
+        "a valid persona-física identifier",
     )
 
 
@@ -754,18 +725,15 @@ def preload_into_browser_context(
     supplied at :meth:`playwright.async_api.Browser.new_context` time;
     there is no post-hoc injection hook. This function therefore
     **validates** the contract rather than mutating ``context``. It is
-    the integration hook the browser layer will call once it learns to
-    pass a :class:`CertificateBundle` through to ``new_context``.
+    the integration hook used by
+    :class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner`
+    after it passes a :class:`CertificateBundle`-derived certificate through
+    to ``new_context``.
 
     Args:
         cert: The :class:`LoadedCertificate` to verify against ``context``.
         context: A Playwright ``BrowserContext`` duck-typed via
             :class:`_BrowserContextLike`.
-
-    Raises:
-        CertificateError: When the selected backend rejects the context
-            (for example, when the Playwright backend is asked to
-            retrofit a cert after construction, which is not supported).
     """
     backend = _select_backend(cert.backend)
     backend.preload(cert, context)
@@ -773,6 +741,10 @@ def preload_into_browser_context(
 
 def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
     """Perform an opt-in TLS handshake smoke test.
+
+    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` calls this
+    before constructing a certificate-backed :class:`AeatSession`. Backend
+    implementations own the actual transport behavior.
 
     Dispatches to the backend selected by ``cert.backend``. TLS failures
     are returned as :class:`HandshakeResult` with ``success=False`` so
@@ -797,7 +769,6 @@ def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
 
 
 __all__ = [
-    "AeatLiveReadNotEnabledError",
     "AeatLoginAssertionError",
     "AeatSessionExpiredError",
     "CertificateBackend",

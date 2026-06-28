@@ -1,0 +1,111 @@
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-nif"
+source = "withholding"
+selector = { fact = "row_field", row_field = "perceptor_tax_id", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-name"
+source = "withholding"
+selector = { fact = "row_field", row_field = "perceptor_legal_name", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-clave"
+source = "withholding"
+selector = { fact = "row_field", row_field = "clave", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-subclave"
+source = "withholding"
+selector = { fact = "row_field", row_field = "subclave", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-percibido-dinerario"
+source = "withholding"
+selector = { fact = "row_field", row_field = "percibido_dinerario", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-percibido-especie"
+source = "withholding"
+selector = { fact = "row_field", row_field = "percibido_especie", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-retencion-practicada"
+source = "withholding"
+selector = { fact = "row_field", row_field = "retencion_practicada", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-perceptor-row-ingreso-a-cuenta"
+source = "withholding"
+selector = { fact = "row_field", row_field = "ingreso_a_cuenta", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-190-procedure"
+required_text = ["modelo 190"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-190-percepciones-anual"
+# RET-1/#28: the annual "número total de percepciones" is the count of DISTINCT
+# (perceptor, clave, subclave) type-2 records (AEAT Diseño), materialised from the
+# dedicated per-perceptor-clave withholding store via the percepcion_count fact —
+# replacing the nine op=sum-of-quarterly-M111-perceptor-counts relations (which
+# double-counted a perceptor present in more than one quarter).
+source = "withholding"
+selector = { fact = "percepcion_count" }
+aggregation = { op = "count_distinct" }
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-190-2025-form"
+required_text = ["NÚMERO TOTAL DE PERCEPCIONES"]

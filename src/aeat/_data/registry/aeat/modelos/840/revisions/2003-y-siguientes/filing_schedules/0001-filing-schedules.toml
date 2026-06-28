@@ -1,0 +1,8 @@
+[[revisions."2003-y-siguientes".filing_schedules]]
+id = "modelo-840-ad-hoc"
+period_kind = "ad_hoc"
+periods = ["0A"]
+profile_condition_mode = "all"
+legal_refs = ["orden-hac-2572-2003:apartado-6", "rdl-2-2004:art-90"]
+source_refs = ["boe-modelo-840-2003-form"]
+

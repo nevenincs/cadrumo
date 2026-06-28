@@ -1,0 +1,148 @@
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-repercutido-general-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general_21"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-repercutido-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reduced_10"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-repercutido-super-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_super_reduced_4"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-soportado-interiores-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+# Annual IVA soportado deducible en importaciones — mirrors the M303
+# import-deducible cuota onto the annual resumen so the deducible total includes
+# imports. Selects import_third_country soportado lines across the rate tiers.
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-soportado-importaciones-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["import_third_country"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+# -----------------------------------------------------------------------------
+# Cross-modelo previous_filing bindings — aggregate the four 303 quarterly
+# autoliquidaciones into the annual resumen totals. Implements the canonical
+# 390 <- 303 dependency where the resumen anual reconciles against the four
+# trimestrales filed during the ejercicio.
+# -----------------------------------------------------------------------------
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-prev-303-cuota-devengada-total"
+source = "relation_prefill"
+selector = { source_modelo = "303", source_casilla_id = "iva.cuota-devengada-total" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-prev-303-cuota-deducible-total"
+source = "relation_prefill"
+selector = { source_modelo = "303", source_casilla_id = "iva.cuota-deducible-total" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-prev-303-resultado-regimen-general"
+source = "relation_prefill"
+selector = { source_modelo = "303", source_casilla_id = "iva.resultado-regimen-general" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-prev-303-compensacion-ultimo-periodo"
+source = "relation_prefill"
+selector = { source_modelo = "303", source_casilla_id = "iva.compensacion-generada-periodo" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
+source = "relation_prefill"
+selector = { source_modelo = "303", source_casilla_id = "iva.compensacion-generada-periodo" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390"]
+
+# -----------------------------------------------------------------------------
+# Bound casillas surfacing the 5 ledger_iva_aggregation bindings + the 3
+# previous_filing bindings as casilla values. Annual resumen mirrors the 303
+# result-casilla shape (devengada / deducible / resultado) plus reconciliation
+# casillas pulling each total from the four 303 quarters.
+# -----------------------------------------------------------------------------

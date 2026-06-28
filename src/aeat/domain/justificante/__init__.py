@@ -1,19 +1,13 @@
-"""Public API for the AEAT justificante (PDF receipt) parser (#44).
+"""Public API for AEAT justificante domain records and errors.
 
 Callers outside :mod:`aeat.domain.justificante` must import exclusively from this
-module — the private ``_schema``, ``_extract``, ``_parser``, and ``_parsers``
-modules are implementation details and may change without notice.
+module for domain records and errors. The parser pipeline lives in
+:mod:`aeat.adapters.inbound.justificante`.
 
 Live CSV verification lives in :mod:`aeat.adapters.outbound.aeat.verify`
 (Playwright/browser automation belongs in the outbound adapter layer, not
 the domain).
 
-Example:
-    >>> from pathlib import Path
-    >>> from aeat.domain.justificante import parse_justificante
-    >>> record = parse_justificante(Path("tests/fixtures/justificantes/modelo_130_2026Q1.pdf"))
-    >>> record.modelo
-    '130'
 """
 
 from __future__ import annotations
@@ -23,8 +17,11 @@ from ._errors import (
     JustificanteError,
     JustificanteParseError,
     JustificanteVerificationError,
+    PdfModeloImportError,
 )
-from ._parser import parse_justificante
+from ._repository import (
+    JustificanteRepository,
+)
 from ._schema import Justificante, JustificanteParserBackend
 
 __all__ = [
@@ -33,6 +30,7 @@ __all__ = [
     "JustificanteError",
     "JustificanteParseError",
     "JustificanteParserBackend",
+    "JustificanteRepository",
     "JustificanteVerificationError",
-    "parse_justificante",
+    "PdfModeloImportError",
 ]

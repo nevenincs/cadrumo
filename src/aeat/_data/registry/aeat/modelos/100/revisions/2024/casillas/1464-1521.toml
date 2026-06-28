@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1521"
+number = "1521"
+label = "Raíces (excepto remolacha azucarera), tubérculos, forrajes, algodón, frutos no cítricos y otros productos agrícolas no comprendidos expresamente en otros números: Ingresos íntegros"
+section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
+semantic_role = "irpf_eo_agr_ingresos_integros_raices_tuberculos_forrajes"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

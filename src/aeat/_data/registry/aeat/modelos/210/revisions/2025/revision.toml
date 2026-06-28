@@ -1,0 +1,21 @@
+[revisions."2025"]
+id = "2025"
+label = "Ejercicio 2025 y siguientes"
+# valid_to is open: the TRLIRNR Art 24-25 tipo-de-gravamen schedule (24% general,
+# 19% ue_residente / ganancia_patrimonial) has been year-stable since RDLeg 5/2004
+# with no annual coefficient table. A separate revision is authored only when a
+# genuine statutory rate change takes effect. Phase-1 engine covers 2025+.
+valid_from = 2025-01-01
+period_selector = { year_from = 2025, periods = ["evento"] }
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+    "ley-35-2006:art-85",
+]
+source_refs = [
+    "aeat-modelo-210-procedure",
+    "aeat-irnr-renta-imputada-inmueble-urbano",
+    "boe-modelo-210-2024-form-layout",
+]

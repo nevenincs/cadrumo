@@ -1,0 +1,9 @@
+[[revisions."2023".casillas]]
+id = "0810"
+number = "0810"
+label = "Número de matrícula del vehículo:"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+data_type = "text"
+semantic_role = "irpf_deduccion_asturias_vehiculo_matricula"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

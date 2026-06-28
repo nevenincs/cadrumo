@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0039"
+number = "0039"
+label = "Reduccion aplicable a determinados contratos de seguro"
+section = ["rendimientos_capital_mobiliario", "base_ahorro"]
+semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_reduccion_seguros_antiguos"
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

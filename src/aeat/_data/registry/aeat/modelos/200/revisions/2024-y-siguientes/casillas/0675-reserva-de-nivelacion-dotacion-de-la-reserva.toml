@@ -1,0 +1,48 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02241"
+number = "02241"
+label = "Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2020 - Importe reserva a dotar [02241]"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_dotacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-02241"]
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02242"
+number = "02242"
+label = "Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2020 - Importe reserva dotada [02242]"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_dotacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-02242"]
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02243"
+number = "02243"
+label = "Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2020 - Importe reserva pendiente dotación [02243]"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_dotacion_pendiente"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-02243"]
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02244"
+number = "02244"
+label = "Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2020 - Reserva dispuesta [02244]"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_dotacion_dispuesta"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-02244"]
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

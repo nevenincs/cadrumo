@@ -1,0 +1,10 @@
+[[revisions."2023".casillas]]
+id = "0561"
+number = "0561"
+label = "Por rentas obtenidas en Ceuta o Melilla (traslade los importes de estas mismas casillas del anexo A.2): Parte autonómica"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deduccion_ceuta_melilla_autonomica"
+input_kind = "computed"
+formula = "renta-2023-deduccion-ceuta-melilla-autonomica-50-porciento"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

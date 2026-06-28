@@ -3,6 +3,7 @@ tags:
   - "#audit"
   - "#real-pdf-import"
 date: "2026-04-21"
+modified: '2026-04-21'
 related:
   - "[[2026-04-21-real-pdf-fixture-corpus-plan]]"
   - "[[2026-04-21-declaracion-extractor-plan]]"
@@ -51,7 +52,7 @@ The reviewer persona (`vaultspec-code-reviewer`) returned a structured inline re
 **Resolution**:
 
 - `_NAME_RE` now requires a `Apellidos y nombre | Apellidos | Nombre | Declarante | Titular | Razon social | Razón social | Empresa` prefix before matching the name tokens.
-- Replacement preserves the prefix and only rewrites the trailing name span: `Apellidos y nombre: KENT WOOTSCH` → `Apellidos y nombre: DEMO AUTONOMO`.
+- Replacement preserves the prefix and only rewrites the trailing name span: `Apellidos y nombre: PERSONA PRUEBA` -> `Apellidos y nombre: DEMO AUTONOMO`.
 - New tests (`TestNamePrefixGuard`) assert `RESULTADO A INGRESAR` and `AGENCIA TRIBUTARIA` survive the scrub and that prefixed names are properly rewritten.
 
 ### M2 — Scrub missing canonical Spanish PII patterns (MEDIUM, **fixed**)

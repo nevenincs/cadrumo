@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1905"
+number = "1905"
+label = "Para compensar el incremento del coste de los préstamos o créditos hipotecarios con tipo de interés variable"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_deduccion_baleares_prestamo_hipotecario_incremento"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

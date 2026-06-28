@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0855"
+number = "0855"
+label = "Por adopción de hijos en el ámbito internacional"
+section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
+semantic_role = "irpf_deduccion_andalucia_adopcion_internacional"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

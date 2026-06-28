@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-634-2015-art-3.html",
+  "source_sha256": "64b1af0d6c1914c01b813212d0be5a7cec0ecf11c982606040938aad0a8f1a1b",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Se considerará que la depreciación de los elementos patrimoniales del inmovilizado material, intangible e inversiones inmobiliarias es efectiva cuando sea el resultado de aplicar alguno de los métodos previstos en el apartado 1 del artículo 12 de la Ley del Impuesto.\n2. Será amortizable el precio de adquisición o coste de producción, excluido, en su caso, el valor residual. Cuando se trate de edificaciones, no será amortizable la parte del precio de adquisición correspondiente al valor del suelo excluidos, en su caso, los costes de rehabilitación. Cuando no se conozca el valor del suelo se calculará prorrateando el precio de adquisición entre los valores catastrales del suelo y de la construcción en el año de adquisición.\n3. Los elementos patrimoniales del inmovilizado material e inversiones inmobiliarias empezarán a amortizarse desde su puesta en condiciones de funcionamiento y los del inmovilizado intangible desde el momento en que estén en condiciones de producir ingresos. Los elementos patrimoniales del inmovilizado material, inmaterial e inversiones inmobiliarias deberán amortizarse dentro del período de su vida útil.\n4. Cuando las renovaciones, ampliaciones o mejoras de los elementos patrimoniales del inmovilizado material e inversiones inmobiliarias se incorporen a dicho inmovilizado, el importe de las mismas se amortizará durante los períodos impositivos que resten para completar la vida útil de los referidos elementos patrimoniales.",
+      "title": "Artículo 3. Amortización de elementos patrimoniales del inmovilizado material, intangible e inversiones inmobiliarias: normas comunes.",
+      "section": "Artículo 3. Amortización de elementos patrimoniales del inmovilizado material, intangible e inversiones inmobiliarias: normas comunes.",
+      "anchor": null
+    }
+  ]
+}

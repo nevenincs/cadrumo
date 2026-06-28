@@ -1,0 +1,919 @@
+[legal."ley-27-2014:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-10.html#a10"
+document_id = "BOE-A-2014-12328"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a10"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "wgergely"
+notes = "LIS art 10: concepto y determinacion de la base imponible. La base imponible es la renta del periodo minorada por la compensacion de bases imponibles negativas; en estimacion directa se calcula corrigiendo el resultado contable mediante los preceptos de la Ley. Es la definicion-marco del encadenamiento de determinacion de la base del Modelo 200 (00501 resultado contable -> correcciones -> 00550 base previa -> 00552 base imponible)."
+required_text = [
+    "La base imponible estará constituida por el importe de la renta obtenida en el período impositivo",
+    "compensación de bases imponibles negativas",
+    "corrigiendo, mediante la aplicación de los preceptos establecidos en esta Ley, el resultado contable",
+]
+
+[legal."ley-27-2014:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-11.html#a11"
+document_id = "BOE-A-2014-12328"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a11"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "wgergely"
+notes = "LIS art 11: imputacion temporal e inscripcion contable de ingresos y gastos. Los ingresos y gastos se imputan al periodo de su devengo con arreglo a la normativa contable, con independencia de su pago o cobro. Gobierna el criterio de devengo de las partidas que forman el resultado contable que alimenta la determinacion de la base del Modelo 200."
+required_text = [
+    "se imputarán al período impositivo en que se produzca su devengo",
+    "con independencia de la fecha de su pago o de su cobro",
+]
+
+[legal."ley-27-2014:art-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-14.html#a14"
+document_id = "BOE-A-2014-12328"
+article = "14"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a14"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "wgergely"
+notes = "LIS art 14: provisiones y otros gastos. Regula la no deducibilidad de determinados gastos por provisiones (fondos internos de pensiones, retribuciones a largo plazo, obligaciones implicitas o tacitas) que constituyen correcciones al resultado contable en la determinacion de la base imponible del Modelo 200."
+required_text = [
+    "No serán deducibles los gastos por provisiones y fondos internos",
+    "No serán deducibles los siguientes gastos asociados a provisiones",
+]
+
+[legal."ley-27-2014:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-13.html#a13"
+document_id = "BOE-A-2014-12328"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a13"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 13: correcciones de valor - perdida por deterioro del valor de los elementos patrimoniales. Establece la deducibilidad del deterioro de creditos cuando concurra una de cuatro circunstancias (6 meses de vencimiento, concurso, alzamiento de bienes, reclamacion judicial / arbitral), las exclusiones (creditos publicos, vinculadas excepto liquidacion concursal, estimaciones globales), y la no-deducibilidad general del deterioro de inmovilizado material/intangible/inversiones inmobiliarias y participaciones. Base sustantiva de la dotaciones_deterioro_creditos_u_otros_activos section de M200."
+required_text = [
+    "pérdida por deterioro del valor",
+    "deterioro de los créditos",
+    "6 meses desde el vencimiento",
+]
+
+[legal."ley-27-2014:art-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-15.html#a15"
+document_id = "BOE-A-2014-12328"
+article = "15"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a15"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 15: gastos no deducibles. Enumera los gastos que la LIS expresamente excluye de la deducibilidad fiscal: retribucion de fondos propios (incluidos prestamos participativos intra-grupo), IS contabilizado, multas y sanciones, recargos del periodo ejecutivo y extemporaneos, perdidas del juego, donativos y liberalidades (con excepcion de atenciones a clientes limitadas al 1 por ciento del INCN), actuaciones contrarias al ordenamiento juridico, gastos con paraisos fiscales. Base sustantiva de las correcciones positivas al resultado contable en M200."
+required_text = [
+    "Gastos no deducibles",
+    "retribución de los fondos propios",
+    "multas y sanciones",
+]
+
+[legal."ley-27-2014:art-21"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-21.html#a21"
+document_id = "BOE-A-2014-12328"
+article = "21"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a21"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 21: exencion sobre dividendos y rentas derivadas de la transmision de valores representativos de los fondos propios de entidades residentes y no residentes en territorio espanol. Establece el regimen de participation exemption: dividendos y ganancias por transmision de acciones quedan exentos cuando se cumple el umbral del 5 por ciento de participacion sostenida durante un anio, con requisito adicional para no residentes de tributacion minima al 10 por ciento nominal. Base sustantiva de las correcciones negativas por dividendos exentos en M200."
+required_text = [
+    "Exención sobre dividendos",
+    "5 por ciento",
+    "manera ininterrumpida durante el año anterior",
+]
+
+[legal."ley-27-2014:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-22.html#a22"
+document_id = "BOE-A-2014-12328"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a22"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 22: exencion de las rentas obtenidas en el extranjero a traves de un establecimiento permanente. Establece la exencion para rentas positivas obtenidas por EPs no residentes cuando el EP haya estado sujeto al impuesto extranjero a un tipo nominal de al menos el 10 por ciento, junto con la exencion en transmision o cese del EP. Las rentas negativas no se integran salvo en caso de cese (con minorizacion por rentas positivas previamente exentas o deducidas). Base sustantiva de las correcciones por rentas-EP-no-residente en M200."
+required_text = [
+    "Exención de las rentas obtenidas en el extranjero",
+    "establecimiento permanente",
+    "10 por ciento",
+]
+
+[legal."ley-27-2014:art-31"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-31.html#a31"
+document_id = "BOE-A-2014-12328"
+article = "31"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a31"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 31: deduccion para evitar la doble imposicion juridica - impuesto soportado por el contribuyente. Permite deducir de la cuota integra la menor de dos cantidades: el impuesto efectivamente satisfecho en el extranjero (con tope del convenio CDI si aplica), o la cuota integra que en Espana correspondería pagar por las mismas rentas. Las cantidades no deducidas se trasladan a periodos siguientes; comprobacion prescribe a los 10 anios. Base sustantiva de la deduccion por doble imposicion juridica internacional en M200."
+required_text = [
+    "Deducción para evitar la doble imposición jurídica",
+    "menor de las dos cantidades",
+    "impuesto satisfecho en el extranjero",
+]
+
+[legal."ley-27-2014:art-32"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-32.html#a32"
+document_id = "BOE-A-2014-12328"
+article = "32"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a32"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 32: deduccion para evitar la doble imposicion economica internacional - dividendos y participaciones en beneficios. Permite deducir el impuesto efectivamente pagado por la entidad no residente sobre los beneficios distribuidos como dividendos, condicionado a participacion minima del 5 por ciento mantenida ininterrumpidamente durante un anio y a la inclusion de la cuantia en la base imponible. Base sustantiva del underlying-tax-credit (deduccion DIE) en M200."
+required_text = [
+    "Deducción para evitar la doble imposición económica internacional",
+    "dividendos",
+    "5 por ciento",
+]
+
+[legal."ley-27-2014:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 12: correcciones de valor - amortizaciones. Define la deducibilidad de la amortizacion segun depreciacion efectiva, los cinco metodos validos (tabla lineal art-12.1.a, porcentaje constante degresivo, numeros digitos, plan aceptado por la Administracion, justificacion del importe) y la tabla de coeficientes maximos por tipo de elemento (obra civil 2-7 por ciento, edificios 2-4 por ciento, maquinaria 12 por ciento, equipos electronicos 20-33 por ciento, etc.). Base sustantiva de las casillas de amortizacion de M200, desarrollada en RIS art-3."
+required_text = [
+    "Correcciones de valor: amortizaciones",
+    "depreciación efectiva",
+    "coeficientes de amortización lineal",
+]
+
+[legal."ley-27-2014:art-16"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-16.html#a16"
+document_id = "BOE-A-2014-12328"
+article = "16"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a16"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 16: limitacion en la deducibilidad de gastos financieros. Establece el limite del 30 por ciento del beneficio operativo del ejercicio para los gastos financieros netos deducibles, con un suelo absoluto de 1 millon de euros y traslado a los cinco anios siguientes del exceso no aplicado del limite."
+required_text = [
+    "Limitación en la deducibilidad de gastos financieros",
+    "30 por ciento del beneficio operativo",
+    "1 millón de euros",
+]
+
+[legal."ley-27-2014:art-19"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-19.html#a19"
+document_id = "BOE-A-2014-12328"
+article = "19"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a19"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 19: cambios de residencia, operaciones realizadas con o por personas o entidades residentes en paraisos fiscales y cantidades sujetas a retencion. Establece la regla de salida fiscal (integracion en base imponible de la diferencia entre valor de mercado y valor fiscal de los elementos patrimoniales al trasladar la residencia) y la opcion de fraccionamiento del pago en cinco anualidades cuando el destino es la UE/EEE con asistencia mutua equivalente. Base sustantiva de la opcion_de_fraccionamiento_en_supuestos_de_cambios section de M200."
+required_text = [
+    "Cambios de residencia",
+    "diferencia entre el valor de mercado y el valor fiscal",
+    "fraccionar el pago",
+]
+
+[legal."ley-27-2014:art-36"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-36.html#a36"
+document_id = "BOE-A-2014-12328"
+article = "36"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a36"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 36: deduccion por inversiones en producciones cinematograficas, series audiovisuales y espectaculos en vivo de artes escenicas y musicales. Establece las tasas de deduccion (30 por ciento primer millon de base, 25 por ciento exceso), los limites por produccion y episodio (20M / 10M EUR), el requisito de gasto territorial espanol (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
+required_text = [
+    "Deducción por inversiones en producciones cinematográficas",
+    "30 por ciento",
+    "25 por ciento",
+]
+
+[legal."ley-27-2014:art-100"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-100.html#a100"
+document_id = "BOE-A-2014-12328"
+article = "100"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a100"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 100: Transparencia Fiscal Internacional. Imputacion de rentas positivas obtenidas por entidades no residentes y establecimientos permanentes cuando el contribuyente tenga (solo o con vinculadas art-18) participacion igual o superior al 50 por ciento Y el gravamen extranjero sea inferior al 75 por ciento del que hubiera correspondido en Espana. Base sustantiva de la imputacion-rentas-positivas-art-100-LIS section de M200."
+required_text = [
+    "Imputación de rentas positivas obtenidas por entidades no residentes",
+    "participación igual o superior al 50 por ciento",
+    "inferior al 75 por ciento",
+]
+
+[legal."rd-634-2015:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-634-2015-art-3.html#a3"
+document_id = "BOE-A-2015-7771"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-7771#a3"
+published_at = 2015-07-11
+effective_from = 2015-07-12
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "RIS art 3: amortizacion de elementos patrimoniales del inmovilizado material, intangible e inversiones inmobiliarias - normas comunes. Define los metodos de depreciacion efectiva (LIS art-12), la base amortizable (precio de adquisicion o coste de produccion, exclusion del valor del suelo en edificaciones, prorrateo catastral), el inicio de la amortizacion (puesta en funcionamiento / capacidad de producir ingresos) y el tratamiento de renovaciones, ampliaciones y mejoras. Base reglamentaria de las casillas de amortizacion de M200."
+required_text = [
+    "Amortización de elementos patrimoniales",
+    "métodos previstos en el apartado 1 del artículo 12",
+    "vida útil",
+]
+
+[legal."ley-27-2014:art-25"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-25.html#a25"
+document_id = "BOE-A-2014-12328"
+article = "25"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a25"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 25: reserva de capitalizacion. Establece la reduccion en la base imponible del 15 por ciento del incremento de los fondos propios (23 por ciento si la plantilla media aumenta), condicionada al mantenimiento durante 3 anios y a la dotacion de una reserva indisponible."
+required_text = [
+    "Reserva de capitalización",
+    "reducción en la base imponible",
+    "incremento de sus fondos propios",
+]
+
+[legal."ley-27-2014:art-26"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-26.html#a26"
+document_id = "BOE-A-2014-12328"
+article = "26"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a26"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 26: compensacion de bases imponibles negativas. Establece el limite del 70 por ciento de la base imponible previa para la compensacion de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millon de euros y plazo de prescripcion de 10 anios para la facultad de comprobacion."
+required_text = [
+    "Compensación de bases imponibles negativas",
+    "70 por ciento de la base imponible previa",
+    "1 millón de euros",
+]
+
+[legal."ley-27-2014:art-29"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-29.html#a29"
+document_id = "BOE-A-2014-12328"
+article = "29"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a29"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 29: el tipo de gravamen. Establece los tipos del Impuesto sobre Sociedades: 25 por ciento general; escala micro-empresa 17 por ciento (0-50.000) / 20 por ciento (resto); cooperativas fiscalmente protegidas -3 pp; entidades sin fines lucrativos 10 por ciento; nuevas creacion 15 por ciento (primeros dos ejercicios); entidades de credito y exploracion de hidrocarburos 30 por ciento."
+required_text = [
+    "El tipo de gravamen",
+    "25 por ciento",
+    "Sociedades cooperativas fiscalmente protegidas",
+]
+
+# LIS disposición transitoria cuadragésima cuarta, added by Ley 7/2024
+# (disposición final octava). Binding source for the micro-empresa
+# (INCN < 1M EUR) two-tranche transitional rate schedule applied to the
+# 2025 (21%/22%) and 2026 (19%/21%) periods on top of LIS art. 29.1.
+[legal."ley-27-2014:dt-44"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-dt-44.html#dt-6"
+document_id = "BOE-A-2014-12328"
+article = "DT-44"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dt-6"
+published_at = 2024-12-21
+effective_from = 2025-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "wgergely"
+notes = "LIS DT 44ª (Ley 7/2024, BOE-A-2024-26694): régimen transitorio del tipo de gravamen de las microempresas cuyo INCN del período inmediato anterior es inferior a 1 millón de euros, sobre la escala del art. 29.1 LIS; ejercicios iniciados en 2025 (21% / 22%) y 2026 (19% / 21%). También fija el tránsito de entidades de reducida dimensión que cumplen el art. 101 LIS: 24% en 2025, 23% en 2026, 22% en 2027 y 21% en 2028, salvo tipo especial distinto del general."
+required_text = [
+    "21 por ciento",
+    "22 por ciento",
+    "24 por ciento",
+    "23 por ciento",
+    "entidades que cumplan las previsiones previstas en el artículo 101",
+    "1 millón de euros",
+]
+
+[legal."ley-27-2014:art-101"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-101.html#a101"
+document_id = "BOE-A-2014-12328"
+article = "101"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a101"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex (bundled corpus excerpt cross-checked against live BOE)"
+notes = "LIS art 101: define the entidades de reducida dimensión threshold by prior-period INCN below 10 million euros and the annualisation/group rules used by DT 44 ERD rate dispatch."
+required_text = [
+    "inferior a 10 millones de euros",
+    "entidad patrimonial",
+    "importe neto de la cifra de negocios se elevará al año",
+]
+
+[legal."ley-27-2014:art-30"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-30.html#a30"
+document_id = "BOE-A-2014-12328"
+article = "30"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a30"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 30: cuota integra. Define la cuota integra como la cantidad resultante de aplicar a la base imponible el tipo de gravamen del articulo 29, con regla de proporcionalidad para periodos impositivos de duracion inferior al anio. La definicion sustantiva del Impuesto sobre Sociedades reside en este articulo."
+required_text = [
+    "Cuota íntegra",
+    "aplicar a la base imponible el tipo de gravamen",
+]
+
+[legal."ley-27-2014:art-39"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-39.html#a39"
+document_id = "BOE-A-2014-12328"
+article = "39"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a39"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 39: normas comunes a las deducciones para incentivar la realizacion de determinadas actividades. Establece el plazo de 15 anios para aplicar deducciones no utilizadas por insuficiencia de cuota, el regimen de abono por insuficiencia de cuota para deducciones de I+D+i y animacion, y los limites anuales de 1 millon de euros (innovacion tecnologica) y 3 millones (conjunto)."
+required_text = [
+    "Normas comunes a las deducciones",
+    "15 años inmediatos y sucesivos",
+    "insuficiencia de cuota",
+]
+
+[legal."ley-27-2014:art-105"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-105.html#a105"
+document_id = "BOE-A-2014-12328"
+article = "105"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a105"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 105: reserva de nivelacion de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millon de euros, computada tambien a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalizacion del articulo 25."
+required_text = [
+    "Reserva de nivelación de bases imponibles",
+    "minorar su base imponible positiva hasta el 10 por ciento",
+    "1 millón de euros",
+]
+
+[legal."ley-27-2014:art-40"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-40.html#a40"
+document_id = "BOE-A-2014-12328"
+article = "40"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a40"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Pago fraccionado del Impuesto sobre Sociedades. Establece las dos modalidades (cuota integra y base imponible) y el calendario de pagos fraccionados que liquida el Modelo 202."
+required_text = [
+    "El pago fraccionado",
+    "20 días naturales de los meses de abril, octubre y diciembre",
+    "La base para calcular el pago fraccionado será la cuota íntegra del último período impositivo",
+    "el porcentaje del 18 por ciento",
+    "el porcentaje que resulte de multiplicar por cinco séptimos el tipo de gravamen redondeado por defecto",
+    "El pago fraccionado tendrá la consideración de deuda tributaria",
+]
+
+[legal."ley-27-2014:art-40-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-40.html#a40"
+document_id = "BOE-A-2014-12328"
+article = "40.3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a40"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-26
+reviewed_by = "wgergely"
+notes = "LIS art 40.3: modalidad opcional / obligatoria del pago fraccionado del Impuesto sobre Sociedades calculada sobre la parte de la base imponible de los 3, 9 u 11 primeros meses del año natural. La modalidad es obligatoria para los contribuyentes cuyo importe neto de la cifra de negocios haya superado los 6 millones de euros durante los 12 meses anteriores al inicio del periodo impositivo. La cuantia se obtiene aplicando a la base el porcentaje resultante de multiplicar por cinco septimos el tipo de gravamen redondeado por defecto. Funda el gate de aplicabilidad de la modalidad Modelo 202 Art. 40.3 frente a la modalidad Art. 40.2."
+required_text = [
+    "Los pagos fraccionados también podrán realizarse, a opción del contribuyente, sobre la parte de la base imponible",
+    "estarán obligados a aplicar la modalidad a que se refiere este apartado",
+    "importe neto de la cifra de negocios haya superado la cantidad de 6 millones de euros",
+    "12 meses anteriores a la fecha en que se inicie el período impositivo",
+    "el porcentaje que resulte de multiplicar por cinco séptimos el tipo de gravamen redondeado por defecto",
+]
+
+[sources."aeat-dr-202-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/01-202-ejercicio-2025-y-siguientes-actualizado-17-03-26-132-kb-xlsx.xlsx"
+sha256 = "463cac7529de6333f55c174e3a887e92c79e7af328de5865bb1a0399d711b9a0"
+bytes = 135038
+retrieved_at = 2026-05-03
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/DR202e25.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-202-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_202/files/modelo-202-instrucciones.html"
+sha256 = "60aa28dc53d942aa876708dbcc3e99b0f36b4da6232cd5df0a478cfeca497c63"
+bytes = 92399
+retrieved_at = 2026-05-05
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-sociedades/modelo-202-is-i_____resencia-territorio-fraccionado_/instrucciones.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-202-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/03-202-ejercicio-2023-a-2024-actualizado-16-04-24-130-kb-xlsx.xlsx"
+sha256 = "1e4881439e25417df5a8584bffd7149ca0952e2df53963b19c0346572259bec7"
+bytes = 132661
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR202e23.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-202-instructions-2023-2024"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_202/files/modelo-202-instrucciones-2023-2024.html"
+sha256 = "36663a37b2f0809728d05fc28dde6fe27546ae9a6b7260600145b2a425ce0e07"
+bytes = 84026
+retrieved_at = 2026-05-05
+applies_from = 2023-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-sociedades/modelo-202-is-i_____resencia-territorio-fraccionado_/instrucciones/instrucciones-periodos-impositivos-iniciados-2023-2024.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-202-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/05-202-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-mayo-2020-132-kb-xlsx.xlsx"
+sha256 = "96160cf2a82a4e6f2c9c9848c6061b2cfe5c4877de7a455126704af86f3ac7db"
+bytes = 132387
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_19/DR202v52.xlsx"
+review_status = "reviewed"
+
+[legal."ley-27-2014:art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-18.html#a18"
+document_id = "BOE-A-2014-12328"
+article = "18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a18"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Operaciones vinculadas: definicion, valor de mercado, metodos de valoracion y deber de informacion (Modelo 232)."
+required_text = [
+    "Operaciones vinculadas",
+    "valor de mercado",
+    "personas o entidades vinculadas",
+]
+
+[legal."rd-634-2015:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-634-2015-art-13.html#a13"
+document_id = "BOE-A-2015-7771"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-7771#a13"
+published_at = 2015-07-11
+effective_from = 2015-07-12
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Reglamento del Impuesto sobre Sociedades: informacion y documentacion sobre entidades y operaciones vinculadas."
+required_text = [
+    "operaciones vinculadas",
+    "18.3 de la Ley",
+]
+
+[legal."orden-hfp-816-2017:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-816-2017.html#a1"
+document_id = "BOE-A-2017-10042"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042"
+published_at = 2017-08-30
+effective_from = 2017-08-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Aprueba el modelo 232 de declaracion informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con paises o territorios calificados como paraisos fiscales."
+required_text = [
+    "modelo 232",
+    "operaciones vinculadas",
+    "paraísos fiscales",
+]
+
+[legal."orden-hfp-816-2017:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-816-2017-art-2.html#a2"
+document_id = "BOE-A-2017-10042"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042#a2"
+published_at = 2017-08-30
+effective_from = 2017-08-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Obligados a presentar el Modelo 232: contribuyentes del IS y del IRNR con establecimiento permanente, asi como entidades en regimen de atribucion de rentas. Define los umbrales de operaciones vinculadas y las reglas de paraisos fiscales."
+required_text = [
+    "Obligados a presentar",
+    "Impuesto sobre Sociedades",
+    "operaciones realizadas con la misma persona",
+]
+
+[legal."orden-hfp-816-2017:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-816-2017-art-3.html#a3"
+document_id = "BOE-A-2017-10042"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042#a3"
+published_at = 2017-08-30
+effective_from = 2017-08-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Contenido del Modelo 232: secciones I (Informacion de operaciones con personas o entidades vinculadas), II (Operaciones con personas o entidades vinculadas en paraisos fiscales) y III (Operaciones y situaciones relacionadas con paraisos fiscales)."
+required_text = [
+    "Contenido del modelo 232",
+    "operaciones del mismo tipo",
+    "Información de operaciones",
+]
+
+[legal."orden-hfp-816-2017:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-816-2017.html#a4"
+document_id = "BOE-A-2017-10042"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042"
+published_at = 2017-08-30
+effective_from = 2017-08-31
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "wgergely"
+notes = "Plazo de presentacion del Modelo 232: el mes siguiente a los diez meses posteriores a la conclusion del periodo impositivo (noviembre para ejercicios cerrados a 31 de diciembre)."
+required_text = [
+    "Plazo de presentación del Modelo 232",
+    "mes siguiente a los diez meses posteriores",
+    "conclusión del período impositivo",
+]
+
+[sources."aeat-dr-232-2018"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_232/files/01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx"
+sha256 = "a61485dfc480393ec1dfc926142fd0b6a9386e28e60746da3dfbf2fdaf3bffff"
+bytes = 149501
+retrieved_at = 2026-05-03
+applies_from = 2018-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_17/dr232e17v14.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-232-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_232/files/02-232-orden-hfp-816-2017-ejercicios-2016-2017-146-kb-xlsx.xlsx"
+sha256 = "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad"
+bytes = 150262
+retrieved_at = 2026-05-03
+applies_from = 2016-01-01
+applies_to = 2017-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr232e17v13.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-232-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_232/files/modelo-232-procedure.html"
+sha256 = "33e413e281e789a4080228d8fb97df1209cd0b633df4d691808079168ad5f31b"
+bytes = 35923
+retrieved_at = 2026-05-05
+applies_from = 2017-08-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI43.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-232-2017-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-816-2017.html"
+sha256 = "c9ac79e79a63c9bbf4f65e61fa176dd1ac1273d64555cac16b7b69fb9405f6f4"
+bytes = 57238
+retrieved_at = 2026-05-05
+published_at = 2017-08-30
+applies_from = 2017-08-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042"
+review_status = "reviewed"
+
+[legal."ley-27-2014:art-41"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-41.html#a41"
+document_id = "BOE-A-2014-12328"
+article = "41"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a41"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Deduccion de retenciones, ingresos a cuenta y pagos fraccionados de la cuota liquida del Impuesto sobre Sociedades. Establece el deber de devolucion del exceso por la Administracion."
+required_text = [
+    "Deducción de las retenciones, ingresos a cuenta y pagos fraccionados",
+    "Serán deducibles de la cuota líquida",
+    "Los pagos fraccionados",
+    "la Administración tributaria procederá a devolver, de oficio, el exceso",
+]
+
+[legal."ley-27-2014:art-124"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-124.html#a124"
+document_id = "BOE-A-2014-12328"
+article = "124"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a124"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Declaracion del Impuesto sobre Sociedades: lugar, forma, obligados y plazo general de 25 dias naturales tras los seis meses posteriores a la conclusion del periodo impositivo."
+required_text = [
+    "Los contribuyentes estarán obligados a presentar una declaración",
+    "25 días naturales siguientes a los 6 meses posteriores",
+    "conclusión del período impositivo",
+]
+
+[sources."aeat-dr-200-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx"
+sha256 = "12ee2c1482654d99a4d6e37406d1ef2846555764aecf91a4184e9d4027f7747f"
+bytes = 2316271
+retrieved_at = 2026-05-03
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR200e25.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-200-manual-2024"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf"
+sha256 = "ad02f914246632dcd7ab30f3e7280daf3501be6ee3938237e2ebfe7328ff8179"
+bytes = 6266062
+retrieved_at = 2026-05-06
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2024.pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-200-2025-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-657-2025.html"
+sha256 = "474cb765a2d0e7bf2c45b7504a4f3a3cbc9dde656e7d2b09b7813f94f8f1bfce"
+bytes = 2602
+retrieved_at = 2026-05-06
+published_at = 2025-06-24
+applies_from = 2025-07-01
+applies_to = 2025-07-25
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
+review_status = "reviewed"
+
+[legal."ley-44-2015:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-44-2015-art-1.html#a1"
+document_id = "BOE-A-2015-11071"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a1"
+published_at = 2015-10-22
+effective_from = 2015-10-24
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 44/2015 Art. 1: definicion de sociedad laboral. Sociedad Anonima Laboral (SAL) y Sociedad Limitada Laboral (SLL). Requisito: la mayoria del capital social ha de ser propiedad de trabajadores que presten en ella servicios retribuidos en forma personal y directa, cuya relacion laboral sea de duracion indefinida. Ningun socio puede poseer acciones o participaciones que representen mas de un tercio del capital social salvo entidades publicas, asociaciones u otras personas juridicas sin animo de lucro."
+required_text = [
+    "sociedad laboral",
+    "capital social",
+    "trabajadores",
+]
+
+[legal."ley-44-2015:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-44-2015-art-2.html#a2"
+document_id = "BOE-A-2015-11071"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a2"
+published_at = 2015-10-22
+effective_from = 2015-10-24
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 44/2015 Art. 2: denominacion social. Las sociedades laborales deben incluir en su denominacion las palabras 'Sociedad Anonima Laboral' o 'Sociedad Limitada Laboral', o sus abreviaturas SAL o SLL respectivamente. Prohibicion de uso de estas denominaciones por entidades no calificadas."
+required_text = [
+    "Sociedad Anónima Laboral",
+    "Sociedad Limitada Laboral",
+    "SAL",
+]
+
+[legal."ley-44-2015:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-44-2015-art-13.html#a13"
+document_id = "BOE-A-2015-11071"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a13"
+published_at = 2015-10-22
+effective_from = 2015-10-24
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 44/2015 Art. 13: regimen tributario de las sociedades laborales. Las sociedades laborales tributan por el Impuesto sobre Sociedades en el regimen general. No tienen un tipo reducido propio; el tipo aplicable es el general del 25 por ciento o el que corresponda segun su cifra de negocios, forma juridica, etc."
+required_text = [
+    "régimen tributario",
+    "Impuesto sobre Sociedades",
+]
+
+[legal."ley-44-2015:art-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-44-2015-art-14.html#a14"
+document_id = "BOE-A-2015-11071"
+article = "14"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a14"
+published_at = 2015-10-22
+effective_from = 2015-10-24
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 44/2015 Art. 14: reserva especial. Las sociedades laborales deberan destinar a la reserva especial una parte de sus beneficios liquidos del ejercicio no inferior al 10 por ciento, hasta que dicha reserva alcance, al menos, el importe del capital social. Para el calculo de la base imponible del Impuesto sobre Sociedades, la dotacion a la reserva especial es gasto fiscalmente deducible segun el regimen fiscal vigente. A efectos practicos, la dotacion obligatoria del 10 por ciento sobre el beneficio neto reduce la base imponible IS, con el limite de que la reserva acumulada no supere el 50 por ciento del capital social (limite operativo en el contexto del calculo del IS; la norma fija 'hasta el importe del capital social' como limite definitivo pero la jurisprudencia fiscal y la practica de la AEAT aplican el 50 por ciento como umbral de la reduccion en cuota)."
+required_text = [
+    "reserva especial",
+    "beneficios líquidos",
+    "10 por ciento",
+]
+
+[legal."ley-31-2022:art-39"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-31-2022-art-39.html#a39"
+document_id = "BOE-A-2022-22128"
+article = "39"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#a39"
+published_at = 2022-12-29
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 31/2022 Art. 39: modifica el articulo 29 de la Ley 27/2014 LIS para introducir el tipo reducido del 23 por ciento para entidades cuya cifra de negocios del periodo impositivo inmediato anterior sea inferior a 1 millon de euros (entidades de reducida dimension). Aplicable a periodos impositivos iniciados a partir del 1 de enero de 2023. Las entidades sujetas al tipo general del 25 por ciento que cumplan el umbral de cifra de negocios inferior a 1 millon de euros aplican el tipo ERD del 23 por ciento; las cooperativas fiscalmente protegidas y entidades sin fines lucrativos conservan sus tipos especiales."
+required_text = [
+    "23 por ciento",
+    "cifra de negocios del período impositivo inmediato anterior",
+    "1 millón de euros",
+]

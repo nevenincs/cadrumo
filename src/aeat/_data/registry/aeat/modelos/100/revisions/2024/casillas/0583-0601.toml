@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0601"
+number = "0601"
+label = "Suma de retenciones e ingresos a cuenta imputados: (suma de las casillas [0264] )"
+section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
+semantic_role = "irpf_retencion_imputada_aie_ute"
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

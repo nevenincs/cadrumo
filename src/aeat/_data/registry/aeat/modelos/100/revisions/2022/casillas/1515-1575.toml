@@ -1,0 +1,11 @@
+[[revisions."2022".casillas]]
+id = "1575"
+number = "1575"
+label = "Rendimiento neto computable ( [1571] - [1572] - [1573] - [1574] )"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
+input_kind = "computed"
+formula = "renta-2022-atribucion-capital-inmobiliario-rendimiento-neto-computable"
+data_type = "decimal"
+semantic_role = "irpf_re_atrib_cap_inmo_rdto_neto_computable"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

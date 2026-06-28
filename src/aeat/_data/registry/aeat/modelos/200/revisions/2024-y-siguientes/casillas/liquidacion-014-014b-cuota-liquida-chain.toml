@@ -1,0 +1,310 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00567"
+number = "00567"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Bonificación por rentas obtenidas en Ceuta y Melilla (art. 33 LIS) [00567]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00567"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00568"
+number = "00568"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Bonificaciones por prestación de servicios (art. 34 LIS) [00568]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00568"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00563"
+number = "00563"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Bonificación rendimientos por ventas bienes corporales producidos en Canarias (art. 26 Ley 19/1994) [00563]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00563"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00566"
+number = "00566"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Bonificaciones Sociedades Cooperativas (Ley 20/1990) [00566]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00566"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00576"
+number = "00576"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Bonificaciones entidades dedicadas al arrendamiento de viviendas (Capítulo III Título VII LIS) [00576]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00576"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00569"
+number = "00569"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Otras bonificaciones [00569]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00569"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00570"
+number = "00570"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Deducciones por doble imposición - D.I. interna generada y aplicada en el ejercicio actual [00570]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00570", "modelo-200-page-015b-casilla-00570"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00572"
+number = "00572"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Deducciones por doble imposición - D.I. interna de períodos anteriores aplicada en el ejercicio [00572]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00572", "modelo-200-page-015b-casilla-00572"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00571"
+number = "00571"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Deducciones por doble imposición - D.I. interna pendiente aplicada en el ejercicio [00571]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00571", "modelo-200-page-016-casilla-00571"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00575"
+number = "00575"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Deducciones por doble imposición - D.I. internacional de períodos anteriores aplicada en el ejercicio [00575]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00575"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00577"
+number = "00577"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Deducciones por doble imposición - Deducciones de apoyo a acontecimientos de excepcional interés público [00577]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00577"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00581"
+number = "00581"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Bonificación empresas navieras en Canarias (art. 76 Ley 19/1994) [00581]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014-casilla-00581"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014:00582"
+number = "00582"
+segmento = "DP200014"
+label = "Liquidación III - Bonificaciones/Deducciones doble imposición - Cuota íntegra ajustada positiva [00582]"
+section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
+data_type = "money"
+semantic_role = "is_liquidacion_iii_cuota_integra_ajustada_positiva"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Liquidación III cuota íntegra ajustada positiva is the single post-bonificaciones cuota-chain casilla; ECPN casilla 00582 is a separate accounting-statement occurrence."
+required = false
+input_kind = "computed"
+formula = "modelo-200-cuota-integra-ajustada-positiva"
+export_refs = ["modelo-200-page-014-casilla-00582"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014B:00583"
+number = "00583"
+segmento = "DP200014B"
+label = "Liquidación IV - Otras deducciones - Deducciones por reinversión de beneficios extraordinarios [00583]"
+section = ["liquidacion_iv", "otras_deducciones"]
+data_type = "money"
+semantic_role = "is_liquidacion_iv_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014b-casilla-00583"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014B:00585"
+number = "00585"
+segmento = "DP200014B"
+label = "Liquidación IV - Otras deducciones - Deducción DT 24ª.7 LIS y art. 42 RDLeg. 4/2004 [00585]"
+section = ["liquidacion_iv", "otras_deducciones"]
+data_type = "money"
+semantic_role = "is_liquidacion_iv_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014b-casilla-00585", "modelo-200-page-016-casilla-00585"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014B:00584"
+number = "00584"
+segmento = "DP200014B"
+label = "Liquidación IV - Otras deducciones - Deducciones DT 24ª.1 LIS [00584]"
+section = ["liquidacion_iv", "otras_deducciones"]
+data_type = "money"
+semantic_role = "is_liquidacion_iv_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014b-casilla-00584", "modelo-200-page-016-casilla-00584"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014B:00588"
+number = "00588"
+segmento = "DP200014B"
+label = "Liquidación IV - Otras deducciones - Deducciones para incentivar determinadas actividades (Cap. IV Tít. VI LIS) [00588]"
+section = ["liquidacion_iv", "otras_deducciones"]
+data_type = "money"
+semantic_role = "is_liquidacion_iv_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014b-casilla-00588", "modelo-200-page-018b-casilla-00588"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014B:00565"
+number = "00565"
+segmento = "DP200014B"
+label = "Liquidación IV - Otras deducciones - Deducciones entidades portuarias [00565]"
+section = ["liquidacion_iv", "otras_deducciones"]
+data_type = "money"
+semantic_role = "is_liquidacion_iv_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014b-casilla-00565", "modelo-200-page-018c-casilla-00565"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014B:00590"
+number = "00590"
+segmento = "DP200014B"
+label = "Liquidación IV - Otras deducciones - Deducciones Inversión Canarias [00590]"
+section = ["liquidacion_iv", "otras_deducciones"]
+data_type = "money"
+semantic_role = "is_liquidacion_iv_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014b-casilla-00590", "modelo-200-page-016b-casilla-00590"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014B:00399"
+number = "00399"
+segmento = "DP200014B"
+label = "Liquidación IV - Otras deducciones - Deducciones específicas de las entidades sometidas a normativa foral [00399]"
+section = ["liquidacion_iv", "otras_deducciones"]
+data_type = "money"
+semantic_role = "is_liquidacion_iv_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014b-casilla-00399"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014B:00082"
+number = "00082"
+segmento = "DP200014B"
+label = "Liquidación IV - Otras deducciones - Deducciones excluidas de límite [00082]"
+section = ["liquidacion_iv", "otras_deducciones"]
+data_type = "money"
+semantic_role = "is_liquidacion_iv_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014b-casilla-00082"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".casillas]]
+id = "DP200014B:00619"
+number = "00619"
+segmento = "DP200014B"
+label = "Liquidación IV - Otras deducciones - Cuota líquida mínima [00619]"
+section = ["liquidacion_iv", "otras_deducciones"]
+data_type = "money"
+semantic_role = "is_liquidacion_iv_cuota_liquida_minima"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-014b-casilla-00619"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

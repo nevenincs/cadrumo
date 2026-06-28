@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0851"
+number = "0851"
+label = "Para los beneficiarios de las ayudas a viviendas protegidas"
+section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
+semantic_role = "irpf_deduccion_andalucia_donativos_ecologicos"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1013"
+number = "1013"
+label = "Por acogimiento de menores"
+section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
+semantic_role = "irpf_deduccion_extremadura_acogimiento_menores"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

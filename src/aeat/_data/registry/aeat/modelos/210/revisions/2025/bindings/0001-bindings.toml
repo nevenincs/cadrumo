@@ -1,0 +1,27 @@
+# M210 IRNR Phase 1 profile-axis bindings (W09.P41.S402).
+#
+# Exposes the operator profile's country_of_fiscal_residence field
+# to the formula runtime so the m210_resolve_rate op (S400) can read
+# the treaty country at evaluation time via ctx.enum_binding_values.
+# Mirrors the M100 CCAA precedent at
+# bindings/0008-renta-2025-profile-tax-residence-ccaa.toml.
+#
+# country_of_fiscal_residence is a free-form ISO 3166-1 alpha-2 string
+# on TaxpayerProfile, not a closed enum class — typed_enum is omitted.
+# The convenio_aplicable derived property on TaxpayerProfile already
+# resolves the BOE treaty reference from this same field.
+
+[[revisions."2025".bindings]]
+id = "m210-2025-profile-country-of-fiscal-residence"
+source = "profile"
+selector = { profile_model = "taxpayer", field = "country_of_fiscal_residence" }
+aggregation = { op = "copy" }
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-2",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["no residentes", "país de residencia"]

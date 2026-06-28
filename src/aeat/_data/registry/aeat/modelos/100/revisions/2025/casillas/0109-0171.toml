@@ -1,0 +1,10 @@
+[[revisions."2025".casillas]]
+id = "0171"
+number = "0171"
+label = "Ingresos de explotacion"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+semantic_role = "irpf_ed_ingresos_explotacion"
+input_kind = "bound"
+binding = "renta-2025-ledger-income-0171"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03101"
+number = "03101"
+label = "Unión temporal de empresas, ajustes por rentas exentas por participar en el extranjero en fórmulas de colaboración análogas a las UTE (art. 45.2 LIS) - Aumento - Correcciones del ejercicio - Perman..."
+section = ["union_temporal_de_empresas_ajustes_por_rentas_exen", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_regimenes_especiales_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03101"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03102"
+number = "03102"
+label = "Unión temporal de empresas, ajustes por rentas exentas por participar en el extranjero en fórmulas de colaboración análogas a las UTE (art. 45.2 LIS) - Aumento - Correcciones del ejercicio - Tempor..."
+section = ["union_temporal_de_empresas_ajustes_por_rentas_exen", "aumento"]
+data_type = "money"
+semantic_role = "is_ute_renta_exenta_colaboracion_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03102"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03103"
+number = "03103"
+label = "Unión temporal de empresas, ajustes por rentas exentas por participar en el extranjero en fórmulas de colaboración análogas a las UTE (art. 45.2 LIS) - Aumento - Correcciones del ejercicio - Tempor..."
+section = ["union_temporal_de_empresas_ajustes_por_rentas_exen", "aumento"]
+data_type = "money"
+semantic_role = "is_ute_renta_exenta_colaboracion_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03103"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03104"
+number = "03104"
+label = "Unión temporal de empresas, ajustes por rentas exentas por participar en el extranjero en fórmulas de colaboración análogas a las UTE (art. 45.2 LIS) - Aumento - Saldo pendiente a principio de ejer..."
+section = ["union_temporal_de_empresas_ajustes_por_rentas_exen", "aumento"]
+data_type = "money"
+semantic_role = "is_ute_renta_exenta_colaboracion_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03104"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03105"
+number = "03105"
+label = "Unión temporal de empresas, ajustes por rentas exentas por participar en el extranjero en fórmulas de colaboración análogas a las UTE (art. 45.2 LIS) - Aumento - Saldo pendiente a fin de ejercicio ..."
+section = ["union_temporal_de_empresas_ajustes_por_rentas_exen", "aumento"]
+data_type = "money"
+semantic_role = "is_ute_renta_exenta_colaboracion_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03105"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

@@ -1,0 +1,9 @@
+[[revisions."2023".casillas]]
+id = "0030"
+number = "0030"
+label = "Rendimientos procedentes de la transmisión o amortización de Letras del Tesoro"
+section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_ahorro"]
+data_type = "decimal"
+semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_letras_tesoro"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

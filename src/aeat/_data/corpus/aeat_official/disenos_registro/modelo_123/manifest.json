@@ -1,0 +1,116 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "123",
+  "retrieved_at": "2026-05-03",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 8,
+  "artefacts": [
+    {
+      "modelo": "123",
+      "title": "123 - 01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR123e24.xls",
+      "stored_path": "files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt",
+      "original_filename": "01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.txt",
+      "content_type": "application/octet-stream",
+      "bytes": 7077,
+      "sha256": "8b231a85b7df3eb49d5cc8c5d1b8cbd5a99b5e93a1063fee1348191035aa4594",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "123",
+      "title": "123 - Orden EHA/3435/2007 (Ejercicio 2024 y siguientes) (190 KB - xls )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR123e24.xls",
+      "stored_path": "files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls",
+      "original_filename": "DR123e24.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 194560,
+      "sha256": "85ffe058c1728a50d11d3c6fcfe03f77e172e0458b53920a620aa434d66d07b4",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "123",
+      "title": "123 - 01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xlsx",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DR123e24.xls",
+      "stored_path": "files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xlsx",
+      "original_filename": "01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 38812,
+      "sha256": "835520ea0edf8d182e7e5c839920a208040fcdc78c97d1628d5433518ef2f2dd",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "123",
+      "title": "123 - 02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR123e15v13.xls",
+      "stored_path": "files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt",
+      "original_filename": "02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.txt",
+      "content_type": "application/octet-stream",
+      "bytes": 6472,
+      "sha256": "5e02b4d3096b8241c563074e63926ff913b44ce692b8ebf1f0f5c2ef0148e913",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "123",
+      "title": "123 - EHA/3435/2007 (Ejercicios 2019-2023) (169 KB - xls )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR123e15v13.xls",
+      "stored_path": "files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xls",
+      "original_filename": "DR123e15v13.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 173568,
+      "sha256": "21ec4feed2950c57c689a772166952b3c2245e7101bce7836c2baedc1f4f8dbd",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "123",
+      "title": "123 - 02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xlsx",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR123e15v13.xls",
+      "stored_path": "files/02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xlsx",
+      "original_filename": "02-123-eha-3435-2007-ejercicios-2019-2023-169-kb-xls.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 38734,
+      "sha256": "035c322eadef3cd90211734216dc5e308c3f213b9a22226be8b4b67f8886a4d4",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "123",
+      "title": "123 - Orden EHA/3435/2007 (Ejercicios 2014 y anteriores) (40 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/123_2008.pdf",
+      "stored_path": "files/03-123-orden-eha-3435-2007-ejercicios-2014-y-anteriores-40-kb-pdf.pdf",
+      "original_filename": "123_2008.pdf",
+      "content_type": "application/pdf",
+      "bytes": 41229,
+      "sha256": "172c238f5b06c4360c9e47e13092ef6703fe0c8f04bd4b7a279017694087f3c5",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "123",
+      "title": "123 - Orden EHA/3435/2007 (Ejercicios 2015 hasta 2018) (164 KB - xls )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR123e15v12.xls",
+      "stored_path": "files/04-123-orden-eha-3435-2007-ejercicios-2015-hasta-2018-164-kb-xls.xls",
+      "original_filename": "DR123e15v12.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 167424,
+      "sha256": "cc24b134697856e14a34b03b85eaeb1195e21e740cfc4d0a6f735a4dd8d6ea70",
+      "retrieved_at": "2026-05-03"
+    }
+  ]
+}

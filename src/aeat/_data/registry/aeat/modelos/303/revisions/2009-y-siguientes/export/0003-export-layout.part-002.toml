@@ -1,0 +1,329 @@
+[[revisions.2009-y-siguientes.export_layouts]]
+id = "modelo-303-fichero-boe"
+
+[[revisions.2009-y-siguientes.export_layouts.records]]
+id = "modelo-303-page-05"
+record_type = "page_05"
+order = 5
+encoding = "latin-1"
+line_ending = "none"
+required = false
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-05-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-05-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "303"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-05-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "05000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-05-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-05-complementaria"
+offset = 12
+length = 1
+kind = "header"
+header_key = "complementaria_05"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-05-prorrata-regdeducdif"
+offset = 13
+length = 827
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-05-reserved"
+offset = 840
+length = 672
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-05-close-tag"
+offset = 1512
+length = 12
+kind = "literal"
+literal = "</T30305000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records]]
+id = "modelo-303-page-did"
+record_type = "page_did"
+order = 6
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "303"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "DID00"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-swift-bic"
+offset = 12
+length = 11
+kind = "header"
+header_key = "swift_bic"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-iban"
+offset = 23
+length = 34
+kind = "header"
+header_key = "iban"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-bank-name"
+offset = 57
+length = 70
+kind = "header"
+header_key = "bank_name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-bank-address"
+offset = 127
+length = 35
+kind = "header"
+header_key = "bank_address"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-city"
+offset = 162
+length = 30
+kind = "header"
+header_key = "bank_city"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-country"
+offset = 192
+length = 2
+kind = "header"
+header_key = "bank_country_code"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-sepa"
+offset = 194
+length = 1
+kind = "header"
+header_key = "sepa_marca"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-reserved"
+offset = 195
+length = 617
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-page-did-close-tag"
+offset = 812
+length = 12
+kind = "literal"
+literal = "</T303DID00>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.export_layouts.records]]
+id = "modelo-303-envelope-footer"
+record_type = "envelope_footer"
+order = 99
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions.2009-y-siguientes.export_layouts.records.fields]]
+id = "modelo-303-envelope-closing-tag"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]

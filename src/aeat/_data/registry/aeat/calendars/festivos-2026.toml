@@ -1,0 +1,67 @@
+# Spanish national + autonomous-community holidays for the 2026 tax year.
+#
+# Source: Resolución de la Dirección General de Trabajo publishing the
+# annual relación de fiestas laborales (BOE, autumn 2025). The exact BOE
+# reference for 2026 is captured in ``boe_ref``; until the BOE publishes,
+# this list reflects the fixed national holidays plus Easter-derived
+# Viernes Santo (3 April 2026) computed from the standard ecclesiastical
+# tables. CCAA additions land when each CCAA's own 2026 calendar publishes.
+
+year = 2026
+boe_ref = "boe-resolucion-festivos-2026"
+
+[[national]]
+date = 2026-01-01
+name = "Año Nuevo"
+
+[[national]]
+date = 2026-01-06
+name = "Epifanía del Señor"
+
+[[national]]
+date = 2026-04-03
+name = "Viernes Santo"
+
+[[national]]
+date = 2026-05-01
+name = "Fiesta del Trabajo"
+
+[[national]]
+date = 2026-08-15
+name = "Asunción de la Virgen"
+
+[[national]]
+date = 2026-10-12
+name = "Fiesta Nacional de España"
+
+[[national]]
+date = 2026-12-08
+name = "Inmaculada Concepción"
+
+[[national]]
+date = 2026-12-25
+name = "Natividad del Señor"
+
+# CCAA bootstrap entries for 2026. Each CCAA carries the high-confidence
+# fixed holidays only; movable holidays (Easter-derived, varying yearly
+# elections) land when the regional gazette publishes.
+
+[[ccaa]]
+ccaa_code = "ES-MD"
+date = 2026-05-02
+name = "Fiesta de la Comunidad de Madrid"
+
+[[ccaa]]
+ccaa_code = "ES-CT"
+date = 2026-09-11
+name = "Diada Nacional de Cataluña"
+
+[[ccaa]]
+ccaa_code = "ES-AN"
+date = 2026-02-28
+name = "Día de Andalucía"
+
+[[ccaa]]
+ccaa_code = "ES-VC"
+date = 2026-10-09
+name = "Día de la Comunitat Valenciana"

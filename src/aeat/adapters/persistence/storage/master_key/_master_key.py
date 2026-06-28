@@ -6,13 +6,11 @@ protocol:
 - :class:`KeyringMasterKeyProvider` — backed by the ``keyring`` package
   (Windows Credential Manager, macOS Keychain, Linux Secret Service via
   libsecret). The master key is stored under a fixed service name and
-  account; on first use the provider mints a 32-byte random key and
-  persists it.
+  account; explicit enrollment mints a 32-byte random key and persists
+  it.
 - :class:`FileFallbackMasterKeyProvider` — backed by a passphrase-
-  derived KEK (Argon2id) wrapping an AES-256-GCM master key persisted
-  alongside a per-store random salt. the KDF from
-  scrypt to Argon2id; the historical (v1, scrypt) format is no longer
-  loadable and must be migrated via :func:`migrate_master_key_kdf`.
+  derived KEK (Argon2id) wrapping an AES-256-GCM master key. The
+  per-store random salt is carried inside ``master.kdf`` (``salt_b64``).
 - :class:`EphemeralMasterKeyProvider` — an in-memory provider used
   exclusively by tests; the key vanishes when the provider object is
   garbage-collected.
@@ -23,60 +21,93 @@ the OS keychain and falls back to the file backend only when the
 keychain is unusable. The ``keyring`` backend refuses to fall back; the
 ``file`` backend never consults the keychain.
 
-The on-disk file backend persists three artefacts in
+The on-disk file backend persists two artefacts in
 :attr:`Settings.aeat_secret_store_dir`:
 
-- ``salt`` — 16 random bytes (read at startup, never rotated).
 - ``master.key`` — the AES-256-GCM ciphertext of the master key, plus
   its 12-byte nonce, plus the 16-byte tag, base64-encoded.
 - ``master.kdf`` — a small JSON document carrying the Argon2id
-  parameters used to derive the KEK from the operator's passphrase.
-  This file is human-readable; only ``master.key`` is sensitive.
+  parameters (including the per-store random ``salt_b64``) used to
+  derive the KEK from the operator's passphrase. This file is
+  human-readable; only ``master.key`` is sensitive.
 
 Passphrase resolution: ``AEAT_SECRET_PASSPHRASE`` env var is consulted
 first; absent that, the passphrase is prompted interactively via
-:func:`getpass.getpass`. The passphrase is cached in memory for the
-process lifetime so subsequent provider calls do not re-prompt.
+:func:`getpass.getpass`.
 """
 
 from __future__ import annotations
 
-import atexit
 import base64
 import binascii
 import contextlib
-import getpass
-import json
 import os
 import secrets
-from collections.abc import Callable
+import sqlite3
+from collections.abc import Iterator
 from pathlib import Path
-from threading import Lock
-from typing import TYPE_CHECKING, ClassVar, Final, Literal, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
-from argon2.low_level import Type as _Argon2Type
-from argon2.low_level import hash_secret_raw as _argon2_hash_secret_raw
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt as _LegacyScrypt
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ValidationError
+
+from .....core.time import now
 
 if TYPE_CHECKING:
-    from .....core.config import Settings
+    from contextlib import AbstractContextManager
+    from types import TracebackType
 
+    from .....core.config import Settings
+    from ._bucket_session import BucketSession
+
+from .....core import resolve_active_bucket_id
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
 from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
-from .....core.locks import exclusive_file_lock, fsync_parent_dir
 from ..errors import (
+    DecryptionError,
+    EncryptionError,
     KeyringUnavailableError,
     MasterKeyKdfVersionError,
     MasterKeyKeychainLockedError,
     MasterKeyMaterialMissingError,
     MasterKeyPassphraseMismatchError,
     MasterKeyUnavailableError,
+    PassphraseTooShortError,
+    SecretAlreadyExistsError,
     SecretStoreError,
     UnsecuredModeRefusedError,
 )
+from ._master_key_bucket_dek import idle_minutes_for_bucket, load_or_mint_bucket_dek
+from ._master_key_derivation import (
+    ARGON2_MEMORY_COST_KIB,
+    ARGON2_PARALLELISM,
+    ARGON2_TIME_COST,
+    KDF_PARAMS_VERSION,
+    SALT_SIZE,
+    derive_kek_with_params,
+)
+from ._master_key_ephemeral import EphemeralMasterKeyProvider as EphemeralMasterKeyProvider
+from ._master_key_io import (
+    PASSPHRASE_ENV_VAR,
+    PassphraseCallback,
+    _b64decode,
+    _b64encode,
+    _default_passphrase_callback,
+    atomic_write_secure_bytes,
+)
+from ._master_key_records import (
+    EnvelopeDocument,
+    _KdfParameters,
+    _KdfVersionEnvelope,
+)
+from ._master_key_tax_id import looks_like_real_tax_id as looks_like_real_tax_id
+
+NIST_PASSPHRASE_MIN_LENGTH: Final[int] = 8
+"""NIST SP 800-63B §5.1.1.1 verifier-side minimum passphrase length."""
 
 _log = get_logger(__name__)
+
 
 KEYRING_SERVICE: Final[str] = "aeat:secure-persistence"
 """Stable service identifier under which the keyring backend stores the key."""
@@ -84,238 +115,128 @@ KEYRING_SERVICE: Final[str] = "aeat:secure-persistence"
 KEYRING_USERNAME: Final[str] = "master"
 """Account identifier for the master-key entry in the OS keychain."""
 
-PASSPHRASE_ENV_VAR: Final[str] = "AEAT_SECRET_PASSPHRASE"  # noqa: S105 — env var name, not a value
-"""Environment variable consulted by the file backend before prompting."""
+_MASTER_KEY_UNAVAILABLE_MESSAGE_KEY: Final[str] = "errors.auth.auth_storage_master_key_unavailable"
+_MASTER_KEY_PASSPHRASE_MISMATCH_MESSAGE_KEY: Final[str] = "errors.auth.auth_storage_master_key_passphrase_mismatch"
 
-_ARGON2_MEMORY_COST_KIB: Final[int] = 19 * 1024
-"""Argon2id ``memory_cost`` in KiB (19 MiB — OWASP-current top tier)."""
 
-_ARGON2_TIME_COST: Final[int] = 2
-"""Argon2id ``time_cost`` (number of iterations) — OWASP-current top tier."""
+def _master_key_unavailable_error(message: str) -> MasterKeyUnavailableError:
+    return MasterKeyUnavailableError(message, translated_message=_MASTER_KEY_UNAVAILABLE_MESSAGE_KEY)
 
-_ARGON2_PARALLELISM: Final[int] = 1
-"""Argon2id ``parallelism`` — OWASP-current top tier."""
 
-_SALT_SIZE: Final[int] = 16
-"""Per-store salt size in bytes."""
-
-_KDF_PARAMS_VERSION: Final[int] = 2
-"""Bumped when the on-disk KDF parameter shape changes.
-
-* v1: scrypt (N=2**17, r=8, p=1). .
-* v2: Argon2id (memory_cost=19 MiB, time_cost=2, parallelism=1). .
-"""
-
-_LEGACY_KDF_PARAMS_VERSION: Final[int] = 1
-"""..11 KDF parameter version. Read-only — only the migration helper consumes it."""
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+def _master_key_passphrase_mismatch_error(message: str) -> MasterKeyPassphraseMismatchError:
+    return MasterKeyPassphraseMismatchError(
+        message,
+        translated_message=_MASTER_KEY_PASSPHRASE_MISMATCH_MESSAGE_KEY,
+    )
 
 
 @runtime_checkable
 class MasterKeyProvider(Protocol):
-    """Source of the master key used by every at-rest crypto consumer."""
+    """Source of the master key used by every at-rest crypto consumer.
+
+    Providers are context managers: entering activates the backend's
+    session (idle-timeout guard, in-memory key cache) and exiting tears
+    it down. Every concrete provider implements the protocol verbatim.
+
+    The ``_session`` / ``_activation_cm`` slots are the bookkeeping the
+    shared enter/exit machinery binds onto: entering stores the opened
+    :class:`BucketSession` and its activation context manager, exiting
+    tears both down. Every concrete provider declares them in
+    ``__init__``.
+    """
+
+    _session: BucketSession | None
+    _activation_cm: AbstractContextManager[None] | None
 
     def get_master_key(self) -> bytes:
         """Return the 32-byte AES-256 master key.
 
-        Raises:
-            MasterKeyUnavailableError: If the master key cannot be
-                acquired from this provider.
+        Returns:
+            The 32-byte AES-256 master key for the active session.
         """
         ...
 
+    def provision_master_key(self) -> bytes:
+        """Mint and persist the 32-byte AES-256 master key during explicit enrollment."""
+        ...
 
-class _KdfParameters(BaseModel):
-    """On-disk record of the Argon2id parameters used to derive the KEK.
+    def __enter__(self) -> object:
+        """Activate the provider's backend session for the ``with`` block."""
+        ...
 
-    The active (v2) shape. Loading a v1 (scrypt) ``master.kdf`` against
-    this model fails by design — the version-gate in
-    :meth:`FileFallbackMasterKeyProvider._unwrap_existing` produces a
-    typed :class:`MasterKeyKdfVersionError` pointing the operator at
-    the migration tool instead of letting a strict-pydantic
-    ``ValidationError`` bubble up unannotated.
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        """Tear down the provider's backend session on block exit."""
+        ...
+
+
+@runtime_checkable
+class KeyringClient(Protocol):
+    """Injection seam for the OS-keychain operations the master-key provider depends on.
+
+    The real implementation wraps the third-party :mod:`keyring`
+    module's ``get_password`` / ``set_password`` calls plus the
+    backend probe that rejects ``fail.Keyring`` and ``null.Keyring``.
+    Tests inject a real in-memory implementation rather than mutating
+    the third-party module at runtime.
     """
 
-    model_config = _STRICT_FROZEN
+    def probe_backend(self) -> None:
+        """Raise :class:`KeyringUnavailableError` when the active backend cannot persist a master key.
 
-    version: int = Field(default=_KDF_PARAMS_VERSION)
-    algorithm: Literal["argon2id"] = Field(default="argon2id")
-    memory_cost: int
-    time_cost: int
-    parallelism: int
-    salt_b64: str
+        No-op fail / null backends trigger this error.
+        """
 
+    def get_password(self, service: str, username: str) -> str | None:
+        """Return the persisted password for ``(service, username)``, or ``None`` when absent."""
 
-class _LegacyKdfParameters(BaseModel):
-    """Parser for v1 (scrypt) ``master.kdf`` files.
-
-    Used **only** by :func:`migrate_master_key_kdf` when re-wrapping an
-    existing master key into the v2 (Argon2id) format. The substrate's
-    regular load path never instantiates this model.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    version: Literal[1]
-    algorithm: Literal["scrypt"]
-    n: int
-    r: int
-    p: int
-    salt_b64: str
+    def set_password(self, service: str, username: str, password: str) -> None:
+        """Persist ``password`` under ``(service, username)``."""
 
 
-class MigrationResult(BaseModel):
-    """Outcome of a one-shot ``master.kdf`` migration run.
+class _RealKeyringClient:
+    """Default :class:`KeyringClient` backed by the third-party ``keyring`` module."""
 
-    Attributes:
-        migrated: ``1`` if the store was on v1 and is now v2; ``0`` if
-            the store was already v2 and required no action.
-        skipped: ``1`` if the store was already v2; ``0`` otherwise.
-        store_dir: The store directory the migration acted on.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    migrated: int = Field(default=0, ge=0, le=1)
-    skipped: int = Field(default=0, ge=0, le=1)
-    store_dir: Path
-
-
-def _b64encode(data: bytes) -> str:
-    return base64.b64encode(data).decode("ascii")
-
-
-def _b64decode(text: str) -> bytes:
-    return base64.b64decode(text.encode("ascii"), validate=True)
-
-
-def atomic_write_secure_bytes(target: Path, payload: bytes) -> None:
-    """Atomically write ``payload`` to ``target`` with mode ``0o600``.
-
-    Writes to a sibling tempfile created with ``O_CREAT|O_EXCL`` and
-    ``mode=0o600`` so the file lands restricted from creation (no
-    chmod-after-close TOCTOU window where a sensitive payload is
-    briefly readable by other users on the host). ``os.fsync``s the
-    fd, then ``os.replace`` atomically swaps the tempfile in. A crash
-    between create and replace leaves the original ``target``
-    untouched; the orphan tempfile is removed on the error path.
-
-    Use this for any persisted sensitive material (master-key state,
-    portable export bundles) where partial writes or world-readable
-    intermediate states are unacceptable. On Windows the mode argument
-    is ignored and the file inherits the parent directory's ACL; the
-    confidentiality posture there depends on per-user profile
-    permissions, not on POSIX mode bits.
-    """
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = target.with_name(f"{target.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    if hasattr(os, "O_NOINHERIT"):
-        flags |= os.O_NOINHERIT  # type: ignore[attr-defined]
-    if hasattr(os, "O_CLOEXEC"):
-        flags |= os.O_CLOEXEC
-    fd = os.open(tmp_path, flags, 0o600)
-    try:
+    def probe_backend(self) -> None:
         try:
-            os.write(fd, payload)
-            os.fsync(fd)
-        finally:
-            os.close(fd)
-        os.replace(tmp_path, target)
-        # Flush the parent directory entry to disk on POSIX so the
-        # rename is durable across power loss (file fsync does not
-        # imply directory fsync on ext4 / xfs / etc.).
-        fsync_parent_dir(target)
-    except BaseException:
-        with contextlib.suppress(OSError):
-            os.unlink(tmp_path)
-        raise
+            import keyring
+        except ImportError as exc:
+            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
+        try:
+            from keyring.backends import fail as _fail_backend
 
-
-def _zeroise(buffer: bytearray | None) -> None:
-    """Best-effort overwrite of a mutable buffer with zero bytes.
-
-    Python's `bytes` is immutable so true zeroisation requires a
-    `bytearray`. The substrate's master-key + passphrase caches use
-    bytearray buffers so a memory-disclosure bug elsewhere (e.g. a
-    debug traceback printing locals) does not surface the key bytes.
-    The atexit hook (registered below) calls this on every cached
-    buffer at shutdown.
-    """
-    if buffer is None:
-        return
-    for i in range(len(buffer)):
-        buffer[i] = 0
-
-
-def _derive_kek(passphrase: bytes, salt: bytes) -> bytes:
-    """Derive a 32-byte KEK from the operator's passphrase and the per-store salt.
-
-    Uses Argon2id with the OWASP-current top-tier parameters
-    (``memory_cost=19 MiB, time_cost=2, parallelism=1``). The result is
-    a 32-byte KEK suitable for AES-256-GCM-wrapping the master key.
-    """
-    return _argon2_hash_secret_raw(
-        secret=passphrase,
-        salt=salt,
-        time_cost=_ARGON2_TIME_COST,
-        memory_cost=_ARGON2_MEMORY_COST_KIB,
-        parallelism=_ARGON2_PARALLELISM,
-        hash_len=KEY_SIZE,
-        type=_Argon2Type.ID,
-    )
-
-
-def _derive_legacy_scrypt_kek(passphrase: bytes, salt: bytes, params: _LegacyKdfParameters) -> bytes:
-    """Derive the 32-byte KEK under the v1 (scrypt) parameter set.
-
-    Used **only** by :func:`migrate_master_key_kdf`. Once a store has
-    been migrated to v2, this function is no longer reachable from the
-    regular load path.
-    """
-    scrypt = _LegacyScrypt(salt=salt, length=KEY_SIZE, n=params.n, r=params.r, p=params.p)
-    return scrypt.derive(passphrase)
-
-
-PassphraseCallback = Callable[[], str]
-"""Pluggable hook for tests — callable returning the passphrase as a str."""
-
-
-def _default_passphrase_callback() -> str:
-    """Resolve the operator's passphrase from env or stdin.
-
-    The env var is read but NOT popped from ``os.environ``. Earlier
-    revisions popped on first read with the rationale that child
-    processes spawned later would not inherit the value, but the
-    in-process cache is reset under several legitimate flows
-    (``aeat security recover`` calls ``_reset_for_tests`` then
-    ``_resolve_passphrase`` again; long-running test sessions cycle
-    the cache between sub-tests). After the pop, those second reads
-    block on ``getpass.getpass`` in non-TTY contexts (CI, batch
-    jobs, subprocess pipes), surfacing as opaque
-    ``MasterKeyPassphraseMismatchError`` once the cached operator
-    cancels and the substrate re-prompts. Keeping the env var lets
-    every cache-miss read resolve consistently; subprocesses that
-    inherit the parent's env always had access to the passphrase
-    anyway (env-var inheritance is a cooperative-isolation property,
-    not a confidentiality boundary the substrate can defend
-    on its own).
-
-    Trailing CRLF is stripped (some shells append it via
-    ``$(cat .secret)``), but interior whitespace is preserved (some
-    passphrase policies require it).
-    """
-    env_value = os.environ.get(PASSPHRASE_ENV_VAR)
-    if env_value:
-        # Strip trailing CRLF only — the shell often appends it.
-        normalized = env_value.rstrip("\r\n")
-        if not normalized:
-            raise SecretStoreError(
-                f"{PASSPHRASE_ENV_VAR} is set to whitespace-only; supply a non-empty passphrase.",
+            backend = keyring.get_keyring()
+        except Exception as exc:
+            _log.debug("keyring backend probe failed error_type=%s", type(exc).__name__)
+            raise KeyringUnavailableError(f"unable to inspect OS keychain backend: {exc}") from exc
+        if isinstance(backend, _fail_backend.Keyring):
+            raise KeyringUnavailableError(
+                f"OS keychain backend is the no-op fail.Keyring (resolved {type(backend).__name__}); "
+                "install a usable backend or set AEAT_SECRET_STORE_BACKEND=file.",
             )
-        return normalized
-    return getpass.getpass(prompt="AEAT secret-store passphrase: ")
+        if type(backend).__name__ == "Keyring" and type(backend).__module__.endswith(".null"):
+            raise KeyringUnavailableError(
+                "OS keychain backend is the no-op null.Keyring; "
+                "install a usable backend or set AEAT_SECRET_STORE_BACKEND=file.",
+            )
+
+    def get_password(self, service: str, username: str) -> str | None:
+        try:
+            import keyring
+        except ImportError as exc:
+            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
+        return keyring.get_password(service, username)
+
+    def set_password(self, service: str, username: str, password: str) -> None:
+        try:
+            import keyring
+        except ImportError as exc:
+            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
+        keyring.set_password(service, username, password)
 
 
 class KeyringMasterKeyProvider:
@@ -328,18 +249,23 @@ class KeyringMasterKeyProvider:
     so the auto fallback can route to the file backend without
     silently dropping the master key into a sink.
 
-    The in-process cache is keyed by ``(service, username)`` so two
-    providers bound to distinct identities never share key material.
-    """
+    Older builds kept an in-process key cache keyed by ``(service,
+    username)``. That cache has retired in favour of
+    :class:`BucketSession`; this provider resolves through the keyring
+    on each call.
 
-    _lock: ClassVar[Lock] = Lock()
-    _cache: ClassVar[dict[tuple[str, str], bytearray]] = {}
+    The optional ``client`` argument injects a :class:`KeyringClient`
+    implementation so tests exercise the provider's contract against a
+    real in-memory implementation rather than mutating the third-party
+    ``keyring`` module at runtime.
+    """
 
     def __init__(
         self,
         *,
         service: str = KEYRING_SERVICE,
         username: str = KEYRING_USERNAME,
+        client: KeyringClient | None = None,
     ) -> None:
         """Bind the provider to a keyring service and account.
 
@@ -348,13 +274,30 @@ class KeyringMasterKeyProvider:
                 stored. Defaults to :data:`KEYRING_SERVICE`.
             username: Account identifier within that service. Defaults
                 to :data:`KEYRING_USERNAME`.
+            client: Optional :class:`KeyringClient` implementation;
+                defaults to the production
+                :class:`_RealKeyringClient` wrapping the ``keyring``
+                module. Tests inject a real fake type via this seam.
         """
         self._service = service
         self._username = username
+        self._client: KeyringClient = client or _RealKeyringClient()
+        self._session: BucketSession | None = None
+        self._activation_cm: AbstractContextManager[None] | None = None
 
-    @staticmethod
-    def _probe_backend() -> None:
-        """Refuse no-op keyring backends up-front.
+    def __enter__(self) -> object:
+        return _provider_enter(self)
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        _provider_exit(self, exc_type, exc, tb)
+
+    def _probe_backend(self) -> None:
+        """Refuse no-op keyring backends up-front, via the injected client.
 
         ``keyring.backends.fail.Keyring`` and ``keyring.backends.null.Keyring``
         are placeholder backends installed when the platform has no
@@ -362,116 +305,142 @@ class KeyringMasterKeyProvider:
         (or raises ``NoKeyringError``) but never persists the value, so
         the master key would be lost on the next process restart.
         """
-        try:
-            import keyring
-        except ImportError as exc:  # pragma: no cover - keyring is a hard dep
-            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
-        try:
-            from keyring.backends import fail as _fail_backend
-
-            backend = keyring.get_keyring()
-        except Exception as exc:  # pragma: no cover - defensive
-            raise KeyringUnavailableError(f"unable to inspect OS keychain backend: {exc}") from exc
-        if isinstance(backend, _fail_backend.Keyring):
-            raise KeyringUnavailableError(
-                f"OS keychain backend is the no-op fail.Keyring (resolved {type(backend).__name__}); "
-                "install a usable backend or set AEAT_SECRET_STORE_BACKEND=file.",
-            )
-        # Null backend is best-detected by class name to avoid an import
-        # against a module that may not exist on every platform.
-        if type(backend).__name__ == "Keyring" and type(backend).__module__.endswith(".null"):
-            raise KeyringUnavailableError(
-                "OS keychain backend is the no-op null.Keyring; "
-                "install a usable backend or set AEAT_SECRET_STORE_BACKEND=file.",
-            )
+        self._client.probe_backend()
 
     def get_master_key(self) -> bytes:
-        """Fetch (or mint and store) the master key via the OS keychain."""
-        cache_key = (self._service, self._username)
-        with KeyringMasterKeyProvider._lock:
-            cached = KeyringMasterKeyProvider._cache.get(cache_key)
-            if cached is not None:
-                return bytes(cached)
+        """Fetch the master key via the OS keychain.
+
+        Resolves on every call: process-global caching has retired in
+        favour of :class:`BucketSession` instance state. Production
+        consumers should activate a session via :func:`activate_session`
+        and read through :func:`get_active_master_key` rather than call
+        this method in a tight loop.
+
+        Absent key material is a provisioning error, not permission to
+        create storage implicitly. Explicit enrollment calls
+        :meth:`provision_master_key`.
+        """
+        try:
+            from keyring.errors import KeyringError
+        except ImportError as exc:
+            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
+        self._probe_backend()
+        stored = self._read_stored_master_key(KeyringError)
+        if stored is not None:
+            return self._decode_stored_master_key(stored)
+        raise MasterKeyMaterialMissingError(
+            "OS keychain master key is not provisioned; run "
+            "`aeat config profile create NAME` to create and unlock a profile, "
+            "or `aeat config switch NAME` for an existing profile.",
+        )
+
+    def provision_master_key(self) -> bytes:
+        """Mint and persist a new keychain master key for explicit enrollment."""
+        try:
+            from keyring.errors import KeyringError
+        except ImportError as exc:
+            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
+        from .....core.config import load_settings
+
+        settings = load_settings()
+        lock_target = Path(settings.aeat_secret_store_dir) / "keyring.lock"
+        lock_target.parent.mkdir(parents=True, exist_ok=True)
+        with exclusive_file_lock(lock_target):
             self._probe_backend()
-            try:
-                import keyring
-                from keyring.errors import KeyringError
-            except ImportError as exc:  # pragma: no cover - keyring is a hard dep
-                raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
-            try:
-                stored = keyring.get_password(self._service, self._username)
-            except KeyringError as exc:
-                # The probe at line above already excluded the no-op
-                # backends; reaching here means the BACKEND itself is
-                # usable but the keychain entry is currently
-                # inaccessible (e.g. macOS Keychain locked, Windows
-                # Hello prompt cancelled, Secret Service not unlocked).
-                # Distinct from KeyringUnavailableError (no usable
-                # backend at all) so the operator-facing message can
-                # point at "unlock the keychain and retry" instead of
-                # "switch backend".
-                raise MasterKeyKeychainLockedError(
-                    f"OS keychain refused get_password: {exc}; "
-                    "unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
-                    "or set AEAT_SECRET_STORE_BACKEND=file to use the passphrase backend.",
-                ) from exc
-            except Exception as exc:  # pragma: no cover - defensive
-                raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
+            stored = self._read_stored_master_key(KeyringError)
             if stored is not None:
-                try:
-                    key = _b64decode(stored)
-                except (ValueError, binascii.Error) as exc:
-                    raise KeyringUnavailableError(
-                        "OS keychain returned a malformed master-key entry; clear it and re-run.",
-                    ) from exc
-                if len(key) != KEY_SIZE:
-                    raise KeyringUnavailableError(
-                        f"OS keychain master key has wrong size: {len(key)} (expected {KEY_SIZE}).",
-                    )
-                KeyringMasterKeyProvider._cache[cache_key] = bytearray(key)
-                return key
-            new_key = secrets.token_bytes(KEY_SIZE)
-            try:
-                keyring.set_password(self._service, self._username, _b64encode(new_key))
-            except KeyringError as exc:
-                raise KeyringUnavailableError(f"OS keychain refused set_password: {exc}") from exc
-            except Exception as exc:  # pragma: no cover - defensive
-                raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
-            # Read back to verify the backend actually persisted the value.
-            try:
-                roundtrip = keyring.get_password(self._service, self._username)
-            except KeyringError as exc:
-                raise KeyringUnavailableError(f"OS keychain refused round-trip read: {exc}") from exc
-            if roundtrip is None or _b64decode(roundtrip) != new_key:
-                raise KeyringUnavailableError(
-                    "OS keychain accepted set_password but the round-trip read disagreed; "
-                    "the backend may be a silent dropper.",
+                raise SecretAlreadyExistsError(
+                    "OS keychain master key is already provisioned; use `aeat config recover` "
+                    "or `aeat config rekey` for custody changes.",
                 )
+            new_key = self._mint_and_verify_master_key(KeyringError)
             _log.info("master key minted in OS keychain (service=%s)", self._service)
-            KeyringMasterKeyProvider._cache[cache_key] = bytearray(new_key)
             return new_key
 
-    @classmethod
-    def _reset_for_tests(cls) -> None:
-        """Clear the in-process cache so tests can verify fetch paths cleanly."""
-        with cls._lock:
-            for buf in cls._cache.values():
-                _zeroise(buf)
-            cls._cache.clear()
+    def _read_stored_master_key(self, keyring_error_cls: type[Exception]) -> str | None:
+        """Fetch the encoded master-key string from the keychain, or ``None`` if absent.
+
+        The probe above already excluded the no-op backends; reaching
+        a ``KeyringError`` here means the backend is usable but the
+        keychain entry is currently inaccessible (macOS Keychain
+        locked, Windows Hello prompt cancelled, Secret Service not
+        unlocked). That maps to :class:`MasterKeyKeychainLockedError`
+        with operator-facing remediation guidance; any other
+        unexpected exception maps to
+        :class:`KeyringUnavailableError`.
+        """
+        try:
+            return self._client.get_password(self._service, self._username)
+        except keyring_error_cls as exc:
+            raise MasterKeyKeychainLockedError(
+                f"OS keychain refused get_password: {exc}; "
+                "unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
+                "or set AEAT_SECRET_STORE_BACKEND=file to use the passphrase backend.",
+            ) from exc
+        except KeyringUnavailableError:
+            raise
+        except Exception as exc:
+            _log.debug("keyring get_password failed unexpectedly error_type=%s", type(exc).__name__)
+            raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
+
+    @staticmethod
+    def _decode_stored_master_key(stored: str) -> bytes:
+        """Decode the base64-encoded master-key string and validate the byte length."""
+        try:
+            key = _b64decode(stored)
+        except (ValueError, binascii.Error) as exc:
+            raise KeyringUnavailableError(
+                "OS keychain returned a malformed master-key entry; clear it and re-run.",
+            ) from exc
+        if len(key) != KEY_SIZE:
+            raise KeyringUnavailableError(
+                f"OS keychain master key has wrong size: {len(key)} (expected {KEY_SIZE}).",
+            )
+        return key
+
+    def _mint_and_verify_master_key(self, keyring_error_cls: type[Exception]) -> bytes:
+        """Mint a fresh master key, persist it, and verify the backend actually retains it.
+
+        Some keyring backends silently drop ``set_password`` writes
+        (e.g. fail-closed fallback adapters); the round-trip read
+        below catches that class of failure before the dropped key
+        reaches a downstream encryption call.
+        """
+        new_key = secrets.token_bytes(KEY_SIZE)
+        try:
+            self._client.set_password(self._service, self._username, _b64encode(new_key))
+        except keyring_error_cls as exc:
+            raise KeyringUnavailableError(f"OS keychain refused set_password: {exc}") from exc
+        except KeyringUnavailableError:
+            raise
+        except Exception as exc:
+            _log.debug("keyring set_password failed unexpectedly error_type=%s", type(exc).__name__)
+            raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
+        try:
+            roundtrip = self._client.get_password(self._service, self._username)
+        except keyring_error_cls as exc:
+            raise KeyringUnavailableError(f"OS keychain refused round-trip read: {exc}") from exc
+        if roundtrip is None:
+            raise KeyringUnavailableError(
+                "OS keychain accepted set_password but the round-trip read was empty; "
+                "the backend may be a silent dropper.",
+            )
+        if self._decode_stored_master_key(roundtrip) != new_key:
+            raise KeyringUnavailableError(
+                "OS keychain accepted set_password but the round-trip read disagreed; "
+                "the backend may be a silent dropper.",
+            )
+        return new_key
 
 
 class FileFallbackMasterKeyProvider:
     """Encrypted-file-backed master-key provider.
 
-    Persists ``salt`` and ``master.key`` (plus a human-readable
-    ``master.kdf`` parameters document) under
+    Persists ``master.key`` (plus a human-readable ``master.kdf``
+    parameters document carrying the per-store ``salt_b64``) under
     :attr:`Settings.aeat_secret_store_dir`. The KEK is derived from a
-    passphrase via scrypt and wraps the master key with AES-256-GCM.
+    passphrase via Argon2id and wraps the master key with AES-256-GCM.
     """
-
-    _lock: ClassVar[Lock] = Lock()
-    _cached_passphrase: ClassVar[bytearray | None] = None
-    _cached_master_key: ClassVar[dict[Path, bytearray]] = {}
 
     def __init__(
         self,
@@ -482,19 +451,28 @@ class FileFallbackMasterKeyProvider:
         """Bind the provider to a store directory.
 
         Args:
-            store_dir: Directory containing ``salt``, ``master.key``,
-                and ``master.kdf``. Created on first use.
+            store_dir: Directory containing ``master.key`` and
+                ``master.kdf``. Created on first use.
             passphrase_callback: Optional override for passphrase
                 resolution. Defaults to
                 :func:`_default_passphrase_callback`. Tests inject a
-                stub that returns a deterministic value.
+                callback that returns a deterministic value.
         """
         self._store_dir = Path(store_dir)
         self._passphrase_callback = passphrase_callback or _default_passphrase_callback
+        self._session: BucketSession | None = None
+        self._activation_cm: AbstractContextManager[None] | None = None
 
-    @property
-    def _salt_path(self) -> Path:
-        return self._store_dir / "salt"
+    def __enter__(self) -> object:
+        return _provider_enter(self)
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        _provider_exit(self, exc_type, exc, tb)
 
     @property
     def _kdf_params_path(self) -> Path:
@@ -505,30 +483,51 @@ class FileFallbackMasterKeyProvider:
         return self._store_dir / "master.key"
 
     def _resolve_passphrase(self) -> bytes:
-        with FileFallbackMasterKeyProvider._lock:
-            cached = FileFallbackMasterKeyProvider._cached_passphrase
-            if cached is not None:
-                return bytes(cached)
-            value = self._passphrase_callback()
-            if not value:
-                raise SecretStoreError(
-                    "secret-store passphrase resolved to empty string; set "
-                    f"{PASSPHRASE_ENV_VAR} or supply a non-empty value at the prompt.",
-                )
-            material = bytearray(value.encode("utf-8"))
-            FileFallbackMasterKeyProvider._cached_passphrase = material
-            return bytes(material)
+        value = self._passphrase_callback()
+        if not value:
+            raise SecretStoreError(
+                "secret-store passphrase resolved to empty string; set "
+                f"{PASSPHRASE_ENV_VAR} or supply a non-empty value at the prompt.",
+            )
+        if len(value) < NIST_PASSPHRASE_MIN_LENGTH:
+            raise PassphraseTooShortError(
+                "secret-store passphrase is shorter than the NIST SP 800-63B "
+                f"§5.1.1.1 verifier minimum of {NIST_PASSPHRASE_MIN_LENGTH} "
+                "characters; supply a longer passphrase via "
+                f"{PASSPHRASE_ENV_VAR} or at the prompt.",
+            )
+        return value.encode(_UTF_8_ENCODING)
 
     def get_master_key(self) -> bytes:
-        # Normalise the path so casing / relative-vs-absolute differences
-        # do not produce two cache entries for the same logical store
-        # (vs-M-1).
+        """Unwrap and return the 32-byte master key from the encrypted file store.
+
+        Resolves the operator passphrase, then serialises the
+        unwrap-or-refuse decision under an exclusive ``master.lock`` so two
+        first-time callers cannot race-mint conflicting ``master.key`` /
+        ``master.kdf`` pairs. When both artefacts (``master.key``,
+        ``master.kdf``) are present, derives the Argon2id
+        key-encryption key (KEK) from the passphrase and uses it to unwrap
+        the wrapped master key. A partial artefact set is a torn install -- a
+        prior mint or recovery crashed mid-write -- and is refused rather
+        than silently re-minted, which would orphan records encrypted under
+        the lost key.
+
+        Returns:
+            The 32-byte AES-256 master key.
+
+        Raises:
+            MasterKeyMaterialMissingError: When the store is unprovisioned
+                or in a torn state.
+            MasterKeyPassphraseMismatchError: When the passphrase fails to
+                unwrap the stored key.
+            MasterKeyKdfVersionError: When ``master.kdf`` carries an
+                unsupported parameter version.
+            MasterKeyUnavailableError: When an artefact is malformed or
+                unreadable.
+            PassphraseTooShortError: When the resolved passphrase is shorter
+                than the NIST verifier minimum.
+        """
         self._store_dir.mkdir(parents=True, exist_ok=True)
-        cache_key = self._store_dir.resolve()
-        with FileFallbackMasterKeyProvider._lock:
-            cached = FileFallbackMasterKeyProvider._cached_master_key.get(cache_key)
-            if cached is not None:
-                return bytes(cached)
         passphrase = self._resolve_passphrase()
         # Serialise the unwrap-or-mint decision under the on-disk lock
         # so two first-time callers cannot both decide to mint and then
@@ -537,7 +536,7 @@ class FileFallbackMasterKeyProvider:
         # the artefacts the first caller wrote and route to unwrap.
         lock_target = self._store_dir / "master.lock"
         with exclusive_file_lock(lock_target):
-            artefacts = (self._master_key_path, self._kdf_params_path, self._salt_path)
+            artefacts = (self._master_key_path, self._kdf_params_path)
             present = [p for p in artefacts if p.exists()]
             if len(present) == len(artefacts):
                 key = self._unwrap_existing(passphrase)
@@ -547,126 +546,149 @@ class FileFallbackMasterKeyProvider:
                 # silently re-mint (which would overwrite the
                 # half-written ``master.key`` and destroy any record
                 # encrypted under the recovered key). The operator
-                # must finish recovery (``aeat security recover
-                # --recovery-key "<24 words>"``) or, if the substrate
-                # was never used and no records exist yet, run
-                # ``aeat security provision --force`` to start fresh.
+                # must finish recovery with `aeat config recover`,
+                # or, if the substrate was never used and no records
+                # exist yet, move the torn directory aside and create a
+                # new profile.
                 missing = [p.name for p in artefacts if not p.exists()]
                 raise MasterKeyMaterialMissingError(
                     f"file-fallback at {self._store_dir} is in a torn state — "
                     f"present={[p.name for p in present]} missing={missing}. "
                     "A previous mint or recovery crashed between writes. Run "
-                    '`aeat security recover --recovery-key "<24 words>"` to '
-                    "finish recovery, or `aeat security provision --force` to "
-                    "wipe and re-provision (only if no records were ever "
-                    "written under the prior key — that operation is "
-                    "irreversible).",
+                    "`aeat config recover --recovery-key <WORDS>` with the 24-word recovery key "
+                    "to finish recovery, or move the torn secret-store directory "
+                    "aside and run `aeat config profile create NAME` "
+                    "only if no records were ever written under the prior key.",
                 )
             else:
-                key = self._mint_new(passphrase)
-        with FileFallbackMasterKeyProvider._lock:
-            FileFallbackMasterKeyProvider._cached_master_key[cache_key] = bytearray(key)
+                raise MasterKeyMaterialMissingError(
+                    f"file-fallback at {self._store_dir} is not provisioned; run "
+                    "`aeat config profile create NAME` to create and unlock a profile "
+                    "before invoking commands that decrypt or persist stored records.",
+                )
         return key
 
+    def provision_master_key(self, *, force: bool = False) -> bytes:
+        """Mint the file-fallback master key for explicit enrollment.
+
+        Args:
+            force: When True, replace complete existing material. Reserved for
+                explicit re-provision flows; normal enrollment leaves it False.
+
+        Returns:
+            The newly minted 32-byte master key.
+
+        Raises:
+            SecretAlreadyExistsError: When the store is already provisioned and ``force`` is False.
+            MasterKeyMaterialMissingError: When the store is in a torn state.
+        """
+        self._store_dir.mkdir(parents=True, exist_ok=True)
+        passphrase = self._resolve_passphrase()
+        lock_target = self._store_dir / "master.lock"
+        with exclusive_file_lock(lock_target):
+            artefacts = (self._master_key_path, self._kdf_params_path)
+            present = [p for p in artefacts if p.exists()]
+            if present and not force:
+                raise SecretAlreadyExistsError(
+                    f"file-fallback at {self._store_dir} is already provisioned; use "
+                    "`aeat config recover` or `aeat config rekey` for custody changes.",
+                )
+            if present and len(present) != len(artefacts):
+                missing = [p.name for p in artefacts if not p.exists()]
+                raise MasterKeyMaterialMissingError(
+                    f"file-fallback at {self._store_dir} is in a torn state - "
+                    f"present={[p.name for p in present]} missing={missing}. Run "
+                    "`aeat config recover --recovery-key <WORDS>` with the 24-word recovery key to "
+                    "finish recovery, or move the torn secret-store directory aside "
+                    "only if no records were ever written under the prior key.",
+                )
+            return self._mint_new(passphrase)
+
     def _unwrap_existing(self, passphrase: bytes) -> bytes:
-        raw_text = self._kdf_params_path.read_text(encoding="utf-8")
+        raw_text = self._kdf_params_path.read_text(encoding=_UTF_8_ENCODING)
         # Version-gate before strict pydantic parsing so a v1 file
         # produces a typed runbook-pointing error instead of a raw
         # ValidationError.
         try:
-            preview = json.loads(raw_text)
-        except json.JSONDecodeError as exc:
-            raise MasterKeyUnavailableError(
-                f"failed to parse KDF parameters at {self._kdf_params_path}: {exc}",
-            ) from exc
-        if not isinstance(preview, dict):
-            raise MasterKeyUnavailableError(
-                f"master.kdf at {self._kdf_params_path} must be a JSON object, got {type(preview).__name__}",
-            )
-        on_disk_version = preview.get("version")
-        if on_disk_version != _KDF_PARAMS_VERSION:
+            preview = _KdfVersionEnvelope.model_validate_json(raw_text)
+        except ValidationError as exc:
+            raise _master_key_unavailable_error("master.kdf must be a JSON object.") from exc
+        on_disk_version = preview.version
+        if on_disk_version != KDF_PARAMS_VERSION:
             raise MasterKeyKdfVersionError(
                 f"master.kdf at {self._kdf_params_path} is version {on_disk_version!r}; "
-                f"this build expects version {_KDF_PARAMS_VERSION}. "
-                "Run `aeat security migrate-master-key-kdf` to upgrade.",
+                f"this build expects version {KDF_PARAMS_VERSION}.",
             )
         try:
             params = _KdfParameters.model_validate_json(raw_text)
-        except Exception as exc:
-            raise MasterKeyUnavailableError(
-                f"failed to parse KDF parameters at {self._kdf_params_path}: {exc}",
-            ) from exc
+        except (ValueError, ValidationError) as exc:
+            raise _master_key_unavailable_error("failed to parse KDF parameters.") from exc
         try:
             salt = _b64decode(params.salt_b64)
         except (ValueError, binascii.Error) as exc:
-            raise MasterKeyUnavailableError("KDF parameters carry malformed salt.") from exc
+            raise _master_key_unavailable_error("KDF parameters carry malformed salt.") from exc
         kek = self._derive_kek_with_params(passphrase, salt, params)
         try:
             wire = base64.b64decode(self._master_key_path.read_bytes(), validate=True)
             blob = EncryptedBlob.from_wire(wire)
-        except Exception as exc:
-            raise MasterKeyUnavailableError(
-                f"failed to read wrapped master key at {self._master_key_path}: {exc}",
-            ) from exc
+        except (OSError, ValueError, binascii.Error) as exc:
+            raise _master_key_unavailable_error("failed to read wrapped master key.") from exc
         try:
             return decrypt_record(blob, key=kek, associated_data=b"aeat.master-key.v1")
-        except Exception as exc:
+        except (DecryptionError, EncryptionError) as exc:
             # Distinguish passphrase-mismatch from material-missing so
             # the CLI can render an actionable hint
-            # (`aeat security recover --recovery-key` for forgotten
-            # passphrase vs `aeat security provision` for absent
+            # (`aeat config recover` for forgotten
+            # passphrase vs `aeat config profile create NAME` for absent
             # material).
-            raise MasterKeyPassphraseMismatchError(
-                "passphrase did not unlock the master key at "
-                f"{self._master_key_path}; verify the passphrase or use "
-                "`aeat security recover --recovery-key`.",
+            raise _master_key_passphrase_mismatch_error(
+                "passphrase did not unlock the master key; verify the passphrase or run "
+                "`aeat config recover --recovery-key <WORDS>`.",
             ) from exc
 
     def _mint_new(self, passphrase: bytes) -> bytes:
-        salt = secrets.token_bytes(_SALT_SIZE)
+        salt = secrets.token_bytes(SALT_SIZE)
         params = _KdfParameters(
-            memory_cost=_ARGON2_MEMORY_COST_KIB,
-            time_cost=_ARGON2_TIME_COST,
-            parallelism=_ARGON2_PARALLELISM,
+            memory_cost=ARGON2_MEMORY_COST_KIB,
+            time_cost=ARGON2_TIME_COST,
+            parallelism=ARGON2_PARALLELISM,
             salt_b64=_b64encode(salt),
         )
         kek = self._derive_kek_with_params(passphrase, salt, params)
         master_key = secrets.token_bytes(KEY_SIZE)
         blob = encrypt_record(master_key, key=kek, associated_data=b"aeat.master-key.v1")
         # Restrict directory permissions on POSIX so the wrapped master
-        # key, the salt, and the KDF parameters cannot be world-read.
+        # key and the KDF parameters cannot be world-read.
         # On Windows os.chmod is a no-op; POSIX gets 0o700 on the dir
         # and 0o600 on every file. icacls hardening is out of scope
         # here (the broader session-state pattern handles that).
         self._restrict_dir_permissions(self._store_dir)
         # Use the durable atomic-write helper so a power-loss between
-        # the three artefact writes does not leave a torn install
+        # the two artefact writes does not leave a torn install
         # (truncated master.key under fresh master.kdf, etc.).
         # Same write order as ``complete_recovery``: master.key first
-        # (under the new KEK), then master.kdf (the parameters that
-        # derive the KEK), then salt (informational — the canonical
-        # salt also lives in master.kdf.salt_b64).
+        # (under the new KEK), then master.kdf (the parameters — including
+        # the canonical salt in ``salt_b64`` — that derive the KEK).
         atomic_write_secure_bytes(
             self._master_key_path,
             base64.b64encode(blob.to_wire()),
         )
         atomic_write_secure_bytes(
             self._kdf_params_path,
-            params.model_dump_json().encode("utf-8"),
+            params.model_dump_json().encode(_UTF_8_ENCODING),
         )
-        atomic_write_secure_bytes(self._salt_path, salt)
         _log.info("master key minted in encrypted file at %s", self._master_key_path)
         return master_key
 
     def complete_recovery(self, master_key: bytes) -> None:
         """Re-mint the file-fallback artefacts under recovered key bytes.
 
-        Writes ``master.kdf``, ``master.key``, and ``salt`` for the
-        operator's *current* passphrase (via the configured callback),
-        wrapping ``master_key`` under a freshly-derived Argon2id KEK.
-        The three artefacts are written via the atomic
-        tempfile-and-replace pattern so a crash between writes leaves
-        the existing on-disk state untouched.
+        Writes ``master.kdf`` and ``master.key`` for the operator's
+        *current* passphrase (via the configured callback), wrapping
+        ``master_key`` under a freshly-derived Argon2id KEK. Both
+        artefacts are written via the atomic tempfile-and-replace
+        pattern so a crash between writes leaves the existing on-disk
+        state untouched.
 
         Use after a recovery-key unwrap (`unwrap_master_key`) to bind
         the recovered master-key bytes to a new passphrase. The
@@ -686,17 +708,12 @@ class FileFallbackMasterKeyProvider:
             raise SecretStoreError(
                 f"recovered master key must be {KEY_SIZE} bytes; got {len(master_key)}",
             )
-        # Drop any stale cached state so the new artefacts are picked
-        # up by subsequent get_master_key() calls (and so the cached
-        # passphrase is freshly resolved against the operator's
-        # current shell environment).
-        FileFallbackMasterKeyProvider._reset_for_tests()
         passphrase = self._resolve_passphrase()
-        salt = secrets.token_bytes(_SALT_SIZE)
+        salt = secrets.token_bytes(SALT_SIZE)
         params = _KdfParameters(
-            memory_cost=_ARGON2_MEMORY_COST_KIB,
-            time_cost=_ARGON2_TIME_COST,
-            parallelism=_ARGON2_PARALLELISM,
+            memory_cost=ARGON2_MEMORY_COST_KIB,
+            time_cost=ARGON2_TIME_COST,
+            parallelism=ARGON2_PARALLELISM,
             salt_b64=_b64encode(salt),
         )
         kek = self._derive_kek_with_params(passphrase, salt, params)
@@ -712,28 +729,23 @@ class FileFallbackMasterKeyProvider:
         self._restrict_dir_permissions(self._store_dir)
         with exclusive_file_lock(self._store_dir / "master.lock"):
             # Write order: ``master.key`` first (under the new KEK),
-            # then ``master.kdf`` (the parameters that derive the new
-            # KEK), then ``salt`` (informational — the canonical salt
-            # also lives in ``master.kdf.salt_b64``). A crash between
-            # the first and second write leaves a state where the new
+            # then ``master.kdf`` (the parameters — including the
+            # canonical salt in ``salt_b64`` — that derive the new KEK).
+            # A crash between the two writes leaves a state where the new
             # ``master.key`` cannot decrypt under the OLD KDF — and
             # the OLD ``master.key`` content has already been
             # overwritten — but the recovery-key wrapping at
             # ``master.recovery.key`` is untouched, so the operator
-            # can re-run ``aeat security recover`` to complete the
-            # recovery. Compare with ``migrate_master_key_kdf`` which
-            # follows the same write-order discipline.
+            # can re-run `aeat config recover` to complete the
+            # recovery.
             atomic_write_secure_bytes(
                 self._master_key_path,
                 base64.b64encode(blob.to_wire()),
             )
             atomic_write_secure_bytes(
                 self._kdf_params_path,
-                params.model_dump_json().encode("utf-8"),
+                params.model_dump_json().encode(_UTF_8_ENCODING),
             )
-            atomic_write_secure_bytes(self._salt_path, salt)
-        with FileFallbackMasterKeyProvider._lock:
-            FileFallbackMasterKeyProvider._cached_master_key[self._store_dir.resolve()] = bytearray(master_key)
         _log.info(
             "master key recovered and re-wrapped under new passphrase at %s",
             self._master_key_path,
@@ -744,94 +756,82 @@ class FileFallbackMasterKeyProvider:
         """Chmod ``target`` to 0o700 on POSIX; no-op on Windows."""
         if os.name == "posix":
             try:
-                os.chmod(target, 0o700)
-            except OSError:  # pragma: no cover - best-effort
+                # Private directory mode; Semgrep's generic file-mode rule is inverted here.
+                os.chmod(target, 0o700)  # nosemgrep
+            except OSError:
                 _log.debug("chmod 0o700 failed on %s; continuing", target)
 
     @staticmethod
-    def _write_bytes_secure(target: Path, payload: bytes) -> None:
-        """Write ``payload`` to ``target`` with mode 0o600 on POSIX.
-
-        Uses ``os.open(O_WRONLY|O_CREAT|O_TRUNC, 0o600)`` on POSIX so
-        the file lands restricted from creation rather than relying on
-        a chmod after the fact (which has a TOCTOU window). On Windows
-        the mode argument is ignored and the file inherits the parent
-        directory's ACL; the file backend's confidentiality posture on
-        Windows depends on per-user profile permissions plus the
-        operator's passphrase, not on POSIX mode bits.
-        """
-        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-        # Avoid inheriting handles into child processes on Windows.
-        if hasattr(os, "O_NOINHERIT"):
-            flags |= os.O_NOINHERIT  # type: ignore[attr-defined]
-        if hasattr(os, "O_CLOEXEC"):
-            flags |= os.O_CLOEXEC
-        fd = os.open(target, flags, 0o600)
-        try:
-            os.write(fd, payload)
-        finally:
-            os.close(fd)
-
-    @staticmethod
     def _derive_kek_with_params(passphrase: bytes, salt: bytes, params: _KdfParameters) -> bytes:
-        return _argon2_hash_secret_raw(
-            secret=passphrase,
-            salt=salt,
-            time_cost=params.time_cost,
+        return derive_kek_with_params(
+            passphrase,
+            salt,
             memory_cost=params.memory_cost,
+            time_cost=params.time_cost,
             parallelism=params.parallelism,
-            hash_len=KEY_SIZE,
-            type=_Argon2Type.ID,
         )
 
-    @classmethod
-    def _reset_for_tests(cls) -> None:
-        """Clear caches so tests can verify mint vs unwrap paths cleanly."""
-        with cls._lock:
-            _zeroise(cls._cached_passphrase)
-            cls._cached_passphrase = None
-            for buf in cls._cached_master_key.values():
-                _zeroise(buf)
-            cls._cached_master_key.clear()
+
+def _extract_profile_tax_ids(envelope_payload: bytes) -> tuple[str, ...] | None:
+    """Extract profile tax-id facts from a decrypted user-profile envelope."""
+    try:
+        doc = EnvelopeDocument.model_validate_json(envelope_payload)
+    except (UnicodeDecodeError, ValueError):
+        return None
+    if doc.payload is None:
+        return None
+    tax_ids: list[str] = [
+        str(fact.value) for fact in doc.payload.facts if fact.path == "identity.tax_id" and isinstance(fact.value, str)
+    ]
+    return tuple(tax_ids) if tax_ids else None
 
 
-def _purge_caches_at_exit() -> None:
-    """atexit hook: zeroise every cached key buffer at process shutdown.
+def _refuse_unsecured_active_bucket_with_real_profile(session: BucketSession) -> None:
+    """Refuse unsecured activation when the active bucket carries a real profile."""
+    from .....core.config import load_settings
+    from .._namespace_registry import BUCKET_DB_DIRNAME, BUCKETS_DIRNAME, USER_PROFILE_VALUE_NAMESPACE
+    from ..crypto._encrypted_columns import decrypt_encrypted_bytes_column
 
-    sec-M-1 hardening — a memory-disclosure bug elsewhere in the
-    process (or a post-mortem core dump) cannot surface key bytes
-    that have been overwritten with zeros.
-    """
-    KeyringMasterKeyProvider._reset_for_tests()
-    FileFallbackMasterKeyProvider._reset_for_tests()
-
-
-atexit.register(_purge_caches_at_exit)
-
-
-class EphemeralMasterKeyProvider:
-    """In-memory master-key provider used exclusively by tests.
-
-    The key is generated once per provider instance and never persisted.
-    """
-
-    def __init__(self, *, key: bytes | None = None) -> None:
-        """Construct a provider with an optional fixed key.
-
-        Args:
-            key: Optional 32-byte key. When ``None``, a fresh random
-                key is minted.
-        """
-        if key is None:
-            key = secrets.token_bytes(KEY_SIZE)
-        if len(key) != KEY_SIZE:
-            raise SecretStoreError(
-                f"ephemeral master key must be {KEY_SIZE} bytes; got {len(key)}",
+    if session.bucket_id == "unsecured":
+        return
+    db_path = (
+        load_settings().aeat_local_storage_root / BUCKETS_DIRNAME / session.bucket_id / BUCKET_DB_DIRNAME / "aeat.db"
+    )
+    if not db_path.is_file():
+        return
+    try:
+        with sqlite3.connect(db_path) as connection:
+            rows = connection.execute(
+                "SELECT payload FROM secure_objects WHERE namespace = ?",
+                (USER_PROFILE_VALUE_NAMESPACE.namespace,),
+            ).fetchall()
+    except sqlite3.Error as exc:
+        # Fail closed: a malformed, locked, or corrupted bucket DB means
+        # we cannot prove the profile is synthetic, so the deterministic
+        # unsecured backend must be refused. Returning here previously
+        # downgraded the check silently and admitted the published key
+        # on profiles that may have held real tax IDs.
+        raise UnsecuredModeRefusedError(
+            "unsecured master-key backend cannot read the active profile bucket DB "
+            "to prove the profile is synthetic; "
+            "use the file or keyring backend before decrypting or persisting records.",
+        ) from exc
+    for (payload_wire,) in rows:
+        try:
+            payload_plain = decrypt_encrypted_bytes_column(bytes(payload_wire))
+        except (DecryptionError, TypeError, ValueError) as exc:
+            raise UnsecuredModeRefusedError(
+                "unsecured master-key backend cannot prove the active profile is synthetic; "
+                "use the file or keyring backend before decrypting or persisting records.",
+            ) from exc
+        tax_ids = _extract_profile_tax_ids(payload_plain)
+        if tax_ids is None:
+            raise UnsecuredModeRefusedError(
+                "unsecured master-key backend cannot prove the active profile is synthetic; "
+                "use the file or keyring backend before decrypting or persisting records.",
             )
-        self._key = key
-
-    def get_master_key(self) -> bytes:
-        return self._key
+        for tax_id in tax_ids:
+            refuse_unsecured_with_real_nif(tax_id, provider=UnsecuredMasterKeyProvider())
 
 
 # Published deterministic key for the unsecured-mode provider. Public by
@@ -844,6 +844,138 @@ class EphemeralMasterKeyProvider:
 _UNSECURED_KEY_PREFIX: Final[bytes] = b"AEAT_UNSECURED_TEST_KEY"
 _UNSECURED_PUBLISHED_KEY: Final[bytes] = _UNSECURED_KEY_PREFIX + b"\x00" * (KEY_SIZE - len(_UNSECURED_KEY_PREFIX))
 assert len(_UNSECURED_PUBLISHED_KEY) == KEY_SIZE
+
+
+def _provider_enter(
+    provider: MasterKeyProvider,
+    *,
+    fallback_bucket_id: str | None = None,
+    allow_bucket_dek_enrollment: bool = False,
+) -> BucketSession:
+    """Open and activate a :class:`BucketSession` for ``provider``.
+
+    Resolves the active bucket id via the canonical precedence chain
+    (env override > pointer file). When the chain yields no active
+    profile, falls back to ``fallback_bucket_id`` if supplied (the
+    Unsecured provider uses ``"unsecured"`` as a stable label so the
+    engine cache keys consistently). When neither resolves, raises
+    :class:`NoActiveProfileError` so the CLI root callback can refuse
+    the verb with a translated message.
+
+    Stores the opened session and the activation context manager on
+    ``provider._session`` and ``provider._activation_cm`` so the
+    matching ``_provider_exit`` can tear them down.
+    """
+    from .....core.config import load_settings
+    from ..bucket._errors import NoActiveBucketError
+    from ._active_session import activate_session
+    from ._bucket_session import BucketSession
+
+    if provider._session is not None:
+        from ._errors import MasterKeyReentrantError
+
+        raise MasterKeyReentrantError(type(provider).__name__)
+
+    bucket_id = resolve_active_bucket_id() or fallback_bucket_id
+    if not bucket_id:
+        raise NoActiveBucketError(
+            "no active profile resolves; run `aeat config profile create NAME` "
+            "or `aeat config switch NAME` before invoking commands that "
+            "decrypt stored records.",
+        )
+
+    key_bytes = provider.get_master_key()
+    settings = load_settings()
+    if isinstance(provider, UnsecuredMasterKeyProvider):
+        dek_bytes = key_bytes
+    else:
+        dek_bytes = load_or_mint_bucket_dek(
+            kek=key_bytes,
+            storage_root=settings.aeat_local_storage_root,
+            bucket_id=bucket_id,
+            allow_bootstrap_mint=allow_bucket_dek_enrollment,
+        )
+    idle_minutes = idle_minutes_for_bucket(
+        storage_root=settings.aeat_local_storage_root,
+        bucket_id=bucket_id,
+        default_minutes=settings.aeat_bucket_default_idle_lock_minutes,
+    )
+    session = BucketSession.open(
+        bucket_id=bucket_id,
+        kek=key_bytes,
+        dek=dek_bytes,
+        idle_minutes=idle_minutes,
+        opened_at=now(),
+        unsecured_backend=isinstance(provider, UnsecuredMasterKeyProvider),
+    )
+    activation = activate_session(session)
+    activation.__enter__()
+    provider._session = session
+    provider._activation_cm = activation
+    try:
+        if session.unsecured_backend:
+            _refuse_unsecured_active_bucket_with_real_profile(session)
+    except BaseException:
+        provider._activation_cm = None
+        provider._session = None
+        activation.__exit__(None, None, None)
+        session.close()
+        raise
+    return session
+
+
+def _provider_exit(
+    provider: MasterKeyProvider,
+    exc_type: type[BaseException] | None,
+    exc: BaseException | None,
+    tb: TracebackType | None,
+) -> None:
+    """Tear down the activation + session opened by :func:`_provider_enter`.
+
+    Idempotent on the provider's bookkeeping attributes; tolerant of
+    the case where ``_provider_enter`` raised before fully populating
+    them.
+    """
+    activation = provider._activation_cm
+    session = provider._session
+    provider._activation_cm = None
+    provider._session = None
+    if activation is not None:
+        activation.__exit__(exc_type, exc, tb)
+    if session is not None:
+        session.close()
+
+
+@contextlib.contextmanager
+def activate_master_key_provider(
+    provider: MasterKeyProvider,
+    *,
+    fallback_bucket_id: str | None = None,
+    allow_bucket_dek_enrollment: bool = False,
+) -> Iterator[object]:
+    """Activate ``provider`` for encrypted storage within the current block.
+
+    ``fallback_bucket_id`` is used by bootstrap flows such as profile
+    creation, where the command knows the bucket being provisioned but
+    the active-profile pointer does not exist until the transaction
+    completes.
+
+    Args:
+        provider: The :class:`MasterKeyProvider` to activate.
+        fallback_bucket_id: Optional bucket identifier used when no active
+            profile pointer is present (bootstrap flows only).
+        allow_bucket_dek_enrollment: When ``True``, a missing per-bucket DEK
+            file is minted on first activation rather than raising.
+    """
+    _provider_enter(
+        provider,
+        fallback_bucket_id=fallback_bucket_id,
+        allow_bucket_dek_enrollment=allow_bucket_dek_enrollment,
+    )
+    try:
+        yield provider
+    finally:
+        _provider_exit(provider, None, None, None)
 
 
 class UnsecuredMasterKeyProvider:
@@ -866,51 +998,47 @@ class UnsecuredMasterKeyProvider:
     published deterministic master key.
     """
 
+    def __init__(self) -> None:
+        self._session: BucketSession | None = None
+        self._activation_cm: AbstractContextManager[None] | None = None
+
     def get_master_key(self) -> bytes:
+        """Return the published deterministic master key for unsecured mode.
+
+        The returned bytes are publicly known by design, so the wrapping
+        key provides **ZERO confidentiality**; the substrate's encryption
+        pipeline is otherwise intact. Intended only for testing, tutorial,
+        and throwaway scenarios that are fenced off from real tax data by
+        the NIF-canary at the profile-load boundary.
+
+        Returns:
+            The 32-byte published deterministic master key.
+        """
         return _UNSECURED_PUBLISHED_KEY
 
+    def provision_master_key(self) -> bytes:
+        """Return the published deterministic key without minting material.
 
-# Synthetic-NIF allow-list: tax-id-shaped strings that are valid under
-# the Spanish checksum algorithm but conventionally used as placeholders
-# in fixtures, tutorials, and tests. Any tax-id that is NOT in this set
-# AND is structurally valid is treated as REAL and refused by the
-# unsecured-mode canary. The list is intentionally small — tightening
-# the canary at the boundary is preferred over a permissive heuristic.
-_SYNTHETIC_TAX_IDS: Final[frozenset[str]] = frozenset(
-    {
-        "00000000T",  # all-zero NIF body — Hacienda's documented placeholder.
-        "X0000000T",  # all-zero NIE body.
-        "Z0000000T",  # all-zero NIE body, alt prefix.
-        "Y0000000Z",  # all-zero NIE body, alt prefix + check.
-        "B00000000",  # all-zero CIF body, common test prefix.
-    }
-)
+        There is nothing to provision for the unsecured backend: the key is
+        a fixed published constant, so enrollment and retrieval return the
+        same bytes. Provides **ZERO confidentiality** -- see
+        ``get_master_key``.
 
+        Returns:
+            The 32-byte published deterministic master key.
+        """
+        return _UNSECURED_PUBLISHED_KEY
 
-def looks_like_real_tax_id(value: str) -> bool:
-    """Return ``True`` when ``value`` parses as a real Spanish tax id.
+    def __enter__(self) -> object:
+        return _provider_enter(self, fallback_bucket_id="unsecured")
 
-    Used by the unsecured-mode NIF-canary to refuse the unsecured
-    backend whenever the operator profile carries a real NIF / NIE /
-    CIF. Synthetic placeholders (all-zero bodies, documented test
-    sentinels — see :data:`_SYNTHETIC_TAX_IDS`) return ``False``.
-
-    Args:
-        value: Raw tax identifier (already-canonical or operator-input).
-
-    Returns:
-        ``True`` when the value validates under the Hacienda checksum
-        algorithm AND is not a synthetic placeholder. ``False`` for
-        invalid inputs and for synthetic placeholders alike — both
-        cases are safe to allow under the unsecured backend.
-    """
-    from .....core.identity import validate_spanish_tax_id
-
-    try:
-        canonical = validate_spanish_tax_id(value)
-    except ValueError:
-        return False
-    return canonical not in _SYNTHETIC_TAX_IDS
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        _provider_exit(self, exc_type, exc, tb)
 
 
 def refuse_unsecured_with_real_nif(
@@ -929,7 +1057,8 @@ def refuse_unsecured_with_real_nif(
 
     Args:
         tax_id: The operator profile's tax id.
-        provider: The active master-key provider.
+        provider: The active :class:`MasterKeyProvider`. The check is a
+            no-op for any provider that is not :class:`UnsecuredMasterKeyProvider`.
 
     Raises:
         UnsecuredModeRefusedError: When the unsecured backend is active
@@ -939,8 +1068,7 @@ def refuse_unsecured_with_real_nif(
         return
     if looks_like_real_tax_id(tax_id):
         raise UnsecuredModeRefusedError(
-            f"unsecured master-key backend is incompatible with the "
-            f"real tax id {tax_id!r}; either remove "
+            "unsecured master-key backend is incompatible with a real tax id; either remove "
             "AEAT_ALLOW_UNENCRYPTED=1 / aeat_secret_store_backend=unsecured, "
             "or use a synthetic placeholder (e.g. '00000000T').",
         )
@@ -951,6 +1079,7 @@ def get_master_key_provider(
     backend: str | None = None,
     settings_override: Settings | None = None,
     passphrase_callback: PassphraseCallback | None = None,
+    keyring_client: KeyringClient | None = None,
 ) -> MasterKeyProvider:
     """Resolve the active :class:`MasterKeyProvider` per project settings.
 
@@ -959,18 +1088,23 @@ def get_master_key_provider(
             ``keyring`` / ``file``). Overrides the value resolved from
             settings.
         settings_override: Optional pre-built settings instance. Tests
-            inject a settings stub bound to ``tmp_path`` so the file
+            inject a settings object bound to ``tmp_path`` so the file
             backend writes inside the test sandbox.
         passphrase_callback: Optional override for passphrase
             resolution; only consulted by the file backend.
+        keyring_client: Optional :class:`KeyringClient` implementation
+            threaded into any constructed
+            :class:`KeyringMasterKeyProvider`. Tests inject a real
+            fake type rather than patching the third-party ``keyring``
+            module.
 
     Returns:
         A live provider instance honouring the resolved backend.
 
     Raises:
-        KeyringUnavailableError: When the resolved backend is
-            ``keyring`` and no usable keychain is detected.
         SecretStoreError: When ``backend`` is not a known value.
+        UnsecuredModeRefusedError: When the unsecured backend is selected with a real tax id.
+        MasterKeyKeychainLockedError: When the keyring backend detects no usable keychain.
     """
     from .....core.config import SecretStoreBackend, load_settings  # local import to avoid cycles
 
@@ -983,10 +1117,12 @@ def get_master_key_provider(
     store_dir = Path(settings.aeat_secret_store_dir)
     if resolved is SecretStoreBackend.UNSECURED:
         # Hostile-named opt-out gate: the unsecured backend requires the
-        # operator to explicitly set AEAT_ALLOW_UNENCRYPTED=1. Refuse
-        # otherwise. The NIF-canary that fences off real tax data lives
-        # at the profile-load boundary (see consumer modules).
-        if not settings.aeat_allow_unencrypted:
+        # operator to explicitly set AEAT_ALLOW_UNENCRYPTED=1 (strict
+        # string match, not Pydantic bool coercion — see the Settings
+        # field's inline rationale). Refuse otherwise. The NIF-canary
+        # that fences off real tax data lives at the profile-load
+        # boundary (see consumer modules).
+        if settings.aeat_allow_unencrypted != "1":
             raise UnsecuredModeRefusedError(
                 "aeat_secret_store_backend='unsecured' requires "
                 "AEAT_ALLOW_UNENCRYPTED=1. The unsecured backend uses a "
@@ -995,16 +1131,17 @@ def get_master_key_provider(
             )
         return UnsecuredMasterKeyProvider()
     if resolved is SecretStoreBackend.KEYRING:
-        provider = KeyringMasterKeyProvider()
-        # Probe early so callers see the failure at construction.
-        provider.get_master_key()
+        provider = KeyringMasterKeyProvider(client=keyring_client)
+        # Probe early so callers see unusable keychains at construction
+        # without turning absent key material into an implicit mint.
+        provider._probe_backend()
         return provider
     if resolved is SecretStoreBackend.FILE:
         return FileFallbackMasterKeyProvider(
             store_dir=store_dir,
             passphrase_callback=passphrase_callback,
         )
-    keyring_provider = KeyringMasterKeyProvider()
+    keyring_provider = KeyringMasterKeyProvider(client=keyring_client)
     try:
         keyring_provider.get_master_key()
         return keyring_provider
@@ -1030,11 +1167,7 @@ def get_master_key_provider(
         # K1 sitting in the locked keychain. The operator must either
         # unlock the keychain or set ``AEAT_SECRET_STORE_BACKEND=file``
         # explicitly to acknowledge the file-only path.
-        file_fallback_exists = (
-            (store_dir / "master.key").exists()
-            and (store_dir / "master.kdf").exists()
-            and (store_dir / "salt").exists()
-        )
+        file_fallback_exists = (store_dir / "master.key").exists() and (store_dir / "master.kdf").exists()
         if file_fallback_exists:
             _log.info(
                 "OS keychain locked (%s); routing through pre-existing file-fallback at %s",
@@ -1052,183 +1185,17 @@ def get_master_key_provider(
             "any record encrypted under either key unreadable when the other backend is "
             "active. Either unlock the OS keychain (Touch ID / Hello / libsecret) and retry, "
             "or set AEAT_SECRET_STORE_BACKEND=file to explicitly choose the passphrase backend "
-            "and provision a file-fallback master key with `aeat security provision`.",
+            "and provision a file-fallback master key with `aeat config profile create NAME`.",
         ) from exc
-
-
-def migrate_master_key_kdf(
-    *,
-    store_dir: Path,
-    passphrase: bytes,
-) -> MigrationResult:
-    """One-shot scrypt -> Argon2id migration of the file-fallback ``master.kdf``.
-
-    Reads the v1 (scrypt) on-disk parameters, derives the legacy KEK,
-    decrypts the wrapped master key, derives a fresh KEK under
-    Argon2id with the **same per-store salt + same passphrase**,
-    re-wraps the master key, and atomically replaces ``master.kdf`` +
-    ``master.key``. The on-disk salt file is untouched.
-
-    The function is resume-idempotent: on a store that is already at
-    v2 it returns ``MigrationResult(skipped=1)`` without rewriting any
-    artefact.
-
-    Args:
-        store_dir: Directory containing ``salt``, ``master.key``, and
-            ``master.kdf``. Must already exist.
-        passphrase: The operator's passphrase as raw bytes (UTF-8
-            encoded). Must match the passphrase used to write the
-            existing v1 store; mismatch produces
-            :class:`MasterKeyUnavailableError` with the v1 store
-            untouched.
-
-    Returns:
-        A :class:`MigrationResult` recording whether the migration
-        ran or was a no-op.
-
-    Raises:
-        MasterKeyUnavailableError: If the on-disk store is malformed,
-            the passphrase does not unwrap the existing master key, or
-            an I/O error prevents the atomic rewrite.
-    """
-    store_dir = Path(store_dir).resolve()
-    kdf_params_path = store_dir / "master.kdf"
-    master_key_path = store_dir / "master.key"
-    salt_path = store_dir / "salt"
-    for required in (kdf_params_path, master_key_path, salt_path):
-        if not required.exists():
-            raise MasterKeyUnavailableError(
-                f"required artefact missing for KDF migration: {required}",
-            )
-
-    # Acquire the same on-disk lock that ``get_master_key`` and
-    # ``complete_recovery`` hold during their multi-write sequences.
-    # Without this, a concurrent ``get_master_key`` reader can
-    # observe a torn state mid-migration (master.key rewritten under
-    # the new KEK but master.kdf still at v1) and surface a spurious
-    # ``MasterKeyPassphraseMismatchError`` despite a correct
-    # passphrase. Re-check the on-disk version inside the lock so
-    # two concurrent migrators serialise cleanly — the second sees
-    # v2 and returns ``skipped=1`` without rewriting anything.
-    with exclusive_file_lock(store_dir / "master.lock"):
-        raw_text = kdf_params_path.read_text(encoding="utf-8")
-        try:
-            preview = json.loads(raw_text)
-        except json.JSONDecodeError as exc:
-            raise MasterKeyUnavailableError(
-                f"failed to parse master.kdf at {kdf_params_path}: {exc}",
-            ) from exc
-        if not isinstance(preview, dict):
-            raise MasterKeyUnavailableError(
-                f"master.kdf at {kdf_params_path} must be a JSON object, got {type(preview).__name__}",
-            )
-        on_disk_version = preview.get("version")
-        if on_disk_version == _KDF_PARAMS_VERSION:
-            return MigrationResult(migrated=0, skipped=1, store_dir=store_dir)
-        if on_disk_version != _LEGACY_KDF_PARAMS_VERSION:
-            raise MasterKeyUnavailableError(
-                f"master.kdf at {kdf_params_path} is version {on_disk_version!r}; "
-                f"the migration helper only handles version {_LEGACY_KDF_PARAMS_VERSION} -> "
-                f"{_KDF_PARAMS_VERSION}.",
-            )
-
-        try:
-            legacy_params = _LegacyKdfParameters.model_validate_json(raw_text)
-        except Exception as exc:
-            raise MasterKeyUnavailableError(
-                f"failed to parse legacy master.kdf at {kdf_params_path}: {exc}",
-            ) from exc
-        try:
-            salt = _b64decode(legacy_params.salt_b64)
-        except (ValueError, binascii.Error) as exc:
-            raise MasterKeyUnavailableError("legacy KDF parameters carry malformed salt.") from exc
-
-        legacy_kek = _derive_legacy_scrypt_kek(passphrase, salt, legacy_params)
-        try:
-            wire = base64.b64decode(master_key_path.read_bytes(), validate=True)
-            blob = EncryptedBlob.from_wire(wire)
-        except Exception as exc:
-            raise MasterKeyUnavailableError(
-                f"failed to read wrapped master key at {master_key_path}: {exc}",
-            ) from exc
-
-        new_params = _KdfParameters(
-            memory_cost=_ARGON2_MEMORY_COST_KIB,
-            time_cost=_ARGON2_TIME_COST,
-            parallelism=_ARGON2_PARALLELISM,
-            salt_b64=_b64encode(salt),
-        )
-        new_kek = FileFallbackMasterKeyProvider._derive_kek_with_params(passphrase, salt, new_params)
-
-        # Recovery for the partial-migration window: a previous run may
-        # have rewritten master.key under the new Argon2id KEK but crashed
-        # before flipping master.kdf to v2. Try the new KEK first; if it
-        # succeeds, master.key is already migrated and we only need to
-        # write master.kdf to complete the transition.
-        #
-        # Use ``try ... else`` to isolate the decrypt probe from the
-        # subsequent atomic write. An I/O failure during the
-        # ``master.kdf`` write (disk full / permission denied / fs read-
-        # only) must propagate cleanly rather than fall through to the
-        # legacy-decrypt path — falling through would surface the I/O
-        # failure as the misleading "passphrase wrong / file tampered"
-        # error message that the legacy branch raises. Issue #469
-        # gemini-review HIGH on PR #466.
-        master_key: bytes
-        try:
-            master_key = decrypt_record(blob, key=new_kek, associated_data=b"aeat.master-key.v1")
-        except Exception:
-            # Not a partial-migration state. Fall through to the
-            # normal legacy-unwrap → re-wrap path. The next try-block
-            # performs the legacy decrypt and surfaces a typed error
-            # if that fails too. Sentinel value for the loop —
-            # immediately overwritten in the legacy-decrypt branch
-            # below.
-            master_key = b""
-        else:
+    except MasterKeyMaterialMissingError:
+        file_fallback_exists = (store_dir / "master.key").exists() and (store_dir / "master.kdf").exists()
+        if file_fallback_exists:
             _log.info(
-                "master.key at %s already wrapped under Argon2id KEK; "
-                "completing partial migration by rewriting master.kdf only",
-                master_key_path,
+                "OS keychain unprovisioned; routing through pre-existing file-fallback at %s",
+                store_dir,
             )
-            # master.key is already v2; just flip master.kdf to v2.
-            # Use atomic_write_secure_bytes so a crash mid-write
-            # leaves the on-disk master.kdf intact (old or new),
-            # never truncated. Any OSError from this write
-            # propagates — it is NOT a passphrase mismatch.
-            atomic_write_secure_bytes(
-                kdf_params_path,
-                new_params.model_dump_json().encode("utf-8"),
+            return FileFallbackMasterKeyProvider(
+                store_dir=store_dir,
+                passphrase_callback=passphrase_callback,
             )
-            _log.info("master.kdf at %s migrated from scrypt (v1) to Argon2id (v2)", kdf_params_path)
-            return MigrationResult(migrated=1, skipped=0, store_dir=store_dir)
-
-        try:
-            master_key = decrypt_record(blob, key=legacy_kek, associated_data=b"aeat.master-key.v1")
-        except Exception as exc:
-            raise MasterKeyUnavailableError(
-                "failed to decrypt master key under legacy scrypt KDF; passphrase may be wrong "
-                "or the file may be tampered with. The v1 store has not been modified.",
-            ) from exc
-
-        new_blob = encrypt_record(master_key, key=new_kek, associated_data=b"aeat.master-key.v1")
-        # Write order: master.key first (so a crash leaves a
-        # recoverable state — see the partial-migration recovery
-        # branch above), THEN master.kdf (the v2 declaration is the
-        # very last on-disk change). Use ``atomic_write_secure_bytes``
-        # for both so a crash between the file open and the write
-        # leaves either the old or new file intact — the old
-        # ``_write_bytes_secure`` opened with ``O_WRONLY|O_CREAT|O_TRUNC``
-        # which truncates the existing inode in-place, so a power
-        # loss between the truncate and the write left ``master.key``
-        # zero-length and unrecoverable from the v1 path.
-        atomic_write_secure_bytes(
-            master_key_path,
-            base64.b64encode(new_blob.to_wire()),
-        )
-        atomic_write_secure_bytes(
-            kdf_params_path,
-            new_params.model_dump_json().encode("utf-8"),
-        )
-        _log.info("master.kdf at %s migrated from scrypt (v1) to Argon2id (v2)", kdf_params_path)
-        return MigrationResult(migrated=1, skipped=0, store_dir=store_dir)
+        return keyring_provider

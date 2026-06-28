@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0606"
+number = "0606"
+label = "Retenciones art. 11 de la Directiva 2003/48/CE devengadas antes de 2019"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+semantic_role = "irpf_retencion_directiva_ahorro_2003_48"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]

@@ -1,0 +1,316 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#declaracion-extraction-architecture'
+date: '2026-06-15'
+modified: '2026-06-15'
+related:
+  - '[[2026-05-21-declaracion-extraction-architecture-W02-P02-S44]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W02-P03-S46]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W02-P04-S48]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W02-P12-S68]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W02-P13-S79]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W03-P05-S18]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W03-P06-S19]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W03-P06-S20]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W03-P07-S21]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W03-P07-S22]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W03-P07-S23]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P08-S24]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P08-S80]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P08-S86]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P08-S91]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P09-S25]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P09-S26]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P09-S27]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P10-S28]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P10-S29]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P10-S30]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P10-S31]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P10-S32]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P14-S81]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P14-S82]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P14-S83]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P14-S84]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W04-P14-S85]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W05-P15-S87]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W05-P15-S88]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W05-P15-S89]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W05-P15-S90]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W07-P27-S169]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-W10-P50-S207]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-adr]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-exec]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-research]]'
+  - '[[2026-05-22-declaracion-extraction-architecture-W05-P11-S33]]'
+  - '[[2026-05-22-declaracion-extraction-architecture-W05-P11-S34]]'
+  - '[[2026-05-22-declaracion-extraction-architecture-W05-P11-S35]]'
+  - '[[2026-05-22-declaracion-extraction-architecture-W05-P11-S36]]'
+  - '[[2026-05-22-declaracion-extraction-architecture-W05-P11-S37]]'
+  - '[[2026-05-22-declaracion-extraction-architecture-W05-P11-S38]]'
+  - '[[2026-05-22-declaracion-extraction-architecture-W05-P11-S39]]'
+  - '[[2026-05-22-declaracion-extraction-architecture-W05-P11-S40]]'
+  - '[[2026-05-22-declaracion-extraction-architecture-W05-P11-S41]]'
+  - '[[2026-05-22-declaracion-extraction-architecture-w03-p06-s20-blocked-exec]]'
+  - '[[2026-05-22-declaracion-extraction-architecture-w04-p08-s86-w04-p09-s27-w04-p10-s29-w05-p11-s37-s95-exec]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P11-S93]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P16-S100]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P16-S127]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P16-S99]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P17-S103]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P18-S104]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P18-S111]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P18-S121]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P18-S122]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P18-S123]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P18-S124]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P18-S125]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P18-S126]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W05-P18-S128]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W06-P19-S112]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W06-P19-S113]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W06-P19-S114]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W06-P19-S115]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W06-P19-S116]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W06-P19-S117]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W06-P19-S118]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W06-P19-S119]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W06-P19-S120]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W07-P26-S161]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W07-P26-S162]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W07-P26-S163]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W07-P27-S164]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W07-P27-S165]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W07-P27-S166]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W07-P27-S167]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W07-P28-S168]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-W07-P28-S170]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-exec]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-m303-profile-fix-exec]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-task28-m303-template-revision-exec]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-task34-provisional-specimen-gate-exec]]'
+  - '[[2026-05-26-declaracion-extraction-architecture-w05-p16-backlog-expansion-exec]]'
+  - '[[2026-05-26-declaracion-extraction-auth-gated-acquisition-status-audit]]'
+  - '[[2026-05-26-declaracion-extraction-convention-hardening-audit]]'
+  - '[[2026-05-26-declaracion-extraction-convention-hardening-code-review-audit]]'
+  - '[[2026-05-26-declaracion-extraction-w05-p16-s127-code-review-audit]]'
+  - '[[2026-05-26-m100-extraction-profile-W07-P22-S160]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W07-P29-S172]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W07-P30-S171]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W07-P31-S173]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W07-P32-S175]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W07-P32-S177]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W07-P32-S178]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W07-P32-S179]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W07-P32-S180]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W07-P33-S174]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P34-S181]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P34-S182]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P34-S183]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P34-S184]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P34-S193]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P34-S194]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P35-S185]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P35-S186]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P35-S187]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P35-S188]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P35-S195]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P36-S190]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P36-S191]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-W08-P37-S192]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-audit]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-exec]]'
+  - '[[2026-05-27-declaracion-extraction-architecture-w05-p11-s36-s94-p16-s101-p18-s107-exec]]'
+  - '[[2026-05-28-borrador-extraction-architecture-research]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W09-P38-S196]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W09-P40-S197]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P41-S198]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P42-S199]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P43-S200]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P43-S210]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P45-S202]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P46-S203]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P47-S204]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P48-S205]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P49-S206]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P51-S208]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P52-S209]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P53-S211]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-W10-P53-S212]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-exec]]'
+  - '[[2026-05-28-declaracion-extraction-architecture-research]]'
+  - '[[2026-05-30-declaracion-extraction-architecture-W10-P44-S201]]'
+  - '[[2026-05-30-declaracion-extraction-architecture-W10-P54-S213]]'
+  - '[[2026-05-30-declaracion-extraction-architecture-W10-P55-S214]]'
+  - '[[2026-05-30-declaracion-extraction-architecture-W10-P56-S215]]'
+  - '[[2026-05-30-declaracion-extraction-architecture-W11-P58-S217]]'
+  - '[[2026-05-30-declaracion-extraction-architecture-W11-P59-S218]]'
+  - '[[2026-05-30-declaracion-extraction-architecture-W12-P65-S216]]'
+  - '[[2026-05-30-declaracion-extraction-architecture-research]]'
+---
+
+# `declaracion-extraction-architecture` feature index
+
+Auto-generated index of all documents tagged with `#declaracion-extraction-architecture`.
+
+## Documents
+
+### adr
+
+- `2026-05-21-declaracion-extraction-architecture-adr` - `declaracion-extraction-architecture` adr: `registry-driven declaración extraction supersedes per-modelo extractor classes` | (**status:** `accepted`)
+
+### audit
+
+- `2026-05-26-declaracion-extraction-auth-gated-acquisition-status-audit` - Declaration Extraction Auth-Gated Acquisition Status
+- `2026-05-26-declaracion-extraction-convention-hardening-audit` - Declaration Extraction Convention Hardening Audit
+- `2026-05-26-declaracion-extraction-convention-hardening-code-review-audit` - `declaracion-extraction-architecture` Code Review
+- `2026-05-26-declaracion-extraction-w05-p16-s127-code-review-audit` - `declaracion-extraction-architecture` `W05.P16.S127` Code Review
+- `2026-05-27-declaracion-extraction-architecture-audit` - declaracion-extraction-architecture audit: full-suite failure inventory 2026-05-27
+
+### exec
+
+- `2026-05-21-declaracion-extraction-architecture-W02-P02-S44` - `declaracion-extraction-architecture` `W02.P02.S44`
+- `2026-05-21-declaracion-extraction-architecture-W02-P03-S46` - `declaracion-extraction-architecture` `W02.P03.S46`
+- `2026-05-21-declaracion-extraction-architecture-W02-P04-S48` - `declaracion-extraction-architecture` `W02.P04.S48`
+- `2026-05-21-declaracion-extraction-architecture-W02-P12-S68` - `declaracion-extraction-architecture` `W02.P12.S68`
+- `2026-05-21-declaracion-extraction-architecture-W02-P13-S79` - `declaracion-extraction-architecture` `W02.P13.S79`
+- `2026-05-21-declaracion-extraction-architecture-W03-P05-S18` - `declaracion-extraction-architecture` `W03.P05.S18`
+- `2026-05-21-declaracion-extraction-architecture-W03-P06-S19` - `declaracion-extraction-architecture` `W03.P06.S19`
+- `2026-05-21-declaracion-extraction-architecture-W03-P06-S20` - `declaracion-extraction-architecture` `W03.P06.S20`
+- `2026-05-21-declaracion-extraction-architecture-W03-P07-S21` - `declaracion-extraction-architecture` `W03.P07.S21`
+- `2026-05-21-declaracion-extraction-architecture-W03-P07-S22` - `declaracion-extraction-architecture` `W03.P07.S22`
+- `2026-05-21-declaracion-extraction-architecture-W03-P07-S23` - `declaracion-extraction-architecture` `W03.P07.S23`
+- `2026-05-21-declaracion-extraction-architecture-W04-P08-S24` - W04.P08.S24 - Named-field modelo corpus and registry presence sweep
+- `2026-05-21-declaracion-extraction-architecture-W04-P08-S80` - W04.P08.S80 - Classification: dead-stub modelos target resolution
+- `2026-05-21-declaracion-extraction-architecture-W04-P08-S86` - W04.P08.S86 - M037 fetch-versus-defer decision
+- `2026-05-21-declaracion-extraction-architecture-W04-P08-S91` - W04.P08.S91 - Record W02 review-fix removal of M347 and M840 dead profiles
+- `2026-05-21-declaracion-extraction-architecture-W04-P09-S25` - W04.P09.S25 - M720 dead-stub verification
+- `2026-05-21-declaracion-extraction-architecture-W04-P09-S26` - W04.P09.S26 - M840 dead-stub repair
+- `2026-05-21-declaracion-extraction-architecture-W04-P09-S27` - W04.P09.S27 - M037 registry registration
+- `2026-05-21-declaracion-extraction-architecture-W04-P10-S28` - W04.P10.S28 - M036 named_label extraction profile
+- `2026-05-21-declaracion-extraction-architecture-W04-P10-S29` - W04.P10.S29 - M037 named_label extraction profile
+- `2026-05-21-declaracion-extraction-architecture-W04-P10-S30` - W04.P10.S30 - M369 named_label extraction profile
+- `2026-05-21-declaracion-extraction-architecture-W04-P10-S31` - W04.P10.S31 - M720 named_label extraction profile
+- `2026-05-21-declaracion-extraction-architecture-W04-P10-S32` - W04.P10.S32 - M840 named_label extraction profile
+- `2026-05-21-declaracion-extraction-architecture-W04-P14-S81` - W04.P14.S81 - M184 dead-stub replacement
+- `2026-05-21-declaracion-extraction-architecture-W04-P14-S82` - W04.P14.S82 - M193 dead-stub replacement
+- `2026-05-21-declaracion-extraction-architecture-W04-P14-S83` - W04.P14.S83 - M232 dead-stub replacement
+- `2026-05-21-declaracion-extraction-architecture-W04-P14-S84` - W04.P14.S84 - M347 dead-stub replacement
+- `2026-05-21-declaracion-extraction-architecture-W04-P14-S85` - W04.P14.S85 - M349 dead-stub replacement
+- `2026-05-21-declaracion-extraction-architecture-W05-P15-S87` - W05.P15.S87 - correct modelo-115 calc-verify ADR extractor-class prose
+- `2026-05-21-declaracion-extraction-architecture-W05-P15-S88` - W05.P15.S88 - correct modelo-303 calc-verify ADR extractor-class prose
+- `2026-05-21-declaracion-extraction-architecture-W05-P15-S89` - W05.P15.S89 - correct modelo-111 rule-delta reference extractor-class prose
+- `2026-05-21-declaracion-extraction-architecture-W05-P15-S90` - W05.P15.S90 - correct _detect.py module docstring
+- `2026-05-21-declaracion-extraction-architecture-exec` - `declaracion-extraction-architecture` historical placeholder exec
+- `2026-05-22-declaracion-extraction-architecture-W05-P11-S33` - W05.P11.S33 - M303 real declaration round-trip
+- `2026-05-22-declaracion-extraction-architecture-W05-P11-S34` - W05.P11.S34 - M180 real declaration round-trip
+- `2026-05-22-declaracion-extraction-architecture-W05-P11-S35` - W05.P11.S35 - M190 real declaration round-trip
+- `2026-05-22-declaracion-extraction-architecture-W05-P11-S36` - W05.P11.S36 - M036 real declaration round-trip
+- `2026-05-22-declaracion-extraction-architecture-W05-P11-S37` - W05.P11.S37 - M037 real declaration round-trip
+- `2026-05-22-declaracion-extraction-architecture-W05-P11-S38` - W05.P11.S38 - M369 real declaration round-trip
+- `2026-05-22-declaracion-extraction-architecture-W05-P11-S39` - W05.P11.S39 - M720 real declaration round-trip
+- `2026-05-22-declaracion-extraction-architecture-W05-P11-S40` - W05.P11.S40 - M840 real declaration round-trip
+- `2026-05-22-declaracion-extraction-architecture-W05-P11-S41` - `declaracion-extraction-architecture` `W05.P11.S41`
+- `2026-05-22-declaracion-extraction-architecture-w03-p06-s20-blocked-exec` - W03.P06.S20 - Modelo 180 declaracion_pdf profile blocked
+- `2026-05-22-declaracion-extraction-architecture-w04-p08-s86-w04-p09-s27-w04-p10-s29-w05-p11-s37-s95-exec` - Modelo 037 fetch-versus-defer decision
+- `2026-05-21-declaracion-extraction-architecture-W07-P27-S169` - declaracion-extraction-architecture W07.P27.S169
+- `2026-05-26-declaracion-extraction-architecture-W05-P11-S93` - `declaracion-extraction-architecture` `W05.P11.S93`
+- `2026-05-26-declaracion-extraction-architecture-W05-P16-S100` - W05.P16.S100 - Modelo 303 printed boxes 46, 69, 87, and 110
+- `2026-05-26-declaracion-extraction-architecture-W05-P16-S127` - `declaracion-extraction-architecture` `W05.P16.S127`
+- `2026-05-26-declaracion-extraction-architecture-W05-P16-S99` - W05.P16.S99 - historical pre-2025 Modelo 037 decision
+- `2026-05-26-declaracion-extraction-architecture-W05-P17-S103` - `declaracion-extraction-architecture` `W05.P17.S103`
+- `2026-05-26-declaracion-extraction-architecture-W05-P18-S104` - W05.P18.S104 - fixture acquisition classification
+- `2026-05-26-declaracion-extraction-architecture-W05-P18-S111` - declaracion-extraction-architecture W05.P18.S111
+- `2026-05-26-declaracion-extraction-architecture-W05-P18-S121` - W05.P18.S121 - Modelo 190 2024 registry and parser verification
+- `2026-05-26-declaracion-extraction-architecture-W05-P18-S122` - W05.P18.S122 - post-authentication acquisition matrix
+- `2026-05-26-declaracion-extraction-architecture-W05-P18-S123` - W05.P18.S123 - no synthetic data to Sede acquisition policy
+- `2026-05-26-declaracion-extraction-architecture-W05-P18-S124` - `declaracion-extraction-architecture` `W05.P18.S124`
+- `2026-05-26-declaracion-extraction-architecture-W05-P18-S125` - W05.P18.S125 - no-synthetic-Sede live-surface research
+- `2026-05-26-declaracion-extraction-architecture-W05-P18-S126` - W05.P18.S126 - no-synthetic-Sede ADR
+- `2026-05-26-declaracion-extraction-architecture-W05-P18-S128` - declaracion-extraction-architecture W05.P18.S128
+- `2026-05-26-declaracion-extraction-architecture-W06-P19-S112` - declaracion-extraction-architecture W06.P19.S112
+- `2026-05-26-declaracion-extraction-architecture-W06-P19-S113` - declaracion-extraction-architecture W06.P19.S113
+- `2026-05-26-declaracion-extraction-architecture-W06-P19-S114` - declaracion-extraction-architecture W06.P19.S114
+- `2026-05-26-declaracion-extraction-architecture-W06-P19-S115` - declaracion-extraction-architecture W06.P19.S115
+- `2026-05-26-declaracion-extraction-architecture-W06-P19-S116` - declaracion-extraction-architecture W06.P19.S116
+- `2026-05-26-declaracion-extraction-architecture-W06-P19-S117` - declaracion-extraction-architecture W06.P19.S117
+- `2026-05-26-declaracion-extraction-architecture-W06-P19-S118` - declaracion-extraction-architecture W06.P19.S118
+- `2026-05-26-declaracion-extraction-architecture-W06-P19-S119` - declaracion-extraction-architecture W06.P19.S119
+- `2026-05-26-declaracion-extraction-architecture-W06-P19-S120` - declaracion-extraction-architecture W06.P19.S120
+- `2026-05-26-declaracion-extraction-architecture-W07-P26-S161` - declaracion-extraction-architecture W07.P26.S161
+- `2026-05-26-declaracion-extraction-architecture-W07-P26-S162` - declaracion-extraction-architecture W07.P26.S162
+- `2026-05-26-declaracion-extraction-architecture-W07-P26-S163` - declaracion-extraction-architecture W07.P26.S163
+- `2026-05-26-declaracion-extraction-architecture-W07-P27-S164` - declaracion-extraction-architecture W07.P27.S164
+- `2026-05-26-declaracion-extraction-architecture-W07-P27-S165` - declaracion-extraction-architecture W07.P27.S165
+- `2026-05-26-declaracion-extraction-architecture-W07-P27-S166` - declaracion-extraction-architecture W07.P27.S166
+- `2026-05-26-declaracion-extraction-architecture-W07-P27-S167` - declaracion-extraction-architecture W07.P27.S167
+- `2026-05-26-declaracion-extraction-architecture-W07-P28-S168` - declaracion-extraction-architecture W07.P28.S168
+- `2026-05-26-declaracion-extraction-architecture-W07-P28-S170` - declaracion-extraction-architecture W07.P28.S170
+- `2026-05-26-declaracion-extraction-architecture-exec` - `declaracion-extraction-architecture` historical placeholder exec
+- `2026-05-26-declaracion-extraction-architecture-m303-profile-fix-exec` - declaracion-extraction-architecture M303 profile fix (reopened #22)
+- `2026-05-26-declaracion-extraction-architecture-task28-m303-template-revision-exec` - declaracion-extraction-architecture task-28 — M303 2021-2022 template-revision extraction profile
+- `2026-05-26-declaracion-extraction-architecture-task34-provisional-specimen-gate-exec` - task-34: provisional_pending_specimen field + corpus specimen gate
+- `2026-05-26-declaracion-extraction-architecture-w05-p16-backlog-expansion-exec` - W05.P16 - declaration extraction backlog expansion
+- `2026-05-26-m100-extraction-profile-W07-P22-S160` - M100 declaracion_pdf extraction profile — third chunk (actividades-económicas ED detail)
+- `2026-05-27-declaracion-extraction-architecture-W07-P29-S172` - `declaracion-extraction-architecture` `W07.P29.S172`
+- `2026-05-27-declaracion-extraction-architecture-W07-P30-S171` - declaracion-extraction-architecture W07.P30.S171
+- `2026-05-27-declaracion-extraction-architecture-W07-P31-S173` - declaracion-extraction-architecture W07.P31.S173
+- `2026-05-27-declaracion-extraction-architecture-W07-P32-S175` - declaracion-extraction-architecture W07.P32.S175
+- `2026-05-27-declaracion-extraction-architecture-W07-P32-S177` - declaracion-extraction-architecture W07.P32.S177
+- `2026-05-27-declaracion-extraction-architecture-W07-P32-S178` - declaracion-extraction-architecture W07.P32.S178
+- `2026-05-27-declaracion-extraction-architecture-W07-P32-S179` - declaracion-extraction-architecture W07.P32.S179
+- `2026-05-27-declaracion-extraction-architecture-W07-P32-S180` - declaracion-extraction-architecture W07.P32.S180
+- `2026-05-27-declaracion-extraction-architecture-W07-P33-S174` - declaracion-extraction-architecture W07.P33.S174
+- `2026-05-27-declaracion-extraction-architecture-W08-P34-S181` - declaracion-extraction-architecture W08.P34.S181
+- `2026-05-27-declaracion-extraction-architecture-W08-P34-S182` - declaracion-extraction-architecture W08.P34.S182
+- `2026-05-27-declaracion-extraction-architecture-W08-P34-S183` - declaracion-extraction-architecture W08.P34.S183
+- `2026-05-27-declaracion-extraction-architecture-W08-P34-S184` - declaracion-extraction-architecture W08.P34.S184
+- `2026-05-27-declaracion-extraction-architecture-W08-P34-S193` - declaracion-extraction-architecture W08.P34.S193
+- `2026-05-27-declaracion-extraction-architecture-W08-P34-S194` - declaracion-extraction-architecture W08.P34.S194
+- `2026-05-27-declaracion-extraction-architecture-W08-P35-S185` - declaracion-extraction-architecture W08.P35.S185 — untrack .vault-scratch/ and add gitignore pattern
+- `2026-05-27-declaracion-extraction-architecture-W08-P35-S186` - declaracion-extraction-architecture W08.P35.S186
+- `2026-05-27-declaracion-extraction-architecture-W08-P35-S187` - declaracion-extraction-architecture W08.P35.S187 — audit _temporal.py case-insensitive period fix callers
+- `2026-05-27-declaracion-extraction-architecture-W08-P35-S188` - `declaracion-extraction-architecture` `W08.P35.S188`
+- `2026-05-27-declaracion-extraction-architecture-W08-P35-S195` - declaracion-extraction-architecture W08.P35.S195
+- `2026-05-27-declaracion-extraction-architecture-W08-P36-S190` - `declaracion-extraction-architecture` `W08.P36.S190`
+- `2026-05-27-declaracion-extraction-architecture-W08-P36-S191` - `declaracion-extraction-architecture` `W08.P36.S191`
+- `2026-05-27-declaracion-extraction-architecture-W08-P37-S192` - declaracion-extraction-architecture W08.P37.S192 — restructure M130/M131 gap tests to assert on typed exception attributes
+- `2026-05-27-declaracion-extraction-architecture-exec` - `declaracion-extraction-architecture` `W07.P32.S176`
+- `2026-05-27-declaracion-extraction-architecture-w05-p11-s36-s94-p16-s101-p18-s107-exec` - W05.P11.S36 + S94 + W05.P16.S101 + W05.P18.S107 - M036 grounding, fixture, round-trip
+- `2026-05-21-declaracion-extraction-architecture-W10-P50-S207` - declaracion-extraction-architecture W10.P50.S207
+- `2026-05-28-declaracion-extraction-architecture-W09-P38-S196` - declaracion-extraction-architecture W09.P38.S196 — bbox_anchored extraction strategy: schema + parser + profiles + tests + validator
+- `2026-05-28-declaracion-extraction-architecture-W09-P40-S197` - declaracion-extraction-architecture W09.P40.S197 — Phase 2 verification chain: parse → ExtractedCasilla → calculation engine recompute → diff
+- `2026-05-28-declaracion-extraction-architecture-W10-P41-S198` - declaracion-extraction-architecture W10.P41.S198 — justificante surface discipline extension
+- `2026-05-28-declaracion-extraction-architecture-W10-P42-S199` - declaracion-extraction-architecture W10.P42.S199 — bank-PDF provider gate discipline, N26-first extensible
+- `2026-05-28-declaracion-extraction-architecture-W10-P43-S200` - `declaracion-extraction-architecture` W10.P43.S200 — borrador architectural audit
+- `2026-05-28-declaracion-extraction-architecture-W10-P43-S210` - `declaracion-extraction-architecture` `W10.P43.S210`
+- `2026-05-28-declaracion-extraction-architecture-W10-P45-S202` - `declaracion-extraction-architecture` W10.P45.S202 — M130 corpus regeneration with formula-consistent values
+- `2026-05-28-declaracion-extraction-architecture-W10-P46-S203` - `declaracion-extraction-architecture` W10.P46.S203 — Resolve M390 leaf-input binding gap
+- `2026-05-28-declaracion-extraction-architecture-W10-P47-S204` - declaracion-extraction-architecture W10.P47.S204 — M180 M115 cross-modelo relation binding
+- `2026-05-28-declaracion-extraction-architecture-W10-P48-S205` - declaracion-extraction-architecture W10.P48.S205
+- `2026-05-28-declaracion-extraction-architecture-W10-P49-S206` - declaracion-extraction-architecture W10.P49.S206 — verification chain extension
+- `2026-05-28-declaracion-extraction-architecture-W10-P51-S208` - declaracion-extraction-architecture W10.P51.S208
+- `2026-05-28-declaracion-extraction-architecture-W10-P52-S209` - `declaracion-extraction-architecture` W10.P52.S209 — M303 corpus regeneration with formula-consistent values
+- `2026-05-28-declaracion-extraction-architecture-W10-P53-S211` - declaracion-extraction-architecture W10.P53.S211 -- M036 NOT-CHAIN-READY resolution
+- `2026-05-28-declaracion-extraction-architecture-W10-P53-S212` - `declaracion-extraction-architecture` W10.P53.S212 — M390 corpus regeneration with formula-consistent values
+- `2026-05-28-declaracion-extraction-architecture-exec` - `declaracion-extraction-architecture` historical placeholder exec
+- `2026-05-30-declaracion-extraction-architecture-W10-P44-S201` - `declaracion-extraction-architecture` W10.P44.S201 — OCR evidence extraction discipline research
+- `2026-05-30-declaracion-extraction-architecture-W10-P54-S213` - declaracion-extraction-architecture W10.P54.S213 — justificante corpus fixture CSV embedding
+- `2026-05-30-declaracion-extraction-architecture-W10-P55-S214` - declaracion-extraction-architecture W10.P55.S214 — test_parser.py fixture-test parity for 13 new corpus modelos
+- `2026-05-30-declaracion-extraction-architecture-W10-P56-S215` - `declaracion-extraction-architecture` W10.P56.S215 -- purchase-invoice OCR ADR ratification
+- `2026-05-30-declaracion-extraction-architecture-W11-P58-S217` - declaracion-extraction-architecture W11.P58.S217
+- `2026-05-30-declaracion-extraction-architecture-W11-P59-S218` - declaracion-extraction-architecture W11.P59.S218
+- `2026-05-30-declaracion-extraction-architecture-W12-P65-S216` - declaracion-extraction-architecture W12.P65.S216
+
+### plan
+
+- `2026-05-21-declaracion-extraction-architecture-plan` - `declaracion-extraction-architecture` umbrella plan
+
+### research
+
+- `2026-05-21-declaracion-extraction-architecture-research` - `declaracion-extraction-architecture` research: `registry-driven vs per-modelo Python extractors`
+- `2026-05-28-borrador-extraction-architecture-research` - `declaracion-extraction-architecture` research: `borrador-surface-architectural-audit`
+- `2026-05-28-declaracion-extraction-architecture-research` - `declaracion-extraction-architecture` research: `{topic}`
+- `2026-05-30-declaracion-extraction-architecture-research` - `declaracion-extraction-architecture` research: `ocr-evidence-extraction-discipline`

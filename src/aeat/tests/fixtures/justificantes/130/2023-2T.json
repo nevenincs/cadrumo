@@ -1,0 +1,51 @@
+{
+  "provenance": "synthetic_generated",
+  "role": "formula_verification",
+  "source_sha256": "600447201728923fd64c1f21ea3c22be04ada4d7a618a941ca6610c1978b61b1",
+  "output_sha256": "600447201728923fd64c1f21ea3c22be04ada4d7a618a941ca6610c1978b61b1",
+  "source_size_bytes": 2005,
+  "output_size_bytes": 2005,
+  "sanitizer_version": "0.1.0-synthetic",
+  "determinism_flags": {
+    "deterministic_id": true,
+    "static_id": false,
+    "object_stream_mode": "preserve",
+    "linearize": false,
+    "recompress_flate": false,
+    "compress_streams": true
+  },
+  "replacements_applied": [
+    {
+      "surface": "content_stream",
+      "surface_index": [
+        0,
+        0
+      ],
+      "real_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "synthetic": "01-01-1900",
+      "encoding": "literal"
+    },
+    {
+      "surface": "content_stream",
+      "surface_index": [
+        0,
+        1
+      ],
+      "real_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "synthetic": "SANITIZED1302023",
+      "encoding": "literal"
+    },
+    {
+      "surface": "content_stream",
+      "surface_index": [
+        0,
+        2
+      ],
+      "real_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "synthetic": "Y0000001S",
+      "encoding": "literal"
+    }
+  ],
+  "surfaces_scrubbed": [],
+  "warnings": []
+}

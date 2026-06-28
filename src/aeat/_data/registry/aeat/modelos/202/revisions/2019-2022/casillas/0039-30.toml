@@ -1,0 +1,14 @@
+[[revisions.2019-2022.casillas]]
+id = "30"
+number = "30"
+label = "Mod. 40.3 LIS — Pagos fraccionados de periodos anteriores en Territorio Comun"
+section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_pagos_previos_territorio_comun"
+required = false
+input_kind = "bound"
+binding = "modelo-202-2019-2022-pagos-fraccionados-anteriores"
+export_refs = ["modelo-202-2019-2022-page-02-casilla-30"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]
+constraints = { sign = "non_negative", legal_refs = ["ley-27-2014:art-40"], source_refs = ["aeat-modelo-202-instructions"] }

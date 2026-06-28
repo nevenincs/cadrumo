@@ -1,0 +1,18 @@
+rules:
+  - id: no-cast-in-domain-application
+    message: |
+      `cast()` is discouraged in src/aeat/domain/ and src/aeat/application/.
+      Prefer `isinstance` narrowing, a `TYPE_CHECKING` import guard, or a
+      typed pydantic validator. If the cast bridges an external untyped
+      API, push it to the adapter boundary. Genuinely irreducible casts
+      (Literal narrowing from `in` check, structural Protocol bridging)
+      must carry an inline justification comment naming the rule and the
+      reason.
+    severity: ERROR
+    languages:
+      - python
+    paths:
+      include:
+        - "/src/aeat/domain/"
+        - "/src/aeat/application/"
+    pattern: cast(...)

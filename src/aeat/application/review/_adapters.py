@@ -3,8 +3,12 @@
 Each adapter loads pending items from one on-disk source and emits a
 tuple of typed :class:`ReviewItem` records. Adapters are pure and
 stateless; they tolerate missing source files by returning an empty
-tuple. Severity is derived per source via a first-match-wins
-predicate table (see ADR D5).
+tuple. Severity is derived per source via a first-match-wins predicate table.
+
+The transaction adapter loads a :class:`TransactionCatalogue` via
+:class:`TransactionCatalogueRepository`; the invoice adapter loads an
+:class:`InvoiceCatalogue` via :class:`InvoiceCatalogueRepository`. Draft
+findings are sourced from the :class:`ModeloDraft` store via the review imports.
 """
 
 from __future__ import annotations
@@ -16,7 +20,8 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ...core.config import Settings
-from ...core.i18n import Translatable
+from ...core.errors import AeatError, BaseSeverity
+from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.invoices import (
     Invoice,
@@ -30,21 +35,13 @@ from ...domain.transactions import (
     is_classified,
 )
 from ..filing import (
-    FilingDraft,
-    FilingDraftStatus,
-    FilingFindingSeverity,
-    FilingValidationFinding,
-)
-from ..sync import (
-    DivergenceClassification,
-    DivergenceRecord,
-    JsonFileDivergenceRepository,
-    ResolutionState,
+    ModeloDraft,
+    ModeloDraftStatus,
+    ModeloValidationFinding,
 )
 from ._enums import ReviewSeverity
 from ._errors import ReviewSourceLoadError
 from ._models import (
-    DivergenceReviewItem,
     FindingReviewItem,
     InvoiceReviewItem,
     TransactionReviewItem,
@@ -54,6 +51,9 @@ _LOGGER = get_logger(__name__)
 
 _SUMMARY_MAX = 80
 
+# Multilingual contract: every tr carries es / en / ca / hu.
+_LANGS: tuple[str, ...] = ("es", "en", "ca", "hu")
+
 
 # ── transactions ──────────────────────────────────────────────────
 
@@ -61,16 +61,20 @@ _SUMMARY_MAX = 80
 def transactions_pending(
     settings: Settings,
     *,
+    bucket_id: str,
     catalogue: TransactionCatalogue | None = None,
 ) -> tuple[TransactionReviewItem, ...]:
     """Return one :class:`TransactionReviewItem` per pending-review transaction.
 
+    ``catalogue`` is an optional :class:`TransactionCatalogue` override; the repository is
+    loaded when ``None``.
+
     Skips fully-classified rows (BUSINESS / PERSONAL / MIXED) and rows
     explicitly skipped by rule (``SKIPPED_BY_RULE``) — those have a
-    final disposition and do not want Kent's attention.
+    final disposition and do not want the operator's attention.
     """
     if catalogue is None:
-        catalogue = _load_transactions(settings)
+        catalogue = _load_transactions(settings, bucket_id=bucket_id)
         if catalogue is None:
             return ()
     items: list[TransactionReviewItem] = []
@@ -85,22 +89,29 @@ def transactions_pending(
 def transactions_low_confidence(
     settings: Settings,
     *,
+    bucket_id: str,
     threshold: Decimal,
     catalogue: TransactionCatalogue | None = None,
 ) -> tuple[TransactionReviewItem, ...]:
-    """Return transactions whose decision confidence sits below a threshold (#236).
+    """Return transactions whose decision confidence sits below a threshold.
+
+    Args:
+        settings: Active application settings.
+        bucket_id: Stable bucket identifier for the ledger to inspect.
+        threshold: Minimum acceptable confidence; transactions strictly below
+            this value are included.
+        catalogue: Optional :class:`TransactionCatalogue` override; when ``None``
+            the catalogue is loaded from the encrypted store.
 
     Surfaces every transaction whose ``classification_confidence`` is
     non-None and strictly less than the threshold, regardless of
-    classification state. A rule engine that tagged a
-    ``PROCESSED_UNCLASSIFIED`` row with confidence 0.4 is just as
-    interesting to Kent as a ``BUSINESS`` classification accepted at
-    confidence 0.4 — both warrant his attention. Transactions with
-    ``None`` confidence are excluded because they have no claim to
-    filter against.
+    classification state. Transactions with ``None`` confidence are excluded
+    because they have no claim to filter against.
+
+    Each element in the returned tuple is a :class:`TransactionReviewItem`.
     """
     if catalogue is None:
-        catalogue = _load_transactions(settings)
+        catalogue = _load_transactions(settings, bucket_id=bucket_id)
         if catalogue is None:
             return ()
     items: list[TransactionReviewItem] = []
@@ -113,10 +124,10 @@ def transactions_low_confidence(
 
 
 def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | None:
-    """First-match-wins severity per the post-#237 BusinessClassification states.
+    """First-match-wins severity per the BusinessClassification states.
 
     Returns ``None`` when the state has a final disposition that does
-    not warrant Kent's attention (classified or rule-excluded).
+    not warrant the operator's attention (classified or rule-excluded).
     """
     if is_classified(state):
         return None
@@ -131,18 +142,21 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
     return ReviewSeverity.NORMAL
 
 
-def _load_transactions(settings: Settings) -> TransactionCatalogue | None:
-    from ...domain.transactions._repository import TransactionCatalogueRepository
+def _load_transactions(settings: Settings, *, bucket_id: str) -> TransactionCatalogue | None:
+    from ...domain.transactions import TransactionCatalogueRepository
 
-    store_dir = settings.aeat_financial_txs_dir.resolve()
-    repository = TransactionCatalogueRepository(store_dir=store_dir)
-    if not repository.envelope_path.exists():
+    del settings
+    repository = TransactionCatalogueRepository(bucket_id=bucket_id)
+    if not repository.exists():
+        _LOGGER.debug("transactions catalogue secure object absent")
         return None
     try:
         return repository.load()
     except (ValidationError, OSError, ValueError) as exc:
         raise ReviewSourceLoadError(
-            f"failed to load transactions catalogue at {repository.envelope_path}: {exc}"
+            message="failed to load transactions catalogue from secure backend",
+            translated_message="review.adapters.errors.transactions_load_failed",
+            context=_load_failure_context(exc),
         ) from exc
 
 
@@ -157,16 +171,14 @@ def _to_transaction_item(
     description = raw.description.strip()
     if len(description) > _SUMMARY_MAX:
         description = description[: _SUMMARY_MAX - 1] + "…"
-    amount = format(raw.amount.normalize(), "f") if not raw.amount.is_zero() else "0"
-    state_label = transaction.business_classification.value
-    summary_text = f"[{state_label}] {transaction.direction.value} {amount} {raw.currency}: {description}"
-    summary: Translatable = {"es": summary_text, "en": summary_text, "hu": summary_text}
+    del raw  # description + amount captured above; nothing else needed
+    summary = tr("review.transaction.summary")
     return TransactionReviewItem(
         item_id=transaction.transaction_id,
         modelo=None,
         severity=severity,
         summary=summary,
-        drill_command=f"aeat financial txs classify {transaction.transaction_id} --as ...",
+        drill_command=f"aeat app ledger review {transaction.transaction_id}",
         since=since,
         source=transaction,
     )
@@ -178,11 +190,19 @@ def _to_transaction_item(
 def invoices_pending(
     settings: Settings,
     *,
+    bucket_id: str,
     catalogue: InvoiceCatalogue | None = None,
 ) -> tuple[InvoiceReviewItem, ...]:
-    """Return :class:`InvoiceReviewItem`s for unmatched / disputed / pending invoices."""
+    """Return :class:`InvoiceReviewItem` records for unmatched / disputed / pending invoices.
+
+    Args:
+        settings: Active application settings.
+        bucket_id: Stable bucket identifier for the invoice catalogue to inspect.
+        catalogue: Optional :class:`InvoiceCatalogue` override; the repository is
+            loaded when ``None``.
+    """
     if catalogue is None:
-        catalogue = _load_invoices(settings)
+        catalogue = _load_invoices(settings, bucket_id=bucket_id)
         if catalogue is None:
             return ()
     items: list[InvoiceReviewItem] = []
@@ -195,21 +215,26 @@ def invoices_pending(
     return tuple(items)
 
 
-def _load_invoices(settings: Settings) -> InvoiceCatalogue | None:
-    from ...domain.invoices._repository import InvoiceCatalogueRepository
+def _load_invoices(settings: Settings, *, bucket_id: str) -> InvoiceCatalogue | None:
+    from ...domain.invoices import InvoiceCatalogueRepository
 
-    store_dir = settings.aeat_invoices_dir.resolve()
-    repository = InvoiceCatalogueRepository(store_dir=store_dir)
-    if not repository.envelope_path.exists():
+    del settings
+    repository = InvoiceCatalogueRepository(bucket_id=bucket_id)
+    if not repository.exists():
+        _LOGGER.debug("invoices catalogue secure object absent")
         return None
     try:
         return repository.load()
     except (ValidationError, OSError, ValueError) as exc:
-        raise ReviewSourceLoadError(f"failed to load invoices catalogue at {repository.envelope_path}: {exc}") from exc
+        raise ReviewSourceLoadError(
+            message="failed to load invoices catalogue from secure backend",
+            translated_message="review.adapters.errors.invoices_load_failed",
+            context=_load_failure_context(exc),
+        ) from exc
 
 
 def _classify_invoice(invoice: Invoice) -> tuple[ReviewSeverity, str] | None:
-    """First-match-wins severity + reason per ADR D5 invoices table."""
+    """First-match-wins severity + reason for invoices."""
     if invoice.linked_transaction_ids == ():
         return ReviewSeverity.HIGH, "unmatched"
     if invoice.payment_status is PaymentStatus.OVERDUE:
@@ -222,70 +247,17 @@ def _classify_invoice(invoice: Invoice) -> tuple[ReviewSeverity, str] | None:
 
 
 def _to_invoice_item(invoice: Invoice, *, severity: ReviewSeverity, reason: str) -> InvoiceReviewItem:
-    grand_total = format(invoice.grand_total.normalize(), "f") if not invoice.grand_total.is_zero() else "0"
-    summary_text = (
-        f"[{reason}] {invoice.kind.value} {invoice.invoice_number} "
-        f"{grand_total} {invoice.currency} ← {invoice.counterparty_name}"
-    )
-    summary: Translatable = {"es": summary_text, "en": summary_text, "hu": summary_text}
+    del reason  # severity already encodes the disposition for the queue line
+    summary = tr("review.invoice.summary")
     since = datetime.combine(invoice.issued_at, time.min, tzinfo=UTC)
     return InvoiceReviewItem(
         item_id=invoice.invoice_id,
         modelo=None,
         severity=severity,
         summary=summary,
-        drill_command=f"aeat financial invoices show {invoice.invoice_id}",
+        drill_command=f"aeat app review view {invoice.invoice_id}",
         since=since,
         source=invoice,
-    )
-
-
-# ── divergences ───────────────────────────────────────────────────
-
-
-def divergences_pending(
-    settings: Settings,
-    *,
-    records: tuple[DivergenceRecord, ...] | None = None,
-) -> tuple[DivergenceReviewItem, ...]:
-    """Return :class:`DivergenceReviewItem`s for PENDING divergence records."""
-    if records is None:
-        repo = JsonFileDivergenceRepository(settings.aeat_sync_divergence_file_dir)
-        try:
-            records = repo.list()
-        except (ValidationError, OSError, ValueError) as exc:
-            raise ReviewSourceLoadError(
-                f"failed to list divergences at {settings.aeat_sync_divergence_file_dir}: {exc}"
-            ) from exc
-    items: list[DivergenceReviewItem] = []
-    for record in records:
-        if record.resolution_state is not ResolutionState.PENDING:
-            continue
-        items.append(_to_divergence_item(record))
-    return tuple(items)
-
-
-def _classify_divergence(record: DivergenceRecord) -> ReviewSeverity:
-    """First-match-wins severity per ADR D5 divergences table."""
-    if record.classification in {
-        DivergenceClassification.BREAKING,
-        DivergenceClassification.SUSPICIOUS,
-    }:
-        return ReviewSeverity.CRITICAL
-    return ReviewSeverity.NORMAL
-
-
-def _to_divergence_item(record: DivergenceRecord) -> DivergenceReviewItem:
-    summary_text = f"[{record.classification.value}] {record.payload.kind.value}"
-    summary: Translatable = {"es": summary_text, "en": summary_text, "hu": summary_text}
-    return DivergenceReviewItem(
-        item_id=record.record_id,
-        modelo=str(record.modelo) if record.modelo is not None else None,
-        severity=_classify_divergence(record),
-        summary=summary,
-        drill_command=f"aeat sync show-divergence {record.record_id}",
-        since=record.detected_at,
-        source=record,
     )
 
 
@@ -295,95 +267,156 @@ def _to_divergence_item(record: DivergenceRecord) -> DivergenceReviewItem:
 def drafts_pending(
     settings: Settings,
     *,
-    drafts: tuple[tuple[Path, FilingDraft], ...] | None = None,
+    bucket_id: str,
+    drafts: tuple[tuple[Path, ModeloDraft], ...] | None = None,
 ) -> tuple[FindingReviewItem, ...]:
-    """Return :class:`FindingReviewItem`s for findings + unready drafts."""
+    """Return :class:`FindingReviewItem` records for findings + unready drafts.
+
+    Args:
+        settings: Active application settings.
+        bucket_id: Stable bucket identifier for the draft repository to inspect.
+        drafts: Optional pre-loaded sequence of ``(path, draft)`` pairs where
+            each draft is a :class:`ModeloDraft`; when ``None`` drafts are
+            loaded from that bucket's secure storage.
+
+    A draft whose ``profile_tax_id`` does not match the active
+    profile's tax id is not the active profile's data and is skipped.
+    Callers see only drafts owned by the active profile.
+    """
     if drafts is None:
-        drafts = _load_drafts(settings)
+        drafts = _load_drafts(settings, bucket_id=bucket_id)
+    active_tax_id = _resolve_active_tax_id(settings)
+    if active_tax_id is None:
+        return ()
     items: list[FindingReviewItem] = []
     seen: set[tuple[str, str, str]] = set()
     for path, draft in drafts:
+        if (draft.profile_tax_id or "") != active_tax_id:
+            continue
         path_str = str(path)
         if draft.findings:
-            for finding in draft.findings:
-                dedup_key = (draft.draft_id, finding.code, finding.casilla_id or "-")
-                if dedup_key in seen:
-                    continue
-                seen.add(dedup_key)
-                items.append(
-                    _to_finding_item(
-                        draft=draft,
-                        path_str=path_str,
-                        finding=finding,
-                    )
-                )
-            continue
-        if draft.status in {FilingDraftStatus.DRAFT, FilingDraftStatus.VALIDATED}:
-            items.append(
-                _to_placeholder_item(
-                    draft=draft,
-                    path_str=path_str,
-                )
-            )
-        elif draft.status is FilingDraftStatus.APPROVAL_STALE:
-            items.append(
-                _to_stale_approval_item(
-                    draft=draft,
-                    path_str=path_str,
-                )
-            )
+            items.extend(_draft_finding_review_items(draft, path_str=path_str, seen=seen))
+        else:
+            _append_unready_draft_review_item(draft, path_str=path_str, items=items)
     return tuple(items)
 
 
-def _load_drafts(settings: Settings) -> tuple[tuple[Path, FilingDraft], ...]:
-    """Iterate every persisted draft via :class:`FilingDraftRepository`.
+def _draft_finding_review_items(
+    draft: ModeloDraft,
+    *,
+    path_str: str,
+    seen: set[tuple[str, str, str]],
+) -> tuple[FindingReviewItem, ...]:
+    """Yield one ``FindingReviewItem`` per non-duplicate finding on ``draft``.
 
-    Drafts are ciphertext-at-rest only; the helper returns the canonical
-    envelope path alongside the typed payload so callers can echo the
-    on-disk location back to the operator without ever touching
-    plaintext.
+    Dedup is keyed on ``(draft_id, finding.code, finding.casilla_id)``
+    so two findings against the same casilla under the same code
+    surface as a single review row. The ``seen`` set is mutated in
+    place so dedup spans every draft in the same ``drafts_pending``
+    pass, not just one draft.
     """
-    from ...domain.filing import FilingDraftRepository
-
-    root = settings.aeat_drafts_dir.resolve()
-    if not root.exists():
-        return ()
-    repository = FilingDraftRepository(store_dir=root)
-    out: list[tuple[Path, FilingDraft]] = []
-    for draft in repository.iter_drafts():
-        out.append((repository.envelope_path_for(draft.draft_id), draft))
+    out: list[FindingReviewItem] = []
+    for finding in draft.findings:
+        dedup_key = (draft.draft_id, finding.code, finding.casilla_id or "-")
+        if dedup_key in seen:
+            continue
+        seen.add(dedup_key)
+        out.append(_to_finding_item(draft=draft, path_str=path_str, finding=finding))
     return tuple(out)
 
 
-def _classify_finding(severity: FilingFindingSeverity) -> ReviewSeverity:
-    """Map FilingFindingSeverity to ReviewSeverity per ADR D5 findings table."""
-    if severity is FilingFindingSeverity.ERROR:
+def _append_unready_draft_review_item(
+    draft: ModeloDraft,
+    *,
+    path_str: str,
+    items: list[FindingReviewItem],
+) -> None:
+    """Append one review item for a finding-free draft that is not yet ready to file.
+
+    DRAFT / VALIDATED drafts get a placeholder review row prompting
+    the operator to complete the draft. APPROVAL_STALE drafts get a
+    distinct review row prompting re-approval. Any other status is
+    a no-op — those drafts are not in the review queue's purview.
+    """
+    if draft.status in {ModeloDraftStatus.BORRADOR, ModeloDraftStatus.VALIDADO}:
+        items.append(_to_placeholder_item(draft=draft, path_str=path_str))
+    elif draft.status is ModeloDraftStatus.APROBACION_CADUCADA:
+        items.append(_to_stale_approval_item(draft=draft, path_str=path_str))
+
+
+def _resolve_active_tax_id(settings: Settings) -> str | None:
+    """Return the active profile's tax id, or ``None`` when unknown."""
+    del settings
+    try:
+        from ..user_profile._orchestration import fact_value
+        from ..workflow import workflow_state_repository
+    except ImportError:
+        _LOGGER.debug("review adapters could not import workflow status helpers", exc_info=True)
+        return None
+    try:
+        state = workflow_state_repository().load()
+        record = state.active_profile_record()
+    except (AeatError, AttributeError):
+        _LOGGER.debug("review adapters could not resolve active workflow status", exc_info=True)
+        return None
+    return fact_value(record, "identity.tax_id") or None
+
+
+def _load_drafts(settings: Settings, *, bucket_id: str) -> tuple[tuple[Path, ModeloDraft], ...]:
+    """Iterate every persisted draft via :class:`ModeloDraftRepository`.
+
+    Drafts are ciphertext-at-rest only. The helper returns the secure
+    backend's logical path marker alongside the typed payload so callers
+    can identify the draft without consulting a plaintext draft
+    directory.
+    """
+    from ...domain.filing import ModeloDraftRepository
+
+    del settings
+    repository = ModeloDraftRepository(bucket_id=bucket_id)
+    out: list[tuple[Path, ModeloDraft]] = []
+    try:
+        for draft in repository.iter_drafts():
+            out.append((repository.envelope_path_for(draft.draft_id), draft))
+    except (AeatError, ValidationError, OSError, ValueError) as exc:
+        raise ReviewSourceLoadError(
+            message="failed to load filing drafts from secure backend",
+            translated_message="review.adapters.errors.drafts_load_failed",
+            context=_load_failure_context(exc),
+        ) from exc
+    return tuple(out)
+
+
+def _load_failure_context(exc: BaseException) -> dict[str, str]:
+    """Return non-sensitive load-failure context for operator error envelopes."""
+    return {"error_type": type(exc).__name__}
+
+
+def _classify_finding(severity: BaseSeverity) -> ReviewSeverity:
+    """Map BaseSeverity to ReviewSeverity for findings."""
+    if severity is BaseSeverity.ERROR:
         return ReviewSeverity.CRITICAL
-    if severity is FilingFindingSeverity.WARNING:
+    if severity is BaseSeverity.WARNING:
         return ReviewSeverity.HIGH
     return ReviewSeverity.INFO
 
 
 def _to_finding_item(
     *,
-    draft: FilingDraft,
+    draft: ModeloDraft,
     path_str: str,
-    finding: FilingValidationFinding,
+    finding: ModeloValidationFinding,
 ) -> FindingReviewItem:
     casilla = finding.casilla_id or "-"
-    summary_text = finding.message.get("en") or _first_translation(finding.message) or finding.code
-    summary_prefix = f"[casilla {casilla}] " if casilla != "-" else ""
-    summary: Translatable = {
-        "es": summary_prefix + (finding.message.get("es") or summary_text),
-        "en": summary_prefix + (finding.message.get("en") or summary_text),
-        "hu": summary_prefix + (finding.message.get("hu") or summary_text),
-    }
+    _first_translation(finding.message) or finding.code
+    summary = tr("review.filing.finding_summary")
+    severity = _classify_finding(finding.severity)
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:{finding.code}:{casilla}",
         modelo=draft.modelo,
-        severity=_classify_finding(finding.severity),
+        severity=severity,
         summary=summary,
-        drill_command=f"aeat filing show {path_str} --findings-only",
+        drill_command=f"aeat app review view {draft.draft_id}:{finding.code}:{casilla}",
         since=draft.updated_at,
         source=finding,
         draft_id=draft.draft_id,
@@ -391,15 +424,14 @@ def _to_finding_item(
     )
 
 
-def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
-    summary_text = f"draft not ready to submit (status={draft.status.value})"
-    summary: Translatable = {"es": summary_text, "en": summary_text, "hu": summary_text}
+def _to_placeholder_item(*, draft: ModeloDraft, path_str: str) -> FindingReviewItem:
+    summary = tr("review.filing.draft_placeholder_summary")
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:{draft.status.value}",
         modelo=draft.modelo,
         severity=ReviewSeverity.NORMAL,
         summary=summary,
-        drill_command=f"aeat filing show {path_str}",
+        drill_command=f"aeat app review view {draft.draft_id}:_status:{draft.status.value}",
         since=draft.updated_at,
         source=None,
         draft_id=draft.draft_id,
@@ -407,16 +439,15 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewI
     )
 
 
-def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
-    """Emit a high-severity item for drafts whose stored approval is stale (#230)."""
-    summary_text = "approval stale — re-review required (status=APPROVAL_STALE)"
-    summary: Translatable = {"es": summary_text, "en": summary_text, "hu": summary_text}
+def _to_stale_approval_item(*, draft: ModeloDraft, path_str: str) -> FindingReviewItem:
+    """Emit a high-severity item for drafts whose stored approval is stale."""
+    summary = tr("review.filing.stale_approval_summary")
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:APPROVAL_STALE",
         modelo=draft.modelo,
         severity=ReviewSeverity.HIGH,
         summary=summary,
-        drill_command=f"aeat review show {path_str}",
+        drill_command=f"aeat app review view {draft.draft_id}:_status:APPROVAL_STALE",
         since=draft.updated_at,
         source=None,
         draft_id=draft.draft_id,
@@ -424,9 +455,6 @@ def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingRevi
     )
 
 
-def _first_translation(message: Translatable) -> str | None:
-    for lang in ("es", "en", "hu"):
-        value = message.get(lang)
-        if value:
-            return value
-    return None
+def _first_translation(message: str) -> str | None:
+    """Return the first non-empty slot in the AEAT-canonical-first order."""
+    return message

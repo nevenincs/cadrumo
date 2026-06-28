@@ -1,0 +1,122 @@
+[[revisions."2013-y-siguientes".constructs]]
+id = "modelo-720-informative"
+title = "Modelo 720 informative declaration of foreign assets and rights"
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-bis",
+    "rd-1065-2007:art-42-ter",
+    "rd-1065-2007:art-54-bis",
+    "orden-hap-72-2013:art-1",
+    "orden-hap-72-2013:art-2",
+    "orden-hap-72-2013:art-7",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-720",
+    "aeat-modelo-720-procedure",
+    "boe-modelo-720-2013-form",
+]
+casilla_ids = [
+    "decl.ejercicio",
+    "decl.tipo-declaracion",
+    "cuentas.codigo-de-cuenta",
+    "cuentas.valoracion",
+    "valores.identificacion",
+    "valores.valoracion",
+]
+bindings = [
+    "modelo-720-2013.type_1.1-1.tipo-de-registro",
+    "modelo-720-2013.type_1.2-4.modelo-declaracion",
+    "modelo-720-2013.type_1.5-8.ejercicio",
+    "modelo-720-2013.type_1.9-17.n-i-f-del-declarante",
+    "modelo-720-2013.type_1.18-57.apellidos-y-nombre-o-razon-social-del-declarante",
+    "modelo-720-2013.type_1.58-58.tipo-de-soporte",
+    "modelo-720-2013.type_1.59-107.persona-con-quien-relacionarse",
+    "modelo-720-2013.type_1.108-120.numero-identificativo-de-la-declaracion",
+    "modelo-720-2013.type_1.121-122.declaracion-complementaria-o-sustitutiva",
+    "modelo-720-2013.type_1.123-135.numero-identificativo-de-la-declaracion-anterior",
+    "modelo-720-2013.type_1.136-144.numero-total-de-registros-declarados",
+    "modelo-720-2013.type_1.145-162.suma-total-de-valoracion-1-saldo-o-valor-a-31-de-diciembre-s",
+    "modelo-720-2013.type_1.163-180.suma-total-de-valoracion-2-importe-o-valor-de-la-transmision",
+    "modelo-720-2013.type_2.1-1.tipo-de-registro",
+    "modelo-720-2013.type_2.2-4.modelo-declaracion",
+    "modelo-720-2013.type_2.5-8.ejercicio",
+    "modelo-720-2013.type_2.9-17.n-i-f-del-declarante",
+    "modelo-720-2013.type_2.18-26.n-i-f-del-declarado",
+    "modelo-720-2013.type_2.27-35.n-i-f-del-representante-legal",
+    "modelo-720-2013.type_2.36-75.apellidos-y-nombre-razon-social-o-denominacion-del-declarado",
+    "modelo-720-2013.type_2.76-76.clave-de-condicion-del-declarante",
+    "modelo-720-2013.type_2.77-101.tipo-de-titularidad-sobre-el-bien-o-derecho",
+    "modelo-720-2013.type_2.102-102.clave-tipo-de-bien-o-derecho",
+    "modelo-720-2013.type_2.103-103.subclave-de-bien-o-derecho",
+    "modelo-720-2013.type_2.104-128.tipo-de-derecho-real-sobre-inmueble",
+    "modelo-720-2013.type_2.129-130.codigo-de-pais",
+    "modelo-720-2013.type_2.131-131.clave-de-identificacion",
+    "modelo-720-2013.type_2.132-143.identificacion-de-valores",
+    "modelo-720-2013.type_2.144-144.clave-identificacion-de-cuenta",
+    "modelo-720-2013.type_2.145-155.codigo-bic",
+    "modelo-720-2013.type_2.156-189.codigo-de-cuenta",
+    "modelo-720-2013.type_2.190-230.identificacion-de-la-entidad",
+    "modelo-720-2013.type_2.231-250.numero-de-identificacion-fiscal-en-el-pais-de-residencia-fis",
+    "modelo-720-2013.type_2.251-414.domicilio-de-la-entidad-o-ubicacion-del-inmueble",
+    "modelo-720-2013.type_2.415-422.fecha-de-incorporacion",
+    "modelo-720-2013.type_2.423-423.origen-del-bien-o-derecho",
+    "modelo-720-2013.type_2.424-431.fecha-de-extincion",
+    "modelo-720-2013.type_2.432-446.valoracion-1-saldo-o-valor-a-31-de-diciembre-saldo-o-valor-e",
+    "modelo-720-2013.type_2.447-461.valoracion-2-importe-o-valor-de-la-transmision-saldo-medio-u",
+    "modelo-720-2013.type_2.462-462.clave-de-representacion-de-valores",
+    "modelo-720-2013.type_2.463-474.numero-de-valores",
+    "modelo-720-2013.type_2.475-475.clave-tipo-de-bien-inmueble",
+    "modelo-720-2013.type_2.476-480.porcentaje-de-participacion",
+    "modelo-720-asset-row-class",
+    "modelo-720-asset-row-country",
+    "modelo-720-asset-row-currency",
+    "modelo-720-asset-row-identifier",
+    "modelo-720-asset-row-valuation",
+    "modelo-720-asset-row-acquisition-date",
+]
+export_layouts = ["modelo-720-fichero-aeat"]
+extraction_profiles = ["modelo-720-declaracion-pdf"]
+verification_expectations = ["modelo-720-informative-summary-verification"]
+workbook_parity_refs = ["modelo-720-dr"]
+live_cross_references = [
+    "modelo-720-static-documentation",
+    "modelo-720-filed-declarations-read",
+]
+application_links = [
+    "modelo-720-portal",
+    "modelo-720-filing",
+    "modelo-720-extractor",
+    "modelo-720-verification",
+    "modelo-720-deadline",
+    "modelo-720-export",
+    "modelo-720-review",
+    "modelo-720-approval",
+    "modelo-720-reconciliation",
+    "modelo-720-workflow",
+]
+filing_schedules = ["modelo-720-anual"]
+deadline_windows = [
+    "modelo-720-2012-0a",
+    "modelo-720-2013-0a",
+    "modelo-720-2014-0a",
+    "modelo-720-2015-0a",
+    "modelo-720-2016-0a",
+    "modelo-720-2017-0a",
+    "modelo-720-2018-0a",
+    "modelo-720-2019-0a",
+    "modelo-720-2020-0a",
+    "modelo-720-2021-0a",
+    "modelo-720-2022-0a",
+    "modelo-720-2023-0a",
+    "modelo-720-2024-0a",
+    "modelo-720-2025-0a",
+    "modelo-720-2026-0a",
+]
+
+# Calculation-completeness manifest for revision 2013-y-siguientes: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed by canonical casilla_id plus reviewed segment/number
+# metadata. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.

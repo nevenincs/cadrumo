@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0516"
+number = "0516"
+label = "Parte autonómica: Mínimo por ascendientes. Importe"
+section = ["resultados", "minimo_per_fam_res"]
+semantic_role = "irpf_minimo_ascendientes_autonomico"
+legal_refs = ["ley-35-2006:art-56"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

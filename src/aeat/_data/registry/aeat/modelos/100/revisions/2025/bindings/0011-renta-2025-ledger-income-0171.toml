@@ -1,0 +1,19 @@
+# Modelo 100 casilla 0171 "Ingresos de explotacion" (estimacion directa) is the
+# annual counterpart of the M130 income aggregation: it sums actividad-economica
+# income from the bucket ledger over the full ejercicio. IVA repercutido is
+# collected on behalf of Hacienda and is not computable income, so the
+# ingresos_integros_sum fact contributes each transaction's IVA-exclusive base
+# imponible (taxable_base) when tagged, falling back to the gross amount. The
+# annual income aggregator (modelo == "100" path) feeds this binding; the same
+# source kind serves the M130 cumulative-quarter income.
+[[revisions."2025".bindings]]
+id = "renta-2025-ledger-income-0171"
+source = "ledger_renta_income_aggregation"
+selector = { modelo = "100", target_casilla_id = "0171", fact = "ingresos_integros_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Ingresos"]

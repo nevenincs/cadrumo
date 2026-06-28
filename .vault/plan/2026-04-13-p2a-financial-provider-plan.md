@@ -3,6 +3,7 @@ tags:
   - "#plan"
   - "#p2a-financial-provider"
 date: "2026-04-13"
+modified: '2026-04-13'
 related:
   - "[[2026-04-13-p2a-financial-provider-research]]"
   - "[[2026-04-13-p2a-financial-provider-adr]]"

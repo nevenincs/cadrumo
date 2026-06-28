@@ -3,18 +3,12 @@ tags:
   - '#adr'
   - '#aeat-restructure'
 date: '2026-04-30'
+modified: '2026-04-30'
 related:
   - '[[2026-04-30-aeat-restructure-research]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `aeat-restructure` adr: domain-aligned restructure of `src/aeat/` | (**status:** `accepted — execution-ready`)
 
@@ -437,47 +431,49 @@ input plan for the rollout, not standalone decisions.
 
 ### Public surface and semver
 
-The following imports are documented public surfaces with stability
-contracts. The restructure either preserves each contract via re-
-export shim or makes a documented breaking change:
+**Historical planning section.** The rollout ultimately hard-cut over
+without retaining root compatibility modules. This section records the
+pre-cutover semver model evaluated during planning; the 2026-05-01
+Outcomes section is authoritative for current policy: no root
+re-export layer, no shim-retention schedule, and no `import-linter`
+quality gate for ordinary delivery.
+
+The following table is retained as a historical planning inventory of
+documented public surfaces and the stability contracts considered before
+the rollout. It is not the current implementation contract. The delivered
+2026-05-01 hard cutover rewrote callers to canonical layered modules and
+did not retain a root re-export/shim layer; the Outcomes section below is
+authoritative for current policy.
 
 | Public surface | Source | Treatment | Mechanism |
 | --- | --- | --- | --- |
-| `from aeat.core.errors import AeatError` | `error-code-registry-adr` + audit 1 | Preserve | Direct re-export shim from `aeat.core.errors`; canonical home stays in `core/errors/`. |
-| `from aeat.core.errors import (rendering pipeline)` (`build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, `get_registered_error_code`, `ErrorCategory`, `ErrorCode`, `ErrorEnvelope`, `ERROR_REGISTRY`, `register`, `bind_error_code`, `resolve_error_message`, `scrub_error_context`) | `error-code-registry-adr` + audit 1 | Preserve | Direct re-export shim from `aeat.core.errors`; tight cluster, all stay in `core/errors/`. |
-| `from aeat.core.errors import FormulasError, RulesetValidationError, FormulaCycleError, CasillaNotDefinedError, AmbiguousPeriodError, MissingRulesetError, EvaluationError, AuditDiscrepancyError` | audit 1 | Preserve via shim; canonical home **moves** | The 8 formulas exceptions move to `domain/formulas/_errors.py`. Re-export shim at `aeat.core.errors` re-imports from `aeat.domain.formulas`. Canonical home is `aeat.domain.formulas` (which already re-exports them). Shim removal is a downstream decision. |
-| `from aeat.core.errors import McpLaunchError` | audit 1 | Preserve via shim; canonical home **moves** | Moves to `entrypoints/mcp/_errors.py`. Shim re-imports. |
-| `from aeat.core.errors import FilingFixtureError, FixtureProvisioningError` | audit 1 | Preserve via shim; canonical home **moves** | Move to `domain/testing/_errors.py`. Shim re-imports. |
+| `from aeat.core.errors import AeatError` | `error-code-registry-adr` + audit 1 | Preserve | Canonical public surface remains `aeat.core.errors`; no root facade is involved. |
+| `from aeat.core.errors import (rendering pipeline)` (`build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, `get_registered_error_code`, `ErrorCategory`, `ErrorCode`, `ErrorEnvelope`, `ERROR_REGISTRY`, `register`, `bind_error_code`, `resolve_error_message`, `scrub_error_context`) | `error-code-registry-adr` + audit 1 | Preserve | Canonical public surface remains `aeat.core.errors`; tight cluster, all stay in `core/errors/`. |
+| `from aeat.core.errors import FormulasError, RulesetValidationError, FormulaCycleError, CasillaNotDefinedError, AmbiguousPeriodError, MissingRulesetError, EvaluationError, AuditDiscrepancyError` | audit 1 | Historical preserve-via-shim option; superseded by hard cutover | The 8 formulas exceptions move to `domain/formulas/_errors.py`; delivered callers import from canonical layered paths. |
+| `from aeat.core.errors import McpLaunchError` | audit 1 | Historical preserve-via-shim option; superseded by hard cutover | Moves to `entrypoints/mcp/_errors.py`; delivered callers import from canonical layered paths. |
+| `from aeat.core.errors import FilingFixtureError, FixtureProvisioningError` | audit 1 | Historical preserve-via-shim option; superseded by hard cutover | Move from `domain/testing/_errors.py` planning shape to the delivered application filing testing surface; no `aeat.domain.testing` package remains. |
 | `from aeat.core.errors import SiteHealthError, AeatObservabilityError` | audit 1 | Preserve | Stay in `core/errors/__init__.py` as firewall declarations. The cross-domain reason for hosting them at this level (preventing import cycles between `browser`, `workflow`, and `observability`) is genuine; relocation is unsafe. |
 | `from aeat.core.errors import DeprecatedAliasError, MovedAliasError` | audit 1 | Preserve | Stay in `core/errors/__init__.py` as generic infra exceptions. |
 | `from aeat.core.errors import WorkspaceLockedError` | audit 1 + refreshed cold-review 22.11 | **DELETE + replace** | Verified production-dead (only test-file usage). Resolution: delete from `__init__.py`, replace test-file usage with a synthetic test exception (e.g. `_TestableAeatError` defined inside the affected test file). NO shim. The "rename or delete" disposition in dead-code Phase 2 is resolved as DELETE. |
-| `from aeat.adapters.outbound.aeat.auth import (Google cluster: scope constants, get_oauth_credentials, get_service_account_credentials, get_credentials, get_credentials_for_scopes, build_*_service, build_*_client, GoogleAuthPath, GoogleAuthInspection, inspect_google_auth, ...)` | audit 3 | Preserve via shim; canonical home **moves** | All Google symbols (~24) move to `aeat.adapters.outbound.google`. Re-export shim at `aeat/adapters/outbound/aeat/auth/__init__.py` re-imports. Consumers (CLI Google subcommands + MCP) all import a single-axis cluster — rewrite is mechanical. |
-| `from aeat.adapters.outbound.aeat.auth import (AEAT cluster: AeatAuthenticator, AeatSession, AeatLoginAssertion, AuthProviderKind, AuthProvider, all session-detail variants, CertificateBundle, CertificateError hierarchy, ClaveMovilAuthProvider, select_provider, ...)` | audit 3 | Preserve via shim; canonical homes **move and split** | Concrete AEAT providers + cert types → `aeat.adapters.outbound.aeat.auth`. `select_provider` factory + provider-agnostic types → `aeat.application.auth`. Browser Playwright protocols → `aeat.adapters.outbound.aeat.browser` (CORE-LEAK fix). Re-export shim preserves the `aeat.adapters.outbound.aeat.auth` import. |
-| `from aeat.adapters.outbound.aeat.auth import AeatAccessGate, AeatGateEnvSnapshot, AeatLiveReadNotEnabledError` | audit 3 | Preserve via shim; canonical home **moves** | Move to `aeat.core.access_gate`. `AeatLiveReadNotEnabledError` is also relocated from `aeat.adapters.outbound.aeat.auth.certificate` (where it was misplaced) to the gate module. Re-export shim preserves `aeat.adapters.outbound.aeat.auth` and `aeat.core.errors` imports. |
-| `from aeat.adapters.outbound.aeat.auth import restrict_file_permissions` | audit 3 | Preserve via shim; canonical home **moves** | Move to `aeat.core.file_permissions`. Re-export shim. |
-| `from aeat.adapters.outbound.aeat.export import LiveSubmitForbiddenError` | audit 3 | Preserve via shim; canonical home **moves** | Relocated from `submission/` to `core/access_gate/_errors.py` (per Constraints — eliminates `core/` ← `adapters/` layering violation). Re-export shim at the old path keeps existing consumers working. |
+| `from aeat.adapters.outbound.aeat.auth import (Google cluster: scope constants, get_oauth_credentials, get_service_account_credentials, get_credentials, get_credentials_for_scopes, build_*_service, build_*_client, GoogleAuthPath, GoogleAuthInspection, inspect_google_auth, ...)` | audit 3 | Historical preserve-via-shim option; superseded by hard cutover | All Google symbols moved to `aeat.adapters.outbound.google`; delivered callers import the canonical package directly. |
+| `from aeat.adapters.outbound.aeat.auth import (AEAT cluster: AeatAuthenticator, AeatSession, AeatLoginAssertion, AuthProviderKind, AuthProvider, all session-detail variants, CertificateBundle, CertificateError hierarchy, ClaveMovilAuthProvider, select_provider, ...)` | audit 3 | Historical preserve-via-shim option; superseded by hard cutover | Concrete AEAT providers + cert types live in `aeat.adapters.outbound.aeat.auth`; provider selection lives in `aeat.application.auth`; delivered callers import canonical layered paths. |
+| `from aeat.adapters.outbound.aeat.auth import AeatAccessGate, AeatGateEnvSnapshot, AeatLiveReadNotEnabledError` | audit 3 | Historical preserve-via-shim option; superseded by hard cutover | Canonical home is `aeat.core.access_gate`; delivered callers import canonical layered paths. |
+| `from aeat.adapters.outbound.aeat.auth import restrict_file_permissions` | audit 3 | Historical preserve-via-shim option; superseded by hard cutover | Canonical home is `aeat.core.file_permissions`; delivered callers import canonical layered paths. |
+| `from aeat.adapters.outbound.aeat.export import LiveSubmitForbiddenError` | audit 3 | Historical preserve-via-shim option; superseded by hard cutover | Canonical home is `core/access_gate/_errors.py`; delivered callers import canonical layered paths. |
 
 Additional public surfaces are surfaced during per-module audits
 and folded into this table.
 
-**Semver impact**: the restructure ships as a minor bump if all
-public surfaces are preserved via shim; major bump if any public
-surface breaks without shim. The audit decides per-surface; the
-cumulative version-bump call is fired **deterministically by the
-pipeline at the layout-move PR merge** (Step 8). All shims preserved
-→ minor; any shim-less break → major. **No override path** under
-the autonomous model.
+**Historical semver impact model**: the original rollout plan used a
+shim-preservation matrix to decide minor-vs-major versioning at Step 8.
+The delivered 2026-05-01 hard cutover superseded this matrix: no root
+compatibility layer or shim-retention schedule exists in the codebase.
 
-**Post-ADR break policy**: any audit finding that surfaces AFTER
-this ADR freezes and mandates a shim-less public-surface break
-defaults to a **major bump**, recorded in the CHANGELOG entry for
-that version. The rule fires deterministically.
+**Historical shim deprecation contract** (per refreshed cold-review 22.5):
 
-**Shim deprecation contract** (per refreshed cold-review 22.5):
-
-Every re-export shim listed above (and any added by future audits)
-ships with a documented deprecation lifecycle. Without this
-contract, shims accumulate indefinitely or are silently removed.
+The following shim lifecycle was evaluated during planning, but it is not
+active after the delivered hard cutover because no root re-export shim
+layer was retained.
 
 - **Deprecation signal**: every shim emits a `DeprecationWarning`
   on first import per process, citing the canonical path. Example:
@@ -642,10 +638,11 @@ single adapter sub-package. Storage's internal sub-module
 hierarchy is permitted to compose freely; the layered contract
 applies only at the storage substrate boundary, not within it.
 
-**Default tool**: `import-linter` (contract-driven, mature, fits
-layered models). Alternatives: `tach`, `deptry`, custom AST checks.
-Tool selection is open; the **requirement** to ship static
-enforcement in the same PR as the layout move is fixed.
+**Historical static-boundary tool note**: `import-linter` was evaluated
+as the default planning tool because it is contract-driven and fits
+layered models. The delivered pipeline superseded this with pytest
+import-contract gates and targeted AST checks; `import-linter` is not
+the current quality gate for ordinary delivery.
 
 The boundary contracts ship in the same PR as the layout move; CI
 fails if any import violates the contract.
@@ -833,9 +830,10 @@ in this ADR):
   succeeds; `pytest --collect-only` runs without `ImportError`.
 - Coverage floor maintained: `just test-cov` reports ≥ 60% on
   `src/aeat` (project mandate).
-- Static import-boundary enforcement is active. The chosen tool
-  (`import-linter` by default) lints zero violations against the
-  layered contracts defined in the Implementation section.
+- Static import-boundary diagnostics were evaluated against the layered
+  contracts defined in the Implementation section. `import-linter`
+  remains historical/diagnostic context, not the current quality gate
+  for ordinary delivery.
 - Vault contradiction list (research doc) at 100% per-tier
   completion: T1 supersedes shipped, T2 security audits validated and
   inline-updated, T3 inline-updates landed in milestone, T4 archive
@@ -844,9 +842,10 @@ in this ADR):
   collection runs successfully under the new marker set.
 - `domain_local_state` test files reclassified by destination
   (`domain_model` or `domain_persistence`) per the migration mechanic.
-- Public-surface decisions executed. `aeat.core.errors` re-export shim in
-  place (or documented break with semver bump); any other public
-  surfaces surfaced by the audit treated similarly.
+- Public-surface decisions executed. Canonical `aeat.core.errors`
+  remains in place for the error registry and rendering pipeline;
+  moved surfaces were rewritten to canonical layered imports under the
+  delivered hard-cutover model.
 - Configuration files updated: `pyproject.toml` (coverage / mypy /
   pytest paths), pre-commit configs, `.mcp.json`, `justfile`,
   `.gitignore`, CI workflow path-scoped steps.
@@ -928,11 +927,11 @@ before resuming, retrying, or firing rollback.
 
 | Decision | Autonomous rule | Mechanism |
 | --- | --- | --- |
-| Calling the freeze | Triggered when Step-5 tooling-prep audits commit clean (Step-5 = import-linter contract committed + rebase script test fixture green + smoke-test fixture green + type-checker config updated + packaging smoke check passes). | The executing agent applies the freeze when Step 5 completes — labels open PRs `needs-rebase-post-restructure` via `gh pr edit`. |
+| Calling the freeze | Triggered when Step-5 tooling-prep audits commit clean (Step-5 = boundary diagnostics recorded + rebase script test fixture green + smoke-test fixture green + type-checker config updated + packaging smoke check passes). | The executing agent applies the freeze when Step 5 completes — labels open PRs `needs-rebase-post-restructure` via `gh pr edit`. |
 | Declaring acceptance criteria met | All 15 acceptance criteria evaluate green. ANY criterion red → pipeline halts. | The executing agent runs the acceptance-criteria checklist against the layout-move PR; reads CI status via `gh run view`. |
 | Invoking rollback | Fired when any abort-criterion threshold is detected (CI > 30% failure across 3 consecutive runs; > 72 h cumulative freeze; coverage floor breach; security guardrail revalidation fails; `live_write` collection-ban mis-fire risk). | The executing agent monitors CI / freeze duration / coverage as it proceeds; on threshold breach, executes `gh pr revert` + downstream-step compound rollback per the table below. |
-| Semver bump | Rule-based deterministic: all shims preserved → minor bump; any public surface breaks without shim → major bump. **No override path** — but the rule's precondition is verified (see "Shim-verification gate" below). | The executing agent runs the shim-verification subroutine, then applies the semver bump rule mechanically. |
-| Shim removal | At the second minor version after shim introduction, a follow-up GitHub issue is filed describing the shims eligible for removal. A future agent picking up that issue executes the removal PR. | At Step 14 close, the executing agent files one follow-up issue per minor-version-eligibility cohort. No external scheduler is required. |
+| Semver bump | Rule-based deterministic: compatible public-surface outcome → minor bump; public-surface break → major bump. **No override path**. | The executing agent applies the semver bump rule mechanically from the delivered public-surface outcome. |
+| Shim removal | Historical planning rule only; superseded by hard cutover. No root re-export shim layer was retained. | At Step 14/15 close, the executing agent records that no shim-retention policy and no shim-removal issue queue exist. |
 | Outstanding boundary items (migration-helper retention; reserved `SchemaSource` enum slots) | Resolved at Step 0 by audit-grounded subagent decisions per the rules below. | Step-0 audit subagent dispatched by the executing agent; decisions land as ADR amendment commit. |
 
 CI failures, coverage drops, and abort-trigger thresholds are not
@@ -940,14 +939,12 @@ escalated to a human — the executing agent fires the rules
 automatically. The pipeline communicates state through exec
 records and CHANGELOG entries.
 
-**Shim-verification gate** (per refreshed cold-review BLOCKER for
-deterministic semver): before the semver bump rule fires, the
-executing agent imports each declared shim path in a clean Python
-subprocess and asserts the re-exported symbols are reachable. Any
-shim that fails the import gate → the shim is treated as broken;
-the semver rule sees that as an unintended break and fires
-`major`. This makes the no-override rule safe by verifying the
-rule's precondition rather than trusting it.
+**Historical shim-verification gate** (per refreshed cold-review BLOCKER
+for deterministic semver): before the hard-cutover outcome superseded
+shim retention, the executing agent would have imported each declared
+shim path in a clean Python subprocess and asserted the re-exported
+symbols were reachable. The delivered model rewrote callers to canonical
+layered modules and retained no root re-export shim layer.
 
 **Bounded retry on ambiguous findings** (per refreshed cold-review
 BLOCKER for halt-loop bounding): when an audit subagent returns an
@@ -1056,29 +1053,29 @@ The 15-step autonomous pipeline shipped end-to-end without invoking
 the abort/rollback path. Outcomes:
 
 - **Semver bump**: MINOR (0.1.0 -> 0.1.1 at the next release tag).
-  All 4 public-surface re-export shims (`aeat.errors`, `aeat.auth`,
-  `aeat.submission`, `aeat.formulas`) preserved per the shim-
-  verification subroutine; verifier exit 0 on every Step-8 run.
+  The planned shim-verification path was superseded by the hard
+  cutover. Root compatibility modules (`aeat.errors`, `aeat.auth`,
+  `aeat.submission`, `aeat.formulas`) were not retained; imports were
+  rewritten to canonical layered modules.
 - **Acceptance criteria**: 15 of 15 satisfied at Step 8 merge and
   re-verified at Step 15 milestone close. The full set is recorded
   in the Step 8 acceptance comment on issue #476.
 - **Dead-code totals**: Phase-1 shipped via PRs #478, #479, #480,
   #481, #482 (5 deletions). Phase-2 shipped via PR #494
-  (`default_schema_provider` duplicate). The remaining Phase-2
-  candidates (`WorkspaceLockedError`, 4 hollow Protocol stubs)
-  were retained because they had real public-surface implications
-  beyond the audit's "test-only" classification.
+  (`default_schema_provider` duplicate). The continuation hard cutover
+  deleted `WorkspaceLockedError`, removed obsolete shim/root surfaces,
+  and rewrote test usage to canonical concrete errors. Remaining
+  Protocol surfaces are tracked separately where they still model real
+  boundaries.
 - **Step-13 issues filed**: 2 umbrella issues (#498 coverage gap;
   #499 casilla rollup). One STRIKE issue (#500) for the empty
   hard-gap audit, closed at filing.
 - **Sanitization**: 197 source files stripped of dev-process
   metadata (#496); 405+ test files migrated to layered axis-B
   markers (#495); 589 vault docs Tier-3 inline-updated (#497).
-- **Override list resolution**: The 9-entry import-linter carve-out
-  registry remained at 9 entries; no carve-out was added or removed
-  during the pipeline. The import-linter contract runs clean on
-  every PR.
-- **Shim-removal schedule**: Per the ADR's deprecation contract,
-  shim removal is eligible at the second minor release after
-  introduction. Auto-generation of the removal PR is scheduled
-  for the corresponding release window.
+- **Boundary checks**: The 9-entry carve-out registry remained at 9
+  entries. `import-linter` remains a diagnostic contract, not the
+  current quality gate for ordinary delivery.
+- **Shim-removal schedule**: None. The hard-cutover model introduced
+  no root re-export shim layer, so there is no shim-retention policy
+  and no future removal window.

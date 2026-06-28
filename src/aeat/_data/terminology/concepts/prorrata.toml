@@ -1,0 +1,90 @@
+# Terminology Handbook concept fragment.
+# One concept per file; compiled by the strict loader in
+# `dev.docs.terminology_handbook` into a frozen `ConceptRecord`. Curated prose
+# fields (definition, scope_note, short_description) are hand-edited
+# here; structural operations go through the `dev.docs.terminology_handbook` CLI.
+
+[concept]
+concept_id = "prorrata"
+domain = "concepto"
+lifecycle = "approved"
+domain_refs = ["modelo:303", "modelo:390"]
+legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104"]
+related = ["casilla"]
+created_at = 2026-06-10
+updated_at = 2026-06-10
+
+[concept.seed_provenance]
+source = "iate"
+attribution = "IATE - Interactive Terminology for Europe (c) European Union, reuse with attribution"
+source_entry_id = "1126728"
+
+[language.es]
+short_description = "Porcentaje de IVA soportado deducible cuando se realizan a la vez operaciones con y sin derecho a deduccion."
+definition = "Regla que determina la parte de las cuotas de IVA soportado que un sujeto pasivo puede deducir cuando en su actividad concurren operaciones que originan el derecho a deducir y operaciones que no lo originan. El porcentaje se calcula como el cociente entre el importe de las operaciones con derecho a deduccion y el total de operaciones, redondeado por exceso a la unidad superior."
+scope_note = "Cubre tanto la prorrata general como la especial. La regularizacion de bienes de inversion se rige por los articulos 107 a 110 LIVA y se trata como concepto aparte."
+
+[language.es.source]
+citation = "Articulos 102 y 104 de la Ley 37/1992 del IVA (LIVA)."
+authority = "boe"
+
+[[language.es.term]]
+label = "prorrata"
+term_status = "preferred"
+part_of_speech = "noun"
+grammatical_gender = "feminine"
+
+[[language.es.term]]
+label = "regla de prorrata"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[[language.es.term]]
+label = "prorrateo"
+term_status = "admitted"
+part_of_speech = "noun"
+hidden_search_forms = ["prorateo"]
+
+[language.en]
+short_description = "The deductible proportion of input VAT when a taxpayer makes both deductible and non-deductible supplies."
+definition = "The rule that fixes the share of input VAT a taxable person may deduct when their activity combines supplies that grant the right to deduct with supplies that do not. The percentage is the ratio of deductible-right turnover to total turnover, rounded up to the next whole unit."
+
+[language.en.source]
+citation = "Articles 102 and 104 of Law 37/1992 on VAT (LIVA)."
+authority = "boe"
+
+[[language.en.term]]
+label = "pro rata"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[[language.en.term]]
+label = "deductible proportion"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "Percentatge d'IVA suportat deduible quan es fan alhora operacions amb i sense dret a deduccio."
+definition = "Regla que determina la part de les quotes d'IVA suportat que un subjecte passiu pot deduir quan en la seva activitat concorren operacions que originen el dret a deduir i operacions que no l'originen."
+
+[language.ca.source]
+citation = "Articles 102 i 104 de la Llei 37/1992 de l'IVA (LIVA)."
+authority = "boe"
+
+[[language.ca.term]]
+label = "prorrata"
+term_status = "preferred"
+part_of_speech = "noun"
+grammatical_gender = "feminine"
+
+[language.hu]
+short_description = "A levonhato elozetes afa aranya, ha az adoalany levonasra jogosito es nem jogosito ugyleteket is vegez."
+
+[language.hu.source]
+citation = "A spanyol afatorveny (Ley 37/1992) 102. es 104. cikke."
+authority = "boe"
+
+[[language.hu.term]]
+label = "aranyositas"
+term_status = "admitted"
+part_of_speech = "noun"

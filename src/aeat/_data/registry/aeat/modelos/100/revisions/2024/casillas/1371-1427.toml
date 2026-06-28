@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "1427"
+number = "1427"
+label = "Mejora 3: Fecha de la realización de la mejora"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+data_type = "text"
+semantic_role = "irpf_inmueble_mejora_fecha"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

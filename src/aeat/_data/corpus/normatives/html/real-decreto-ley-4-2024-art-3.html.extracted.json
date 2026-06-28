@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/real-decreto-ley-4-2024-art-3.html",
+  "source_sha256": "8279c94a3bd99328dd3174b2161bc78ed153ca8029dfe3d1bd6e1325e89ab6ca",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se modifica la disposición adicional quincuagésima séptima de la Ley 35/2006, de 28 de noviembre, que queda redactada como deducción por residencia habitual y efectiva en la isla de La Palma durante los períodos impositivos 2022, 2023 y 2024.\nEn los períodos impositivos 2022, 2023 y 2024, la deducción prevista en el número 1.º del apartado 4 del artículo 68 de esta ley será aplicable, en los mismos términos y condiciones, a los contribuyentes con residencia habitual y efectiva en la isla de La Palma.\nPara determinar el tipo del pago fraccionado correspondiente a las actividades económicas que tengan derecho a la misma, el plazo de presentación no debe haberse iniciado en el momento de la entrada en vigor del Real Decreto-ley 4/2024, de 26 de junio.",
+      "title": "Artículo 3. Modificación de la Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Físicas.",
+      "section": "Artículo 3. Modificación de la Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Físicas.",
+      "anchor": null
+    }
+  ]
+}

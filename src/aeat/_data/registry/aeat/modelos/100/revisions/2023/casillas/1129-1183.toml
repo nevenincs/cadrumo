@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1183"
+number = "1183"
+label = "Por inversión en adquisición de acciones o participaciones sociales en entidades nuevas o de reciente creación"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_acciones_participaciones"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

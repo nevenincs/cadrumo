@@ -1,0 +1,14 @@
+[[revisions."2024".relations]]
+id = "renta-2024-rel-115-retenciones-trimestrales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "115"
+source_revision_selector = { year = 2024 }
+source_casilla_id = "03"
+target_binding = "renta-2024-modelo-115-retenciones-periodicas"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]

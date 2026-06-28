@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0590"
+number = "0590"
+label = "Deduccion por doble imposicion por imputacion de rentas de derechos de imagen"
+section = ["resultado_declaracion"]
+semantic_role = "irpf_deduccion_doble_imposicion_imputacion_rentas"
+legal_refs = ["ley-35-2006:art-80", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]

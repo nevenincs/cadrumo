@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0105"
+number = "0105"
+label = "Intereses de los capitales invertidos en la adquisición o mejora del inmueble y demás gastos de financiación en 2021"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_gastos_financiacion_ejercicio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

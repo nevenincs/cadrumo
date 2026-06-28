@@ -70,6 +70,16 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+# CLI reference is generated fresh at build time from the live command tree
+# (docs/conf.py builder-inited); never committed, so it cannot drift.
+docs/cli/
+# Glossary is generated fresh at build time from the approved Terminology
+# Handbook concepts (docs/conf.py builder-inited); never committed.
+docs/_generated/
+# Compiled Pagefind search index (ADR D5: uncommitted, regenerated every docs
+# build like docs/_build). The canonical output lives under docs/_build/html/
+# pagefind/; a root-level pagefind/ from an ad-hoc build run is never committed.
+pagefind/
 
 # PyBuilder
 .pybuilder/
@@ -142,9 +152,6 @@ celerybeat.pid
 # inside it except the tracked example template.
 env/*
 !env/.env.example
-# Explicitly ignored because the google-workspace MCP launcher hard-pins
-# the upstream refresh-token cache into a repo-local secret directory.
-env/workspace-mcp-credentials/
 venv/
 env.bak/
 venv.bak/
@@ -196,6 +203,11 @@ cython_debug/
 # Ruff stuff:
 .ruff_cache/
 
+# Complexity / type-checker caches used by the audit pipeline
+.complexipy_cache/
+.ty_cache/
+.pyrefly_cache/
+
 # PyPI configuration file
 .pypirc
 
@@ -213,12 +225,8 @@ __marimo__/
 
 # Credentials & secrets
 credentials/
-service-account*.json
 token.json
 token.pickle
-gcp-oauth.keys.json
-.gdrive-server-credentials.json
-.mcp-google-sheets-token.json
 .tokens/
 providers.json
 
@@ -228,34 +236,21 @@ test-results/
 
 # AEAT Manual practico raw PDFs (#25): binaries are materialised by
 # `aeat manual fetch` and verified against the committed manifest.json.
-# Raw-binary storage policy belongs to #17; keep manifests committed
-# but never commit the multi-MB PDF blobs from this branch.
-corpus/manuals/**/source.pdf
-corpus/manuals/**/source.html/
+# Keep raw PDFs ignored unless a registry source catalogue explicitly enrolls
+# the official payload as legal/source evidence.
+src/aeat/_data/corpus/manuals/**/source.pdf
+!src/aeat/_data/corpus/manuals/renta/2020/part1/source.pdf
+!src/aeat/_data/corpus/manuals/renta/2021/part1/source.pdf
+!src/aeat/_data/corpus/manuals/renta/2022/part1/source.pdf
+!src/aeat/_data/corpus/manuals/renta/2023/part1/source.pdf
+!src/aeat/_data/corpus/manuals/renta/2024/part1/source.pdf
+!src/aeat/_data/corpus/manuals/renta/2025/part1/source.pdf
+!src/aeat/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf
+src/aeat/_data/corpus/manuals/**/source.html/
 
 # IDE
 .idea/
 .vscode/
-
-# >>> vaultspec-managed (do not edit this block) >>>
-.agents/
-.claude/
-.codex/
-.gemini/
-.mcp.json
-.vault/.obsidian/
-.vault/.trash/
-.vault/data/
-.vault/logs/
-.vaultspec/
-.vaultspec/*.lock
-.vaultspec/_snapshots/
-/.gitignore.lock
-/.mcp.json.lock
-AGENTS.md
-CLAUDE.md
-GEMINI.md
-# <<< vaultspec-managed <<<
 
 # Note: `.vaultspec/rules/rules/aeat-project-mandates.md` is the project's
 # custom mandate rule; it is force-added to git (`git add -f`) despite the
@@ -273,14 +268,15 @@ GEMINI.md
 /.vaultspec/*.lock
 /.pre-commit-config.yaml
 
-# Scratch / ad-hoc workspace
-#
-# Canonical home for PM triage dumps, one-off parsers, gh-issue exports,
-# and any other ephemeral output. Nothing under scratch/ ever enters git.
-# Authored artifacts belong in `.vault/` via the vaultspec pipeline
-# (research → adr → plan → exec → audit), never at the repo root.
+# Scratch / ad-hoc workspace / temp
 scratch/*
-!scratch/README.md
+.vault-scratch/
+.dedup-scan/
+tmp/
+tmp_*/
+temp/
+cache/
+
 
 # Root-level safety net for common ad-hoc output patterns that tend to
 # appear when agents shortcut past the scratch/ convention. Narrow,
@@ -299,3 +295,59 @@ scratch/*
 # Scratch / research artefacts under .tmp/ (xlsx downloads, raw JSON,
 # agent workspaces). Same role as scratch/ — ephemeral, never in git.
 /.tmp/
+/.tmp_*/
+/.tmp-*/
+
+# Top-level scratch outputs (one-shot agent runs, encoded blobs,
+# tmp text dumps, accidental absolute-path filenames). Never durable.
+/tmp_*.txt
+/*.b64
+/write_*.py
+/C\:*
+/*_keys.txt
+/translate_*.py
+/scratch_*.py
+# Agent scratch the patterns above missed: commit-message temps, capture
+# dumps, trace/check helpers, ad-hoc runners, underscore-prefixed temp files,
+# and generated-doc backups. Root-level only; never durable.
+/*.tmp
+/.msg
+/_*.py
+/_*.ps1
+/_*.txt
+/trace_*.py
+/check_*.py
+/check_*.ps1
+/test_fix.py
+/run_test.sh
+/run_tests.sh
+/dom_*.txt
+/fails.txt
+/apex.txt
+/campaign_run.txt
+/api.bak/
+
+# Quarantined: this plan repeatedly self-corrupts to multi-GB via the
+# vaultspec-core plan round-trip bug (wgergely/vaultspec-core#125) whenever
+# any agent runs a `vault plan` verb on it. Untracked + ignored so the
+# corruption never re-enters git or pollutes status. Clean content lives in
+# git history; restore with `git show <sha>:<path>`. Un-quarantine once #125
+# ships.
+/.vault/plan/2026-05-14-secure-backend-passkey-bucket-plan.md
+
+
+# >>> vaultspec-managed (do not edit this block) >>>
+.vault/.obsidian/
+.vault/.trash/
+.vault/data/
+.vault/logs/
+.vaultspec/*.lock
+.vaultspec/_snapshots/
+.vaultspec/providers.json
+/.gitignore.lock
+/.mcp.json.lock
+# <<< vaultspec-managed <<<
+
+# Claude Code machine-local (not team-shared)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock

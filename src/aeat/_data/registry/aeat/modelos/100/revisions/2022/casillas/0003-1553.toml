@@ -1,0 +1,9 @@
+[[revisions."2022".casillas]]
+id = "1553"
+number = "1553"
+label = "Rendimiento neto de actividades agricolas ganaderas y forestales en estimacion objetiva"
+section = ["rendimientos_actividades_economicas"]
+semantic_role = "irpf_rendimiento_act_eco_eo_agr_rdto_neto"
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd"]

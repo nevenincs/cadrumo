@@ -3,6 +3,7 @@ tags:
   - "#research"
   - "#gsuite-bootstrap"
 date: 2026-04-12
+modified: '2026-04-12'
 related:
   - "[[2026-04-12-dev-scaffolding-plan]]"
   - "[[2026-04-12-dev-scaffolding-adr]]"

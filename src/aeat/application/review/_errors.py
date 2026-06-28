@@ -1,8 +1,11 @@
 """Error hierarchy for the unified review queue.
 
-All review-layer errors inherit from :class:`ReviewError` which in
-turn inherits from :class:`aeat.core.errors.AeatError` per the project
-mandate.
+All review-layer errors inherit from :class:`ReviewError`, which in
+turn inherits from :class:`aeat.core.errors.AeatError` per the
+project's package-wide error-base mandate. Callers can therefore catch
+either :class:`ReviewError` for review-specific failures or the
+package-wide :exc:`aeat.core.errors.AeatError` to handle every aeat
+domain error uniformly.
 """
 
 from __future__ import annotations
@@ -18,11 +21,117 @@ class ReviewSourceLoadError(ReviewError):
     """Raised when a source disk file is present but cannot be parsed."""
 
 
+class FilterParseError(ReviewError):
+    """Raised when ``--filter KEY=VALUE`` cannot be parsed.
+
+    Carries the raw token plus a stable reason code so the CLI can render
+    a per-language repair hint.
+
+    Attributes:
+        raw_token: The string the operator supplied (e.g. ``"status="`` or
+            ``"period: 1T"``). Kept for internal compatibility,
+            but omitted from rendered messages and context because
+            filter values may include free-text search strings or
+            imported identifiers.
+        safe_token: A redacted token that preserves the key when it is
+            parseable and replaces the value with ``<redacted>``.
+        reason: One of ``"missing-equals"``, ``"empty-key"``,
+            ``"empty-value"``, ``"unknown-key-{scope}"``,
+            ``"invalid-value-{scope}"``, ``"duplicate-key-{scope}"``.
+    """
+
+    def __init__(self, raw_token: str, *, reason: str) -> None:
+        """Construct the error with the offending token and stable reason code.
+
+        Args:
+            raw_token: The string the operator supplied.
+            reason: Stable reason code (e.g. ``"missing-equals"``,
+                ``"empty-key"``, ``"invalid-value-{scope}"``).
+        """
+        context: dict[str, object] = {"reason": reason}
+        key = _safe_token_key(raw_token, flag="--filter")
+        if key is not None:
+            context["key"] = key
+        super().__init__(
+            f"cannot parse filter token: {reason}",
+            context=context,
+            translated_message="review.filter.errors.parse_failed",
+        )
+        self.raw_token = raw_token
+        self.safe_token = _safe_token_display(raw_token, flag="--filter")
+        self.reason = reason
+
+
+class EditParseError(ReviewError):
+    """Raised when ``--set KEY=VALUE`` cannot be parsed.
+
+    Attributes:
+        raw_token: The string the operator supplied. Kept for callers
+            that need to build a CLI recovery hint, but intentionally
+            omitted from the rendered error text and structured context
+            because edit values may contain file paths, references, or
+            operator notes.
+        reason: One of ``"missing-equals"``, ``"empty-key"``,
+            ``"empty-value"``, ``"unknown-key-{scope}"``,
+            ``"invalid-value-{scope}"``, ``"duplicate-key-{scope}"``.
+    """
+
+    def __init__(self, raw_token: str, *, reason: str) -> None:
+        """Construct the error with the offending token and stable reason code.
+
+        Args:
+            raw_token: The string the operator supplied.
+            reason: Stable reason code (e.g. ``"missing-equals"``,
+                ``"empty-key"``, ``"invalid-value-{scope}"``).
+        """
+        context: dict[str, object] = {"reason": reason}
+        key = _safe_edit_token_key(raw_token)
+        if key is not None:
+            context["key"] = key
+        super().__init__(
+            f"cannot parse edit token: {reason}",
+            context=context,
+            translated_message="review.edit.errors.parse_failed",
+        )
+        self.raw_token = raw_token
+        self.reason = reason
+
+
+def _safe_edit_token_key(raw_token: str) -> str | None:
+    """Return the edit key without exposing the user-supplied value."""
+    return _safe_token_key(raw_token, flag="--set")
+
+
+def _safe_token_key(raw_token: str, *, flag: str) -> str | None:
+    """Return a parsed token key without exposing the supplied value."""
+    token = raw_token.removeprefix(f"{flag} ").strip()
+    key, separator, _value = token.partition("=")
+    if not separator:
+        return None
+    stripped = key.strip().lower()
+    return stripped or None
+
+
+def _safe_token_display(raw_token: str, *, flag: str) -> str:
+    """Return a CLI-safe token display that never includes the value."""
+    key = _safe_token_key(raw_token, flag=flag)
+    if key is None:
+        return "<redacted>"
+    return f"{key}=<redacted>"
+
+
 class ReviewKindReservedError(ReviewError):
-    """Raised when the CLI receives a reserved-but-not-implemented kind token.
+    """Raised when the CLI receives a reserved kind token.
 
     Carries the blocking reason returned by
     :func:`aeat.application.review._enums.reserved_kind_reason`.
+
+    Attributes:
+        token: The ``--kind`` value supplied by the user.
+            Kept for internal compatibility, but omitted from rendered
+            messages and structured context because selector values are
+            operator input and may contain copied identifiers.
+        reason: Explanation naming the blocking upstream record type.
     """
 
     def __init__(self, token: str, reason: str) -> None:
@@ -31,8 +140,12 @@ class ReviewKindReservedError(ReviewError):
         Args:
             token: The ``--kind`` value supplied by the user.
             reason: Human-readable explanation naming the blocking
-                upstream issue or record type.
+                upstream record type.
         """
-        super().__init__(f"--kind {token!r} is reserved but not yet emitted: {reason}")
+        super().__init__(
+            "review kind is reserved and is not an emitted review kind",
+            context={"reason": reason},
+            translated_message="review.operator.errors.reserved_kind",
+        )
         self.token = token
         self.reason = reason

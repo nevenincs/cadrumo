@@ -1,21 +1,18 @@
-"""Round-trip calculation verification for imported declaración drafts (#305).
+"""Registry-backed verification of imported declaración drafts.
 
-Turns an :class:`aeat.adapters.inbound.declaracion.DeclaracionFiling` + the project's
-formula engine output into a Kent-readable verdict: ``verified`` /
-``needs_review`` / ``unverifiable``. The module consumes
-:func:`aeat.domain.formulas.Engine.audit_against` and classifies each
-discrepancy by cause (extraction unreliable / rounding / un-modelled
-rule / correctness divergence) so Kent gets an actionable next step.
+Compares an imported declaración draft against the registry's expectations
+and classifies each discrepancy, so an operator can see where a parsed
+filing diverges from what the registry predicts. Pure value logic over
+typed inputs.
 
-Public API:
+Major declarations:
 
-    from aeat.application.verification import (
-        DiscrepancyCause,
-        ClassifiedDiscrepancy,
-        VerificationStatus,
-        VerificationVerdict,
-        verify_declaracion,
-    )
+* :func:`verify_declaracion` — run the verification and return a
+  :class:`VerificationVerdict`.
+* :class:`VerificationStatus` and :class:`ClassifiedDiscrepancy` with
+  :class:`DiscrepancyCause` — the verdict status and the per-field
+  discrepancy classification.
+* :class:`VerificationError` — the failure raised on malformed input.
 """
 
 from __future__ import annotations
@@ -28,7 +25,6 @@ from ._schema import (
     VerificationVerdict,
 )
 from ._verify import verify_declaracion
-from ._verify_summary import verify_modelo_347_summary
 
 __all__ = [
     "ClassifiedDiscrepancy",
@@ -37,5 +33,4 @@ __all__ = [
     "VerificationStatus",
     "VerificationVerdict",
     "verify_declaracion",
-    "verify_modelo_347_summary",
 ]

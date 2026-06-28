@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#aeat-restructure"
 date: 2026-04-30
+modified: '2026-04-30'
 related:
   - "[[2026-04-30-aeat-restructure-adr]]"
   - "[[2026-04-30-aeat-restructure-plan]]"
@@ -15,6 +16,11 @@ related:
 ## status
 
 **COMPLETE** — three sub-passes ran; all findings have a disposition; the override-list candidate set is enumerated and audit-grounded.
+
+Historical execution note: this is a pre-move planning scan. References
+to shim-based preservation reflect the planning state at Step 1 and are
+superseded by the delivered hard-cutover outcome (no retained root
+compatibility shim layer).
 
 ## sub-pass 1 — dynamic imports / entry points
 

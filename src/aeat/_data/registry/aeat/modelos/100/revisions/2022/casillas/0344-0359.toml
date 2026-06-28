@@ -1,0 +1,9 @@
+[[revisions."2022".casillas]]
+id = "0359"
+number = "0359"
+label = "Último año  de cobro"
+section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
+data_type = "text"
+semantic_role = "irpf_ganancia_otros_ultimo_anio_cobro"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

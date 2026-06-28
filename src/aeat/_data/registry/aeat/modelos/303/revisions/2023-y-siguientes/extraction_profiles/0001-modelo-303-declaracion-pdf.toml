@@ -1,0 +1,40 @@
+[[revisions."2023-y-siguientes".extraction_profiles]]
+id = "modelo-303-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaracion"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = [
+    # Primitive cuota leaves — Route A of the parser-engine-totals-impedance
+    # ADR (2026-06-02). The engine sums these into iva.cuota-devengada-total
+    # and iva.cuota-deducible-total, so resultado-regimen-general is
+    # recomputed from primitives rather than copied from the printed total.
+    {casilla_id = "iva.repercutido.general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+general\s+21\s+por\s+ciento'},
+    {casilla_id = "iva.repercutido.reducido", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+reducido\s+10\s+por\s+ciento'},
+    {casilla_id = "iva.repercutido.super-reducido", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+super-reducido\s+4\s+por\s+ciento'},
+    {casilla_id = "iva.autorepercutido.intracomunitaria", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+autorepercutido\s+intracomunitaria'},
+    {casilla_id = "iva.soportado.interiores", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+soportado\s+interiores'},
+    {casilla_id = "iva.autoconsumo.promotor.base", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+autoconsumo\s+promotor\s+base'},
+    # Form-page totals — kept for AEAT-form fidelity and the internal-
+    # consistency assertion in test_verification_chain_m303_engine_recomputes_
+    # resultado_regimen_general (engine resultado == c27 - c45).
+    {casilla_id = "27", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+cuota\s+devengada'},
+    {casilla_id = "29", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Por\s+cuotas\s+soportadas\s+en\s+operaciones\s+interiores\s+corrientes'},
+    {casilla_id = "37", match_strategy = "named_label", value_kind = "amount", label_pattern = 'En\s+adquisiciones\s+intracomunitarias\s+de\s+bienes\s+y\s+servicios\s+corrientes'},
+    {casilla_id = "45", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+a\s+deducir'},
+    {casilla_id = "iva.resultado-regimen-general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+r[eé]gimen\s+general\s+\(27\s*-\s*45\)'},
+    {casilla_id = "64", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Suma\s+de\s+resultados'},
+    {casilla_id = "66", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Atribuible\s+a\s+la\s+Administraci[oó]n\s+del\s+Estado'},
+    {casilla_id = "iva.compensacion-pendiente-periodos-anteriores", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuotas\s+a\s+compensar\s+pendientes\s+de\s+periodos\s+anteriores'},
+    {casilla_id = "iva.compensacion-aplicada-periodo", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuotas\s+a\s+compensar\s+de\s+periodos\s+anteriores\s+aplicadas\s+en\s+este\s+periodo'},
+    {casilla_id = "iva.compensacion-pendiente-periodos-posteriores", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuotas\s+a\s+compensar\s+de\s+periodos\s+previos\s+pendientes\s+para\s+periodos\s+posteriores\s+\(110\s*-\s*78\)'},
+    {casilla_id = "iva.resultado", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+de\s+la\s+autoliquidaci[oó]n\s+\(66[^\)]*\)'},
+    {casilla_id = "71", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+\(69\s*-\s*70\s*\+\s*109\)'},
+]
+confidence = "strict"
+corpus_round_trip_verified = true
+verification_source = "synthetic_from_aeat_published_text"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]

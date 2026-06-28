@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1378"
+number = "1378"
+label = "Aportaciones y contribuciones de 2023 no aplicadas cuyo importe se solicita poder reducir en los 5 ejercicios siguientes"
+section = ["resultados", "anexo_c_res", "excesos_deportistas_res"]
+semantic_role = "irpf_anexo_c_exceso_deportistas_generado"
+legal_refs = ["ley-35-2006:da-11"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,33 @@
+[[revisions."2022".constructs]]
+id = "renta-2022-dependent-modelos"
+title = "Modelo 100 2022 retenciones and withholding cross-modelo inputs"
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-108",
+    "rd-439-2007:art-109",
+    "rd-439-2007:art-110",
+    "orden-eha-3435-2007:anexo-ii",
+]
+source_refs = [
+    "aeat-renta-2022-manual-parte1",
+    "boe-modelo-100-2022-form",
+]
+bindings = [
+    "renta-2022-modelo-111-retenciones-periodicas",
+    "renta-2022-modelo-115-retenciones-periodicas",
+    "renta-2022-modelo-123-retenciones-periodicas",
+]
+formulas = [
+    "renta-2022-total-pagos-a-cuenta",
+]
+relations = [
+    "renta-2022-rel-111-retenciones-trimestrales",
+    "renta-2022-rel-111-retenciones-mensuales",
+    "renta-2022-rel-115-retenciones-trimestrales",
+    "renta-2022-rel-123-retenciones-trimestrales",
+]
+dependency_classifications = [
+    "renta-2022-dep-111",
+    "renta-2022-dep-115",
+    "renta-2022-dep-123",
+]

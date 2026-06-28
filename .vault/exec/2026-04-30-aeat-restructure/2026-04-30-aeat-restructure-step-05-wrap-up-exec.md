@@ -3,6 +3,7 @@ tags:
   - "#exec"
   - "#aeat-restructure"
 date: 2026-05-01
+modified: '2026-05-01'
 related:
   - "[[2026-04-30-aeat-restructure-adr]]"
   - "[[2026-04-30-aeat-restructure-plan]]"
@@ -14,6 +15,10 @@ related:
 ## status
 
 Step 5 (Tooling prep) substantively complete after this PR lands. The `justfile` exposes the new tooling as named recipes for invocation by Step 5.5 (sandbox rehearsal), Step 7 (keystone), and Step 8 (acceptance gate).
+
+Historical execution note: this record captures the pre-hard-cutover
+tooling plan. The delivered rollout removed compatibility shims, and
+`verify-shims` is not part of the active post-cutover contract.
 
 ## tooling matrix
 

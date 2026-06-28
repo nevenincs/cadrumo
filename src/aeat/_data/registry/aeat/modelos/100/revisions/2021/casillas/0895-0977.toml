@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "0977"
+number = "0977"
+label = "Fecha de visado del proyecto de ejecución:"
+section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
+data_type = "text"
+semantic_role = "irpf_deduccion_castilla_y_leon_fecha_visado"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

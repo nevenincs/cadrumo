@@ -3,8 +3,9 @@ tags:
   - '#exec'
   - '#aeat-restructure'
 date: '2026-05-01'
+modified: '2026-05-01'
 related:
-  - "[[2026-04-30-aeat-restructure-summary]]"
+  - "[[2026-04-30-aeat-restructure-summary-exec]]"
 ---
 
 # `aeat-restructure` `test-pruning` `eliminate-shims-colocated-tests`

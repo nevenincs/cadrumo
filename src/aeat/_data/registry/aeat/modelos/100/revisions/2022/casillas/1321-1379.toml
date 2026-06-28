@@ -1,0 +1,9 @@
+[[revisions."2022".casillas]]
+id = "1379"
+number = "1379"
+label = "Contribuyente titular"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+data_type = "text"
+semantic_role = "irpf_toma_datos_declarante_selector"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

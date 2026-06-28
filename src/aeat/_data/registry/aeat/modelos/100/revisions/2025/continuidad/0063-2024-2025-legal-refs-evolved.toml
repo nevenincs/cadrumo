@@ -1,0 +1,44 @@
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0063-2020-2025-legal-refs-evolved"
+continuidad_id = "irpf.inmueble.porcentaje-propiedad"
+from_revision = "2020"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-22", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0063-2021-2025-legal-refs-evolved"
+continuidad_id = "irpf.inmueble.porcentaje-propiedad"
+from_revision = "2021"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-22", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0063-2022-2025-legal-refs-evolved"
+continuidad_id = "irpf.inmueble.porcentaje-propiedad"
+from_revision = "2022"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-22", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0063-2023-2025-legal-refs-evolved"
+continuidad_id = "irpf.inmueble.porcentaje-propiedad"
+from_revision = "2023"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-22", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0063-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf.inmueble.porcentaje-propiedad"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-22", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

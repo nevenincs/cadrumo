@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0861"
+number = "0861"
+label = "Código Cuenta de Cotización:"
+section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
+data_type = "text"
+semantic_role = "irpf_deduccion_andalucia_empleada_hogar_ccc_2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

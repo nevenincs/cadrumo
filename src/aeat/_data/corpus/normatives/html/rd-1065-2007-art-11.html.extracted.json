@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-1065-2007-art-11.html",
+  "source_sha256": "ef65cd0c2f1d7dc02aa4fa172c1dbd6e67d2da01f1ceb15308368faff9e38ffb",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Quienes cesen en el desarrollo de todo tipo de actividades empresariales o profesionales o, no teniendo la condición de empresarios o profesionales, dejen de satisfacer rendimientos sujetos a retención o ingreso a cuenta deberán presentar la correspondiente declaración mediante la que comuniquen a la Administración tributaria tal circunstancia a efectos de su baja en el Censo de Empresarios, Profesionales y Retenedores.\nAsimismo, las personas jurídicas que no desarrollen actividades empresariales o profesionales deberán presentar esta declaración a efectos de su baja en el Registro de operadores intracomunitarios cuando sus adquisiciones intracomunitarias de bienes deban resultar no sujetas de acuerdo con el artículo 14 de la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido.\n2. La declaración de baja deberá presentarse en el plazo de un mes desde que se cumplan las condiciones previstas en el apartado 1 de este artículo, sin perjuicio de que la persona o entidad afectada deba presentar las declaraciones y cumplir las obligaciones tributarias que le incumban y sin que a estos efectos deba darse de alta en el censo.\nEn los supuestos mencionados en los artículos 39 y 40 de la Ley 58/2003, del 17 de diciembre, General Tributaria, se informará de los datos relativos a la identificación de los sucesores en la declaración de baja.",
+      "title": "Artículo 11. Declaración de baja en el Censo de Empresarios, Profesionales y Retenedores.",
+      "section": "Artículo 11. Declaración de baja en el Censo de Empresarios, Profesionales y Retenedores.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,34 +1,48 @@
 """Persistence layer and migrations entry point.
 
-Public API of the storage subpackage. Callers outside :mod:`aeat.adapters.persistence.storage` MUST
-import only from here — internal modules (``_orm``, ``engine``, ``session``,
-``repository``, ``migrations_api``) are implementation details.
+Public API of the storage subpackage. Callers outside
+:mod:`aeat.adapters.persistence.storage` must import only from here; internal
+modules (``sql._orm``, ``sql.engine``, ``sql.session``, ``sql.repository``,
+and the encryption substrate under ``crypto``,
+``envelope``, ``master_key``, ``blob_store``, ``secret_store``) are
+implementation details.
+
+The phrase **encryption substrate** denotes the layered crypto stack
+(master-key provider → envelope wrapper → encrypted blob store →
+typed column helpers) that every persisted record passes through.
+Throughout the package, "substrate" without a qualifier refers to
+this stack.
 
 The public surface is intentionally narrow:
 
-- Pydantic v2 record models: :class:`ModeloRecord`, :class:`PortalRecord`,
+- Pydantic v2 record models — :class:`ModeloCatalogueRecord`, :class:`PortalRecord`,
   :class:`CorpusArtifactRecord`, plus :class:`PortalAuthMethod`.
-- Errors: :class:`StorageError`, :class:`MigrationError`,
-  :class:`RepositoryError`.
-- Engine + session helpers: :func:`get_engine`, :func:`dispose_engine`,
+- Errors — :class:`StorageError`, :class:`RepositoryError`.
+- Engine and session helpers — :func:`get_engine`, :func:`dispose_engine`,
   :func:`session_scope`.
-- Typed repositories: :class:`ModeloRepository`, :class:`PortalRepository`,
-  :class:`CorpusArtifactRepository`.
-- Migration helpers: :func:`upgrade_to_head`, :func:`downgrade_to_base`,
-  :func:`round_trip_migrations`.
-
-See the evolution workflow section of the data-storage ADR
-(``.vault/adr/2026-04-12-data-storage-adr.md``) for how to add columns and
-write migrations.
+- Typed repositories — :class:`ModeloRepository`, :class:`PortalRepository`,
+  :class:`CorpusArtifactRepository`, and the base :class:`SecureObjectRepository`.
+- Encryption substrate — :class:`Envelope`, :class:`EncryptedBlobStore`,
+  :class:`MasterKeyProvider`, :class:`SecretStore`, plus the column-level
+  helpers :class:`EncryptedString`, :class:`EncryptedBytes`,
+  :class:`EncryptedJSON`, and :class:`HashedLookup`.
+- Runtime and master-key session boundary — :class:`StorageRuntime`,
+  :class:`StorageRuntimeReadiness`, :func:`inspect_storage_runtime`,
+  :func:`inspect_bucket_storage_runtime`, :func:`activate_session`,
+  :func:`has_active_bucket_session`, :func:`get_active_master_key`,
+  :func:`activate_master_key_provider`, and :func:`get_master_key_provider`.
+- Secure-object hierarchy registry — :data:`STORAGE_NAMESPACE_REGISTRY`,
+  :data:`STORAGE_PATH_DEFINITIONS`, namespace constants, and
+  :func:`secure_object_logical_path` /
+  :func:`secure_object_namespace_logical_path`; callers must use these
+  exported symbols instead of constructing persisted secure-storage
+  locations by hand.
+- Classification — :class:`SensitivityClass` tags every persisted record
+  and governs the at-rest treatment applied by the substrate.
 """
 
 from __future__ import annotations
 
-from .blob_store._blob_store import (
-    BlobManifest,
-    BlobReference,
-    EncryptedBlobStore,
-)
 from ....core.classification import (
     AtRestTreatment,
     ClassificationPolicy,
@@ -50,12 +64,122 @@ from ....core.corpus_manifest import (
     save_corpus_manifest,
     verify_corpus_manifest,
 )
+from ....core.locks import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
+from ....core.locks_errors import LockAcquisitionError
+from ....core.redaction import (
+    default_rules,
+    default_rules_for,
+    default_rules_for_class,
+    redact,
+    redact_for_log,
+    redact_structured,
+)
+from ._namespace_registry import (
+    AEAT_BROWSER_SESSION_NAMESPACE,
+    AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
+    AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
+    AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
+    APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
+    APPLICATION_FILING_HISTORY_NAMESPACE,
+    ATTACHMENT_BLOB_NAMESPACE,
+    ATTACHMENT_MANIFEST_NAMESPACE,
+    AUTH_APODERADO_CONFIGURATION_NAMESPACE,
+    BLOB_MANIFEST_SCHEMA_VERSION,
+    BUCKET_AUDIT_DIRNAME,
+    BUCKET_BLOBS_DIRNAME,
+    BUCKET_DB_DIRNAME,
+    BUCKET_DEK_FILENAME,
+    BUCKET_EVENT_HISTORY_NAMESPACE,
+    BUCKET_LOCK_FILENAME,
+    BUCKET_MANIFEST_FILENAME,
+    BUCKETS_DIRNAME,
+    CALCULATION_OBSERVATIONS_NAMESPACE,
+    CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
+    DOMAIN_NAMESPACE_DEFINITIONS,
+    FILING_AMENDMENTS_NAMESPACE,
+    FILING_DRAFTS_NAMESPACE,
+    GOOGLE_DRIVE_CONFIG_NAMESPACE,
+    GOOGLE_OAUTH_CLIENT_NAMESPACE,
+    GOOGLE_OAUTH_METADATA_NAMESPACE,
+    GOOGLE_OAUTH_TOKEN_NAMESPACE,
+    INVOICE_CATALOGUE_NAMESPACE,
+    IVA_COMPENSATION_HISTORY_NAMESPACE,
+    IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
+    IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
+    JUSTIFICANTE_METADATA_NAMESPACE,
+    KEYSTORE_DIRNAME,
+    LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
+    LEDGER_CLASSIFICATION_RULES_NAMESPACE,
+    LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
+    LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
+    LIVE_CENSO_SNAPSHOT_NAMESPACE,
+    LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
+    LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE,
+    LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
+    LIVE_M036_DECLARATION_NAMESPACE,
+    LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
+    LIVE_VERIFY_OBSERVATION_NAMESPACE,
+    LLM_CACHE_NAMESPACE,
+    LLM_USAGE_NAMESPACE,
+    MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
+    MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
+    MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,
+    MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
+    PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
+    PROFILE_ASSETS_LEDGER_NAMESPACE,
+    PROFILE_INVENTORY_LEDGER_NAMESPACE,
+    REPAIR_INTEGRITY_DECISION_NAMESPACE,
+    RETENCION_OBSERVATIONS_NAMESPACE,
+    SECRET_RECORD_SCHEMA_VERSION,
+    SECURE_OBJECT_CATALOGUE_KEY,
+    SECURE_OBJECT_DEFAULT_KEY,
+    SECURE_OBJECT_SCHEMA_VERSION_V1,
+    SECURE_OBJECT_WORKFLOW_STATE_KEY,
+    STORAGE_NAMESPACE_REGISTRY,
+    STORAGE_PATH_DEFINITIONS,
+    SUBMISSION_RECORDS_NAMESPACE,
+    TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
+    TEST_SESSION_LIFECYCLE_NAMESPACE,
+    TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+    TRANSACTION_CATALOGUE_NAMESPACE,
+    TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
+    USAGE_RATIO_PROFILE_NAMESPACE,
+    USER_PROFILE_SNAPSHOT_NAMESPACE,
+    USER_PROFILE_VALUE_NAMESPACE,
+    WITHHOLDING_OBSERVATIONS_NAMESPACE,
+    WORKFLOW_RUN_NAMESPACE,
+    WORKFLOW_STATE_NAMESPACE,
+    SecureObjectNamespaceDefinition,
+    StorageHierarchyRegistry,
+    StorageNamespaceScope,
+    StoragePathDefinition,
+    StoragePathKind,
+    StorageRemoteMirrorPolicy,
+    secure_object_logical_path,
+    secure_object_namespace_logical_path,
+)
+from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
+from ._rotation import (
+    RotationPlanEntry,
+    RotationSummary,
+    default_blob_store_roots,
+    default_rotation_plan,
+    rotate_blob_stores,
+    rotate_master_key,
+)
+from .attachment import AttachmentStore
+from .blob_store._blob_store import (
+    BlobManifest,
+    BlobReference,
+    EncryptedBlobStore,
+)
 from .blob_store._materialisation import (
     export_to_temp_path,
     get_secret_store,
     materialise_secret,
     override_secret_store,
 )
+from .bucket import RecoveryVerificationError
 from .crypto._crypto import (
     GCM_TAG_SIZE,
     KEY_SIZE,
@@ -70,8 +194,8 @@ from .crypto._encrypted_columns import (
     EncryptedJSON,
     EncryptedString,
     HashedLookup,
-    override_master_key_provider,
 )
+from .envelope import SecureBoundRepository
 from .envelope._envelope import (
     AeadAlgorithm,
     CipherEnvelope,
@@ -84,18 +208,50 @@ from .envelope._envelope import (
     save_encrypted_envelope,
     save_envelope,
 )
-from ....core.locks import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
+from .errors import (
+    BlobIntegrityError,
+    BlobNotFoundError,
+    ClassificationError,
+    DecryptionError,
+    EncryptionError,
+    EnvelopeVersionError,
+    KeyDerivationError,
+    KeyringUnavailableError,
+    MasterKeyKdfVersionError,
+    MasterKeyKeychainLockedError,
+    MasterKeyMaterialMissingError,
+    MasterKeyPassphraseMismatchError,
+    MasterKeyUnavailableError,
+    NonceCollisionError,
+    PathContainmentError,
+    PersistenceError,
+    RepositoryError,
+    RetentionPolicyError,
+    SecretAlreadyExistsError,
+    SecretNotFoundError,
+    SecretStoreError,
+    SecureObjectRevisionConflictError,
+    StorageError,
+    StorageValidationError,
+    UnsecuredModeRefusedError,
+)
+from .master_key._active_session import (
+    NoActiveBucketSessionError,
+    activate_session,
+    get_active_master_key,
+    has_active_bucket_session,
+    suspend_active_session,
+)
 from .master_key._master_key import (
     EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
-    MigrationResult,
     UnsecuredMasterKeyProvider,
+    activate_master_key_provider,
     atomic_write_secure_bytes,
     get_master_key_provider,
     looks_like_real_tax_id,
-    migrate_master_key_kdf,
     refuse_unsecured_with_real_nif,
 )
 from .master_key._recovery import (
@@ -109,67 +265,120 @@ from .master_key._recovery import (
     unwrap_master_key,
     wrap_master_key,
 )
-from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
-from ....core.redaction import (
-    default_rules,
-    default_rules_for,
-    default_rules_for_class,
-    redact,
-    redact_for_log,
-    redact_structured,
+from .master_key._recovery_facade import (
+    MintedRecovery,
+    load_recovery_envelope,
+    mint_recovery_envelope,
+    open_session_from_recovery,
+    save_recovery_envelope,
+    unwrap_recovery_envelope,
+    verify_recovery_mnemonic,
 )
-from ._rotation import (
-    RotationPlanEntry,
-    RotationSummary,
-    default_blob_store_roots,
-    default_rotation_plan,
-    rotate_blob_stores,
-    rotate_master_key,
+from .master_key._recovery_record import RecoveryRecord
+from .runtime import (
+    StorageRuntime,
+    StorageRuntimeReadiness,
+    StorageRuntimeReadinessCode,
+    StorageRuntimeReadinessIssue,
+    StorageRuntimeSession,
+    inspect_bucket_storage_runtime,
+    inspect_storage_runtime,
 )
+from .runtime_repository import secure_object_repository_for_bucket
 from .secret_store._secret_store import SecretRecord, SecretStore
-from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
-from .errors import (
-    BlobIntegrityError,
-    BlobNotFoundError,
-    ClassificationError,
-    CorpusManifestDriftError,
-    CorpusManifestError,
-    CorpusManifestTamperError,
-    DecryptionError,
-    EncryptionError,
-    EnvelopeVersionError,
-    KeyDerivationError,
-    KeyringUnavailableError,
-    LockAcquisitionError,
-    MasterKeyKdfVersionError,
-    MasterKeyKeychainLockedError,
-    MasterKeyMaterialMissingError,
-    MasterKeyPassphraseMismatchError,
-    MasterKeyUnavailableError,
-    MigrationError,
-    NonceCollisionError,
-    PathContainmentError,
-    PersistenceError,
-    RepositoryError,
-    RetentionPolicyError,
-    SecretAlreadyExistsError,
-    SecretNotFoundError,
-    SecretStoreError,
-    StorageError,
-    UnsecuredModeRefusedError,
+from .sql import (
+    SecureObjectDeletion,
+    SecureObjectNamespaceIntegrity,
+    SecureObjectRepository,
+    SecureObjectWrite,
 )
-from .sql.migrations_api import downgrade_to_base, round_trip_migrations, upgrade_to_head
-from .sql.records import CorpusArtifactRecord, ModeloRecord, PortalAuthMethod, PortalRecord
-from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, Repository
+from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
+from .sql.records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
+from .sql.repository import CorpusArtifactRepository, ModeloRepository, PortalRepository, SqlRecordRepository
 from .sql.session import get_sessionmaker, session_scope
 
 __all__ = [
+    "AEAT_BROWSER_SESSION_NAMESPACE",
+    "AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE",
+    "AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE",
+    "AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE",
+    "APPLICATION_EVIDENCE_BUNDLE_NAMESPACE",
+    "APPLICATION_FILING_HISTORY_NAMESPACE",
+    "ATTACHMENT_BLOB_NAMESPACE",
+    "ATTACHMENT_MANIFEST_NAMESPACE",
+    "AUTH_APODERADO_CONFIGURATION_NAMESPACE",
+    "BLOB_MANIFEST_SCHEMA_VERSION",
+    "BUCKETS_DIRNAME",
+    "BUCKET_AUDIT_DIRNAME",
+    "BUCKET_BLOBS_DIRNAME",
+    "BUCKET_DB_DIRNAME",
+    "BUCKET_DEK_FILENAME",
+    "BUCKET_EVENT_HISTORY_NAMESPACE",
+    "BUCKET_LOCK_FILENAME",
+    "BUCKET_MANIFEST_FILENAME",
+    "CALCULATION_OBSERVATIONS_NAMESPACE",
+    "CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE",
     "DEFAULT_LOCK_TIMEOUT",
+    "DOMAIN_NAMESPACE_DEFINITIONS",
+    "FILING_AMENDMENTS_NAMESPACE",
+    "FILING_DRAFTS_NAMESPACE",
     "GCM_TAG_SIZE",
+    "GOOGLE_DRIVE_CONFIG_NAMESPACE",
+    "GOOGLE_OAUTH_CLIENT_NAMESPACE",
+    "GOOGLE_OAUTH_METADATA_NAMESPACE",
+    "GOOGLE_OAUTH_TOKEN_NAMESPACE",
+    "INVOICE_CATALOGUE_NAMESPACE",
+    "IVA_COMPENSATION_HISTORY_NAMESPACE",
+    "IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE",
+    "IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE",
+    "JUSTIFICANTE_METADATA_NAMESPACE",
+    "KEYSTORE_DIRNAME",
     "KEY_SIZE",
+    "LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE",
+    "LEDGER_CLASSIFICATION_RULES_NAMESPACE",
+    "LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE",
+    "LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE",
+    "LIVE_CENSO_SNAPSHOT_NAMESPACE",
+    "LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE",
+    "LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE",
+    "LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
+    "LIVE_M036_DECLARATION_NAMESPACE",
+    "LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE",
+    "LIVE_VERIFY_OBSERVATION_NAMESPACE",
+    "LLM_CACHE_NAMESPACE",
+    "LLM_USAGE_NAMESPACE",
+    "MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE",
+    "MODELO_FILING_RECORD_CATALOGUE_NAMESPACE",
+    "MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE",
+    "MODELO_WORK_UNIT_CATALOGUE_NAMESPACE",
     "NONCE_SIZE",
+    "PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE",
+    "PROFILE_ASSETS_LEDGER_NAMESPACE",
+    "PROFILE_INVENTORY_LEDGER_NAMESPACE",
+    "REPAIR_INTEGRITY_DECISION_NAMESPACE",
+    "RETENCION_OBSERVATIONS_NAMESPACE",
+    "SECRET_RECORD_SCHEMA_VERSION",
+    "SECURE_OBJECT_CATALOGUE_KEY",
+    "SECURE_OBJECT_DEFAULT_KEY",
+    "SECURE_OBJECT_SCHEMA_VERSION_V1",
+    "SECURE_OBJECT_WORKFLOW_STATE_KEY",
+    "STORAGE_NAMESPACE_REGISTRY",
+    "STORAGE_PATH_DEFINITIONS",
+    "SUBMISSION_RECORDS_NAMESPACE",
+    "TEST_SECURE_BOUND_CONTRACT_NAMESPACE",
+    "TEST_SESSION_LIFECYCLE_NAMESPACE",
+    "TEST_SNAPSHOT_BASE_PROBE_NAMESPACE",
+    "TRANSACTION_CATALOGUE_NAMESPACE",
+    "TRANSACTION_PARTICIPATION_INDEX_NAMESPACE",
+    "USAGE_RATIO_PROFILE_NAMESPACE",
+    "USER_PROFILE_SNAPSHOT_NAMESPACE",
+    "USER_PROFILE_VALUE_NAMESPACE",
+    "WITHHOLDING_OBSERVATIONS_NAMESPACE",
+    "WORKFLOW_RUN_NAMESPACE",
+    "WORKFLOW_STATE_NAMESPACE",
     "AeadAlgorithm",
     "AtRestTreatment",
+    "AttachmentStore",
     "BlobIntegrityError",
     "BlobManifest",
     "BlobNotFoundError",
@@ -182,9 +391,6 @@ __all__ = [
     "CorpusEntry",
     "CorpusManifest",
     "CorpusManifestDiff",
-    "CorpusManifestDriftError",
-    "CorpusManifestError",
-    "CorpusManifestTamperError",
     "DecryptionError",
     "EncryptedBlob",
     "EncryptedBlobStore",
@@ -209,10 +415,10 @@ __all__ = [
     "MasterKeyPassphraseMismatchError",
     "MasterKeyProvider",
     "MasterKeyUnavailableError",
-    "MigrationError",
-    "MigrationResult",
-    "ModeloRecord",
+    "MintedRecovery",
+    "ModeloCatalogueRecord",
     "ModeloRepository",
+    "NoActiveBucketSessionError",
     "NonceCollisionError",
     "PathContainmentError",
     "PersistenceError",
@@ -220,9 +426,10 @@ __all__ = [
     "PortalRecord",
     "PortalRepository",
     "RecoveryKey",
+    "RecoveryRecord",
+    "RecoveryVerificationError",
     "RedactionRule",
     "RedactionStrategy",
-    "Repository",
     "RepositoryError",
     "RetentionPolicy",
     "RetentionPolicyError",
@@ -233,11 +440,32 @@ __all__ = [
     "SecretRecord",
     "SecretStore",
     "SecretStoreError",
+    "SecureBoundRepository",
+    "SecureObjectDeletion",
+    "SecureObjectNamespaceDefinition",
+    "SecureObjectNamespaceIntegrity",
+    "SecureObjectRepository",
+    "SecureObjectRevisionConflictError",
+    "SecureObjectWrite",
     "SensitivityClass",
+    "SqlRecordRepository",
     "StorageError",
+    "StorageHierarchyRegistry",
+    "StorageNamespaceScope",
+    "StoragePathDefinition",
+    "StoragePathKind",
+    "StorageRemoteMirrorPolicy",
+    "StorageRuntime",
+    "StorageRuntimeReadiness",
+    "StorageRuntimeReadinessCode",
+    "StorageRuntimeReadinessIssue",
+    "StorageRuntimeSession",
+    "StorageValidationError",
     "UnsecuredMasterKeyProvider",
     "UnsecuredModeRefusedError",
     "WrappedMasterKey",
+    "activate_master_key_provider",
+    "activate_session",
     "assert_corpus_clean",
     "atomic_write_secure_bytes",
     "build_corpus_manifest",
@@ -253,25 +481,29 @@ __all__ = [
     "default_rules_for_class",
     "derive_key",
     "dispose_engine",
-    "downgrade_to_base",
     "encode_mnemonic",
     "encrypt_record",
     "exclusive_file_lock",
     "export_to_temp_path",
     "generate_recovery_key",
+    "get_active_master_key",
     "get_engine",
     "get_master_key_provider",
     "get_secret_store",
     "get_sessionmaker",
+    "has_active_bucket_session",
+    "inspect_bucket_storage_runtime",
+    "inspect_storage_runtime",
     "load_corpus_manifest",
     "load_encrypted_envelope",
     "load_envelope",
+    "load_recovery_envelope",
     "load_wrapped_master_key",
     "looks_like_real_tax_id",
     "manifest_path_for",
     "materialise_secret",
-    "migrate_master_key_kdf",
-    "override_master_key_provider",
+    "mint_recovery_envelope",
+    "open_session_from_recovery",
     "override_secret_store",
     "redact",
     "redact_for_log",
@@ -280,17 +512,22 @@ __all__ = [
     "refuse_unsecured_with_real_nif",
     "rotate_blob_stores",
     "rotate_master_key",
-    "round_trip_migrations",
     "safe_record_path",
     "safe_repository_id",
     "safe_subpath",
     "save_corpus_manifest",
     "save_encrypted_envelope",
     "save_envelope",
+    "save_recovery_envelope",
     "save_wrapped_master_key",
+    "secure_object_logical_path",
+    "secure_object_namespace_logical_path",
+    "secure_object_repository_for_bucket",
     "session_scope",
+    "suspend_active_session",
     "unwrap_master_key",
-    "upgrade_to_head",
+    "unwrap_recovery_envelope",
     "verify_corpus_manifest",
+    "verify_recovery_mnemonic",
     "wrap_master_key",
 ]

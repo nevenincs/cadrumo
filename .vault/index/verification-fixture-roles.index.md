@@ -1,0 +1,30 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#verification-fixture-roles'
+date: '2026-06-15'
+modified: '2026-06-15'
+related:
+  - '[[2026-06-01-verification-fixture-roles-adr]]'
+  - '[[2026-06-01-verification-fixture-roles-plan]]'
+  - '[[2026-06-01-verification-fixture-roles-research]]'
+---
+
+# `verification-fixture-roles` feature index
+
+Auto-generated index of all documents tagged with `#verification-fixture-roles`.
+
+## Documents
+
+### adr
+
+- `2026-06-01-verification-fixture-roles-adr` - `verification-fixture-roles` adr: `role-aware verification fixtures via sidecar provenance` | (**status:** `accepted`)
+
+### plan
+
+- `2026-06-01-verification-fixture-roles-plan` - `verification-fixture-roles` `role-aware verification fixtures` plan
+
+### research
+
+- `2026-06-01-verification-fixture-roles-research` - `verification-fixture-roles` research: `role-aware verification fixtures`

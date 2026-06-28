@@ -1,0 +1,9 @@
+[[revisions."2023".casillas]]
+id = "1781"
+number = "1781"
+label = "SEPA rectificación"
+section = ["resultados", "regularizacion_res", "rectsepa"]
+data_type = "text"
+semantic_role = "irpf_rectsepa_cuenta_iban"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

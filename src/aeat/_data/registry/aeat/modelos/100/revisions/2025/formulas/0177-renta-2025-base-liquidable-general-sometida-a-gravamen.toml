@@ -1,0 +1,14 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-base-liquidable-general-sometida-a-gravamen"
+target_casilla_id = "0505"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla_id = "0500" }, { casilla_id = "0527" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-63", "orden-hac-277-2026:art-3"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-dr-100-2025-dictionary"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable general", "reducciones"]

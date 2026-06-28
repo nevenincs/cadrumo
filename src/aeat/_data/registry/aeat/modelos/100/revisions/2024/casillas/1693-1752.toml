@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "1752"
+number = "1752"
+label = "Hijo/Hija 4 (*): NIF/NIE"
+section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
+data_type = "nif"
+semantic_role = "irpf_descendiente_nif"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

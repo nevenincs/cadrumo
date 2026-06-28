@@ -1,0 +1,282 @@
+"""Strict Pydantic records for the backend-owned operator surface contract.
+
+S538 invariant-guard classification note
+-----------------------------------------
+All :class:`ValueError` raises in this module appear inside Pydantic v2
+``@field_validator`` / ``@model_validator`` methods. Pydantic wraps these into
+:class:`pydantic.ValidationError` automatically; raising any other exception
+type (including :class:`aeat.core.errors.AeatError`) would bypass that wrapping
+and surface as an uncaught internal exception. These guards are therefore
+**developer-surface-only invariants** and must remain :class:`ValueError`. They
+are NOT operator-facing errors and do not require ``translated_message``.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from enum import StrEnum
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from ...core import BindingSourceKind
+
+
+class RootSurfaceName(StrEnum):
+    """Accepted root command surfaces."""
+
+    CONFIG = "config"
+    APP = "app"
+
+
+class ModeloLifecycleStep(StrEnum):
+    """Canonical modelo lifecycle steps exposed to operators."""
+
+    CALCULATE = "calculate"
+    VERIFY = "verify"
+    FILE = "file"
+
+
+class FilingStatus(StrEnum):
+    """Canonical filing-status token taxonomy for operator-facing live reads."""
+
+    FILED = "filed"
+
+
+class OperatorMutability(StrEnum):
+    """Side-effect class for an operator-facing command family."""
+
+    READ_ONLY = "read_only"
+    LOCAL_STATE_MUTATING = "local_state_mutating"
+    LIVE_READ = "live_read"
+
+
+class HelpSurface(StrEnum):
+    """Curated help surfaces with backend-owned command listings."""
+
+    ROOT = "root"
+    CONFIG = "config"
+    APP = "app"
+
+
+class MountedCommandDomain(StrEnum):
+    """Backend-owned command domains exposed under the accepted roots."""
+
+    FIRST_RUN = "first_run"
+    PROFILE = "profile"
+    CUSTODY = "custody"
+    BUCKET = "bucket"
+    AUTH = "auth"
+    DIAGNOSTICS = "diagnostics"
+    OVERVIEW = "overview"
+    LEDGER = "ledger"
+    LIVE = "live"
+    MODELO = "modelo"
+    REVIEW = "review"
+    REGISTRY = "registry"
+
+
+class RootSurface(BaseModel):
+    """Backend ownership record for an accepted root surface."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    name: RootSurfaceName
+    purpose: str = Field(min_length=1)
+    owns_storage_maintenance: bool
+    owns_operational_workflow: bool
+    required_children: tuple[str, ...] = Field(default_factory=tuple)
+
+    @field_validator("required_children")
+    @classmethod
+    def _children_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("root surface children must be unique")
+        return value
+
+
+class HelpEntry(BaseModel):
+    """One command row in a curated help section."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    command: str = Field(min_length=1, max_length=80)
+    description: str = Field(min_length=1, max_length=80)
+
+
+class HelpSection(BaseModel):
+    """One workflow-ordered help section."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    title: str = Field(min_length=1, max_length=80)
+    entries: tuple[HelpEntry, ...] = Field(min_length=1)
+
+
+class HelpDocument(BaseModel):
+    """Curated help document rendered by the CLI boundary."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    surface: HelpSurface
+    heading: str = Field(min_length=1, max_length=120)
+    paragraphs: tuple[str, ...] = Field(min_length=1)
+    sections: tuple[HelpSection, ...] = Field(min_length=1)
+    footer: str = Field(min_length=1, max_length=120)
+
+
+class RootLandingReport(BaseModel):
+    """Bare ``aeat`` invocation result."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    active_profile: str | None = None
+    command: str = Field(min_length=1, max_length=120)
+    message: str = Field(min_length=1, max_length=160)
+
+
+class LifecycleContract(BaseModel):
+    """Modelo lifecycle vocabulary and live-submission safety contract."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    steps: tuple[ModeloLifecycleStep, ...]
+    internal_filed_term: str = "internal filed"
+    live_submission_enabled: bool = False
+    live_submission_wording: str = "live submission is permanently disabled"
+
+    @field_validator("steps")
+    @classmethod
+    def _steps_are_canonical(cls, value: tuple[ModeloLifecycleStep, ...]) -> tuple[ModeloLifecycleStep, ...]:
+        expected = (
+            ModeloLifecycleStep.CALCULATE,
+            ModeloLifecycleStep.VERIFY,
+            ModeloLifecycleStep.FILE,
+        )
+        if value != expected:
+            raise ValueError("modelo lifecycle must be calculate -> verify -> file")
+        return value
+
+    @field_validator("live_submission_enabled")
+    @classmethod
+    def _live_submission_is_forbidden(cls, value: bool) -> bool:
+        if value:
+            raise ValueError("live submission must remain disabled")
+        return value
+
+
+class SourceKindAlias(BaseModel):
+    """Input-only alias mapped to a canonical source kind."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    alias: str = Field(min_length=1)
+    canonical: BindingSourceKind
+
+
+class MountedCommandFamily(BaseModel):
+    """One mounted command family and its backend owner."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    domain: MountedCommandDomain
+    root: RootSurfaceName
+    child: str = Field(min_length=1)
+    operator_question: str = Field(min_length=1)
+    service_owner: str = Field(pattern=r"^aeat\.(application|domain|adapters|core)(\.[a-z_][a-z0-9_]*)*$")
+    commands: tuple[str, ...] = Field(min_length=1)
+    mutability: OperatorMutability
+
+    @field_validator("child")
+    @classmethod
+    def _child_is_kebab(cls, value: str) -> str:
+        if value != value.strip().lower() or " " in value:
+            raise ValueError("mounted command child must be a lower-case command token")
+        return value
+
+    @field_validator("commands")
+    @classmethod
+    def _commands_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("mounted command names must be unique")
+        if any(not command.strip() for command in value):
+            raise ValueError("mounted command names must not be blank")
+        return value
+
+
+class ServiceOwner(BaseModel):
+    """Application/domain package that owns an operator-facing capability."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    capability: str = Field(min_length=1)
+    owner: str = Field(pattern=r"^aeat\.(application|domain|adapters|core)(\.[a-z_][a-z0-9_]*)*$")
+    notes: str = Field(min_length=1)
+
+
+class OperatorSurfaceLogFields(BaseModel):
+    """Stable non-secret log fields emitted by operator-surface services."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    contract_name: str = "operator_surface"
+    root_count: int
+    lifecycle: str
+    source_kind_count: int
+
+    def as_extra(self) -> Mapping[str, object]:
+        """Return a logging ``extra`` payload with stable field names."""
+        return {
+            "contract_name": self.contract_name,
+            "root_count": self.root_count,
+            "lifecycle": self.lifecycle,
+            "source_kind_count": self.source_kind_count,
+        }
+
+
+class OperatorSurfaceContract(BaseModel):
+    """Complete backend-owned contract consumed by future CLI adapters."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    schema_version: str = "1"
+    roots: tuple[RootSurface, ...]
+    lifecycle: LifecycleContract
+    source_kinds: tuple[BindingSourceKind, ...]
+    source_kind_aliases: tuple[SourceKindAlias, ...]
+    command_families: tuple[MountedCommandFamily, ...]
+    service_owners: tuple[ServiceOwner, ...]
+    log_fields: OperatorSurfaceLogFields
+    error_codes: tuple[str, ...]
+
+    @field_validator("roots")
+    @classmethod
+    def _roots_are_exact(cls, value: tuple[RootSurface, ...]) -> tuple[RootSurface, ...]:
+        names = tuple(root.name for root in value)
+        expected = (RootSurfaceName.CONFIG, RootSurfaceName.APP)
+        if names != expected:
+            raise ValueError("operator roots must be exactly config and app")
+        return value
+
+    @field_validator("source_kinds")
+    @classmethod
+    def _source_kinds_are_exact(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
+        expected = (
+            BindingSourceKind.LEDGER_TRANSACTION,
+            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+            BindingSourceKind.PAYABLE_INVOICE,
+            BindingSourceKind.COLLECTIBLE_INVOICE,
+        )
+        if value != expected:
+            raise ValueError("source kinds must match the accepted four-kind taxonomy")
+        return value
+
+    @field_validator("command_families")
+    @classmethod
+    def _command_families_are_unique(
+        cls,
+        value: tuple[MountedCommandFamily, ...],
+    ) -> tuple[MountedCommandFamily, ...]:
+        keys = tuple((family.root, family.child) for family in value)
+        if len(set(keys)) != len(keys):
+            raise ValueError("mounted command families must be unique per root and child")
+        return value

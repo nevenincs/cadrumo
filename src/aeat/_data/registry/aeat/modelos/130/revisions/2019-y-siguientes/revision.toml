@@ -1,0 +1,8 @@
+[revisions."2019-y-siguientes"]
+label = "Orden HAP/258/2015, ejercicios 2019 y siguientes"
+valid_from = 2019-01-01
+period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+

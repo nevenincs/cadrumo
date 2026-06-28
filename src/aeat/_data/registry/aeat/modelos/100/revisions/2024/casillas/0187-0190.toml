@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0190"
+number = "0190"
+label = "Otros gastos de personal"
+section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
+semantic_role = "irpf_ed_otros_gastos_personal"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

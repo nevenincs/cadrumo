@@ -3,19 +3,13 @@ tags:
   - '#research'
   - '#secure-persistence-foundation'
 date: '2026-04-30'
+modified: '2026-04-30'
 related:
   - "[[2026-04-30-secure-persistence-foundation-wave5-audit]]"
   - "[[2026-04-30-secure-persistence-foundation-wave5-adr]]"
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `secure-persistence-foundation` wave-6 research
 

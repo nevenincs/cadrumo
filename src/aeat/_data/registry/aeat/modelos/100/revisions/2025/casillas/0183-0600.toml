@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0600"
+number = "0600"
+label = "Por atribucion de retenciones de ganancias y perdidas patrimoniales imputables a 2025"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+semantic_role = "irpf_retencion_atribuida_ganancias_patrimoniales"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]

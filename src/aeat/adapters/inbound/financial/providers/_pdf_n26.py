@@ -1,22 +1,35 @@
-"""N26 PDF statement provider backed by `pdfplumber`."""
+"""N26 PDF statement provider backed by ``pdfplumber``.
+
+Implements :class:`PdfN26Provider`, an
+:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
+that parses German-language N26 monthly PDF statements. The parser
+is anchored on the ``Beschreibung Verbuchungsdatum Betrag`` table
+header and a regex matched against each line below it; continuation
+lines (value-date stamps, IBAN annotations, free-form remittance
+text) attach to the most recent header row.
+"""
 
 from __future__ import annotations
 
 import re
 from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import TypedDict
+from typing import TypedDict, override
 
-from .._raw_transaction import RawTransaction, SourceFormat
+from .....core.external_constants import DEFAULT_CURRENCY
+from .....core.logging import get_logger
+from .....domain.transactions import SourceFormat
 from ._base import (
     FinancialProvider,
     InvalidFinancialSourceError,
+    ParsedLedgerRow,
     ProviderValidation,
     build_raw_transaction,
     parse_amount_value,
     parse_date_value,
     synthesize_transaction_id,
 )
+from ._constants import PDF_EXTENSION
 
 _HEADER_LINE = "Beschreibung Verbuchungsdatum Betrag"
 _BANK_MARKERS = ("N26 Bank AG", "N26 Bank SE")
@@ -38,7 +51,7 @@ _INTERNAL_NARRATIVES = frozenset(
         "Solidaritätszuschlag",
         "An Hauptkonto",
         "Von Hauptkonto",
-    }
+    },
 )
 _ROW_RE = re.compile(
     r"^(?P<narrative>.+?) (?P<booked_date>\d{2}\.\d{2}\.\d{4}) (?P<amount>[+-][\d\.,]+)EUR$",
@@ -46,9 +59,14 @@ _ROW_RE = re.compile(
 _VALUE_DATE_RE = re.compile(r"^Wertstellung (?P<value_date>\d{2}\.\d{2}\.\d{4})$")
 _STATEMENT_NUMBER_RE = re.compile(r"(?:Kontoauszug )?Nr\. (?P<number>\d+/\d+)")
 _PERIOD_RE = re.compile(r"^\d{2}\.\d{2}\.\d{4} bis \d{2}\.\d{2}\.\d{4}$")
+_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
+
+_logger = get_logger(__name__)
 
 
 class _InProgressRow(TypedDict):
+    """Mutable scratch row collected while iterating page lines."""
+
     base_line: str
     narrative: str
     booked_date: str
@@ -57,6 +75,8 @@ class _InProgressRow(TypedDict):
 
 
 class _ParsedRow(TypedDict):
+    """Frozen statement row produced by :func:`_finalize_row`."""
+
     base_line: str
     narrative: str
     booked_date: str
@@ -68,14 +88,37 @@ class _ParsedRow(TypedDict):
 
 
 class PdfN26Provider(FinancialProvider):
-    """Ingest raw transactions from N26 monthly PDF statements."""
+    """Ingest raw transactions from N26 monthly PDF statements.
+
+    The provider rejects any PDF that does not carry the N26 bank
+    marker, the ``Kontoauszug`` heading, and the canonical
+    transaction-table header line, so an arbitrary PDF cannot be
+    silently accepted as an N26 statement. Internal-flow narratives
+    (interest credits, savings transfers, withholding tax) are
+    flagged via :data:`_INTERNAL_NARRATIVES` so the
+    :func:`_derive_counterparty_and_description` helper drops the
+    counterparty for those rows.
+    """
 
     name = "n26-pdf"
-    supported_extensions = frozenset({".pdf"})
+    supported_extensions = frozenset({PDF_EXTENSION})
     source_format = SourceFormat.PDF
+    # Corpus PDFs are synthetic fixtures generated from sanitised text dumps
+    # from the portfolio-performance open-source test corpus (Kontoauszug01.txt,
+    # Kontoauszug06.txt, Kontoauszug07.txt). The line-structure family matches
+    # real N26 PDF layouts; no raw operator statement PDFs are held.
+    # Set provisional_pending_specimen = True when real operator PDFs are
+    # acquired to trigger the corpus upgrade gate.
+    verification_source = "synthetic_from_bank_published_text"
+    provisional_pending_specimen = False
 
+    @override
     def validate_source(self, path: Path) -> ProviderValidation:
-        """Validate that `path` is an N26 PDF statement with at least one row."""
+        """Validate that ``path`` is an N26 PDF statement with at least one row.
+
+        Returns:
+            A :class:`ProviderValidation` with the validation outcome.
+        """
         try:
             pages = self._extract_pages(path)
             self._require_n26_statement(pages)
@@ -96,8 +139,9 @@ class PdfN26Provider(FinancialProvider):
             detected_dialect=f"pages={len(pages)};currency={currency};rows={row_count}",
         )
 
-    def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield strict raw transactions from the N26 PDF statement."""
+    @override
+    def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
+        """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from the N26 PDF statement."""
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
         pages = self._extract_pages(path)
@@ -150,7 +194,7 @@ class PdfN26Provider(FinancialProvider):
         """Return normalized text lines for every PDF page."""
         try:
             import pdfplumber
-        except ImportError as exc:  # pragma: no cover - dependency is pinned
+        except ImportError as exc:
             raise InvalidFinancialSourceError("pdfplumber is not installed") from exc
         try:
             with pdfplumber.open(str(path)) as pdf:
@@ -159,8 +203,29 @@ class PdfN26Provider(FinancialProvider):
                     text = page.extract_text() or ""
                     lines = tuple(line.strip() for line in text.splitlines() if line.strip())
                     pages.append(lines)
+        # BROAD-EXCEPT-RATIONALE-PDF-N26-TEARDOWN: pdfplumber raises
+        # OSError (I/O failure), ValueError (malformed structure), and
+        # struct.error (corrupt binary data) from its C-level PDF parser.
+        # The upstream exception surface is not fully typed and grows
+        # with library versions, so the broad catch is intentional to
+        # guarantee conversion to InvalidFinancialSourceError.
         except Exception as exc:
-            raise InvalidFinancialSourceError(f"could not parse PDF file: {path}") from exc
+            # Debug, not error: this is reached during the ``--provider auto``
+            # detection probe loop for every non-PDF (or unreadable) input,
+            # where a parse miss is the expected, non-fatal signal that this
+            # provider does not match. The failure is converted to an
+            # InvalidFinancialSourceError that detection treats as a miss; the
+            # operator-facing refusal is raised once by the caller.
+            _logger.debug(
+                "pdf_n26_provider: failed to parse PDF file %s: %s",
+                _INPUT_PDF_SOURCE_LABEL,
+                type(exc).__name__,
+            )
+            raise InvalidFinancialSourceError(
+                f"could not parse PDF file: {_INPUT_PDF_SOURCE_LABEL}",
+                translated_message="adapters.inbound.financial.providers.pdf_n26.errors.parse_failed",
+                context={"source": _INPUT_PDF_SOURCE_LABEL},
+            ) from exc
         if not pages:
             raise InvalidFinancialSourceError("PDF file contains no pages")
         return tuple(pages)
@@ -181,33 +246,47 @@ def _iter_statement_rows(
 ) -> Iterator[_ParsedRow]:
     """Yield the raw transaction rows found in statement pages."""
     for page_number, page_lines in enumerate(pages, start=1):
-        if _HEADER_LINE not in page_lines:
-            continue
-        header_index = page_lines.index(_HEADER_LINE)
-        current: _InProgressRow | None = None
-        for line in page_lines[header_index + 1 :]:
-            if _is_footer_or_section_line(line):
-                if current is not None:
-                    yield _finalize_row(current, page_number, page_lines)
-                break
-            match = _ROW_RE.match(line)
-            if match is not None:
-                if current is not None:
-                    yield _finalize_row(current, page_number, page_lines)
-                current = {
-                    "base_line": line,
-                    "narrative": match.group("narrative"),
-                    "booked_date": match.group("booked_date"),
-                    "amount": match.group("amount"),
-                    "continuations": [],
-                }
-                continue
-            if current is None:
-                continue
-            current["continuations"].append(line)
-        else:
+        yield from _iter_page_rows(page_lines, page_number)
+
+
+def _iter_page_rows(
+    page_lines: tuple[str, ...],
+    page_number: int,
+) -> Iterator[_ParsedRow]:
+    """Yield row records on one page; an unfinished row at end-of-page is finalised too."""
+    if _HEADER_LINE not in page_lines:
+        return
+    header_index = page_lines.index(_HEADER_LINE)
+    current: _InProgressRow | None = None
+    for line in page_lines[header_index + 1 :]:
+        if _is_footer_or_section_line(line):
             if current is not None:
                 yield _finalize_row(current, page_number, page_lines)
+            return
+        next_row = _start_new_row(line) if _ROW_RE.match(line) else None
+        if next_row is not None:
+            if current is not None:
+                yield _finalize_row(current, page_number, page_lines)
+            current = next_row
+            continue
+        if current is not None:
+            current["continuations"].append(line)
+    if current is not None:
+        yield _finalize_row(current, page_number, page_lines)
+
+
+def _start_new_row(line: str) -> _InProgressRow | None:
+    """Match ``line`` against ``_ROW_RE`` and return a fresh in-progress row, or ``None``."""
+    match = _ROW_RE.match(line)
+    if match is None:
+        return None
+    return {
+        "base_line": line,
+        "narrative": match.group("narrative"),
+        "booked_date": match.group("booked_date"),
+        "amount": match.group("amount"),
+        "continuations": [],
+    }
 
 
 def _finalize_row(
@@ -238,8 +317,8 @@ def _finalize_row(
 def _extract_statement_currency(pages: tuple[tuple[str, ...], ...]) -> str:
     """Return the statement currency from the PDF text."""
     all_lines = tuple(line for page_lines in pages for line in page_lines)
-    if any("EUR" in line for line in all_lines):
-        return "EUR"
+    if any(DEFAULT_CURRENCY in line for line in all_lines):
+        return DEFAULT_CURRENCY
     raise InvalidFinancialSourceError("could not determine statement currency from the PDF")
 
 

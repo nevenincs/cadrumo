@@ -1,0 +1,19 @@
+[modelo]
+id = "390"
+title = "IVA. Declaración-resumen anual"
+official_name = "Modelo 390. Declaración-resumen anual del Impuesto sobre el Valor Añadido."
+tax_domain = "iva"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "rd-1624-1992:art-71",
+    "orden-eha-3111-2009:art-1",
+    "orden-eha-3111-2009:art-8",
+]
+source_refs = [
+    "aeat-dr-390-2025",
+    "aeat-modelo-390-procedure",
+    "boe-modelo-390-2009-form",
+]
+

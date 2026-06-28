@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "0527"
+number = "0527"
+label = "Importe de las anualidades por alimentos en favor de los hijos satisfechas por decisión judicial"
+section = ["toma_datos_ampliada", "datos_adicionales"]
+semantic_role = "irpf_anualidades_alimentos_total"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

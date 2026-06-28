@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "2051"
+number = "2051"
+label = "Por cuotas satisfechas a la Seguridad Social por la contratación de empleados o empleadas de hogar"
+section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
+semantic_role = "irpf_deduccion_canarias_cuotas_seguridad_social"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

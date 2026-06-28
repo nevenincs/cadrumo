@@ -1,0 +1,33 @@
+rules:
+  - id: no-duplicate-ccaa-enum
+    message: |
+      A new enum class outside `aeat.domain.profile._ccaa` appears to declare
+      Spanish autonomous-community members (`ANDALUCIA`, `ARAGON`, `MADRID`, …).
+      The single canonical CCAA type is `aeat.domain.profile.CCAA`.  Import from
+      there instead of declaring a parallel enum.  See defect-class T-04 in the
+      linkage-design-audit reference document and the P02.S04 canonicalisation
+      step.
+    severity: ERROR
+    languages:
+      - python
+    paths:
+      include:
+        - "/src/aeat/"
+      exclude:
+        - "/src/aeat/domain/profile/_ccaa.py"
+    pattern-either:
+      - pattern: |
+          class $ENUM(StrEnum):
+              ANDALUCIA = ...
+      - pattern: |
+          class $ENUM(StrEnum):
+              ARAGON = ...
+      - pattern: |
+          class $ENUM(StrEnum):
+              MADRID = ...
+      - pattern: |
+          class $ENUM(enum.StrEnum):
+              ANDALUCIA = ...
+      - pattern: |
+          class $ENUM(enum.StrEnum):
+              MADRID = ...

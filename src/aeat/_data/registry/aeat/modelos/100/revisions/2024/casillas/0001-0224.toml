@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "0224"
+number = "0224"
+label = "Rendimiento neto de actividades economicas en estimacion directa"
+section = ["rendimientos_actividades_economicas"]
+semantic_role = "irpf_ed_rdto_neto_previo_reduccion"
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd"]

@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "0257"
+number = "0257"
+label = "Nº de identificación fiscal (NIF) de la entidad"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_agrup_interes_economico"]
+data_type = "nif"
+semantic_role = "irpf_re_agrup_interes_economico_nif"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

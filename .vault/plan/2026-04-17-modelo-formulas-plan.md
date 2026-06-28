@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#modelo-formulas'
 date: '2026-04-17'
+modified: '2026-04-17'
 related:
   - '[[2026-04-17-modelo-formulas-adr]]'
   - '[[2026-04-17-modelo-formula-ruleset-research]]'

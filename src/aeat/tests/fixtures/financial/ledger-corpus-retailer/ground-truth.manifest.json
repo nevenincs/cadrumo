@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "description": "Ground-truth oracle for the recargo-equivalencia RETAILER corpus (cross-profile sibling of the Marta autonoma corpus). Same first-match-wins rule shape. The retailer is under regimen de recargo de equivalencia: on purchases the supplier charges IVA + RE and the retailer deducts NEITHER (full gross is acquisition cost); on retail sales the retailer charges IVA but does NOT file M303 for the retail activity (IVA is settled via the RE paid to suppliers). This is the regime treatment of recargo_equivalencia, contrasted with the Marta corpus where an RE line is a non-retailer anomaly.",
+  "taxpayer": {
+    "name": "Comercio Minorista Garcia",
+    "nif": "23456789J",
+    "regime": "recargo_equivalencia",
+    "iva_regime": "recargo_equivalencia",
+    "source_jurisdiction": "ES"
+  },
+  "accounts": [
+    {"id": "bbva-retail-eur", "provider": "BBVA", "currency": "EUR", "file": "bbva-retail-eur.csv"}
+  ],
+  "rules": [
+    {"match": "Cobro ventas TPV", "direction": "INCOMING", "classification": "BUSINESS", "category_id": null, "iva_category": "regimen_simplificado", "iva_rate": "0.21", "irpf_category": "actividades_economicas_directa_simplificada", "eu_member_state": null, "base_mode": "gross_includes_iva", "iva_declarable": false, "note": "Retail sales charge IVA to the consumer but a recargo-equivalencia retailer does NOT file M303 for the retail activity; income still feeds renta actividad.", "feeds": ["m130_ingresos", "m100_actividad_ingresos"]},
+    {"match": "Compra mercaderia proveedor mayorista con recargo", "direction": "OUTGOING", "classification": "BUSINESS", "category_id": null, "iva_category": "recargo_equivalencia", "iva_rate": null, "irpf_category": "actividades_economicas_directa_simplificada", "eu_member_state": null, "base_mode": "no_iva", "iva_declarable": false, "iva_deductible": false, "note": "Under RE the supplier charges IVA (21%) + recargo (5.2%); the retailer deducts NEITHER — the full gross (compras de mercaderias) is the renta cost.", "feeds": ["m130_gastos", "m100_actividad_gastos"]},
+    {"match": "Cuota autonomos RETA", "direction": "OUTGOING", "classification": "BUSINESS", "category_id": "cuotas_autonomos_ss", "iva_category": null, "iva_rate": null, "irpf_category": "actividades_economicas_directa_simplificada", "eu_member_state": null, "base_mode": "no_iva", "iva_declarable": false, "feeds": ["m130_gastos", "m100_actividad_gastos"]},
+    {"match": "Alquiler local comercial", "direction": "OUTGOING", "classification": "BUSINESS", "category_id": "arrendamiento_local", "iva_category": "domestic_general_21", "iva_rate": "0.21", "irpf_category": "actividades_economicas_directa_simplificada", "eu_member_state": null, "base_mode": "gross_includes_iva", "iva_declarable": false, "iva_deductible": false, "note": "A RE retailer cannot deduct input IVA on its expenses either; the gross rent is the renta cost.", "feeds": ["m130_gastos", "m100_actividad_gastos"]},
+    {"match": "Factura luz local comercial", "direction": "OUTGOING", "classification": "BUSINESS", "category_id": null, "iva_category": "domestic_general_21", "iva_rate": "0.21", "irpf_category": "actividades_economicas_directa_simplificada", "eu_member_state": null, "base_mode": "gross_includes_iva", "iva_declarable": false, "iva_deductible": false, "feeds": ["m130_gastos", "m100_actividad_gastos"]},
+    {"match": "Gestoria asesoria fiscal", "direction": "OUTGOING", "classification": "BUSINESS", "category_id": "asesoria_fiscal", "iva_category": "domestic_general_21", "iva_rate": "0.21", "irpf_category": "actividades_economicas_directa_simplificada", "eu_member_state": null, "base_mode": "gross_includes_iva", "iva_declarable": false, "iva_deductible": false, "feeds": ["m130_gastos", "m100_actividad_gastos"]},
+    {"match": "Seguro responsabilidad civil local", "direction": "OUTGOING", "classification": "BUSINESS", "category_id": "seguros_responsabilidad_civil", "iva_category": "domestic_exempt", "iva_rate": null, "irpf_category": "actividades_economicas_directa_simplificada", "eu_member_state": null, "base_mode": "no_iva", "iva_declarable": false, "feeds": ["m130_gastos", "m100_actividad_gastos"]}
+  ]
+}

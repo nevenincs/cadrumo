@@ -1,0 +1,1031 @@
+[revisions.2023-y-siguientes]
+label = "Modelo 303 ejercicios 2023 y siguientes (Orden EHA/3786/2008, modificada por sucesivas ordenes anuales)"
+valid_from = 2023-01-01
+orden_aplicabilidad = ["orden-eha-3786-2008:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[revisions.2023-y-siguientes.period_selector]
+year_from = 2023
+# Quarterly periods for standard autoliquidacion; monthly periods for
+# SII-enrolled taxpayers (Art. 62.6 RD 1624/1992, Orden HFP/187/2017).
+periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+
+[[revisions.2023-y-siguientes.workbook_parity_refs]]
+id = "modelo-303-dr-2025"
+workbook_source = "aeat-dr-303-2025"
+fixture_id = "modelo-303-2025-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2023-y-siguientes.verification_expectations]]
+id = "modelo-303-iva-chain-verification"
+computed_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general", "64", "66", "iva.compensacion-aplicada-periodo", "iva.compensacion-pendiente-periodos-posteriores", "iva.resultado", "71", "iva.compensacion-generada-periodo", "iva.compensacion-disponible-fin-periodo"]
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-iva-repercutido-general-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+categories = ["domestic_general_21"]
+rate_kinds = ["general"]
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-iva-repercutido-reducido-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+categories = ["domestic_reduced_10"]
+rate_kinds = ["reduced"]
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-iva-repercutido-super-reducido-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+categories = ["domestic_super_reduced_4"]
+rate_kinds = ["super_reduced"]
+flow_direction = "repercutido"
+fact = "iva_amount_sum"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-iva-soportado-interiores-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "soportado"
+fact = "iva_amount_sum"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "sum"
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
+source = "ledger_iva_aggregation"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+categories = ["intra_community_acquisition_reverse_charge"]
+rate_kinds = ["general", "reduced", "super_reduced"]
+flow_direction = "inversion_sujeto_pasivo"
+fact = "iva_amount_sum"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "sum"
+
+# Domestic reverse-charge (inversion del sujeto pasivo, LIVA art. 84.Uno.2)
+# bindings live in bindings/0001-reverse-charge.part-001.toml — the loader
+# merges revision bindings across fragments, keeping this file under the
+# reviewability cap. They book official boxes 13 (devengado) + 37 (deducible).
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-compensacion-pendiente-anteriores"
+source = "previous_filing"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+source_modelo = "303"
+source_casilla_id = "iva.compensacion-disponible-fin-periodo"
+source_period_offset_from_target = -1
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "copy"
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-autoconsumo-promotor-base"
+source = "profile"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303 de autoliquidación del Impuesto sobre el Valor Añadido"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+profile_key = "iva.autoconsumo_promotor_base"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "copy"
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-profile-state-attribution-ratio"
+source = "profile"
+legal_refs = ["ley-37-1992:art-115", "ley-12-2002:art-29", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303 de autoliquidación del Impuesto sobre el Valor Añadido"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+profile_key = "tax_residence.state_attribution_ratio"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "copy"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-iva-cuota-devengada-total"
+target_casilla_id = "iva.cuota-devengada-total"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.repercutido.general"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.repercutido.reducido"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.repercutido.super-reducido"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.autorepercutido.interior.devengado"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.autoconsumo.promotor.cuota"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-autoconsumo-promotor-cuota"
+target_casilla_id = "iva.autoconsumo.promotor.cuota"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303 de autoliquidación del Impuesto sobre el Valor Añadido"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "multiply"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.autoconsumo.promotor.base"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+literal = "0.21"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-iva-cuota-deducible-total"
+target_casilla_id = "iva.cuota-deducible-total"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.soportado.interiores"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.soportado.importaciones"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.autorepercutido.interior.deducible"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-iva-resultado-regimen-general"
+target_casilla_id = "iva.resultado-regimen-general"
+rounding = "money-2"
+# Orden EHA/3786/2008 art. 1 as amended by successive annual orders including the 2024 reform:
+# box [46] = [27] - [45].  The M303 printed form labels this cell "Resultado régimen general
+# (27 - 45)".  Casilla 27 = Total cuota devengada (LIVA art. 88); casilla 45 = Total a deducir
+# (LIVA arts. 92-94).  Source: boe-modelo-303-2008-form (Orden EHA/3786/2008 form spec) and
+# aeat-modelo-303-procedure (AEAT instrucciones de cumplimentación, casilla 46).
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.cuota-devengada-total"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.cuota-deducible-total"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-iva-prorrata-porcentaje"
+target_casilla_id = "iva.prorrata-porcentaje"
+rounding = "integer"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "if_then_else"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+op = "greater_than"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+casilla_id = "iva.prorrata-volumen-total"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+literal = "0"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+op = "divide"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+op = "multiply"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args.args]]
+casilla_id = "iva.prorrata-volumen-con-derecho"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args.args]]
+literal = "100"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+casilla_id = "iva.prorrata-volumen-total"
+
+# No prorrata-volume data declared (volumen-total = 0) means no exempt-without-
+# right operations limit the deduction, so the prorrata percentage defaults to
+# 100 (full right to deduct, LIVA art. 94) — never 0, which would zero every
+# deduction and block a fully-taxable trader's filing (defect C2). A trader who
+# genuinely applies prorrata declares the volume casillas, and the computed
+# branch above takes over.
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+literal = "100"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-compensacion-aplicada-periodo"
+target_casilla_id = "iva.compensacion-aplicada-periodo"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "min"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+op = "max"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+literal = "0"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+casilla_id = "iva.resultado-regimen-general"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-compensacion-pendiente-periodos-posteriores"
+target_casilla_id = "iva.compensacion-pendiente-periodos-posteriores"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.compensacion-aplicada-periodo"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-iva-suma-resultados"
+target_casilla_id = "64"
+rounding = "money-2"
+# Orden HAC/819/2024 art. 1 (Modelo 303 2023+): casilla [64] = [46] + [58] + [76].
+#   [46] = resultado régimen general (LIVA arts. 88, 92)
+#   [58] = resultado régimen simplificado (LIVA arts. 122-124)
+#   [76] = regularización cuotas art. 80.Cinco.5ª LIVA (rectificación)
+# Source: aeat-modelo-303-procedure (instrucciones casilla 64) and boe-modelo-303-2008-form
+# (Orden EHA/3786/2008 form spec, casilla 64 row).
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-hac-819-2024:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.resultado-regimen-general"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "58"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "76"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-iva-atribuible-estado"
+target_casilla_id = "66"
+rounding = "money-2"
+# Orden HAC/819/2024 art. 1 (Modelo 303 2023+): casilla [66] = [64] × [65] / 100.
+#   [64] = suma de resultados (total neto IVA antes de apportionment)
+#   [65] = porcentaje atribuible a la Administración del Estado (operator-input ratio)
+# The foral-territory apportionment is encoded by the operator entering [65].
+# For taxpayers in territorio común, [65] = 100 and [66] = [64].
+# Formula: [66] = [64] × ([65] / 100).
+# Source: aeat-modelo-303-procedure (instrucciones casilla 66) and boe-modelo-303-2008-form.
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-819-2024:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "divide"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+op = "multiply"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+casilla_id = "64"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+casilla_id = "65"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+literal = "100"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-iva-resultado"
+target_casilla_id = "iva.resultado"
+rounding = "money-2"
+# Orden HAC/819/2024 art. 1 (Modelo 303 2023+): casilla [69] = [66] + [77] + [68] - [78].
+#   [66] = importe atribuible Administración del Estado
+#   [77] = IVA a la importación liquidado por la Aduana pendiente de ingreso
+#   [68] = tributación conjunta resultado regularización anual
+#   [78] = cuotas a compensar de períodos anteriores aplicadas en este período (LIVA arts. 99, 115-116)
+# For standard single-régimen filings with no importation IVA and no joint-taxation
+# adjustment: [77]=0, [68]=0, so [69] = [66] - [78].
+# Source: aeat-modelo-303-procedure (instrucciones casilla 69) and boe-modelo-303-2008-form.
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-hac-819-2024:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "subtract"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+op = "add"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+op = "add"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args.args]]
+casilla_id = "66"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args.args]]
+casilla_id = "77"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+casilla_id = "68"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.compensacion-aplicada-periodo"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-iva-resultado-final"
+target_casilla_id = "71"
+rounding = "money-2"
+# Orden HAC/819/2024 art. 1 (Modelo 303 2023+): casilla [71] = [69] - [70] + [109].
+#   [69] = resultado de la autoliquidación
+#   [70] = resultados a ingresar de anteriores autoliquidaciones del ejercicio y período
+#          (autoliquidaciones complementarias: importes ya ingresados)
+#   [109] = devoluciones acordadas por la AEAT en anteriores autoliquidaciones del ejercicio
+#           y período (importes devueltos)
+# For standard first filings of the period: [70]=0 and [109]=0, so [71] = [69].
+# Source: aeat-modelo-303-procedure (instrucciones casilla 71) and boe-modelo-303-2008-form.
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-hac-819-2024:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+op = "subtract"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+casilla_id = "iva.resultado"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+casilla_id = "70"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "109"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-compensacion-disponible-fin-periodo"
+target_casilla_id = "iva.compensacion-disponible-fin-periodo"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "add"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.compensacion-pendiente-periodos-posteriores"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.compensacion-generada-periodo"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-compensacion-generada-periodo"
+target_casilla_id = "iva.compensacion-generada-periodo"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "max"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+literal = "0"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+op = "negate"
+
+[[revisions.2023-y-siguientes.formulas.expression.args.args]]
+casilla_id = "iva.resultado"
+
+# The M303 official Diseño box projection formulas (Stage 2) live in the
+# formulas/ fragment directory (formulas/0001-dr303-projections.toml) to keep
+# this file under the reviewability baseline; the directory-mode loader merges
+# them. They are registered by id in the formulas = [...] list below.
+
+[[revisions.2023-y-siguientes.relations]]
+id = "modelo-303-rel-self-compensacion-anteriores"
+kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "303"
+source_casilla_id = "iva.compensacion-disponible-fin-periodo"
+target_binding = "modelo-303-compensacion-pendiente-anteriores"
+target_periods = ["1T", "2T", "3T", "4T"]
+source_period_offset_from_target = -1
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[revisions.2023-y-siguientes.relations.source_revision_selector]
+filing_year_delta = 0
+
+[revisions.2023-y-siguientes.relations.period_alignment]
+mode = "previous_quarter"
+
+[revisions.2023-y-siguientes.relations.aggregation]
+op = "copy"
+
+[[revisions.2023-y-siguientes.dependency_classifications]]
+id = "modelo-303-dep-self-prior-quarter"
+source_modelo = "303"
+treatment = "factual_evidence"
+target_constructs = ["modelo-303-iva-autoliquidacion"]
+relation_refs = ["modelo-303-rel-self-compensacion-anteriores"]
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.live_cross_references]]
+id = "modelo-303-static-documentation"
+evidence_tier = "official_source_guidance"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-303-static-only"
+forbidden_actions = ["server-side-save", "signing", "presentation", "payment", "amendment", "cancellation", "document-submission", "declaration-submission"]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.live_cross_references]]
+id = "modelo-303-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-303-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = ["server-side-save", "signing", "presentation", "payment", "amendment", "cancellation", "document-submission", "declaration-submission"]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.application_links]]
+id = "modelo-303-portal"
+surface = "portal"
+consumer = "portal_m303_iva_autoliquidacion"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.application_links]]
+id = "modelo-303-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.application_links]]
+id = "modelo-303-extractor"
+surface = "extractor"
+consumer = "aeat.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.application_links]]
+id = "modelo-303-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.application_links]]
+id = "modelo-303-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.application_links]]
+id = "modelo-303-approval"
+surface = "approval"
+consumer = "aeat.application.filing.approval"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.application_links]]
+id = "modelo-303-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-eha-3786-2008:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.application_links]]
+id = "modelo-303-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.application_links]]
+id = "modelo-303-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.application_links]]
+id = "modelo-303-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-eha-3786-2008:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.application_links]]
+id = "modelo-303-export"
+surface = "export"
+consumer = "aeat.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-eha-3786-2008:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.filing_schedules]]
+id = "modelo-303-trimestral"
+period_kind = "quarterly"
+periods = ["1T", "2T", "3T", "4T"]
+profile_condition_mode = "all"
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
+field = "iva.regime"
+op = "not_equals"
+value = "EXENTO"
+explanation = "Autonomos not in an exempt IVA regime file Modelo 303 quarterly IVA self-assessments."
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
+field = "iva.sii_enrolled"
+op = "not_equals"
+value = true
+explanation = "SII-enrolled taxpayers file Modelo 303 monthly, not quarterly; this schedule excludes them."
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.filing_schedules]]
+id = "modelo-303-mensual-sii"
+period_kind = "monthly"
+periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+profile_condition_mode = "all"
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
+field = "iva.sii_enrolled"
+op = "equals"
+value = true
+explanation = "Taxpayers enrolled in SII (Suministro Inmediato de Informacion) file Modelo 303 monthly per Art. 62.6 RD 1624/1992."
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2025-1t"
+filing_year = 2025
+period = "2025-1T"
+period_kind = "quarterly"
+opens_on = 2025-04-01
+closes_on = 2025-04-21
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2025-2t"
+filing_year = 2025
+period = "2025-2T"
+period_kind = "quarterly"
+opens_on = 2025-07-01
+closes_on = 2025-07-21
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2025-3t"
+filing_year = 2025
+period = "2025-3T"
+period_kind = "quarterly"
+opens_on = 2025-10-01
+closes_on = 2025-10-20
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2025-4t"
+filing_year = 2025
+period = "2025-4T"
+period_kind = "quarterly"
+opens_on = 2026-01-01
+closes_on = 2026-01-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-1t"
+filing_year = 2026
+period = "2026-1T"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-20
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-2t"
+filing_year = 2026
+period = "2026-2T"
+period_kind = "quarterly"
+opens_on = 2026-07-01
+closes_on = 2026-07-20
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-3t"
+filing_year = 2026
+period = "2026-3T"
+period_kind = "quarterly"
+opens_on = 2026-10-01
+closes_on = 2026-10-20
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-4t"
+filing_year = 2026
+period = "2026-4T"
+period_kind = "quarterly"
+opens_on = 2027-01-01
+closes_on = 2027-01-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+# Monthly deadline windows for SII-enrolled taxpayers (Art. 62.6 RD 1624/1992,
+# Orden HFP/187/2017). Period closes on the 30th of the following month; January
+# closes on the last day of February. Representative anchors registered here to
+# keep the registry minimal; months 02-05, 07-11 follow the same pattern.
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2025-01-mensual"
+filing_year = 2025
+period = "2025-01"
+period_kind = "monthly"
+opens_on = 2025-02-01
+closes_on = 2025-02-28
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2025-06-mensual"
+filing_year = 2025
+period = "2025-06"
+period_kind = "monthly"
+opens_on = 2025-07-01
+closes_on = 2025-07-30
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2025-12-mensual"
+filing_year = 2025
+period = "2025-12"
+period_kind = "monthly"
+opens_on = 2026-01-01
+closes_on = 2026-01-30
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-01-mensual"
+filing_year = 2026
+period = "2026-01"
+period_kind = "monthly"
+opens_on = 2026-02-01
+closes_on = 2026-02-28
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.constructs]]
+id = "modelo-303-iva-autoliquidacion"
+title = "Modelo 303 IVA quarterly autoliquidacion"
+legal_refs = [
+    "orden-eha-3786-2008:art-1",
+    "orden-eha-3786-2008:art-7",
+    "orden-hac-819-2024:art-1",
+    "ley-37-1992:art-9",
+    "ley-37-1992:art-13",
+    "ley-37-1992:art-15",
+    "ley-37-1992:art-17",
+    "ley-37-1992:art-79",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-88",
+    "ley-37-1992:art-90",
+    "ley-37-1992:art-91",
+    "ley-37-1992:art-92",
+    "ley-37-1992:art-94",
+    "ley-37-1992:art-95",
+    "ley-37-1992:art-161",
+    "rd-1624-1992:art-71",
+    "ley-37-1992:art-99",
+    "ley-37-1992:art-115",
+    "ley-37-1992:art-116",
+    "rd-1624-1992:art-29",
+    "rd-1624-1992:art-30",
+    "ley-37-1992:art-102",
+    "ley-37-1992:art-104",
+    "ley-37-1992:art-107",
+    "ley-37-1992:art-108",
+    "ley-37-1992:art-109",
+    "ley-37-1992:art-110",
+    "ley-37-1992:art-122",
+    "ley-37-1992:art-123",
+    "ley-37-1992:art-124",
+]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+casilla_ids = [
+    "iva.repercutido.general",
+    "iva.repercutido.reducido",
+    "iva.repercutido.super-reducido",
+    "iva.soportado.interiores",
+    "iva.soportado.importaciones",
+    "iva.autorepercutido.intracomunitaria",
+    "iva.autorepercutido.intracomunitaria.devengado",
+    "iva.autorepercutido.intracomunitaria.deducible",
+    "iva.autorepercutido.interior.devengado",
+    "iva.autorepercutido.interior.deducible",
+    "iva.autoconsumo.promotor.base",
+    "iva.autoconsumo.promotor.cuota",
+    "iva.cuota-devengada-total",
+    "iva.cuota-deducible-total",
+    "iva.resultado-regimen-general",
+    "58",
+    "76",
+    "64",
+    "65",
+    "66",
+    "77",
+    "68",
+    "iva.compensacion-pendiente-periodos-anteriores",
+    "iva.compensacion-aplicada-periodo",
+    "iva.compensacion-pendiente-periodos-posteriores",
+    "iva.resultado",
+    "70",
+    "109",
+    "71",
+    "iva.compensacion-generada-periodo",
+    "iva.compensacion-disponible-fin-periodo",
+    "iva.prorrata-volumen-con-derecho",
+    "iva.prorrata-volumen-total",
+    "iva.prorrata-porcentaje",
+    "iva.regularizacion-inversiones",
+    "158",
+    "21",
+    "24",
+    "01",
+    "04",
+    "07",
+    "28",
+    "decl.ejercicio",
+    "decl.periodo",
+]
+formulas = [
+    "modelo-303-iva-cuota-devengada-total",
+    "modelo-303-autoconsumo-promotor-cuota",
+    "modelo-303-iva-cuota-deducible-total",
+    "modelo-303-iva-resultado-regimen-general",
+    "modelo-303-iva-suma-resultados",
+    "modelo-303-iva-atribuible-estado",
+    "modelo-303-compensacion-aplicada-periodo",
+    "modelo-303-compensacion-pendiente-periodos-posteriores",
+    "modelo-303-iva-resultado",
+    "modelo-303-iva-resultado-final",
+    "modelo-303-compensacion-generada-periodo",
+    "modelo-303-compensacion-disponible-fin-periodo",
+    "modelo-303-iva-prorrata-porcentaje",
+    "modelo-303-dr303-09-projection",
+    "modelo-303-dr303-06-projection",
+    "modelo-303-dr303-03-projection",
+    "modelo-303-dr303-11-projection",
+    "modelo-303-dr303-13-projection",
+    "modelo-303-dr303-27-projection",
+    "modelo-303-dr303-29-projection",
+    "modelo-303-dr303-33-projection",
+    "modelo-303-dr303-37-projection",
+    "modelo-303-dr303-45-projection",
+]
+bindings = [
+    "modelo-303-iva-repercutido-general-cuota",
+    "modelo-303-iva-repercutido-reducido-cuota",
+    "modelo-303-iva-repercutido-super-reducido-cuota",
+    "modelo-303-iva-soportado-interiores-cuota",
+    "modelo-303-iva-soportado-importaciones-cuota",
+    "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
+    "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota",
+    "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota",
+    "modelo-303-iva-autorepercutido-interior-devengado-cuota",
+    "modelo-303-iva-autorepercutido-interior-deducible-cuota",
+    "modelo-303-compensacion-pendiente-anteriores",
+    "modelo-303-autoconsumo-promotor-base",
+    "modelo-303-recargo-equivalencia-general-cuota",
+    "modelo-303-recargo-equivalencia-reducido-cuota",
+    "modelo-303-recargo-equivalencia-super-reducido-cuota",
+    "modelo-303-iva-repercutido-general-base",
+    "modelo-303-iva-repercutido-reducido-base",
+    "modelo-303-iva-repercutido-super-reducido-base",
+    "modelo-303-iva-soportado-interiores-base",
+]
+relations = ["modelo-303-rel-self-compensacion-anteriores"]
+dependency_classifications = ["modelo-303-dep-self-prior-quarter"]
+workbook_parity_refs = ["modelo-303-dr-2025"]
+extraction_profiles = ["modelo-303-declaracion-pdf"]
+live_cross_references = ["modelo-303-static-documentation", "modelo-303-filed-declarations-read"]
+application_links = ["modelo-303-portal", "modelo-303-filing", "modelo-303-extractor", "modelo-303-verification", "modelo-303-review", "modelo-303-approval", "modelo-303-reconciliation", "modelo-303-workflow", "modelo-303-deadline", "modelo-303-calculation"]
+filing_schedules = ["modelo-303-trimestral", "modelo-303-mensual-sii"]
+deadline_windows = ["modelo-303-2025-1t", "modelo-303-2025-2t", "modelo-303-2025-3t", "modelo-303-2025-4t", "modelo-303-2026-1t", "modelo-303-2026-2t", "modelo-303-2026-3t", "modelo-303-2026-4t", "modelo-303-2025-01-mensual", "modelo-303-2025-06-mensual", "modelo-303-2025-12-mensual", "modelo-303-2026-01-mensual"]
+
+# The completeness_manifest section lives in the completeness_manifest/ fragment
+# directory (completeness_manifest/0001-completeness_manifest.toml) to keep this
+# file under the reviewability baseline; the directory-mode loader merges it.

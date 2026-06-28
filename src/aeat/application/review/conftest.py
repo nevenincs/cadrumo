@@ -1,12 +1,4 @@
-"""Shared review-package test fixtures.
-
-Every test in :mod:`aeat.application.review` that persists a draft via the
-ciphertext-at-rest :class:`FilingDraftRepository` needs an
-:class:`EphemeralMasterKeyProvider` installed via
-:func:`override_master_key_provider`. Putting the autouse fixture in a
-conftest keeps individual test modules free of crypto bootstrapping
-boilerplate.
-"""
+"""Shared review-package test fixtures."""
 
 from __future__ import annotations
 
@@ -14,32 +6,23 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
+
+from ...adapters.persistence.storage.sql import dispose_engine
+from ...core.config import SecretStoreBackend, override_settings
+from ...tests.secure_sql import dev_test_database_password
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
-    from ...adapters.persistence.storage import (
-        EncryptedBlobStore,
-        EphemeralMasterKeyProvider,
-        SecretStore,
-        override_master_key_provider,
-        override_secret_store,
-    )
-
-    provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs",
-        master_key_provider=provider,
-    )
-    secret_store = SecretStore(
-        store_dir=tmp_path / "secrets",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
-    override_master_key_provider(provider)
-    override_secret_store(secret_store)
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        override_secret_store(None)
+def _file_backed_review_storage(tmp_path: Path) -> Iterator[None]:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=None,
+        aeat_secret_store_backend=SecretStoreBackend.FILE,
+        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+    ) as settings:
+        dispose_engine(settings)
+        try:
+            yield
+        finally:
+            dispose_engine(settings)

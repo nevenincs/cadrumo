@@ -1,0 +1,56 @@
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-incentivos-inversion-empresarial-total"
+target_casilla_id = "0845"
+expression = { op = "sum", args = [
+    { casilla_id = "0752" },
+    { casilla_id = "0753" },
+    { casilla_id = "0754" },
+    { casilla_id = "0755" },
+    { casilla_id = "0756" },
+    { casilla_id = "0757" },
+    { casilla_id = "0758" },
+    { casilla_id = "0759" },
+    { casilla_id = "0764" },
+    { casilla_id = "0765" },
+    { casilla_id = "0766" },
+    { casilla_id = "0767" },
+    { casilla_id = "0780" },
+    { casilla_id = "0783" },
+    { casilla_id = "0784" },
+    { casilla_id = "0788" },
+    { casilla_id = "0791" },
+    { casilla_id = "0793" },
+    { casilla_id = "0795" },
+    { casilla_id = "0796" },
+    { casilla_id = "0797" },
+    { casilla_id = "0798" },
+    { casilla_id = "0817" },
+    { casilla_id = "0836" },
+    { casilla_id = "0837" },
+    { casilla_id = "0838" },
+    { casilla_id = "0839" },
+    { casilla_id = "0840" },
+    { casilla_id = "0841" },
+    { casilla_id = "0842" },
+    { casilla_id = "0843" },
+    { casilla_id = "0844" },
+    { casilla_id = "1627" },
+    { casilla_id = "1629" },
+    { casilla_id = "1686" },
+    { casilla_id = "1687" },
+    { casilla_id = "1688" },
+    { casilla_id = "1722" },
+    { casilla_id = "1723" },
+    { casilla_id = "1727" },
+    { casilla_id = "1728" },
+    { casilla_id = "1729" },
+    { casilla_id = "1730" },
+    { casilla_id = "1731" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-68"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "actividades económicas"]

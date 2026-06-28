@@ -1,0 +1,21 @@
+# Modelo 202 modalidad 40.2 — 2P and 3P base from the prior year's Modelo 200
+# cuota líquida.
+#
+# The 2P (October) and 3P (December) instalments are paid after the prior-year
+# Modelo 200 filing deadline (July) has elapsed, so their 40.2 base is that
+# prior year's cuota líquida: filing_year_delta = -1. This is the common case;
+# only 1P binds two years back (see the sibling 1P relation).
+[[revisions.2025-y-siguientes.relations]]
+id = "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "200"
+source_revision_selector = { filing_year_delta = -1 }
+source_casilla_id = "DP200014B:00592"
+target_binding = "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
+period_alignment = { source_period = "0A", target_period = "2P", filing_year_delta = -1 }
+source_periods = ["0A"]
+target_periods = ["2P", "3P"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-modelo-202-instructions"]

@@ -1,0 +1,84 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00729"
+number = "00729"
+label = "Estado de cambios patrimonio neto (II) - Otras variaciones del patrimonio neto - Otras variaciones - Capital - Escriturado [00729]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00729", "modelo-200-page-015b-casilla-00729"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00730"
+number = "00730"
+label = "Estado de cambios patrimonio neto (II) - Otras variaciones del patrimonio neto - Otras variaciones - Capital - No exigido [00730]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00730", "modelo-200-page-015b-casilla-00730"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00731"
+number = "00731"
+label = "Estado de cambios patrimonio neto (II) - Otras variaciones del patrimonio neto - Otras variaciones - Prima de emisión [00731]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00731", "modelo-200-page-015b-casilla-00731"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00732"
+number = "00732"
+label = "Estado de cambios patrimonio neto (II) - Otras variaciones del patrimonio neto - Otras variaciones - Reservas [00732]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00732", "modelo-200-page-015b-casilla-00732"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00733"
+number = "00733"
+label = "Estado de cambios patrimonio neto (II) - Otras variaciones del patrimonio neto - Otras variaciones - Acciones y participaciones en patrimonio propias [00733]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00733", "modelo-200-page-015b-casilla-00733"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00734"
+number = "00734"
+label = "Estado de cambios patrimonio neto (II) - Otras variaciones del patrimonio neto - Otras variaciones - Resultados ejercicios anteriores [00734]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00734", "modelo-200-page-015b-casilla-00734"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00735"
+number = "00735"
+label = "Estado de cambios patrimonio neto (II) - Otras variaciones del patrimonio neto - Otras variaciones - Otras aportaciones de socios [00735]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
+data_type = "money"
+semantic_role = "is_ecpn_otras_variaciones_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00735", "modelo-200-page-015b-casilla-00735"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

@@ -34,19 +34,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Install just
-        uses: taiki-e/install-action@just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
 
       - name: Cache prek hooks
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             ~/.cache/prek
@@ -62,21 +62,60 @@ jobs:
           just env-setup
 
       - name: Lint
-        run: just lint
+        run: |
+          just check-style
+          just check-relative-imports
 
       - name: Typecheck
-        run: just typecheck
+        run: just check-types
+
+      - name: Semgrep regression rules (linkage-design type-uniformity)
+        # Semgrep requires the Unix `resource` module and does not run on
+        # Windows. Rules in `.semgrep/rules/` enforce the type-uniformity
+        # discipline; see `.semgrep/README.md` for the rule inventory and policy.
+        if: matrix.os == 'ubuntu-latest'
+        run: uv run --no-sync semgrep --config .semgrep/rules/ --error src/aeat/
+
+      - name: Registry verify
+        run: uv run --no-sync aeat app registry verify --json
+
+      - name: Audit oracle bindings
+        # Fails the workflow if any cross-reference declares an
+        # oracle_id that doesn't match the registered oracle's
+        # surface_kind. To fix locally, run:
+        #   uv run --no-sync aeat app registry audit-oracles
+        run: uv run --no-sync aeat app registry audit-oracles --json
 
       - name: Test (unit)
         run: uv run pytest --junitxml=junit.xml
         # AEAT_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
 
+      - name: Documentation conformance
+        # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
+        # module-to-stub correspondence, and CLI reference drift/conformance)
+        # plus doc8 and interrogate. Excluded from the fast unit lane above
+        # because the nitpicky build is multi-minute; gated here on every push.
+        run: just docs-check
+
+      - name: Audit dependencies for known CVEs
+        # Scans the locked dependency graph against the PyPI Advisory
+        # Database (PYSEC + GitHub Advisory) and fails the build on any
+        # known vulnerability. Catches newly-published CVEs that
+        # otherwise reach production silently — the codebase has no
+        # automated CVE detection today (security swarm 2026-05-30,
+        # axis 6 supply-chain F10). To allow-list a specific advisory
+        # locally, append --ignore-vuln <GHSA-/PYSEC-id>.
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          uv export --frozen --no-emit-project --no-hashes > /tmp/audit-reqs.txt
+          uvx pip-audit --strict -r /tmp/audit-reqs.txt
+
       - name: Hooks
-        run: just hooks
+        run: just check-pre-commit
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: test-results-${{ matrix.os }}
           path: junit.xml

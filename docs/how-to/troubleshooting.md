@@ -1,0 +1,255 @@
+# Diagnose and repair your local setup
+
+Every check on this page runs locally and the tool never submits anything to AEAT - building, validating, and exporting all happen on your machine. The only network step is the optional connectivity probe, which checks reachability and reads nothing. Find the error you see in the headings on this page and follow the steps under it. If your error is not listed, jump to [Prepare a privacy-safe support request](#prepare-a-privacy-safe-support-request).
+
+Every profile-scoped command needs your master-key passphrase. The tool prompts for it interactively. To run a command non-interactively, set `AEAT_SECRET_PASSPHRASE` in the environment first. The tool's output is in Spanish, so the error text you see may differ from the English shown on this page.
+
+## "This operation requires an active profile"
+
+The command needs a taxpayer profile and none is active. Check what the tool thinks is active:
+
+```bash
+aeat config profile status
+```
+
+If a profile exists but the active setting won't load, repair it:
+
+```bash
+aeat config repair profile
+```
+
+If the active setting points at unreadable profile state, clear it and switch to a good profile:
+
+```bash
+aeat config repair profile --clear-active --yes
+aeat config switch <profile-name>
+```
+
+If no profile exists yet, create one first - see [Set up your taxpayer profile](profile-setup.md).
+
+If a profile loads but the numbers look wrong, see the next symptom.
+
+## The numbers or facts look like someone else's
+
+The wrong profile is active. Each profile keeps its own ledger, calculations, and filings, so a command run under the wrong one shows someone else's data. See which profile is active:
+
+```bash
+aeat config profile status
+```
+
+Switch to the right profile with `aeat config switch <profile-name>` - [Set up your taxpayer profile](profile-setup.md) covers creating and switching profiles.
+
+## A calculation refuses because the ledger is not ready
+
+The refusal looks like this:
+
+```text
+ledger preflight blocks modelo calculation: transaction <id> <reason>: <detail>. Run `aeat app ledger preflight --period <TOKEN>` before calculating.
+```
+
+The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - `ledger preflight` takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) and also requires `--year`, so add it even though the message above omits it:
+
+```bash
+aeat app ledger preflight --year 2026 --period 1T
+aeat app ledger status
+```
+
+The preflight report names the rows that block the calculation. Fix them by completing the import and review steps in [Work with transactions](import-bank-statements.md), then run the calculation again.
+
+## A required value is missing
+
+The refusal names the missing item:
+
+```text
+Binding <id> has no supplied value
+Required casilla <id> is not present in the calculation revision inputs
+```
+
+A casilla is a numbered box on the official form. A binding is a rule that fills one. List which values are still missing for your form:
+
+```bash
+aeat app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
+```
+
+Replace the modelo, year, and period with your own. The full workflow for supplying and reviewing values lives in [Review and supply calculation inputs](review-calculation-values.md).
+
+## The period token is rejected
+
+Use one period grammar everywhere: the AEAT tokens. `0A` is the annual period, `1T` through `4T` are the quarters, and `01` through `12` are the months. Every command takes the year separately with `--year`. [Filing periods](filing-periods.md) explains which form uses which period.
+
+Modelo and ledger commands share the same shape - the AEAT token with `--year`:
+
+```bash
+aeat app ledger preflight --year 2026 --period 1T
+aeat app ledger status --year 2026 --period 0A
+aeat app ledger preflight --year 2026 --period 03
+aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+```
+
+The ledger `--period` commands are `ledger preflight`, `ledger status`, `ledger export`, `ledger import`, and `overview status`. On `ledger status` and `overview status`, where the period is optional, a bare token with no `--year` is refused with the year fix (shown here in English; the tool prints it in Spanish):
+
+```text
+El token de periodo '1T' necesita un año en este comando. Añada --year (e.g. --period 1T --year 2024).
+```
+
+On `ledger preflight` and `ledger export`, `--year` is a required option, so omitting it is refused before the token is read:
+
+```text
+Missing option '--year'.
+```
+
+A modelo token that is not valid for the form lists the accepted tokens:
+
+```text
+--period '<token>' is not a valid period token for modelo <modelo>. ... Valid tokens: ...
+```
+
+Calendar shapes such as `2026Q1`, `2026-03`, or `2026` are not accepted; use the AEAT token with `--year`.
+
+## An export refuses because no verified calculation exists
+
+Exports only work from a calculation that passed verification. Run the verification first - [Verify a draft filing](verification-reports.md) owns that workflow and explains what the report tells you.
+
+## Recording a filing refuses because the filing window is not open
+
+This refusal applies to `aeat app modelo work file` only - exporting works at any time. See [Upload your exported modelo at the AEAT portal](file-at-aeat.md) for the recording workflow and [Plan your filing calendar](filing-calendar.md) for when each window opens.
+
+## Output appears in the wrong language
+
+Add `--language` to the command. Accepted values are `en`, `es`, `ca`, and `hu`. The flag changes both command output and help text:
+
+```bash
+aeat --language en config profile create --help
+```
+
+To set the language for a whole shell session, set the environment variable `AEAT_OUTPUT_LANGUAGE` before running commands.
+
+In PowerShell:
+
+```powershell
+$env:AEAT_OUTPUT_LANGUAGE = 'en'
+```
+
+In bash:
+
+```bash
+export AEAT_OUTPUT_LANGUAGE=en
+```
+
+The `--language` flag wins over the environment variable for that command. A profile also carries a default output language - set it with `--output-language` at profile creation, as described in [Set up your taxpayer profile](profile-setup.md).
+
+## A live read from AEAT refuses
+
+Live reads need a registered digital certificate or Cl@ve PIN (the digital identity system Spain uses for citizens to log in to government services online). Check your authentication:
+
+```bash
+aeat config auth status
+aeat config auth test
+```
+
+`auth test` is a local probe - it checks your stored credentials without contacting AEAT. Check that the tool can reach the AEAT website (Sede Electrónica, the official online portal):
+
+```bash
+aeat config repair connectivity
+```
+
+If authentication was never set up, follow [Authenticate with AEAT](authenticate-with-aeat.md).
+
+When a live login fails, the tool captures an encrypted diagnostic of the failure. List and inspect them:
+
+```bash
+aeat config auth diagnostics list
+aeat config auth diagnostics show <diagnostic-id>
+```
+
+`list` shows when each failure happened, the reason, and which login method and profile were involved. `show` prints one diagnostic with sensitive content redacted — configured credentials appear only as present/absent flags and fingerprints, never as values.
+
+For Cl@ve failures, the missing piece is often what happened on your phone — something the tool cannot see. Record what you observed so the diagnostic is complete:
+
+```bash
+aeat config auth diagnostics report <diagnostic-id> --phone-state app_prompted_not_accepted
+```
+
+Accepted states are `app_prompted_and_accepted`, `app_prompted_not_accepted`, `app_did_not_prompt`, and `operator_did_not_check`.
+
+## The diagnostic toolbox
+
+Use these when no single symptom matches, or to gather context before asking for help.
+
+When you don't know where to start, check overall status:
+
+```bash
+aeat app overview status
+aeat config profile status
+```
+
+`overview status` reports your profile, ledger, and modelo readiness; `profile status` reports the active profile. Together they tell you whether the problem is your setup or your data.
+
+When a command fails and you want the details, read the logs:
+
+```bash
+aeat config repair logs --lines 50
+```
+
+It prints the log file path and the most recent lines. Use `--lines` to control how many it prints.
+
+When a command reports corrupt or unreadable data, check integrity:
+
+```bash
+aeat config repair integrity objects
+aeat config repair integrity registry
+```
+
+`integrity objects` checks the security seals on your encrypted records; `integrity registry` checks the tax rule definitions. If either fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
+
+When unreadable encrypted records block other commands, move them aside. Preview first, then apply:
+
+```bash
+aeat config repair quarantine --dry-run
+aeat config repair quarantine --yes
+```
+
+The preview lists how many records would move, per storage area, without changing anything. The real run requires `--yes`. Quarantine does not delete anything: each unreadable record is moved, still encrypted, into a quarantine archive inside the same storage, and readable records are untouched. If the cause was a missing key that you later recover — for example with the recovery key, see [Protect access to your data](protect-data-access.md) — the archived records still exist.
+
+When you need to know which finalized calculations and filings used a transaction, ask the participation index:
+
+```bash
+aeat app ledger participation <transaction-id>
+aeat app ledger participation rebuild
+```
+
+The index is a derived cross-reference, safe to regenerate at any time: `rebuild` rescans the finalized calculation records and rewrites it. Run it if a participation lookup looks incomplete. Rebuilding changes no ledger or filing data.
+
+Both `participation` verbs read the active profile's encrypted bucket, so they need an unlocked profile session. If either refuses with `No hay una sesion de bucket activa`, switch to the profile first with `aeat config switch <profile-name>`.
+
+When nothing else recovers the problem, and only then, clear the saved progress of interrupted commands. This command is destructive:
+
+```bash
+aeat config repair reset-progress --yes
+```
+
+It removes saved interrupted-command progress and requires `--yes`. Like the participation verbs, it reads the active profile's bucket, so switch to the profile first if it refuses with `No hay una sesion de bucket activa`.
+
+## Prepare a privacy-safe support request
+
+When the steps on this page don't resolve the problem, gather this before asking for help:
+
+- The exact command you ran.
+- The error lines the command printed.
+- The log path and the relevant recent lines from `aeat config repair logs`.
+- Any report or work-unit IDs the output shows.
+
+Remove personal data first: tax identifiers (NIF, CIF, DNI, NIE, NII), names, addresses, and file paths that embed your user name. Log lines can contain personal data - read them before pasting.
+
+Take the request to the [project issue tracker](https://github.com/wgergely/aeat/issues).
+
+If a term in an error message is unfamiliar, look it up in the {doc}`glossary </_generated/glossary>`.
+
+## Next steps
+
+- [Quickstart: produce a modelo file](quickstart.md) - follow the first local filing path.
+- [Set up your taxpayer profile](profile-setup.md) - create and switch profiles.
+- [Authenticate with AEAT](authenticate-with-aeat.md) - check read-only live access setup.
+- [Check AEAT notifications](check-aeat-notifications.md) - inspect saved DEHu notification snapshots.
+- [Pipeline explanation](../explanation/index.md) - what the registry, secure storage, and workflow state are.
+- [CLI reference](../cli/index.rst) - every repair command, flag, and exit code.

@@ -1,0 +1,13 @@
+# Modelo 036 (Censo de empresarios, profesionales y retenedores). Enrolled by
+# the censal alta/modificacion threshold-continuity test. An alta in annual
+# context 2025 and a modificacion in annual context 2026 are persisted via the
+# real encrypted-SQLite CalculationObservationRepository, loaded back, and
+# asserted for strict pydantic equality + event-kind isolation + vigencia
+# normativa identity across both contexts. Evidence class is
+# threshold_continuity (ad_hoc cadence, no calculation engine;
+# RD 1065/2007 arts. 9-11 / Orden HAC/1526/2024).
+[modelo]
+modelo = "036"
+renta_years = [2025, 2026]
+evidence_class = "threshold_continuity"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_036_censal_continuity.py"

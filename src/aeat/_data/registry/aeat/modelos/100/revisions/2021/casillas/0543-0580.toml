@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "0580"
+number = "0580"
+label = "Si la regularización está motivada por haberse producido las circunstancias previstas en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de la Ley del Impuesto, marque con una 'X' esta casilla: Parte estatal"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+data_type = "boolean"
+semantic_role = "irpf_flag_regularizacion_da45"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

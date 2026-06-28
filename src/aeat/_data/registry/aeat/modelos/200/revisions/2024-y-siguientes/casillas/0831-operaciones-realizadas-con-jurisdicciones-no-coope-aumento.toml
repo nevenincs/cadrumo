@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02811"
+number = "02811"
+label = "Operaciones realizadas con jurisdicciones no cooperativas (art. 15 g) LIS) - Aumento - Correcciones del ejercicio - Permanentes [02811]"
+section = ["operaciones_realizadas_con_jurisdicciones_no_coope", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_jurisdicciones_no_cooperativas_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02811"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02812"
+number = "02812"
+label = "Operaciones realizadas con jurisdicciones no cooperativas (art. 15 g) LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02812]"
+section = ["operaciones_realizadas_con_jurisdicciones_no_coope", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_jurisdicciones_no_cooperativas_temporaria_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02812"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02813"
+number = "02813"
+label = "Operaciones realizadas con jurisdicciones no cooperativas (art. 15 g) LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02813]"
+section = ["operaciones_realizadas_con_jurisdicciones_no_coope", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_jurisdicciones_no_cooperativas_temporaria_anteriores_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02813"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02814"
+number = "02814"
+label = "Operaciones realizadas con jurisdicciones no cooperativas (art. 15 g) LIS) - Aumento - Saldo pendiente a principio de ejercicio [02814]"
+section = ["operaciones_realizadas_con_jurisdicciones_no_coope", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_jurisdicciones_no_cooperativas_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02814"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02815"
+number = "02815"
+label = "Operaciones realizadas con jurisdicciones no cooperativas (art. 15 g) LIS) - Aumento - Saldo pendiente a fin de ejercicio [02815]"
+section = ["operaciones_realizadas_con_jurisdicciones_no_coope", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_jurisdicciones_no_cooperativas_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02815"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

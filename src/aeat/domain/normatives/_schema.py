@@ -3,18 +3,19 @@
 Every boundary-crossing record the subpackage reads from disk, writes
 to disk, or exposes over its public API is defined here. The schema is
 frozen and strict wherever the loader idiom permits it, per the
-project-wide pydantic v2 mandate reinforced by issue ``#45``.
+project-wide pydantic v2 mandate.
 
-Closed catalogues are :class:`enum.StrEnum`. Trilingual fields use
+Closed catalogues are :class:`enum.StrEnum`. Multilingual fields use
 :class:`aeat.core.i18n.Translatable`; the authoritative ``es`` key is
 enforced at load time on every title and summary.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping
 from datetime import date
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, override
 
 from pydantic import (
     AnyHttpUrl,
@@ -25,7 +26,9 @@ from pydantic import (
     model_validator,
 )
 
-from ...core.i18n import Translatable
+from ...core import STRICT_FROZEN_CONFIG
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from ._errors import NormativeValidationError
 
 
 class NormativeKind(StrEnum):
@@ -107,31 +110,43 @@ _BoeIdField = Annotated[
 """BOE-A identifier shape, e.g. ``BOE-A-2006-20764``."""
 
 
-def _require_spanish(translatable: Translatable, field_name: str) -> None:
-    """Assert a translatable carries the authoritative ``es`` key.
+LocalizedText = Mapping[str, str]
+"""Multilingual content mapping, one entry per codified output language.
+
+The authoritative ``es`` entry is mandatory; the remaining codified
+languages (``en``, ``ca``, ``hu``) are optional translations. Unknown
+language codes are rejected so corpus drift is caught at load time.
+"""
+
+
+def _require_spanish(translatable: LocalizedText, field_name: str) -> None:
+    """Assert a localized-text mapping carries the authoritative ``es`` key.
 
     Args:
-        translatable: The translatable mapping under validation.
+        translatable: The localized-text mapping under validation.
         field_name: Dotted field name surfaced in the error message.
 
     Raises:
-        ValueError: If the ``es`` key is missing or empty.
+        NormativeValidationError: If the ``es`` key is missing or empty,
+            or if the mapping carries an unknown language code.
     """
-    if not translatable.get("es"):
-        raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
+    unknown = set(translatable) - set(SUPPORTED_OUTPUT_LANGUAGES)
+    if unknown:
+        raise NormativeValidationError(
+            f"{field_name}: unknown language code(s) {sorted(unknown)!r} "
+            f"(codified languages are {sorted(SUPPORTED_OUTPUT_LANGUAGES)!r})",
+        )
+    if not translatable.get("es", "").strip():
+        raise NormativeValidationError(f"{field_name}: missing authoritative Spanish ('es') translation")
 
 
-class _StrictFrozen(BaseModel):
+class _NormativeStrictFrozen(BaseModel):
     """Shared base config: strict validation, immutable, no extras."""
 
-    model_config = ConfigDict(
-        strict=True,
-        frozen=True,
-        extra="forbid",
-    )
+    model_config = STRICT_FROZEN_CONFIG
 
 
-class _StrictMutable(BaseModel):
+class _NormativeStrictMutable(BaseModel):
     """Strict validation but mutable; used for aggregate catalogues."""
 
     model_config = ConfigDict(
@@ -141,7 +156,7 @@ class _StrictMutable(BaseModel):
     )
 
 
-class Articulo(_StrictFrozen):
+class Articulo(_NormativeStrictFrozen):
     """A single article inside a :class:`NormativeReference`.
 
     The project codifies only the articles it actively cites. Missing
@@ -151,9 +166,16 @@ class Articulo(_StrictFrozen):
     """
 
     numero: _ArticuloNumero = Field(description="Article number, e.g. '32' or '32.1.a'.")
-    titulo: Translatable = Field(description="Article title in all supplied languages.")
-    summary: Translatable = Field(description="One-paragraph plain-language article summary.")
+    titulo: LocalizedText = Field(description="Article title in all supplied languages.")
+    summary: LocalizedText = Field(description="One-paragraph plain-language article summary.")
     permalink: AnyHttpUrl = Field(description="BOE deep link to the article (fragment-addressed).")
+    text_es: str = Field(
+        default="",
+        description=(
+            "Verbatim authoritative Spanish article text. Optional; when present "
+            "it grounds registry legal-reference required_text substring checks."
+        ),
+    )
     notes: str = Field(default="", description="Free-form reviewer notes.")
 
     @model_validator(mode="after")
@@ -164,13 +186,13 @@ class Articulo(_StrictFrozen):
         return self
 
 
-class NormativeReference(_StrictFrozen):
+class NormativeReference(_NormativeStrictFrozen):
     """A single Spanish tax normative codified by the project."""
 
     id: _StableId = Field(description="Stable kebab-case id, e.g. 'ley-35-2006'.")
     kind: NormativeKind = Field(description="Legal-act kind.")
     number: _NormativeNumber = Field(description="Normative number, e.g. '35/2006' or 'HAC/242/2025'.")
-    title: Translatable = Field(description="Full normative title in all supplied languages.")
+    title: LocalizedText = Field(description="Full normative title in all supplied languages.")
     published_at: date = Field(description="BOE publication date.")
     boe_url: AnyHttpUrl = Field(description="Canonical BOE consolidated-text URL.")
     boe_id: _BoeIdField = Field(description="BOE-A identifier, e.g. 'BOE-A-2006-20764'.")
@@ -192,18 +214,20 @@ class NormativeReference(_StrictFrozen):
         seen: set[str] = set()
         for articulo in self.articulos:
             if articulo.numero in seen:
-                raise ValueError(f"NormativeReference[{self.id}]: duplicate articulo numero {articulo.numero!r}")
+                raise NormativeValidationError(
+                    f"NormativeReference[{self.id}]: duplicate articulo numero {articulo.numero!r}",
+                )
             seen.add(articulo.numero)
             permalink = str(articulo.permalink)
             if self.boe_id not in permalink:
-                raise ValueError(
+                raise NormativeValidationError(
                     f"NormativeReference[{self.id}].articulo[{articulo.numero}]: "
-                    f"permalink {permalink!r} does not reference boe_id {self.boe_id!r}"
+                    f"permalink {permalink!r} does not reference boe_id {self.boe_id!r}",
                 )
         return self
 
 
-class NormativeCatalogue(_StrictMutable):
+class NormativeCatalogue(_NormativeStrictMutable):
     """Aggregate view over every loaded :class:`NormativeReference`.
 
     The aggregate is mutable to keep the loader idiom simple (the
@@ -222,10 +246,13 @@ class NormativeCatalogue(_StrictMutable):
         """Ensure every mapping key matches its record's id."""
         for key, ref in self.references.items():
             if key != ref.id:
-                raise ValueError(f"NormativeCatalogue: key {key!r} does not match reference id {ref.id!r}")
+                raise NormativeValidationError(
+                    f"NormativeCatalogue: key {key!r} does not match reference id {ref.id!r}",
+                )
         return self
 
-    def __iter__(self):  # type: ignore[override]
+    @override
+    def __iter__(self) -> Iterator[NormativeReference]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over every loaded :class:`NormativeReference`."""
         return iter(self.references.values())
 
@@ -238,11 +265,11 @@ class NormativeCatalogue(_StrictMutable):
         return key in self.references
 
     def get(self, ref_id: str) -> NormativeReference | None:
-        """Return the reference keyed by ``ref_id`` or ``None`` if absent."""
+        """Return the :class:`NormativeReference` keyed by ``ref_id`` or ``None`` if absent."""
         return self.references.get(ref_id)
 
 
-class VerificationIssue(_StrictFrozen):
+class NormativeVerificationIssue(_NormativeStrictFrozen):
     """A single finding produced by :func:`aeat.domain.normatives.verify_catalogue`."""
 
     level: str = Field(description="'error' or 'warning'.")
@@ -251,14 +278,18 @@ class VerificationIssue(_StrictFrozen):
     reference_id: str | None = Field(default=None, description="Affected reference id, if any.")
 
 
-class VerificationReport(_StrictFrozen):
+class NormativeVerificationReport(_NormativeStrictFrozen):
     """Aggregate verification report for :class:`NormativeCatalogue`."""
 
-    issues: tuple[VerificationIssue, ...] = Field(default_factory=tuple)
+    issues: tuple[NormativeVerificationIssue, ...] = Field(default_factory=tuple)
 
     @property
-    def errors(self) -> tuple[VerificationIssue, ...]:
-        """Return the subset of issues whose level is ``error``."""
+    def errors(self) -> tuple[NormativeVerificationIssue, ...]:
+        """Return the subset of issues whose level is ``error``.
+
+        Returns:
+            Tuple of :class:`NormativeVerificationIssue` objects with error severity.
+        """
         return tuple(issue for issue in self.issues if issue.level == "error")
 
     @property

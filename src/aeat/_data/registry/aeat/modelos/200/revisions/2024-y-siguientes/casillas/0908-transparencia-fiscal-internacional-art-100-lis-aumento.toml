@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03171"
+number = "03171"
+label = "Transparencia fiscal internacional (art. 100 LIS) - Aumento - Correcciones del ejercicio - Permanentes [03171]"
+section = ["transparencia_fiscal_internacional_art_100_lis", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_regimenes_especiales_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03171"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03172"
+number = "03172"
+label = "Transparencia fiscal internacional (art. 100 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03172]"
+section = ["transparencia_fiscal_internacional_art_100_lis", "aumento"]
+data_type = "money"
+semantic_role = "is_tfi_correccion_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03172"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03173"
+number = "03173"
+label = "Transparencia fiscal internacional (art. 100 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03173]"
+section = ["transparencia_fiscal_internacional_art_100_lis", "aumento"]
+data_type = "money"
+semantic_role = "is_tfi_correccion_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03173"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03174"
+number = "03174"
+label = "Transparencia fiscal internacional (art. 100 LIS) - Aumento - Saldo pendiente a principio de ejercicio [03174]"
+section = ["transparencia_fiscal_internacional_art_100_lis", "aumento"]
+data_type = "money"
+semantic_role = "is_tfi_saldo_pendiente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03174"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03175"
+number = "03175"
+label = "Transparencia fiscal internacional (art. 100 LIS) - Aumento - Saldo pendiente a fin de ejercicio [03175]"
+section = ["transparencia_fiscal_internacional_art_100_lis", "aumento"]
+data_type = "money"
+semantic_role = "is_tfi_saldo_pendiente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03175"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

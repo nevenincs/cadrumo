@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0607"
+number = "0607"
+label = "Por la adquisición de vehículos eléctricos «enchufables» y de pila de combustible (importe de esta casilla del anexo A.2): Parte estatal"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deduccion_vehiculos_electricos"
+legal_refs = ["ley-35-2006:da-58", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

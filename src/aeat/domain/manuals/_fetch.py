@@ -1,29 +1,31 @@
 """Raw manual-part downloader and manifest writer.
 
-The fetcher speaks ``httpx`` directly: the :class:`PartSpec` table
+The fetcher speaks :mod:`httpx` directly: the :class:`PartSpec` table
 below hard-codes the verified canonical AEAT URLs for every
-``(manual_id, year, part)`` triple the subpackage supports; the
+``(manual_id, year, part)`` triple the subpackage supports. The
 ``fetch`` CLI looks up a triple in the table, streams the PDF to
 disk, computes its sha256 on the fly, and writes a
-:class:`FetchedManualPart` manifest next to the raw binary.
+:class:`~aeat.domain.manuals.FetchedManualPart` manifest next to the
+raw binary.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict
+from pydantic import AnyHttpUrl, BaseModel, ValidationError
 
+from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.paths import resolve_relative_subpath
+from ...core.time import now
+from ._errors import ManifestError
 from ._loader import resolve_part_root
 from ._schema import FetchedManualPart, ManualId, ManualPart
-from .errors import ManifestError
 
 _logger = get_logger(__name__)
 
@@ -35,12 +37,18 @@ _MANIFEST_FILENAME = "manifest.json"
 class PartSpec(BaseModel):
     """Canonical source URL for a ``(manual_id, year, part)`` triple.
 
-    Strict + frozen so the public surface stays on pydantic v2 per the
-    project mandate; held as a static tuple in :data:`PART_SPECS` and
-    never constructed from untrusted input.
+    Strict and frozen so the public surface stays on pydantic v2 per
+    the project mandate; held as a static tuple in :data:`PART_SPECS`
+    and never constructed from untrusted input.
+
+    Attributes:
+        manual_id: Handbook identifier.
+        year: Tax year.
+        part: Volume split within the year.
+        source_pdf_url: Canonical AEAT URL the PDF is fetched from.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     manual_id: ManualId
     year: int
@@ -48,42 +56,141 @@ class PartSpec(BaseModel):
     source_pdf_url: str
 
 
+_EXTERNAL = Settings.external_constants().aeat
+_MANUAL_BIBLIOTECA_ROOT = f"{_EXTERNAL.domains.sede}{_EXTERNAL.help_pages.manual_practicos_root}"
+
 PART_SPECS: tuple[PartSpec, ...] = (
+    # 2020
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2020,
+        part=ManualPart.PARTE_1,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2020/ManualRenta2020_es_es.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2020,
+        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2020/ManualRenta2020_Deducciones_Autonomicas_es_es.pdf",
+    ),
+    # 2021
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2021,
+        part=ManualPart.PARTE_1,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2021/ManualRenta2021_es_es.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2021,
+        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2021/ManualRenta2021_Deducciones_Autonomicas_es_es.pdf",
+    ),
+    # 2022
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2022,
+        part=ManualPart.PARTE_1,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2022/ManualRenta2022_es_es.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2022,
+        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2022/ManualRenta2022_Deducciones_Autonomicas_es_es.pdf",
+    ),
+    # 2023
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2023,
+        part=ManualPart.PARTE_1,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2023/ManualRenta2023_es_es.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2023,
+        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2023/ManualRenta2023_Deducciones_Autonomicas_es_es.pdf",
+    ),
+    # 2024
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2024,
+        part=ManualPart.PARTE_1,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2024/ManualRenta2024Tomo1_es_es.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.RENTA,
+        year=2024,
+        part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2024/ManualRenta2024Tomo2_es_es.pdf",
+    ),
+    # 2025
     PartSpec(
         manual_id=ManualId.RENTA,
         year=2025,
         part=ManualPart.PARTE_1,
-        source_pdf_url=(
-            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/"
-            "Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
-        ),
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf",
     ),
     PartSpec(
         manual_id=ManualId.RENTA,
         year=2025,
         part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
         source_pdf_url=(
-            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/"
-            "Manual/Practicos/IRPF/IRPF-2025-Deducciones-autonomicas/"
-            "ManualRenta2025Parte2_es_es.pdf"
+            f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2025-Deducciones-autonomicas/ManualRenta2025Parte2_es_es.pdf"
         ),
+    ),
+    PartSpec(
+        manual_id=ManualId.IVA,
+        year=2020,
+        part=ManualPart.SINGLE,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2020.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.IVA,
+        year=2021,
+        part=ManualPart.SINGLE,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2021.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.IVA,
+        year=2022,
+        part=ManualPart.SINGLE,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2022.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.IVA,
+        year=2023,
+        part=ManualPart.SINGLE,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2023.pdf",
+    ),
+    PartSpec(
+        manual_id=ManualId.IVA,
+        year=2024,
+        part=ManualPart.SINGLE,
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2024.pdf",
     ),
     PartSpec(
         manual_id=ManualId.IVA,
         year=2025,
         part=ManualPart.SINGLE,
-        source_pdf_url=(
-            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/"
-            "Manual/Practicos/IVA/Manual_IVA_2025.pdf"
-        ),
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2025.pdf",
     ),
 )
 
 
 class FetchResult(BaseModel):
-    """Thin wrapper returned by :func:`fetch_manual_part` to the CLI."""
+    """Thin wrapper returned by :func:`fetch_manual_part` to the CLI.
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    Attributes:
+        manifest: The :class:`~aeat.domain.manuals.FetchedManualPart`
+            record written next to the raw PDF.
+        part_root: Resolved directory root for the manual part.
+        pdf_path: Absolute path to the freshly downloaded PDF.
+        manifest_path: Absolute path to the JSON manifest on disk.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
 
     manifest: FetchedManualPart
     part_root: Path
@@ -115,11 +222,21 @@ def lookup_spec(manual_id: ManualId, year: int, part: ManualPart) -> PartSpec:
 
 
 def _stream_to_file(url: str, destination: Path) -> tuple[str, int]:
-    """Download ``url`` to ``destination`` and return ``(sha256, length)``."""
+    """Download ``url`` to ``destination`` and return ``(sha256, length)``.
+
+    Streams the response body in 64 KiB chunks while updating the
+    sha256 hash in flight so the caller never needs to re-read the
+    file from disk to verify it.
+    """
     destination.parent.mkdir(parents=True, exist_ok=True)
     sha = hashlib.sha256()
     length = 0
-    with httpx.stream("GET", url, follow_redirects=True, timeout=60.0) as response:
+    with httpx.stream(
+        "GET",
+        url,
+        follow_redirects=True,
+        timeout=load_settings().aeat_manuals_http_timeout_s,
+    ) as response:
         response.raise_for_status()
         with destination.open("wb") as out:
             for chunk in response.iter_bytes(_CHUNK_SIZE):
@@ -132,13 +249,24 @@ def _stream_to_file(url: str, destination: Path) -> tuple[str, int]:
 
 
 def write_manifest(manifest_path: Path, manifest: FetchedManualPart) -> None:
-    """Serialise a :class:`FetchedManualPart` as indented JSON on disk."""
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    payload = manifest.model_dump(mode="json")
-    manifest_path.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    """Serialise a :class:`~aeat.domain.manuals.FetchedManualPart` as indented JSON on disk.
+
+    Args:
+        manifest_path: Destination path for the JSON manifest.
+        manifest: Manifest record to serialise.
+
+    Raises:
+        ManifestError: If the file cannot be written due to an OS error.
+    """
+    try:
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = manifest.model_dump(mode="json")
+        manifest_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        raise ManifestError(f"{manifest_path}: cannot write manifest ({exc})") from exc
 
 
 def load_manifest(manifest_path: Path) -> FetchedManualPart:
@@ -158,7 +286,7 @@ def load_manifest(manifest_path: Path) -> FetchedManualPart:
         raise ManifestError(f"manifest not found: {manifest_path}")
     try:
         return FetchedManualPart.model_validate_json(manifest_path.read_text(encoding="utf-8"))
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
         raise ManifestError(f"{manifest_path}: invalid manifest ({exc})") from exc
 
 
@@ -194,7 +322,8 @@ def fetch_manual_part(
     _logger.info("fetching %s/%s/%s from %s", manual_id.value, year, part.value, spec.source_pdf_url)
     try:
         sha256, length = _stream_to_file(spec.source_pdf_url, pdf_path)
-    except httpx.HTTPError as exc:
+    except (OSError, httpx.HTTPError) as exc:
+        _logger.warning("manual fetch failed %s/%s/%s", manual_id.value, year, part.value, exc_info=True)
         raise ManifestError(f"download failed for {spec.source_pdf_url}: {exc}") from exc
 
     manifest = FetchedManualPart(
@@ -205,7 +334,7 @@ def fetch_manual_part(
         relative_pdf_path=_PDF_FILENAME,
         sha256=sha256,
         content_length=length,
-        fetched_at=datetime.now(tz=UTC),
+        fetched_at=now(),
         synthetic=False,
     )
     write_manifest(manifest_path, manifest)
@@ -236,14 +365,29 @@ def verify_fetched_pdf(manifest: FetchedManualPart, part_root: Path) -> None:
         raise ManifestError(f"raw PDF not found at {pdf_path}; run 'aeat manual fetch' to materialise it")
     sha = hashlib.sha256()
     length = 0
-    with pdf_path.open("rb") as handle:
-        while True:
-            chunk = handle.read(_CHUNK_SIZE)
-            if not chunk:
-                break
-            sha.update(chunk)
-            length += len(chunk)
+    try:
+        with pdf_path.open("rb") as handle:
+            while True:
+                chunk = handle.read(_CHUNK_SIZE)
+                if not chunk:
+                    break
+                sha.update(chunk)
+                length += len(chunk)
+    except OSError as exc:
+        raise ManifestError(f"{pdf_path}: cannot read raw PDF ({exc})") from exc
     if sha.hexdigest() != manifest.sha256:
+        _logger.error(
+            "manual pdf sha256 mismatch %s: computed=%s manifest=%s",
+            pdf_path,
+            sha.hexdigest(),
+            manifest.sha256,
+        )
         raise ManifestError(f"{pdf_path}: sha256 mismatch (got {sha.hexdigest()}, manifest {manifest.sha256})")
     if length != manifest.content_length:
+        _logger.error(
+            "manual pdf length mismatch %s: computed=%d manifest=%d",
+            pdf_path,
+            length,
+            manifest.content_length,
+        )
         raise ManifestError(f"{pdf_path}: content_length mismatch (got {length}, manifest {manifest.content_length})")

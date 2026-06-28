@@ -1,0 +1,36 @@
+[[revisions.2019-2022.constructs]]
+id = "modelo-202-2019-2022-foundation"
+title = "Modelo 202 registry-backed fractional payment construct (ejercicios 2019-2022)"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions", "aeat-modelo-202-instructions-2023-2024"]
+parameters = ["is.modalidad_cuota.percentage"]
+formulas = [
+    "modelo-202-2019-2022-modalidad-40-2-a-ingresar",
+    "modelo-202-2019-2022-total-correcciones-aumentos",
+    "modelo-202-2019-2022-total-correcciones-disminuciones",
+    "modelo-202-2019-2022-base-imponible-previa",
+    "modelo-202-2019-2022-base-imponible-corregida",
+    "modelo-202-2019-2022-resultado-previo-b1",
+    "modelo-202-2019-2022-importe-pago-fraccionado-b2-tipo-1",
+    "modelo-202-2019-2022-importe-pago-fraccionado-b2-tipo-2",
+    "modelo-202-2019-2022-resultado-previo-b2",
+    "modelo-202-2019-2022-modalidad-40-3-resultado",
+    "modelo-202-2019-2022-cantidad-a-ingresar",
+]
+workbook_parity_refs = ["modelo-202-2019-2022-dr-xlsx"]
+live_cross_references = ["modelo-202-2019-2022-static-documentation"]
+export_layouts = ["modelo-202-2019-2022-fichero-boe"]
+bindings = ["modelo-202-2019-2022-pagos-fraccionados-anteriores"]
+relations = ["modelo-202-2019-2022-rel-self-pagos-2p", "modelo-202-2019-2022-rel-self-pagos-3p"]
+dependency_classifications = ["modelo-202-2019-2022-dep-self-prior-pagos"]
+application_links = [
+    "modelo-202-2019-2022-portal",
+    "modelo-202-2019-2022-calculation",
+    "modelo-202-2019-2022-filing",
+    "modelo-202-2019-2022-verification",
+    "modelo-202-2019-2022-review",
+    "modelo-202-2019-2022-approval",
+    "modelo-202-2019-2022-reconciliation",
+    "modelo-202-2019-2022-export",
+    "modelo-202-2019-2022-workflow",
+]

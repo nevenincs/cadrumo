@@ -1,0 +1,194 @@
+[legal."ley-7-2012:da-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-7-2012-da-1.html#da-1"
+document_id = "BOE-A-2012-13416"
+article = "DA-1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-13416#a1"
+published_at = 2012-10-30
+effective_from = 2012-10-31
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 7/2012 DA 1ª — introduce la disposición adicional decimoctava de la Ley 58/2003 LGT que establece la obligación de información sobre bienes y derechos situados en el extranjero (origen normativo del Modelo 720)."
+required_text = [
+    "Modificación de la Ley 58/2003",
+    "bienes y derechos situados en el extranjero",
+]
+
+[legal."ley-58-2003:da-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-da-18.html#dadecimoctava"
+document_id = "BOE-A-2003-23186"
+article = "DA-18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#dadecimoctava"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Disposicion adicional decimoctava de la Ley General Tributaria: obligacion de informacion sobre bienes y derechos situados en el extranjero (origen del Modelo 720)."
+required_text = [
+    "bienes y derechos situados en el extranjero",
+    "cuentas situadas en el extranjero",
+    "bienes inmuebles y derechos sobre bienes inmuebles",
+]
+
+[legal."rd-1065-2007:art-42-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007-art-42-bis.html#a42bis"
+document_id = "BOE-A-2007-15984"
+article = "42-bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a42bis"
+published_at = 2007-09-05
+effective_from = 2007-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Reglamento General de Gestion e Inspeccion (RGAT) art 42 bis: obligacion de informar sobre cuentas en entidades financieras situadas en el extranjero (Modelo 720, seccion de cuentas)."
+required_text = [
+    "Obligación de informar acerca de cuentas en entidades financieras situadas en el extranjero",
+    "personas físicas y jurídicas residentes en territorio español",
+    "cuentas en entidades financieras situadas en el extranjero",
+]
+
+[legal."rd-1065-2007:art-42-ter"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007-art-42-ter.html#a42ter"
+document_id = "BOE-A-2007-15984"
+article = "42-ter"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a42ter"
+published_at = 2007-09-05
+effective_from = 2007-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "RGAT art 42 ter: obligacion de informar sobre valores, derechos, seguros y rentas depositados, gestionados u obtenidos en el extranjero (Modelo 720, seccion de valores)."
+required_text = [
+    "valores",
+    "rentas",
+    "extranjero",
+]
+
+[legal."rd-1065-2007:art-54-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007-art-54-bis.html#a54bis"
+document_id = "BOE-A-2007-15984"
+article = "54-bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a54bis"
+published_at = 2007-09-05
+effective_from = 2007-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "RGAT art 54 bis: obligacion de informar sobre bienes inmuebles y derechos sobre bienes inmuebles situados en el extranjero (Modelo 720, seccion de inmuebles)."
+required_text = [
+    "Obligación de informar sobre bienes inmuebles y derechos sobre bienes inmuebles situados en el extranjero",
+    "extranjero",
+]
+
+[legal."orden-hap-72-2013:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-72-2013-art-1.html#a1"
+document_id = "BOE-A-2013-954"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954#a1"
+published_at = 2013-01-30
+effective_from = 2013-02-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Aprueba el modelo 720 'Declaracion informativa de bienes y derechos situados en el extranjero' y aprueba sus disenos fisicos y logicos."
+required_text = [
+    "Aprobación del Modelo 720",
+    "Declaración informativa de bienes y derechos situados en el extranjero",
+    "diseños físicos y lógicos",
+]
+
+[legal."orden-hap-72-2013:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-72-2013-art-2.html#a2"
+document_id = "BOE-A-2013-954"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954#a2"
+published_at = 2013-01-30
+effective_from = 2013-02-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Obligados a presentar el modelo 720: personas fisicas y juridicas residentes en territorio espanol con cuentas, valores, o inmuebles en el extranjero por encima de los umbrales de 50.000 EUR por categoria, asi como entidades en regimen de atribucion de rentas y otros sujetos previstos."
+required_text = [
+    "Obligados a presentar el modelo 720",
+    "personas físicas y jurídicas residentes en territorio español",
+    "extranjero",
+]
+
+[legal."orden-hap-72-2013:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-72-2013-art-7.html#a7"
+document_id = "BOE-A-2013-954"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954#a7"
+published_at = 2013-01-30
+effective_from = 2013-02-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "Plazo de presentacion del Modelo 720: entre el 1 de enero y el 31 de marzo del ano siguiente al ejercicio al que se refiera la informacion."
+required_text = [
+    "Plazo de presentación del modelo 720",
+    "1 de enero y el 31 de marzo",
+    "información a suministrar",
+]
+
+[sources."aeat-dr-720"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_720/files/01-720-599-kb-pdf.pdf"
+sha256 = "ac324b935b690f0b6fe12dc8351c324cc804170750f483b0768d6417dd4976b7"
+bytes = 612620
+retrieved_at = 2026-05-03
+applies_from = 2013-02-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/modelo_720.pdf"
+review_status = "reviewed"
+
+[sources."aeat-modelo-720-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_720/files/modelo-720-procedure.html"
+sha256 = "4855e7816565a93ace64e718a53a2681db927372ad3811a1cc6d63b92588241a"
+bytes = 40144
+retrieved_at = 2026-05-06
+applies_from = 2013-02-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI34.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-720-2013-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-72-2013.html"
+sha256 = "8eb8c09c311f98623db7edd1fe38d777f2f237ee1ca2fc5803f9011ed1d35eb4"
+bytes = 130509
+retrieved_at = 2026-05-06
+published_at = 2013-01-30
+applies_from = 2013-02-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2013-954"
+review_status = "reviewed"

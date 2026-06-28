@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "1987"
+number = "1987"
+label = "Fecha de la operación (fecha de inscripción de la escritura pública en que se documenta la operación en el Registro Mercantil)"
+section = ["toma_datos_ampliada", "regimen_especial", "feac"]
+data_type = "text"
+semantic_role = "irpf_feac_fecha_operacion"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

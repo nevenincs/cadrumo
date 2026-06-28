@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-11-2021-da-10.html",
+  "source_sha256": "c0634c9de5972535eac36d746ad13997adad1fad97b01d7a30208173d2cbbba3",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Las personas físicas y jurídicas residentes en territorio español, los establecimientos permanentes en dicho territorio de personas o entidades no residentes, y las entidades a que se refiere el artículo 35.4 de la Ley 58/2003, de 17 de diciembre, General Tributaria, que posean monedas virtuales situadas en el extranjero de las que sean titulares, o respecto de las que tengan la condición de beneficiarios o autorizados o de alguna otra forma ostenten poder de disposición, custodiadas por personas o entidades que proporcionan servicios para salvaguardar claves criptográficas privadas en nombre de terceros, para mantener, almacenar y transferir monedas virtuales, estarán obligadas a suministrar información a la Administración Tributaria sobre dichas monedas virtuales.\n2. La obligación a que se refiere el apartado anterior se exigirá a quienes sean titulares de monedas virtuales situadas en el extranjero a 31 de diciembre de cada año, siempre que el valor de las mismas supere los 50.000 euros a dicha fecha.",
+      "title": "Disposición adicional décima. Obligación de información sobre monedas virtuales situadas en el extranjero.",
+      "section": "Disposición adicional décima. Obligación de información sobre monedas virtuales situadas en el extranjero.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0335"
+number = "0335"
+label = "Reducción aplicable (DT 9.ª)"
+section = ["toma_datos_ampliada", "gp_acciones", "entidad_accion"]
+semantic_role = "irpf_ganancia_acciones_reduccion_dt9"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,16 @@
+[[revisions."2020".parameters]]
+id = "renta-2020-minimo-descendientes-tercer-hijo-2020"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58"]
+source_refs = ["aeat-renta-2020-manual-parte1"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = ["Mínimo por descendientes", "tercero"]
+
+[[revisions."2020".parameters.values]]
+value = "4000"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31

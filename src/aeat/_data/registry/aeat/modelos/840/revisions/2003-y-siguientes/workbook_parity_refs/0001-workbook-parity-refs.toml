@@ -1,0 +1,11 @@
+[[revisions."2003-y-siguientes".workbook_parity_refs]]
+id = "modelo-840-dr"
+workbook_source = "aeat-dr-840"
+fixture_id = "modelo-840-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840"]
+
+

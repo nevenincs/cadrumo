@@ -1,0 +1,11 @@
+[[revisions."2024".bindings]]
+id = "renta-2024-profile-taxpayer-birth-date"
+source = "profile"
+selector = { profile_key = "renta_taxpayer.birth_date", xsd_path = "/DatosIdentificativos/Declarante/DPFNAC_D", dictionary_field = "DPFNAC_D", format = "date" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-57", "orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "boe-modelo-100-2024-form"
+required_text = ["Modelo 100", "ejercicio 2024"]

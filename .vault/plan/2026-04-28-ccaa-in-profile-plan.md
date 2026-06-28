@@ -3,6 +3,7 @@ tags:
   - '#plan'
   - '#ccaa-in-profile'
 date: '2026-04-28'
+modified: '2026-04-28'
 related:
   - '[[2026-04-28-ccaa-in-profile-research]]'
   - '[[2026-04-28-ccaa-in-profile-adr]]'
@@ -39,3 +40,35 @@ Path A persistence is chosen: a JSON file under the OS config directory, indepen
 ## Verification
 
 Run focused unit tests for profile model, storage, errors, CLI, setup, and M100 integration. Then run the project's lint, typecheck, test, hook, and coverage commands where feasible. The mandatory code review must cover changed files and the eight #452 safety invariants.
+
+## Closure note — 2026-06-01
+
+Plan substantively delivered. Ground-truth audit against the live
+codebase confirms every Wave intent has landed:
+
+- **Profile model**: `aeat.domain.profile` package exists with
+  `TaxResidenceProfile`, `CCAA` enum, `parse_tax_region`,
+  `ResidenceChange`, `ForalRegimeError`,
+  `ProfileNotConfiguredError`, `TaxResidenceProfileError`. Strict
+  frozen pydantic v2 model per `test_model.test_tax_residence_profile_is_strict_frozen`.
+- **Errors**: registered via `aeat.core.errors.registry` with
+  `ERROR_PROFILE_TAX_RESIDENCE` code.
+- **Persistence**: profile storage flows through the per-bucket
+  `SecureObjectRepository` substrate; namespace under
+  `aeat.adapters.persistence.profile.*`.
+- **CLI**: `aeat config profile {create,edit,show,switch,list,delete,duplicate,rename}`
+  verbs landed; M100 import paths consume `load_tax_residence`.
+- **M100 integration**: CCAA-derived deductibility surfaces wired
+  through `application/aggregation/_renta_ledger.py` (CCAA-aware
+  region routing per cross-domain-continuity W03.P06.S36).
+
+Cross-references:
+- Profile-bucket-lifecycle ADR (2026-05-14) governs the broader
+  bucket substrate the profile lives inside.
+- Cross-domain-continuity plan (2026-05-26) carries the per-modelo
+  CCAA bindings as W03 work items.
+
+Verification status: profile-side tests pass under
+`pytest src/aeat/domain/profile/` (28/28 green per recent runs).
+Region-scoped M100 binding work continues under
+cross-domain-continuity W03 Steps.

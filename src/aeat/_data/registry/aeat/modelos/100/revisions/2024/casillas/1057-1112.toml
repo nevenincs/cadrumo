@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1112"
+number = "1112"
+label = "Por donaciones o cesiones de uso o comodatos para otros fines de interés cultural, científico o deportivo no profesional"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_donaciones_otros_fines"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

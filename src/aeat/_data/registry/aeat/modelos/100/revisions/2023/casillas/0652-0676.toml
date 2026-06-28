@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "0676"
+number = "0676"
+label = "Resultados a ingresar de las anteriores autoliquidaciones o liquidaciones administrativas correspondientes al ejercicio 2023"
+section = ["resultados", "regularizacion_res"]
+semantic_role = "irpf_regularizacion_autoliquidaciones_anteriores_ingresar"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

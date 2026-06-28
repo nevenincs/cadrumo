@@ -1,0 +1,10 @@
+[[revisions."2020".casillas]]
+id = "0540"
+number = "0540"
+label = "Cuotas correspondientes a la base liquidable del ahorro: Parte estatal"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_cuota_base_liquidable_ahorro_estatal"
+input_kind = "computed"
+formula = "renta-2020-cuota-base-liquidable-ahorro-estatal"
+legal_refs = ["ley-35-2006:art-63"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

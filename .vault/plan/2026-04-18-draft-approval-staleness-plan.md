@@ -3,10 +3,10 @@ tags:
   - '#plan'
   - '#draft-approval-staleness'
 date: '2026-04-18'
+modified: '2026-04-18'
 related:
   - '[[2026-04-18-draft-approval-staleness-adr]]'
   - '[[2026-04-18-draft-approval-staleness-research]]'
-  - '[[2026-04-17-kent-revise-review-audit]]'
 ---
 
 # `draft-approval-staleness` `implementation` plan

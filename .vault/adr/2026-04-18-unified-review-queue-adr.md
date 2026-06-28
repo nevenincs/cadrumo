@@ -3,9 +3,9 @@ tags:
   - "#adr"
   - "#unified-review-queue"
 date: 2026-04-18
+modified: '2026-04-18'
 related:
   - "[[2026-04-18-unified-review-queue-research]]"
-  - "[[2026-04-17-kent-revise-review-audit]]"
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-12-self-healing-sync-adr]]"
   - "[[2026-04-12-filing-draft-engine-adr]]"

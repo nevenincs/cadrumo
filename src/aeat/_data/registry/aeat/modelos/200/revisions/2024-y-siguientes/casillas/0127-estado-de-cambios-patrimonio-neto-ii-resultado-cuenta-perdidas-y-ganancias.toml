@@ -1,0 +1,84 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "00450"
+number = "00450"
+label = "Estado de cambios patrimonio neto (II) - Resultado cuenta pérdidas y ganancias - Capital - Escriturado [00450]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "resultado_cuenta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_resultado_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00450", "modelo-200-page-026-casilla-00450", "modelo-200-page-043-casilla-00450"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00451"
+number = "00451"
+label = "Estado de cambios patrimonio neto (II) - Resultado cuenta pérdidas y ganancias - Capital - No exigido [00451]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "resultado_cuenta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_resultado_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00451", "modelo-200-page-026-casilla-00451", "modelo-200-page-043-casilla-00451"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00452"
+number = "00452"
+label = "Estado de cambios patrimonio neto (II) - Resultado cuenta pérdidas y ganancias - Prima de emisión [00452]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "resultado_cuenta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_resultado_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00452", "modelo-200-page-020b-casilla-00452", "modelo-200-page-042-casilla-00452"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00453"
+number = "00453"
+label = "Estado de cambios patrimonio neto (II) - Resultado cuenta pérdidas y ganancias - Reservas [00453]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "resultado_cuenta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_resultado_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00453", "modelo-200-page-020b-casilla-00453", "modelo-200-page-032-casilla-00453", "modelo-200-page-042-casilla-00453"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00454"
+number = "00454"
+label = "Estado de cambios patrimonio neto (II) - Resultado cuenta pérdidas y ganancias - Acciones y participaciones en patrimonio propias [00454]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "resultado_cuenta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_resultado_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00454", "modelo-200-page-020b-casilla-00454", "modelo-200-page-032-casilla-00454", "modelo-200-page-042-casilla-00454"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00455"
+number = "00455"
+label = "Estado de cambios patrimonio neto (II) - Resultado cuenta pérdidas y ganancias - Resultados ejercicios anteriores [00455]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "resultado_cuenta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_resultado_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00455", "modelo-200-page-020b-casilla-00455", "modelo-200-page-033-casilla-00455", "modelo-200-page-042-casilla-00455"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "00456"
+number = "00456"
+label = "Estado de cambios patrimonio neto (II) - Resultado cuenta pérdidas y ganancias - Otras aportaciones de socios [00456]"
+section = ["estado_de_cambios_patrimonio_neto_ii", "resultado_cuenta_perdidas_y_ganancias"]
+data_type = "money"
+semantic_role = "is_ecpn_resultado_perdidas_ganancias_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-010-casilla-00456", "modelo-200-page-020b-casilla-00456", "modelo-200-page-033-casilla-00456", "modelo-200-page-042-casilla-00456"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

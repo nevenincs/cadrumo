@@ -1,17 +1,22 @@
-"""Portal: Modelo 840 — Impuesto sobre Actividades Económicas."""
+"""Registry entry for Modelo 840 - Impuesto sobre Actividades Economicas (IAE).
+
+Defines the :class:`PortalMetadata` record for :class:`Portal`
+``PORTAL_M840_IAE`` under :class:`PortalCategory` ``FILING``,
+exposed as :data:`ENTRY` and consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY`.
+"""
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M840_IAE,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G323.shtml",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_M840_IAE),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(
         AuthMethod.CERTIFICATE,
@@ -20,11 +25,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_840,
-    label={
-        "es": "Modelo 840 — Impuesto sobre Actividades Económicas",
-        "en": "Modelo 840 — Economic activities tax",
-        "hu": "840-es űrlap — Gazdasági tevékenységi adó",
-    },
-    purpose_es="Alta, variación y baja en el Impuesto sobre Actividades Económicas (IAE).",
+    label="entries.portal_m840_iae.label",
+    purpose="entries.portal_m840_iae.purpose",
 )
+"""Portal entry for Modelo 840 (Impuesto sobre Actividades Económicas — IAE)."""

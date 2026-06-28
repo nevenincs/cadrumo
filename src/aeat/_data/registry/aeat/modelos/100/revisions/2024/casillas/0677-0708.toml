@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "0708"
+number = "0708"
+label = "Fecha de adquisición de la vivienda por la que se practica la deducción (salvo que se cumplimente la casilla [0690])"
+section = ["resultados", "anexo_a_res", "deduccion_vivienda_habitual_res"]
+data_type = "text"
+semantic_role = "irpf_anexo_a_vivienda_fecha_adquisicion"
+legal_refs = ["ley-35-2006:dt-18"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

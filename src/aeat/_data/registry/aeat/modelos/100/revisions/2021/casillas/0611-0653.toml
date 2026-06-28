@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "0653"
+number = "0653"
+label = "Indique si le han cedido el derecho a la deducción y en su caso el NIF del cedente/s"
+section = ["resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res"]
+data_type = "boolean"
+semantic_role = "irpf_familia_numerosa_cedido_flag"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

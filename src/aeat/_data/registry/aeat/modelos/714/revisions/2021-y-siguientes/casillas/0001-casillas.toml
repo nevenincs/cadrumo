@@ -1,0 +1,131 @@
+# Modelo 714 (Impuesto sobre el Patrimonio) — casilla schema.
+#
+# Authored from the AEAT diseño de registro DR714_2025.xls (Orden HAC/1023/2021,
+# corpus/aeat_official/disenos_registro/modelo_714/), sheet "714-10 Patrimonio"
+# (liquidación). The registry now computes the art. 30 cuota íntegra scale
+# (casilla 29) and the art. 31 80%-floor reference (casilla 39). Base inputs,
+# límite conjunto, total cuota íntegra, cuota minorada, and cuota a ingresar
+# stay manual until their own official formula evidence lands. The vivienda
+# habitual exemption remains grounded in art. 4.Nueve on the base-imponible input.
+
+[[revisions."2021-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+label = "Ejercicio al que se refiere la declaracion"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["ley-19-1991:art-28"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2021-y-siguientes".casillas]]
+id = "decl.periodo"
+number = "periodo"
+label = "Periodo (anual, 0A)"
+section = ["declarante"]
+data_type = "period_code"
+semantic_role = "filing_period"
+required = true
+input_kind = "informational"
+legal_refs = ["ley-19-1991:art-28"]
+source_refs = ["aeat-modelo-714-procedure"]
+
+[[revisions."2021-y-siguientes".casillas]]
+id = "patrimonio.base-imponible"
+number = "patrimonio.base-imponible"
+label = "Base imponible (patrimonio neto)"
+section = ["liquidacion", "base"]
+data_type = "money"
+semantic_role = "patrimonio_base_imponible"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-4-9"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2021-y-siguientes".casillas]]
+id = "patrimonio.base-liquidable"
+number = "patrimonio.base-liquidable"
+label = "Base liquidable (base imponible menos reducciones, art. 28)"
+section = ["liquidacion", "base"]
+data_type = "money"
+semantic_role = "patrimonio_base_liquidable"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-28"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2021-y-siguientes".casillas]]
+id = "patrimonio.cuota-integra"
+number = "29"
+label = "Liquidacion - Cuota integra (escala art. 30)"
+section = ["liquidacion", "cuota"]
+data_type = "money"
+semantic_role = "patrimonio_cuota_integra"
+required = false
+input_kind = "computed"
+formula = "patrimonio-cuota-integra-escala-estatal"
+legal_refs = ["ley-19-1991:art-30"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2021-y-siguientes".casillas]]
+id = "patrimonio.limite-conjunto"
+number = "33"
+label = "Liquidacion - Limite conjunto de cuotas del IP y del IRPF (60%, art. 31)"
+section = ["liquidacion", "limite"]
+data_type = "money"
+semantic_role = "patrimonio_limite_conjunto"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2021-y-siguientes".casillas]]
+id = "patrimonio.reduccion-limite-80"
+number = "39"
+label = "Liquidacion - 80% de la cuota integra del Impuesto sobre el Patrimonio (suelo reduccion, art. 31)"
+section = ["liquidacion", "limite"]
+data_type = "money"
+semantic_role = "patrimonio_reduccion_limite_ochenta"
+required = false
+input_kind = "computed"
+formula = "patrimonio-reduccion-limite-80-suelo"
+legal_refs = ["ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2021-y-siguientes".casillas]]
+id = "patrimonio.total-cuota-integra"
+number = "40"
+label = "Liquidacion - Total cuota integra"
+section = ["liquidacion", "cuota"]
+data_type = "money"
+semantic_role = "patrimonio_total_cuota_integra"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2021-y-siguientes".casillas]]
+id = "patrimonio.cuota-minorada"
+number = "45"
+label = "Liquidacion - Cuota minorada"
+section = ["liquidacion", "cuota"]
+data_type = "money"
+semantic_role = "patrimonio_cuota_minorada"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2021-y-siguientes".casillas]]
+id = "patrimonio.cuota-a-ingresar"
+number = "55"
+label = "Liquidacion - Cuota a ingresar"
+section = ["liquidacion", "resultado"]
+data_type = "money"
+semantic_role = "patrimonio_cuota_a_ingresar"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-19-1991:art-30", "ley-19-1991:art-31"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]

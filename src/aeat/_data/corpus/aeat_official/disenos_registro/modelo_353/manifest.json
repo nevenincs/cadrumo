@@ -1,0 +1,32 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "353",
+  "retrieved_at": "2026-05-06",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "353",
+      "title": "353 - 01-353-ejercicio-2026-y-siguientes-actualizado-03-02-26.xlsx",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR353e26v12.xlsx",
+      "stored_path": "files/01-353-ejercicio-2026-y-siguientes-actualizado-03-02-26.xlsx",
+      "original_filename": "01-353-ejercicio-2026-y-siguientes-actualizado-03-02-26.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 130282,
+      "sha256": "cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380",
+      "retrieved_at": "2026-05-06"
+    }
+  ]
+}

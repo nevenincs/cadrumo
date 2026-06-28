@@ -1,0 +1,43 @@
+# Terminology Handbook concept fragment.
+
+[concept]
+concept_id = "mapa-relevancia"
+domain = "concepto"
+lifecycle = "deprecated"
+broader = ["manual-terminologia"]
+related = ["barrido-rag", "depuracion-licencia"]
+created_at = 2026-06-12
+updated_at = 2026-06-12
+
+[language.es]
+short_description = "El dato comprometido que asocia cada termino barrido con destinos documentales rankeados."
+definition = "Archivo de datos laundered que materializa los resultados del barrido RAG como mapeos de termino a destino: identificadores de registro, tipo de superficie, destino y peso normalizado. En ADR D6 y D8, este mapa es comprometido porque CI y el build offline no ejecutan RAG, y sus targets deben resolver contra la documentacion actual."
+scope_note = "El mapa no contiene vectores, pesos sparse, snippets ni rutas de hits crudos."
+
+[language.es.source]
+citation = "2026-06-10-docs-terminology-search-adr, decisiones D6 y D8."
+authority = "vaultspec"
+
+[[language.es.term]]
+label = "mapa de relevancia"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[[language.es.term]]
+label = "relevance mapping"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "The committed data that maps swept terms to ranked documentation targets."
+
+[[language.en.term]]
+label = "relevance mapping"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "La dada compromesa que associa cada terme amb destinacions documentals ordenades."
+
+[language.hu]
+short_description = "Az eltarolt adat, amely a terminusokat rangsorolt dokumentacios celokhoz koti."

@@ -1,0 +1,10 @@
+[[revisions."2021".casillas]]
+id = "1283"
+number = "1283"
+label = "Saldo negativo de los rendimientos de capital mobiliario imputables a 2021, a integrar en la base imponible del ahorro, pendientes de compensación en los 4 ejercicios siguientes (casillas [0430] - ..."
+section = ["resultados", "anexo_c_res", "rdtos_cm_negativos_res"]
+semantic_role = "irpf_anexo_c_rdto_cm_negativo_generado"
+input_kind = "computed"
+formula = "renta-2021-capital-mobiliario-saldo-pendiente-base-ahorro"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

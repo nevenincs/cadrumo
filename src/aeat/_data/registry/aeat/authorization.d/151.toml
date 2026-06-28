@@ -1,0 +1,14 @@
+# Modelo 151 (régimen especial de impatriados, "Ley Beckham"). Enrolled by the
+# cuota-íntegra escala calculation across two distinct renta years (2024, 2025)
+# inside one taxpayer's 6-year régimen window (art. 93 chapeau: change-of-
+# residence year + 5 siguientes — the régimen and its escala persist
+# year-over-year, the cross-renta continuity). The engine computes the flat
+# two-band escala of art. 93.2.e).1.º (24% hasta 600.000 €, 47% sobre el exceso)
+# via lookup_bracket; the enrolling test asserts the cuota against a
+# BOE-escala-derived worked example (base 700.000 → 191.000; base 900.000 →
+# 285.000), not by re-running the registry formula. evidence_class calculation.
+[modelo]
+modelo = "151"
+renta_years = [2024, 2025]
+evidence_class = "calculation"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_151_beckham_cuota_continuity.py"

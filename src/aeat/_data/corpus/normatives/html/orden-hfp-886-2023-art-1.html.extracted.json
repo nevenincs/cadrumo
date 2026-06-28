@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hfp-886-2023-art-1.html",
+  "source_sha256": "708f342af38ed0b208c82591dc49a8e90527f22f62015866ba4eeb3155be818e",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Se aprueba el Modelo 721 «Declaración informativa sobre monedas virtuales situadas en el extranjero» cuyos diseños físicos y lógicos figuran en el anexo de esta Orden.",
+      "title": "Artículo 1. Aprobación del Modelo 721 y de sus diseños físicos y lógicos.",
+      "section": "Artículo 1. Aprobación del Modelo 721 y de sus diseños físicos y lógicos.",
+      "anchor": null
+    }
+  ]
+}

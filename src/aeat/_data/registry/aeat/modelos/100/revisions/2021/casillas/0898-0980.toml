@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0980"
+number = "0980"
+label = "Para el fomento de emprendimiento (traslade el importe de la casilla [1136] del anexo B.8)"
+section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
+semantic_role = "irpf_deduccion_castilla_y_leon_fomento_emprendimiento"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

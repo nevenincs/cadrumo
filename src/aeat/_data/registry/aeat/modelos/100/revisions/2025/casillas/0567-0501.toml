@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0501"
+number = "0501"
+label = "Compensación (si la casilla [0500] es positiva y hasta el límite máximo de su importe): Bases liquidables generales negativas de 2021 a 2024 (cumplimente el anexo C.4)"
+section = ["resultados", "base_liquidable_res"]
+semantic_role = "irpf_compensacion_bases_negativas_generales"
+legal_refs = ["ley-35-2006:art-50", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

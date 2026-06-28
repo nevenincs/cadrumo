@@ -1,0 +1,9 @@
+[[revisions.2019-2022.workbook_parity_refs]]
+id = "modelo-180-dr-pdf-2014"
+workbook_source = "aeat-dr-180-2014"
+fixture_id = "modelo-180-2014-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2014"]

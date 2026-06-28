@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "1240"
+number = "1240"
+label = "Importe reinvertido hasta el 31-12-2025 en rentas vitalicias"
+section = ["resultados", "anexo_c_res", "exencion_rentas_vitalicias_res"]
+semantic_role = "irpf_anexo_c_exencion_rv_importe_reinvertido"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-38", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

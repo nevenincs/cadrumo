@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "1631"
+number = "1631"
+label = "Fecha de transmisión (día, mes y año)"
+section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
+data_type = "text"
+semantic_role = "irpf_ganancia_otros_fecha_transmision"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
-from playwright.async_api import BrowserContext
+if TYPE_CHECKING:
+    # playwright is the optional `browser` extra; this type is annotation-only.
+    from playwright.async_api import BrowserContext
 
 from .....core.logging import get_logger
+from ._errors import BrowserEvasionError
 
 logger = get_logger(__name__)
 
@@ -38,13 +41,18 @@ class PlaywrightStealthEvasion:
             context: The Playwright BrowserContext to patch.
 
         Raises:
-            RuntimeError: If the ``playwright-stealth`` package is not installed.
+            BrowserEvasionError: If the ``playwright-stealth`` package is not installed.
         """
         try:
             from playwright_stealth import Stealth
         except ImportError as e:
-            logger.error("playwright-stealth is not installed. Evasion failed.")
-            raise RuntimeError("playwright-stealth is required for this evasion strategy.") from e
+            from .....core import BROWSER_EXTRA
+
+            logger.error("playwright-stealth is not installed; evasion failed", exc_info=True)
+            raise BrowserEvasionError(
+                "playwright-stealth is required for this evasion strategy.",
+                suggestion=BROWSER_EXTRA.install_hint,
+            ) from e
 
         await Stealth().apply_stealth_async(context)
-        logger.info("Successfully applied playwright-stealth evasion.")
+        logger.debug("playwright-stealth evasion applied")

@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1654"
+number = "1654"
+label = "Ganancia patrimonial reducida no exenta imputable a 2024"
+section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
+semantic_role = "irpf_ganancia_otros_reducida_imputable_da7"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

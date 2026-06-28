@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "1055"
+number = "1055"
+label = "Por inversión en instalaciones de recursos energéticos renovables"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_recursos_energeticos_renovables"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

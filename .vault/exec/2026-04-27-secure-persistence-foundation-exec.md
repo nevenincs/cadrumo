@@ -1,16 +1,9 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/exec/ location)
-# Feature tag (replace secure-persistence-foundation with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#exec'
   - '#secure-persistence-foundation'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-04-27'
-# Related documents as quoted wiki-links - MUST link to parent PLAN
-# (e.g., "[[2026-02-04-feature-plan]]")
+modified: '2026-04-27'
 related:
   - "[[2026-04-27-secure-persistence-foundation-plan]]"
   - "[[2026-04-27-secure-persistence-foundation-adr]]"
@@ -18,14 +11,7 @@ related:
   - "[[2026-04-27-security-storage-audit-audit]]"
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `secure-persistence-foundation` execution summary
 

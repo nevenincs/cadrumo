@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0086"
+number = "0086"
+label = "En el caso excepcional de que el inmueble esté, en los mismos días, parte a disposición del contribuyente y parte destinado a otros usos, marque una \"X\""
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+data_type = "boolean"
+semantic_role = "irpf_inmueble_uso_mixto_flag"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

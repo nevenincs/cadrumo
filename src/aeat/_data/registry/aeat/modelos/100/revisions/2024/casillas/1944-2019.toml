@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "2019"
+number = "2019"
+label = "Fecha de efectos título de familia numerosa"
+section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
+data_type = "text"
+semantic_role = "irpf_deduccion_madrid_familia_numerosa_fecha_titulo"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

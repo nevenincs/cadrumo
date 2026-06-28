@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0399"
+number = "0399"
+label = "Importe de la ganancia patrimonial que procede imputar a 2022"
+section = ["toma_datos_ampliada", "gp_reinversion"]
+semantic_role = "irpf_ganancia_reinversion_imputable"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

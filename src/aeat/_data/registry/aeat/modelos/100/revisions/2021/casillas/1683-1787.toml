@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "1787"
+number = "1787"
+label = "Ciudad/City"
+section = ["resultados", "regularizacion_res", "rectnosepa"]
+data_type = "text"
+semantic_role = "irpf_rectnosepa_banco_ciudad"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

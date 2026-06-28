@@ -1,1 +1,0 @@
-"""Import-contract test package."""

@@ -1,23 +1,26 @@
-"""Portal: Calendario del contribuyente."""
+"""Catalogue entry for the AEAT *Calendario del contribuyente* reference page.
+
+Exposes :data:`ENTRY`, a frozen :class:`PortalMetadata` record identified
+by the :class:`Portal` code ``PORTAL_CALENDARIO_CONTRIBUYENTE`` under
+the :class:`PortalCategory` member
+:attr:`aeat.domain.portals.PortalCategory.CALENDAR_REFERENCE`.
+"""
 
 from __future__ import annotations
 
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_CALENDARIO_CONTRIBUYENTE,
-    url="https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/calendario-contribuyente.html",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_CALENDARIO_CONTRIBUYENTE),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.CALENDAR_REFERENCE,
     auth_methods=(AuthMethod.ANONYMOUS,),
     url_stability=UrlStability.STABLE_WITHIN_CAMPAIGN,
-    label={
-        "es": "Calendario del contribuyente",
-        "en": "Taxpayer calendar",
-        "hu": "Adózói naptár",
-    },
-    purpose_es="Calendario oficial del contribuyente con los plazos de presentación por modelo.",
+    label="entries.portal_calendario_contribuyente.label",
+    purpose="entries.portal_calendario_contribuyente.purpose",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the taxpayer calendar reference page."""

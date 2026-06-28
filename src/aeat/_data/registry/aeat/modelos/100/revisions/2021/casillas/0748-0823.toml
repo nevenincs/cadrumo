@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0823"
+number = "0823"
+label = "Por inversiones o donaciones a entidades de la Economía Social establecidas en Cantabria (traslade el importe de la casilla [1179] del anexo B.8)"
+section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
+semantic_role = "irpf_deduccion_cantabria_economia_social"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

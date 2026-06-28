@@ -1,0 +1,12 @@
+# Modelo 840 (IAE — declaración censal). Enrolled by the IAE alta/baja
+# threshold-continuity test. An alta in annual context 2024 and a baja in
+# annual context 2026 are persisted via the real encrypted-SQLite
+# CalculationObservationRepository, loaded back, and asserted for strict
+# pydantic equality + tipo-declaracion isolation + ejercicio casilla
+# correctness. Evidence class is threshold_continuity (ad_hoc cadence, no
+# calculation engine; RDL 2/2004 arts. 78/82/90 / Orden HAC/2572/2003).
+[modelo]
+modelo = "840"
+renta_years = [2024, 2026]
+evidence_class = "threshold_continuity"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_840_iae_continuity.py"

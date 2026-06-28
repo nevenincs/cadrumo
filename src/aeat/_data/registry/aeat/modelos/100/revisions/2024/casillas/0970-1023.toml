@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1023"
+number = "1023"
+label = "Por cuidado de hijos menores"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_cuidado_hijos_menores"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

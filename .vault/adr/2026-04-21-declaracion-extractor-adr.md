@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#declaracion-extractor"
 date: "2026-04-21"
+modified: '2026-04-21'
 related:
   - "[[2026-04-21-declaracion-extractor-research]]"
   - "[[2026-04-21-pdf-taxonomy-adr]]"
@@ -10,7 +11,20 @@ related:
   - "[[2026-04-21-real-pdf-fixture-corpus-adr]]"
 ---
 
-# `declaracion-extractor` adr: `label-first-bbox-fallback-acroform-opportunistic-per-modelo-registry` | (**status:** `accepted`)
+# `declaracion-extractor` adr: `label-first-bbox-fallback-acroform-opportunistic-per-modelo-registry` | (**status:** `superseded`)
+
+## Superseded (2026-05-21)
+
+This ADR is **superseded by `2026-05-21-declaracion-extraction-architecture-adr`**.
+Its `DeclaracionExtractor` ABC + per-modelo Python extractor-class
+registry was never going to survive the registry-data direction of
+`2026-05-03-calculation-truth-registry-pending-adr`: the hexagonal
+restructure deleted every extractor class and replaced them with a
+registry-profile-driven generic parser. The successor ADR ratifies that
+registry-driven design as canonical and adds a typed named-field
+extraction primitive. The decision content below is retained for
+historical context only; do not implement the `DeclaracionExtractor`
+ABC or the per-modelo class registry.
 
 ## Problem Statement
 

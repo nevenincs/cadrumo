@@ -1,0 +1,46 @@
+[[revisions."2019-y-siguientes".constructs]]
+id = "modelo-111-withholding-workflow"
+title = "Modelo 111 withholding filing workflow"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
+casilla_ids = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30"]
+formulas = ["modelo-111-total-retenciones-ingresos", "modelo-111-resultado-ingresar"]
+filing_schedules = ["modelo-111-trimestral", "modelo-111-mensual"]
+export_layouts = ["modelo-111-fichero-boe"]
+extraction_profiles = ["modelo-111-export-record", "modelo-111-declaracion-pdf"]
+live_cross_references = ["modelo-111-static-official", "modelo-111-filed-declarations-read"]
+workbook_parity_refs = ["modelo-111-dr-xls"]
+verification_expectations = ["modelo-111-calculation-verification"]
+application_links = [
+    "modelo-111-calculation",
+    "modelo-111-filing",
+    "modelo-111-export",
+    "modelo-111-verification",
+    "modelo-111-review",
+    "modelo-111-approval",
+    "modelo-111-reconciliation",
+    "modelo-111-extractor",
+    "modelo-111-portal-cross-reference",
+    "modelo-111-filed-declarations-observation",
+    "modelo-111-deadline",
+    "modelo-111-workflow",
+]
+deadline_windows = [
+    "modelo-111-2026-1t",
+    "modelo-111-2026-01",
+    "modelo-111-2026-02",
+    "modelo-111-2026-03",
+    "modelo-111-2026-04",
+    "modelo-111-2026-05",
+    "modelo-111-2026-06",
+    "modelo-111-2026-07",
+    "modelo-111-2026-08",
+    "modelo-111-2026-09",
+    "modelo-111-2026-10",
+    "modelo-111-2026-11",
+    "modelo-111-2026-12",
+    "modelo-111-2026-2t",
+    "modelo-111-2026-3t",
+    "modelo-111-2026-4t",
+]
+

@@ -1,0 +1,28 @@
+[[revisions."2019-2023".live_cross_references]]
+id = "modelo-131-2019-2023-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-131-filed-declarations-read-only"
+allowed_hosts = ["www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
+
+# -----------------------------------------------------------------------------
+# Prior-quarter negative-result carry-forward (AEAT M131 instructions under
+# the RD 439/2007 art. 110 pago fraccionado framework)
+# revision 2019-2023.
+# -----------------------------------------------------------------------------

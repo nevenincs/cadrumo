@@ -1,0 +1,54 @@
+[[revisions."2008-y-siguientes".constructs]]
+id = "modelo-347-informative"
+title = "Modelo 347 informative declaration of operaciones con terceras personas"
+legal_refs = [
+    "orden-eha-3012-2008:art-1",
+    "orden-eha-3012-2008:art-10",
+    "orden-hac-1431-2025:art-1",
+    "rd-1065-2007:art-31",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-347-2025",
+    "aeat-dr-347-2011",
+    "aeat-modelo-347-procedure",
+    "boe-modelo-347-2008-form",
+    "boe-modelo-347-2011-amendment",
+]
+casilla_ids = [
+    "decl.ejercicio",
+    "decl.tipo-declaracion",
+    "contraparte.nif",
+    "contraparte.nombre",
+    "contraparte.clave-operacion",
+    "contraparte.importe-Q1",
+    "contraparte.importe-Q2",
+    "contraparte.importe-Q3",
+    "contraparte.importe-Q4",
+    "contraparte.pais-codigo",
+]
+workbook_parity_refs = ["modelo-347-dr-2025", "modelo-347-dr-2011"]
+live_cross_references = [
+    "modelo-347-static-documentation",
+    "modelo-347-filed-declarations-read",
+]
+application_links = [
+    "modelo-347-portal",
+    "modelo-347-filing",
+    "modelo-347-verification",
+    "modelo-347-deadline",
+    "modelo-347-extractor",
+]
+filing_schedules = ["modelo-347-anual"]
+extraction_profiles = ["modelo-347-declaracion-pdf"]
+deadline_windows = [
+    "modelo-347-2018-0a",
+    "modelo-347-2019-0a",
+    "modelo-347-2020-0a",
+    "modelo-347-2021-0a",
+    "modelo-347-2022-0a",
+    "modelo-347-2023-0a",
+    "modelo-347-2024-0a",
+    "modelo-347-2025-0a",
+    "modelo-347-2026-0a",
+]

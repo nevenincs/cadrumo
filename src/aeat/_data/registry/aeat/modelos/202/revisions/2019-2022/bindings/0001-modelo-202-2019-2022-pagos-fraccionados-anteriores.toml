@@ -1,0 +1,11 @@
+[[revisions.2019-2022.bindings]]
+id = "modelo-202-2019-2022-pagos-fraccionados-anteriores"
+source = "relation_prefill"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+selector = { source_modelo = "202", source_casilla_id = "34" }
+aggregation = { op = "sum" }
+
+[[revisions.2019-2022.bindings.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["pagos fraccionados"]

@@ -1,0 +1,9 @@
+[[revisions."2023".casillas]]
+id = "0273"
+number = "0273"
+label = "Persona o entidad con la que el contribuyente mantiene la relación laboral: NIF (si es residente en territorio español) o denominación"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_derechos_imagen"]
+data_type = "text"
+semantic_role = "irpf_re_imagen_empleador"
+legal_refs = ["ley-35-2006:art-92"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

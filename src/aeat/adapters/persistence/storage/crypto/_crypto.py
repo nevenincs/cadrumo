@@ -23,11 +23,10 @@ from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import DecryptionError, EncryptionError, KeyDerivationError
-
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 NONCE_SIZE: int = 12
 """AES-256-GCM nonce size in bytes (per NIST SP 800-38D)."""
@@ -128,7 +127,7 @@ def encrypt_record(
     nonce = secrets.token_bytes(NONCE_SIZE)
     try:
         ciphertext = cipher.encrypt(nonce, plaintext, associated_data)
-    except Exception as exc:  # pragma: no cover - defensive
+    except (TypeError, ValueError) as exc:
         raise EncryptionError(f"AES-256-GCM encryption failed: {exc}") from exc
     return EncryptedBlob(nonce=nonce, ciphertext=ciphertext)
 
@@ -165,7 +164,7 @@ def decrypt_record(
         return cipher.decrypt(blob.nonce, blob.ciphertext, associated_data)
     except InvalidTag as exc:
         raise DecryptionError("AES-256-GCM tag verification failed") from exc
-    except Exception as exc:  # pragma: no cover - defensive
+    except (TypeError, ValueError) as exc:
         raise DecryptionError(f"AES-256-GCM decryption failed: {exc}") from exc
 
 
@@ -207,5 +206,5 @@ def derive_key(
     try:
         hkdf = HKDF(algorithm=hashes.SHA256(), length=length, salt=salt, info=context)
         return hkdf.derive(key_material)
-    except Exception as exc:  # pragma: no cover - defensive
+    except (TypeError, ValueError) as exc:
         raise KeyDerivationError(f"HKDF-SHA256 derivation failed: {exc}") from exc

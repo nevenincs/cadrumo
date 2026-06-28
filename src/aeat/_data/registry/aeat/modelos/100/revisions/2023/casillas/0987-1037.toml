@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1037"
+number = "1037"
+label = "Para paliar los daños causados por la explosión de material pirotécnico que tuvo lugar en Tui durante el mes de mayo del 2018"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_danos_pirotecnia"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

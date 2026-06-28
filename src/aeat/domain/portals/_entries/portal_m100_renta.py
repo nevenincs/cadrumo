@@ -1,17 +1,22 @@
-"""Portal: Modelo 100 — IRPF renta anual."""
+"""Catalogue entry for the *Modelo 100* IRPF annual return procedure page.
+
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_M100_RENTA`` under :class:`PortalCategory`
+``FILING``. Accepts the IRPF-only ``REFERENCE_NUMBER`` credential in
+addition to the standard certificate / Cl@ve / DNIe set.
+"""
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M100_RENTA,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G229.shtml",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_M100_RENTA),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(
         AuthMethod.CERTIFICATE,
@@ -22,11 +27,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.REFERENCE_NUMBER,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_100,
-    label={
-        "es": "Modelo 100 — IRPF declaración anual",
-        "en": "Modelo 100 — Annual personal income tax",
-        "hu": "100-as űrlap — Éves személyi jövedelemadó",
-    },
-    purpose_es="Presentación de la declaración anual del IRPF (Renta).",
+    label="entries.portal_m100_renta.label",
+    purpose="entries.portal_m100_renta.purpose",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 100 IRPF Renta page."""

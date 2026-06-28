@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "0680"
+number = "0680"
+label = "Resultado de la declaración complementaria"
+section = ["resultados", "regularizacion_res"]
+data_type = "decimal"
+semantic_role = "irpf_regularizacion_complementaria_resultado"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

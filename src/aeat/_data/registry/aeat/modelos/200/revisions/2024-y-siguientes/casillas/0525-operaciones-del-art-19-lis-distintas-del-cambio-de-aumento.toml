@@ -1,0 +1,48 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "01677"
+number = "01677"
+label = "Operaciones del art. 19 LIS distintas del cambio de residencia a Estados miembros de la Unión Europea o EEE - Aumento - Correcciones del ejercicio - Permanentes [01677]"
+section = ["operaciones_del_art_19_lis_distintas_del_cambio_de", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_art19_otras_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-01677"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01678"
+number = "01678"
+label = "Operaciones del art. 19 LIS distintas del cambio de residencia a Estados miembros de la Unión Europea o EEE - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [01678]"
+section = ["operaciones_del_art_19_lis_distintas_del_cambio_de", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_art19_otras_temporaria_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-01678"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01679"
+number = "01679"
+label = "Operaciones del art. 19 LIS distintas del cambio de residencia a Estados miembros de la Unión Europea o EEE - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores..."
+section = ["operaciones_del_art_19_lis_distintas_del_cambio_de", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_art19_otras_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-01679"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01680"
+number = "01680"
+label = "Operaciones del art. 19 LIS distintas del cambio de residencia a Estados miembros de la Unión Europea o EEE - Aumento - Saldo pendiente a fin de ejercicio [01680]"
+section = ["operaciones_del_art_19_lis_distintas_del_cambio_de", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_operaciones_art19_otras_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-01680"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

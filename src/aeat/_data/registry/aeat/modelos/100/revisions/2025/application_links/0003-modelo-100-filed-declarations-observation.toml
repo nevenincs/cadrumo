@@ -1,0 +1,7 @@
+[[revisions."2025".application_links]]
+id = "modelo-100-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-modelo-100-procedure"]

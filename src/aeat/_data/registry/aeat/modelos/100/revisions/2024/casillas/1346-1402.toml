@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "1402"
+number = "1402"
+label = "Gasto 4: Importe del gasto"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+data_type = "money"
+semantic_role = "irpf_inmueble_gasto_reparacion_importe"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

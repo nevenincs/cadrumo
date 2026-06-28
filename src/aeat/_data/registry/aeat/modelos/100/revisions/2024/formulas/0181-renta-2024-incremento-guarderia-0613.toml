@@ -1,0 +1,20 @@
+[[revisions."2024".formulas]]
+id = "renta-2024-incremento-guarderia-0613"
+target_casilla_id = "0613"
+# Art. 81 bis LIRPF: incremento deducción maternidad por gastos de guardería.
+# Cap = min(gastos_reales_pagados, hijos_menores_3 × 1.000 €, cotizaciones_SS_madre_2024).
+expression = { op = "min", args = [
+    { binding = "renta-2024-profile-guarderia-gastos-reales" },
+    { op = "multiply", args = [
+        { binding = "renta-2024-profile-descendientes-menores-3" },
+        { literal = "1000" },
+    ] },
+    { binding = "renta-2024-profile-cotizaciones-ss-madre" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["incremento", "guarder", "cotizaciones"]

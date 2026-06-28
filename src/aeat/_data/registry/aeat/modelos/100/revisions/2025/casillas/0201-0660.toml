@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0660"
+number = "0660"
+label = "Deduccion por familia numerosa"
+section = ["resultado_declaracion"]
+semantic_role = "irpf_deduccion_familia_numerosa"
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]

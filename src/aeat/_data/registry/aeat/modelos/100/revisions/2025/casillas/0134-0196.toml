@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0196"
+number = "0196"
+label = "Regularizacion cuotas RETA a ingresar"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+semantic_role = "irpf_ed_regularizacion_reta_ingresar"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

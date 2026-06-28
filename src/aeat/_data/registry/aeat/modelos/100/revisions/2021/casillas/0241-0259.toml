@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "0259"
+number = "0259"
+label = "Base imponible imputada"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_agrup_interes_economico"]
+data_type = "decimal"
+semantic_role = "irpf_re_agrup_interes_economico_base_imponible_imputada"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#modelo-303-formulas"
 date: 2026-04-17
+modified: '2026-04-17'
 related:
   - "[[2026-04-17-modelo-303-casilla-rules-research]]"
   - "[[2026-04-17-modelo-formulas-adr]]"
@@ -12,6 +13,11 @@ related:
 ---
 
 # modelo-303-formulas adr (#183)
+
+> **PARTIALLY-SUPERSEDED 2026-05-19**: The Value-Added Tax direction in this ADR is reversed: Spanish stems are authoritative for tax-domain identifiers, IvaInvoiceClassification is canonical, and domain/vat migrates into domain/iva. The Modelo 303 ruleset shape, parameter table, legal citations, casilla coverage, period-keyed catalogue infrastructure, and ruleset registration remain in force; VATClassification, VATClassificationCriteria, IssuerResidency, CustomerResidency, InvoiceDirection, CasillaRole, Modelo303Contribution, and the _classification.py and _modelo_303_mapping.py module paths rename per the cluster ledger.
+> See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
+> rename ledger and Spanish-stem terminology authority.
+
 
 ## Status
 

@@ -1,4 +1,4 @@
-"""Pydantic v2 schema for the :mod:`aeat.application.filing` subpackage.
+"""Pydantic v2 schema for the :mod:`aeat.domain.filing` subpackage.
 
 Every type in this module is a strict, frozen pydantic v2 model
 or a closed :class:`enum.StrEnum`. These are the boundary-crossing
@@ -7,46 +7,25 @@ records the rest of the project pins against — keep them stable.
 
 from __future__ import annotations
 
-import hashlib
-import json
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-from ...core.i18n import Translatable
-from ..submission._protocols import FilingFindingSeverity
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
+from ...core.errors import BaseSeverity
+from ...core.hashing import content_hash_hex
+from ...core.i18n import Translatable as tr
+from ...core.identity import SubjectTaxId
+from ..calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RegistrySnapshotRef, SourceRefId
+from ..submission import ModeloDraftStatus
 
-# Default schema version stamped on a freshly built draft when a
-# caller provides an ad hoc collection without an explicit runtime
-# schema version.
-SCHEMA_VERSION_DEFAULT = "filing-schema-0.1.0"
 APPROVAL_BASIS_VERSION = "review-basis-v1"
 
 
-class FilingDraftStatus(StrEnum):
-    """Lifecycle status of a :class:`FilingDraft`.
-
-    Drafts still build and validate up to ``READY_TO_SUBMIT``. Review adds
-    the local approval states ``APPROVED`` and ``APPROVAL_STALE`` without
-    introducing any write-path coupling.
-    """
-
-    DRAFT = "DRAFT"
-    VALIDATED = "VALIDATED"
-    READY_TO_SUBMIT = "READY_TO_SUBMIT"
-    APPROVED = "APPROVED"
-    APPROVAL_STALE = "APPROVAL_STALE"
-    SUBMITTED = "SUBMITTED"
-    ACKNOWLEDGED = "ACKNOWLEDGED"
-    REJECTED = "REJECTED"
-    AMENDED = "AMENDED"
-    CANCELLED = "CANCELLED"
-
-
-class FilingValueKind(StrEnum):
-    """Provenance kind of a :class:`FilingValue`."""
+class ModeloValueKind(StrEnum):
+    """Provenance kind of a :class:`ModeloValue`."""
 
     LITERAL = "LITERAL"
     COMPUTED = "COMPUTED"
@@ -59,37 +38,88 @@ class FilingValueKind(StrEnum):
 # can carry. Pydantic will parse JSON values back into the right
 # Python type via this union (Decimal is preferred over float for
 # any monetary value).
-FilingScalar = Decimal | int | str | bool | date | None
+ModeloScalar = Decimal | int | str | bool | date | None
 
 
-class FilingValue(BaseModel):
-    """The typed value of one casilla on a :class:`FilingDraft`.
+class ModeloValue(BaseModel):
+    """The typed value of one casilla on a :class:`ModeloDraft`.
 
     Attributes:
         casilla_id: Stable casilla ID (e.g. ``"03"``).
         value: The scalar value carried by this casilla. ``None``
-            iff ``kind`` is :attr:`FilingValueKind.EMPTY`.
+            iff ``kind`` is :attr:`ModeloValueKind.EMPTY`.
         kind: Provenance kind — literal user input, computed,
             inherited from a previous draft, default from the
             casilla schema, or empty.
         source: Free-text provenance string — e.g.
             ``"user-supplied"``, ``"computed from 01,02"``,
             ``"default per modelo schema"``.
-        formula_trace: For ``COMPUTED`` values, the casilla IDs
+        formula_trace_casilla_ids: For ``COMPUTED`` values, the casilla IDs
             that fed the computation. ``None`` for non-computed
             kinds.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
-    casilla_id: str
-    value: FilingScalar
-    kind: FilingValueKind
+    casilla_id: CasillaId
+    value: ModeloScalar
+    kind: ModeloValueKind
     source: str
-    formula_trace: tuple[str, ...] | None = None
+    formula_trace_casilla_ids: tuple[CasillaId, ...] | None = None
 
 
-class FilingValidationFinding(BaseModel):
+class ModeloBindingValue(BaseModel):
+    """The typed value of one registry binding on a :class:`ModeloDraft`.
+
+    Carries the same regulatory grounding the casilla half exposes via
+    :class:`ModeloCasillaProvenance`: ``legal_refs`` and ``source_refs``
+    populated from the binding definition, plus a typed
+    :class:`~aeat.core.BindingSourceKind` ``source`` (replacing the former
+    free-text provenance string) so a bound value is operator-traceable at
+    parity with a computed casilla.
+
+    Attributes:
+        binding_id: Stable registry binding id this value materialises.
+        value: The scalar value carried for this binding.
+        kind: Provenance kind — literal input, computed, inherited, etc.
+        source: Typed registry binding source kind (e.g.
+            :attr:`~aeat.core.BindingSourceKind.MANUAL_INPUT`,
+            :attr:`~aeat.core.BindingSourceKind.LEDGER_IVA_AGGREGATION`).
+        legal_refs: Legal references carried from the binding definition.
+        source_refs: Source references carried from the binding definition.
+        row_index: 1-based row index for multi-row (detail-record) bindings.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    binding_id: BindingId
+    value: ModeloScalar
+    kind: ModeloValueKind
+    source: BindingSourceKind
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    row_index: int | None = Field(default=None, ge=1)
+
+
+class ModeloCasillaProvenance(BaseModel):
+    """Regulatory grounding for one casilla carried on a filing draft.
+
+    ``formula_id`` is set for computed casillas (those whose value is
+    produced by a registry formula) and ``None`` for manual-input or
+    bound casillas. ``legal_refs`` and ``source_refs`` are always
+    populated from the registry casilla definition when the draft is
+    created.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    casilla_id: CasillaId
+    formula_id: FormulaId | None = None
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+
+
+class ModeloValidationFinding(BaseModel):
     """One finding produced by the validator.
 
     Attributes:
@@ -98,25 +128,24 @@ class FilingValidationFinding(BaseModel):
         severity: ERROR / WARNING / INFO.
         code: A stable machine-readable code (e.g.
             ``"casilla-required-missing"``).
-        message: A trilingual :class:`Translatable` describing the
-            finding.
+        message: A strictly-typed :class:`Translatable` key.
         references_rules: Tuple of Manual práctico Rule IDs that
             justify the finding (see :class:`aeat.domain.manuals.Rule`).
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
-    casilla_id: str | None
-    severity: FilingFindingSeverity
+    casilla_id: CasillaId | None
+    severity: BaseSeverity
     code: str
-    message: Translatable
+    message: tr
     references_rules: tuple[str, ...] = Field(default_factory=tuple)
 
 
-class FilingApprovalBasis(BaseModel):
+class ModeloApprovalBasis(BaseModel):
     """Persisted approval-basis digests for deterministic stale detection."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     version: str = APPROVAL_BASIS_VERSION
     draft_payload_fingerprint: str
@@ -126,7 +155,7 @@ class FilingApprovalBasis(BaseModel):
     schema_formula_fingerprint: str
 
 
-class FilingDraft(BaseModel):
+class ModeloDraft(BaseModel):
     """A typed, validated draft of one filing.
 
     The ``draft_id`` is a content-addressed hash of
@@ -136,15 +165,30 @@ class FilingDraft(BaseModel):
     from the hash.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = STRICT_FROZEN_CONFIG
 
     draft_id: str
     modelo: str
-    period: str
+    period: Period
     profile_tax_id: str
-    status: FilingDraftStatus
-    values: tuple[FilingValue, ...]
-    findings: tuple[FilingValidationFinding, ...] = Field(default_factory=tuple)
+    # Typed Spanish NIF/NIE/CIF of the filing subject. Defaults to
+    # ``None`` so historical records that predate the field remain
+    # loadable; new drafts populate this from the validated profile
+    # substrate so the identity is re-checkable at persistence time.
+    subject_tax_id: SubjectTaxId | None = None
+    # Four-axis coordinates identifying the registry snapshot this
+    # draft was built against. Replaces the role of the opaque
+    # ``schema_version`` string for re-resolution against the live
+    # registry catalogue. Defaults to ``None`` for backward
+    # compatibility with persisted records that predate the field;
+    # newly built drafts populate this from the snapshot used to
+    # produce the casilla values.
+    snapshot_ref: RegistrySnapshotRef | None = None
+    status: ModeloDraftStatus
+    values: tuple[ModeloValue, ...]
+    binding_values: tuple[ModeloBindingValue, ...] = Field(default_factory=tuple)
+    casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
+    findings: tuple[ModeloValidationFinding, ...] = Field(default_factory=tuple)
     created_at: datetime
     updated_at: datetime
     schema_version: str
@@ -152,37 +196,45 @@ class FilingDraft(BaseModel):
     approved_at: datetime | None = None
     approved_by: str | None = None
     review_checksum: str | None = None
-    approval_basis: FilingApprovalBasis | None = None
+    approval_basis: ModeloApprovalBasis | None = None
 
 
-def compute_draft_id(
+def compute_modelo_draft_id(
     *,
     modelo: str,
-    period: str,
+    period: Period,
     profile_tax_id: str,
     schema_version: str,
-    values: tuple[FilingValue, ...],
+    values: tuple[ModeloValue, ...],
+    binding_values: tuple[ModeloBindingValue, ...] = (),
 ) -> str:
     """Compute the stable, content-addressed ``draft_id``.
 
+    The period is serialised as ``{"filing_year": <int>, "code": "<token>"}``
+    so the hash is deterministic and self-consistent regardless of the
+    human-readable ``str(period)`` form.
+
     Args:
         modelo: Modelo string ID.
-        period: Period string (e.g. ``"2026Q1"``).
+        period: Typed :class:`~aeat.core.Period` for the filing period.
         profile_tax_id: Taxpayer tax ID.
         schema_version: The casilla DB version this draft was
             built against.
-        values: The tuple of :class:`FilingValue` records to hash.
+        values: The tuple of :class:`ModeloValue` records to hash.
+        binding_values: Optional tuple of :class:`ModeloBindingValue` records
+            included in the hash; defaults to an empty tuple.
 
     Returns:
         A 16-character lowercase hex SHA-256 prefix.
     """
     sorted_values = sorted(values, key=lambda v: v.casilla_id)
+    sorted_binding_values = sorted(binding_values, key=lambda v: (v.binding_id, v.row_index or 0))
     payload = {
         "modelo": modelo,
-        "period": period,
+        "period": {"filing_year": period.filing_year, "code": period.registry_token},
         "profile_tax_id": profile_tax_id,
         "schema_version": schema_version,
         "values": [v.model_dump(mode="json") for v in sorted_values],
+        "binding_values": [v.model_dump(mode="json") for v in sorted_binding_values],
     }
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()[:16]
+    return content_hash_hex(payload)[:16]

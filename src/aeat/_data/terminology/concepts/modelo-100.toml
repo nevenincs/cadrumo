@@ -1,0 +1,41 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "modelo-100"
+domain = "modelo"
+lifecycle = "approved"
+legal_refs = ["ley-35-2006:art-96"]
+domain_refs = ["modelo:100"]
+related = ["irpf", "renta", "casilla", "borrador"]
+created_at = 2026-06-10
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Declaracion anual del IRPF (Renta)."
+definition = "Declaracion anual del Impuesto sobre la Renta de las Personas Fisicas con la que el contribuyente regulariza su tributacion del ejercicio (la campana de la Renta)."
+
+[language.es.source]
+citation = "Ley 35/2006 del IRPF."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 100"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "declaracion de la renta"
+term_status = "admitted"
+
+[language.en]
+short_description = "Annual personal income tax (IRPF) return."
+
+[language.ca]
+short_description = "Declaracio anual de l'IRPF (Renda)."
+
+[language.hu]
+short_description = "Eves szemelyi jovedelemado-bevallas."

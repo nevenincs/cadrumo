@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0951"
+number = "0951"
+label = "Por donativos a fundaciones o al Fondo Cantabria Coopera o a Asociaciones que persigan entre sus fines el apoyo a personas con discapacidad"
+section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
+semantic_role = "irpf_deduccion_cantabria_donativos_fundaciones"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

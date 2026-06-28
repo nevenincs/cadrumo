@@ -1,26 +1,31 @@
-"""Concrete AEAT auth provider types and context provisioners.
+"""Concrete AEAT auth provider detail models and context provisioners.
 
-Provider-agnostic abstractions (``AuthProviderKind``, ``AuthProviderDescription``,
-``AuthProvider`` protocol, ``describe_provider_operator_impact``)
-live in ``aeat.domain.auth``; this module holds concrete
-per-provider detail models and the certificate browser-context provisioner.
+Provider-agnostic abstractions (:class:`AuthProviderKind`,
+:class:`AuthProviderDescription`, :class:`AuthProvider`, and
+:func:`describe_provider_operator_impact`) live in
+:mod:`aeat.application.auth`. This module owns the provider-specific payloads
+used by :class:`aeat.adapters.outbound.aeat.auth.AeatSession` and
+:class:`aeat.adapters.outbound.aeat.auth.AeatLoginAssertion`, plus the
+certificate browser-context provisioner that wires PKCS#12 credentials into
+Playwright contexts.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Literal, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Literal, Protocol, TypedDict, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
-from .....domain.auth import (
+from .....application.auth import (
     AuthProvider,
     AuthProviderDescription,
     AuthProviderKind,
     describe_provider_operator_impact,
 )
+from ._certificate_backends._base import CERTIFICATE_CONTEXT_MARKER
 from ._certificate_backends._playwright_context import build_client_certificates_kwarg
 from .certificate import (
+    CertificateNifParseError,
     HandshakeResult,
     LoadedCertificate,
     evaluate_loaded_certificate_health,
@@ -32,13 +37,17 @@ if TYPE_CHECKING:
         BrowserContextLike,
     )
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-CERTIFICATE_CONTEXT_MARKER = "_aeat_certificate_thumbprint"
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class CertificateSessionDetail(BaseModel):
-    """Certificate-backed session details."""
+    """Certificate-specific detail embedded in an authenticated AEAT session.
+
+    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` populates this
+    detail for certificate-backed :class:`aeat.adapters.outbound.aeat.auth.AeatSession`
+    records. The thumbprint and subject bind the live session to the loaded
+    certificate, while :class:`HandshakeResult` records the mTLS probe evidence.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -48,25 +57,15 @@ class CertificateSessionDetail(BaseModel):
     handshake: HandshakeResult
 
 
-class ClavePermanenteSessionDetail(BaseModel):
-    """Placeholder detail shape for future Cl@ve Permanente sessions."""
-
-    model_config = _STRICT_FROZEN
-
-    kind: Literal[AuthProviderKind.CLAVE_PERMANENTE] = AuthProviderKind.CLAVE_PERMANENTE
-
-
 class ClaveMovilSessionDetail(BaseModel):
     """Detail shape for a Cl@ve Móvil-authenticated AEAT session.
 
-    Cl@ve Móvil hands AEAT a uniform set of session cookies after the
-    user approves the push notification on their phone. The session
-    does not carry any long-lived credential material — only the
-    identity used during login and a rendezvous timestamp. The real
-    authority is the cookie set persisted in the Playwright
-    storage-state file, which is round-tripped by
-    :class:`aeat.adapters.outbound.aeat.auth._authenticator.AeatAuthenticator` via the
-    provider-agnostic sidecar.
+    :class:`aeat.adapters.outbound.aeat.auth.ClaveMovilAuthProvider` projects
+    :class:`aeat.adapters.outbound.aeat.auth._clave_movil_metadata.ClaveMovilSessionMetadata`
+    into this detail when fresh or persisted Cl@ve sessions become
+    :class:`aeat.adapters.outbound.aeat.auth.AeatSession` records. The session
+    does not carry long-lived credential material; the cookie set in encrypted
+    browser storage remains the authority for reuse.
     """
 
     model_config = _STRICT_FROZEN
@@ -87,18 +86,25 @@ class ClaveMovilSessionDetail(BaseModel):
             "login; recorded for audit only. Not reused on resume."
         ),
     )
-
-
-class ClavePinSessionDetail(BaseModel):
-    """Placeholder detail shape for future Cl@ve PIN sessions."""
-
-    model_config = _STRICT_FROZEN
-
-    kind: Literal[AuthProviderKind.CLAVE_PIN] = AuthProviderKind.CLAVE_PIN
+    landing_url: str | None = Field(
+        default=None,
+        description=(
+            "Concrete authenticated AEAT URL observed after login. "
+            "Used by live verification and resume probes so the provider "
+            "does not re-enter the auth selector when a session is already live."
+        ),
+    )
 
 
 class CertificateLoginAssertionDetail(BaseModel):
-    """Certificate-backed verification details."""
+    """Login-assertion detail for certificate-backed AEAT verification.
+
+    Carries the three signals
+    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` collects during
+    a post-auth navigation probe: whether the mTLS handshake leg succeeded,
+    whether AEAT returned a non-challenge HTTP response, and the RFC-4514
+    subject DN of the presented certificate.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -108,21 +114,13 @@ class CertificateLoginAssertionDetail(BaseModel):
     parsed_subject: str | None = None
 
 
-class ClavePermanenteLoginAssertionDetail(BaseModel):
-    """Placeholder verification detail shape for future Cl@ve Permanente."""
-
-    model_config = _STRICT_FROZEN
-
-    kind: Literal[AuthProviderKind.CLAVE_PERMANENTE] = AuthProviderKind.CLAVE_PERMANENTE
-
-
 class ClaveMovilLoginAssertionDetail(BaseModel):
     """Verification detail for a Cl@ve Móvil-backed session probe.
 
-    After a successful Cl@ve Móvil login, the authenticator probes a
-    well-known AEAT Sede URL to confirm that the session cookies are
-    still live. This detail record carries the observed signals for
-    that probe.
+    After a successful Cl@ve Móvil login, the provider probes an AEAT Sede page
+    to confirm that the session cookies are still live. This detail records the
+    cookie and landing-URL signals carried by
+    :class:`aeat.adapters.outbound.aeat.auth.AeatLoginAssertion`.
     """
 
     model_config = _STRICT_FROZEN
@@ -141,51 +139,87 @@ class ClaveMovilLoginAssertionDetail(BaseModel):
     )
 
 
-class ClavePinLoginAssertionDetail(BaseModel):
-    """Placeholder verification detail shape for future Cl@ve PIN."""
+AuthSessionDetail = CertificateSessionDetail | ClaveMovilSessionDetail
 
-    model_config = _STRICT_FROZEN
-
-    kind: Literal[AuthProviderKind.CLAVE_PIN] = AuthProviderKind.CLAVE_PIN
+AuthLoginAssertionDetail = CertificateLoginAssertionDetail | ClaveMovilLoginAssertionDetail
 
 
-AuthSessionDetail = (
-    CertificateSessionDetail | ClavePermanenteSessionDetail | ClaveMovilSessionDetail | ClavePinSessionDetail
-)
+class BrowserContextKwargs(TypedDict, total=False):
+    """Subset of Playwright ``Browser.new_context()`` keyword arguments.
 
-AuthLoginAssertionDetail = (
-    CertificateLoginAssertionDetail
-    | ClavePermanenteLoginAssertionDetail
-    | ClaveMovilLoginAssertionDetail
-    | ClavePinLoginAssertionDetail
-)
+    Only the kwargs that AEAT auth provisioners currently supply are
+    declared here. ``total=False`` makes every key optional so callers
+    can return a partial mapping.
+    """
+
+    client_certificates: list[dict[str, str]]
 
 
 @runtime_checkable
 class BrowserContextProvisioner(Protocol):
-    """Hook that decorates BrowserSession.create_context()."""
+    """Hook that decorates browser-context creation for auth providers.
 
-    def build_context_kwargs(self) -> Mapping[str, Any]: ...
+    :class:`CertificateContextProvisioner` implements this protocol to add
+    Playwright ``new_context()`` kwargs and then annotate the created context
+    with provider-specific runtime evidence.
+    """
+
+    def build_context_kwargs(self) -> BrowserContextKwargs: ...
 
     def annotate_context(self, context: BrowserContextLike) -> None: ...
 
 
 class CertificateContextProvisioner:
-    """Browser-context provisioner for the certificate-backed auth flow."""
+    """Browser-context provisioner for the certificate-backed AEAT auth flow.
+
+    Implements :class:`BrowserContextProvisioner` for PKCS#12 client-certificate
+    authentication. ``build_context_kwargs`` wires the loaded certificate into
+    Playwright's ``client_certificates`` list so every TLS connection the
+    browser makes to the AEAT origin presents the certificate automatically.
+    ``annotate_context`` stamps the SHA-256 thumbprint of the certificate onto
+    the context object under :data:`CERTIFICATE_CONTEXT_MARKER`, so the
+    authenticator can confirm that the context was provisioned with the expected
+    certificate.
+    """
 
     def __init__(self, cert: LoadedCertificate, *, origin: str) -> None:
+        """Bind ``cert`` to ``origin`` for context provisioning.
+
+        Args:
+            cert: The :class:`~aeat.adapters.outbound.aeat.auth.certificate.LoadedCertificate`
+                whose PKCS#12 bytes will be presented to the AEAT origin.
+            origin: URL origin (scheme + host) the certificate is valid for,
+                passed to Playwright's ``client_certificates`` list as the
+                binding scope.
+        """
         self._cert = cert
         self._origin = origin
 
-    def build_context_kwargs(self) -> Mapping[str, Any]:
+    def build_context_kwargs(self) -> BrowserContextKwargs:
+        """Return the Playwright ``new_context()`` kwargs that wire the certificate.
+
+        Returns:
+            A :class:`BrowserContextKwargs` mapping with ``client_certificates``
+            populated for the bound origin.
+        """
         return {
             "client_certificates": build_client_certificates_kwarg(
                 self._cert,
                 self._origin,
-            )
+            ),
         }
 
     def annotate_context(self, context: BrowserContextLike) -> None:
+        """Stamp the certificate thumbprint onto ``context`` as a marker attribute.
+
+        The marker attribute name is ``CERTIFICATE_CONTEXT_MARKER``. The
+        authenticator reads this attribute after context creation to assert
+        that the context was provisioned with the expected certificate.
+
+        Args:
+            context: The newly created :class:`~aeat.adapters.outbound.aeat.auth._authenticator.BrowserContextLike`
+                to annotate.
+        """
         setattr(context, CERTIFICATE_CONTEXT_MARKER, self._cert.sha256_thumbprint)
 
 
@@ -195,8 +229,12 @@ def describe_certificate_provider(
     warn_days: int,
     critical_days: int,
 ) -> AuthProviderDescription:
-    """Build an :class:`AuthProviderDescription` from a loaded certificate."""
+    """Build an :class:`AuthProviderDescription` from a loaded certificate.
 
+    The returned description carries the parsed identity NIF when available and
+    the :class:`~aeat.adapters.outbound.aeat.auth.certificate.CertificateHealth`
+    severity used by operator-facing auth status commands.
+    """
     health = evaluate_loaded_certificate_health(
         cert,
         warn_days=warn_days,
@@ -204,7 +242,7 @@ def describe_certificate_provider(
     )
     try:
         identity_nif = extract_nif_from_subject(cert)
-    except Exception:
+    except CertificateNifParseError:
         identity_nif = None
     return AuthProviderDescription(
         kind=AuthProviderKind.CERTIFICATE,
@@ -233,10 +271,6 @@ __all__ = [
     "CertificateSessionDetail",
     "ClaveMovilLoginAssertionDetail",
     "ClaveMovilSessionDetail",
-    "ClavePermanenteLoginAssertionDetail",
-    "ClavePermanenteSessionDetail",
-    "ClavePinLoginAssertionDetail",
-    "ClavePinSessionDetail",
     "describe_certificate_provider",
     "describe_provider_operator_impact",
 ]

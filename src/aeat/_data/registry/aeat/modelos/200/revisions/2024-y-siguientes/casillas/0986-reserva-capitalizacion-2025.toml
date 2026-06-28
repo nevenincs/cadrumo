@@ -1,0 +1,36 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03591"
+number = "03591"
+label = "Reserva Capitalización - 2025 - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [03591]"
+section = ["reserva_capitalizacion", "2025"]
+data_type = "money"
+semantic_role = "is_reserva_capitalizacion_derecho_generado"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-03591"]
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03592"
+number = "03592"
+label = "Reserva Capitalización - 2025 - Reducción B.I. aplicada [03592]"
+section = ["reserva_capitalizacion", "2025"]
+data_type = "money"
+semantic_role = "is_reserva_capitalizacion_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-03592"]
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03593"
+number = "03593"
+label = "Reserva Capitalización - 2025 - Reducción B.I. pdte. De aplicar en períodos futuros [03593]"
+section = ["reserva_capitalizacion", "2025"]
+data_type = "money"
+semantic_role = "is_reserva_capitalizacion_pendiente_futuros"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-03593"]
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

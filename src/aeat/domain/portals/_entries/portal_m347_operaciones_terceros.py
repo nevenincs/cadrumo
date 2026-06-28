@@ -1,17 +1,23 @@
-"""Portal: Modelo 347 — declaración anual operaciones con terceros."""
+"""Registry entry for Modelo 347 - annual third-party transactions return.
+
+Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
+code ``PORTAL_M347_OPERACIONES_TERCEROS``, exposed as :data:`ENTRY` under
+the :class:`PortalCategory` member ``INFORMATIVA``, consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M347_OPERACIONES_TERCEROS,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI27.shtml",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_M347_OPERACIONES_TERCEROS),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(
         AuthMethod.CERTIFICATE,
@@ -20,11 +26,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_347,
-    label={
-        "es": "Modelo 347 — Operaciones con terceros",
-        "en": "Modelo 347 — Third-party transactions",
-        "hu": "347-es űrlap — Harmadik felekkel folytatott ügyletek",
-    },
-    purpose_es="Declaración informativa anual de operaciones con terceras personas por encima del umbral legal.",
+    label="entries.portal_m347_operaciones_terceros.label",
+    purpose="entries.portal_m347_operaciones_terceros.purpose",
 )
+"""Portal entry for Modelo 347 (annual third-party transactions return)."""

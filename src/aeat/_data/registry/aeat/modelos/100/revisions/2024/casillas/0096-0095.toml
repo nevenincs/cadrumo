@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "0095"
+number = "0095"
+label = "Marque una \"X\" si en la casilla [0094] ha consignado un NIF de otro país"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+data_type = "boolean"
+semantic_role = "irpf_inmueble_arrendatario2_nif_extranjero_flag"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

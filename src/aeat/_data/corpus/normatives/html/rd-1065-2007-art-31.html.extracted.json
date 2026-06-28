@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-1065-2007-art-31.html",
+  "source_sha256": "89bcf01d1ee6f22353fb0d7c81bbee633a482e21d026290d0cc6068637cb0cb8",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "RD 1065/2007 Art. 31 — Obligación de informar sobre operaciones con terceras personas\nArtículo 31. Obligación de informar sobre operaciones con terceras personas.\n1. De acuerdo con lo dispuesto en el artículo 93 de la Ley 58/2003, de 17 de diciembre,\nGeneral Tributaria, las personas físicas o jurídicas, públicas o privadas, así como las\nentidades mencionadas en el apartado 4 del artículo 35 de dicha ley, que desarrollen\nactividades empresariales o profesionales, deberán presentar una declaración anual relativa\na sus operaciones con terceras personas, siempre que el importe total de las operaciones\nrealizadas con cada una de dichas personas haya superado la cifra de 3.005,06 euros durante\nel año natural correspondiente.\n2. A efectos de lo dispuesto en este artículo, se entenderán por operaciones con terceras\npersonas tanto las de ingresos como las de pagos que en el ejercicio de su actividad empresarial\no profesional sean objeto de declaración o retención en el impuesto sobre la renta de las\npersonas físicas, en el impuesto sobre sociedades o en el impuesto sobre la renta de\nno residentes.\nReal Decreto 1065/2007 — Reglamento General de las Actuaciones y los Procedimientos de Gestión e Inspección Tributaria\nEl Real Decreto 1065/2007, de 27 de julio (BOE-A-2007-15984), aprueba el Reglamento General\nde las Actuaciones y los Procedimientos de Gestión e Inspección Tributaria y de desarrollo de las\nnormas comunes de los procedimientos de aplicación de los tributos. Entró en vigor el 1 de enero\nde 2008. El artículo 31 constituye la base reglamentaria del Modelo 347 (declaración anual de\noperaciones con terceras personas), cuyo umbral se fija en 3.005,06 euros por contraparte y\nejercicio.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

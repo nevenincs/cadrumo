@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03146"
+number = "03146"
+label = "Valoración de bienes y derechos. Régimen especial operaciones reestructuración (capítulo VII del título VII LIS) - Disminución - Correcciones del ejercicio - Permanentes [03146]"
+section = ["valoracion_de_bienes_y_derechos_regimen_especial_o", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_valoracion_bienes_derechos_regimen_especial_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03146"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03147"
+number = "03147"
+label = "Valoración de bienes y derechos. Régimen especial operaciones reestructuración (capítulo VII del título VII LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio..."
+section = ["valoracion_de_bienes_y_derechos_regimen_especial_o", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_valoracion_bienes_derechos_regimen_especial_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03147"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03148"
+number = "03148"
+label = "Valoración de bienes y derechos. Régimen especial operaciones reestructuración (capítulo VII del título VII LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios a..."
+section = ["valoracion_de_bienes_y_derechos_regimen_especial_o", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_valoracion_bienes_derechos_regimen_especial_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03148"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03149"
+number = "03149"
+label = "Valoración de bienes y derechos. Régimen especial operaciones reestructuración (capítulo VII del título VII LIS) - Disminución - Saldo pendiente a principio de ejercicio [03149]"
+section = ["valoracion_de_bienes_y_derechos_regimen_especial_o", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_valoracion_bienes_derechos_regimen_especial_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03149"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03150"
+number = "03150"
+label = "Valoración de bienes y derechos. Régimen especial operaciones reestructuración (capítulo VII del título VII LIS) - Disminución - Saldo pendiente a fin de ejercicio [03150]"
+section = ["valoracion_de_bienes_y_derechos_regimen_especial_o", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_valoracion_bienes_derechos_regimen_especial_saldo_final_neto"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03150"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

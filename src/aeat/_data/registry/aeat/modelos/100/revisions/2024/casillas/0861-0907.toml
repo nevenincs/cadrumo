@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0907"
+number = "0907"
+label = "Por arrendamiento de vivienda habitual (importe de la casilla [1130] del anexo B.9)"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_deduccion_baleares_arrendamiento_vivienda"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

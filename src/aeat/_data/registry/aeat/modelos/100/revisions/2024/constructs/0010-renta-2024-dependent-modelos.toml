@@ -1,0 +1,58 @@
+[[revisions."2024".constructs]]
+id = "renta-2024-dependent-modelos"
+title = "Modelo 100 2024 retenciones, pagos fraccionados and withholding cross-modelo inputs"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-108",
+    "rd-439-2007:art-109",
+    "rd-439-2007:art-110",
+    "orden-eha-3435-2007:anexo-ii",
+    "orden-hac-56-2024:art-1",
+    "orden-eha-3377-2011:art-1",
+    "orden-eha-672-2007:art-1",
+]
+source_refs = [
+    "aeat-dr-100-2024-dictionary",
+    "aeat-dr-100-2024-input-dictionary",
+    "aeat-dr-100-2024-xsd",
+    "aeat-modelo-100-procedure",
+    "aeat-renta-2024-manual-parte1",
+    "boe-modelo-100-2024-form",
+    "boe-modelo-193-2011-form",
+]
+bindings = [
+    "renta-2024-modelo-111-retenciones-periodicas",
+    "renta-2024-modelo-115-retenciones-periodicas",
+    "renta-2024-modelo-123-retenciones-periodicas",
+    "renta-2024-modelo-130-pagos-fraccionados",
+    "renta-2024-modelo-131-pagos-fraccionados",
+    "renta-2024-modelo-193-retenciones-anuales",
+]
+casilla_ids = [
+    "0604",
+]
+formulas = [
+    "renta-2024-pagos-fraccionados-ingresados",
+]
+relations = [
+    "renta-2024-rel-111-retenciones-trimestrales",
+    "renta-2024-rel-111-retenciones-mensuales",
+    "renta-2024-rel-115-retenciones-trimestrales",
+    "renta-2024-rel-123-retenciones-trimestrales",
+    "renta-2024-rel-130-pagos-fraccionados",
+    "renta-2024-rel-131-pagos-fraccionados",
+    "renta-2024-rel-193-retenciones-anuales",
+]
+dependency_classifications = [
+    "renta-2024-dep-111",
+    "renta-2024-dep-115",
+    "renta-2024-dep-123",
+    "renta-2024-dep-130",
+    "renta-2024-dep-131",
+    "renta-2024-dep-193",
+]

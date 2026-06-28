@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0471"
+number = "0471"
+label = "N.º de identificación fiscal (NIF) de la persona con discapacidad partícipe, mutualista o asegurada"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_discapacidad"]
+data_type = "nif"
+semantic_role = "irpf_discapacitado_nif"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52", "ley-35-2006:art-53", "ley-35-2006:art-54"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

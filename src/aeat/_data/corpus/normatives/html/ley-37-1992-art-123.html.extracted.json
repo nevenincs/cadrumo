@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-123.html",
+  "source_sha256": "0e7691a7f6430545ca73d22bc3660809cd3f765481699dff250bf6b1aa1b44ff",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Uno. En las actividades acogidas al régimen simplificado la determinación de las cuotas tributarias se llevará a cabo mediante el método de índices, módulos u otros parámetros objetivos que se determinen reglamentariamente por cada actividad.\nDos. A los efectos del cálculo de las cuotas tributarias correspondientes a cada actividad se utilizarán los módulos aplicables a la misma, determinados en virtud de las disposiciones reglamentarias correspondientes, con arreglo a los siguientes criterios:\n1.º La cuota devengada por operaciones corrientes del régimen simplificado se calculará aplicando a los módulos correspondientes la cuota derivada del método de estimación objetiva.\n2.º La cuota a ingresar o a devolver por el régimen simplificado se determinará por diferencia entre la cuota devengada y los importes deducibles de conformidad con lo dispuesto en esta Ley.",
+      "title": "Artículo 123. Contenido del régimen simplificado.",
+      "section": "Artículo 123. Contenido del régimen simplificado.",
+      "anchor": null
+    }
+  ]
+}

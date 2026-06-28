@@ -1,16 +1,17 @@
 """Public pydantic v2 record models for the storage layer.
 
-These types are the boundary-crossing surface of :mod:`aeat.adapters.persistence.storage`. Callers
-outside the subpackage always work with these records — never with the
-internal SQLAlchemy mapper classes from :mod:`aeat.adapters.persistence.storage._orm`.
+These types are the boundary-crossing surface of
+:mod:`aeat.adapters.persistence.storage`. Callers outside the subpackage
+always work with these records — never with the internal SQLAlchemy
+mapper classes from :mod:`aeat.adapters.persistence.storage.sql._orm`.
 
-Every record is declared with ``ConfigDict(strict=True, frozen=True)`` per the
-project pydantic mandate.
+Every record is declared with ``ConfigDict(strict=True, frozen=True)`` per
+the project pydantic mandate.
 
 Note:
-    Translatable string fields (``name``, ``label``) are plain ``str`` today.
-    Once the trilingual primitive from issue #20 lands, these fields will be
-    migrated to the shared ``Translatable`` shape.
+    str string fields (``name``, ``label``) are plain :class:`str`
+    today. Once the shared multilingual primitive lands, these fields will be
+    migrated to the :class:`~aeat.core.i18n.Translatable` shape.
 """
 
 from __future__ import annotations
@@ -22,7 +23,14 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class PortalAuthMethod(StrEnum):
-    """Closed catalogue of supported AEAT portal authentication methods."""
+    """Closed catalogue of supported AEAT portal authentication methods.
+
+    Attributes:
+        CLAVE: Cl@ve PIN / Cl@ve Permanente based authentication.
+        CERTIFICATE: Software / hardware X.509 certificate authentication.
+        DNIE: Spanish electronic ID card authentication.
+        NONE: Public area, no authentication required.
+    """
 
     CLAVE = "clave"
     CERTIFICATE = "certificate"
@@ -31,17 +39,17 @@ class PortalAuthMethod(StrEnum):
 
 
 class _StrictFrozen(BaseModel):
-    """Shared base enforcing strict parsing and immutability."""
+    """Shared pydantic base enforcing strict parsing and immutability."""
 
     model_config = ConfigDict(strict=True, frozen=True)
 
 
-class ModeloRecord(_StrictFrozen):
+class ModeloCatalogueRecord(_StrictFrozen):
     """Public record for a row in the ``modelos`` table.
 
     Attributes:
         id: Surrogate primary key. ``None`` for records not yet persisted.
-        identifier: Stable natural key (e.g. ``MODELO_130``).
+        identifier: Stable natural key for the modelo record.
         name: Human-readable modelo name (translatable, see module note).
     """
 
@@ -58,7 +66,7 @@ class PortalRecord(_StrictFrozen):
         identifier: Stable natural key (e.g. ``SEDE_ELECTRONICA_ROOT``).
         base_url: Canonical URL for the portal.
         auth_method: Authentication method (closed enum).
-        modelo_id: Optional foreign key to :class:`ModeloRecord`.
+        modelo_id: Optional foreign key to :class:`ModeloCatalogueRecord`.
         label: Human-readable label (translatable, see module note).
     """
 
@@ -76,7 +84,7 @@ class CorpusArtifactRecord(_StrictFrozen):
     Attributes:
         id: Surrogate primary key. ``None`` for records not yet persisted.
         year: Tax year this artifact belongs to.
-        modelo_id: Foreign key to the owning :class:`ModeloRecord`.
+        modelo_id: Foreign key to the owning :class:`ModeloCatalogueRecord`.
         file_path: Project-relative path to the on-disk artifact.
         sha256: Hex digest of the artifact bytes.
         source_url: URL the artifact was fetched from.

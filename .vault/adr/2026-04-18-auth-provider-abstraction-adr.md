@@ -3,6 +3,7 @@ tags:
   - "#adr"
   - "#aeat-auth-providers"
 date: 2026-04-18
+modified: '2026-04-18'
 related:
   - "[[2026-04-18-aeat-auth-providers-research]]"
   - "[[2026-04-12-cert-auth-adr]]"
@@ -14,7 +15,7 @@ related:
 
 ## status
 
-Proposed — 2026-04-18. Supersedes the `Non-goals` section of `2026-04-12-cert-auth-adr.md` (lines 83–84) which listed Cl@ve and DNIe as out-of-scope. Builds on `2026-04-17-aeat-access-gate-adr.md` (the env-var gate stays as the policy layer regardless of provider).
+Accepted — 2026-04-18 (status resolved 2026-05-21). The pluggable `AuthProvider` abstraction this ADR specifies was implemented and merged (`CertificateAuthProvider` via PR #282 / #297) and is referenced as established fact by later accepted ADRs; the status field is corrected from `Proposed` to `Accepted` to match that landed reality. Supersedes the `Non-goals` section of `2026-04-12-cert-auth-adr.md` (lines 83–84) which listed Cl@ve and DNIe as out-of-scope. Builds on `2026-04-17-aeat-access-gate-adr.md` (the env-var gate stays as the policy layer regardless of provider).
 
 ## context
 

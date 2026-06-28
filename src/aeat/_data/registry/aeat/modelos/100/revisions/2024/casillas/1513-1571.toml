@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "1571"
+number = "1571"
+label = "Rendimiento neto atribuido por la entidad"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
+data_type = "decimal"
+semantic_role = "irpf_re_atrib_rdto_neto_entidad"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

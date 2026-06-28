@@ -1,0 +1,16 @@
+[[revisions."2015-y-siguientes".workbook_parity_refs]]
+id = "modelo-151-cuota-escala"
+workbook_source = "boe-modelo-151-form"
+fixture_id = "modelo-151-cuota-integra-general-escala"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["boe-modelo-151-form"]
+
+# Cuota-íntegra escala parity (art. 93.2.e.1º): the cuota = lookup_bracket over
+# the 24/47 two-tramo table. The enrolling E2E asserts the cuota against a
+# worked example whose expected value is derived from the BOE escala arithmetic
+# (600.000 × 0,24 + exceso × 0,47), not by re-running the registry formula.
+# runner_required = false: the parity is asserted by the enrollment test, not a
+# separate workbook runner.

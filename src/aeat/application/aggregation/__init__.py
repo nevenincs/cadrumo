@@ -1,39 +1,274 @@
-"""T6 aggregation from classified transactions to AEAT casilla inputs."""
+"""Financial aggregation: roll classified ledger entries into casilla inputs.
+
+Turns the classified ledger and profile facts into the per-casilla and
+per-binding values a modelo calculation consumes, with one aggregation
+family per AEAT surface (IVA, retenciones, third-party operations, foreign
+assets, prorrata, OSS / IOSS, renta expenses). Pure value logic; the
+repositories it reads are injected.
+
+Major declarations:
+
+* :func:`aggregate_per_modelo` with :class:`PerModeloAggregationContributor`
+  and :class:`PerModeloAggregationResult` — the unified per-modelo entry
+  point.
+* :func:`aggregate_iva_ledger_observations` with :class:`IvaLedgerAggregation`
+  — the IVA (Modelo 303 family) rollup.
+* :func:`aggregate_retenciones_111` and its 115 / 123 / 180 / 190 / 193
+  siblings, with :class:`RetencionesAggregation` — withholding rollups.
+* :func:`aggregate_counterpart_347`, :func:`aggregate_counterpart_349`, and
+  :func:`aggregate_foreign_assets_720` — informativa rollups.
+* :class:`CasillaAggregation` and :class:`CasillaProvenance` — the typed
+  per-modelo ledger-aggregation value plus its source provenance, produced by
+  the ``aggregate_*`` family. These are aggregation-family value records, NOT a
+  resolved-source envelope; the single resolved-source envelope across the
+  calculate mesh is :class:`CalculationSourceResolution` below.
+* :class:`ModeloSourceResolver` and :class:`CalculationSourceResolution` —
+  the source mesh that reconciles ledger, profile, and registry sources, and
+  the one canonical resolved-source envelope every mesh resolver returns.
+* :class:`AggregationError` and its subclasses — the failure taxonomy.
+"""
 
 from __future__ import annotations
 
+from ...core import Period, PeriodKind
+from ...core.aggregation import ForeignAssetClass, OperationKind347, OperationKind349, RetencionScheme
+from ...domain.calculations.registry import WithholdingObservation
+from ._counterpart import (
+    CounterpartAggregation,
+    CounterpartObservation,
+    aggregate_counterpart_347,
+    aggregate_counterpart_349,
+    declarable_counterparty_nifs_347,
+    declarable_for_347,
+)
 from ._errors import (
-    AggregationCasillaMappingError,
     AggregationCategoryCoverageError,
+    AggregationConfigError,
     AggregationError,
     AggregationMissingClassificationError,
     AggregationPeriodError,
     AggregationUnsupportedModeloError,
+    AggregationValidationError,
 )
-from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
-from ._service import aggregate_catalogue
+from ._evidence_advisory import (
+    MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND,
+    missing_evidence_advisory_observations,
+)
+from ._foreign_assets import (
+    ForeignAssetClassRollup,
+    ForeignAssetIngestObservation,
+    ForeignAssetsAggregation,
+    aggregate_foreign_assets_720,
+    declarable_asset_classes_720,
+    declarable_class,
+)
+from ._iva_ledger import (
+    IvaLedgerAggregation,
+    IvaLedgerAggregationIssue,
+    IvaLedgerAggregationIssueReason,
+    IvaLedgerCandidate,
+    IvaLedgerInputKind,
+    ProrrataLedgerReference,
+    aggregate_iva_ledger_candidate_bindings,
+    aggregate_iva_ledger_candidates,
+    aggregate_iva_ledger_observations,
+    aggregate_iva_ledger_observations_from_repositories,
+    iva_ledger_missing_fact_reasons,
+    validate_iva_ledger_observation,
+    validate_iva_ledger_observations,
+)
+from ._ledger_filing_snapshot import stale_filed_revisions
+from ._modelo_bindings import (
+    LedgerIvaAggregationSourceResolver,
+    LedgerRentaExpenseAggregationSourceResolver,
+    LedgerRentaGastoAggregationSourceResolver,
+    LedgerRentaIncomeAggregationSourceResolver,
+    RetencionesAggregationSourceResolver,
+    aggregation_period_for_modelo,
+)
+from ._models import CasillaAggregation, CasillaProvenance
+from ._oss_ioss import (
+    OssIossLedgerCandidate,
+    OssIossLedgerSourceResolver,
+    aggregate_oss_ioss_bindings,
+    aggregate_oss_ioss_from_repositories,
+    oss_ioss_candidates_from_repositories,
+    validate_oss_ioss_observation,
+    validate_oss_ioss_observations,
+)
+from ._prorrata import (
+    IvaOperation,
+    IvaOperationKind,
+    ProrrataAggregation,
+    aggregate_definitiva_prorrata,
+    aggregate_prorrata_inputs,
+    aggregate_provisional_prorrata,
+)
+from ._renta_ledger import (
+    RentaLedgerAggregationIssue,
+    RentaLedgerAggregationIssueReason,
+    RentaLedgerExpenseAggregation,
+    aggregate_renta_ledger_expenses,
+    aggregate_renta_ledger_expenses_from_repositories,
+)
+from ._retencion_observations_repository import (
+    RetencionObservationRepository,
+    persist_retencion_observations,
+    retencion_observation_key,
+)
+from ._retenciones import (
+    RetencionesAggregation,
+    RetencionObservation,
+    RetencionPerceptorRollup,
+    aggregate_retenciones_111,
+    aggregate_retenciones_115,
+    aggregate_retenciones_123,
+    aggregate_retenciones_180,
+    aggregate_retenciones_190,
+    aggregate_retenciones_193,
+)
+from ._service import (
+    ACCEPTED_SOURCE_KINDS,
+    AggregationErrorCodes,
+    PerModeloAggregationCommand,
+    PerModeloAggregationContributor,
+    PerModeloAggregationLogFields,
+    PerModeloAggregationResult,
+    aggregate_per_modelo,
+    get_per_modelo_aggregation_contract,
+)
+from ._source_mesh import (
+    DEFERRED_SOURCE_KINDS,
+    RESERVED_SOURCE_KINDS,
+    BindingSourceDisposition,
+    BorradorSourceProvenance,
+    CalculationSourceContext,
+    CalculationSourceDiagnostic,
+    CalculationSourceDiagnosticReason,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+    ModeloSourceResolver,
+    build_binding_source_dispositions,
+    collect_unhandled_source_diagnostics,
+    merge_source_resolutions,
+    merge_source_resolutions_by_precedence,
+    storage_degradation_resolution,
+)
+from ._source_profile import ProfileSourceResolver
+from ._withholding_observations_repository import (
+    WithholdingObservationRepository,
+    persist_withholding_observations,
+    withholding_observation_key,
+)
+from ._withholding_source import WithholdingSourceResolver
 
 __all__ = [
-    "AggregationCasillaMappingError",
+    "ACCEPTED_SOURCE_KINDS",
+    "DEFERRED_SOURCE_KINDS",
+    "MISSING_TRANSACTION_EVIDENCE_SOURCE_KIND",
+    "RESERVED_SOURCE_KINDS",
     "AggregationCategoryCoverageError",
+    "AggregationConfigError",
     "AggregationError",
+    "AggregationErrorCodes",
     "AggregationMissingClassificationError",
     "AggregationPeriodError",
     "AggregationUnsupportedModeloError",
+    "AggregationValidationError",
+    "BindingSourceDisposition",
+    "BorradorSourceProvenance",
+    "CalculationSourceContext",
+    "CalculationSourceDiagnostic",
+    "CalculationSourceDiagnosticReason",
+    "CalculationSourceProvenance",
+    "CalculationSourceResolution",
     "CasillaAggregation",
     "CasillaProvenance",
-    "FinancialFilingInputsProvider",
+    "CounterpartAggregation",
+    "CounterpartObservation",
+    "ForeignAssetClass",
+    "ForeignAssetClassRollup",
+    "ForeignAssetIngestObservation",
+    "ForeignAssetsAggregation",
+    "IvaLedgerAggregation",
+    "IvaLedgerAggregationIssue",
+    "IvaLedgerAggregationIssueReason",
+    "IvaLedgerCandidate",
+    "IvaLedgerInputKind",
+    "IvaOperation",
+    "IvaOperationKind",
+    "LedgerIvaAggregationSourceResolver",
+    "LedgerRentaExpenseAggregationSourceResolver",
+    "LedgerRentaGastoAggregationSourceResolver",
+    "LedgerRentaIncomeAggregationSourceResolver",
+    "ModeloSourceResolver",
+    "OperationKind347",
+    "OperationKind349",
+    "OssIossLedgerCandidate",
+    "OssIossLedgerSourceResolver",
+    "PerModeloAggregationCommand",
+    "PerModeloAggregationContributor",
+    "PerModeloAggregationLogFields",
+    "PerModeloAggregationResult",
     "Period",
     "PeriodKind",
-    "aggregate_catalogue",
+    "ProfileSourceResolver",
+    "ProrrataAggregation",
+    "ProrrataLedgerReference",
+    "RentaLedgerAggregationIssue",
+    "RentaLedgerAggregationIssueReason",
+    "RentaLedgerExpenseAggregation",
+    "RetencionObservation",
+    "RetencionObservationRepository",
+    "RetencionPerceptorRollup",
+    "RetencionScheme",
+    "RetencionesAggregation",
+    "RetencionesAggregationSourceResolver",
+    "WithholdingObservation",
+    "WithholdingObservationRepository",
+    "WithholdingSourceResolver",
+    "aggregate_counterpart_347",
+    "aggregate_counterpart_349",
+    "aggregate_definitiva_prorrata",
+    "aggregate_foreign_assets_720",
+    "aggregate_iva_ledger_candidate_bindings",
+    "aggregate_iva_ledger_candidates",
+    "aggregate_iva_ledger_observations",
+    "aggregate_iva_ledger_observations_from_repositories",
+    "aggregate_oss_ioss_bindings",
+    "aggregate_oss_ioss_from_repositories",
+    "aggregate_per_modelo",
+    "aggregate_prorrata_inputs",
+    "aggregate_provisional_prorrata",
+    "aggregate_renta_ledger_expenses",
+    "aggregate_renta_ledger_expenses_from_repositories",
+    "aggregate_retenciones_111",
+    "aggregate_retenciones_115",
+    "aggregate_retenciones_123",
+    "aggregate_retenciones_180",
+    "aggregate_retenciones_190",
+    "aggregate_retenciones_193",
+    "aggregation_period_for_modelo",
+    "build_binding_source_dispositions",
+    "collect_unhandled_source_diagnostics",
+    "declarable_asset_classes_720",
+    "declarable_class",
+    "declarable_counterparty_nifs_347",
+    "declarable_for_347",
+    "get_per_modelo_aggregation_contract",
+    "iva_ledger_missing_fact_reasons",
+    "merge_source_resolutions",
+    "merge_source_resolutions_by_precedence",
+    "missing_evidence_advisory_observations",
+    "oss_ioss_candidates_from_repositories",
+    "persist_retencion_observations",
+    "persist_withholding_observations",
+    "retencion_observation_key",
+    "stale_filed_revisions",
+    "storage_degradation_resolution",
+    "validate_iva_ledger_observation",
+    "validate_iva_ledger_observations",
+    "validate_oss_ioss_observation",
+    "validate_oss_ioss_observations",
+    "withholding_observation_key",
 ]
-
-
-def __getattr__(name: str) -> object:
-    """Lazily expose repository-backed provider without importing storage at CLI startup."""
-
-    if name == "FinancialFilingInputsProvider":
-        from ._provider import FinancialFilingInputsProvider
-
-        return FinancialFilingInputsProvider
-    raise AttributeError(name)

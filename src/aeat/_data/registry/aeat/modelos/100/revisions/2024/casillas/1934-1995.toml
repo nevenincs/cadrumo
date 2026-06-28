@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1995"
+number = "1995"
+label = "Deducción por adopción: Importe pendiente a solicitar por el contribuyente"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_i_baleares"]
+semantic_role = "irpf_anexo_b_adoption_pending_claim"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

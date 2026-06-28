@@ -1,0 +1,648 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = "modelo-202-fichero-boe"
+
+[[revisions.2025-y-siguientes.export_layouts.records]]
+id = "modelo-202-page-01"
+record_type = "page_01"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-literal-opent-pos-1"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-literal-202-pos-3"
+offset = 3
+length = 3
+kind = "literal"
+literal = "202"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-literal-01-pos-6"
+offset = 6
+length = 2
+kind = "literal"
+literal = "01"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-literal-000close-pos-8"
+offset = 8
+length = 4
+kind = "literal"
+literal = "000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-filler-pos-12"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-declaration_type-pos-13"
+offset = 13
+length = 1
+kind = "header"
+header_key = "declaration_type"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-draft-profile_tax_id-pos-14"
+offset = 14
+length = 9
+kind = "draft"
+draft_attribute = "profile_tax_id"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-surnames-pos-23"
+offset = 23
+length = 60
+kind = "header"
+header_key = "surnames"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-name-pos-83"
+offset = 83
+length = 20
+kind = "header"
+header_key = "name"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-filler-pos-103"
+offset = 103
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-draft-filing_year-pos-104"
+offset = 104
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-draft-period_code-pos-108"
+offset = 108
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-devengo_start_date-pos-110"
+offset = 110
+length = 8
+kind = "header"
+header_key = "devengo_start_date"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-cnae-pos-118"
+offset = 118
+length = 4
+kind = "header"
+header_key = "cnae"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-datos_adicionales_entidad-que-apli-pos-122"
+offset = 122
+length = 1
+kind = "header"
+header_key = "datos_adicionales_entidad-que-aplica-el-r-gimen-de-la-ley"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-datos_adicionales_entidad-que-apli-pos-123"
+offset = 123
+length = 1
+kind = "header"
+header_key = "datos_adicionales_entidad-que-aplica-el-r-gimen-de-la-ley"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-datos_adicionales_entidad-de-capit"
+offset = 124
+length = 1
+kind = "header"
+header_key = "datos_adicionales_entidad-de-capital-riesgo-que-aplica-el"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-datos_adicionales_entidad-que-apli-pos-125"
+offset = 125
+length = 1
+kind = "header"
+header_key = "datos_adicionales_entidad-que-aplica-el-r-gimen-de-las-ent"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-datos_adicionales_entidad-que-cump"
+offset = 126
+length = 1
+kind = "header"
+header_key = "datos_adicionales_entidad-que-cumpla-los-requisitos-para-l"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-datos_adicionales-incn-12-meses-pos-127"
+offset = 127
+length = 1
+kind = "header"
+header_key = "datos_adicionales_importe-neto-cifra-negocios-doce-meses-a"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-datos_adicionales_cooperativa-fisc"
+offset = 128
+length = 1
+kind = "header"
+header_key = "datos_adicionales_cooperativa-fiscalmente-protegida"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-datos_adicionales_marque-esta-casi"
+offset = 129
+length = 1
+kind = "header"
+header_key = "datos_adicionales_marque-esta-casilla-si-concurre-alguna-d"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-datos_adicionales_entidad-con-impo"
+offset = 130
+length = 1
+kind = "header"
+header_key = "datos_adicionales_entidad-con-importe-neto-de-la-cifra-de"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-datos_adicionales_otras-entidades"
+offset = 131
+length = 1
+kind = "header"
+header_key = "datos_adicionales_otras-entidades-con-posibilidad-de-aplic"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-header-datos_adicionales_tipo-de-gravamen"
+offset = 132
+length = 15
+kind = "header"
+header_key = "datos_adicionales_tipo-de-gravamen-del-impuesto-sobre-soci"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-filler-pos-147"
+offset = 147
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-filler-pos-148"
+offset = 148
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-01"
+offset = 149
+length = 17
+kind = "casilla"
+casilla_id = "01"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-02"
+offset = 166
+length = 17
+kind = "casilla"
+casilla_id = "02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-03"
+offset = 183
+length = 17
+kind = "casilla"
+casilla_id = "03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-04"
+offset = 200
+length = 17
+kind = "casilla"
+casilla_id = "04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-05"
+offset = 217
+length = 17
+kind = "casilla"
+casilla_id = "05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-06"
+offset = 234
+length = 17
+kind = "casilla"
+casilla_id = "06"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-67"
+offset = 251
+length = 17
+kind = "casilla"
+casilla_id = "67"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-37"
+offset = 268
+length = 17
+kind = "casilla"
+casilla_id = "37"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-07"
+offset = 285
+length = 17
+kind = "casilla"
+casilla_id = "07"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-08"
+offset = 302
+length = 17
+kind = "casilla"
+casilla_id = "08"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-38"
+offset = 319
+length = 17
+kind = "casilla"
+casilla_id = "38"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-39"
+offset = 336
+length = 17
+kind = "casilla"
+casilla_id = "39"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-13"
+offset = 353
+length = 17
+kind = "casilla"
+casilla_id = "13"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-44"
+offset = 370
+length = 17
+kind = "casilla"
+casilla_id = "44"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-14"
+offset = 387
+length = 17
+kind = "casilla"
+casilla_id = "14"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-45"
+offset = 404
+length = 17
+kind = "casilla"
+casilla_id = "45"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-casilla-46"
+offset = 421
+length = 17
+kind = "casilla"
+casilla_id = "46"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-filler-pos-438"
+offset = 438
+length = 251
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = "modelo-202-page-01-literal-open-t20201000close-pos-689"
+offset = 689
+length = 12
+kind = "literal"
+literal = "</T20201000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025"]

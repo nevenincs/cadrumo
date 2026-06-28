@@ -1,0 +1,11 @@
+[[revisions."2025".casillas]]
+id = "FNACDLG"
+number = "*77"
+label = "Hijo o descendiente fecha de nacimiento"
+section = ["datos_identificativos", "hijos", "hijo"]
+data_type = "text"
+semantic_role = "irpf_descendiente_fecha_nacimiento"
+input_kind = "bound"
+binding = "renta-2025-family-descendant-birth-date"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]

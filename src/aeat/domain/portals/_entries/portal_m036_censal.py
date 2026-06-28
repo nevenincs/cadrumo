@@ -1,18 +1,25 @@
-"""Portal: Modelo 036 — declaración censal."""
+"""Catalogue entry for the *Modelo 036* censo-declaration procedure page.
+
+Exposes :data:`ENTRY`, a frozen :class:`PortalMetadata` record identified
+by the :class:`Portal` code ``PORTAL_M036_CENSAL`` under the
+:class:`PortalCategory` member
+:attr:`aeat.domain.portals.PortalCategory.CENSO`. Covers registration,
+modification, and deregistration on the censo of entrepreneurs,
+professionals, and withholders.
+"""
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M036_CENSAL,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G322.shtml",
-    subdomain=Subdomain.SEDE,
-    category=PortalCategory.CENSUS,
+    path=portal_path(Portal.PORTAL_M036_CENSAL),
+    subdomain=PortalHost.SEDE,
+    category=PortalCategory.CENSO,
     auth_methods=(
         AuthMethod.CERTIFICATE,
         AuthMethod.CLAVE_PIN,
@@ -21,11 +28,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_036,
-    label={
-        "es": "Modelo 036 — Declaración censal",
-        "en": "Modelo 036 — Census declaration",
-        "hu": "036-os űrlap — Adóalanyi nyilvántartásba vétel",
-    },
-    purpose_es="Alta, modificación y baja en el censo de empresarios, profesionales y retenedores.",
+    label="entries.portal_m036_censal.label",
+    purpose="entries.portal_m036_censal.purpose",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 036 censo procedure page."""

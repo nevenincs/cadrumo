@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0049"
+number = "0049"
+label = "En el caso de los rendimientos derivados de la cesión de la explotación de los derechos de autor, si opta por imputar el anticipo a cuenta de los mismos a medida que vayan devengándose los derechos..."
+section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_general"]
+data_type = "boolean"
+semantic_role = "irpf_rendimiento_capital_mobiliario_general_cesion_derechos_autor_anticipo_flag"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

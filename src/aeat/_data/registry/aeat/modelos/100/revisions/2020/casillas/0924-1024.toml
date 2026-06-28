@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "1024"
+number = "1024"
+label = "Por contribuyentes con discapacidad de edad igual o superior a 65 años que precisen ayuda de terceras personas"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_discapacidad_mayores_65"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

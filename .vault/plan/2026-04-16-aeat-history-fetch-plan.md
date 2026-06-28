@@ -3,6 +3,7 @@ tags:
   - "#plan"
   - "#aeat-history-fetch"
 date: 2026-04-16
+modified: '2026-04-16'
 title: AEAT filing-history read surface — implementation plan
 related:
   - "[[2026-04-16-aeat-history-fetch-adr]]"

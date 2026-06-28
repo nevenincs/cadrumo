@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-1624-1992-art-30.html",
+  "source_sha256": "78fa1705926353f800ebaa10e46bffe7a2f56a94a0156e74776eea5cd49faf0b",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Para poder ejercitar el derecho a la devolución establecido en los artículos 116 y 163 nonies de la Ley del Impuesto, los sujetos pasivos deberán estar inscritos en el registro de devolución mensual regulado en este artículo.\nEn otro caso, sólo podrán solicitar la devolución del saldo que tengan a su favor al término del último período de liquidación de cada año natural de acuerdo con lo dispuesto en el artículo 115.uno de la Ley del Impuesto.\nLas solicitudes de devolución consignadas en declaraciones-liquidaciones que correspondan a períodos de liquidación distintos del último del año natural presentadas por sujetos pasivos no inscritos en el registro de devolución mensual, no iniciarán el procedimiento de devolución a que se refiere este artículo.",
+      "title": "Artículo 30. Devoluciones al término de cada período de liquidación.",
+      "section": "Artículo 30. Devoluciones al término de cada período de liquidación.",
+      "anchor": null
+    }
+  ]
+}

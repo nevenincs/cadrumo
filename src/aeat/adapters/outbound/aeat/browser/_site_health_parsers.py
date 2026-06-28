@@ -1,4 +1,4 @@
-"""Marker-based parsers for AEAT site-health classification (#95).
+"""Marker-based parsers for AEAT site-health classification.
 
 Three pure functions inspect the HTTP status, headers, and body of a
 response and decide whether it looks like an AEAT maintenance page, a
@@ -8,10 +8,9 @@ and returns the first non-``None`` classification.
 
 All parsers are deliberately synchronous, side-effect free, and free
 of any Playwright dependency so they can be driven from plain strings
-loaded from disk in unit tests. See
-[[2026-04-13-aeat-mantenimiento-detection-adr]] for the marker corpus
-rationale and [[2026-04-13-aeat-mantenimiento-detection-research]]
-§5 for the observed markers on AEAT Sede Electrónica.
+loaded from disk in unit tests. The marker corpora reflect the
+observed set of mantenimiento, WAF, and rate-limit responses on AEAT
+Sede Electrónica.
 """
 
 from __future__ import annotations
@@ -20,6 +19,8 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
+from .....core.time import now
+from .....core.time._utc import coerce_utc_aware
 from ._site_health import (
     _URL_ADAPTER,
     SiteHealthEvidence,
@@ -61,10 +62,10 @@ _WAF_CORRELATION_MARKERS: tuple[str, ...] = (
 def _utcnow() -> datetime:
     """Return the current UTC timestamp.
 
-    Factored for deterministic test hooks and to centralise the
-    timezone-aware construction used across the parser suite.
+    Delegates to :func:`aeat.core.time._clock.now` so call-sites remain
+    uniform across the production codebase.
     """
-    return datetime.now(tz=UTC)
+    return now()
 
 
 def _parse_http_date_retry_after(
@@ -86,11 +87,8 @@ def _parse_http_date_retry_after(
         return None
     if parsed is None:
         return None
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=UTC)
-    reference = now if now is not None else datetime.now(tz=UTC)
-    if reference.tzinfo is None:
-        reference = reference.replace(tzinfo=UTC)
+    parsed = coerce_utc_aware(parsed)
+    reference = coerce_utc_aware(now) if now is not None else datetime.now(tz=UTC)
     delta = int((parsed - reference).total_seconds())
     return max(delta, 0)
 
@@ -173,9 +171,9 @@ def parse_mantenimiento_banner(
     when two or more curated body markers match, or when exactly one
     body marker matches alongside a title containing ``mantenimiento``
     or ``interrupcion``. A title-only match with zero body markers
-    **never** classifies: the ADR (Decision 2.1,
-    [[2026-04-13-aeat-mantenimiento-detection-adr]]) requires at least
-    one body-marker hit as corroborating evidence.
+    **never** classifies: at least one body-marker hit is required as
+    corroborating evidence to suppress false positives from
+    unrelated pages whose ``<title>`` happens to mention maintenance.
 
     Args:
         url: The probe URL.
@@ -238,8 +236,8 @@ def parse_waf_challenge(
         http_status: The observed HTTP status code.
         headers: Case-insensitive mapping of response headers.
         html: The response body.
-        rate_limit_retry_after_default: Ignored; see
-            :func:`parse_mantenimiento_banner`.
+        rate_limit_retry_after_default: Ignored; reserved for interface parity.
+        _lowered: Pre-computed lowercased ``html``; computed from ``html`` when omitted.
 
     Returns:
         A populated :class:`SiteHealthStatus` or ``None`` when the
@@ -364,8 +362,7 @@ def evaluate_response(
 ) -> SiteHealthStatus | None:
     """Run the full parser suite and return the first non-OK hit.
 
-    Parsers are evaluated in the order documented in
-    [[2026-04-13-aeat-mantenimiento-detection-adr]]:
+    Parsers are evaluated in cost-then-specificity order:
 
     1. :func:`parse_rate_limit_response` (cheapest, header-first
        short-circuit; yields to mantenimiento when a 503 carries

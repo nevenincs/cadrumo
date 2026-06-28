@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1960"
+number = "1960"
+label = "Por cantidades satisfechas en gastos asociados a la práctica del deporte y actividades saludables (importe de la casilla [2122] del anexo B.12)"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_gastos_deporte"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

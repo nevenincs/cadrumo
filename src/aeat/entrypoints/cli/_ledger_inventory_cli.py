@@ -1,0 +1,277 @@
+"""Typer registration for ledger inventory commands."""
+
+from __future__ import annotations
+
+import typer
+
+from ...application.inventory import InventoryMovementCommand, InventoryService
+from ...core.external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
+from ...core.i18n import tr
+from ...domain.contribuyente.inventory import MovementKind
+from ._common import (
+    _bad,
+    _emit_envelope,
+    _parse_iso_date,
+    parse_decimal_amount,
+    parse_optional_decimal_amount,
+)
+from ._common import (
+    active_bucket_id_or_refuse as _inventory_bucket_id,
+)
+from ._ledger_payloads import (
+    InventoryCreateResult,
+    InventoryListResult,
+    InventoryMovementAddResult,
+    InventoryValuationPreviewPayload,
+)
+
+
+def register_inventory_commands(app: typer.Typer) -> None:
+    """Mount inventory command groups on the ledger app."""
+    app.add_typer(inventory_app, name="inventory")
+    inventory_app.add_typer(inventory_movement_app, name="movement")
+    inventory_app.add_typer(inventory_valuation_app, name="valuation")
+
+
+def _parse_movement_kind(raw: str) -> MovementKind:
+    try:
+        return MovementKind(raw)
+    except ValueError as exc:
+        raise _bad(
+            tr(
+                "cli.app.ledger.inventory.unknown_movement_kind",
+                default="Unknown movement kind: {kind!r}",
+                kind=raw,
+            ),
+        ) from exc
+
+
+def _inventory_service() -> InventoryService:
+    return InventoryService()
+
+
+inventory_app = typer.Typer(
+    name="inventory",
+    help=tr(
+        "cli.app.ledger.inventory.group_help",
+        default="Per-actividad inventory ledgers (stock, movements, valuation).",
+    ),
+    no_args_is_help=True,
+)
+
+inventory_movement_app = typer.Typer(
+    name="movement",
+    help=tr("cli.app.ledger.inventory.movement_group_help", default="Inventory movement subcommands."),
+    no_args_is_help=True,
+)
+inventory_valuation_app = typer.Typer(
+    name="valuation",
+    help=tr("cli.app.ledger.inventory.valuation_group_help", default="Inventory valuation subcommands."),
+    no_args_is_help=True,
+)
+
+
+@inventory_app.command(
+    "list",
+    help=tr(
+        "cli.app.ledger.inventory.list_help",
+        default="List every per-actividad inventory ledger on the active profile.",
+    ),
+)
+def inventory_list(ctx: typer.Context) -> None:
+    """List every per-actividad inventory ledger on the active bucket."""
+    bucket_id = _inventory_bucket_id()
+    rows = _inventory_service().list_all(bucket_id=bucket_id)
+    payload = {
+        "bucket_id": bucket_id,
+        "rows": [row.model_dump(mode="json") for row in rows],
+        "count": len(rows),
+    }
+    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+    for row in rows:
+        lines.append(
+            f"{row.actividad_id}\t{row.year}\t{row.valuation_method.value}\t"
+            f"opening={row.opening_stock}\tmovements={row.movement_count}",
+        )
+    _emit_envelope(
+        ctx,
+        command="ledger.inventory.list",
+        result=InventoryListResult.model_validate(payload),
+        lines=lines,
+    )
+
+
+@inventory_app.command(
+    "create",
+    help=tr(
+        "cli.app.ledger.inventory.create_help",
+        default="Create a fresh inventory ledger for one actividad and year.",
+    ),
+)
+def inventory_create(
+    ctx: typer.Context,
+    actividad_id: str = typer.Argument(
+        ...,
+        help=tr("cli.app.ledger.inventory.actividad_id_help", default="Actividad identifier."),
+    ),
+    year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help", default="Fiscal year.")),
+    valuation_method: str = typer.Option(
+        ...,
+        "--valuation-method",
+        help=tr("cli.app.ledger.inventory.valuation_method_help", default="Valuation method (fifo or pmp)."),
+    ),
+    opening_stock: str = typer.Option(
+        "0",
+        "--opening-stock",
+        help=tr("cli.app.ledger.inventory.opening_stock_help", default="Opening stock value."),
+    ),
+) -> None:
+    """Create a fresh inventory ledger for one actividad and fiscal year."""
+    bucket_id = _inventory_bucket_id()
+    result = _inventory_service().create(
+        bucket_id=bucket_id,
+        actividad_id=actividad_id,
+        year=year,
+        valuation_method=valuation_method,
+        opening_stock=parse_decimal_amount(opening_stock, label="opening-stock"),
+    )
+    ledger = result.ledger
+    payload = ledger.model_dump(mode="json")
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    _emit_envelope(
+        ctx,
+        command="ledger.inventory.create",
+        result=InventoryCreateResult.model_validate(payload),
+        lines=(
+            f"bucket\t{bucket_id}",
+            f"actividad_id\t{ledger.actividad_id}",
+            f"year\t{ledger.year}",
+            f"valuation_method\t{ledger.valuation_method.value}",
+            f"opening_stock\t{ledger.opening_stock}",
+            f"bucket_event_ids\t{','.join(result.bucket_event_ids)}",
+        ),
+    )
+
+
+@inventory_movement_app.command(
+    "add",
+    help=tr(
+        "cli.app.ledger.inventory.movement_add_help",
+        default="Append one movement (purchase/sale/adjustment) to an actividad ledger.",
+    ),
+)
+def inventory_movement_add(
+    ctx: typer.Context,
+    actividad_id: str = typer.Option(
+        ...,
+        "--actividad-id",
+        help=tr("cli.app.ledger.inventory.actividad_id_help", default="Actividad identifier."),
+    ),
+    year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help", default="Fiscal year.")),
+    movement_id: str = typer.Option(
+        ...,
+        "--movement-id",
+        help=tr("cli.app.ledger.inventory.movement_id_help", default="Movement identifier (unique per ledger)."),
+    ),
+    movement_date: str = typer.Option(
+        ...,
+        "--date",
+        help=tr("cli.app.ledger.inventory.movement_date_help", default="Movement date (YYYY-MM-DD)."),
+    ),
+    kind: str = typer.Option(
+        ...,
+        "--kind",
+        help=tr(
+            "cli.app.ledger.inventory.movement_kind_help",
+            default="Movement kind (purchase, sale, adjustment, ...)",
+        ),
+    ),
+    quantity: str = typer.Option(
+        ...,
+        "--quantity",
+        help=tr("cli.app.ledger.inventory.quantity_help", default="Movement quantity (positive or negative)."),
+    ),
+    unit_cost: str | None = typer.Option(
+        None,
+        "--unit-cost",
+        help=tr("cli.app.ledger.inventory.unit_cost_help", default="Unit cost (purchase movements)."),
+    ),
+    taxable_base: str | None = typer.Option(
+        None,
+        "--taxable-base",
+        help=tr("cli.app.ledger.inventory.taxable_base_help", default="Taxable base (for IVA)."),
+    ),
+    iva_rate: str = typer.Option(
+        str(DEFAULT_IVA_GENERAL_RATE_PCT),
+        "--iva-rate",
+        help=tr("cli.app.ledger.inventory.iva_rate_help", default="IVA rate in percent."),
+    ),
+) -> None:
+    """Append one inventory movement to an actividad ledger."""
+    bucket_id = _inventory_bucket_id()
+    command = InventoryMovementCommand(
+        movement_id=movement_id,
+        movement_date=_parse_iso_date(movement_date, label="--date"),
+        kind=_parse_movement_kind(kind),
+        quantity=parse_decimal_amount(quantity, label="quantity"),
+        unit_cost=parse_optional_decimal_amount(unit_cost, label="unit-cost"),
+        taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
+        iva_rate=parse_decimal_amount(iva_rate, label="iva-rate"),
+    )
+    result = _inventory_service().movement_add(
+        bucket_id=bucket_id,
+        actividad_id=actividad_id,
+        year=year,
+        movement=command,
+    )
+    ledger = result.ledger
+    payload = ledger.model_dump(mode="json")
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    _emit_envelope(
+        ctx,
+        command="ledger.inventory.movement.add",
+        result=InventoryMovementAddResult.model_validate(payload),
+        lines=(
+            f"bucket\t{bucket_id}",
+            f"actividad_id\t{ledger.actividad_id}",
+            f"year\t{ledger.year}",
+            f"movements\t{len(ledger.period_movements)}",
+            f"bucket_event_ids\t{','.join(result.bucket_event_ids)}",
+        ),
+    )
+
+
+@inventory_valuation_app.command(
+    "preview",
+    help=tr(
+        "cli.app.ledger.inventory.valuation_preview_help",
+        default="Preview closing stock and COGS for one actividad/year ledger.",
+    ),
+)
+def inventory_valuation_preview(
+    ctx: typer.Context,
+    actividad_id: str = typer.Option(
+        ...,
+        "--actividad-id",
+        help=tr("cli.app.ledger.inventory.actividad_id_help", default="Actividad identifier."),
+    ),
+    year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help", default="Fiscal year.")),
+) -> None:
+    """Preview closing stock and COGS for one actividad/year inventory ledger."""
+    bucket_id = _inventory_bucket_id()
+    result = _inventory_service().valuation_preview(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
+    preview = result.preview
+    _emit_envelope(
+        ctx,
+        command="ledger.inventory.valuation.preview",
+        result=InventoryValuationPreviewPayload.from_result(result),
+        lines=(
+            f"bucket\t{bucket_id}",
+            f"actividad_id\t{preview.actividad_id}",
+            f"year\t{preview.year}",
+            f"valuation_method\t{preview.valuation_method.value}",
+            f"closing_stock\t{preview.closing_stock}",
+            f"cogs\t{preview.cogs}",
+            f"bucket_event_ids\t{','.join(result.bucket_event_ids)}",
+        ),
+    )

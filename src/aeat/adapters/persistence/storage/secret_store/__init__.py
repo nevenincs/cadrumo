@@ -1,6 +1,10 @@
-"""Secret-store substrate: keyed secret repository on top of blob_store.
+"""Secret-store substrate: keyed secret repository on top of the blob store.
 
-Bucket boundary established by audit-4 in the aeat-restructure ADR.
+Public surface for the keyed-secret persistence layer. Exposes the
+typed :class:`SecretRecord` payload and the :class:`SecretStore`
+repository that wraps records in a :class:`Envelope`, persists them
+via :class:`aeat.adapters.persistence.storage.blob_store.EncryptedBlobStore`,
+and indexes them by HMAC-SHA256 digest of the natural key.
 """
 
 from __future__ import annotations

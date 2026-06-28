@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0008"
+number = "0008"
+label = "Contribuciones empresariales a planes de pensiones, planes de previsión social empresarial y mutualidades de previsión social (excepto a seguros colectivos de dependencia). Importes imputados al co..."
+section = ["toma_datos_ampliada", "rdto_trabajo"]
+semantic_role = "irpf_rendimiento_trabajo_contribucion_empresarial_prevision"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

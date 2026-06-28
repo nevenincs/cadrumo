@@ -1,0 +1,20 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-cuota-liquida-autonomica-incrementada"
+target_casilla_id = "0586"
+expression = { op = "sum", args = [
+    { casilla_id = "0571" },
+    { casilla_id = "0569" },
+    { casilla_id = "0583" },
+    { casilla_id = "0577" },
+    { casilla_id = "0578" },
+    { casilla_id = "0579" },
+    { casilla_id = "0581" },
+    { casilla_id = "0504" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Cuota líquida autonómica", "incrementada"]

@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02646"
+number = "02646"
+label = "Libertad de amortización sin mantenimiento de empleo (RDL 13/2010 y DT 13ª.2 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02646]"
+section = ["libertad_de_amortizacion_sin_mantenimiento_de_empl", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02646"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02647"
+number = "02647"
+label = "Libertad de amortización sin mantenimiento de empleo (RDL 13/2010 y DT 13ª.2 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02647]"
+section = ["libertad_de_amortizacion_sin_mantenimiento_de_empl", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_ejercicio_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02647"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02648"
+number = "02648"
+label = "Libertad de amortización sin mantenimiento de empleo (RDL 13/2010 y DT 13ª.2 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02648]"
+section = ["libertad_de_amortizacion_sin_mantenimiento_de_empl", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_temporaria_anteriores_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02648"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02649"
+number = "02649"
+label = "Libertad de amortización sin mantenimiento de empleo (RDL 13/2010 y DT 13ª.2 LIS) - Disminución - Saldo pendiente a principio de ejercicio [02649]"
+section = ["libertad_de_amortizacion_sin_mantenimiento_de_empl", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02649"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02650"
+number = "02650"
+label = "Libertad de amortización sin mantenimiento de empleo (RDL 13/2010 y DT 13ª.2 LIS) - Disminución - Saldo pendiente a fin de ejercicio [02650]"
+section = ["libertad_de_amortizacion_sin_mantenimiento_de_empl", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_sin_mantenimiento_empleo_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02650"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

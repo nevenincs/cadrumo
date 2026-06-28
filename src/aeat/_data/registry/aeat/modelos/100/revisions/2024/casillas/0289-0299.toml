@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0299"
+number = "0299"
+label = "Subvenciones para la adquisición de viviendas de protección oficial o de precio tasado. Importe imputable a 2024 (cumplimente el Anexo C.1) (*)"
+section = ["toma_datos_ampliada", "gp_premios", "otras"]
+semantic_role = "irpf_ganancia_premios_subvencion_vpo"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

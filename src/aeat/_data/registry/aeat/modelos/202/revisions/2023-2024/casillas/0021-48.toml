@@ -1,0 +1,12 @@
+[[revisions.2023-2024.casillas]]
+id = "48"
+number = "48"
+label = "Mod. 40.3 LIS B1 — Reserva nivelacion convertida — Aumentos"
+section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b1_reserva_nivelacion_convertida_aum"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-202-2023-2024-page-01-casilla-48"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]

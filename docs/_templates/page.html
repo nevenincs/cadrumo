@@ -1,0 +1,118 @@
+{% extends "!page.html" %}
+
+{% macro aeat_link(item, class_name="") -%}
+  {%- if item.doc -%}
+  {%- set href = pathto(item.doc) -%}
+  {%- if item.fragment -%}
+  {%- if href == "#" -%}
+  {%- set href = "#" ~ item.fragment -%}
+  {%- else -%}
+  {%- set href = href ~ '#' ~ item.fragment -%}
+  {%- endif -%}
+  {%- endif -%}
+  <a{% if class_name %} class="{{ class_name }}"{% endif %} href="{{ href }}">{{ item.label }}</a>
+  {%- elif item.url -%}
+  <a{% if class_name %} class="{{ class_name }}"{% endif %} href="{{ item.url }}">{{ item.label }}</a>
+  {%- else -%}
+  <span{% if class_name %} class="{{ class_name }}"{% endif %}>{{ item.label }}</span>
+  {%- endif -%}
+{%- endmacro %}
+
+{% block announcement %}
+  {% if aeat_broadcasts %}
+  <div class="aeat-broadcast" aria-label="Site updates">
+    {% for broadcast in aeat_broadcasts %}
+    <div class="aeat-broadcast-item">
+      <span class="aeat-broadcast-label">{{ broadcast.label }}</span>
+      <span class="aeat-broadcast-message">{{ broadcast.message }}</span>
+      {% if broadcast.links %}
+      <span class="aeat-broadcast-links" aria-label="Broadcast links">
+        {% for link in broadcast.links %}
+          {{ aeat_link(link, "aeat-broadcast-link") }}
+        {% endfor %}
+      </span>
+      {% endif %}
+    </div>
+    {% endfor %}
+    <button type="button" class="aeat-broadcast-dismiss" data-aeat-broadcast-dismiss aria-label="Dismiss notice">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/></svg>
+    </button>
+  </div>
+  {% endif %}
+  <header class="aeat-header">
+    <div class="aeat-header-inner">
+      <label class="aeat-header-burger nav-overlay-icon" for="__navigation" aria-label="Toggle site navigation sidebar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </label>
+      <a class="aeat-header-brand" href="{{ pathto(master_doc) }}">
+        <img class="aeat-header-mark" src="{{ pathto('_static/aeat-favicon.svg', 1) }}" alt="" aria-hidden="true"/>
+        <span class="aeat-header-wordmark">aeat<span class="aeat-header-wordmark-suffix">-cli</span></span>
+      </a>
+      {% if aeat_nav %}
+      <nav class="aeat-header-nav" aria-label="Primary">
+        {% for item in aeat_nav %}
+          {{ aeat_link(item, "aeat-header-nav-link") }}
+        {% endfor %}
+      </nav>
+      {% endif %}
+      <div class="aeat-header-actions">
+        <button type="button" class="aeat-header-search" data-aeat-search data-aeat-search-url="{{ pathto('search') }}" aria-label="Search documentation">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg>
+        </button>
+        {% if aeat_repository_url %}
+        <a class="aeat-header-icon" href="{{ aeat_repository_url }}" aria-label="Project repository on GitHub">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        </a>
+        {% endif %}
+        <div class="theme-toggle-container aeat-header-toggle">
+          <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+            <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+            <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+            <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+            <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+          </button>
+        </div>
+        <label class="aeat-header-toc toc-overlay-icon{% if furo_hide_toc %} no-toc{% endif %}" for="__toc" aria-label="Toggle table of contents sidebar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M4 12h10M4 18h13"/></svg>
+        </label>
+      </div>
+    </div>
+  </header>
+{% endblock announcement %}
+
+{% block content %}
+  {% if pagename != master_doc %}
+  <nav class="aeat-breadcrumbs" aria-label="Breadcrumb">
+    <a href="{{ pathto(master_doc) }}">Home</a>
+    {%- for parent in parents -%}
+    <span class="aeat-breadcrumbs-sep" aria-hidden="true">/</span><a href="{{ parent.link }}">{{ parent.title|striptags }}</a>
+    {%- endfor -%}
+    <span class="aeat-breadcrumbs-sep" aria-hidden="true">/</span><span class="aeat-breadcrumbs-current" aria-current="page">{{ title|striptags }}</span>
+  </nav>
+  {% endif %}
+  {{ super() }}
+{% endblock content %}
+
+{% block footer %}
+  {% if aeat_footer_groups %}
+  <section class="aeat-site-footer" aria-label="Documentation update channels">
+    <div class="aeat-site-footer-intro">
+      <p class="aeat-site-footer-kicker">Project notices</p>
+      <p class="aeat-site-footer-note">{{ aeat_footer_note }}</p>
+    </div>
+    <div class="aeat-site-footer-grid">
+      {% for group in aeat_footer_groups %}
+      <nav class="aeat-site-footer-group" aria-label="{{ group.title }}">
+        <p class="aeat-site-footer-title">{{ group.title }}</p>
+        <ul>
+          {% for link in group.links %}
+          <li>{{ aeat_link(link) }}</li>
+          {% endfor %}
+        </ul>
+      </nav>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  {{ super() }}
+{% endblock footer %}

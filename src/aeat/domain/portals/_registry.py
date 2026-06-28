@@ -14,7 +14,9 @@ from collections.abc import Mapping
 from types import MappingProxyType
 
 from ...core.logging import get_logger
-from ..modelos import ModeloCode, UnknownModeloError
+from ...core.resources import resources
+from ..calculations.registry import RegistryError, RegistrySnapshotError
+from ..modelos import ModeloCode
 from ._categories import PortalCategory
 from ._codes import Portal
 from ._entries import (
@@ -61,17 +63,13 @@ from ._entries import (
     portal_renta_web_borrador,
     portal_sede_root,
 )
-from ._errors import PortalIntegrityError, UnknownPortalError
+from ._errors import PortalIntegrityError, PortalValidationError, UnknownPortalError
 from ._metadata import PortalMetadata
 
 _LOG = get_logger(__name__)
 
 
-_CATEGORIES_REQUIRING_MODELO: frozenset[PortalCategory] = frozenset(
-    {PortalCategory.FILING, PortalCategory.CENSUS, PortalCategory.BORRADOR}
-)
 _FILING_OR_BORRADOR: frozenset[PortalCategory] = frozenset({PortalCategory.FILING, PortalCategory.BORRADOR})
-_FILING_OR_CENSUS: frozenset[PortalCategory] = frozenset({PortalCategory.FILING, PortalCategory.CENSUS})
 
 _ENTRIES: tuple[PortalMetadata, ...] = (
     # AUTH
@@ -83,7 +81,7 @@ _ENTRIES: tuple[PortalMetadata, ...] = (
     portal_cert_selection.ENTRY,
     portal_cert_validation_rest.ENTRY,
     portal_dnie_sede_entry.ENTRY,
-    # FILING / CENSUS
+    # FILING / CENSO
     portal_m036_censal.ENTRY,
     portal_m037_censal_simplificada.ENTRY,
     portal_m100_renta.ENTRY,
@@ -140,64 +138,12 @@ def _check_replaced_by(entries: Mapping[Portal, PortalMetadata]) -> None:
         if target is None:
             continue
         if target not in entries:
+            _LOG.error(
+                "portal integrity: %s replaced_by %s which is not in registry",
+                portal.value,
+                target.value,
+            )
             raise PortalIntegrityError(f"portal {portal.value} replaced_by {target.value} which is not in the registry")
-
-
-def _check_modelo_closure(entries: Mapping[Portal, PortalMetadata]) -> None:
-    """Verify every :class:`ModeloCode` is covered by a FILING or CENSUS portal.
-
-    ``ModeloCode.MODELO_037`` is permitted to have only an ``active=False``
-    backing portal (its simplificada procedure was suppressed on
-    2025-02-03). Every other member must have at least one active
-    FILING or CENSUS portal.
-
-    Args:
-        entries: The assembled registry mapping.
-
-    Raises:
-        PortalIntegrityError: If any :class:`ModeloCode` member has no
-            FILING / CENSUS portal, or the M037 active carve-out is
-            violated (i.e. M037 inadvertently gains an active portal).
-    """
-    coverage: dict[ModeloCode, list[PortalMetadata]] = {code: [] for code in ModeloCode}
-    for metadata in entries.values():
-        if metadata.category in _FILING_OR_CENSUS and metadata.related_modelo is not None:
-            coverage[metadata.related_modelo].append(metadata)
-
-    for code, portals in coverage.items():
-        if not portals:
-            raise PortalIntegrityError(f"modelo {code.value} has no FILING/CENSUS portal entry")
-        if code is ModeloCode.MODELO_037:
-            if any(p.active for p in portals):
-                raise PortalIntegrityError(
-                    "modelo 037 must not have an active FILING/CENSUS portal "
-                    "(suppressed 2025-02-03 by Orden HAC/1526/2024)"
-                )
-        else:
-            if not any(p.active for p in portals):
-                raise PortalIntegrityError(f"modelo {code.value} has no active FILING/CENSUS portal entry")
-
-
-def _check_related_modelo_roundtrip(entries: Mapping[Portal, PortalMetadata]) -> None:
-    """Verify every ``related_modelo`` round-trips through :class:`ModeloCode`.
-
-    The field is already typed as :class:`ModeloCode`, so the check is
-    a defence-in-depth against future schema drift.
-
-    Args:
-        entries: The assembled registry mapping.
-
-    Raises:
-        PortalIntegrityError: If any ``related_modelo`` does not
-            resolve back through :class:`ModeloCode`.
-    """
-    valid = frozenset(ModeloCode)
-    for portal, metadata in entries.items():
-        code = metadata.related_modelo
-        if code is None:
-            continue
-        if code not in valid:
-            raise PortalIntegrityError(f"portal {portal.value} related_modelo {code!r} is not a known ModeloCode")
 
 
 def _finalise_registry(
@@ -219,27 +165,54 @@ def _finalise_registry(
     materialised: dict[Portal, PortalMetadata] = {}
     for entry in entries:
         if entry.portal in materialised:
+            _LOG.error("portal registry: duplicate entry for portal %s", entry.portal.value)
             raise PortalIntegrityError(f"duplicate registry entry for portal {entry.portal.value}")
         materialised[entry.portal] = entry
     missing = set(Portal) - set(materialised)
     if missing:
         missing_values = sorted(p.value for p in missing)
+        _LOG.error("portal registry: missing entries for portals %s", missing_values)
         raise PortalIntegrityError(f"registry is missing entries for portals: {missing_values}")
     extra = set(materialised) - set(Portal)
     if extra:
         extra_values = sorted(p.value for p in extra)
+        _LOG.error("portal registry: unknown portals in entries %s", extra_values)
         raise PortalIntegrityError(f"registry contains unknown portals: {extra_values}")
     for key, metadata in materialised.items():
         if metadata.portal is not key:
+            _LOG.error(
+                "portal registry: entry for %s has mismatched portal field %s",
+                key.value,
+                metadata.portal.value,
+            )
             raise PortalIntegrityError(f"entry for {key.value} has mismatched portal {metadata.portal.value}")
     _check_replaced_by(materialised)
-    _check_related_modelo_roundtrip(materialised)
-    _check_modelo_closure(materialised)
     _LOG.debug("loaded %d portal entries", len(materialised))
     return MappingProxyType(materialised)
 
 
 PORTAL_REGISTRY: Mapping[Portal, PortalMetadata] = _finalise_registry(_ENTRIES)
+
+
+def _portal_consumer_binding(modelo_id: str, revision_id: str, consumer: str) -> Portal | None:
+    """Resolve registry application consumers that identify portal dispatch entries."""
+    for enum_prefix in (f"{Portal.__module__}.{Portal.__qualname__}.", "aeat.domain.portals.Portal."):
+        if consumer.startswith(enum_prefix):
+            member_name = consumer.removeprefix(enum_prefix)
+            try:
+                return Portal[member_name]
+            except KeyError as exc:
+                raise PortalIntegrityError(
+                    f"modelo {modelo_id} revision {revision_id} binds unknown portal enum {consumer!r}",
+                ) from exc
+    if consumer.startswith("portal_"):
+        try:
+            return Portal(consumer)
+        except ValueError as exc:
+            raise PortalIntegrityError(
+                f"modelo {modelo_id} revision {revision_id} binds unknown portal {consumer!r}",
+            ) from exc
+    return None
 
 
 def get_portal(portal: Portal | str) -> PortalMetadata:
@@ -271,35 +244,61 @@ def get_portal(portal: Portal | str) -> PortalMetadata:
         raise UnknownPortalError(member.value) from exc
 
 
-def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
-    """Return every FILING or BORRADOR portal cross-referencing ``code``.
+def _registry_portal_bindings_for_modelo(code: ModeloCode) -> frozenset[Portal]:
+    """Return portal ids bound to ``code`` by validated registry data."""
+    try:
+        try:
+            modelo = resources().modelos.authority.validate_modelo(str(code))
+        except RegistrySnapshotError:
+            _LOG.debug(
+                "portals: registry snapshot unavailable for modelo %s; no portal bindings",
+                code,
+            )
+            return frozenset()
+        bound: set[Portal] = set()
+        for revision in modelo.revisions.values():
+            for link in revision.application_links:
+                if link.surface != "portal":
+                    continue
+                portal = _portal_consumer_binding(modelo.id, revision.id, link.consumer)
+                if portal is not None:
+                    bound.add(portal)
+        return frozenset(bound)
+    except RegistryError as exc:
+        raise PortalIntegrityError(f"registry-backed portal lookup failed: {exc}") from exc
 
-    CENSUS portals are intentionally excluded: ``portals_for_modelo``
-    is a filing-dispatch helper, and the census procedures (Modelo
+
+def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
+    """Return every FILING or BORRADOR portal linked to ``code``.
+
+    CENSO portals are intentionally excluded: ``portals_for_modelo``
+    is a filing-dispatch helper, and the censo procedures (Modelo
     036/037) live in their own category so callers can look them up
     with :func:`portals_by_category` when needed.
 
     Args:
-        code: A :class:`ModeloCode` member or its string value.
+        code: A :class:`aeat.domain.modelos.ModeloCode` member or its string value.
 
     Returns:
-        A tuple of matching :class:`PortalMetadata` entries sorted by
-        :class:`Portal` value for deterministic output.
+        A tuple of matching :class:`PortalMetadata` entries declared by
+        validated registry definitions and sorted by :class:`Portal`
+        value for deterministic output.
 
     Raises:
-        UnknownModeloError: If ``code`` is not a registered modelo.
+        PortalValidationError: If ``code`` is not a recognised modelo identifier.
     """
     if isinstance(code, ModeloCode):
         member = code
     else:
         try:
             member = ModeloCode(code)
-        except ValueError as exc:
-            raise UnknownModeloError(str(code)) from exc
+        except KeyError as exc:
+            raise PortalValidationError(f"unknown modelo code: {code!r}") from exc
+    bound_portals = _registry_portal_bindings_for_modelo(member)
     matches = [
         metadata
         for metadata in PORTAL_REGISTRY.values()
-        if metadata.category in _FILING_OR_BORRADOR and metadata.related_modelo is member
+        if metadata.category in _FILING_OR_BORRADOR and metadata.portal in bound_portals
     ]
     matches.sort(key=lambda m: m.portal.value)
     return tuple(matches)

@@ -1,0 +1,9 @@
+[[revisions."2023".casillas]]
+id = "0690"
+number = "0690"
+label = "Si la adquisición de la vivienda se ha producido después del 31-12-2012, por estar en construcción, indique la fecha de adquisición (fecha de la escritura de adquisición o de obra nueva)"
+section = ["resultados", "anexo_a_res", "deduccion_vivienda_habitual_res"]
+data_type = "text"
+semantic_role = "irpf_anexo_a_vivienda_fecha_adquisicion"
+legal_refs = ["ley-35-2006:dt-18"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

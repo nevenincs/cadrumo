@@ -1,0 +1,10 @@
+[[revisions."2021".casillas]]
+id = "0845"
+number = "0845"
+label = "Importe total de las deducciones por incentivos y estímulos a la inversión empresarial que se aplican en esta declaración (suma de las casillas [0752] a [0759] + [0764] a [0767] + [0776] + [0780] +..."
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deducciones_incentivos_inversion_total"
+input_kind = "computed"
+formula = "renta-2021-deduccion-incentivos-inversion-empresarial-total"
+legal_refs = ["ley-35-2006:art-68"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

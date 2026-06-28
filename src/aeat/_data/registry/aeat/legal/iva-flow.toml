@@ -1,0 +1,529 @@
+[legal."ley-37-1992:art-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a9"
+document_id = "BOE-A-1992-28740"
+article = "9"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "LIVA art 9: operaciones asimiladas a las entregas de bienes (autoconsumo). El apartado 1.c establece el autoconsumo del promotor cuando afecta a su patrimonio empresarial o profesional bienes inmuebles de su propia construccion o rehabilitacion. La base imponible se determina conforme al art 79 apartado 4."
+required_text = [
+    "autoconsumo",
+    "afectación",
+    "patrimonio empresarial",
+]
+
+[legal."ley-37-1992:art-9-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a9-2"
+document_id = "BOE-A-1992-28740"
+article = "9 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9-2"
+published_at = 1992-12-29
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "LIVA art 9 bis: acuerdo de ventas de bienes en consigna. Define las transferencias intracomunitarias en consigna, el plazo de doce meses, y la inclusion reglamentaria en declaracion recapitulativa. Base sustantiva de las claves M349 R, D y C desde la revision 2020."
+required_text = [
+    "Acuerdo de ventas de bienes en consigna",
+    "declaración recapitulativa a que se refiere el artículo 164",
+    "plazo de los doce meses",
+]
+
+[legal."ley-37-1992:art-79"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a79"
+document_id = "BOE-A-1992-28740"
+article = "79"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a79"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "LIVA art 79 apartado 4: reglas especiales de base imponible para las operaciones asimiladas a entregas de bienes (autoconsumo). La base imponible del autoconsumo es el coste de los bienes o servicios utilizados, incluidos los gastos de personal, con exclusion del beneficio industrial."
+required_text = [
+    "coste",
+    "autoconsumo",
+    "gastos de personal",
+]
+
+[legal."ley-37-1992:art-80"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a80"
+document_id = "BOE-A-1992-28740"
+article = "80"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a80"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "LIVA art 80: modificacion de la base imponible. Grounds rectified M349 bases where the declared intracommunity operation base changes because the taxable base is reduced or otherwise modified."
+required_text = [
+    "Modificación de la base imponible",
+    "la base imponible se modificará en la cuantía correspondiente",
+]
+
+[legal."ley-37-1992:art-84"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-84.html#a84"
+document_id = "BOE-A-1992-28740"
+article = "84"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a84"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIVA art 84: sujetos pasivos. Establece la regla general (apartado uno 1o) y la inversion del sujeto pasivo (apartado uno 2o), donde el destinatario de la operacion asume la condicion de sujeto pasivo y debe autorepercutirse el IVA."
+required_text = [
+    "Sujetos pasivos",
+    "Los empresarios o profesionales para quienes se realicen las operaciones",
+]
+
+[legal."ley-37-1992:art-88"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-88.html#a88"
+document_id = "BOE-A-1992-28740"
+article = "88"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a88"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIVA art 88: repercusion del impuesto. Establece la obligacion del sujeto pasivo de repercutir integramente el importe del IVA sobre el destinatario de la operacion gravada, quedando este obligado a soportarlo. Es la base legal del flujo IVA repercutido."
+required_text = [
+    "Repercusión del impuesto",
+    "deberán repercutir íntegramente el importe del impuesto",
+    "obligado a soportarlo",
+]
+
+[legal."ley-37-1992:art-92"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-92.html#a92"
+document_id = "BOE-A-1992-28740"
+article = "92"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a92"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "wgergely"
+notes = "LIVA art 92: cuotas tributarias deducibles. Establece el derecho del sujeto pasivo a deducir las cuotas del IVA devengadas por las operaciones que ha soportado por repercusion directa o por las operaciones equivalentes (importaciones, adquisiciones intracomunitarias, autorepercusion). Es la base legal del flujo IVA soportado y deducible."
+required_text = [
+    "Cuotas tributarias deducibles",
+    "podrán deducir",
+    "soportado por repercusión directa",
+]
+
+[legal."ley-37-1992:art-21"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-21.html#a21"
+document_id = "BOE-A-1992-28740"
+article = "21"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a21"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIVA art 21: exenciones en las exportaciones de bienes. Cubre entregas a fuera de la Comunidad por el transmitente o por el adquirente no establecido, regimen de viajeros (residentes fuera de la UE), tiendas libres de impuestos, trabajos sobre bienes muebles para exportacion y entregas a Organismos reconocidos. Es la base sustantiva del Modelo 308 cuando este lo invoca."
+required_text = [
+    "Exenciones en las exportaciones de bienes",
+    "expedidos o transportados fuera de la Comunidad",
+    "entregas de bienes a viajeros",
+]
+
+[legal."ley-37-1992:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-7.html#a7"
+document_id = "BOE-A-1992-28740"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a7"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 7: operaciones no sujetas al impuesto. Enumera los supuestos de no sujecion (transmision de unidad economica autonoma, muestras gratuitas, entregas publicitarias, servicios en regimen de dependencia, operaciones de Administraciones Publicas sin contraprestacion, concesiones administrativas, entregas de dinero). Base sustantiva para la clasificacion no-sujeta en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Operaciones no sujetas al impuesto",
+    "No estarán sujetas al impuesto",
+    "constituyan o sean susceptibles de constituir una unidad económica autónoma",
+]
+
+[legal."ley-37-1992:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-13.html#a13"
+document_id = "BOE-A-1992-28740"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a13"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 13: hecho imponible de las adquisiciones intracomunitarias de bienes. Sujeta las adquisiciones intracomunitarias efectuadas a titulo oneroso por empresarios, profesionales o personas juridicas, asi como las adquisiciones de medios de transporte nuevos. Base sustantiva del hecho imponible intracomunitario en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Las adquisiciones intracomunitarias de bienes efectuadas a título oneroso",
+    "Estarán sujetas las siguientes operaciones realizadas en el ámbito espacial de aplicación del Impuesto",
+]
+
+[legal."ley-37-1992:art-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-15.html#a15"
+document_id = "BOE-A-1992-28740"
+article = "15"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a15"
+published_at = 1992-12-29
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 15: concepto de adquisicion intracomunitaria de bienes. Define la adquisicion intracomunitaria como la obtencion del poder de disposicion sobre bienes muebles corporales expedidos o transportados al territorio de aplicacion del Impuesto desde otro Estado miembro. Base definitoria del enrutamiento intracomunitario M303 (Tier-2 routing)."
+required_text = [
+    "Concepto de adquisición intracomunitaria de bienes",
+    "Se entenderá por adquisición intracomunitaria de bienes",
+    "La obtención del poder de disposición sobre bienes muebles corporales",
+]
+
+[legal."ley-37-1992:art-17"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-17.html#a17"
+document_id = "BOE-A-1992-28740"
+article = "17"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a17"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 17: hecho imponible de las importaciones de bienes. Sujeta al impuesto las importaciones de bienes cualquiera que sea el fin a que se destinen y la condicion del importador. Base sustantiva del hecho imponible de importacion en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Estarán sujetas al impuesto las importaciones de bienes",
+    "cualquiera que sea el fin a que se destinen y la condición del importador",
+]
+
+[legal."ley-37-1992:art-20"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-20.html#a20"
+document_id = "BOE-A-1992-28740"
+article = "20"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a20"
+published_at = 1992-12-29
+effective_from = 2019-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 20: exenciones en operaciones interiores. Enumera las exenciones limitadas (sin derecho a deduccion) aplicables a las operaciones interiores: servicio postal, sanidad, educacion, asistencia social, operaciones financieras y de seguros, arrendamientos y entregas de inmuebles, entre otras. Base sustantiva de la clasificacion exenta interior en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Exenciones en operaciones interiores",
+    "Estarán exentas de este impuesto las siguientes operaciones",
+]
+
+[legal."ley-37-1992:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-22.html#a22"
+document_id = "BOE-A-1992-28740"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a22"
+published_at = 1992-12-29
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 22: exenciones en las operaciones asimiladas a las exportaciones. Exime entregas y servicios relativos a buques afectos a navegacion maritima internacional, aeronaves de companias que se dediquen al trafico internacional, operaciones con organismos internacionales y misiones diplomaticas. Base sustantiva de la clasificacion exenta asimilada a exportacion en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Exenciones en las operaciones asimiladas a las exportaciones",
+    "los buques aptos para navegar por alta mar",
+]
+
+[legal."ley-37-1992:art-25"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-25.html#a25"
+document_id = "BOE-A-1992-28740"
+article = "25"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a25"
+published_at = 1992-12-29
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 25: exenciones en las entregas de bienes destinados a otro Estado miembro (entregas intracomunitarias). Exime las entregas de bienes expedidos o transportados al territorio de otro Estado miembro cuando el adquirente disponga de un NIF-IVA asignado por otro Estado miembro y la operacion se incluya en la declaracion recapitulativa. Base sustantiva de la clasificacion exenta intracomunitaria en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Exenciones en las entregas de bienes destinados a otro Estado miembro",
+    "expedidos o transportados, por el vendedor, por el adquirente o por un tercero",
+]
+
+[legal."ley-37-1992:art-26"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-26.html#a26"
+document_id = "BOE-A-1992-28740"
+article = "26"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a26"
+published_at = 1992-12-29
+effective_from = 2010-03-03
+review_status = "reviewed"
+reviewed_at = 2026-06-09
+reviewed_by = "wgergely"
+notes = "LIVA art 26: exenciones en las adquisiciones intracomunitarias de bienes, incluida la operacion triangular. Exime las adquisiciones intracomunitarias cuya entrega interior estaria no sujeta o exenta, las que corresponden a importaciones exentas, las realizadas en el marco de una operacion triangular y aquellas con derecho a devolucion total. Base sustantiva de la exencion intracomunitaria y la triangulacion en el enrutamiento M303 (Tier-2 routing)."
+required_text = [
+    "Exenciones en las adquisiciones intracomunitarias de bienes",
+    "Las adquisiciones intracomunitarias de bienes cuya entrega en el territorio de aplicación del impuesto hubiera estado",
+]
+
+[legal."ley-37-1992:art-27"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a27"
+document_id = "BOE-A-1992-28740"
+article = "27"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a27"
+published_at = 1992-12-29
+effective_from = 2011-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "LIVA art 27.12: importaciones exentas followed by onward delivery to another Member State. Base sustantiva de las claves M349 M y H when the M349 instructions cite importacion exenta and representative-fiscal flows."
+required_text = [
+    "Importaciones de bienes cuya entrega en el interior estuviese exenta del impuesto",
+    "los bienes cuya expedición o transporte tenga como punto de llegada un lugar situado en otro Estado miembro",
+    "representante fiscal",
+]
+
+[legal."ley-37-1992:art-69"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a69"
+document_id = "BOE-A-1992-28740"
+article = "69"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a69"
+published_at = 1992-12-29
+effective_from = 2010-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "LIVA art 69: general place-of-supply rules for services. Grounds M349 intracommunity service prestation/acquisition keys S and I together with the RIVA recapitulativa obligation."
+required_text = [
+    "Lugar de realización de las prestaciones de servicios. Reglas generales",
+    "Cuando el destinatario sea un empresario o profesional que actúe como tal",
+]
+
+[legal."ley-37-1992:art-70"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a70"
+document_id = "BOE-A-1992-28740"
+article = "70"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a70"
+published_at = 1992-12-29
+effective_from = 2010-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "LIVA art 70: special place-of-supply rules for services. Complements art 69 for M349 service keys S and I where official instructions distinguish services localized in or outside the TAI."
+required_text = [
+    "Lugar de realización de las prestaciones de servicios. Reglas especiales",
+    "Los relacionados con bienes inmuebles que radiquen en el citado territorio",
+]
+
+[legal."ley-37-1992:art-86"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a86"
+document_id = "BOE-A-1992-28740"
+article = "86"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a86"
+published_at = 1992-12-29
+effective_from = 2011-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "LIVA art 86.3: import representative-fiscal obligation for importations covered by art 27.12. Base sustantiva for M349 key H where the instructions require representative-fiscal deliveries after exempt import."
+required_text = [
+    "Sujetos pasivos",
+    "cuando se trate de las importaciones a que se refiere el número 12.º del artículo 27",
+    "representante fiscal",
+]
+
+[legal."ley-37-1992:art-117-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-117-bis.html#a117bis"
+document_id = "BOE-A-1992-28740"
+article = "117 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a117bis"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIVA art 117 bis: solicitudes de devolucion de empresarios o profesionales establecidos en el territorio de aplicacion del Impuesto, Islas Canarias, Ceuta y Melilla, correspondientes a cuotas soportadas por operaciones efectuadas en la Comunidad con excepcion de las realizadas en el territorio de aplicacion del Impuesto. Base sustantiva del Modelo 360 (devolucion 8a Directiva)."
+required_text = [
+    "Solicitudes de devolución",
+    "empresarios o profesionales que estén establecidos en el territorio de aplicación del Impuesto",
+    "presentación por vía electrónica de una solicitud",
+]
+
+[legal."rd-1624-1992:art-71"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-71.html#a71"
+document_id = "BOE-A-1992-28925"
+article = "71"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a71"
+published_at = 1992-12-31
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Reglamento del IVA art 71: liquidacion del Impuesto, normas generales. Establece la obligacion de autoliquidacion de los sujetos pasivos, las periodicidades trimestral y mensual, la declaracion resumen anual y las exoneraciones. Base reglamentaria comun de los Modelos 303 (autoliquidacion), 309 (no periodica), 322 (REGE individual), 353 (REGE agregada) y 390 (resumen anual)."
+required_text = [
+    "Liquidación del Impuesto. Normas generales",
+    "los sujetos pasivos deberán realizar por sí mismos la determinación de la deuda tributaria",
+    "El período de liquidación coincidirá con el trimestre natural",
+]
+
+[legal."rd-1624-1992:art-79"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-79.html#a79"
+document_id = "BOE-A-1992-28925"
+article = "79"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a79"
+published_at = 1992-12-31
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "Reglamento del IVA art 79: obligation to present the declaracion recapitulativa. Enumerates the M349 operation universe: intracommunity deliveries, acquisitions, services, triangular subsequent deliveries, and consignment-sale movements."
+required_text = [
+    "Obligación de presentar la declaración recapitulativa",
+    "Las prestaciones intracomunitarias de servicios",
+    "acuerdo de ventas de bienes en consigna",
+]
+
+[legal."rd-1624-1992:art-80"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-80.html#a80"
+document_id = "BOE-A-1992-28925"
+article = "80"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a80"
+published_at = 1992-12-31
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "Reglamento del IVA art 80: content of the declaracion recapitulativa, including identification data, operation bases/importes, consignment-sale information, and rectification of erroneous recapitulativa data."
+required_text = [
+    "Contenido de la declaración recapitulativa",
+    "Los datos de identificación de los proveedores y adquirentes",
+    "deberán rectificarse cuando se haya incurrido en errores",
+]
+
+[legal."rd-1624-1992:art-29"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-29.html#a29"
+document_id = "BOE-A-1992-28925"
+article = "29"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a29"
+published_at = 1992-12-31
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-19
+reviewed_by = "codex"
+notes = "Reglamento del IVA art 29: forma de las devoluciones de oficio vinculadas al articulo 115 LIVA."
+required_text = [
+    "Devoluciones de oficio",
+    "se realizarán por transferencia bancaria",
+    "artículo 115 de la Ley del Impuesto",
+]
+
+[legal."rd-1624-1992:art-30"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-30.html#a30"
+document_id = "BOE-A-1992-28925"
+article = "30"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a30"
+published_at = 1992-12-31
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-19
+reviewed_by = "codex"
+notes = "Reglamento del IVA art 30: registro de devolucion mensual y limites para solicitar devolucion en periodos distintos del ultimo periodo anual."
+required_text = [
+    "Devoluciones al término de cada período de liquidación",
+    "deberán estar inscritos en el registro de devolución mensual",
+    "no iniciarán el procedimiento de devolución",
+]
+
+[legal."rd-1624-1992:art-30-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-30-bis.html#a30bis"
+document_id = "BOE-A-1992-28925"
+article = "30 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a30bis"
+published_at = 1992-12-31
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Reglamento del IVA art 30 bis: devolucion de cuotas deducibles a los sujetos pasivos que ejerzan la actividad de transporte de viajeros o de mercancias por carretera tributando por el regimen simplificado. Articulo invocado en el official_name del Modelo 308 como el reglamentario de la solicitud de devolucion."
+required_text = [
+    "Devolución de cuotas deducibles",
+    "transporte de viajeros o de mercancías por carretera",
+    "régimen simplificado",
+]

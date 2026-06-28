@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03181"
+number = "03181"
+label = "Empresas de reducida dimensión: libertad de amortización (art. 102 LIS) - Aumento - Correcciones del ejercicio - Permanentes [03181]"
+section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_regimenes_especiales_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03181"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03182"
+number = "03182"
+label = "Empresas de reducida dimensión: libertad de amortización (art. 102 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03182]"
+section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "aumento"]
+data_type = "money"
+semantic_role = "is_erd_libertad_amortizacion_correccion_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03182"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03183"
+number = "03183"
+label = "Empresas de reducida dimensión: libertad de amortización (art. 102 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03183]"
+section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "aumento"]
+data_type = "money"
+semantic_role = "is_erd_libertad_amortizacion_correccion_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03183"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03184"
+number = "03184"
+label = "Empresas de reducida dimensión: libertad de amortización (art. 102 LIS) - Aumento - Saldo pendiente a principio de ejercicio [03184]"
+section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "aumento"]
+data_type = "money"
+semantic_role = "is_erd_libertad_amortizacion_saldo_pendiente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03184"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03185"
+number = "03185"
+label = "Empresas de reducida dimensión: libertad de amortización (art. 102 LIS) - Aumento - Saldo pendiente a fin de ejercicio [03185]"
+section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "aumento"]
+data_type = "money"
+semantic_role = "is_erd_libertad_amortizacion_saldo_pendiente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03185"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

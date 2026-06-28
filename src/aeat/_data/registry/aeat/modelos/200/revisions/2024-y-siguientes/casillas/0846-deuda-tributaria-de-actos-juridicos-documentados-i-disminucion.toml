@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02876"
+number = "02876"
+label = "Deuda tributaria de actos jurídicos documentados (ITP y AJD) (art. 15 m) LIS) - Disminución - Correcciones del ejercicio - Permanentes [02876]"
+section = ["deuda_tributaria_de_actos_juridicos_documentados_i", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deuda_tributaria_ajd_itp_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02876"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02877"
+number = "02877"
+label = "Deuda tributaria de actos jurídicos documentados (ITP y AJD) (art. 15 m) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02877]"
+section = ["deuda_tributaria_de_actos_juridicos_documentados_i", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deuda_tributaria_ajd_itp_temporaria_ejercicio_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02877"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02878"
+number = "02878"
+label = "Deuda tributaria de actos jurídicos documentados (ITP y AJD) (art. 15 m) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02878]"
+section = ["deuda_tributaria_de_actos_juridicos_documentados_i", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deuda_tributaria_ajd_itp_temporaria_anteriores_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02878"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02879"
+number = "02879"
+label = "Deuda tributaria de actos jurídicos documentados (ITP y AJD) (art. 15 m) LIS) - Disminución - Saldo pendiente a principio de ejercicio [02879]"
+section = ["deuda_tributaria_de_actos_juridicos_documentados_i", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deuda_tributaria_ajd_itp_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02879"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02880"
+number = "02880"
+label = "Deuda tributaria de actos jurídicos documentados (ITP y AJD) (art. 15 m) LIS) - Disminución - Saldo pendiente a fin de ejercicio [02880]"
+section = ["deuda_tributaria_de_actos_juridicos_documentados_i", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deuda_tributaria_ajd_itp_saldo_final_neto"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02880"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

@@ -1,0 +1,14 @@
+[[revisions."2025".relations]]
+id = "renta-2025-rel-123-retenciones-trimestrales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "123"
+source_revision_selector = { year = 2025 }
+source_casilla_id = "09"
+target_binding = "renta-2025-modelo-123-retenciones-periodicas"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-hac-277-2026:art-3", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]

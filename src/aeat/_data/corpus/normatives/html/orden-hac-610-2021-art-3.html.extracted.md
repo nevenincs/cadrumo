@@ -1,0 +1,3 @@
+# Artículo 3. Plazo de presentación del modelo 369 «Impuesto sobre el Valor Añadido. Autoliquidación de los regímenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condición de sujetos pasivos, que efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes».
+
+El modelo 369 se presentará dentro del mes natural siguiente al del final del período al que se refiera la autoliquidación.

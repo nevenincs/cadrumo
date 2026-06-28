@@ -1,0 +1,13 @@
+# Modelo 232 (Operaciones vinculadas e información país por país). Enrolled by
+# the year-over-year related-party operation data-fidelity test. A vinculada-1
+# row with NIF, tipo-vinculacion, and importe above the €100,000 threshold
+# (RD 634/2015 art. 13) is persisted for exercises 2024 and 2025 via the real
+# encrypted-SQLite CalculationObservationRepository, loaded back, and asserted
+# for strict pydantic equality + NIF identity continuity + amount isolation +
+# threshold check. Evidence class is data_fidelity (no calculation engine;
+# Ley 27/2014 LIS arts. 18-19 / Orden HFP/816/2017).
+[modelo]
+modelo = "232"
+renta_years = [2024, 2025]
+evidence_class = "data_fidelity"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_232_operaciones_vinculadas_fidelity.py"

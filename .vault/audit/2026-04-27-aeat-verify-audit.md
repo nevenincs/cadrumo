@@ -1,16 +1,9 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/audit/ location)
-# Feature tag (replace aeat-verify with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#audit'
   - '#aeat-verify'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-04-27'
-# Related documents as quoted wiki-links
-# (e.g., "[[2026-02-04-feature-research]]")
+modified: '2026-04-27'
 related:
   - "[[2026-04-26-aeat-verify-audit]]"
   - "[[2026-04-25-aeat-verify-plan]]"
@@ -18,14 +11,7 @@ related:
   - "[[2026-04-25-pdf-sanitizer-adr]]"
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `aeat-verify` audit: `post-pdf-sanitizer-completion-state`
 
@@ -57,7 +43,7 @@ read-only Python code:
   filing register** — the routine quarterly/annual modelos that
   the expediente tree omits.
 
-Cross-wave P1 enumeration against Y4113523X's account, fully
+Cross-wave P1 enumeration against the authenticated operator account, fully
 resolved:
 
 | Wave | Modelo | Status | Captured |
@@ -501,7 +487,7 @@ or a ZK form drive that fetches state, never POSTs / submits.
   M100/2022/0A draft with `profile_tax_id="X9999999Z"` (wrong
   NIE), reconciled against AEAT's real record. Verdict:
   `status: divergent`, `tax_id_mismatch` surfaces:
-  draft=X9999999Z vs AEAT=Y4113523X.
+  draft=X9999999Z vs AEAT=<redacted operator NIE>.
 
 This closes the Kent-observable acceptance criteria for #239:
 > "`aeat filing reconcile <draft-id>` returns MATCH 30 minutes

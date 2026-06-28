@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0862"
+number = "0862"
+label = "Importe de la deducción"
+section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
+semantic_role = "irpf_deduccion_andalucia_empleada_hogar_importe"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

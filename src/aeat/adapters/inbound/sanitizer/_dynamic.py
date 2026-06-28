@@ -2,10 +2,12 @@
 
 Dynamic surfaces are the parts of a PDF that can rewrite content at
 view time: embedded JavaScript, AcroForm field values, annotations,
-optional content groups, attachments. Per the Manafort / NSA Russia
-memo / AstraZeneca redaction-failure post-mortems, these surfaces
-must be removed *before* content-stream rewriting so a JS action
-cannot re-inject PII the sanitiser just stripped.
+optional content groups, attachments. The Manafort, NSA Russia
+memo and AstraZeneca redaction-failure post-mortems all share the
+same root cause — these surfaces must be removed *before*
+content-stream rewriting so a JS action, layer toggle, or
+hierarchical AcroForm field cannot re-inject PII the sanitiser
+just stripped.
 
 Each function in this module is a single-surface scrubber. They
 record their work as :class:`ScrubbedSurface` rows so the
@@ -22,13 +24,14 @@ from ._records import SanitizationWarning, ScrubbedSurface
 
 
 def strip_attachments(pdf: Pdf) -> ScrubbedSurface:
-    """Removes every embedded file attachment from ``pdf``.
+    """Remove every embedded file attachment from ``pdf``.
 
     Args:
         pdf: An open PDF whose attachment table should be wiped.
 
     Returns:
-        A counter recording how many attachments were removed.
+        A :class:`ScrubbedSurface` counter recording how many
+        attachments were removed.
     """
     count = len(list(pdf.attachments))
     if count == 0:
@@ -40,16 +43,17 @@ def strip_attachments(pdf: Pdf) -> ScrubbedSurface:
 
 
 def strip_javascript(pdf: Pdf) -> tuple[ScrubbedSurface, ScrubbedSurface, ScrubbedSurface]:
-    """Removes embedded JavaScript from the Names tree and document actions.
+    """Remove embedded JavaScript from the Names tree and document actions.
 
     Args:
         pdf: An open PDF whose JavaScript surfaces should be wiped.
 
     Returns:
-        A 3-tuple of ``(javascript, open_action, additional_actions)``
-        counters. ``javascript`` covers the ``Root.Names.JavaScript``
-        name tree; ``open_action`` covers ``Root.OpenAction``;
-        ``additional_actions`` covers ``Root.AA`` plus per-page ``AA``.
+        A 3-tuple of :class:`ScrubbedSurface` counters
+        ``(javascript, open_action, additional_actions)``. ``javascript``
+        covers the ``Root.Names.JavaScript`` name tree; ``open_action``
+        covers ``Root.OpenAction``; ``additional_actions`` covers ``Root.AA``
+        plus per-page ``AA``.
     """
     js_count = 0
     names = pdf.Root.get("/Names")
@@ -79,7 +83,7 @@ def strip_javascript(pdf: Pdf) -> tuple[ScrubbedSurface, ScrubbedSurface, Scrubb
 
 
 def strip_annotations(pdf: Pdf) -> ScrubbedSurface:
-    """Drops every page annotation from ``pdf``.
+    """Drop every page annotation from ``pdf``.
 
     Annotations can carry PII via their ``/Contents`` strings,
     embedded files, or JavaScript actions. The sanitiser drops
@@ -90,7 +94,8 @@ def strip_annotations(pdf: Pdf) -> ScrubbedSurface:
         pdf: An open PDF whose annotation arrays should be wiped.
 
     Returns:
-        A counter of annotations removed across all pages.
+        A :class:`ScrubbedSurface` counter of annotations removed
+        across all pages.
     """
     total = 0
     for page in pdf.pages:
@@ -103,7 +108,7 @@ def strip_annotations(pdf: Pdf) -> ScrubbedSurface:
 
 
 def strip_optional_content_groups(pdf: Pdf) -> ScrubbedSurface:
-    """Removes any Optional Content (layer) properties from ``pdf``.
+    """Remove any Optional Content (layer) properties from ``pdf``.
 
     OCG layers can selectively show or hide content at view time —
     a redaction that hides content with a layer toggle is not a
@@ -114,7 +119,8 @@ def strip_optional_content_groups(pdf: Pdf) -> ScrubbedSurface:
         pdf: An open PDF whose ``Root.OCProperties`` should be wiped.
 
     Returns:
-        A counter of OCG entries removed (zero or one).
+        A :class:`ScrubbedSurface` counter of OCG entries removed
+        (zero or one).
     """
     if "/OCProperties" not in pdf.Root:
         return ScrubbedSurface(surface="optional_content_groups", count=0)
@@ -127,7 +133,7 @@ def strip_acroform(
     *,
     drop_entirely: bool = False,
 ) -> tuple[ScrubbedSurface, tuple[SanitizationWarning, ...]]:
-    """Clears AcroForm field values, optionally dropping the form structure.
+    """Clear AcroForm field values, optionally dropping the form structure.
 
     Args:
         pdf: An open PDF whose form values should be cleared.
@@ -136,14 +142,11 @@ def strip_acroform(
             value) entries on every field while preserving the form.
 
     Returns:
-        A 2-tuple of (counter, warnings). The counter records the
-        number of fields whose values were cleared (or 1 when the
-        form was dropped wholesale). The warnings tuple includes
-        ``unknown_surface_present`` when a hierarchical form
-        (``/Kids`` chains) is detected — the inherited values
-        require recursive walk that this version does not
-        implement, and the operator should review or pass
-        ``drop_entirely=True``.
+        A 2-tuple ``(counter, warnings)``. The counter is a :class:`ScrubbedSurface`
+        recording the number of fields whose values were cleared (or 1 when the
+        form was dropped wholesale). The warnings tuple contains
+        :class:`SanitizationWarning` entries, including ``unknown_surface_present``
+        when a hierarchical form (``/Kids`` chains) is detected.
     """
     acroform = pdf.Root.get("/AcroForm")
     if acroform is None:
@@ -160,7 +163,7 @@ def strip_acroform(
         return ScrubbedSurface(surface="acroform_field_value", count=0), ()
     cleared = 0
     has_kids = False
-    # `Object` is the base pikepdf type and ty's stub doesn't
+    # `Object` is the base pikepdf type and ty's metadata doesn't
     # advertise iteration on it directly; the runtime exposes a
     # numeric index. Loop with an explicit range to keep both the
     # type checker and pikepdf happy.
@@ -191,7 +194,7 @@ def strip_acroform(
 
 
 def strip_thumbnails(pdf: Pdf) -> ScrubbedSurface:
-    """Drops every page-level rasterised thumbnail.
+    """Drop every page-level rasterised thumbnail.
 
     Thumbnails can carry PII visible at a glance even after body
     sanitisation — a renderer that ignores the body but renders the
@@ -201,7 +204,8 @@ def strip_thumbnails(pdf: Pdf) -> ScrubbedSurface:
         pdf: An open PDF whose page thumbnails should be wiped.
 
     Returns:
-        A counter of thumbnails removed across all pages.
+        A :class:`ScrubbedSurface` counter of thumbnails removed
+        across all pages.
     """
     count = 0
     for page in pdf.pages:
@@ -212,7 +216,7 @@ def strip_thumbnails(pdf: Pdf) -> ScrubbedSurface:
 
 
 def strip_outlines(pdf: Pdf) -> ScrubbedSurface:
-    """Removes the document outline (bookmarks) tree.
+    """Remove the document outline (bookmarks) tree.
 
     Bookmarks have historically retained the redacted term in the
     AstraZeneca contract failure case. The sanitiser drops them.
@@ -221,7 +225,7 @@ def strip_outlines(pdf: Pdf) -> ScrubbedSurface:
         pdf: An open PDF whose outline should be wiped.
 
     Returns:
-        A counter (zero or one).
+        A :class:`ScrubbedSurface` counter (zero or one).
     """
     if "/Outlines" not in pdf.Root:
         return ScrubbedSurface(surface="outlines", count=0)
@@ -230,13 +234,13 @@ def strip_outlines(pdf: Pdf) -> ScrubbedSurface:
 
 
 def strip_page_labels(pdf: Pdf) -> ScrubbedSurface:
-    """Removes per-page label dictionaries.
+    """Remove per-page label dictionaries.
 
     Args:
         pdf: An open PDF whose ``Root.PageLabels`` should be wiped.
 
     Returns:
-        A counter (zero or one).
+        A :class:`ScrubbedSurface` counter (zero or one).
     """
     if "/PageLabels" not in pdf.Root:
         return ScrubbedSurface(surface="page_labels", count=0)

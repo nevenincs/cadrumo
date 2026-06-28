@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1969"
+number = "1969"
+label = "Retribución en especie (no exenta por superar la cuantía prevista en al artículo 42.3.f) y pendientes de imputación  de acuerdo con lo dispuesto en el artículo 14.2.m) de la Ley del impuesto): Ingr..."
+section = ["toma_datos_ampliada", "rdto_trabajo", "retrib_especie_anexo_c"]
+semantic_role = "irpf_retrib_especie_importe_no_exenta_2"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

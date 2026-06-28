@@ -1,28 +1,31 @@
 """Strict pydantic records for the authenticated AEAT sede surface.
 
-Every record is derived from HTML / URL shapes captured live against
-Kent's production sede on 2026-04-24. No field is speculative; each
-one has at least one real observation backing its shape and bounds.
+Every record represents a read-only AEAT filing, document, or
+notification observation. The schema is intentionally narrow so
+malformed or unsupported AEAT response shapes fail during parsing.
 
 Every boundary-crossing record carries ``mode: Literal["read"]`` as
-part of the five-layer write-guard — the sede module is structurally
-incapable of mutating AEAT state.
+part of the structural write-guard — the sede module is incapable
+of mutating AEAT state.
+
+Public surface: :class:`Expediente`, :class:`JustificanteRef`,
+:class:`SedeCapture`, :class:`FiledDeclaracionArtefact`,
+:class:`ObservedCasillaValue`, :class:`FiledDeclaracionObservation`.
 """
 
 from __future__ import annotations
 
 import re
 from datetime import datetime
+from decimal import Decimal
 from typing import Final, Literal
 
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
 
-_STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
-    strict=True,
-    frozen=True,
-    extra="forbid",
-)
-
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import Modelo, Period
+from .....domain.calculations.registry import CasillaId
+from ._errors import SedeValidationError
 
 # AEAT expediente identifiers are <year><sequence><checksum-letter>, e.g.
 # "202310013522456T" (length 16). Observed range: 14-20 characters in
@@ -37,7 +40,7 @@ _CSV_PATTERN: Final[re.Pattern[str]] = re.compile(r"^[A-Z0-9]{8,32}$")
 class Expediente(BaseModel):
     """One AEAT expediente as listed under *Mis Expedientes*.
 
-    Captured live: the sede renders an AJAX-expanded category tree at
+    The sede renders an AJAX-expanded category tree at
     ``/wlpl/TEWV-CORE/ResumenVlt``; leaf rows carry the expediente id
     as the link text and the detail URL on the ``<a>`` ``href``.
 
@@ -52,12 +55,10 @@ class Expediente(BaseModel):
         ejercicio: Tax year inferred from the expediente id's leading
             four digits. Captured against 2021 / 2022 / 2023 IRPF.
         category_path: Breadcrumb through the sede's tree, from
-            root to leaf. Captured live:
-            ``("Agencia Estatal de Administración Tributaria",
-               "Impuestos, tasas y prestaciones patrimoniales",
-               "Impuesto sobre la Renta de las Personas Físicas",
-               "Modelo 100- Modelo 102. IRPF. Declaración y
-                 documento de ingreso o devolución.")``.
+            root to leaf. Example: a four-element tuple from
+            "Agencia Estatal de Administración Tributaria" down to
+            "Modelo 100- Modelo 102. IRPF. Declaración y documento
+            de ingreso o devolución.".
         detail_url: Full URL of the expediente's detail page. Per-year
             endpoint for IRPF:
             ``/wlpl/DASR-CORE/AccesoDR<YYYY>RVlt?exp=<id>``.
@@ -76,26 +77,28 @@ class Expediente(BaseModel):
     @field_validator("expediente_id")
     @classmethod
     def _expediente_id_shape(cls, value: str) -> str:
+        """Reject ``expediente_id`` values that do not match the AEAT shape pattern."""
         if not _EXPEDIENTE_ID_PATTERN.match(value):
-            raise ValueError(f"expediente_id does not match AEAT shape: {value!r}")
+            raise SedeValidationError(f"expediente_id does not match AEAT shape: {value!r}")
         return value
 
     @field_validator("category_path")
     @classmethod
     def _category_path_non_empty(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Reject empty / whitespace entries inside ``category_path``."""
         for entry in value:
-            if not entry.strip():
-                raise ValueError("category_path entries must be non-empty")
+            if not entry:
+                raise SedeValidationError("category_path entries must be non-empty")
         return value
 
 
 class JustificanteRef(BaseModel):
     """CSV-keyed handle for AEAT's document verifier.
 
-    Captured live: on every expediente detail page, the
-    *Grabación de la declaración* link carries the document's CSV in
-    its ``href``. The same CSV unlocks both the HTML cotejo viewer
-    (``CotejoIdSv``) and the raw PDF (``CotejoDocIdSv``).
+    On every expediente detail page, the *Grabación de la declaración*
+    link carries the document's CSV in its ``href``. The same CSV
+    unlocks both the HTML cotejo viewer (``CotejoIdSv``) and the raw
+    PDF (``CotejoDocIdSv``).
 
     Attributes:
         csv: Código Seguro de Verificación — AEAT's per-document hash.
@@ -120,8 +123,9 @@ class JustificanteRef(BaseModel):
     @field_validator("csv")
     @classmethod
     def _csv_shape(cls, value: str) -> str:
-        if not _CSV_PATTERN.match(value):
-            raise ValueError(f"csv does not match AEAT shape: {value!r}")
+        """Reject CSV values that do not match the AEAT uppercase alphanumeric pattern."""
+        if value is not None and not _CSV_PATTERN.match(value):
+            raise SedeValidationError(f"csv does not match AEAT shape: {value!r}")
         return value
 
 
@@ -151,8 +155,136 @@ class SedeCapture(BaseModel):
     mode: Literal["read"] = "read"
 
 
+class FiledDeclaracionArtefact(BaseModel):
+    """One immutable artefact captured from AEAT's filed-declaration surface.
+
+    The artefact is evidence of what AEAT served during a read-only
+    session. It is not calculation authority; legal/formula authority
+    remains in BOE, AEAT instructions, manuals, and registry definitions.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"]
+    source_url: AnyHttpUrl
+    content_type: str = Field(min_length=1, max_length=255)
+    byte_count: int = Field(ge=0)
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    captured_at: datetime
+    storage_ref: str | None = Field(default=None, min_length=1, max_length=4096)
+    mode: Literal["read"] = "read"
+
+
+class ObservedCasillaValue(BaseModel):
+    """One casilla value observed from an AEAT filed-data artefact."""
+
+    model_config = _STRICT_FROZEN
+
+    casilla_id: CasillaId
+    value: str = Field(min_length=1, max_length=4096)
+    source_artefact_kind: Literal[
+        "submitted_file",
+        "declaration_pdf",
+        "justificante_pdf",
+        "derived_registry_formula",
+        "derived_carry_policy",
+    ]
+    source_locator: str = Field(min_length=1, max_length=512)
+    confidence: float = Field(ge=0, le=1)
+    mode: Literal["read"] = "read"
+
+
+class IvaCompensationWalletRow(BaseModel):
+    """One AEAT wallet row for IVA compensation generated in a source period.
+
+    The row represents external AEAT state, not a filed-declaration casilla. It
+    maps one line of AEAT's "Cartera de cuotas de IVA a compensar" detail table:
+    the period that generated the credit plus its still-available balance
+    (the "Cuota Disponible" column), carried in ``pending_amount``.
+
+    AEAT's read-only cartera consultation surface exposes only the available
+    balance per generation period; it does not break out the original generated
+    amount or the cumulative applied amount. ``generated_amount`` and
+    ``applied_amount`` are therefore optional and stay ``None`` for this surface,
+    reserved for a richer AEAT view that itemises the movement columns.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    generation_year: int = Field(ge=2000, le=2099)
+    generation_period: Period
+    generated_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
+    applied_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
+    pending_amount: Decimal = Field(ge=Decimal("0"))
+    raw_label: str | None = Field(default=None, min_length=1, max_length=256)
+    mode: Literal["read"] = "read"
+
+
+class IvaCompensationWalletObservation(BaseModel):
+    """Read-only observation of AEAT's IVA compensation wallet.
+
+    Produced by the authenticated Sede wallet reader. Calculation code
+    must not consume this record directly; it is raw evidence consumed
+    by the reconciliation layer, which emits the effective binding
+    decision for Modelo 303 casilla `110`.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    taxpayer_nif: str = Field(min_length=1, max_length=32)
+    authenticated_identity: str = Field(min_length=1, max_length=32)
+    target_modelo: Literal[Modelo.M303] = Modelo.M303
+    target_year: int = Field(ge=2000, le=2099)
+    target_period: Period
+    rows: tuple[IvaCompensationWalletRow, ...] = ()
+    total_pending: Decimal = Field(ge=Decimal("0"))
+    source_url: AnyHttpUrl
+    captured_at: datetime
+    raw_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    mode: Literal["read"] = "read"
+
+
+class FiledDeclaracionObservation(BaseModel):
+    """Normalized read-only observation of one filed AEAT declaration.
+
+    A complete observation starts from the register row and may include
+    submitted machine-readable data, declaration PDFs, and justificante
+    PDFs. Parsed casillas are observations only; downstream calculation
+    logic must validate them through registry extraction profiles.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=8)
+    ejercicio: int = Field(ge=2000, le=2099)
+    period: Period
+    expediente_id: str = Field(min_length=12, max_length=32)
+    status: str = Field(min_length=1, max_length=32)
+    presented_at: datetime
+    authenticated_identity: str = Field(min_length=1, max_length=32)
+    artefacts: tuple[FiledDeclaracionArtefact, ...] = Field(min_length=1)
+    casillas: tuple[ObservedCasillaValue, ...] = ()
+    metadata: dict[str, str] = Field(default_factory=dict)
+    extraction_coverage: dict[str, float] = Field(default_factory=dict)
+    registry_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    mode: Literal["read"] = "read"
+
+    @field_validator("expediente_id")
+    @classmethod
+    def _observation_expediente_id_shape(cls, value: str) -> str:
+        """Reject ``expediente_id`` values that do not match the AEAT shape pattern."""
+        if not _EXPEDIENTE_ID_PATTERN.match(value):
+            raise SedeValidationError(f"expediente_id does not match AEAT shape: {value!r}")
+        return value
+
+
 __all__ = [
     "Expediente",
+    "FiledDeclaracionArtefact",
+    "FiledDeclaracionObservation",
+    "IvaCompensationWalletObservation",
+    "IvaCompensationWalletRow",
     "JustificanteRef",
+    "ObservedCasillaValue",
     "SedeCapture",
 ]

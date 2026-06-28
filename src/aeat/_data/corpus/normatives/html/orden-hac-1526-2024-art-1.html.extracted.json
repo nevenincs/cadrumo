@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-1526-2024-art-1.html",
+  "source_sha256": "3a5d5ae50cb321677724003ef9eee7878dc6c66e477497a23260c931fde0451d",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden HAC/1526/2024 - Articulo primero\nArticulo primero. Modificacion de la Orden EHA/1274/2007.\nLa orden pasa a aprobar el modelo 036 de Declaracion censal de alta, modificacion y baja en el Censo de empresarios, profesionales y retenedores.\nSe suprimen los articulos 14, 15 y 16.\nSe suprime el anexo II.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03051"
+number = "03051"
+label = "Impuesto extranjero soportado por el contribuyente, no deducible por afectar a rentas con deducción por doble imposición (art. 31.2 LIS) - Aumento - Correcciones del ejercicio - Permanentes [03051]"
+section = ["impuesto_extranjero_soportado_por_el_contribuyente", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_impuesto_extranjero_deduccion_doble_imposicion_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03051"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03052"
+number = "03052"
+label = "Impuesto extranjero soportado por el contribuyente, no deducible por afectar a rentas con deducción por doble imposición (art. 31.2 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con or..."
+section = ["impuesto_extranjero_soportado_por_el_contribuyente", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_impuesto_extranjero_deduccion_doble_imposicion_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03052"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03053"
+number = "03053"
+label = "Impuesto extranjero soportado por el contribuyente, no deducible por afectar a rentas con deducción por doble imposición (art. 31.2 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con or..."
+section = ["impuesto_extranjero_soportado_por_el_contribuyente", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_impuesto_extranjero_deduccion_doble_imposicion_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03053"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03054"
+number = "03054"
+label = "Impuesto extranjero soportado por el contribuyente, no deducible por afectar a rentas con deducción por doble imposición (art. 31.2 LIS) - Aumento - Saldo pendiente a principio de ejercicio [03054]"
+section = ["impuesto_extranjero_soportado_por_el_contribuyente", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_impuesto_extranjero_deduccion_doble_imposicion_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03054"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03055"
+number = "03055"
+label = "Impuesto extranjero soportado por el contribuyente, no deducible por afectar a rentas con deducción por doble imposición (art. 31.2 LIS) - Aumento - Saldo pendiente a fin de ejercicio [03055]"
+section = ["impuesto_extranjero_soportado_por_el_contribuyente", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_impuesto_extranjero_deduccion_doble_imposicion_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026e-casilla-03055"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

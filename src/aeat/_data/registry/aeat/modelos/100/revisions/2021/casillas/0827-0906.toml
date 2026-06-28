@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0906"
+number = "0906"
+label = "Por declarantes con discapacidad física, psíquica o sensorial o con descendientes con esa condición"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_deduccion_baleares_discapacidad"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

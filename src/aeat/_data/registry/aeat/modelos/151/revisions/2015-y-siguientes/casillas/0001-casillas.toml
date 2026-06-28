@@ -1,0 +1,81 @@
+# Modelo 151 (régimen especial de impatriados, Ley Beckham) — casilla schema.
+#
+# Phase: the load-bearing cuota-íntegra escala (art. 93.2.e.1º, 24/47) IS
+# computed via lookup_bracket; retenciones and cuota a ingresar are derived.
+# The savings escala (art. 93.2.e.2º → IRPF art. 66) is intentionally out of
+# scope here (its current bracket set is not yet corpus-grounded — see the
+# art-93 corpus note); only the flat general escala is modelled.
+
+[[revisions."2015-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+label = "Ejercicio al que se refiere la declaracion"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure"]
+
+[[revisions."2015-y-siguientes".casillas]]
+id = "decl.periodo"
+number = "periodo"
+label = "Periodo (anual, 0A)"
+section = ["declarante"]
+data_type = "period_code"
+semantic_role = "filing_period"
+required = true
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure"]
+
+[[revisions."2015-y-siguientes".casillas]]
+id = "impatriado.base-liquidable-general"
+number = "impatriado.base-liquidable-general"
+label = "Base liquidable general (régimen impatriados, excluida la parte del ahorro art. 25.1.f TRLIRNR)"
+section = ["liquidacion", "base"]
+data_type = "money"
+semantic_role = "impatriado_base_liquidable_general"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+
+[[revisions."2015-y-siguientes".casillas]]
+id = "impatriado.cuota-integra-general"
+number = "impatriado.cuota-integra-general"
+label = "Cuota integra general (escala art. 93.2.e.1º: 24% hasta 600.000 €, 47% sobre el exceso)"
+section = ["liquidacion", "cuota"]
+data_type = "money"
+semantic_role = "impatriado_cuota_integra_general"
+required = false
+input_kind = "computed"
+formula = "modelo-151-cuota-integra-general"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+
+[[revisions."2015-y-siguientes".casillas]]
+id = "impatriado.retenciones"
+number = "impatriado.retenciones"
+label = "Retenciones e ingresos a cuenta (pagos a cuenta, art. 93.2.f)"
+section = ["liquidacion", "pagos_a_cuenta"]
+data_type = "money"
+semantic_role = "impatriado_retenciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+
+[[revisions."2015-y-siguientes".casillas]]
+id = "impatriado.cuota-diferencial"
+number = "impatriado.cuota-diferencial"
+label = "Cuota diferencial (cuota integra general menos retenciones)"
+section = ["liquidacion", "resultado"]
+data_type = "money"
+semantic_role = "impatriado_cuota_diferencial"
+required = false
+input_kind = "computed"
+formula = "modelo-151-cuota-diferencial"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]

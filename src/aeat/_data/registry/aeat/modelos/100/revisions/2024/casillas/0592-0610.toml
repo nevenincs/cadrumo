@@ -1,0 +1,11 @@
+[[revisions."2024".casillas]]
+id = "0610"
+number = "0610"
+label = "Cuota diferencial"
+section = ["resultados", "calculo_impuesto_res", "cuota_diferencial_res"]
+data_type = "decimal"
+semantic_role = "irpf_cuota_diferencial"
+input_kind = "computed"
+formula = "renta-2024-cuota-diferencial"
+legal_refs = ["ley-35-2006:art-79"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

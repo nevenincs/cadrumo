@@ -1,30 +1,16 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/adr/ location)
-# Feature tag (replace rental-income-hardening with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#adr'
   - '#rental-income-hardening'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-04-29'
-# Related documents as quoted wiki-links
-# (e.g., "[[2026-02-04-feature-research]]")
+modified: '2026-04-29'
 related:
   - "[[2026-04-29-rental-income-hardening-research]]"
   - "[[2026-04-28-modelo-100-renta-full-calc-reference]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `rental-income-hardening` adr: per-finca + per-contract register, Ley 12/2023 tier auto-resolver, art. 23.1.f amortización 3% ledger | (**status:** `accepted`)
 

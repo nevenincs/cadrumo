@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-68-2.html",
+  "source_sha256": "e722304c0252e33b367c15348116026cb3848c8cb758cd4cfe72449b6aecb6eb",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "2. Deducciones en actividades económicas.\na) A los contribuyentes por este Impuesto que ejerzan actividades económicas les serán de aplicación los incentivos y estímulos a la inversión empresarial establecidos o que se establezcan en la normativa del Impuesto sobre Sociedades con igualdad de porcentajes y límites de deducción, con excepción de lo dispuesto en los apartados 2 y 3 del artículo 39 de la Ley del Impuesto sobre Sociedades.\nb) Adicionalmente, los contribuyentes que cumplan los requisitos establecidos en el artículo 101 de la Ley del Impuesto sobre Sociedades podrán deducir los rendimientos netos de actividades económicas del período impositivo que se inviertan en elementos nuevos del inmovilizado material o inversiones inmobiliarias afectos a actividades económicas desarrolladas por el contribuyente.\nEl porcentaje de deducción será del 5 por ciento. No obstante, el porcentaje de deducción será del 2,5 por ciento cuando el contribuyente hubiera practicado la reducción prevista en el apartado 3 del artículo 32 de esta Ley o se trate de rentas obtenidas en Ceuta y Melilla respecto de las que se hubiera aplicado la deducción prevista en el artículo 68.4 de esta Ley.\nLos elementos patrimoniales objeto de inversión deberán permanecer en funcionamiento en el patrimonio del contribuyente, salvo pérdida justificada, durante un plazo de 5 años, o durante su vida útil de resultar inferior.\nc) Los contribuyentes por este Impuesto que ejerzan actividades económicas y determinen su rendimiento neto por el método de estimación objetiva sólo les serán de aplicación los incentivos a que se refiere este apartado 2 cuando así se establezca reglamentariamente teniendo en cuenta las características y obligaciones formales del citado método.",
+      "title": "Artículo 68. Deducciones.",
+      "section": "Artículo 68. Deducciones.",
+      "anchor": null
+    }
+  ]
+}

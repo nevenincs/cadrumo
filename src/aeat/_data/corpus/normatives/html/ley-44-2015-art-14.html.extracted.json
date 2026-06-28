@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-44-2015-art-14.html",
+  "source_sha256": "e738013626ed65b71ee9c8288d93a0f2cea692f61c28e2d4641c2728795b13be",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Las sociedades laborales estarán obligadas a constituir un Fondo Especial de Reserva, que se nutrirá con el 10 por ciento, como mínimo, de los beneficios líquidos de cada ejercicio.\nLa dotación al Fondo Especial de Reserva será obligatoria hasta que dicho Fondo alcance, al menos, el importe del capital social.\n2. La dotación al Fondo Especial de Reserva tendrá la consideración de gasto fiscalmente deducible a efectos del Impuesto sobre Sociedades, con el límite del 25 por ciento de los beneficios netos del ejercicio.",
+      "title": "Artículo 14. Reserva especial.",
+      "section": "Artículo 14. Reserva especial.",
+      "anchor": null
+    }
+  ]
+}

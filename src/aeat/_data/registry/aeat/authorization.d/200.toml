@@ -1,0 +1,13 @@
+# Modelo 200 (Impuesto sobre Sociedades, anual). Enrolled by the cross-renta
+# BIN stock carry: the prior ejercicio's bases imponibles negativas pendientes
+# de aplicación en períodos futuros (casilla 00671) become this ejercicio's
+# opening pending stock (casilla 00670) via the previous_filing binding
+# modelo-200-2024-bin-pendiente-ejercicios-anteriores (filing_year_delta = -1).
+# LIS art. 26.1 unlimited carry-forward. The enrolling test drives the real
+# M200 engine across two distinct renta years (2025, 2026), each sourcing a
+# modelled prior year's 00671, and asserts the year-isolated stock carry.
+[modelo]
+modelo = "200"
+renta_years = [2025, 2026]
+evidence_class = "calculation"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_200_bin_carry_forward_continuity.py"

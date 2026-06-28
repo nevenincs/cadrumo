@@ -3,6 +3,7 @@ tags:
   - "#research"
   - "#aeat-mantenimiento-detection"
 date: 2026-04-13
+modified: '2026-04-13'
 title: "AEAT Mantenimiento / WAF / Rate-Limit Detection Research"
 related:
   - "[[2026-04-12-status-reader-adr]]"

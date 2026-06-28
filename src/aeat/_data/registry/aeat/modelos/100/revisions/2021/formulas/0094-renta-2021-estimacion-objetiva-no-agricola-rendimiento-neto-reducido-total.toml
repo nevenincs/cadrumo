@@ -1,0 +1,14 @@
+[[revisions."2021".formulas]]
+id = "renta-2021-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total"
+target_casilla_id = "1484"
+expression = { op = "subtract", args = [
+    { casilla_id = "1482" },
+    { casilla_id = "1483" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "rendimiento neto"]

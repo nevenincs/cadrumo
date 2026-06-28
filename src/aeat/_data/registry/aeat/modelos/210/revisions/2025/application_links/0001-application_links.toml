@@ -1,0 +1,104 @@
+# Modelo 210 Phase 1 application-link declaration (W04.P19.S387.patch).
+#
+# The validator requires at least one filing or communication surface
+# to satisfy the casilla-routing contract. Phase 1 declares the
+# minimum filing link (the engine path that S389 will wire); broader
+# surfaces (export, extractor, verification, review, workflow,
+# reconciliation, portal) land alongside the Phase 2 schema work.
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "ley-35-2006:art-85",
+]
+source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+    "ley-35-2006:art-85",
+]
+source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+    "ley-35-2006:art-85",
+]
+source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-review"
+surface = "review"
+consumer = "aeat.application.review"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+    "ley-35-2006:art-85",
+]
+source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+    "ley-35-2006:art-85",
+]
+source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+    "ley-35-2006:art-85",
+]
+source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+    "ley-35-2006:art-85",
+]
+source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]

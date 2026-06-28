@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02661"
+number = "02661"
+label = "Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 y DT 33ª.1 LIS. - Aumento - Correcciones del ejercicio - Permanentes [02661]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_y_provisio", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_provisiones_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02661"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02662"
+number = "02662"
+label = "Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 y DT 33ª.1 LIS. - Aumento - Correcciones del ejercicio - Temporarias (con o..."
+section = ["perdidas_por_deterioro_del_art_13_1_lis_y_provisio", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_provisiones_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02662"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02663"
+number = "02663"
+label = "Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 y DT 33ª.1 LIS. - Aumento - Correcciones del ejercicio - Temporarias (con o..."
+section = ["perdidas_por_deterioro_del_art_13_1_lis_y_provisio", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_provisiones_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02663"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02664"
+number = "02664"
+label = "Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 y DT 33ª.1 LIS. - Aumento - Saldo pendiente a principio de ejercicio [02664]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_y_provisio", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_provisiones_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02664"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02665"
+number = "02665"
+label = "Pérdidas por deterioro del art. 13.1 LIS y provisiones y gastos (art. 14.1 y 14.2 LIS) a los que se refiere el art. 11.12 y DT 33ª.1 LIS. - Aumento - Saldo pendiente a fin de ejercicio [02665]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_y_provisio", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_provisiones_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02665"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

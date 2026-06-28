@@ -1,0 +1,12 @@
+[[revisions.2019-2022.casillas]]
+id = "05"
+number = "05"
+label = "Mod. 40.3 LIS — Correcciones por IS — Aumentos"
+section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_correcciones_is_aumentos"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-202-2019-2022-page-01-casilla-05"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]

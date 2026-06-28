@@ -5,6 +5,7 @@ tags:
   - "#exec"
   - "#data-storage"
 date: 2026-04-12
+modified: '2026-04-12'
 related:
   - "[[2026-04-12-data-storage-plan]]"
   - "[[2026-04-12-data-storage-adr]]"

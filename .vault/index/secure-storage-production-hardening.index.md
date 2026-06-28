@@ -1,0 +1,1765 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#secure-storage-production-hardening'
+date: '2026-06-15'
+modified: '2026-06-15'
+related:
+  - '[[2026-05-22-secure-storage-production-hardening-W01-P01-S01]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W01-P01-S02]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W01-P01-S03]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W01-P01-S04]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W01-P01-summary]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W01-P02-S05]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W01-P02-S06]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W01-P02-S07]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W01-P02-S08]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W01-P02-S09]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W01-P02-S10]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W02-P03-S11]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W02-P03-S12]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W02-P03-S13]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S318]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S319]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S320]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S321]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S322]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S323]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S324]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S325]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S326]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S327]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S328]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S329]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S330]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S331]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S332]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S333]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W14-P29-S402]]'
+  - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
+  - '[[2026-05-22-secure-storage-production-hardening-architecture-research]]'
+  - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
+  - '[[2026-05-22-secure-storage-production-hardening-w01-p02-review-audit]]'
+  - '[[2026-05-22-secure-storage-production-hardening-w02-p03-review-audit]]'
+  - '[[2026-05-26-active-profile-storage-runtime-classification-closeout-audit]]'
+  - '[[2026-05-26-active-profile-storage-runtime-discovery-audit]]'
+  - '[[2026-05-26-secure-storage-convention-regrounding-audit]]'
+  - '[[2026-05-26-secure-storage-exception-hierarchy-audit]]'
+  - '[[2026-05-26-secure-storage-exception-observability-audit]]'
+  - '[[2026-05-26-secure-storage-model-duplication-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W02-P03-S11]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W02-P03-S12]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W02-P03-S13]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W02-P03-S14]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W02-P03-summary]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W02-P04-S15]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W02-P04-S16]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W02-P04-S17]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W02-P04-S18]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W02-P04-S19]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W09-P16-S62]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W09-P16-S63]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W09-P16-S64]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W09-P16-summary]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W10-P17-S65]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W10-P17-S66]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W10-P17-S67]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W10-P17-S68]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W10-P17-S69]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W10-P17-S70]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W11-P18-S71]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W11-P18-S72]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W11-P18-S73]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W11-P18-summary]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W11-P19-S74]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W11-P19-S75]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W11-P19-S76]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W11-P19-S77]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W11-P19-summary]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P20-S78]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P20-S79]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P20-S80]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P20-S81]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P20-S82]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P20-summary]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P21-S83]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P21-S84]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P21-S85]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P21-S86]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P21-S87]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P22-S88]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P22-S89]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P22-S90]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P22-S91]]'
+  - '[[2026-05-26-secure-storage-production-hardening-W12-P23-S92]]'
+  - '[[2026-05-26-secure-storage-production-hardening-coverage-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w02-p04-s16-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w02-p04-s17-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w02-p04-s18-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w02-p04-s19-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p21-s83-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p21-s84-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p21-s85-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p21-s86-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p21-s87-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p22-s88-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p22-s89-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p22-s90-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p22-s91-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s92-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-application-profile-slice-exec]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-application-profile-slice-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-census-corporate-profile-slice-exec]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-census-corporate-profile-slice-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-domain-repository-slice-exec]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-domain-repository-slice-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-profile-bootstrap-helper-slice-exec]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-profile-bootstrap-helper-slice-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-profile-health-slice-exec]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-profile-health-slice-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-submission-slice-exec]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-user-profile-repository-slice-exec]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-user-profile-repository-slice-review-audit]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-workflow-run-hardening-slice-exec]]'
+  - '[[2026-05-26-secure-storage-production-hardening-w12-p23-s93-workflow-run-hardening-slice-review-audit]]'
+  - '[[2026-05-26-secure-storage-s75-code-review-audit]]'
+  - '[[2026-05-26-secure-storage-settings-env-audit]]'
+  - '[[2026-05-26-secure-storage-settings-route-audit]]'
+  - '[[2026-05-26-secure-storage-test-hygiene-audit]]'
+  - '[[2026-05-26-secure-storage-tr-locale-error-message-audit]]'
+  - '[[2026-05-27-application-namespace-registry-adoption-reference]]'
+  - '[[2026-05-27-core-plaintext-exception-closeout-audit]]'
+  - '[[2026-05-27-deadline-manual-normative-plaintext-exception-closeout-audit]]'
+  - '[[2026-05-27-domain-registry-plaintext-exception-closeout-audit]]'
+  - '[[2026-05-27-observability-plaintext-exception-closeout-audit]]'
+  - '[[2026-05-27-observability-store-persistence-closeout-audit]]'
+  - '[[2026-05-27-resource-boundary-plaintext-exception-closeout-audit]]'
+  - '[[2026-05-27-secure-storage-diagnostics-profile-closeout-audit]]'
+  - '[[2026-05-27-secure-storage-hierarchy-namespace-inventory-audit]]'
+  - '[[2026-05-27-secure-storage-observation-pool-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W03-P05-S20]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W03-P05-S21]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W03-P05-S22]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W03-P05-S23]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W03-P06-S24]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W03-P06-S25]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W03-P06-S26]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W03-P06-S27]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S299]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S300]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S301]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S302]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S305]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S306]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S308]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S309]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S310]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S311]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S312]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S313]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S314]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S315]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S316]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W12-P26-S317]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P30-S403]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P30-S404]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P30-S405]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P31-S406]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P31-S407]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P31-S408]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P32-S409]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P32-S410]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P32-S411]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P33-S412]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P33-S413]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P33-S414]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P34-S415]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P34-S416]]'
+  - '[[2026-05-27-secure-storage-production-hardening-W15-P34-summary]]'
+  - '[[2026-05-27-secure-storage-production-hardening-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w03-p05-s20-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w03-p05-s21-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w03-p05-s22-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w03-p05-s23-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w03-p06-s24-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w03-p06-s25-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w03-p06-s26-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w03-p06-s27-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s83-bucket-event-runtime-default-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s83-bucket-event-runtime-default-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s83-workflow-runtime-default-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s83-workflow-runtime-default-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s85-auth-diagnostics-runtime-default-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s85-auth-diagnostics-runtime-default-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s85-borrador-100-runtime-default-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s85-borrador-100-runtime-default-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s86-attachment-runtime-default-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s86-attachment-runtime-default-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s86-profile-ledger-runtime-default-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p21-s86-profile-ledger-runtime-default-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p23-s93-output-language-fixture-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p23-s93-output-language-fixture-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p23-s93-profile-localization-failclosed-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p23-s93-profile-localization-failclosed-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-observability-store-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s116-clave-movil-runtime-default-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s116-clave-movil-runtime-default-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s168-s169-secure-bound-runtime-default-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s168-secure-bound-contract-runtime-default-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s169-secure-bound-repository-runtime-default-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s170-storage-errors-exception-hygiene-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s170-storage-errors-exception-hygiene-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s239-modelo-reconcile-runtime-default-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s239-modelo-reconcile-runtime-default-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s283-workflow-persistence-runtime-default-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s283-workflow-persistence-runtime-default-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s371-usage-ratios-runtime-default-slice-exec]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w12-p26-s371-usage-ratios-runtime-default-slice-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w15-p33-review-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w15-p34-closeout-audit]]'
+  - '[[2026-05-27-secure-storage-production-hardening-w15-p34-review-audit]]'
+  - '[[2026-05-27-secure-storage-repair-profile-privacy-review-audit]]'
+  - '[[2026-05-27-secure-storage-residual-guard-inventory-audit]]'
+  - '[[2026-05-28-critical-error-triage-secure-storage-substrate-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W04-P07-S28]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W04-P07-S29]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W04-P07-S30]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W04-P07-S31]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W04-P07-summary]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W04-P08-S32]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W04-P08-S33]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W04-P08-S34]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W04-P08-S35]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S36]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S37]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S38]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S39]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W05-P09-S40]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W05-P10-S41]]'
+  - '[[2026-05-28-secure-storage-production-hardening-W05-P10-S42]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w04-p07-s28-s31-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w04-p07-s29-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w04-p07-s30-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w04-p08-s32-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w04-p08-s33-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w04-p08-s34-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w04-p08-s35-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s36-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s36-side-store-inventory-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s37-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s38-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s39-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s40-adr]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s40-research]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s40-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p10-s41-review-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p10-s42-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W05-P10-S426]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W05-P10-S427]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W05-P10-S43]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W05-P10-S44]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W05-P10-summary]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S428]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S429]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S430]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S431]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S432]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S433]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S434]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S435]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S436]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S437]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S438]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S439]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S440]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S45]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S46]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S47]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S48]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W06-P11-S49]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W07-P12-S50]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W07-P12-S51]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W07-P12-S52]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W07-P12-S53]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W07-P13-S55]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W07-P14-S59]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W07-P14-S60]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W07-P14-S61]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P24-S97]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P24-S98]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P24-S99]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P25-S100]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S103]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S104]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S105]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S106]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S107]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S108]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S109]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S110]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S111]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S112]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S113]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S114]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W12-P26-S132]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W17-P37-S424]]'
+  - '[[2026-06-02-secure-storage-production-hardening-W17-P37-S425]]'
+  - '[[2026-06-02-secure-storage-production-hardening-code-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w05-p10-s43-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w05-p10-s43-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w05-p10-s44-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w06-p11-s428-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w06-p11-s429-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w06-p11-s430-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w06-p11-s45-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w06-p11-s46-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w06-p11-s47-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w06-p11-s48-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-bootstrap-slice-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-bootstrap-slice-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-ledger-fixture-slice-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-ledger-fixture-slice-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-wizard-fixture-slice-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-wizard-fixture-slice-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-config-fixture-slice-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-config-fixture-slice-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-ledger-fixture-slice-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-ledger-fixture-slice-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-ledger-overview-live-slice-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-ledger-overview-live-slice-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-modelo-fixture-slice-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-modelo-fixture-slice-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-output-work-fixture-slice-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-output-work-fixture-slice-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s93-remote-mirror-slice-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s94-explicit-route-guard-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s94-explicit-route-guard-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s95-test-isolation-closeout-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s95-test-isolation-closeout-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p23-s95-test-isolation-closeout-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p24-s96-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p24-s96-side-store-classification-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p24-s96-side-store-classification-exec]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p24-s97-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p24-s98-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p24-s99-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p25-s100-scanner-delta-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p26-s103-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p26-s104-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p26-s105-s111-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p26-s106-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p26-s107-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p26-s108-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p26-s109-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p26-s110-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p26-s112-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p26-s113-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w12-p26-s114-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w17-p37-s424-review-audit]]'
+  - '[[2026-06-02-secure-storage-production-hardening-w17-p37-s425-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W06-P11-S441]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P25-S101]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S115]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S117]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S118]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S119]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S120]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S121]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S122]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S123]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S129]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S130]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S131]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S133]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S134]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S135]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S136]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S137]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S138]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S139]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S140]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S141]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S142]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S143]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S144]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S145]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S146]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S147]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S148]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S149]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S150]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S151]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S152]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S153]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S154]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S155]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S156]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S157]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S158]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S159]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S160]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S161]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S162]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S163]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S164]]'
+  - '[[2026-06-03-secure-storage-production-hardening-W12-P26-S165]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w06-p11-s441-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p25-s100-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p25-s101-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p25-s102-exec]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p25-s102-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s115-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s117-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s118-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s119-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s120-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s121-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s121-s128-exec]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s121-s128-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s122-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s123-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s129-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s130-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s131-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s132-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s133-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s134-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s135-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s136-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s137-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s138-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s139-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s140-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s141-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s142-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s143-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s144-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s145-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s146-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s147-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s148-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s149-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s150-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s151-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s152-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s153-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s154-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s155-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s156-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s157-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s158-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s159-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s160-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s161-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s162-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s163-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s164-review-audit]]'
+  - '[[2026-06-03-secure-storage-production-hardening-w12-p26-s165-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S166]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S167]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S171]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S172]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S173]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S174]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S175]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S176]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S177]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S178]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S179]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S180]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S181]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S182]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S183]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S184]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S185]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S186]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S187]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S188]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S189]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S190]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S191]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S192]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S193]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S194]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S195]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S196]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S197]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S198]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S199]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S200]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S201]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S202]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S203]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S204]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S205]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S206]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S207]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S208]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S209]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S210]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S211]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S212]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S213]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S214]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S215]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S216]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S217]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S218]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S219]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S220]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S221]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S222]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S223]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S224]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S225]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S226]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S227]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S228]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S229]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S230]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S231]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S232]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S233]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S234]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S235]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S236]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S237]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S238]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S240]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S241]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S242]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S243]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S244]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S245]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S246]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S247]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S248]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S249]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S250]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S251]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S252]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S253]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S254]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S255]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S256]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S257]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S258]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S259]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S260]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S261]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S262]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S263]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S264]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S265]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S266]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S267]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S268]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S269]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S270]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S271]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S272]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S273]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S274]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S275]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S276]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S277]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S278]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S279]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S280]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S281]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S282]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S284]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S285]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S286]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S294]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S383]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S384]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S393]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S394]]'
+  - '[[2026-06-04-secure-storage-production-hardening-W12-P26-S395]]'
+  - '[[2026-06-04-secure-storage-production-hardening-code-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s166-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s167-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s171-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s172-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s173-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s174-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s175-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s176-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s177-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s178-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s179-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s180-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s181-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s182-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s183-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s184-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s185-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s186-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s187-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s188-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s189-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s190-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s191-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s192-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s193-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s194-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s195-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s196-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s197-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s198-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s199-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s200-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s201-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s202-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s203-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s204-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s205-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s206-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s207-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s208-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s209-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s210-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s211-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s212-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s213-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s214-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s215-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s216-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s217-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s218-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s219-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s220-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s221-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s222-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s223-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s224-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s225-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s226-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s227-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s228-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s229-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s230-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s231-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s232-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s233-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s234-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s235-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s236-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s237-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s238-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s240-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s240-s243-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s241-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s242-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s244-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s245-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s246-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s247-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s248-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s249-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s250-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s251-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s252-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s253-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s254-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s255-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s256-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s257-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s258-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s259-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s260-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s261-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s262-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s263-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s264-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s265-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s266-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s267-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s268-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s269-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s270-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s271-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s272-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s273-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s274-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s275-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s276-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s277-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s278-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s279-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s280-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s281-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s282-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s284-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s285-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s286-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s294-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s383-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s384-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s393-locale-key-registry-repair-exec]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s393-locale-key-registry-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s393-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s394-review-audit]]'
+  - '[[2026-06-04-secure-storage-production-hardening-w12-p26-s395-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P25-S102]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S287]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S288]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S289]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S290]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S291]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S292]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S293]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S295]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S296]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S297]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S298]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S338]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S339]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S340]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S342]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S343]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S347]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S348]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S353]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S354]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S355]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S356]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S357]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S358]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S359]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S361]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S362]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S363]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S364]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S365]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S366]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S367]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S368]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S369]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S370]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S372]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S373]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S374]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S375]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S376]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S377]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S378]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S379]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S380]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S381]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S382]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S385]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S386]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S387]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S388]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S389]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S390]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S391]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W12-P26-S392]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W16-P35-S417]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W16-P35-S418]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W16-P36-S419]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W16-P36-S420]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W16-P36-S421]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W18-P38-S442]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W18-P38-S443]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W18-P38-S444]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W18-P38-S445]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W18-P38-S446]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W18-P38-S447]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W18-P38-S448]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W18-P38-S449]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W18-P38-summary]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W19-P39-S450]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S451]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S452]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S457]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S458]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W20-P40-S459]]'
+  - '[[2026-06-05-secure-storage-production-hardening-W20-P41-S453]]'
+  - '[[2026-06-05-secure-storage-production-hardening-code-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-error-registry-hygiene-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p25-s102-runtime-rollout-closeout-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-register-reconciliation-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s287-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s288-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s289-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s290-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s291-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s292-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s293-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s295-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s296-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s297-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s298-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s321-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s338-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s339-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s340-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s342-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s343-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s347-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s348-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s353-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s354-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s355-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s356-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s357-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s358-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s359-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s361-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s362-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s363-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s364-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s365-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s366-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s367-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s368-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s369-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s370-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s372-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s373-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s374-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s375-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s376-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s377-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s378-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s379-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s380-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s381-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s382-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s385-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s386-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s387-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s388-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s389-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s390-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s391-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w12-p26-s392-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w18-p38-s442-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w18-p38-s443-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w18-p38-s444-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w18-p38-s445-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w18-p38-s445-s449-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w18-p38-s446-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w18-p38-s447-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w18-p38-s448-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w18-p38-s449-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w18-p38-split-module-review-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s451-custody-api-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s452-passphrase-redaction-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s457-custody-rollout-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w20-p40-s458-guidance-rollout-audit]]'
+  - '[[2026-06-05-secure-storage-production-hardening-w20-p41-s453-guard-inventory-audit]]'
+  - '[[2026-06-06-secure-storage-production-hardening-W13-P27-S396]]'
+  - '[[2026-06-06-secure-storage-production-hardening-W13-P27-S397]]'
+  - '[[2026-06-06-secure-storage-production-hardening-W13-P27-S398]]'
+  - '[[2026-06-06-secure-storage-production-hardening-W20-P40-S460]]'
+  - '[[2026-06-06-secure-storage-production-hardening-W20-P41-S455]]'
+  - '[[2026-06-06-secure-storage-production-hardening-W20-P42-S456]]'
+  - '[[2026-06-06-secure-storage-production-hardening-code-review-audit]]'
+  - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s396-persona-readiness-reconciliation-audit]]'
+  - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-finding-requirements-research]]'
+  - '[[2026-06-06-secure-storage-production-hardening-w20-p41-s455-provenance-path-audit]]'
+  - '[[2026-06-06-secure-storage-production-hardening-w20-p42-s456-redaction-enrollment-audit]]'
+  - '[[2026-06-11-secure-storage-production-hardening-W13-P28-S399]]'
+  - '[[2026-06-11-secure-storage-production-hardening-W13-P28-S400]]'
+  - '[[2026-06-11-secure-storage-production-hardening-W13-P28-S401]]'
+  - '[[2026-06-11-secure-storage-production-hardening-W20-P41-S454]]'
+  - '[[2026-06-11-secure-storage-production-hardening-W21-P43-S462]]'
+  - '[[2026-06-11-secure-storage-production-hardening-w13-p28-s401-testimonial-synthesis-audit]]'
+  - '[[2026-06-11-secure-storage-production-hardening-w20-p41-s454-localization-error-hierarchy-audit]]'
+---
+
+# `secure-storage-production-hardening` feature index
+
+Auto-generated index of all documents tagged with `#secure-storage-production-hardening`.
+
+## Documents
+
+### adr
+
+- `2026-05-22-secure-storage-production-hardening-architecture-adr` - `secure-storage-production-hardening` adr: `canonical SecureStorage architecture for adverse production operation` | (**status:** `accepted`)
+- `2026-05-28-secure-storage-production-hardening-w05-p09-s40-adr` - `secure-storage-production-hardening` adr: `W05.P09.S40 operator-directed export exceptions` | (**status:** `accepted`)
+
+### audit
+
+- `2026-05-22-secure-storage-production-hardening-w01-p02-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-22-secure-storage-production-hardening-w02-p03-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-active-profile-storage-runtime-classification-closeout-audit` - Active-profile storage runtime classification closeout audit
+- `2026-05-26-active-profile-storage-runtime-discovery-audit` - Active-profile storage runtime discovery audit
+- `2026-05-26-secure-storage-convention-regrounding-audit` - `secure-storage-production-hardening` audit: `convention regrounding expansion`
+- `2026-05-26-secure-storage-exception-hierarchy-audit` - `secure-storage-production-hardening` audit: `exception hierarchy`
+- `2026-05-26-secure-storage-exception-observability-audit` - `secure-storage-production-hardening` audit: `exception observability`
+- `2026-05-26-secure-storage-model-duplication-audit` - `secure-storage-production-hardening` audit: `model and enum reuse`
+- `2026-05-26-secure-storage-production-hardening-coverage-audit` - `secure-storage-production-hardening` audit: `coverage reconciliation`
+- `2026-05-26-secure-storage-production-hardening-w02-p04-s16-review-audit` - `secure-storage-production-hardening-W02-P04-S16` Code Review
+- `2026-05-26-secure-storage-production-hardening-w02-p04-s17-review-audit` - `secure-storage-production-hardening-W02-P04-S17` Code Review
+- `2026-05-26-secure-storage-production-hardening-w02-p04-s18-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w02-p04-s19-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p21-s83-review-audit` - `secure-storage-production-hardening-W12-P21-S83` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p21-s84-review-audit` - `secure-storage-production-hardening-W12-P21-S84` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p21-s85-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p21-s86-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p21-s87-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p22-s88-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p22-s89-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p22-s90-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p22-s91-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s92-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-application-profile-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-census-corporate-profile-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-domain-repository-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-profile-bootstrap-helper-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-profile-health-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-user-profile-repository-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-workflow-run-hardening-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-s75-code-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-26-secure-storage-settings-env-audit` - `secure-storage-production-hardening` audit: `settings and environment handling`
+- `2026-05-26-secure-storage-settings-route-audit` - `secure-storage-production-hardening` audit: `settings-backed route handling`
+- `2026-05-26-secure-storage-test-hygiene-audit` - `secure-storage-production-hardening` audit: `test hygiene`
+- `2026-05-26-secure-storage-tr-locale-error-message-audit` - `secure-storage-production-hardening` audit: `tr-backed storage messages`
+- `2026-05-27-core-plaintext-exception-closeout-audit` - Core plaintext-exception closeout audit
+- `2026-05-27-deadline-manual-normative-plaintext-exception-closeout-audit` - Deadline, manual, and normative plaintext-exception closeout audit
+- `2026-05-27-domain-registry-plaintext-exception-closeout-audit` - Domain registry plaintext-exception closeout audit
+- `2026-05-27-observability-plaintext-exception-closeout-audit` - Observability plaintext-exception closeout audit
+- `2026-05-27-observability-store-persistence-closeout-audit` - Observability store persistence closeout audit
+- `2026-05-27-resource-boundary-plaintext-exception-closeout-audit` - Resource boundary plaintext-exception closeout audit
+- `2026-05-27-secure-storage-diagnostics-profile-closeout-audit` - Diagnostics/profile storage closeout audit
+- `2026-05-27-secure-storage-hierarchy-namespace-inventory-audit` - `secure-storage-production-hardening` Storage Hierarchy Namespace Inventory
+- `2026-05-27-secure-storage-observation-pool-audit` - `secure-storage-production-hardening` Observation Pool Plan Expansion
+- `2026-05-27-secure-storage-production-hardening-audit` - `secure-storage-production-hardening` audit: `locale setter code review`
+- `2026-05-27-secure-storage-production-hardening-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w03-p05-s20-review-audit` - `secure-storage-production-hardening` W03.P05.S20 Review
+- `2026-05-27-secure-storage-production-hardening-w03-p05-s21-review-audit` - `secure-storage-production-hardening` W03.P05.S21 Review
+- `2026-05-27-secure-storage-production-hardening-w03-p05-s22-review-audit` - `secure-storage-production-hardening` W03.P05.S22 Code Review
+- `2026-05-27-secure-storage-production-hardening-w03-p05-s23-review-audit` - `secure-storage-production-hardening` W03.P05.S23 Code Review
+- `2026-05-27-secure-storage-production-hardening-w03-p06-s24-review-audit` - `secure-storage-production-hardening` W03.P06.S24 Code Review
+- `2026-05-27-secure-storage-production-hardening-w03-p06-s25-review-audit` - `secure-storage-production-hardening` W03.P06.S25 Code Review
+- `2026-05-27-secure-storage-production-hardening-w03-p06-s26-review-audit` - `secure-storage-production-hardening` W03.P06.S26 Code Review
+- `2026-05-27-secure-storage-production-hardening-w03-p06-s27-review-audit` - `secure-storage-production-hardening` W03.P06.S27 Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p21-s83-bucket-event-runtime-default-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p21-s83-workflow-runtime-default-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p21-s85-auth-diagnostics-runtime-default-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p21-s85-borrador-100-runtime-default-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p21-s86-attachment-runtime-default-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p21-s86-profile-ledger-runtime-default-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p23-s93-output-language-fixture-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p23-s93-profile-localization-failclosed-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p26-observability-store-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s116-clave-movil-runtime-default-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s168-s169-secure-bound-runtime-default-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s170-storage-errors-exception-hygiene-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s239-modelo-reconcile-runtime-default-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s283-workflow-persistence-runtime-default-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s371-usage-ratios-runtime-default-slice-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-production-hardening-w15-p33-review-audit` - `secure-storage-production-hardening` W15.P33 Review
+- `2026-05-27-secure-storage-production-hardening-w15-p34-closeout-audit` - `secure-storage-production-hardening` W15.P34 Closeout
+- `2026-05-27-secure-storage-production-hardening-w15-p34-review-audit` - `secure-storage-production-hardening` W15.P34 Review
+- `2026-05-27-secure-storage-repair-profile-privacy-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-27-secure-storage-residual-guard-inventory-audit` - `secure-storage-production-hardening` Residual Guard Inventory
+- `2026-05-28-critical-error-triage-secure-storage-substrate-audit` - `secure-storage-production-hardening` Critical Error Triage
+- `2026-05-28-secure-storage-production-hardening-w04-p07-s28-s31-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-28-secure-storage-production-hardening-w04-p07-s29-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-28-secure-storage-production-hardening-w04-p07-s30-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-28-secure-storage-production-hardening-w04-p08-s32-review-audit` - `secure-storage-production-hardening-W04-P08-S32` Code Review
+- `2026-05-28-secure-storage-production-hardening-w04-p08-s33-review-audit` - `secure-storage-production-hardening` W04.P08.S33 Code Review
+- `2026-05-28-secure-storage-production-hardening-w04-p08-s34-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-28-secure-storage-production-hardening-w04-p08-s35-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-28-secure-storage-production-hardening-w05-p09-s36-review-audit` - `secure-storage-production-hardening` W05.P09.S36 Code Review
+- `2026-05-28-secure-storage-production-hardening-w05-p09-s36-side-store-inventory-audit` - `secure-storage-production-hardening` W05.P09.S36 side-store inventory
+- `2026-05-28-secure-storage-production-hardening-w05-p09-s37-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-28-secure-storage-production-hardening-w05-p09-s38-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-28-secure-storage-production-hardening-w05-p09-s39-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-28-secure-storage-production-hardening-w05-p09-s40-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-28-secure-storage-production-hardening-w05-p10-s41-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-05-28-secure-storage-production-hardening-w05-p10-s42-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-code-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w05-p10-s43-review-audit` - `secure-storage-production-hardening-W05-P10-S43` Code Review
+- `2026-06-02-secure-storage-production-hardening-w05-p10-s44-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w06-p11-s428-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w06-p11-s429-review-audit` - `secure-storage-production-hardening` S429 Review Checkpoint
+- `2026-06-02-secure-storage-production-hardening-w06-p11-s430-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w06-p11-s45-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w06-p11-s46-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w06-p11-s47-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w06-p11-s48-review-audit` - `secure-storage-production-hardening` S48 Review Checkpoint
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-bootstrap-slice-review-audit` - `secure-storage-production-hardening` `W12.P23.S93` Application Bootstrap Slice Review
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-ledger-fixture-slice-review-audit` - `secure-storage-production-hardening` `W12.P23.S93` Application Ledger Fixture Slice Review
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-wizard-fixture-slice-review-audit` - `secure-storage-production-hardening` `W12.P23.S93` Application Wizard Fixture Slice Review
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-config-fixture-slice-review-audit` - `secure-storage-production-hardening` `W12.P23.S93` CLI Config Fixture Slice Review
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-ledger-fixture-slice-review-audit` - `secure-storage-production-hardening` `W12.P23.S93` CLI Ledger Fixture Slice Review
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-ledger-overview-live-slice-review-audit` - `secure-storage-production-hardening` `W12.P23.S93` CLI Ledger Overview Live Slice Review
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-modelo-fixture-slice-review-audit` - `secure-storage-production-hardening` `W12.P23.S93` CLI Modelo Fixture Slice Review
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-output-work-fixture-slice-review-audit` - `secure-storage-production-hardening` `W12.P23.S93` Output Work Fixture Slice Review
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s94-explicit-route-guard-review-audit` - `secure-storage-production-hardening` `W12.P23.S94` Explicit Route Guard Review
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s95-test-isolation-closeout-audit` - `secure-storage-production-hardening` `W12.P23.S95` Test-Isolation Closeout
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s95-test-isolation-closeout-review-audit` - `secure-storage-production-hardening` `W12.P23.S95` Test-Isolation Closeout Review
+- `2026-06-02-secure-storage-production-hardening-w12-p24-s96-review-audit` - `secure-storage-production-hardening` `W12.P24.S96` Review
+- `2026-06-02-secure-storage-production-hardening-w12-p24-s96-side-store-classification-audit` - `secure-storage-production-hardening` `W12.P24.S96` Side-Store Classification
+- `2026-06-02-secure-storage-production-hardening-w12-p24-s97-review-audit` - `secure-storage-production-hardening` `W12.P24.S97` Review
+- `2026-06-02-secure-storage-production-hardening-w12-p24-s98-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w12-p24-s99-review-audit` - `secure-storage-production-hardening` `W12.P24.S99` Review
+- `2026-06-02-secure-storage-production-hardening-w12-p25-s100-scanner-delta-audit` - W12.P25.S100 scanner delta
+- `2026-06-02-secure-storage-production-hardening-w12-p26-s103-review-audit` - `secure-storage-production-hardening` W12.P26.S103 Review
+- `2026-06-02-secure-storage-production-hardening-w12-p26-s104-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w12-p26-s105-s111-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w12-p26-s106-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w12-p26-s107-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w12-p26-s108-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w12-p26-s109-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w12-p26-s110-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w12-p26-s112-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w12-p26-s113-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w12-p26-s114-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-02-secure-storage-production-hardening-w17-p37-s424-review-audit` - `secure-storage-production-hardening` `W17.P37.S424` Review
+- `2026-06-02-secure-storage-production-hardening-w17-p37-s425-review-audit` - `secure-storage-production-hardening` `W17.P37.S425` Review
+- `2026-06-03-secure-storage-production-hardening-w06-p11-s441-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-03-secure-storage-production-hardening-w12-p25-s100-review-audit` - W12.P25.S100 review
+- `2026-06-03-secure-storage-production-hardening-w12-p25-s101-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-03-secure-storage-production-hardening-w12-p25-s102-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s115-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s117-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s118-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s119-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s120-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s121-review-audit` - W12.P26.S121 review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s121-s128-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s122-review-audit` - W12.P26.S122 review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s123-review-audit` - `secure-storage-production-hardening` `W12.P26.S123` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s129-review-audit` - `secure-storage-production-hardening` `W12.P26.S129` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s130-review-audit` - `secure-storage-production-hardening` `W12.P26.S130` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s131-review-audit` - `secure-storage-production-hardening` `W12.P26.S131` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s132-review-audit` - `secure-storage-production-hardening` `W12.P26.S132` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s133-review-audit` - `secure-storage-production-hardening` `W12.P26.S133` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s134-review-audit` - `secure-storage-production-hardening` `W12.P26.S134` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s135-review-audit` - `secure-storage-production-hardening` `W12.P26.S135` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s136-review-audit` - `secure-storage-production-hardening` `W12.P26.S136` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s137-review-audit` - `secure-storage-production-hardening` `W12.P26.S137` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s138-review-audit` - `secure-storage-production-hardening` `W12.P26.S138` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s139-review-audit` - `secure-storage-production-hardening` `W12.P26.S139` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s140-review-audit` - `secure-storage-production-hardening` `W12.P26.S140` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s141-review-audit` - `secure-storage-production-hardening` `W12.P26.S141` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s142-review-audit` - `secure-storage-production-hardening` `W12.P26.S142` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s143-review-audit` - `secure-storage-production-hardening` `W12.P26.S143` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s144-review-audit` - `secure-storage-production-hardening` `W12.P26.S144` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s145-review-audit` - `secure-storage-production-hardening` `W12.P26.S145` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s146-review-audit` - `secure-storage-production-hardening` `W12.P26.S146` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s147-review-audit` - `secure-storage-production-hardening` `W12.P26.S147` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s148-review-audit` - `secure-storage-production-hardening` `W12.P26.S148` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s149-review-audit` - `secure-storage-production-hardening` `W12.P26.S149` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s150-review-audit` - `secure-storage-production-hardening` `W12.P26.S150` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s151-review-audit` - `secure-storage-production-hardening` `W12.P26.S151` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s152-review-audit` - `secure-storage-production-hardening` `W12.P26.S152` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s153-review-audit` - `secure-storage-production-hardening` `W12.P26.S153` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s154-review-audit` - `secure-storage-production-hardening` `W12.P26.S154` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s155-review-audit` - `secure-storage-production-hardening` `W12.P26.S155` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s156-review-audit` - `secure-storage-production-hardening` `W12.P26.S156` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s157-review-audit` - `secure-storage-production-hardening` `W12.P26.S157` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s158-review-audit` - `secure-storage-production-hardening` `W12.P26.S158` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s159-review-audit` - `secure-storage-production-hardening` `W12.P26.S159` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s160-review-audit` - `secure-storage-production-hardening` `W12.P26.S160` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s161-review-audit` - `secure-storage-production-hardening` `W12.P26.S161` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s162-review-audit` - `secure-storage-production-hardening` `W12.P26.S162` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s163-review-audit` - `secure-storage-production-hardening` `W12.P26.S163` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s164-review-audit` - `secure-storage-production-hardening` `W12.P26.S164` Review
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s165-review-audit` - `secure-storage-production-hardening` `W12.P26.S165` Review
+- `2026-06-04-secure-storage-production-hardening-code-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s166-review-audit` - `secure-storage-production-hardening` `W12.P26.S166` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s167-review-audit` - `secure-storage-production-hardening` `W12.P26.S167` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s171-review-audit` - `secure-storage-production-hardening` `W12.P26.S171` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s172-review-audit` - `secure-storage-production-hardening` `W12.P26.S172` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s173-review-audit` - `secure-storage-production-hardening` `W12.P26.S173` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s174-review-audit` - `secure-storage-production-hardening` `W12.P26.S174` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s175-review-audit` - `secure-storage-production-hardening` `W12.P26.S175` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s176-review-audit` - `secure-storage-production-hardening` `W12.P26.S176` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s177-review-audit` - `secure-storage-production-hardening` `W12.P26.S177` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s178-review-audit` - `secure-storage-production-hardening` `W12.P26.S178` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s179-review-audit` - `secure-storage-production-hardening` `W12.P26.S179` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s180-review-audit` - `secure-storage-production-hardening` `W12.P26.S180` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s181-review-audit` - `secure-storage-production-hardening` `W12.P26.S181` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s182-review-audit` - `secure-storage-production-hardening` `W12.P26.S182` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s183-review-audit` - `secure-storage-production-hardening` `W12.P26.S183` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s184-review-audit` - `secure-storage-production-hardening` `W12.P26.S184` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s185-review-audit` - `secure-storage-production-hardening` `W12.P26.S185` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s186-review-audit` - `secure-storage-production-hardening` `W12.P26.S186` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s187-review-audit` - `secure-storage-production-hardening` `W12.P26.S187` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s188-review-audit` - `secure-storage-production-hardening` `W12.P26.S188` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s189-review-audit` - `secure-storage-production-hardening` `W12.P26.S189` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s190-review-audit` - `secure-storage-production-hardening` `W12.P26.S190` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s191-review-audit` - `secure-storage-production-hardening` `W12.P26.S191` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s192-review-audit` - `secure-storage-production-hardening` `W12.P26.S192` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s193-review-audit` - `secure-storage-production-hardening` `W12.P26.S193` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s194-review-audit` - `secure-storage-production-hardening` `W12.P26.S194` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s195-review-audit` - `secure-storage-production-hardening` `W12.P26.S195` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s196-review-audit` - `secure-storage-production-hardening` `W12.P26.S196` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s197-review-audit` - `secure-storage-production-hardening` `W12.P26.S197` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s198-review-audit` - `secure-storage-production-hardening` `W12.P26.S198` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s199-review-audit` - `secure-storage-production-hardening` `W12.P26.S199` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s200-review-audit` - `secure-storage-production-hardening` `W12.P26.S200` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s201-review-audit` - `secure-storage-production-hardening` `W12.P26.S201` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s202-review-audit` - `secure-storage-production-hardening` `W12.P26.S202` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s203-review-audit` - `secure-storage-production-hardening` `W12.P26.S203` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s204-review-audit` - `secure-storage-production-hardening` `W12.P26.S204` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s205-review-audit` - `secure-storage-production-hardening` `W12.P26.S205` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s206-review-audit` - `secure-storage-production-hardening` `W12.P26.S206` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s207-review-audit` - `secure-storage-production-hardening` `W12.P26.S207` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s208-review-audit` - `secure-storage-production-hardening` `W12.P26.S208` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s209-review-audit` - `secure-storage-production-hardening` `W12.P26.S209` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s210-review-audit` - `secure-storage-production-hardening` `W12.P26.S210` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s211-review-audit` - `secure-storage-production-hardening` `W12.P26.S211` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s212-review-audit` - `secure-storage-production-hardening` `W12.P26.S212` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s213-review-audit` - `secure-storage-production-hardening` `W12.P26.S213` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s214-review-audit` - `secure-storage-production-hardening` `W12.P26.S214` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s215-review-audit` - `secure-storage-production-hardening` `W12.P26.S215` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s216-review-audit` - `secure-storage-production-hardening` `W12.P26.S216` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s217-review-audit` - `secure-storage-production-hardening` `W12.P26.S217` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s218-review-audit` - `secure-storage-production-hardening` `W12.P26.S218` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s219-review-audit` - `secure-storage-production-hardening` `W12.P26.S219` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s220-review-audit` - `secure-storage-production-hardening` `W12.P26.S220` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s221-review-audit` - `secure-storage-production-hardening` `W12.P26.S221` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s222-review-audit` - `secure-storage-production-hardening` `W12.P26.S222` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s223-review-audit` - `secure-storage-production-hardening` `W12.P26.S223` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s224-review-audit` - `secure-storage-production-hardening` `W12.P26.S224` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s225-review-audit` - `secure-storage-production-hardening` `W12.P26.S225` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s226-review-audit` - `secure-storage-production-hardening` `W12.P26.S226` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s227-review-audit` - `secure-storage-production-hardening` `W12.P26.S227` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s228-review-audit` - `secure-storage-production-hardening` `W12.P26.S228` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s229-review-audit` - `secure-storage-production-hardening` `W12.P26.S229` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s230-review-audit` - `secure-storage-production-hardening` `W12.P26.S230` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s231-review-audit` - `secure-storage-production-hardening` `W12.P26.S231` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s232-review-audit` - `secure-storage-production-hardening` `W12.P26.S232` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s233-review-audit` - `secure-storage-production-hardening` `W12.P26.S233` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s234-review-audit` - `secure-storage-production-hardening` `W12.P26.S234` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s235-review-audit` - `secure-storage-production-hardening` `W12.P26.S235` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s236-review-audit` - `secure-storage-production-hardening` `W12.P26.S236` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s237-review-audit` - `secure-storage-production-hardening` `W12.P26.S237` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s238-review-audit` - `secure-storage-production-hardening` `W12.P26.S238` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s240-review-audit` - `secure-storage-production-hardening` `W12.P26.S240` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s240-s243-review-audit` - `secure-storage-production-hardening` `W12.P26.S240/S243` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s241-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s242-review-audit` - `secure-storage-production-hardening` `W12.P26.S242` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s244-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s245-review-audit` - `secure-storage-production-hardening` `W12.P26.S245` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s246-review-audit` - `secure-storage-production-hardening` `W12.P26.S246` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s247-review-audit` - `secure-storage-production-hardening` `W12.P26.S247` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s248-review-audit` - `secure-storage-production-hardening` `W12.P26.S248` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s249-review-audit` - `secure-storage-production-hardening` `W12.P26.S249` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s250-review-audit` - `secure-storage-production-hardening` `W12.P26.S250` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s251-review-audit` - `secure-storage-production-hardening` `W12.P26.S251` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s252-review-audit` - `secure-storage-production-hardening` `W12.P26.S252` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s253-review-audit` - `secure-storage-production-hardening` `W12.P26.S253` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s254-review-audit` - `secure-storage-production-hardening` `W12.P26.S254` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s255-review-audit` - `secure-storage-production-hardening` `W12.P26.S255` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s256-review-audit` - `secure-storage-production-hardening` `W12.P26.S256` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s257-review-audit` - `secure-storage-production-hardening` `W12.P26.S257` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s258-review-audit` - `secure-storage-production-hardening` `W12.P26.S258` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s259-review-audit` - `secure-storage-production-hardening` `W12.P26.S259` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s260-review-audit` - `secure-storage-production-hardening` `W12.P26.S260` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s261-review-audit` - `secure-storage-production-hardening` `W12.P26.S261` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s262-review-audit` - `secure-storage-production-hardening` `W12.P26.S262` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s263-review-audit` - `secure-storage-production-hardening` `W12.P26.S263` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s264-review-audit` - `secure-storage-production-hardening` `W12.P26.S264` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s265-review-audit` - `secure-storage-production-hardening` `W12.P26.S265` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s266-review-audit` - `secure-storage-production-hardening` `W12.P26.S266` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s267-review-audit` - `secure-storage-production-hardening` `W12.P26.S267` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s268-review-audit` - `secure-storage-production-hardening` `W12.P26.S268` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s269-review-audit` - `secure-storage-production-hardening` `W12.P26.S269` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s270-review-audit` - `secure-storage-production-hardening` `W12.P26.S270` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s271-review-audit` - `secure-storage-production-hardening` `W12.P26.S271` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s272-review-audit` - `secure-storage-production-hardening` `W12.P26.S272` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s273-review-audit` - `secure-storage-production-hardening` `W12.P26.S273` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s274-review-audit` - `secure-storage-production-hardening` `W12.P26.S274` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s275-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s276-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s277-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s278-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s279-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s280-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s281-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s282-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s284-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s285-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s286-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s294-review-audit` - `secure-storage-production-hardening` `W12.P26.S294` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s383-review-audit` - `secure-storage-production-hardening` `W12.P26.S383` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s384-review-audit` - `secure-storage-production-hardening` `W12.P26.S384` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s393-locale-key-registry-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s393-review-audit` - `secure-storage-production-hardening` `W12.P26.S393` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s394-review-audit` - `secure-storage-production-hardening` `W12.P26.S394` Review
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s395-review-audit` - `secure-storage-production-hardening` `W12.P26.S395` Review
+- `2026-06-05-secure-storage-production-hardening-code-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-error-registry-hygiene-audit` - `secure-storage-production-hardening` Error Registry Hygiene
+- `2026-06-05-secure-storage-production-hardening-w12-p25-s102-runtime-rollout-closeout-audit` - `secure-storage-production-hardening` `W12.P25.S102` runtime rollout closeout
+- `2026-06-05-secure-storage-production-hardening-w12-p26-register-reconciliation-audit` - `secure-storage-production-hardening` W12.P26 Register Reconciliation
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s287-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s288-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s289-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s290-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s291-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s292-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s293-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s295-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s296-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s297-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s298-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s321-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s338-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s339-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s340-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s342-review-audit` - `secure-storage-production-hardening` `W12.P26.S342` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s343-review-audit` - `secure-storage-production-hardening` `W12.P26.S343` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s347-review-audit` - `secure-storage-production-hardening` `W12.P26.S347` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s348-review-audit` - `secure-storage-production-hardening` `W12.P26.S348` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s353-review-audit` - `secure-storage-production-hardening` `W12.P26.S353` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s354-review-audit` - `secure-storage-production-hardening` `W12.P26.S354` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s355-review-audit` - `secure-storage-production-hardening` `W12.P26.S355` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s356-review-audit` - `secure-storage-production-hardening` `W12.P26.S356` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s357-review-audit` - `secure-storage-production-hardening` `W12.P26.S357` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s358-review-audit` - `secure-storage-production-hardening` `W12.P26.S358` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s359-review-audit` - `secure-storage-production-hardening` `W12.P26.S359` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s361-review-audit` - `secure-storage-production-hardening` `W12.P26.S361` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s362-review-audit` - `secure-storage-production-hardening` `W12.P26.S362` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s363-review-audit` - `secure-storage-production-hardening` `W12.P26.S363` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s364-review-audit` - `secure-storage-production-hardening` `W12.P26.S364` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s365-review-audit` - `secure-storage-production-hardening` `W12.P26.S365` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s366-review-audit` - `secure-storage-production-hardening` `W12.P26.S366` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s367-review-audit` - `secure-storage-production-hardening` `W12.P26.S367` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s368-review-audit` - `secure-storage-production-hardening` `W12.P26.S368` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s369-review-audit` - `secure-storage-production-hardening` `W12.P26.S369` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s370-review-audit` - `secure-storage-production-hardening` `W12.P26.S370` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s372-review-audit` - `secure-storage-production-hardening` `W12.P26.S372` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s373-review-audit` - `secure-storage-production-hardening` `W12.P26.S373` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s374-review-audit` - `secure-storage-production-hardening` `W12.P26.S374` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s375-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s376-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s377-review-audit` - `secure-storage-production-hardening` `W12.P26.S377` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s378-review-audit` - `secure-storage-production-hardening` `W12.P26.S378` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s379-review-audit` - `secure-storage-production-hardening` `W12.P26.S379` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s380-review-audit` - `secure-storage-production-hardening` `W12.P26.S380` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s381-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s382-review-audit` - `secure-storage-production-hardening` `W12.P26.S382` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s385-review-audit` - `secure-storage-production-hardening` `W12.P26.S385` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s386-review-audit` - `secure-storage-production-hardening` `W12.P26.S386` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s387-review-audit` - `secure-storage-production-hardening` `W12.P26.S387` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s388-review-audit` - `secure-storage-production-hardening` `W12.P26.S388` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s389-review-audit` - `secure-storage-production-hardening` `W12.P26.S389` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s390-review-audit` - `secure-storage-production-hardening` `W12.P26.S390` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s391-review-audit` - `secure-storage-production-hardening` `W12.P26.S391` Review
+- `2026-06-05-secure-storage-production-hardening-w12-p26-s392-review-audit` - `secure-storage-production-hardening` `W12.P26.S392` Review
+- `2026-06-05-secure-storage-production-hardening-w18-p38-s442-review-audit` - `secure-storage-production-hardening` `W18.P38.S442` Review
+- `2026-06-05-secure-storage-production-hardening-w18-p38-s443-review-audit` - `secure-storage-production-hardening` `W18.P38.S443` Review
+- `2026-06-05-secure-storage-production-hardening-w18-p38-s444-review-audit` - `secure-storage-production-hardening` `W18.P38.S444` Review
+- `2026-06-05-secure-storage-production-hardening-w18-p38-s445-review-audit` - `secure-storage-production-hardening` `W18.P38.S445` Review
+- `2026-06-05-secure-storage-production-hardening-w18-p38-s445-s449-review-audit` - `secure-storage-production-hardening` `W18.P38.S445-S449` Review
+- `2026-06-05-secure-storage-production-hardening-w18-p38-s446-review-audit` - `secure-storage-production-hardening` `W18.P38.S446` Review
+- `2026-06-05-secure-storage-production-hardening-w18-p38-s447-review-audit` - `secure-storage-production-hardening` `W18.P38.S447` Review
+- `2026-06-05-secure-storage-production-hardening-w18-p38-s448-review-audit` - `secure-storage-production-hardening` `W18.P38.S448` Review
+- `2026-06-05-secure-storage-production-hardening-w18-p38-s449-review-audit` - `secure-storage-production-hardening` `W18.P38.S449` Review
+- `2026-06-05-secure-storage-production-hardening-w18-p38-split-module-review-audit` - `secure-storage-production-hardening` `W18.P38` split-module review
+- `2026-06-05-secure-storage-production-hardening-w20-p40-s451-custody-api-audit` - `secure-storage-production-hardening` `W20.P40.S451` custody API audit
+- `2026-06-05-secure-storage-production-hardening-w20-p40-s452-passphrase-redaction-audit` - `secure-storage-production-hardening` `W20.P40.S452` passphrase and redaction audit
+- `2026-06-05-secure-storage-production-hardening-w20-p40-s457-custody-rollout-audit` - `secure-storage-production-hardening` `W20.P40.S457` custody rollout audit
+- `2026-06-05-secure-storage-production-hardening-w20-p40-s458-guidance-rollout-audit` - `secure-storage-production-hardening` `W20.P40.S458` guidance rollout audit
+- `2026-06-05-secure-storage-production-hardening-w20-p41-s453-guard-inventory-audit` - `secure-storage-production-hardening` `W20.P41.S453` guard inventory audit
+- `2026-06-06-secure-storage-production-hardening-code-review-audit` - `secure-storage-production-hardening` Code Review
+- `2026-06-06-secure-storage-production-hardening-w13-p27-s396-persona-readiness-reconciliation-audit` - S396 persona readiness ownership reconciliation
+- `2026-06-06-secure-storage-production-hardening-w20-p41-s455-provenance-path-audit` - S455 provenance path audit
+- `2026-06-06-secure-storage-production-hardening-w20-p42-s456-redaction-enrollment-audit` - S456 redaction enrollment audit
+- `2026-06-11-secure-storage-production-hardening-w13-p28-s401-testimonial-synthesis-audit` - S401 testimonial retest synthesis and final dispositions
+- `2026-06-11-secure-storage-production-hardening-w20-p41-s454-localization-error-hierarchy-audit` - S454 Filing/Modelo Localization And Error-Hierarchy Audit
+
+### exec
+
+- `2026-05-22-secure-storage-production-hardening-W01-P01-S01` - `secure-storage-production-hardening` `W01.P01.S01`
+- `2026-05-22-secure-storage-production-hardening-W01-P01-S02` - `secure-storage-production-hardening` `W01.P01.S02`
+- `2026-05-22-secure-storage-production-hardening-W01-P01-S03` - `secure-storage-production-hardening` `W01.P01.S03`
+- `2026-05-22-secure-storage-production-hardening-W01-P01-S04` - `secure-storage-production-hardening` `W01.P01.S04`
+- `2026-05-22-secure-storage-production-hardening-W01-P01-summary` - `secure-storage-production-hardening` `W01.P01` summary
+- `2026-05-22-secure-storage-production-hardening-W01-P02-S05` - `secure-storage-production-hardening` `W01.P02.S05`
+- `2026-05-22-secure-storage-production-hardening-W01-P02-S06` - `secure-storage-production-hardening` `W01.P02.S06`
+- `2026-05-22-secure-storage-production-hardening-W01-P02-S07` - `secure-storage-production-hardening` `W01.P02.S07`
+- `2026-05-22-secure-storage-production-hardening-W01-P02-S08` - `secure-storage-production-hardening` `W01.P02.S08`
+- `2026-05-22-secure-storage-production-hardening-W01-P02-S09` - `secure-storage-production-hardening` `W01.P02.S09`
+- `2026-05-22-secure-storage-production-hardening-W01-P02-S10` - `secure-storage-production-hardening` `W01.P02.S10`
+- `2026-05-22-secure-storage-production-hardening-W02-P03-S11` - `secure-storage-production-hardening` `W02.P03.S11`
+- `2026-05-22-secure-storage-production-hardening-W02-P03-S12` - `secure-storage-production-hardening` `W02.P03.S12`
+- `2026-05-22-secure-storage-production-hardening-W02-P03-S13` - `secure-storage-production-hardening` `W02.P03.S13`
+- `2026-05-22-secure-storage-production-hardening-W14-P29-S402` - `secure-storage-production-hardening` `W14.P29.S402`
+- `2026-05-26-secure-storage-production-hardening-W02-P03-S11` - `secure-storage-production-hardening` `W02.P03.S11`
+- `2026-05-26-secure-storage-production-hardening-W02-P03-S12` - `secure-storage-production-hardening` `W02.P03.S12`
+- `2026-05-26-secure-storage-production-hardening-W02-P03-S13` - `secure-storage-production-hardening` `W02.P03.S13`
+- `2026-05-26-secure-storage-production-hardening-W02-P03-S14` - `secure-storage-production-hardening` `W02.P03.S14`
+- `2026-05-26-secure-storage-production-hardening-W02-P03-summary` - `secure-storage-production-hardening` `W02.P03` summary
+- `2026-05-26-secure-storage-production-hardening-W02-P04-S15` - `secure-storage-production-hardening` `W02.P04.S15`
+- `2026-05-26-secure-storage-production-hardening-W02-P04-S16` - `secure-storage-production-hardening` `W02.P04.S16`
+- `2026-05-26-secure-storage-production-hardening-W02-P04-S17` - `secure-storage-production-hardening` `W02.P04.S17`
+- `2026-05-26-secure-storage-production-hardening-W02-P04-S18` - `secure-storage-production-hardening` `W02.P04.S18`
+- `2026-05-26-secure-storage-production-hardening-W02-P04-S19` - `secure-storage-production-hardening` `W02.P04.S19`
+- `2026-05-26-secure-storage-production-hardening-W09-P16-S62` - `secure-storage-production-hardening` `W09.P16.S62`
+- `2026-05-26-secure-storage-production-hardening-W09-P16-S63` - `secure-storage-production-hardening` `W09.P16.S63`
+- `2026-05-26-secure-storage-production-hardening-W09-P16-S64` - `secure-storage-production-hardening` `W09.P16.S64`
+- `2026-05-26-secure-storage-production-hardening-W09-P16-summary` - `secure-storage-production-hardening` `W09.P16` summary
+- `2026-05-26-secure-storage-production-hardening-W10-P17-S65` - `secure-storage-production-hardening` `W10.P17.S65`
+- `2026-05-26-secure-storage-production-hardening-W10-P17-S66` - `secure-storage-production-hardening` `W10.P17.S66`
+- `2026-05-26-secure-storage-production-hardening-W10-P17-S67` - `secure-storage-production-hardening` `W10.P17.S67`
+- `2026-05-26-secure-storage-production-hardening-W10-P17-S68` - `secure-storage-production-hardening` `W10.P17.S68`
+- `2026-05-26-secure-storage-production-hardening-W10-P17-S69` - `secure-storage-production-hardening` `W10.P17.S69`
+- `2026-05-26-secure-storage-production-hardening-W10-P17-S70` - `secure-storage-production-hardening` `W10.P17.S70`
+- `2026-05-26-secure-storage-production-hardening-W11-P18-S71` - `secure-storage-production-hardening` `W11.P18.S71`
+- `2026-05-26-secure-storage-production-hardening-W11-P18-S72` - `secure-storage-production-hardening` `W11.P18.S72`
+- `2026-05-26-secure-storage-production-hardening-W11-P18-S73` - `secure-storage-production-hardening` `W11.P18.S73`
+- `2026-05-26-secure-storage-production-hardening-W11-P18-summary` - `secure-storage-production-hardening` `W11.P18` summary
+- `2026-05-26-secure-storage-production-hardening-W11-P19-S74` - `secure-storage-production-hardening` `W11.P19.S74`
+- `2026-05-26-secure-storage-production-hardening-W11-P19-S75` - `secure-storage-production-hardening` `W11.P19.S75`
+- `2026-05-26-secure-storage-production-hardening-W11-P19-S76` - `secure-storage-production-hardening` `W11.P19.S76`
+- `2026-05-26-secure-storage-production-hardening-W11-P19-S77` - `secure-storage-production-hardening` `W11.P19.S77`
+- `2026-05-26-secure-storage-production-hardening-W11-P19-summary` - `secure-storage-production-hardening` `W11.P19` summary
+- `2026-05-26-secure-storage-production-hardening-W12-P20-S78` - `secure-storage-production-hardening` `W12.P20.S78`
+- `2026-05-26-secure-storage-production-hardening-W12-P20-S79` - `secure-storage-production-hardening` `W12.P20.S79`
+- `2026-05-26-secure-storage-production-hardening-W12-P20-S80` - `secure-storage-production-hardening` `W12.P20.S80`
+- `2026-05-26-secure-storage-production-hardening-W12-P20-S81` - `secure-storage-production-hardening` `W12.P20.S81`
+- `2026-05-26-secure-storage-production-hardening-W12-P20-S82` - `secure-storage-production-hardening` `W12.P20.S82`
+- `2026-05-26-secure-storage-production-hardening-W12-P20-summary` - `secure-storage-production-hardening` `W12.P20` summary
+- `2026-05-26-secure-storage-production-hardening-W12-P21-S83` - `secure-storage-production-hardening` `W12.P21.S83`
+- `2026-05-26-secure-storage-production-hardening-W12-P21-S84` - `secure-storage-production-hardening` `W12.P21.S84`
+- `2026-05-26-secure-storage-production-hardening-W12-P21-S85` - `secure-storage-production-hardening` `W12.P21.S85`
+- `2026-05-26-secure-storage-production-hardening-W12-P21-S86` - `secure-storage-production-hardening` `W12.P21.S86`
+- `2026-05-26-secure-storage-production-hardening-W12-P21-S87` - `secure-storage-production-hardening` `W12.P21.S87`
+- `2026-05-26-secure-storage-production-hardening-W12-P22-S88` - `secure-storage-production-hardening` `W12.P22.S88`
+- `2026-05-26-secure-storage-production-hardening-W12-P22-S89` - `secure-storage-production-hardening` `W12.P22.S89`
+- `2026-05-26-secure-storage-production-hardening-W12-P22-S90` - `secure-storage-production-hardening` `W12.P22.S90`
+- `2026-05-26-secure-storage-production-hardening-W12-P22-S91` - `secure-storage-production-hardening` `W12.P22.S91`
+- `2026-05-26-secure-storage-production-hardening-W12-P23-S92` - `secure-storage-production-hardening` `W12.P23.S92`
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-application-profile-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Application Profile Slice
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-census-corporate-profile-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Census And Corporate Profile Slice
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-domain-repository-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Domain Repository Slice
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-profile-bootstrap-helper-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Profile Bootstrap Helper Slice
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-profile-health-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Profile Health Slice
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-submission-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Submission Slice
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-user-profile-repository-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` User Profile Repository Slice
+- `2026-05-26-secure-storage-production-hardening-w12-p23-s93-workflow-run-hardening-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Workflow Run Hardening Slice
+- `2026-05-27-secure-storage-production-hardening-W03-P05-S20` - `secure-storage-production-hardening` `W03.P05.S20`
+- `2026-05-27-secure-storage-production-hardening-W03-P05-S21` - `secure-storage-production-hardening` `W03.P05.S21`
+- `2026-05-27-secure-storage-production-hardening-W03-P05-S22` - `secure-storage-production-hardening` `W03.P05.S22`
+- `2026-05-27-secure-storage-production-hardening-W03-P05-S23` - `secure-storage-production-hardening` `W03.P05.S23`
+- `2026-05-27-secure-storage-production-hardening-W03-P06-S24` - `secure-storage-production-hardening` `W03.P06.S24`
+- `2026-05-27-secure-storage-production-hardening-W03-P06-S25` - `secure-storage-production-hardening` `W03.P06.S25`
+- `2026-05-27-secure-storage-production-hardening-W03-P06-S26` - `secure-storage-production-hardening` `W03.P06.S26`
+- `2026-05-27-secure-storage-production-hardening-W03-P06-S27` - `secure-storage-production-hardening` `W03.P06.S27`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S299` - `secure-storage-production-hardening` `W12.P26.S299`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S300` - `secure-storage-production-hardening` `W12.P26.S300`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S301` - `secure-storage-production-hardening` `W12.P26.S301`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S302` - `secure-storage-production-hardening` `W12.P26.S302`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S305` - `secure-storage-production-hardening` `W12.P26.S305`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S306` - `secure-storage-production-hardening` `W12.P26.S306`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S308` - `secure-storage-production-hardening` `W12.P26.S308`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S309` - `secure-storage-production-hardening` `W12.P26.S309`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S310` - `secure-storage-production-hardening` `W12.P26.S310`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S311` - `secure-storage-production-hardening` `W12.P26.S311`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S312` - `secure-storage-production-hardening` `W12.P26.S312`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S313` - `secure-storage-production-hardening` `W12.P26.S313`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S314` - `secure-storage-production-hardening` `W12.P26.S314`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S315` - `secure-storage-production-hardening` `W12.P26.S315`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S316` - `secure-storage-production-hardening` `W12.P26.S316`
+- `2026-05-27-secure-storage-production-hardening-W12-P26-S317` - `secure-storage-production-hardening` `W12.P26.S317`
+- `2026-05-27-secure-storage-production-hardening-W15-P30-S403` - `secure-storage-production-hardening` `W15.P30.S403`
+- `2026-05-27-secure-storage-production-hardening-W15-P30-S404` - `secure-storage-production-hardening` `W15.P30.S404`
+- `2026-05-27-secure-storage-production-hardening-W15-P30-S405` - `secure-storage-production-hardening` `W15.P30.S405`
+- `2026-05-27-secure-storage-production-hardening-W15-P31-S406` - `secure-storage-production-hardening` `W15.P31.S406`
+- `2026-05-27-secure-storage-production-hardening-W15-P31-S407` - `secure-storage-production-hardening` `W15.P31.S407`
+- `2026-05-27-secure-storage-production-hardening-W15-P31-S408` - `secure-storage-production-hardening` `W15.P31.S408`
+- `2026-05-27-secure-storage-production-hardening-W15-P32-S409` - `secure-storage-production-hardening` `W15.P32.S409`
+- `2026-05-27-secure-storage-production-hardening-W15-P32-S410` - `secure-storage-production-hardening` `W15.P32.S410`
+- `2026-05-27-secure-storage-production-hardening-W15-P32-S411` - `secure-storage-production-hardening` `W15.P32.S411`
+- `2026-05-27-secure-storage-production-hardening-W15-P33-S412` - `secure-storage-production-hardening` `W15.P33.S412`
+- `2026-05-27-secure-storage-production-hardening-W15-P33-S413` - `secure-storage-production-hardening` `W15.P33.S413`
+- `2026-05-27-secure-storage-production-hardening-W15-P33-S414` - `secure-storage-production-hardening` `W15.P33.S414`
+- `2026-05-27-secure-storage-production-hardening-W15-P34-S415` - `secure-storage-production-hardening` `W15.P34.S415`
+- `2026-05-27-secure-storage-production-hardening-W15-P34-S416` - `secure-storage-production-hardening` `W15.P34.S416`
+- `2026-05-27-secure-storage-production-hardening-W15-P34-summary` - `secure-storage-production-hardening` `W15.P34` summary
+- `2026-05-27-secure-storage-production-hardening-w12-p21-s83-bucket-event-runtime-default-slice-exec` - `secure-storage-production-hardening` `W12.P21.S83` Bucket Event Runtime-Default Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p21-s83-workflow-runtime-default-slice-exec` - `secure-storage-production-hardening` `W12.P21.S83` Workflow Runtime-Default Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p21-s85-auth-diagnostics-runtime-default-slice-exec` - `secure-storage-production-hardening` `W12.P21.S85` Auth Diagnostics Runtime-Default Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p21-s85-borrador-100-runtime-default-slice-exec` - `secure-storage-production-hardening` `W12.P21.S85` Borrador 100 Runtime-Default Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p21-s86-attachment-runtime-default-slice-exec` - `secure-storage-production-hardening` `W12.P21.S86` Attachment Runtime-Default Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p21-s86-profile-ledger-runtime-default-slice-exec` - `secure-storage-production-hardening` `W12.P21.S86` Profile Ledger Runtime-Default Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p23-s93-output-language-fixture-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Output Language Fixture Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p23-s93-profile-localization-failclosed-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Profile Localization Fail-Closed Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s116-clave-movil-runtime-default-slice-exec` - `secure-storage-production-hardening` `W12.P26.S116` Clave Movil Runtime-Default Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s168-secure-bound-contract-runtime-default-slice-exec` - `secure-storage-production-hardening` `W12.P26.S168` Secure-Bound Contract Runtime-Default Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s169-secure-bound-repository-runtime-default-slice-exec` - `secure-storage-production-hardening` `W12.P26.S169` Secure-Bound Repository Runtime-Default Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s170-storage-errors-exception-hygiene-slice-exec` - `secure-storage-production-hardening` `W12.P26.S170` Storage Errors Exception Hygiene Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s239-modelo-reconcile-runtime-default-slice-exec` - `secure-storage-production-hardening` `W12.P26.S239` Modelo Reconcile Runtime-Default Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s283-workflow-persistence-runtime-default-slice-exec` - `secure-storage-production-hardening` `W12.P26.S283` Workflow Persistence Runtime-Default Slice
+- `2026-05-27-secure-storage-production-hardening-w12-p26-s371-usage-ratios-runtime-default-slice-exec` - `secure-storage-production-hardening` `W12.P26.S371` Usage Ratios Runtime-Default Slice
+- `2026-05-28-secure-storage-production-hardening-W04-P07-S28` - `secure-storage-production-hardening` `W04.P07.S28`
+- `2026-05-28-secure-storage-production-hardening-W04-P07-S29` - `secure-storage-production-hardening` `W04.P07.S29`
+- `2026-05-28-secure-storage-production-hardening-W04-P07-S30` - `secure-storage-production-hardening` `W04.P07.S30`
+- `2026-05-28-secure-storage-production-hardening-W04-P07-S31` - `secure-storage-production-hardening` `W04.P07.S31`
+- `2026-05-28-secure-storage-production-hardening-W04-P07-summary` - `secure-storage-production-hardening` `W04.P07` summary
+- `2026-05-28-secure-storage-production-hardening-W04-P08-S32` - `secure-storage-production-hardening` `W04.P08.S32`
+- `2026-05-28-secure-storage-production-hardening-W04-P08-S33` - `secure-storage-production-hardening` `W04.P08.S33`
+- `2026-05-28-secure-storage-production-hardening-W04-P08-S34` - `secure-storage-production-hardening` `W04.P08.S34`
+- `2026-05-28-secure-storage-production-hardening-W04-P08-S35` - `secure-storage-production-hardening` `W04.P08.S35`
+- `2026-05-28-secure-storage-production-hardening-W05-P09-S36` - `secure-storage-production-hardening` `W05.P09.S36`
+- `2026-05-28-secure-storage-production-hardening-W05-P09-S37` - `secure-storage-production-hardening` `W05.P09.S37`
+- `2026-05-28-secure-storage-production-hardening-W05-P09-S38` - `secure-storage-production-hardening` `W05.P09.S38`
+- `2026-05-28-secure-storage-production-hardening-W05-P09-S39` - `secure-storage-production-hardening` `W05.P09.S39`
+- `2026-05-28-secure-storage-production-hardening-W05-P09-S40` - `secure-storage-production-hardening` `W05.P09.S40`
+- `2026-05-28-secure-storage-production-hardening-W05-P10-S41` - `secure-storage-production-hardening` `W05.P10.S41`
+- `2026-05-28-secure-storage-production-hardening-W05-P10-S42` - `secure-storage-production-hardening` `W05.P10.S42`
+- `2026-06-02-secure-storage-production-hardening-W05-P10-S426` - `secure-storage-production-hardening` `W05.P10.S426`
+- `2026-06-02-secure-storage-production-hardening-W05-P10-S427` - `secure-storage-production-hardening` `W05.P10.S427`
+- `2026-06-02-secure-storage-production-hardening-W05-P10-S43` - `secure-storage-production-hardening` `W05.P10.S43`
+- `2026-06-02-secure-storage-production-hardening-W05-P10-S44` - `secure-storage-production-hardening` `W05.P10.S44`
+- `2026-06-02-secure-storage-production-hardening-W05-P10-summary` - `secure-storage-production-hardening` `W05.P10` summary
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S428` - `secure-storage-production-hardening` `W06.P11.S428`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S429` - `secure-storage-production-hardening` `W06.P11.S429`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S430` - `secure-storage-production-hardening` `W06.P11.S430`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S431` - `secure-storage-production-hardening` `W06.P11.S431`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S432` - `secure-storage-production-hardening` `W06.P11.S432`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S433` - `secure-storage-production-hardening` `W06.P11.S433`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S434` - `secure-storage-production-hardening` `W06.P11.S434`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S435` - `secure-storage-production-hardening` `W06.P11.S435`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S436` - `secure-storage-production-hardening` `W06.P11.S436`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S437` - `secure-storage-production-hardening` `W06.P11.S437`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S438` - `secure-storage-production-hardening` `W06.P11.S438`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S439` - `secure-storage-production-hardening` `W06.P11.S439`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S440` - `secure-storage-production-hardening` `W06.P11.S440`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S45` - `secure-storage-production-hardening` `W06.P11.S45`
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S46` - W06.P11.S46 Runtime Adverse-Condition Gates
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S47` - W06.P11.S47 Revision Conflict And Remote Mirror Adverse Tests
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S48` - W06.P11.S48 Focused Gate Execution Checkpoint
+- `2026-06-02-secure-storage-production-hardening-W06-P11-S49` - `secure-storage-production-hardening` `W06.P11.S49`
+- `2026-06-02-secure-storage-production-hardening-W07-P12-S50` - `secure-storage-production-hardening` `W07.P12.S50`
+- `2026-06-02-secure-storage-production-hardening-W07-P12-S51` - `secure-storage-production-hardening` `W07.P12.S51`
+- `2026-06-02-secure-storage-production-hardening-W07-P12-S52` - `secure-storage-production-hardening` `W07.P12.S52`
+- `2026-06-02-secure-storage-production-hardening-W07-P12-S53` - `secure-storage-production-hardening` `W07.P12.S53`
+- `2026-06-02-secure-storage-production-hardening-W07-P13-S55` - `secure-storage-production-hardening` `W07.P13.S55`
+- `2026-06-02-secure-storage-production-hardening-W07-P14-S59` - `secure-storage-production-hardening` `W07.P14.S59`
+- `2026-06-02-secure-storage-production-hardening-W07-P14-S60` - `secure-storage-production-hardening` `W07.P14.S60`
+- `2026-06-02-secure-storage-production-hardening-W07-P14-S61` - `secure-storage-production-hardening` `W07.P14.S61`
+- `2026-06-02-secure-storage-production-hardening-W12-P24-S97` - `secure-storage-production-hardening` `W12.P24.S97`
+- `2026-06-02-secure-storage-production-hardening-W12-P24-S98` - `secure-storage-production-hardening` `W12.P24.S98`
+- `2026-06-02-secure-storage-production-hardening-W12-P24-S99` - `secure-storage-production-hardening` `W12.P24.S99`
+- `2026-06-02-secure-storage-production-hardening-W12-P25-S100` - W12.P25.S100 - active-profile runtime scanner delta
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S103` - Close AFR-001 for Modelo 100 borrador summary extractor
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S104` - Close AFR-002 for Borrador parser entry point
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S105` - Close AFR-003 for Borrador pdfplumber backend
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S106` - Close AFR-004 for Declaracion parser entry point
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S107` - Close AFR-005 for OFX financial provider
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S108` - Close AFR-006 for N26 PDF financial provider
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S109` - Close AFR-007 for justificante parser entry point
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S110` - Close AFR-008 for justificante parser dispatch
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S111` - Close AFR-009 for shared pdfplumber primitive
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S112` - Close AFR-010 for shared PDF hash utility
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S113` - Close AFR-011 for sanitizer errors
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S114` - Close AFR-012 for sanitizer pipeline
+- `2026-06-02-secure-storage-production-hardening-W12-P26-S132` - `secure-storage-production-hardening` `W12.P26.S132`
+- `2026-06-02-secure-storage-production-hardening-W17-P37-S424` - `secure-storage-production-hardening` `W17.P37.S424`
+- `2026-06-02-secure-storage-production-hardening-W17-P37-S425` - `secure-storage-production-hardening` `W17.P37.S425`
+- `2026-06-02-secure-storage-production-hardening-w05-p10-s43-exec` - `secure-storage-production-hardening` `W05.P10.S43` audit actions
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-bootstrap-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Application Bootstrap Slice
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-ledger-fixture-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Application Ledger Fixture Slice
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-application-wizard-fixture-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Application Wizard Fixture Slice
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-config-fixture-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` CLI Config Fixture Slice
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-ledger-fixture-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` CLI Ledger Fixture Slice
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-ledger-overview-live-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` CLI Ledger Overview Live Slice
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-cli-modelo-fixture-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` CLI Modelo Fixture Slice
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-output-work-fixture-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Output Work Fixture Slice
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s93-remote-mirror-slice-exec` - `secure-storage-production-hardening` `W12.P23.S93` Remote Mirror Slice
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s94-explicit-route-guard-exec` - `secure-storage-production-hardening` `W12.P23.S94` Explicit Route Guard
+- `2026-06-02-secure-storage-production-hardening-w12-p23-s95-test-isolation-closeout-exec` - `secure-storage-production-hardening` `W12.P23.S95` Test-Isolation Closeout
+- `2026-06-02-secure-storage-production-hardening-w12-p24-s96-side-store-classification-exec` - `secure-storage-production-hardening` `W12.P24.S96` Side-Store Classification
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S318` - W12.P26.S318 apoderamientos catalogue
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S319` - W12.P26.S319 buckets package boundary
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S320` - W12.P26.S320 bucket event catalogue
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S322` - W12.P26.S322 registry bindings
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S323` - W12.P26.S323 registry export parser
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S324` - W12.P26.S324 registry plaintext exception
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S325` - W12.P26.S325 registry plaintext exception
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S326` - W12.P26.S326 registry plaintext exception
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S327` - W12.P26.S327 registry plaintext exception
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S328` - W12.P26.S328 registry plaintext exception
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S329` - W12.P26.S329 registry audit close
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S330` - W12.P26.S330 registry audit close
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S331` - W12.P26.S331 registry audit close
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S332` - W12.P26.S332 registry audit close
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S333` - W12.P26.S333 registry audit close
+- `2026-06-03-secure-storage-production-hardening-W06-P11-S441` - `secure-storage-production-hardening` `W06.P11.S441`
+- `2026-06-03-secure-storage-production-hardening-W12-P25-S101` - W12.P25.S101 - focused runtime migration gates
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S115` - Close AFR-013 for AEAT authenticator diagnostics
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S117` - Close AFR-015 for AEAT browser session store
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S118` - Close AFR-016 for AEAT browser factory
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S119` - Close AFR-017 for AEAT site-health evidence
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S120` - Close AFR-018 for AEAT export deserialisation
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S121` - W12.P26.S121 - close AFR-019 for export record specs
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S122` - W12.P26.S122 - close AFR-020 for G313 censo live fetch
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S123` - `secure-storage-production-hardening` `W12.P26.S123`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S129` - `secure-storage-production-hardening` `W12.P26.S129`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S130` - `secure-storage-production-hardening` `W12.P26.S130`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S131` - `secure-storage-production-hardening` `W12.P26.S131`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S133` - `secure-storage-production-hardening` `W12.P26.S133`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S134` - `secure-storage-production-hardening` `W12.P26.S134`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S135` - `secure-storage-production-hardening` `W12.P26.S135`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S136` - `secure-storage-production-hardening` `W12.P26.S136`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S137` - `secure-storage-production-hardening` `W12.P26.S137`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S138` - `secure-storage-production-hardening` `W12.P26.S138`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S139` - `secure-storage-production-hardening` `W12.P26.S139`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S140` - `secure-storage-production-hardening` `W12.P26.S140`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S141` - `secure-storage-production-hardening` `W12.P26.S141`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S142` - `secure-storage-production-hardening` `W12.P26.S142`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S143` - `secure-storage-production-hardening` `W12.P26.S143`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S144` - `secure-storage-production-hardening` `W12.P26.S144`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S145` - `secure-storage-production-hardening` `W12.P26.S145`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S146` - `secure-storage-production-hardening` `W12.P26.S146`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S147` - `secure-storage-production-hardening` `W12.P26.S147`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S148` - `secure-storage-production-hardening` `W12.P26.S148`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S149` - `secure-storage-production-hardening` `W12.P26.S149`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S150` - `secure-storage-production-hardening` `W12.P26.S150`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S151` - `secure-storage-production-hardening` `W12.P26.S151`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S152` - `secure-storage-production-hardening` `W12.P26.S152`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S153` - `secure-storage-production-hardening` `W12.P26.S153`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S154` - `secure-storage-production-hardening` `W12.P26.S154`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S155` - `secure-storage-production-hardening` `W12.P26.S155`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S156` - `secure-storage-production-hardening` `W12.P26.S156`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S157` - `secure-storage-production-hardening` `W12.P26.S157`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S158` - `secure-storage-production-hardening` `W12.P26.S158`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S159` - `secure-storage-production-hardening` `W12.P26.S159`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S160` - `secure-storage-production-hardening` `W12.P26.S160`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S161` - `secure-storage-production-hardening` `W12.P26.S161`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S162` - `secure-storage-production-hardening` `W12.P26.S162`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S163` - `secure-storage-production-hardening` `W12.P26.S163`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S164` - `secure-storage-production-hardening` `W12.P26.S164`
+- `2026-06-03-secure-storage-production-hardening-W12-P26-S165` - `secure-storage-production-hardening` `W12.P26.S165`
+- `2026-06-03-secure-storage-production-hardening-w12-p25-s102-exec` - W12.P25.S102 audit actions
+- `2026-06-03-secure-storage-production-hardening-w12-p26-s121-s128-exec` - Close AFR-019 through AFR-026 for AEAT export/Sede/verify surfaces
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S166` - `secure-storage-production-hardening` `W12.P26.S166`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S167` - `secure-storage-production-hardening` `W12.P26.S167`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S171` - `secure-storage-production-hardening` `W12.P26.S171`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S172` - `secure-storage-production-hardening` `W12.P26.S172`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S173` - `secure-storage-production-hardening` `W12.P26.S173`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S174` - `secure-storage-production-hardening` `W12.P26.S174`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S175` - `secure-storage-production-hardening` `W12.P26.S175`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S176` - `secure-storage-production-hardening` `W12.P26.S176`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S177` - `secure-storage-production-hardening` `W12.P26.S177`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S178` - `secure-storage-production-hardening` `W12.P26.S178`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S179` - `secure-storage-production-hardening` `W12.P26.S179`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S180` - `secure-storage-production-hardening` `W12.P26.S180`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S181` - `secure-storage-production-hardening` `W12.P26.S181`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S182` - `secure-storage-production-hardening` `W12.P26.S182`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S183` - `secure-storage-production-hardening` `W12.P26.S183`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S184` - `secure-storage-production-hardening` `W12.P26.S184`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S185` - `secure-storage-production-hardening` `W12.P26.S185`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S186` - `secure-storage-production-hardening` `W12.P26.S186`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S187` - `secure-storage-production-hardening` `W12.P26.S187`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S188` - `secure-storage-production-hardening` `W12.P26.S188`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S189` - `secure-storage-production-hardening` `W12.P26.S189`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S190` - `secure-storage-production-hardening` `W12.P26.S190`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S191` - `secure-storage-production-hardening` `W12.P26.S191`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S192` - `secure-storage-production-hardening` `W12.P26.S192`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S193` - `secure-storage-production-hardening` `W12.P26.S193`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S194` - `secure-storage-production-hardening` `W12.P26.S194`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S195` - `secure-storage-production-hardening` `W12.P26.S195`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S196` - `secure-storage-production-hardening` `W12.P26.S196`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S197` - `secure-storage-production-hardening` `W12.P26.S197`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S198` - `secure-storage-production-hardening` `W12.P26.S198`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S199` - `secure-storage-production-hardening` `W12.P26.S199`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S200` - `secure-storage-production-hardening` `W12.P26.S200`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S201` - `secure-storage-production-hardening` `W12.P26.S201`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S202` - `secure-storage-production-hardening` `W12.P26.S202`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S203` - `secure-storage-production-hardening` `W12.P26.S203`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S204` - `secure-storage-production-hardening` `W12.P26.S204`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S205` - `secure-storage-production-hardening` `W12.P26.S205`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S206` - `secure-storage-production-hardening` `W12.P26.S206`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S207` - `secure-storage-production-hardening` `W12.P26.S207`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S208` - `secure-storage-production-hardening` `W12.P26.S208`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S209` - `secure-storage-production-hardening` `W12.P26.S209`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S210` - `secure-storage-production-hardening` `W12.P26.S210`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S211` - `secure-storage-production-hardening` `W12.P26.S211`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S212` - `secure-storage-production-hardening` `W12.P26.S212`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S213` - `secure-storage-production-hardening` `W12.P26.S213`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S214` - `secure-storage-production-hardening` `W12.P26.S214`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S215` - `secure-storage-production-hardening` `W12.P26.S215`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S216` - `secure-storage-production-hardening` `W12.P26.S216`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S217` - `secure-storage-production-hardening` `W12.P26.S217`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S218` - `secure-storage-production-hardening` `W12.P26.S218`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S219` - `secure-storage-production-hardening` `W12.P26.S219`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S220` - `secure-storage-production-hardening` `W12.P26.S220`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S221` - `secure-storage-production-hardening` `W12.P26.S221`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S222` - `secure-storage-production-hardening` `W12.P26.S222`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S223` - `secure-storage-production-hardening` `W12.P26.S223`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S224` - `secure-storage-production-hardening` `W12.P26.S224`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S225` - `secure-storage-production-hardening` `W12.P26.S225`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S226` - `secure-storage-production-hardening` `W12.P26.S226`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S227` - `secure-storage-production-hardening` `W12.P26.S227`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S228` - `secure-storage-production-hardening` `W12.P26.S228`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S229` - `secure-storage-production-hardening` `W12.P26.S229`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S230` - `secure-storage-production-hardening` `W12.P26.S230`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S231` - `secure-storage-production-hardening` `W12.P26.S231`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S232` - `secure-storage-production-hardening` `W12.P26.S232`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S233` - `secure-storage-production-hardening` `W12.P26.S233`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S234` - `secure-storage-production-hardening` `W12.P26.S234`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S235` - `secure-storage-production-hardening` `W12.P26.S235`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S236` - `secure-storage-production-hardening` `W12.P26.S236`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S237` - `secure-storage-production-hardening` `W12.P26.S237`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S238` - `secure-storage-production-hardening` `W12.P26.S238`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S240` - `secure-storage-production-hardening` `W12.P26.S240`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S241` - W12.P26.S241 CRUD Contract Storage Disposition
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S242` - `secure-storage-production-hardening` `W12.P26.S242`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S243` - `secure-storage-production-hardening` `W12.P26.S243`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S244` - W12.P26.S244 Overview Runtime Storage Disposition
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S245` - `secure-storage-production-hardening` `W12.P26.S245`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S246` - `secure-storage-production-hardening` `W12.P26.S246`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S247` - `secure-storage-production-hardening` `W12.P26.S247`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S248` - `secure-storage-production-hardening` `W12.P26.S248`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S249` - `secure-storage-production-hardening` `W12.P26.S249`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S250` - `secure-storage-production-hardening` `W12.P26.S250`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S251` - `secure-storage-production-hardening` `W12.P26.S251`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S252` - `secure-storage-production-hardening` `W12.P26.S252`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S253` - `secure-storage-production-hardening` `W12.P26.S253`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S254` - `secure-storage-production-hardening` `W12.P26.S254`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S255` - `secure-storage-production-hardening` `W12.P26.S255`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S256` - `secure-storage-production-hardening` `W12.P26.S256`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S257` - `secure-storage-production-hardening` `W12.P26.S257`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S258` - `secure-storage-production-hardening` `W12.P26.S258`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S259` - `secure-storage-production-hardening` `W12.P26.S259`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S260` - `secure-storage-production-hardening` `W12.P26.S260`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S261` - `secure-storage-production-hardening` `W12.P26.S261`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S262` - `secure-storage-production-hardening` `W12.P26.S262`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S263` - `secure-storage-production-hardening` `W12.P26.S263`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S264` - `secure-storage-production-hardening` `W12.P26.S264`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S265` - `secure-storage-production-hardening` `W12.P26.S265`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S266` - `secure-storage-production-hardening` `W12.P26.S266`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S267` - `secure-storage-production-hardening` `W12.P26.S267`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S268` - `secure-storage-production-hardening` `W12.P26.S268`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S269` - `secure-storage-production-hardening` `W12.P26.S269`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S270` - `secure-storage-production-hardening` `W12.P26.S270`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S271` - `secure-storage-production-hardening` `W12.P26.S271`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S272` - `secure-storage-production-hardening` `W12.P26.S272`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S273` - `secure-storage-production-hardening` `W12.P26.S273`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S274` - `secure-storage-production-hardening` `W12.P26.S274`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S275` - W12.P26.S275 - Close AFR-173 for wizard prompter
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S276` - W12.P26.S276 - Close AFR-174 for wizard status
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S277` - W12.P26.S277 - Close AFR-175 for wizard translations
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S278` - W12.P26.S278 - Close AFR-176 for wizard widgets
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S279` - W12.P26.S279 - Close AFR-177 for workflow initializer
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S280` - W12.P26.S280 - Close AFR-178 for workflow errors
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S281` - W12.P26.S281 - Close AFR-179 for workflow reset events
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S282` - W12.P26.S282 - Close AFR-180 for workflow models
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S284` - W12.P26.S284 - Close AFR-182 for profile bucket scan
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S285` - W12.P26.S285 - Close AFR-183 for active profile health
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S286` - W12.P26.S286 - Close AFR-184 for bucket pointer value object
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S294` - `secure-storage-production-hardening` `W12.P26.S294`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S383` - `secure-storage-production-hardening` `W12.P26.S383`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S384` - `secure-storage-production-hardening` `W12.P26.S384`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S393` - `secure-storage-production-hardening` `W12.P26.S393`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S394` - `secure-storage-production-hardening` `W12.P26.S394`
+- `2026-06-04-secure-storage-production-hardening-W12-P26-S395` - `secure-storage-production-hardening` `W12.P26.S395`
+- `2026-06-04-secure-storage-production-hardening-w12-p26-s393-locale-key-registry-repair-exec` - W12.P26.S393 - Locale-key registry repair
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S321` - W12.P26.S321 bucket event repository
+- `2026-06-05-secure-storage-production-hardening-W12-P25-S102` - W12.P25.S102 - Final runtime rollout disposition review
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S287` - W12.P26.S287 - Close AFR-185 for active-profile pointer I/O
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S288` - W12.P26.S288 - Close AFR-186 for core TOML helpers
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S289` - W12.P26.S289 - Close AFR-187 for access-gate exports
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S290` - W12.P26.S290 - Close AFR-188 for core config
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S291` - W12.P26.S291 - Close AFR-189 for corpus manifest
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S292` - W12.P26.S292 - Close AFR-190 for env I/O
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S293` - W12.P26.S293 - Close AFR-191 for adapter error registry
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S295` - W12.P26.S295 - Close AFR-193 for core error registry
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S296` - W12.P26.S296 - Close AFR-194 for external constants
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S297` - W12.P26.S297 - Close AFR-195 for file permissions
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S298` - W12.P26.S298 - Close AFR-196 for i18n rendering
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S338` - W12.P26.S338 - Close AFR-236 for filing amendments
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S339` - W12.P26.S339 - Close AFR-237 for filing drafts
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S340` - W12.P26.S340 - Close AFR-238 for filing runtime helpers
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S342` - W12.P26.S342 - Close AFR-240 for invoice models
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S343` - W12.P26.S343 - Close AFR-241 for invoice repository
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S347` - W12.P26.S347 - Close AFR-245 for IVA schema
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S348` - W12.P26.S348 - Close AFR-246 for justificante repository
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S353` - W12.P26.S353 - Close AFR-251 for modelo calculation revisions
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S354` - W12.P26.S354 - Close AFR-252 for modelo filing record model
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S355` - W12.P26.S355 - Close AFR-253 for modelo filing records
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S356` - W12.P26.S356 - Close AFR-254 for modelo work units
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S357` - W12.P26.S357 - Close AFR-255 for modelo runtime repository
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S358` - W12.P26.S358 - Close AFR-256 for modelo verification reports
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S359` - W12.P26.S359 - Close AFR-257 for modelo work-unit model
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S361` - W12.P26.S361 - Close AFR-259 for renta substrate
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S362` - W12.P26.S362 - Close AFR-260 for submission models
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S363` - W12.P26.S363 - Close AFR-261 for submission preflight
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S364` - W12.P26.S364 - Close AFR-262 for submission protocols
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S365` - W12.P26.S365 - Close AFR-263 for submission repository
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S366` - W12.P26.S366 - Close AFR-264 for transaction errors
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S367` - W12.P26.S367 - Close AFR-265 for transaction models
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S368` - W12.P26.S368 - Close AFR-266 for raw transaction models
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S369` - W12.P26.S369 - Close AFR-267 for transaction repository
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S370` - W12.P26.S370 - Close AFR-268 for usage-ratio model
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S372` - W12.P26.S372 - Close AFR-270 for user-profile schema loader
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S373` - W12.P26.S373 - Close AFR-271 for user profile values
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S374` - W12.P26.S374 - Close AFR-272 for CLI bootstrap custody
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S375` - W12.P26.S375 app-live runtime boundary
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S376` - W12.P26.S376 bootstrap-exempt registry
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S377` - W12.P26.S377 - Close AFR-275 for CLI common helpers
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S378` - W12.P26.S378 - Close AFR-276 for config CLI facade
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S379` - W12.P26.S379 - Close AFR-277 for Google config remote mirror
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S380` - W12.P26.S380 - Close AFR-278 for profile censo bootstrap custody
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S381` - W12.P26.S381 CLI error boundary
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S382` - W12.P26.S382 - Close AFR-280 for ledger manifest discovery
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S385` - W12.P26.S385 - Close AFR-283 for overview CLI manifest discovery
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S386` - W12.P26.S386 - Close AFR-284 for overview rendering
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S387` - W12.P26.S387 - Close AFR-285 for review queue
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S388` - W12.P26.S388 - Close AFR-286 for review payload schemas
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S389` - W12.P26.S389 - Close AFR-287 for root landing rendering
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S390` - W12.P26.S390 - Close AFR-288 for CLI schema re-export
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S391` - W12.P26.S391 - Close AFR-289 for CLI TTY helpers
+- `2026-06-05-secure-storage-production-hardening-W12-P26-S392` - W12.P26.S392 - Close AFR-290 for registry CLI commands
+- `2026-06-05-secure-storage-production-hardening-W16-P35-S417` - W16.P35.S417 - Inventory secure-storage observation pool
+- `2026-06-05-secure-storage-production-hardening-W16-P35-S418` - W16.P35.S418 - Map observation-pool ownership
+- `2026-06-05-secure-storage-production-hardening-W16-P36-S419` - W16.P36.S419 - Persist observation-pool closeout
+- `2026-06-05-secure-storage-production-hardening-W16-P36-S420` - W16.P36.S420 - Add missing affected-file owner rows
+- `2026-06-05-secure-storage-production-hardening-W16-P36-S421` - W16.P36.S421 - Add recurring observation-owner guard
+- `2026-06-05-secure-storage-production-hardening-W18-P38-S442` - W18.P38.S442 - Close AFR-294 for modelo projection services
+- `2026-06-05-secure-storage-production-hardening-W18-P38-S443` - W18.P38.S443 - Close AFR-295 for modelo selectors
+- `2026-06-05-secure-storage-production-hardening-W18-P38-S444` - W18.P38.S444 - Close AFR-296 for modelo work addressing
+- `2026-06-05-secure-storage-production-hardening-W18-P38-S445` - W18.P38.S445 - Close AFR-297 for modelo work create policy
+- `2026-06-05-secure-storage-production-hardening-W18-P38-S446` - W18.P38.S446 - Close AFR-298 for modelo work plazo
+- `2026-06-05-secure-storage-production-hardening-W18-P38-S447` - W18.P38.S447 - Close AFR-299 for IVA wallet seed facade
+- `2026-06-05-secure-storage-production-hardening-W18-P38-S448` - W18.P38.S448 - Close AFR-300 for modelo projection CLI
+- `2026-06-05-secure-storage-production-hardening-W18-P38-S449` - W18.P38.S449 - Close AFR-301 for modelo IVA wallet CLI
+- `2026-06-05-secure-storage-production-hardening-W18-P38-summary` - `secure-storage-production-hardening` `W18.P38` summary
+- `2026-06-05-secure-storage-production-hardening-W19-P39-S450` - W19.P39.S450 - Refresh secure-storage guard inventories
+- `2026-06-05-secure-storage-production-hardening-W20-P40-S451` - W20.P40.S451 - Verify custody command and API exposure
+- `2026-06-05-secure-storage-production-hardening-W20-P40-S452` - W20.P40.S452 - Harden passphrase bootstrap and redaction
+- `2026-06-05-secure-storage-production-hardening-W20-P40-S457` - W20.P40.S457 - Implement first-class config custody verbs
+- `2026-06-05-secure-storage-production-hardening-W20-P40-S458` - W20.P40.S458 - Replace stale custody and recovery guidance
+- `2026-06-05-secure-storage-production-hardening-W20-P40-S459` - W20.P40.S459 - Implement config lock and unlock aliases
+- `2026-06-05-secure-storage-production-hardening-W20-P41-S453` - W20.P41.S453 - Narrow secure-storage guard inventories
+- `2026-06-06-secure-storage-production-hardening-W13-P27-S396` - W13.P27.S396 persona readiness reconciliation
+- `2026-06-06-secure-storage-production-hardening-W13-P27-S397` - W13.P27.S397 persona research requirements
+- `2026-06-06-secure-storage-production-hardening-W13-P27-S398` - W13.P27.S398 persona finding classification
+- `2026-06-06-secure-storage-production-hardening-W20-P40-S460` - W20.P40.S460 - Close stale custody guidance drift
+- `2026-06-06-secure-storage-production-hardening-W20-P41-S455` - W20.P41.S455 inbound provenance privacy
+- `2026-06-06-secure-storage-production-hardening-W20-P42-S456` - W20.P42.S456 central redaction enrollment
+- `2026-06-11-secure-storage-production-hardening-W13-P28-S399` - W13.P28.S399 secure-storage persona retests
+- `2026-06-11-secure-storage-production-hardening-W13-P28-S400` - W13.P28.S400 testimonial repair adoption
+- `2026-06-11-secure-storage-production-hardening-W13-P28-S401` - W13.P28.S401 testimonial synthesis
+- `2026-06-11-secure-storage-production-hardening-W20-P41-S454` - W20.P41.S454 Filing/Modelo Localization And Error Hierarchy
+- `2026-06-11-secure-storage-production-hardening-W21-P43-S462` - W21.P43.S462 CLI Startup Registration Repair
+
+### plan
+
+- `2026-05-22-secure-storage-production-hardening-refactor-plan` - `secure-storage-production-hardening` `refactor` plan
+
+### reference
+
+- `2026-05-27-application-namespace-registry-adoption-reference` - Application Namespace Registry Adoption Reference
+
+### research
+
+- `2026-05-22-secure-storage-production-hardening-architecture-research` - `secure-storage-production-hardening` research: `architecture mandate for adverse production operation`
+- `2026-05-28-secure-storage-production-hardening-w05-p09-s40-research` - `secure-storage-production-hardening` research: `W05.P09.S40 retained export and side-store exceptions`
+- `2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-finding-requirements-research` - `secure-storage-production-hardening` research: `S397 persona finding research requirements`

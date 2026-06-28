@@ -1,21 +1,15 @@
-"""AEAT - Spanish Tax Authority automation tools.
+"""Top-level package for the AEAT (Agencia Estatal de Administración Tributaria) toolkit.
 
-Tools for interacting with the Agencia Estatal de Administracion Tributaria (AEAT),
-managing tax information, and automating tax filing workflows.
+Exposes the ``__version__`` of the distribution. Subpackages provide the
+layered architecture: :mod:`aeat.adapters` (inbound / outbound integrations),
+:mod:`aeat.application` (use-cases), :mod:`aeat.domain` (pure rules),
+:mod:`aeat.entrypoints` (CLI / scripts), and :mod:`aeat.core`
+(cross-cutting infrastructure).
+
+The ``pikepdf._core`` bridge logger is silenced via the ``loggers`` block in
+:func:`aeat.core.logging.configure_logging` (dictConfig) rather than via a
+bootstrap-time ``setLevel`` call here. This keeps all logger-level policy in
+a single, auditable location.
 """
-
-import logging as _logging
-
-# Silence pikepdf's C++-to-Python logger bridge INFO message that
-# fires at first pikepdf import. Without this, the bridge init line
-# ("pikepdf C++ to Python logger bridge initialized") lands on
-# stderr before the CLI's JSON output contract (#399) takes over,
-# contaminating any pipeline that asserts a clean JSON envelope on
-# stderr. Configuring the logger here — at the package root, before
-# any submodule (and therefore any pikepdf transitive import) loads
-# — guarantees the level is set before the bridge fires. Does not
-# touch pikepdf's WARNING/ERROR levels; real pikepdf failures still
-# log normally.
-_logging.getLogger("pikepdf._core").setLevel(_logging.WARNING)
 
 __version__ = "0.1.0"

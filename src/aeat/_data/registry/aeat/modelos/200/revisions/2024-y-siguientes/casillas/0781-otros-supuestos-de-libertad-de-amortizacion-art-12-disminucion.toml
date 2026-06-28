@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02626"
+number = "02626"
+label = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Correcciones del ejercicio - Permanentes [02626]"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02626"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02627"
+number = "02627"
+label = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02627]"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_ejercicio_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02627"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02628"
+number = "02628"
+label = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02628]"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_temporaria_anteriores_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02628"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02629"
+number = "02629"
+label = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Saldo pendiente a principio de ejercicio [02629]"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02629"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02630"
+number = "02630"
+label = "Otros supuestos de libertad de amortización (art. 12.3 a) y d) y DA 16ª y 17ª LIS) - Disminución - Saldo pendiente a fin de ejercicio [02630]"
+section = ["otros_supuestos_de_libertad_de_amortizacion_art_12", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_otros_art12_saldo_final_neto"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02630"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

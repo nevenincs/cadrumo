@@ -1,13 +1,12 @@
-# Write-guard: tokens that must NEVER appear as a CALL-SITE verb in
-# aeat.sede public surface. One per line. Loaded by test_no_write_surface.py.
-#
-# Covers English (submit/send/commit/etc.) and Spanish (enviar/presentar/etc.)
-# mutation verbs, plus modificar/anular/cancelar/rechazar captured from the
-# real AEAT expediente detail page ("Modificar declaración" is a literal
-# WRITE action next to the read-only links we consume).
+# Tokens that must not appear as call-site verbs in aeat.adapters.outbound.aeat.sede.
 submit
 send
 commit
+save
+amend
+delete
+payment
+debit
 POST
 enviar
 presentar
@@ -18,3 +17,9 @@ modificar
 anular
 cancelar
 rechazar
+pagar
+pago
+domiciliar
+domiciliacion
+guardar
+subsanar

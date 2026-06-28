@@ -1,0 +1,9 @@
+[[revisions."2023".casillas]]
+id = "1682"
+number = "1682"
+label = "Reserva para Inversiones en Canarias 2018 (1): Año de la dotación"
+section = ["resultados", "anexo_a_res", "reserva_inversiones_canarias_res"]
+data_type = "text"
+semantic_role = "irpf_ric_canarias_dotacion_anio"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

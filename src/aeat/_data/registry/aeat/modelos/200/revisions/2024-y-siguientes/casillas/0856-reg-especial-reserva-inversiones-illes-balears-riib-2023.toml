@@ -1,0 +1,36 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02914"
+number = "02914"
+label = "Rég. especial reserva inversiones Illes Balears - RIIB 2023 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, DA 70.4 Ley 31/2022 [02914]"
+section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2023"]
+data_type = "money"
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-022b-casilla-02914"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02915"
+number = "02915"
+label = "Rég. especial reserva inversiones Illes Balears - RIIB 2023 - Aplicado/materializado en esta liquidación - Inversiones previstas letra C DA 70.4 Ley 31/2022 [02915]"
+section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2023"]
+data_type = "money"
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-022b-casilla-02915"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02917"
+number = "02917"
+label = "Rég. especial reserva inversiones Illes Balears - RIIB 2023 - Pendiente de materializar RIIB al final de período [02917]"
+section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2023"]
+data_type = "money"
+semantic_role = "is_reserva_inversiones_illes_balears_importe"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-022b-casilla-02917"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

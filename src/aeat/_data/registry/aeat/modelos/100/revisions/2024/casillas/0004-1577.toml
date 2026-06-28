@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "1577"
+number = "1577"
+label = "Rendimiento neto de actividad economica atribuido por entidades en regimen de atribucion de rentas"
+section = ["rendimientos_actividades_economicas"]
+semantic_role = "irpf_rendimiento_act_eco_atribuido_rdto_neto"
+input_kind = "informational"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd"]

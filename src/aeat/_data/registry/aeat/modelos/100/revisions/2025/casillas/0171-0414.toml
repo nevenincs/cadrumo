@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0414"
+number = "0414"
+label = "Deduccion por obtencion de rendimientos del trabajo"
+section = ["resultado_declaracion"]
+semantic_role = "irpf_deduccion_obtencion_rendimientos_trabajo"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]

@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1908"
+number = "1908"
+label = "Por inversión en adquisición de acciones y participaciones sociales como consecuencia de acuerdos de constitución de sociedades o ampliación de capital en las sociedades mercantiles (importe de la ..."
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_acciones_participaciones"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0685"
+number = "0685"
+label = "Resultado de la solicitud de rectificación de autoliquidación: ( [0670] - [0681] + [0682] )"
+section = ["resultados", "regularizacion_res"]
+data_type = "decimal"
+semantic_role = "irpf_regularizacion_rectificacion_resultado"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,371 @@
+[revisions."esquema-exterior"]
+label = "Modelo 369 - Esquema Exterior - regimen especial servicios prestados por sujetos pasivos no establecidos en la Comunidad (LIVA art 163 octiesdecies a vicies). Trimestral por HAC/610/2021 art 2(a)."
+valid_from = 2021-07-01
+period_selector = { year_from = 2021, periods = ["EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"] }
+orden_aplicabilidad = ["orden-hac-610-2021:art-1"]
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-octiesdecies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+
+[[revisions."esquema-exterior".workbook_parity_refs]]
+id = "modelo-369-exterior-dr-2021"
+workbook_source = "aeat-dr-369-2021"
+fixture_id = "modelo-369-exterior-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".verification_expectations]]
+id = "modelo-369-exterior-iva-chain-verification"
+computed_casilla_ids = ["iva.exterior.cuota-total"]
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-37-1992:art-163-octiesdecies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".bindings]]
+id = "modelo-369-exterior-de-external-services-21pct"
+source = "ledger_oss_aggregation"
+selector = { regime = "external_scheme", destination_member_state = "de", rate_kind = "general", invoice_direction = "issued", transaction_kinds = ["external_scheme_services"], fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-163-octiesdecies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".bindings.source_citations]]
+source_ref = "boe-modelo-369-2021-form"
+required_text = ["modelo 369"]
+
+[[revisions."esquema-exterior".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+label = "Ejercicio al que se refiere la autoliquidacion"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".casillas]]
+id = "decl.periodo"
+number = "periodo"
+label = "Periodo de la declaracion"
+section = ["declarante"]
+data_type = "period_code"
+semantic_role = "filing_period"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hac-610-2021:art-2"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".casillas]]
+id = "iva.exterior.de.services-cuota"
+number = "iva.exterior.de.services-cuota"
+label = "Cuota IVA repercutido al destino DE — servicios prestados (Esquema Exterior)"
+section = ["iva", "exterior", "destino_de"]
+data_type = "money"
+semantic_role = "iva_oss_exterior_servicios_destino_cuota"
+required = false
+input_kind = "bound"
+binding = "modelo-369-exterior-de-external-services-21pct"
+legal_refs = ["ley-37-1992:art-163-octiesdecies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".casillas]]
+id = "iva.exterior.cuota-total"
+number = "iva.exterior.cuota-total"
+label = "Total cuota IVA repercutida del Esquema Exterior (suma de cuotas por destino)"
+section = ["iva", "exterior", "totales"]
+data_type = "money"
+semantic_role = "iva_oss_exterior_cuota_total"
+required = false
+input_kind = "computed"
+formula = "modelo-369-exterior-cuota-total"
+legal_refs = ["ley-37-1992:art-163-octiesdecies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".formulas]]
+id = "modelo-369-exterior-cuota-total"
+target_casilla_id = "iva.exterior.cuota-total"
+expression = { op = "add", args = [
+    { casilla_id = "iva.exterior.de.services-cuota" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-163-octiesdecies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".formulas.source_citations]]
+source_ref = "boe-modelo-369-2021-form"
+required_text = ["modelo 369"]
+
+[[revisions."esquema-exterior".live_cross_references]]
+id = "modelo-369-exterior-static-documentation"
+evidence_tier = "official_source_guidance"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-369-exterior-static-only"
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".live_cross_references]]
+id = "modelo-369-exterior-filed-declarations-read"
+evidence_tier = "official_source_guidance"
+surface = "authenticated_read_surface"
+guard_policy_id = "modelo-369-exterior-filed-declarations-read-only"
+allowed_hosts = ["www1.agenciatributaria.gob.es", "www6.agenciatributaria.gob.es"]
+allowed_methods = ["GET", "HEAD", "OPTIONS"]
+forbidden_actions = [
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+]
+synthetic_data_allowed = false
+requires_authentication = true
+requires_aeat_authorization = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+# Applicability gate: only OSS-enrolled subjects file Modelo 369 and
+# therefore only they can have filed declarations to read. Subjects
+# outside the OSS regime should never invoke this read surface.
+[[revisions."esquema-exterior".live_cross_references.applicability_predicates]]
+field = "iva.oss_enrolled"
+op = "equals"
+value = true
+explanation = "OSS filed-declarations read applies only to taxpayers enrolled in the OSS / IOSS one-stop-shop regime."
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-portal"
+surface = "portal"
+consumer = "portal_m369_iva_oss_exterior"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-extractor"
+surface = "extractor"
+consumer = "aeat.adapters.inbound.declaracion.parse_declaracion"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1", "ley-37-1992:art-163-octiesdecies"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".filing_schedules]]
+id = "modelo-369-exterior-trimestral"
+period_kind = "quarterly"
+periods = ["EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"]
+profile_condition_mode = "all"
+legal_refs = ["orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form", "aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".filing_schedules.profile_conditions]]
+field = "iva.oss_enrolled"
+op = "equals"
+value = true
+explanation = "Modelo 369 esquema exterior aplica solo a sujetos pasivos acogidos al regimen OSS / IOSS de ventanilla unica."
+legal_refs = ["orden-hac-610-2021:art-2"]
+source_refs = ["aeat-modelo-369-procedure"]
+
+[[revisions."esquema-exterior".deadline_windows]]
+id = "modelo-369-exterior-2025-ext-1t"
+filing_year = 2025
+period = "2025-EXT-1T"
+period_kind = "quarterly"
+opens_on = 2025-04-01
+closes_on = 2025-04-30
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".deadline_windows]]
+id = "modelo-369-exterior-2025-ext-2t"
+filing_year = 2025
+period = "2025-EXT-2T"
+period_kind = "quarterly"
+opens_on = 2025-07-01
+closes_on = 2025-07-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".deadline_windows]]
+id = "modelo-369-exterior-2025-ext-3t"
+filing_year = 2025
+period = "2025-EXT-3T"
+period_kind = "quarterly"
+opens_on = 2025-10-01
+closes_on = 2025-10-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".deadline_windows]]
+id = "modelo-369-exterior-2025-ext-4t"
+filing_year = 2025
+period = "2025-EXT-4T"
+period_kind = "quarterly"
+opens_on = 2026-01-01
+closes_on = 2026-01-31
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".deadline_windows]]
+id = "modelo-369-exterior-2026-ext-1t"
+filing_year = 2026
+period = "2026-EXT-1T"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-30
+legal_refs = ["orden-hac-610-2021:art-3"]
+source_refs = ["boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".constructs]]
+id = "modelo-369-esquema-exterior"
+title = "Modelo 369 - Esquema Exterior (regimen especial servicios prestados por no establecidos)"
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-octiesdecies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+casilla_ids = [
+    "decl.ejercicio",
+    "decl.periodo",
+    "iva.exterior.de.services-cuota",
+    "iva.exterior.cuota-total",
+]
+formulas = ["modelo-369-exterior-cuota-total"]
+bindings = ["modelo-369-exterior-de-external-services-21pct"]
+workbook_parity_refs = ["modelo-369-exterior-dr-2021"]
+live_cross_references = [
+    "modelo-369-exterior-static-documentation",
+    "modelo-369-exterior-filed-declarations-read",
+]
+application_links = [
+    "modelo-369-exterior-portal",
+    "modelo-369-exterior-filing",
+    "modelo-369-exterior-extractor",
+    "modelo-369-exterior-verification",
+    "modelo-369-exterior-deadline",
+    "modelo-369-exterior-calculation",
+    "modelo-369-exterior-review",
+    "modelo-369-exterior-approval",
+    "modelo-369-exterior-reconciliation",
+    "modelo-369-exterior-workflow",
+]
+filing_schedules = ["modelo-369-exterior-trimestral"]
+deadline_windows = [
+    "modelo-369-exterior-2025-ext-1t",
+    "modelo-369-exterior-2025-ext-2t",
+    "modelo-369-exterior-2025-ext-3t",
+    "modelo-369-exterior-2025-ext-4t",
+    "modelo-369-exterior-2026-ext-1t",
+]
+
+# -----------------------------------------------------------------------------
+# Esquema Union — quarterly per HAC/610/2021 art 2(b) and LIVA 163 unvicies
+# -----------------------------------------------------------------------------
+

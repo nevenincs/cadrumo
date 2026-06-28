@@ -1,0 +1,36 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02782"
+number = "02782"
+label = "Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2024 - Importe reserva dotada [02782]"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_dotacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-02782"]
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02783"
+number = "02783"
+label = "Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2024 - Importe reserva pendiente dotación [02783]"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_dotacion_pendiente"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-02783"]
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02784"
+number = "02784"
+label = "Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2024 - Reserva dispuesta [02784]"
+section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_dotacion_dispuesta"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-02784"]
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

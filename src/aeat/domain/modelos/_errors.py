@@ -1,44 +1,106 @@
-"""Error hierarchy for the modelo registry.
+"""Domain errors for AEAT modelo records and calculations.
 
-Every error raised from :mod:`aeat.domain.modelos` derives from
-:class:`ModeloRegistryError`, which in turn derives from the project
-root :class:`aeat.core.errors.AeatError`. Two concrete subclasses cover the
-failure modes surfaced to external callers:
-
-- :class:`UnknownModeloError` — raised by registry lookups on an
-  unknown / unparseable code.
-- :class:`RegistryIntegrityError` — raised at import time during
-  registry assembly when a structural invariant is violated.
+:class:`ModeloValidationError` is raised by :class:`ModeloCode` and
+:class:`WorkUnit` invariant checks; :class:`PensionReduccionError` reports
+invalid fiscal-reduction inputs, and :func:`raise_catalogue_integrity_error`
+normalises repository integrity failures into typed :class:`ModeloError`
+subclasses.
 """
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from logging import Logger
+from typing import NoReturn
+
+from ...core.errors import AeatError, CoreValidationError
 
 
-class ModeloRegistryError(AeatError):
-    """Base class for every error raised from :mod:`aeat.domain.modelos`."""
+class ModeloError(AeatError):
+    """Base error for the modelos subpackage."""
 
 
-class UnknownModeloError(ModeloRegistryError):
-    """Raised by :func:`aeat.domain.modelos.get_modelo` on unknown codes.
+class PensionReduccionError(CoreValidationError):
+    """Raised when a pension reducción computation pre-condition is violated.
 
-    Attributes:
-        modelo_code: The offending code as supplied by the caller.
+    Covers the numeric guard checks for both the DT 12ª plan-de-pensiones capital
+    rescate reducción and the Ley 44/2015 SAL/SLL reserva especial dotacion
+    computation. Raises instead of a bare :class:`ValueError` so the failure
+    reaches the typed error registry with a stable error code and a structured
+    context envelope.
     """
 
-    def __init__(self, code: str) -> None:
-        """Initialise with the offending modelo code string."""
-        super().__init__(f"unknown modelo code: {code!r}")
-        self.modelo_code = code
+
+class ModeloValidationError(ModeloError, ValueError):
+    """Raised when a modelo code violates shape invariants."""
 
 
-class RegistryIntegrityError(ModeloRegistryError):
-    """Raised at import time when the registry fails a structural check.
+class ModeloExportError(ModeloError):
+    """Base error for modelo-revision export failures (manifest, archive build)."""
 
-    Signals that a modelo registry entry violates a cross-reference
-    invariant (missing code, extra code, dangling ``caps_into``, or
-    entry ``code`` not matching its dict key). Always raised from
-    :func:`aeat.domain.modelos._registry._finalise_registry` and therefore
-    never crosses a user call stack — it aborts package import.
+
+class ModeloExportManifestError(ModeloExportError):
+    """Raised when a modelo export manifest cannot be built or validated."""
+
+
+class Modelo036LifecycleError(ModeloError):
+    """Base error for the Modelo 036 lifecycle (alta / modificacion / baja)."""
+
+
+class Modelo036PriorAltaRequiredError(Modelo036LifecycleError):
+    """Raised when modificacion or baja is requested without a prior alta."""
+
+
+class Modelo036TerminalStateError(Modelo036LifecycleError):
+    """Raised when an operation is requested on a 036 record already in a terminal (baja) state."""
+
+
+class CensoStaleRefusedError(ModeloError):
+    """Raised when an operation is refused because the censo was updated after the target was produced.
+
+    Applies to calculate, verify, file, build_draft, approve_draft, and export_draft.
+    AEAT is the binding legal source of truth: any work unit, calculation revision,
+    filing draft, or filing record that referenced censo facts now superseded by a
+    ``aeat config profile censo apply`` must be refused until the operator re-runs
+    the governing calculation against the fresh censo. The fix is operator-driven:
+    re-run ``aeat app modelo work calculate`` (or the relevant verb) against the
+    affected work unit.
     """
+
+
+def raise_catalogue_integrity_error(
+    exc: Exception,
+    *,
+    error_cls: type[ModeloError],
+    label: str,
+    translated_message: str,
+    logger: Logger,
+) -> NoReturn:
+    """Log and re-raise a secure-object catalogue integrity failure as ``error_cls``.
+
+    The modelo catalogue repositories share one recovery path when a stored
+    envelope fails its classification / schema-version guard: log the
+    ``"<label> catalogue integrity error"`` at error level and raise the
+    repository's typed ``ModeloError`` subclass carrying the
+    ``secure_object_integrity`` reason and the originating exception's type in
+    its context, chained from ``exc``.
+    """
+    message = f"{label} catalogue integrity error"
+    logger.error(message, exc_info=True)
+    raise error_cls(
+        message,
+        translated_message=translated_message,
+        context={"reason": "secure_object_integrity", "cause_type": type(exc).__name__},
+    ) from exc
+
+
+__all__ = [
+    "CensoStaleRefusedError",
+    "Modelo036LifecycleError",
+    "Modelo036PriorAltaRequiredError",
+    "Modelo036TerminalStateError",
+    "ModeloError",
+    "ModeloExportError",
+    "ModeloExportManifestError",
+    "ModeloValidationError",
+    "raise_catalogue_integrity_error",
+]

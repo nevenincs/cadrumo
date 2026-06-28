@@ -1,0 +1,313 @@
+[[revisions."2019-y-siguientes".casillas]]
+id = "01"
+number = "01"
+label = "Ingresos"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+semantic_role = "irpf_pf_ingresos"
+required = false
+input_kind = "bound"
+binding = "modelo-130-actividad-economica-ingresos-cumulative"
+export_refs = ["modelo-130-casilla-01"]
+# Pago-fraccionado computation provision (art-110) plus the LIRPF articles that
+# ESTABLISH actividad-económica income: art-27 (concept of rendimientos de
+# actividades económicas) and art-28 (reglas generales de cálculo).
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "02"
+number = "02"
+label = "Gastos"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+semantic_role = "irpf_pf_gastos"
+required = true
+input_kind = "bound"
+binding = "modelo-130-actividad-economica-gastos-cumulative"
+export_refs = ["modelo-130-casilla-02"]
+# Pago-fraccionado computation provision (art-110) plus the LIRPF articles that
+# ESTABLISH deductible gastos in estimación directa: art-28 (reglas generales)
+# and art-30 (estimación directa, gastos fiscalmente deducibles).
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "03"
+number = "03"
+label = "Rendimiento neto"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+semantic_role = "irpf_pf_rendimiento_neto"
+required = false
+# Per AEAT M130 Instrucciones, Casilla 03 = Casilla 01 - Casilla 02
+# (ingresos - gastos = rendimiento neto). The binding
+# `modelo-130-actividad-economica-rendimiento-neto-cumulative` populates
+# casilla 01 (target_casilla_id = "01") from the renta-ledger; casilla 03
+# is the simple subtraction of the two operator-visible casillas.
+# Computed (not bound) so manual-filing operators who supply casillas
+# 01 and 02 directly get casilla 03 without requiring an active
+# renta-ledger aggregation source.
+input_kind = "computed"
+formula = "modelo-130-rendimiento-neto"
+export_refs = ["modelo-130-casilla-03"]
+# Rendimiento neto = ingresos - gastos: art-110 (pago-fraccionado base) plus the
+# LIRPF establishing articles art-28 (reglas generales) and art-30 (estimación
+# directa).
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "04"
+number = "04"
+label = "Importe del pago fraccionado"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+semantic_role = "irpf_pf_importe"
+required = false
+input_kind = "computed"
+formula = "modelo-130-pago-fraccionado-directa"
+export_refs = ["modelo-130-casilla-04"]
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-130-instructions"] }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "05"
+number = "05"
+label = "Pagos fraccionados anteriores"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+semantic_role = "pago_fraccionado_previo"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"], source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"] }
+required = false
+# Same-ejercicio carry of prior-quarter pagos fraccionados (AEAT
+# instrucciones casilla 05): SUM max(0, prior casilla 07_q) - SUM prior
+# casilla 16_q over the trimestres anteriores del mismo ejercicio. Bound
+# via the prior_quarter_expanding_span previous_filing binding; at 1T the
+# span is empty and casilla 05 materialises Decimal(0) absent-by-design.
+input_kind = "bound"
+binding = "modelo-130-pagos-fraccionados-anteriores"
+export_refs = ["modelo-130-casilla-05"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "06"
+number = "06"
+label = "Retenciones e ingresos a cuenta"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"], source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"] }
+required = false
+input_kind = "manual"
+export_refs = ["modelo-130-casilla-06"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "07"
+number = "07"
+label = "Resultado parcial apartado I"
+section = ["actividades_economicas_estimacion_directa"]
+data_type = "money"
+semantic_role = "irpf_pf_resultado_parcial_directa"
+required = false
+input_kind = "computed"
+formula = "modelo-130-resultado-apartado-i"
+export_refs = ["modelo-130-casilla-07"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "08"
+number = "08"
+label = "Volumen de ingresos del trimestre"
+section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
+data_type = "money"
+semantic_role = "irpf_pf_volumen_ingresos_trimestre"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-130-casilla-08"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "09"
+number = "09"
+label = "Importe del pago fraccionado"
+section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
+data_type = "money"
+semantic_role = "irpf_pf_importe"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"], source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"] }
+required = false
+input_kind = "computed"
+formula = "modelo-130-pago-fraccionado-agrario"
+export_refs = ["modelo-130-casilla-09"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "10"
+number = "10"
+label = "Retenciones e ingresos a cuenta"
+section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"], source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"] }
+required = false
+input_kind = "manual"
+export_refs = ["modelo-130-casilla-10"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "11"
+number = "11"
+label = "Resultado parcial apartado II"
+section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
+data_type = "money"
+semantic_role = "irpf_pf_resultado_parcial_agraria"
+required = false
+input_kind = "computed"
+formula = "modelo-130-resultado-apartado-ii"
+export_refs = ["modelo-130-casilla-11"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "12"
+number = "12"
+label = "Suma de resultados parciales"
+section = ["total_liquidacion_trimestral"]
+data_type = "money"
+semantic_role = "irpf_pf_suma_resultados_parciales"
+required = false
+input_kind = "computed"
+formula = "modelo-130-suma-parciales"
+export_refs = ["modelo-130-casilla-12"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "13"
+number = "13"
+label = "Minoracion por rendimientos netos"
+section = ["total_liquidacion_trimestral"]
+data_type = "money"
+semantic_role = "irpf_pf_minoracion_rendimientos"
+required = false
+input_kind = "computed"
+formula = "modelo-130-minoracion-rendimientos-netos"
+export_refs = ["modelo-130-casilla-13"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "14"
+number = "14"
+label = "Neto tras minoracion"
+section = ["total_liquidacion_trimestral"]
+data_type = "money"
+semantic_role = "irpf_pf_neto_tras_minoracion"
+required = false
+input_kind = "computed"
+formula = "modelo-130-neto-tras-minoracion"
+export_refs = ["modelo-130-casilla-14"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "15"
+number = "15"
+label = "Resultados negativos de trimestres anteriores"
+section = ["resultados_negativos_trimestres_anteriores"]
+data_type = "money"
+semantic_role = "irpf_pf_resultados_negativos_anteriores"
+required = false
+input_kind = "bound"
+binding = "modelo-130-resultados-negativos-anteriores"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-130-instructions"] }
+export_refs = ["modelo-130-casilla-15"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "16"
+number = "16"
+label = "Deduccion por inversion en vivienda habitual"
+section = ["deduccion_inversion_vivienda_habitual"]
+data_type = "money"
+semantic_role = "deduccion_vivienda_habitual"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-130-casilla-16"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "17"
+number = "17"
+label = "Diferencia"
+section = ["resultado_final"]
+data_type = "money"
+semantic_role = "irpf_pf_diferencia"
+required = false
+input_kind = "computed"
+formula = "modelo-130-diferencia"
+export_refs = ["modelo-130-casilla-17"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "18"
+number = "18"
+label = "Resultado a ingresar de autoliquidaciones anteriores"
+section = ["resultado_final"]
+data_type = "money"
+semantic_role = "resultado_anteriores_autoliquidaciones"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-130-casilla-18"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "19"
+number = "19"
+label = "Resultado final"
+section = ["resultado_final"]
+data_type = "money"
+semantic_role = "irpf_pf_resultado_final"
+required = false
+input_kind = "computed"
+formula = "modelo-130-resultado-final"
+export_refs = ["modelo-130-casilla-19"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+# -----------------------------------------------------------------------------
+# Prior-quarter negative-result carry-forward. AEAT Modelo 130 instructions
+# define the casilla 15 same-ejercicio carry under the RD 439/2007 art. 110
+# pago fraccionado framework. When a quarter's "Diferencia" (casilla 17) is
+# negative, the absolute value is carried forward as a deductible casilla 15
+# in the following quarter within the same ejercicio. The
+# saldo-negativo-fin-periodo casilla exposes that carry-forward seed; casilla
+# 15 picks it up via a previous_filing binding stamped by the resolver from
+# the prior quarter.
+# -----------------------------------------------------------------------------
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "saldo-negativo-fin-periodo"
+number = "saldo-negativo-fin-periodo"
+label = "Saldo negativo trasladable a periodos posteriores (max 0, -casilla 17)"
+section = ["computed_carry_forward"]
+data_type = "money"
+semantic_role = "irpf_pf_saldo_negativo_fin_periodo"
+required = false
+input_kind = "computed"
+formula = "modelo-130-saldo-negativo-fin-periodo"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-130-instructions"] }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]

@@ -1,0 +1,40 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "iva-recargo-equivalencia"
+domain = "regimen"
+lifecycle = "approved"
+legal_refs = ["ley-37-1992:art-148"]
+domain_refs = ["iva-category:recargo_equivalencia"]
+created_at = 2026-06-10
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Regimen especial de IVA para comerciantes minoristas."
+definition = "Regimen especial obligatorio para comerciantes minoristas personas fisicas en el que el proveedor repercute un recargo ademas del IVA y el minorista queda exonerado de liquidar el impuesto por esas ventas."
+
+[language.es.source]
+citation = "Articulos 148 a 163 de la Ley 37/1992 del IVA."
+authority = "boe"
+
+[[language.es.term]]
+label = "regimen del recargo de equivalencia"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "RE"
+term_status = "admitted"
+
+[language.en]
+short_description = "A special VAT regime for retail traders (equivalence surcharge)."
+
+[language.ca]
+short_description = "Recarrec d'equivalencia: regim especial d'IVA per a comerciants minoristes."
+
+[language.hu]
+short_description = "Egyenertekusegi potlek: kulonleges afa-rendszer kiskereskedoknek."

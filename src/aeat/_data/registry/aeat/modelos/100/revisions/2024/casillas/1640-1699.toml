@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "1699"
+number = "1699"
+label = "NIF de la persona contratada o Centro de día 1"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_autonomica_empleada_hogar_nif"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

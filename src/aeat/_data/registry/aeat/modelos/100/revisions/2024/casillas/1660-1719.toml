@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1719"
+number = "1719"
+label = "Abono anticipado de la deducción por nacimiento"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_deduccion_baleares_nacimiento_abono_anticipado"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

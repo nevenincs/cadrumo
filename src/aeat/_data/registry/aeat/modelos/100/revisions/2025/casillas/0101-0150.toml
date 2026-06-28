@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0150"
+number = "0150"
+label = "Reduccion por arrendamiento de inmuebles destinados a vivienda"
+section = ["rendimientos_capital_inmobiliario", "reducciones"]
+semantic_role = "irpf_rendimiento_capital_inmobiliario_reduccion_arrendamiento_vivienda"
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

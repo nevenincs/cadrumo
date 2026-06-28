@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#draft-approval-staleness'
 date: '2026-04-18'
+modified: '2026-04-18'
 related:
   - '[[2026-04-18-draft-approval-staleness-research]]'
   - '[[2026-04-17-export-first-adr]]'
-  - '[[2026-04-17-kent-revise-review-audit]]'
-  - '[[2026-04-17-kent-ux-journey-audit]]'
 ---
 
 # `draft-approval-staleness` adr: `persist status-level draft approval and derive stale transitions from approval-basis fingerprints` | (**status:** `accepted`)

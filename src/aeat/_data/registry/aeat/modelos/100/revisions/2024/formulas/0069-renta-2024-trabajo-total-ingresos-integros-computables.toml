@@ -1,0 +1,20 @@
+[[revisions."2024".formulas]]
+id = "renta-2024-trabajo-total-ingresos-integros-computables"
+target_casilla_id = "0012"
+expression = { op = "sum", args = [
+        { casilla_id = "0003" },
+        { casilla_id = "0007" },
+        { casilla_id = "0008" },
+        { casilla_id = "0024" },
+        { casilla_id = "0009" },
+        { casilla_id = "0010" },
+        { op = "negate", args = [{ casilla_id = "0011" }] },
+        { op = "negate", args = [{ casilla_id = "0058" }] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-7-h"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-dr-100-2024-dictionary"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["trabajo", "rendimiento neto"]

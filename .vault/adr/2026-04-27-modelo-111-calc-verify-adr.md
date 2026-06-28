@@ -3,13 +3,40 @@ tags:
   - '#adr'
   - '#modelo-111-calc-verify'
 date: '2026-04-27'
+modified: '2026-04-27'
 related:
   - "[[2026-04-27-modelo-111-calc-verify-research]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"
   - "[[2026-04-27-modelo-130-rule-delta-reference]]"
 ---
 
-# `modelo-111-calc-verify` ADR — child of EPIC `#316`
+# `modelo-111-calc-verify` ADR — child of EPIC `#316` | (**status:** `rejected`)
+
+## Rejection (2026-05-21)
+
+This ADR is **rejected**. Its D13 decision asserts the Modelo 111
+ruleset covers "four computed casillas (09, 12, 28, 30) — the two
+fixed-rate retentions (premios + arrendamiento ganancias at 19 %)".
+That premise is factually wrong against AEAT authority.
+
+Verified against the AEAT Modelo 111 official instructions and the
+live registry: casillas `09` and `12` are *retenciones e ingresos a
+cuenta sobre rendimientos de actividades económicas* (dinerarios /
+en especie) — declarant-reported manual-input totals at variable
+rates (15 % profesionales, 7 % new professionals, 2 % agrícolas /
+forestales, 1 % estimación objetiva — never a single 19 %). They are
+neither premios nor arrendamiento, and they are not a percentage of
+casillas `08` / `11`. Modelo 111 is a withholding-*declaration* form:
+per-rubro retention amounts are declarant facts, not form-computed.
+The only computed M111 casillas are the totals (`28`) and the
+resultado (`30`), both already correctly in the registry.
+
+Authoring `09 = 19 % × 08` per this ADR would overwrite correctly
+declared inputs with wrong figures. The ADR's D5/D6 sections also
+reference the post-PR-440 declaración extractor registry, which the
+hexagonal restructure has since deleted. No further action is taken
+on this ADR; the registry Modelo 111 is correct as-is. See the
+branch-reconciliation audit for the discovery context.
 
 ## Context
 

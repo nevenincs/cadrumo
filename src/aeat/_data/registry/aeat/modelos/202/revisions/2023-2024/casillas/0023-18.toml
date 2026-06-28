@@ -1,0 +1,13 @@
+[[revisions.2023-2024.casillas]]
+id = "18"
+number = "18"
+label = "Mod. 40.3 LIS B1 — Caso general — Resultado previo"
+section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b1_resultado_previo"
+required = false
+input_kind = "computed"
+formula = "modelo-202-2023-2024-resultado-previo-b1"
+export_refs = ["modelo-202-2023-2024-page-01-casilla-18"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]

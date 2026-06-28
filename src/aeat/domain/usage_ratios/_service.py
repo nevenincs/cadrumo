@@ -1,155 +1,293 @@
-"""Atomic load/save helpers for :class:`UsageRatioProfile` (issue #259).
+"""Load / save helpers for :class:`UsageRatioProfile`.
 
-The profile carries business / personal split percentages — FINANCIAL
-class per the default policy table. Both helpers route through the
-substrate's encrypted-envelope writers so the on-disk record is always
-AES-256-GCM ciphertext under HKDF context
-``aeat.domain.usage_ratios.profile.v1``.
+Usage ratios carry business / personal split percentages. They are
+stored as :class:`Envelope`-wrapped encrypted byte objects via
+:class:`SecureObjectRepository` at :class:`SensitivityClass` FINANCIAL;
+no plaintext profile JSON or envelope file lands on disk.
 """
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from pathlib import Path
+from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
 from ...core.logging import get_logger
-from ._errors import UsageRatioPersistenceError
+from ...core.time import now
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ...adapters.persistence.storage import SecureObjectRepository
+
+from ..categories import (
+    SpendingCategory,
+    SpendingCategoryFamily,
+    categories_for_family,
+    effective_usage_ratio,
+    resolve_category_profiles,
+)
+from ._errors import (
+    CensoRatioMismatchError,
+    UsageRatioPersistenceError,
+    UsageRatioValidationError,
+)
 from ._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 
-__all__ = ["load_usage_ratios", "save_usage_ratios"]
+__all__ = [
+    "derive_home_office_ratios_from_censo",
+    "load_usage_ratios",
+    "load_usage_ratios_with_censo_guard",
+    "save_usage_ratios",
+    "usage_ratios_object_key",
+]
 
 _LOGGER = get_logger(__name__)
-_HKDF_CONTEXT_USAGE_RATIOS = b"aeat.domain.usage_ratios.profile.v1"
 _USAGE_RATIO_VERSION = 1
+_USAGE_RATIO_NAMESPACE = "aeat.domain.usage_ratios"
 
 
-def load_usage_ratios(path: Path) -> UsageRatioProfile:
-    """Load Kent's persisted usage-ratio profile, or return an empty one.
+def usage_ratios_object_key(bucket_id: str) -> str:
+    """Return the secure object key for one profile bucket's usage-ratio profile."""
+    trimmed = bucket_id.strip()
+    if not trimmed:
+        raise UsageRatioPersistenceError("bucket_id must not be blank")
+    return f"profile:{trimmed}"
 
-    A missing file is not an error — it is the virgin state — so this helper
-    returns an empty :class:`UsageRatioProfile` in that case. The on-disk
-    record is a :class:`CipherEnvelope` written under HKDF context
-    ``aeat.domain.usage_ratios.profile.v1`` at FINANCIAL class.
+
+def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None = None) -> UsageRatioProfile:
+    """Load one bucket's persisted :class:`UsageRatioProfile`, or return an empty one.
 
     Args:
-        path: Filesystem path of the usage-ratio envelope file.
-
-    Returns:
-        The validated profile, or an empty one when ``path`` does not exist.
-
-    Raises:
-        UsageRatioPersistenceError: If the file cannot be read or its
-            payload is invalid.
+        bucket_id: Profile bucket identifier.
+        objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
     """
-    from ...adapters.persistence.storage import (
-        Envelope,
-        SensitivityClass,
-        load_encrypted_envelope,
-    )
-    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+    from ...adapters.persistence.storage import Envelope, SensitivityClass
+    from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
-    target = path.resolve()
-    if not target.exists():
-        _LOGGER.info("usage-ratios file not found at %s; returning empty profile", target)
-        return UsageRatioProfile()
+    object_key = usage_ratios_object_key(bucket_id)
+    repository = objects if objects is not None else secure_object_repository_for_bucket(bucket_id)
     try:
-        envelope = load_encrypted_envelope(
-            target,
-            Envelope[UsageRatioProfile],
+        record = repository.load(
+            _USAGE_RATIO_NAMESPACE,
+            object_key,
             expected_class=SensitivityClass.FINANCIAL,
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=_HKDF_CONTEXT_USAGE_RATIOS,
             max_supported_version=_USAGE_RATIO_VERSION,
         )
+        if record is None:
+            _LOGGER.debug("usage-ratios object not found; returning empty profile bucket_id=%s", bucket_id)
+            return UsageRatioProfile()
+        envelope = Envelope[UsageRatioProfile].model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not SensitivityClass.FINANCIAL:
+            raise ClassificationError(
+                f"usage-ratio profile object has classification {envelope.classification}; "
+                f"consumer expected {SensitivityClass.FINANCIAL}",
+            )
+        if envelope.schema_version > _USAGE_RATIO_VERSION:
+            raise EnvelopeVersionError(
+                f"usage-ratio profile object is at version {envelope.schema_version}; "
+                f"consumer supports up to {_USAGE_RATIO_VERSION}",
+            )
     except ValidationError as exc:
+        _LOGGER.error("usage-ratios object validation failed", exc_info=True)
         raise UsageRatioPersistenceError(
-            f"invalid usage-ratio profile envelope: {target}\n{_summarise_validation_errors(exc)}"
+            f"invalid usage-ratio profile object\n{_summarise_validation_errors(exc)}",
         ) from exc
-    except OSError as exc:
+    except UnicodeDecodeError as exc:
+        _LOGGER.error("usage-ratios object payload is not UTF-8", exc_info=True)
         raise UsageRatioPersistenceError(
-            f"unable to read usage-ratio profile: {target}: {exc.__class__.__name__}: {exc}"
+            f"invalid usage-ratio profile object\n  - payload: invalid UTF-8: {exc}",
+        ) from exc
+    except (ClassificationError, EnvelopeVersionError) as exc:
+        _LOGGER.error("usage-ratios object integrity error", exc_info=True)
+        raise UsageRatioPersistenceError(
+            f"usage-ratio profile object integrity error: {exc.__class__.__name__}: {exc}",
         ) from exc
     profile = envelope.payload
-    _LOGGER.info("loaded %s usage ratios from %s", len(profile.ratios), target)
+    _LOGGER.info("loaded %s usage ratios from secure database bucket_id=%s", len(profile.ratios), bucket_id)
     return profile
 
 
 def _summarise_validation_errors(exc: ValidationError) -> str:
-    """Render a short, Kent-legible summary of a pydantic validation failure.
-
-    The default ``str(ValidationError)`` is verbose and includes pydantic doc
-    URLs; this helper extracts one human-readable line per error with the
-    offending path (e.g. ``ratios.suministros_home_office_luz``) and the
-    message. Two specific rewrites are applied for Kent's benefit:
-
-    * Unknown dict-key enum errors for ``ratios`` are replaced with a
-      tailored list of the twelve eligible categories (instead of pydantic's
-      default dump of all 38 ``SpendingCategory`` values).
-    * The pydantic ``"Value error, "`` / ``"Input should be "`` prefixes
-      are stripped where they add noise.
-    """
+    """Render a short, operator-legible summary of a pydantic validation failure."""
     lines: list[str] = []
     for error in exc.errors():
         loc = error.get("loc", ())
         location = ".".join(str(part) for part in loc)
         message = error.get("msg", "validation error")
-        # Detect the pydantic "dict-key failed enum validation" shape.
-        # Example loc: ("ratios", "foo", "[key]"); type: "enum".
         if error.get("type") == "enum" and len(loc) >= 3 and loc[0] == "ratios" and loc[-1] == "[key]":
             offending_key = loc[1]
             eligible = ", ".join(sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES))
             lines.append(f"  - ratios.{offending_key}: unknown ratio key; eligible categories are: {eligible}")
             continue
-        # Strip pydantic's leading "Value error, " on custom validator errors.
         if message.startswith("Value error, "):
             message = message[len("Value error, ") :]
         lines.append(f"  - {location}: {message}" if location else f"  - {message}")
     return "\n".join(lines) if lines else "  - validation error"
 
 
-def save_usage_ratios(profile: UsageRatioProfile, path: Path) -> None:
-    """Persist Kent's usage-ratio profile atomically through the substrate.
-
-    The on-disk record is a :class:`CipherEnvelope` at FINANCIAL class
-    written via :func:`save_encrypted_envelope`; no plaintext business /
-    personal split percentage lands on disk.
+def save_usage_ratios(
+    profile: UsageRatioProfile,
+    *,
+    bucket_id: str,
+    objects: SecureObjectRepository | None = None,
+) -> None:
+    """Persist one bucket's usage-ratio profile in the encrypted database.
 
     Args:
-        profile: The profile to persist.
-        path: Destination envelope file.
+        profile: The usage-ratio profile to persist.
+        bucket_id: Profile bucket identifier.
+        objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
+    """
+    from ...adapters.persistence.storage import Envelope, SensitivityClass
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+
+    envelope = Envelope[UsageRatioProfile](
+        schema_version=_USAGE_RATIO_VERSION,
+        written_at=now(),
+        classification=SensitivityClass.FINANCIAL,
+        payload=profile,
+    )
+    object_key = usage_ratios_object_key(bucket_id)
+    repository = objects if objects is not None else secure_object_repository_for_bucket(bucket_id)
+    try:
+        repository.save(
+            namespace=_USAGE_RATIO_NAMESPACE,
+            object_key=object_key,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_USAGE_RATIO_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+    except OSError as exc:
+        _LOGGER.error("usage-ratios database write failed", exc_info=True)
+        raise UsageRatioPersistenceError(
+            f"unable to write usage-ratio profile: {exc.__class__.__name__}: {exc}",
+        ) from exc
+    _LOGGER.info("saved %s usage ratios to secure database bucket_id=%s", len(profile.ratios), bucket_id)
+
+
+_HOME_OFFICE_FAMILIES = (
+    SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS,
+    SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP,
+)
+
+
+def _home_office_categories() -> frozenset[SpendingCategory]:
+    return frozenset(category for family in _HOME_OFFICE_FAMILIES for category in categories_for_family(family))
+
+
+def load_usage_ratios_with_censo_guard(
+    *,
+    bucket_id: str,
+    raw_afectacion_ratio: Decimal | None,
+    year: int = 2025,
+    objects: SecureObjectRepository | None = None,
+) -> UsageRatioProfile:
+    """Load a usage-ratio profile and refuse on censo disagreement.
+
+    Calls :func:`load_usage_ratios` and then enforces the binding-
+    censo invariant for HOME_OFFICE_SUMINISTROS and
+    HOME_OFFICE_OWNERSHIP categories: every persisted override must
+    equal the censo-derived value
+    (``raw_afectacion_ratio * statutory_multiplier``). When the
+    operator has not yet captured a censo snapshot, any persisted
+    HOME_OFFICE override is refused as well, since there is no
+    legally-grounded reference to validate against.
+
+    The refusal is a clean break: no auto-migration, no silent
+    coercion, no warning-and-continue. The calling surface
+    (calculate / verify / file / build_draft / approve_draft /
+    export_draft) must therefore surface the underlying
+    :exc:`CensoRatioMismatchError` to the operator so they can
+    re-run ``aeat config profile censo pull + apply`` or unset
+    the diverging override.
+
+    Args:
+        bucket_id: Active workflow bucket id.
+        raw_afectacion_ratio: ``office_m2 / total_m2`` from the bound
+            censo snapshot, or ``None`` if the operator has not yet
+            applied a censo.
+        year: Registry year whose proportionality rules drive the
+            derivation.
+        objects: Optional injected :class:`SecureObjectRepository`
+            (testing seam).
+
+    Returns:
+        The persisted :class:`UsageRatioProfile` when no HOME_OFFICE
+        override disagrees with the censo.
 
     Raises:
-        UsageRatioPersistenceError: If the write cannot be completed.
+        CensoRatioMismatchError: When at least one persisted HOME_OFFICE
+            override disagrees with the censo-derived value, or when any
+            persisted HOME_OFFICE override exists with ``raw_afectacion_ratio``
+            unset.
     """
-    from ...adapters.persistence.storage import (
-        Envelope,
-        SensitivityClass,
-        exclusive_file_lock,
-        save_encrypted_envelope,
-    )
-    from ...adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+    profile = load_usage_ratios(bucket_id=bucket_id, objects=objects)
+    home_office = _home_office_categories()
+    persisted_home_office = {category: ratio for category, ratio in profile.ratios.items() if category in home_office}
+    if not persisted_home_office:
+        return profile
+    if raw_afectacion_ratio is None:
+        offending = sorted(c.value for c in persisted_home_office)
+        raise CensoRatioMismatchError(
+            f"persisted HOME_OFFICE overrides require an applied censo; offending categories: {offending}",
+        )
+    derived = derive_home_office_ratios_from_censo(raw_afectacion_ratio, year=year)
+    mismatches = {
+        category: (persisted, derived.ratios[category])
+        for category, persisted in persisted_home_office.items()
+        if persisted != derived.ratios[category]
+    }
+    if mismatches:
+        rendered = ", ".join(
+            f"{category.value} persisted={persisted} censo={censo}"
+            for category, (persisted, censo) in sorted(mismatches.items(), key=lambda kv: kv[0].value)
+        )
+        raise CensoRatioMismatchError(f"persisted HOME_OFFICE overrides disagree with the bound censo: {rendered}")
+    return profile
 
-    target = path.resolve()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    lock_target = target.with_suffix(".lock")
-    try:
-        with exclusive_file_lock(lock_target):
-            envelope = Envelope[UsageRatioProfile](
-                schema_version=_USAGE_RATIO_VERSION,
-                written_at=datetime.now(UTC),
-                classification=SensitivityClass.FINANCIAL,
-                payload=profile,
-            )
-            save_encrypted_envelope(
-                envelope,
-                target,
-                master_key_provider=_resolve_master_key_provider(),
-                hkdf_context=_HKDF_CONTEXT_USAGE_RATIOS,
-            )
-    except OSError as exc:
-        raise UsageRatioPersistenceError(
-            f"unable to write usage-ratio profile: {target}: {exc.__class__.__name__}: {exc}"
-        ) from exc
-    _LOGGER.info("saved %s usage ratios to %s", len(profile.ratios), target)
+
+def derive_home_office_ratios_from_censo(
+    raw_afectacion_ratio: Decimal,
+    *,
+    year: int,
+) -> UsageRatioProfile:
+    """Build a :class:`UsageRatioProfile` for HOME_OFFICE categories from the censo.
+
+    The operator's vivienda afectación ratio is the raw
+    ``office_m2 / total_m2`` computed from the AEAT-bound censo facts
+    (LIRPF Art. 30.2 rule 5, Ley 6/2017 BOE-A-2017-12544). For every
+    HOME_OFFICE_SUMINISTROS category, the ratio is multiplied by the
+    registry rule's ``statutory_multiplier`` (legally 0.30 for utility
+    costs); for every HOME_OFFICE_OWNERSHIP category, the multiplier is
+    absent (effective factor 1.0) so the operator-chosen ratio is the
+    full deductible percentage.
+
+    Args:
+        raw_afectacion_ratio: ``office_m2 / total_m2`` as a Decimal in
+            [0, 1]. Higher values are rejected; AEAT exclusive-use
+            criteria forbid 100% afectación on the habitual vivienda.
+        year: Registry profile year (e.g. ``2025``) whose
+            proportionality rules drive the derivation.
+
+    Returns:
+        A :class:`UsageRatioProfile` carrying one entry per
+        HOME_OFFICE category, each set to its legally-effective
+        deductible percentage.
+
+    Raises:
+        UsageRatioValidationError: When ``raw_afectacion_ratio`` is outside
+            the ``[0, 1]`` range.
+    """
+    if raw_afectacion_ratio < Decimal("0") or raw_afectacion_ratio > Decimal("1"):
+        raise UsageRatioValidationError(
+            f"raw_afectacion_ratio must be in [0, 1]; got {raw_afectacion_ratio}",
+        )
+    registry = resolve_category_profiles(year)
+    derived: dict[SpendingCategory, Decimal] = {}
+    for family in _HOME_OFFICE_FAMILIES:
+        for category in categories_for_family(family):
+            profile = registry[category]
+            derived[category] = effective_usage_ratio(profile.proportionality, raw_afectacion_ratio)
+    return UsageRatioProfile(ratios=derived)

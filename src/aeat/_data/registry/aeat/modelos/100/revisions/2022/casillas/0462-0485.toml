@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0485"
+number = "0485"
+label = "Importe de la pensión o anualidad satisfecha en 2022 por decisión judicial"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_pensiones_compensatorias_alimentos"]
+semantic_role = "irpf_red_pensiones_compensatorias_importe"
+legal_refs = ["ley-35-2006:art-55"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

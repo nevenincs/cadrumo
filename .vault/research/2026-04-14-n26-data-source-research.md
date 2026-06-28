@@ -3,6 +3,7 @@ tags:
   - "#research"
   - "#n26-data-source"
 date: "2026-04-14"
+modified: '2026-04-14'
 related:
   - "[[2026-04-14-n26-data-source-adr]]"
   - "[[2026-04-13-p2a-financial-provider-adr]]"

@@ -1,0 +1,9 @@
+[[revisions."2025".casillas]]
+id = "0397"
+number = "0397"
+label = "NIF del empleador"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+data_type = "nif"
+semantic_role = "irpf_empleador_nif"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

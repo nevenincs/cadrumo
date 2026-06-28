@@ -1,0 +1,24 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "01137"
+number = "01137"
+label = "Reserva Capitalización - Total - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [01137]"
+section = ["reserva_capitalizacion", "total"]
+data_type = "money"
+semantic_role = "is_reserva_capitalizacion_derecho_generado"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-01137"]
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01139"
+number = "01139"
+label = "Reserva Capitalización - Total - Reducción B.I. pdte. de aplicar en períodos futuros [01139]"
+section = ["reserva_capitalizacion", "total"]
+data_type = "money"
+semantic_role = "is_reserva_capitalizacion_pendiente_futuros"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-01139"]
+legal_refs = ["ley-27-2014:art-25"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

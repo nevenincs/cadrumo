@@ -1,0 +1,38 @@
+[modelo]
+id = "131"
+title = "IRPF pago fraccionado estimación objetiva"
+official_name = "Modelo 131. IRPF. Empresarios y profesionales en Estimación Objetiva. Pago fraccionado."
+tax_domain = "irpf"
+cadence = "quarterly"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-1",
+    "orden-hac-1264-2018:art-4",
+    "orden-hac-1164-2019:art-4",
+    "orden-hac-1155-2020:art-4",
+    "orden-hfp-1335-2021:art-4",
+    "orden-hfp-1172-2022:art-4",
+    "orden-hfp-1359-2023:art-4",
+    "orden-hac-1347-2024:art-4",
+    "orden-hac-1425-2025:art-4",
+    "ley-35-2006:art-68.4",
+    "orden-hfp-1359-2023:da-5",
+    "orden-hfp-1359-2023:da-6",
+    "real-decreto-ley-4-2024:art-3",
+    "real-decreto-ley-7-2024:art-11",
+    "real-decreto-ley-13-2025:art-2",
+    "rd-439-2007:art-95",
+]
+source_refs = [
+    "aeat-dr-131-2019-2023-v101",
+    "aeat-dr-131-2024",
+    "aeat-dr-131-2025",
+    "aeat-dr-131-2026",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-instructions",
+    "aeat-modelo-131-formulario-presentacion",
+    "aeat-modelo-131-recuperacion-declaraciones",
+    "boe-modelo-131-2007-form",
+]

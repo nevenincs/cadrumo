@@ -1,0 +1,10 @@
+[[revisions."2020".casillas]]
+id = "0422"
+number = "0422"
+label = "Suma de ganancias patrimoniales ( [1608] + [0324] + [0339] + [0354] + [0386] + [0387] + [0390] + [0393] + [0412] )"
+section = ["resultados", "integracion_res", "gp_patrimoniales_res"]
+semantic_role = "irpf_integracion_gyp_ahorro_suma_ganancias"
+input_kind = "computed"
+formula = "renta-2020-ganancias-patrimoniales-base-ahorro-suma"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

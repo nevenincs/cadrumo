@@ -1,0 +1,465 @@
+[[rates]]
+member_state = "es"
+kind = "general"
+pct = "21"
+effective_from = 2024-01-01
+effective_until = 2024-12-31
+reference = "Ley 37/1992 Art. 90.Uno"
+
+[[rates]]
+member_state = "es"
+kind = "reduced"
+pct = "10"
+effective_from = 2024-01-01
+effective_until = 2024-12-31
+reference = "Ley 37/1992 Art. 91.Uno"
+
+[[rates]]
+member_state = "es"
+kind = "super_reduced"
+pct = "4"
+effective_from = 2024-01-01
+effective_until = 2024-12-31
+reference = "Ley 37/1992 Art. 91.Dos"
+
+[[rates]]
+member_state = "es"
+kind = "zero"
+pct = "0"
+effective_from = 2024-01-01
+effective_until = 2024-12-31
+reference = "Ley 37/1992 Art. 24/25"
+
+[[rates]]
+member_state = "es"
+kind = "general"
+pct = "21"
+effective_from = 2025-01-01
+reference = "Ley 37/1992 Art. 90.Uno"
+
+[[rates]]
+member_state = "es"
+kind = "reduced"
+pct = "10"
+effective_from = 2025-01-01
+reference = "Ley 37/1992 Art. 91.Uno"
+
+[[rates]]
+member_state = "es"
+kind = "super_reduced"
+pct = "4"
+effective_from = 2025-01-01
+reference = "Ley 37/1992 Art. 91.Dos"
+
+[[rates]]
+member_state = "es"
+kind = "zero"
+pct = "0"
+effective_from = 2025-01-01
+reference = "Ley 37/1992 Art. 24/25"
+
+[[rates]]
+member_state = "de"
+kind = "general"
+pct = "19"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; UStG 12(1)"
+
+[[rates]]
+member_state = "de"
+kind = "reduced"
+pct = "7"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; UStG 12(2)"
+
+[[rates]]
+member_state = "de"
+kind = "zero"
+pct = "0"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC Art. 138"
+
+[[rates]]
+member_state = "fr"
+kind = "general"
+pct = "20"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; CGI Art. 278"
+
+[[rates]]
+member_state = "fr"
+kind = "reduced"
+pct = "10"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; CGI Art. 278 bis"
+
+[[rates]]
+member_state = "fr"
+kind = "super_reduced"
+pct = "5.5"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; CGI Art. 278-0 bis"
+
+[[rates]]
+member_state = "fr"
+kind = "zero"
+pct = "0"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC Art. 138"
+
+[[rates]]
+member_state = "it"
+kind = "general"
+pct = "22"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; DPR 633/1972"
+
+[[rates]]
+member_state = "it"
+kind = "reduced"
+pct = "10"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; DPR 633/1972"
+
+[[rates]]
+member_state = "it"
+kind = "super_reduced"
+pct = "4"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; DPR 633/1972"
+
+[[rates]]
+member_state = "it"
+kind = "zero"
+pct = "0"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC Art. 138"
+
+[[rates]]
+member_state = "nl"
+kind = "general"
+pct = "21"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Wet OB 1968 Art. 9"
+
+[[rates]]
+member_state = "nl"
+kind = "reduced"
+pct = "9"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Wet OB 1968 Art. 9"
+
+[[rates]]
+member_state = "nl"
+kind = "zero"
+pct = "0"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC Art. 138"
+
+[[rates]]
+member_state = "be"
+kind = "general"
+pct = "21"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Code TVA"
+
+[[rates]]
+member_state = "be"
+kind = "reduced"
+pct = "12"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Code TVA"
+
+[[rates]]
+member_state = "be"
+kind = "super_reduced"
+pct = "6"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Code TVA"
+
+[[rates]]
+member_state = "at"
+kind = "general"
+pct = "20"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; UStG 1994 10"
+
+[[rates]]
+member_state = "at"
+kind = "reduced"
+pct = "10"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; UStG 1994 10"
+
+[[rates]]
+member_state = "pt"
+kind = "general"
+pct = "23"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; CIVA"
+
+[[rates]]
+member_state = "pt"
+kind = "reduced"
+pct = "13"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; CIVA"
+
+[[rates]]
+member_state = "pt"
+kind = "super_reduced"
+pct = "6"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; CIVA"
+
+[[rates]]
+member_state = "ie"
+kind = "general"
+pct = "23"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; VATCA 2010"
+
+[[rates]]
+member_state = "ie"
+kind = "reduced"
+pct = "13.5"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; VATCA 2010"
+
+[[rates]]
+member_state = "pl"
+kind = "general"
+pct = "23"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Ustawa IVA"
+
+[[rates]]
+member_state = "pl"
+kind = "reduced"
+pct = "8"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Ustawa IVA"
+
+[[rates]]
+member_state = "se"
+kind = "general"
+pct = "25"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Mervardesskattelag"
+
+[[rates]]
+member_state = "se"
+kind = "reduced"
+pct = "12"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Mervardesskattelag"
+
+[[rates]]
+member_state = "dk"
+kind = "general"
+pct = "25"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Momsloven"
+
+[[rates]]
+member_state = "fi"
+kind = "general"
+pct = "25.5"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Arvonlisaverolaki"
+
+[[rates]]
+member_state = "fi"
+kind = "reduced"
+pct = "14"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Arvonlisaverolaki"
+
+[[rates]]
+member_state = "hu"
+kind = "general"
+pct = "27"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; AFA torveny"
+
+[[rates]]
+member_state = "hu"
+kind = "reduced"
+pct = "18"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; AFA torveny"
+
+[[rates]]
+member_state = "hu"
+kind = "super_reduced"
+pct = "5"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; AFA torveny"
+
+[[rates]]
+member_state = "gr"
+kind = "general"
+pct = "24"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; N. 2859/2000"
+
+[[rates]]
+member_state = "gr"
+kind = "reduced"
+pct = "13"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; N. 2859/2000"
+
+[[rates]]
+member_state = "cz"
+kind = "general"
+pct = "21"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Zakon o DPH"
+
+[[rates]]
+member_state = "cz"
+kind = "reduced"
+pct = "12"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Zakon o DPH"
+
+[[rates]]
+member_state = "sk"
+kind = "general"
+pct = "23"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Zakon o DPH SK"
+
+[[rates]]
+member_state = "sk"
+kind = "reduced"
+pct = "5"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Zakon o DPH SK"
+
+[[rates]]
+member_state = "lu"
+kind = "general"
+pct = "17"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Loi TVA LU"
+
+[[rates]]
+member_state = "lu"
+kind = "reduced"
+pct = "8"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Loi TVA LU"
+
+[[rates]]
+member_state = "bg"
+kind = "general"
+pct = "20"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; IVA Act BG"
+
+[[rates]]
+member_state = "hr"
+kind = "general"
+pct = "25"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Zakon o PDV-u"
+
+[[rates]]
+member_state = "hr"
+kind = "reduced"
+pct = "13"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Zakon o PDV-u"
+
+[[rates]]
+member_state = "cy"
+kind = "general"
+pct = "19"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Cyprus IVA Law"
+
+[[rates]]
+member_state = "cy"
+kind = "reduced"
+pct = "9"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Cyprus IVA Law"
+
+[[rates]]
+member_state = "ee"
+kind = "general"
+pct = "22"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Kaibemaksuseadus"
+
+[[rates]]
+member_state = "lv"
+kind = "general"
+pct = "21"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; PVN likums"
+
+[[rates]]
+member_state = "lv"
+kind = "reduced"
+pct = "12"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; PVN likums"
+
+[[rates]]
+member_state = "lt"
+kind = "general"
+pct = "21"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; PVM istatymas"
+
+[[rates]]
+member_state = "lt"
+kind = "reduced"
+pct = "9"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; PVM istatymas"
+
+[[rates]]
+member_state = "mt"
+kind = "general"
+pct = "18"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; IVA Act Malta"
+
+[[rates]]
+member_state = "mt"
+kind = "reduced"
+pct = "7"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; IVA Act Malta"
+
+[[rates]]
+member_state = "ro"
+kind = "general"
+pct = "19"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Codul Fiscal RO"
+
+[[rates]]
+member_state = "ro"
+kind = "reduced"
+pct = "9"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; Codul Fiscal RO"
+
+[[rates]]
+member_state = "si"
+kind = "general"
+pct = "22"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; ZDDV-1"
+
+[[rates]]
+member_state = "si"
+kind = "reduced"
+pct = "9.5"
+effective_from = 2025-01-01
+reference = "Directive 2006/112/EC; ZDDV-1"

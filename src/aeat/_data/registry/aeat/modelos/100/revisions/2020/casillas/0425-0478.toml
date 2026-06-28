@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0478"
+number = "0478"
+label = "Número de identificación fiscal (NIF) de la persona con discapacidad titular del patrimonio protegido"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_patrimonio_protegido_discapacidad"]
+data_type = "nif"
+semantic_role = "irpf_discapacitado_nif"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52", "ley-35-2006:art-53", "ley-35-2006:art-54"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,77 @@
+[[revisions."2013-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+label = "Ejercicio al que se refiere la informacion"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[[revisions."2013-y-siguientes".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+label = "Tipo de declaracion (originaria / sustitutiva / complementaria)"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hap-72-2013:art-2", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+[[revisions."2013-y-siguientes".casillas]]
+id = "cuentas.codigo-de-cuenta"
+number = "cuentas.codigo-de-cuenta"
+label = "Codigo de cuenta en entidad financiera situada en el extranjero"
+section = ["detalle", "cuentas", "identificacion"]
+data_type = "text"
+semantic_role = "foreign_account_identifier"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis", "orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".casillas]]
+id = "cuentas.valoracion"
+number = "cuentas.valoracion"
+label = "Valoracion de cuenta en entidad financiera situada en el extranjero"
+section = ["detalle", "cuentas", "valoracion"]
+data_type = "money"
+semantic_role = "foreign_account_valuation"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis", "orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".casillas]]
+id = "valores.identificacion"
+number = "valores.identificacion"
+label = "Identificacion de valores, derechos, seguros o rentas situados en el extranjero"
+section = ["detalle", "valores", "identificacion"]
+data_type = "text"
+semantic_role = "foreign_security_identifier"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-ter", "orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".casillas]]
+id = "valores.valoracion"
+number = "valores.valoracion"
+label = "Valoracion de valores, derechos, seguros o rentas situados en el extranjero"
+section = ["detalle", "valores", "valoracion"]
+data_type = "money"
+semantic_role = "foreign_security_valuation"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-ter", "orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+# Per-asset / per-account / per-real-estate declaration threshold per
+# RD 1065/2007 art. 42 bis–quater: only foreign accounts, securities,
+# and real estate exceeding €50,000 (sum of opening/closing/4Q balances
+# or year-end valuation) trigger the declaration obligation. Encoded
+# as a static parameter for downstream detail-record validation.

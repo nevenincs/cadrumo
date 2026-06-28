@@ -1,0 +1,110 @@
+
+[[revisions."2019-2023".casillas]]
+id = "01-legacy"
+number = "01"
+label = "Numero de perceptores"
+section = ["retenciones_ingresos_cuenta"]
+data_type = "integer"
+semantic_role = "perceptor_count"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-2019-casilla-01"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "02-legacy"
+number = "02"
+label = "Base de retenciones e ingresos a cuenta"
+section = ["retenciones_ingresos_cuenta"]
+data_type = "money"
+semantic_role = "base_retenciones_ingresos_a_cuenta"
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"] }
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-2019-casilla-02"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "03-legacy"
+number = "03"
+label = "Retenciones e ingresos a cuenta"
+section = ["retenciones_ingresos_cuenta"]
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"] }
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-2019-casilla-03"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "04-legacy"
+number = "04"
+label = "Ingresos de ejercicios anteriores"
+section = ["periodificacion"]
+data_type = "money"
+semantic_role = "ingresos_ejercicios_anteriores"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-2019-casilla-04"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "05-legacy"
+number = "05"
+label = "Regularizacion"
+section = ["periodificacion"]
+data_type = "money"
+semantic_role = "regularizacion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-2019-casilla-05"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "06-legacy"
+number = "06"
+label = "Suma de retenciones y regularizacion"
+section = ["total_liquidacion"]
+data_type = "money"
+semantic_role = "suma_retenciones_regularizacion"
+required = false
+input_kind = "computed"
+formula = "modelo-123-2019-total-liquidacion"
+export_refs = ["modelo-123-2019-casilla-06"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "07-legacy"
+number = "07"
+label = "Resultado de anteriores autoliquidaciones"
+section = ["total_liquidacion"]
+data_type = "money"
+semantic_role = "resultado_anteriores_autoliquidaciones"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-123-2019-casilla-07"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+
+[[revisions."2019-2023".casillas]]
+id = "08-legacy"
+number = "08"
+label = "Resultado a ingresar"
+section = ["total_liquidacion"]
+data_type = "money"
+semantic_role = "cuota_a_ingresar"
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"], source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"] }
+required = false
+input_kind = "computed"
+formula = "modelo-123-2019-resultado-ingresar"
+export_refs = ["modelo-123-2019-casilla-08"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text"]
+

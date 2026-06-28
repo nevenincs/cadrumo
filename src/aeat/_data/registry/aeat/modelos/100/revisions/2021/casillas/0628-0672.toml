@@ -1,0 +1,10 @@
+[[revisions."2021".casillas]]
+id = "0672"
+number = "0672"
+label = "50 por 100 del importe de las deducciones por doble imposición: 50% de ( [0588] + [0589] + [0590] )"
+section = ["resultados", "irpf_ccaa_res"]
+semantic_role = "irpf_deduccion_doble_imposicion_autonomica_50pct"
+input_kind = "computed"
+formula = "renta-2021-doble-imposicion-50-porciento"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

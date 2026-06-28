@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0043"
+number = "0043"
+label = "Importe total acumulado del capital diferido percibido en 2016, 2017, 2018, 2019, 2020 y 2021 a cuyo rendimiento se aplicó la DT 4.ª"
+section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_dt4"]
+semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_dt4_capital_diferido_acumulado"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

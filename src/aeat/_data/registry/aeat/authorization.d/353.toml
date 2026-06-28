@@ -1,0 +1,15 @@
+# Modelo 353 (IVA grupo de entidades — agregado mensual del grupo). Enrolled by
+# the cross-member aggregation: each grupo member files its own monthly Modelo
+# 322; the entidad dominante's 353 sums each member's result casillas for the
+# same month via the per_grupo_member previous_filing bindings
+# (modelo-353-prev-322-cuota-devengada-total / -deducible-total /
+# -resultado-regimen-general). The enrolling test drives two distinct renta
+# months (12/2025 + 01/2026) through the real encrypted-SQLite member store and
+# the real per_grupo_member resolver, asserting the cross-member sum identity
+# (353[mes M] == Σ member-322[mes M]) and the cross-renta month wrap. The 322
+# member figures are engine-produced; evidence_class calculation.
+[modelo]
+modelo = "353"
+renta_years = [2025, 2026]
+evidence_class = "calculation"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_353_grupo_aggregation_continuity.py"

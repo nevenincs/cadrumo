@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0085"
+number = "0085"
+label = "Número de días a disposición del contribuyente"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_dias_a_disposicion"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

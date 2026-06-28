@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-37-1992-art-26.html",
+  "source_sha256": "97462f5f585d300fe2be29440066cc3a0e258cb0de3c630de0638a66f1ac0af4",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Estarán exentas del impuesto:\nUno. Las adquisiciones intracomunitarias de bienes cuya entrega en el territorio de aplicación del impuesto hubiera estado, en todo caso, no sujeta o exenta en virtud de lo dispuesto en los artículos 7, 20, 22, 23 y 24 de esta Ley.\nDos. Las adquisiciones intracomunitarias de bienes cuya importación hubiera estado, en todo caso, exenta del impuesto en virtud de lo dispuesto en el Capítulo III de este Título.\nTres. Las adquisiciones intracomunitarias de bienes en las que concurran los siguientes requisitos:\n1º. Que se realicen por un empresario o profesional que:\na) No esté establecido ni identificado a efectos del Impuesto sobre el Valor Añadido en el territorio de aplicación del Impuesto, y\nb) Que esté identificado a efectos del Impuesto sobre el Valor Añadido en otro Estado miembro de la Comunidad.\n2º. Que se efectúen para la ejecución de una entrega subsiguiente de los bienes adquiridos, realizada en el interior del territorio de aplicación del impuesto por el propio adquirente.\n3º. Que los bienes adquiridos se expidan o transporten directamente a partir de un Estado miembro distinto de aquel en el que se encuentre identificado a efectos del Impuesto sobre el Valor Añadido el adquirente y con destino a la persona para la cual se efectúe la entrega subsiguiente.\n4º. Que el destinatario de la posterior entrega sea un empresario o profesional o una persona jurídica que no actúe como tal, a quienes no les afecte la no sujeción establecida en el artículo 14 de esta Ley y que tengan atribuido un número de identificación a efectos del Impuesto sobre el Valor Añadido suministrado por la Administración española\nCuatro. Las adquisiciones intracomunitarias de bienes respecto de las cuales se atribuya al adquirente, en virtud de lo dispuesto en los artículos 119 o 119 bis de esta Ley, el derecho a la devolución total del Impuesto que se hubiese devengado por las mismas.",
+      "title": "Artículo 26. Exenciones en las adquisiciones intracomunitarias de bienes.",
+      "section": "Artículo 26. Exenciones en las adquisiciones intracomunitarias de bienes.",
+      "anchor": null
+    }
+  ]
+}

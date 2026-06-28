@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02656"
+number = "02656"
+label = "Pérdidas por deterioro del art. 13.1 LIS no afectada por el art. 11.12 ni por DT 33ª.1 LIS - Disminución - Correcciones del ejercicio - Permanentes [02656]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_no_afectado_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02656"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02657"
+number = "02657"
+label = "Pérdidas por deterioro del art. 13.1 LIS no afectada por el art. 11.12 ni por DT 33ª.1 LIS - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02657]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_no_afectado_temporaria_ejercicio_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02657"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02658"
+number = "02658"
+label = "Pérdidas por deterioro del art. 13.1 LIS no afectada por el art. 11.12 ni por DT 33ª.1 LIS - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02658]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_no_afectado_temporaria_anteriores_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02658"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02659"
+number = "02659"
+label = "Pérdidas por deterioro del art. 13.1 LIS no afectada por el art. 11.12 ni por DT 33ª.1 LIS - Disminución - Saldo pendiente a principio de ejercicio [02659]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_no_afectado_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02659"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02660"
+number = "02660"
+label = "Pérdidas por deterioro del art. 13.1 LIS no afectada por el art. 11.12 ni por DT 33ª.1 LIS - Disminución - Saldo pendiente a fin de ejercicio [02660]"
+section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_art13_1_no_afectado_saldo_final_neto"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02660"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

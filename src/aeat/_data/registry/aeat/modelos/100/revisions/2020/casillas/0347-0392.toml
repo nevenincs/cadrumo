@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "0392"
+number = "0392"
+label = "Importe de la ganancia patrimonial que procede imputar a 2020"
+section = ["toma_datos_ampliada", "gp_otras_ganancias_ejer_ant", "gp_imp_gan_ant"]
+semantic_role = "irpf_ganancia_otras_ejer_ant_ganancia_imputable"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

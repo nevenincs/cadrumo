@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0663"
+number = "0663"
+label = "Importe del abono anticipado de la deducción correspondiente a 2024 (*)"
+section = ["resultados", "calculo_impuesto_res", "deduc_monoparental_res"]
+semantic_role = "irpf_abono_anticipado_monoparental"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

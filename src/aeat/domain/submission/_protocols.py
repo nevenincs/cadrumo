@@ -6,13 +6,12 @@ classes (no mocks, no patches). Each Protocol declares only the
 surface the engine actually consumes, decoupling submission from the
 richer surfaces of its sibling subpackages.
 
-- ``ModeloIdentifier`` — typed validating string for an AEAT modelo.
 - ``AuthProviderProbe`` — narrow auth-provider surface for the preflight gate.
 - ``DeadlineWindowChecker`` — narrow surface over
   :mod:`aeat.domain.deadlines` used by preflight.
-- ``FilingFinding`` / ``FilingDraftLike`` / ``DraftLoader`` — narrow
-  filing draft surfaces; :class:`aeat.application.filing.FilingDraft`
-  structurally conforms to ``FilingDraftLike``.
+- ``ModeloFinding`` / ``ModeloDraftLike`` / ``ModeloDraftLoader`` — narrow
+  filing draft surfaces; :class:`aeat.application.filing.ModeloDraft`
+  structurally conforms to ``ModeloDraftLike``.
 
 Every record is either a strict+frozen pydantic v2 model or a
 ``runtime_checkable`` ``Protocol``; no dataclasses; no bare dicts.
@@ -20,85 +19,66 @@ Every record is either a strict+frozen pydantic v2 model or a
 
 from __future__ import annotations
 
-import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, GetCoreSchemaHandler
-from pydantic_core import CoreSchema, core_schema
+from pydantic import BaseModel
 
-from ...core.i18n import Translatable
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.errors import BaseSeverity
+from ._models import ModeloPresentado
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-_MODELO_RE = re.compile(r"^\d{3}[A-Z]?$")
-
-
-class ModeloIdentifier(str):
-    """Typed string identifier for an AEAT modelo (e.g. ``"130"``, ``"303"``).
-
-    Shape-compatible with :class:`aeat.domain.deadlines.ModeloIdentifier`.
-    Intentionally wider than :class:`aeat.domain.modelos.ModeloCode`: any
-    well-formed three-digit modelo identifier is accepted, including
-    modelos outside the v1 closed catalogue.
-    """
-
-    __slots__ = ()
-
-    def __new__(cls, value: str) -> ModeloIdentifier:
-        """Construct and validate a modelo identifier.
-
-        Args:
-            value: The raw string identifier.
-
-        Returns:
-            The validated :class:`ModeloIdentifier`.
-
-        Raises:
-            ValueError: If ``value`` does not match the
-                ``^\\d{3}[A-Z]?$`` pattern.
-        """
-        if not isinstance(value, str) or not _MODELO_RE.match(value):
-            raise ValueError(f"Invalid modelo identifier: {value!r}")
-        return super().__new__(cls, value)
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        source_type: Any,
-        handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        """Return a pydantic core schema that validates via :meth:`__new__`."""
-        return core_schema.no_info_after_validator_function(
-            cls,
-            core_schema.str_schema(pattern=_MODELO_RE.pattern),
-        )
+if TYPE_CHECKING:  # pragma: no cover — type-only import
+    from ...core import Period
+    from ...core.identity import SubjectTaxId
 
 
 @runtime_checkable
 class AuthProviderDescriptionLike(Protocol):
-    """Submission-facing shape returned by an auth provider."""
+    """Submission-facing shape returned by an auth provider.
+
+    Attributes:
+        kind: Provider identifier (kept as ``object`` so the protocol does
+            not couple submission to the auth subpackage's enum).
+        label: Human-readable provider name.
+        configured: Whether the provider's required settings are present.
+        available: Whether a session can currently be established.
+        subject: Subject DN (or equivalent identity string), if known.
+        expires_on: Expiry date for the underlying credential, if known.
+    """
 
     @property
-    def kind(self) -> object: ...
+    def kind(self) -> object:
+        """Provider kind identifier."""
+        ...
 
     @property
-    def label(self) -> str: ...
+    def label(self) -> str:
+        """Human-readable provider name."""
+        ...
 
     @property
-    def configured(self) -> bool: ...
+    def configured(self) -> bool:
+        """Whether the provider's required settings are present."""
+        ...
 
     @property
-    def available(self) -> bool: ...
+    def available(self) -> bool:
+        """Whether a session can currently be established."""
+        ...
 
     @property
-    def subject(self) -> str | None: ...
+    def subject(self) -> str | None:
+        """Subject DN or identity string when known, else ``None``."""
+        ...
 
     @property
-    def expires_on(self) -> date | None: ...
+    def expires_on(self) -> date | None:
+        """Expiry date for the underlying credential, when known."""
+        ...
 
 
 @runtime_checkable
@@ -106,10 +86,12 @@ class AuthProviderProbe(Protocol):
     """Narrow submission-facing auth-provider surface."""
 
     @property
-    def kind(self) -> object: ...
+    def kind(self) -> object:
+        """Provider kind identifier consumed by the preflight gate."""
+        ...
 
     def describe(self) -> AuthProviderDescriptionLike:
-        """Return a safe description of the active auth provider."""
+        """Return an :class:`AuthProviderDescriptionLike` describing the active auth provider."""
         ...
 
 
@@ -117,80 +99,135 @@ class AuthProviderProbe(Protocol):
 class DeadlineWindowChecker(Protocol):
     """Narrow surface over :mod:`aeat.domain.deadlines` for the preflight gate."""
 
-    def is_window_open(self, modelo: str, period: str, today: date) -> bool:
-        """Return ``True`` iff the AEAT filing window for ``modelo`` /
-        ``period`` is open on ``today``."""
+    def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
+        """Return ``True`` iff the AEAT filing window for ``modelo`` / ``period`` is open on ``today``."""
         ...
 
 
-class FilingFindingSeverity(StrEnum):
-    """Severity of a filing/preflight finding."""
-
-    INFO = "INFO"
-    WARNING = "WARNING"
-    ERROR = "ERROR"
-
-
-class FilingFinding(BaseModel):
+class ModeloFinding(BaseModel):
     """Minimal finding record consumed by the preflight gate.
 
-    Distinct from :class:`aeat.application.filing.FilingValidationFinding`,
+    Distinct from :class:`aeat.application.filing.ModeloValidationFinding`,
     which carries the validator's full provenance graph; the submission
     engine reads only ``severity`` to decide whether the draft is
     blocked.
 
     Attributes:
         severity: The finding severity; ``ERROR`` blocks submission.
-        message: Trilingual finding message.
+        message: Multilingual finding message.
     """
 
     model_config = _STRICT_FROZEN
 
-    severity: FilingFindingSeverity
-    message: Translatable
+    severity: BaseSeverity
+    message: str
 
 
-class DraftStatus(StrEnum):
-    """Mirror of :class:`aeat.application.filing.FilingDraftStatus` for preflight.
+class ModeloDraftStatus(StrEnum):
+    """Lifecycle status of a modelo draft, spanning preparation and submission.
 
-    Kept in sync with the source enum; the engine uses only the
-    ``APPROVED`` and ``APPROVAL_STALE`` members on its happy path.
+    The state machine carries a draft from creation through validation,
+    operator approval, submission, and the AEAT-side terminal states.
+    The preflight engine consumes only :attr:`APROBADO` and
+    :attr:`APROBACION_CADUCADA` on its happy path; the broader filing /
+    submission stack consumes the full lifecycle. Member names and
+    values mirror the AEAT Sede labels per ADR A7.2.
+
+    Attributes:
+        BORRADOR: New draft, not yet validated.
+        VALIDADO: Validation rules executed without errors.
+        LISTO_PARA_PRESENTAR: Draft fully prepared for an attempt.
+        APROBADO: Operator-approved for submission.
+        APROBACION_CADUCADA: Approval timestamp aged out.
+        PRESENTADA: A submission attempt is recorded.
+        ACEPTADA: AEAT acknowledged the filing.
+        RECHAZADA: AEAT rejected the filing.
+        ENMENDADO: Superseded by an amendment record.
+        ANULADO: Operator cancelled before submission.
     """
 
-    DRAFT = "DRAFT"
-    VALIDATED = "VALIDATED"
-    READY_TO_SUBMIT = "READY_TO_SUBMIT"
-    APPROVED = "APPROVED"
-    APPROVAL_STALE = "APPROVAL_STALE"
-    SUBMITTED = "SUBMITTED"
-    ACKNOWLEDGED = "ACKNOWLEDGED"
-    REJECTED = "REJECTED"
-    AMENDED = "AMENDED"
-    CANCELLED = "CANCELLED"
+    BORRADOR = "BORRADOR"
+    VALIDADO = "VALIDADO"
+    LISTO_PARA_PRESENTAR = "LISTO_PARA_PRESENTAR"
+    APROBADO = "APROBADO"
+    APROBACION_CADUCADA = "APROBACION_CADUCADA"
+    PRESENTADA = "PRESENTADA"
+    ACEPTADA = "ACEPTADA"
+    RECHAZADA = "RECHAZADA"
+    ENMENDADO = "ENMENDADO"
+    ANULADO = "ANULADO"
 
 
 @runtime_checkable
-class FilingDraftLike(Protocol):
+class ModeloDraftLike(Protocol):
     """Narrow surface over a filing draft.
 
-    :class:`aeat.application.filing.FilingDraft` structurally conforms to
+    :class:`aeat.application.filing.ModeloDraft` structurally conforms to
     this Protocol so the engine can accept either the real draft or any
     Protocol-conforming hand-rolled class in tests.
+
+    Attributes are declared as read-only properties so pyright treats them
+    covariantly and frozen pydantic models satisfy the protocol without
+    invariance errors.
     """
 
-    draft_id: str
-    modelo: str
-    period: str
-    profile_tax_id: str
-    status: object
-    values: Mapping[str, str] | Iterable[object]
-    findings: tuple[object, ...]
+    @property
+    def draft_id(self) -> str: ...
+
+    @property
+    def modelo(self) -> str: ...
+
+    @property
+    def period(self) -> Period: ...
+
+    @property
+    def profile_tax_id(self) -> SubjectTaxId: ...
+
+    @property
+    def status(self) -> object: ...
+
+    @property
+    def values(self) -> Mapping[str, str] | Iterable[object]: ...
+
+    @property
+    def findings(self) -> tuple[object, ...]: ...
 
 
 @runtime_checkable
-class DraftLoader(Protocol):
-    """Loads a :class:`FilingDraftLike` from a draft path on disk."""
+class ModeloDraftLoader(Protocol):
+    """Loads a :class:`ModeloDraftLike` from a draft path on disk."""
 
-    def load(self, draft_path: Path) -> FilingDraftLike:
-        """Load and return the :class:`FilingDraftLike` at ``draft_path``."""
+    def load(self, _draft_path: Path, /) -> ModeloDraftLike:
+        """Load and return the :class:`ModeloDraftLike` at ``draft_path``."""
+        ...
+
+
+@runtime_checkable
+class SubmissionRepositoryProtocol(Protocol):
+    """Narrow domain-facing repository contract for the submission engine.
+
+    The concrete ``SubmissionRepository`` inherits from the adapter-layer
+    ``SecureBoundRepository``. This Protocol captures only the surface the
+    engine consumes so callers can depend inward on this port without
+    importing the concrete class.
+
+    Note: ``SubmissionRepository`` itself retains adapter-level imports
+    because its base class (``SecureBoundRepository``) lives in the adapter
+    layer. Moving the concrete class to adapters is deferred to a later wave.
+    """
+
+    def load(self, record_id: str) -> ModeloPresentado | None:
+        """Load a persisted :class:`ModeloPresentado` by id, or return None if absent."""
+        ...
+
+    def iter_submissions(self) -> Iterator[ModeloPresentado]:
+        """Yield every persisted submission in lexicographic id order.
+
+        Returns:
+            Iterator over :class:`ModeloPresentado` records.
+        """
+        ...
+
+    def list_submission_ids(self) -> tuple[str, ...]:
+        """Return every submission id persisted in this repository."""
         ...

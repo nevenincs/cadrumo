@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "03186"
+number = "03186"
+label = "Empresas de reducida dimensión: libertad de amortización (art. 102 LIS) - Disminución - Correcciones del ejercicio - Permanentes [03186]"
+section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03186"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03187"
+number = "03187"
+label = "Empresas de reducida dimensión: libertad de amortización (art. 102 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03187]"
+section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "disminucion"]
+data_type = "money"
+semantic_role = "is_erd_libertad_amortizacion_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03187"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03188"
+number = "03188"
+label = "Empresas de reducida dimensión: libertad de amortización (art. 102 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03188]"
+section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "disminucion"]
+data_type = "money"
+semantic_role = "is_erd_libertad_amortizacion_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03188"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03189"
+number = "03189"
+label = "Empresas de reducida dimensión: libertad de amortización (art. 102 LIS) - Disminución - Saldo pendiente a principio de ejercicio [03189]"
+section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "disminucion"]
+data_type = "money"
+semantic_role = "is_erd_libertad_amortizacion_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03189"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "03190"
+number = "03190"
+label = "Empresas de reducida dimensión: libertad de amortización (art. 102 LIS) - Disminución - Saldo pendiente a fin de ejercicio [03190]"
+section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "disminucion"]
+data_type = "money"
+semantic_role = "is_erd_libertad_amortizacion_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026f-casilla-03190"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

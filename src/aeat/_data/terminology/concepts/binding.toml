@@ -1,0 +1,37 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "binding"
+domain = "concepto"
+lifecycle = "deprecated"
+related = ["casilla", "ledger"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "La regla del registro que conecta una entrada del ledger o un dato del perfil con una casilla."
+scope_note = "Concepto interno de la maquinaria de busqueda/calculo de la aplicacion; documentado para el RAG de desarrollo, no es un termino tributario de cara al contribuyente y por eso queda fuera del glosario."
+definition = "Regla del registro de modelos que asigna una entrada del ledger o un dato del perfil a una casilla concreta, de modo que el calculo sepa que dato alimenta cada casilla de un modelo."
+
+[language.es.source]
+citation = "Documentacion de la aplicacion aeat; concepto interno del registro de modelos."
+authority = "other"
+
+[[language.es.term]]
+label = "binding"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "The registry rule that maps a ledger entry or a profile fact to a casilla."
+
+[language.ca]
+short_description = "La regla del registre que connecta una entrada del ledger o una dada del perfil amb una casella."
+
+[language.hu]
+short_description = "A nyilvantartasi szabaly, amely egy ledger-bejegyzest vagy profiladatot egy casilla-hoz rendel."

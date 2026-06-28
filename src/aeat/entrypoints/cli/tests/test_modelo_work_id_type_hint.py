@@ -1,0 +1,145 @@
+"""Instructive id-type hint for ``aeat app modelo work verify`` / ``file``.
+
+``work calculate`` consumes a ``work_unit_id``; ``work verify`` and ``work
+file`` consume a ``calculation_revision_id``. Both are 64-character SHA-256
+digests, so an operator's first instinct -- reuse the id from ``work create`` --
+lands a work-unit id where a calculation-revision id is required. Before this
+hint the verb failed with a bare "not found"; now, when the supplied id resolves
+to a real work unit, the error names the id-type mismatch and the verb that
+mints the calculation-revision id (``work calculate``).
+
+These tests pin that contract with real behaviour: a real work unit (without a
+calculation revision) is persisted, then ``work verify`` / ``work file`` are
+invoked with that work-unit id and the error must name the mismatch and the
+``work calculate`` path. The anti-no-op companion confirms a calc-revision id
+that genuinely does not resolve to any work unit still gets the plain not-found
+(the hint is targeted, not a blanket rewrite). No mocks.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+from typer.testing import CliRunner
+
+from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....application.user_profile._orchestration import profile_create_storage_span
+from ....application.user_profile._testing import register_minimal_profile
+from ....application.workflow._persistence import workflow_state_repository
+from ....core import Period
+from ....domain.modelos._codes import ModeloCode
+from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
+from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from ....tests.secure_sql import isolated_profile_storage_root
+from .. import app
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    dispose_engine()
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span("operator"),
+    ):
+        try:
+            workflow_state_repository().update(
+                lambda state: register_minimal_profile(state, profile_id="operator"),
+            )
+            yield
+        finally:
+            dispose_engine()
+
+
+def _seed_work_unit_without_revision(*, modelo: str = "130", filing_year: int = 2026, period: str = "1T") -> str:
+    """Persist a work unit with NO calculation revision and return its id.
+
+    A work unit that was created (``work create``) but never calculated
+    (``work calculate``) carries no calculation revision -- so passing its id to
+    ``work verify`` / ``work file`` raises CalculationRevisionNotFoundError, the
+    exact path the id-type hint enriches.
+    """
+    state = workflow_state_repository().load()
+    bucket_id = state.active_profile_bucket_id()
+    assert bucket_id is not None
+    revision_id = "r" + "0" * 63
+    filing_period = Period.from_year_and_code(filing_year, period)
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=filing_period,
+        revision_id=revision_id,
+    )
+    now = datetime.now(UTC)
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode(modelo),
+        filing_year=filing_year,
+        period=filing_period,
+        revision_id=revision_id,
+        name=f"{modelo}-{filing_year}-{period}",
+        created_at=now,
+        updated_at=now,
+    )
+    repo = WorkUnitCatalogueRepository()
+    repo.save(upsert_work_unit(repo.load(), work_unit))
+    return work_unit_id
+
+
+def test_verify_with_work_unit_id_hints_at_calculate(cli_runner: CliRunner) -> None:
+    """``work verify`` given a work-unit id names the mismatch and the calculate verb.
+
+    The id resolves to a real work unit but to no calculation revision, so the
+    refusal must be instructive: it names that the id is a work-unit id, that
+    verify needs a calculation-revision id, and the ``work calculate`` command
+    (echoing the offending id) that produces one -- not a bare "not found".
+    """
+    work_unit_id = _seed_work_unit_without_revision()
+    result = cli_runner.invoke(app, ["app", "modelo", "work", "verify", work_unit_id])
+
+    assert result.exit_code != 0, result.output
+    collapsed = " ".join(result.output.split())
+    assert "work-unit-id" in collapsed
+    assert "calculation-revision-id" in collapsed
+    assert "--modelo" in collapsed and "130" in collapsed
+    assert "--year" in collapsed and "2026" in collapsed
+    assert "--period" in collapsed and "1T" in collapsed
+    assert f"work calculate {work_unit_id}" not in collapsed
+
+
+def test_file_with_work_unit_id_hints_at_calculate(cli_runner: CliRunner) -> None:
+    """``work file`` given a work-unit id gets the same instructive id-type hint."""
+    work_unit_id = _seed_work_unit_without_revision()
+    result = cli_runner.invoke(app, ["app", "modelo", "work", "file", work_unit_id])
+
+    assert result.exit_code != 0, result.output
+    collapsed = " ".join(result.output.split())
+    assert "work-unit-id" in collapsed
+    assert "calculation-revision-id" in collapsed
+    assert "--modelo" in collapsed and "130" in collapsed
+    assert "--year" in collapsed and "2026" in collapsed
+    assert "--period" in collapsed and "1T" in collapsed
+    assert f"work calculate {work_unit_id}" not in collapsed
+
+
+def test_verify_with_unknown_id_keeps_plain_not_found(cli_runner: CliRunner) -> None:
+    """An id resolving to no work unit at all keeps the plain not-found error.
+
+    The hint is targeted at the work-unit-vs-calc-revision confusion. A 64-char
+    id that is neither a calculation revision nor a work unit must NOT be
+    mislabelled as a work-unit id -- the hint must not fire, proving it is
+    conditioned on a real work-unit resolution rather than blanket-rewriting
+    every not-found.
+    """
+    unknown_id = "f" * 64
+    result = cli_runner.invoke(app, ["app", "modelo", "work", "verify", unknown_id])
+
+    assert result.exit_code != 0, result.output
+    collapsed = " ".join(result.output.split())
+    assert "work calculate" not in collapsed

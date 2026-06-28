@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1026"
+number = "1026"
+label = "Por alquiler de vivienda habitual por contribuyentes de edad igual o inferior a 35 años (se traslada este importe a la casilla [1130] del anexo B.9)"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_alquiler_jovenes_discapacidad"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

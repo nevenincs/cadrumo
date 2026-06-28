@@ -1,0 +1,21 @@
+# Modality gate (Art. 40.3 lane): this casilla is always reachable for
+# IS contribuyentes with a declared INCN. When INCN > 6.000.000 EUR
+# (LIS Art. 40.3) only this lane applies and the Art. 40.2 lane (clave
+# 03) must not be filed. When INCN ≤ 6.000.000 EUR both modalities are
+# reachable and Art. 40.2 is the elected default with Art. 40.3 still
+# optional. The gate is enforced at calculation time via
+# `derive_modelo_202_modality`; the INCN is supplied through binding
+# `modelo-202-2025-y-siguientes-incn-prior-12-months`.
+[[revisions.2025-y-siguientes.casillas]]
+id = "32"
+number = "32"
+label = "Mod. 40.3 LIS — Resultado"
+section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_resultado"
+required = false
+input_kind = "computed"
+formula = "modelo-202-modalidad-40-3-resultado"
+export_refs = ["modelo-202-page-02-casilla-32"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]

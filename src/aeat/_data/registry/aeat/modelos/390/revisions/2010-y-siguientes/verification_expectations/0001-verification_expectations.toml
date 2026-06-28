@@ -1,0 +1,19 @@
+[[revisions."2010-y-siguientes".verification_expectations]]
+id = "modelo-390-iva-annual-chain-verification"
+computed_casilla_ids = ["iva.anual.cuota-devengada-total", "iva.anual.cuota-deducible-total", "iva.anual.resultado-regimen-general"]
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# Ledger IVA aggregation bindings for the annual resumen over the full
+# ejercicio. The IVA classification tuple lets Modelo 390 recompute directly
+# from ledger observations and cross-check periodic Modelo 303 filings.
+

@@ -1,0 +1,36 @@
+[[revisions."2025".constructs]]
+id = "renta-2025-mini-model-capital-mobiliario"
+title = "Modelo 100 2025 capital mobiliario aggregators"
+legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-49",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-85",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-87",
+    "ley-35-2006:art-88",
+    "ley-35-2006:art-89",
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
+]
+source_refs = [
+    "lirpf-cuota-chain-authority",
+]
+formulas = [
+    "renta-2025-atribucion-capital-mobiliario-ahorro-suma",
+    "renta-2025-atribucion-capital-mobiliario-general-suma",
+    "renta-2025-atribucion-capital-mobiliario-rendimiento-neto-computable",
+    "renta-2025-iic-ganancias-reducidas-no-exentas",
+    "renta-2025-iic-ganancias-reducidas-suma",
+    "renta-2025-iic-paraisos-fiscales-suma",
+    "renta-2025-iic-perdidas-reducidas-suma",
+    "renta-2025-capital-inmobiliario-intereses-gastos-passthrough",
+    "renta-2025-saldo-capital-mobiliario-cap-25-base-ahorro",
+    "renta-2025-capital-mobiliario-saldo-pendiente-base-ahorro",
+]

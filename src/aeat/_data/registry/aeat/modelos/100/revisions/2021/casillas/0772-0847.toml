@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0847"
+number = "0847"
+label = "Por la cesión de uso temporal y gratuita de inmuebles ubicados en la isla de la Palma"
+section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
+semantic_role = "irpf_deduccion_canarias_palma_cesion_inmueble"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

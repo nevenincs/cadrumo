@@ -1,0 +1,39 @@
+[[revisions."2024-y-siguientes".constructs]]
+id = "modelo-123-current-capital-withholding"
+title = "Modelo 123 current quarterly capital-income withholding filing"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+source_refs = [
+    "aeat-dr-123-2024-v20",
+    "aeat-dr-123-2024-v20-form-text",
+    "aeat-modelo-123-procedure",
+    "boe-modelo-123-2024-form",
+]
+casilla_ids = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14"]
+formulas = [
+    "modelo-123-total-rentas",
+    "modelo-123-total-base",
+    "modelo-123-total-retenciones",
+    "modelo-123-total-liquidacion",
+    "modelo-123-resultado-ingresar",
+]
+export_layouts = ["modelo-123-fichero-boe"]
+extraction_profiles = ["modelo-123-export-record", "modelo-123-declaracion-pdf"]
+live_cross_references = ["modelo-123-static-official", "modelo-123-filed-declarations-read"]
+workbook_parity_refs = ["modelo-123-dr-xls-2024"]
+verification_expectations = ["modelo-123-calculation-verification"]
+application_links = [
+    "modelo-123-calculation",
+    "modelo-123-filing",
+    "modelo-123-export",
+    "modelo-123-verification",
+    "modelo-123-review",
+    "modelo-123-approval",
+    "modelo-123-reconciliation",
+    "modelo-123-extractor",
+    "modelo-123-portal-cross-reference",
+    "modelo-123-filed-declarations-observation",
+    "modelo-123-workflow",
+    "modelo-123-deadline",
+]
+deadline_windows = ["modelo-123-2026-1t", "modelo-123-2026-2t", "modelo-123-2026-3t", "modelo-123-2026-4t"]
+

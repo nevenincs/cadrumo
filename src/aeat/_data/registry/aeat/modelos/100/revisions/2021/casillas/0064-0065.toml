@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "0065"
+number = "0065"
+label = "Situación  (clave)"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+data_type = "text"
+semantic_role = "irpf_inmueble_situacion_clave"
+legal_refs = ["ley-35-2006:art-22"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

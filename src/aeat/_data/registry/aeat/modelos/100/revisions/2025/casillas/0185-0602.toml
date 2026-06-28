@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0602"
+number = "0602"
+label = "Ingresos a cuenta del articulo 92.8 de la Ley del Impuesto"
+section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
+semantic_role = "irpf_ingreso_cuenta_art_92_8"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]

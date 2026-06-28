@@ -1,0 +1,43 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "justificante"
+domain = "concepto"
+lifecycle = "approved"
+legal_refs = ["ley-58-2003:art-99"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "El resguardo que la AEAT emite tras presentar una declaracion."
+definition = "Documento acreditativo (habitualmente un PDF) que la AEAT emite tras la presentacion de una declaracion, con el codigo seguro de verificacion y las cifras presentadas, como prueba de la presentacion."
+
+[language.es.source]
+citation = "Manuales de la Sede Electronica de la AEAT sobre presentacion de declaraciones."
+authority = "aeat"
+
+[[language.es.term]]
+label = "justificante"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "justificante de presentacion"
+term_status = "admitted"
+
+[language.en]
+short_description = "The filing receipt the AEAT issues after you file."
+
+[[language.en.term]]
+label = "filing receipt"
+term_status = "preferred"
+
+[language.ca]
+short_description = "El justificant que l'AEAT emet despres de presentar una declaracio."
+
+[language.hu]
+short_description = "A benyujtas utan az AEAT altal kiadott bizonylat."

@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0132"
+number = "0132"
+label = "Amortización en casos especiales"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_rendimiento_capital_inmobiliario_amortizacion_casos_especiales"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

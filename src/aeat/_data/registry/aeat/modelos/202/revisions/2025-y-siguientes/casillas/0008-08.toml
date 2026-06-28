@@ -1,0 +1,12 @@
+[[revisions.2025-y-siguientes.casillas]]
+id = "08"
+number = "08"
+label = "Mod. 40.3 LIS — Resto correcciones — Disminuciones"
+section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_resto_correcciones_disminuciones"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-202-page-01-casilla-08"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]

@@ -3,6 +3,7 @@ tags:
   - '#adr'
   - '#modelo-200-calc-verify'
 date: '2026-04-28'
+modified: '2026-04-28'
 related:
   - "[[2026-04-28-modelo-200-calc-verify-research]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"
@@ -44,3 +45,39 @@ This design satisfies the Tier-L bar for the implemented extraction surface whil
 ## Consequences
 
 The rulesets are citation-clean and mutation-visible. Corporate-side derivations that can be expressed from explicit facts now have strict helper coverage. The rule-delta manifest records the annual-order publication gap so future work can revisit layout changes when BOE publishes later M200 orders.
+
+## Amendment (2026-05-20): page-14 cuota chain corrected against the AEAT manual
+
+While porting the Modelo 200 page-14 cuota formulas onto the
+segment-scoped Liquidacion casillas (the registry-casilla-identity
+feature), the shipped registry formula
+`modelo-200-cuota-ejercicio-a-ingresar-devolver` was found
+tax-incorrect and independently verified against the AEAT Manual
+practico de Sociedades 2024 (corpus `aeat-modelo-200-manual-2024`).
+The shipped formula computed casilla 00599 as cuota liquida minus
+*pagos fraccionados*; the manual (pages 500-501) requires cuota
+liquida minus *retenciones*. Pagos fraccionados subtract one step
+later, at casilla 00611. This amendment records the authoritative,
+manual-grounded page-14 chain that the implementation is corrected to.
+
+- **Cuota integra** — `[00562] = [01330] x [00558] / 100` (manual
+  page 362; LIS arts. 29-30). `[01330]` is the base imponible after
+  the reserva de nivelacion: `[01330] = [00552] + [01033] - [01034]`
+  (manual page 361; LIS art. 105).
+- **Cuota del ejercicio a ingresar o a devolver** —
+  `[00599] = ([00625] / 100) x ([00592] - [01766] - [01784])` (manual
+  pages 500-501; LIS arts. 41, 128). Subtracts *retenciones e ingresos
+  a cuenta* (`01766`, `01784`) from the cuota liquida, scaled by the
+  Estado share `00625`. The prior shipped formula's subtraction of
+  pagos fraccionados here was the defect.
+- **Cuota diferencial** — `[00611] = [00599] - ([00601] + [00603] +
+  [00605])` (manual page 506; LIS arts. 40-41). The pagos-fraccionados
+  relation feeds this step.
+
+The AEAT manual worked liquidacion example (pages 399 and 401,
+"Liquidacion del IS 2024 sin tributacion minima") is the external
+oracle for the calc-verify test: cuota liquida `00592 = 0`,
+retenciones `-20.000` give `00599 = -20.000`; pagos fraccionados
+`-10.000` give `00611 = -30.000`. Expected values are AEAT-published,
+not author-computed, satisfying the no-tautological-calculation-tests
+rule. Decision and scope of this ADR are otherwise unchanged.

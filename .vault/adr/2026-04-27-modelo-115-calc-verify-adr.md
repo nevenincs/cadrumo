@@ -3,12 +3,12 @@ tags:
   - '#adr'
   - '#modelo-115-calc-verify'
 date: '2026-04-27'
+modified: '2026-04-27'
 related:
   - "[[2026-04-27-modelo-115-calc-verify-research]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"
   - "[[2026-04-25-mandatory-citations-adr]]"
   - "[[2026-04-25-mutation-harness-extension-adr]]"
-  - "[[2026-04-25-kent-workflows-expansion-adr]]"
   - "[[2026-04-27-modelo-130-rule-delta-reference]]"
 ---
 
@@ -130,6 +130,15 @@ only the `template_revision` ClassVar; the extraction logic is
 inherited verbatim because the form layout is unchanged across
 all three years. Register both new classes in
 `src/aeat/adapters/inbound/declaracion/_extractors/__init__.py::_REGISTERED_CLASSES`.
+
+> **Correction — 2026-05-21.** The per-modelo `DeclaracionExtractor` ABC,
+> `GenericDeclaracionExtractor`, the `_extractors/` class registry, and all
+> per-modelo extractor subclasses described in this section were subsequently
+> deleted. Declaración extraction is now driven entirely by registry
+> `declaracion_pdf` extraction profiles resolved from the `TemplateRevision`
+> detected by `detect_template_revision`. The extractor-class mechanism
+> described here no longer exists. See ADR
+> `2026-05-21-declaracion-extraction-architecture-adr`.
 
 ### D3. Rule-delta manifest
 
@@ -315,7 +324,8 @@ Per STEP 5 of the handover prompt:
 - **Two new sibling extractor classes** widen the
   `_REGISTERED_CLASSES` tuple. Mitigation: each subclass is a
   five-line pin of the `template_revision` ClassVar; no new
-  extraction logic.
+  extraction logic. *(Superseded 2026-05-21: the extractor-class
+  mechanism was deleted; see correction note in D2.)*
 - **Coordinated `_rulesets/__init__.py` edit** soft-collides
   with `#326` (M303 2026) and `#322` (M131 2026) when those
   land. Mitigation: union-merge resolves the soft collision

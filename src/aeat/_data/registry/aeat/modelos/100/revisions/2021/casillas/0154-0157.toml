@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0157"
+number = "0157"
+label = "Gasto deducible correspondiente a alquileres de locales a determinados empresarios en los meses de enero, febrero y marzo de 2021 (Real Decreto-ley 35/2020, de 22 de diciembre)"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_gasto_deducible_alquiler_locales"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

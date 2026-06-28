@@ -1,0 +1,45 @@
+# Semantic index exclusions. Git exclusions still apply separately; this file
+# removes generated, duplicated, or low-signal text from VaultSpec RAG.
+
+# Generated provider copies of the canonical VaultSpec rule/skill surfaces.
+.agents/
+.claude/
+.codex/
+.gemini/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+
+# Generated documentation surfaces. Keep hand-written docs/ pages indexable.
+docs/_build/
+docs/cli/
+docs/api/
+
+# Raw BOE normatives HTML: the article-split preprocessor emits clean
+# per-article *.extracted.md sidecars for these, which rank far better than
+# the raw markup (the raw HTML polluted the low-score tail with TOC link
+# farms and tag noise). Exclude only the raw .html here so the clean
+# *.extracted.md sidecars remain the sole index entry for this corpus. The
+# pattern matches *.html but not *.html.extracted.md (different suffix), and
+# is scoped to normatives/html so other raw HTML without a sidecar stays
+# indexable.
+src/aeat/_data/corpus/normatives/html/*.html
+
+# Local caches, reports, and ad-hoc execution output that may appear before
+# .gitignore pruning catches up.
+.import_linter_cache/
+.playwright-mcp/
+.pytest_cache/
+.ruff_cache/
+.ty_cache/
+.pyrefly_cache/
+.complexipy_cache/
+htmlcov/
+playwright-report/
+test-results/
+scratch/
+tmp/
+tmp_*/
+temp/
+cache/
+var/

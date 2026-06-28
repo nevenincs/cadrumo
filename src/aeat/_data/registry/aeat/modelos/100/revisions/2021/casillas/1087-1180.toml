@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "1180"
+number = "1180"
+label = "Por adquisición de vehículos nuevos pertenecientes a las categorías incluidas en la Orden 5/2020, de 8 de junio"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_vehiculos_electricos"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

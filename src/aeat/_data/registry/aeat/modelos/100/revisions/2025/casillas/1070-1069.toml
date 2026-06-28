@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "1069"
+number = "1069"
+label = "Por gastos en escuelas o centros de educación infantil o personal contratado para el cuidado de hijos de 0 a 3 años por contribuyentes residentes en pequeños municipios"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_guarderia_escuelas"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

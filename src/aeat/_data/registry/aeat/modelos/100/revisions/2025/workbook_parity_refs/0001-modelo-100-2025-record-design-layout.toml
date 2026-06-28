@@ -1,0 +1,23 @@
+[[revisions."2025".workbook_parity_refs]]
+id = "modelo-100-2025-record-design-layout"
+workbook_source = "aeat-dr-100-2025-xsd"
+fixture_id = "modelo-100-2025-record-design"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-hac-277-2026:art-3",
+]
+source_refs = [
+    "aeat-dr-100-2025-dictionary",
+    "aeat-dr-100-2025-input-dictionary",
+    "aeat-dr-100-2025-xsd",
+    "boe-modelo-100-2025-form",
+]

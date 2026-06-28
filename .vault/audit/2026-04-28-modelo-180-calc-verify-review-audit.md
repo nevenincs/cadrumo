@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#modelo-180-calc-verify'
 date: '2026-04-28'
+modified: '2026-04-28'
 related:
   - "[[2026-04-28-modelo-180-calc-verify-plan]]"
   - "[[2026-04-28-modelo-180-calc-verify-adr]]"

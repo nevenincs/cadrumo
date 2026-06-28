@@ -1,9 +1,13 @@
 """Pure-function HTML parsers for the authenticated AEAT sede.
 
 All parsers take raw HTML strings and return strict pydantic records.
-No Playwright, no I/O. This makes them trivially unit-testable against
-captured fixtures and keeps the navigation (side-effect) concerns
-isolated in ``_walker.py``.
+No Playwright, no I/O. This makes them trivially unit-testable
+against captured fixtures and keeps the navigation (side-effect)
+concerns isolated in :mod:`aeat.adapters.outbound.aeat.sede._walker`.
+
+Public surface: :func:`parse_resumen_tree` (top-level expediente
+listing), :func:`parse_expediente_detail` (per-expediente CSV
+extraction).
 """
 
 from __future__ import annotations
@@ -12,12 +16,15 @@ import re
 from typing import Final
 from urllib.parse import urljoin, urlparse
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from pydantic import AnyHttpUrl
 
+from .....core.config import Settings
 from .....core.logging import get_logger
 from ._errors import SedeParseError
 from ._schema import Expediente, JustificanteRef
+
+_SEDE_PATHS = Settings.external_constants().aeat.sede_paths
 
 _log = get_logger(__name__)
 
@@ -28,17 +35,17 @@ _log = get_logger(__name__)
 # but the ``href`` is already valid as a GET with session cookies).
 _EXPEDIENTE_LINK_HANDLERS: Final[tuple[str, ...]] = ("lanzarTewvForm",)
 
-# Modelo-code pattern inside a category label, e.g.
-#   "Modelo 100- Modelo 102. IRPF. Declaración y documento..."
-#   "Modelo 303. IVA. Autoliquidación..."
+# Modelo-code pattern inside a category label.
 _MODELO_IN_LABEL: Final[re.Pattern[str]] = re.compile(r"\bModelo\s+(?P<modelo>\d{2,4})\b")
 
-# Per-year IRPF endpoint: /wlpl/DASR-CORE/AccesoDR<YYYY>RVlt?exp=<id>
-_IRPF_ENDPOINT: Final[re.Pattern[str]] = re.compile(r"/wlpl/DASR-CORE/AccesoDR(?P<year>\d{4})RVlt")
+_IRPF_ENDPOINT: Final[re.Pattern[str]] = re.compile(
+    rf"{re.escape(_SEDE_PATHS.irpf_expediente_detail_year_prefix)}(?P<year>\d{{4}})"
+    rf"{re.escape(_SEDE_PATHS.irpf_expediente_detail_year_suffix)}",
+)
 
-# The CSV link pattern on an expediente detail page:
-#   /wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=<csv>
-_COTEJO_CSV: Final[re.Pattern[str]] = re.compile(r"/wlpl/KATA-APLI/cotejo/CotejoIdSv\?CSV=(?P<csv>[A-Z0-9]{8,32})")
+_COTEJO_CSV: Final[re.Pattern[str]] = re.compile(
+    rf"{re.escape(_SEDE_PATHS.cotejo_query)}\?CSV=(?P<csv>[A-Z0-9]{{8,32}})",
+)
 
 
 def parse_resumen_tree(html: str, *, base_url: str) -> tuple[Expediente, ...]:
@@ -112,6 +119,7 @@ def parse_resumen_tree(html: str, *, base_url: str) -> tuple[Expediente, ...]:
                 expediente_id,
                 href,
                 exc,
+                exc_info=True,
             )
             continue
         results.append(expediente)
@@ -149,11 +157,11 @@ def parse_expediente_detail(
     if match is None:
         raise SedeParseError(
             f"expediente {expediente_id!r}: no /CotejoIdSv?CSV= link on detail page; "
-            "session may have expired or the modelo exposes a different verifier"
+            "session may have expired or the modelo exposes a different verifier",
         )
     csv = match.group("csv")
-    cotejo_url = urljoin(base_url, f"/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV={csv}")
-    pdf_url = urljoin(base_url, f"/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV={csv}")
+    cotejo_url = urljoin(base_url, f"{_SEDE_PATHS.cotejo_query}?CSV={csv}")
+    pdf_url = urljoin(base_url, f"{_SEDE_PATHS.cotejo_document}?CSV={csv}")
     return JustificanteRef(
         csv=csv,
         expediente_id=expediente_id,
@@ -162,7 +170,7 @@ def parse_expediente_detail(
     )
 
 
-def _collect_category_path(anchor: object) -> tuple[str, ...]:
+def _collect_category_path(anchor: Tag) -> tuple[str, ...]:
     """Walk up from a leaf ``<a>`` collecting parent category labels.
 
     The sede tree uses nested ``<ul>/<li>`` where each ``<li>`` begins
@@ -171,21 +179,35 @@ def _collect_category_path(anchor: object) -> tuple[str, ...]:
     to root, then reverse for a root-to-leaf breadcrumb.
     """
     labels: list[str] = []
-    current = getattr(anchor, "parent", None)
+    current = anchor.parent
     while current is not None:
-        if getattr(current, "name", None) == "li":
-            header_anchor = current.find("a", recursive=False)
-            if header_anchor is None:
-                # Some themes wrap the header in a span first.
-                first_anchor = current.find("a")
-                if first_anchor is not None and first_anchor is not anchor:
-                    header_anchor = first_anchor
-            if header_anchor is not None and header_anchor is not anchor:
-                text = header_anchor.get_text(" ", strip=True)
-                if text:
-                    labels.append(text)
-        current = getattr(current, "parent", None)
+        if isinstance(current, Tag) and current.name == "li":
+            label = _li_header_label(current, leaf=anchor)
+            if label is not None:
+                labels.append(label)
+        current = current.parent
     return tuple(reversed(labels))
+
+
+def _li_header_label(li: Tag, *, leaf: Tag) -> str | None:
+    """Return the header-anchor text for a sede ``<li>`` node, or ``None``.
+
+    The header anchor is normally the first direct ``<a>`` child of the
+    ``<li>`` (``recursive=False``); when the theme wraps the header in a
+    ``<span>`` the first ``<a>`` is nested instead. In both cases the
+    header anchor is distinct from ``leaf`` — that's what tells the
+    walker the current ``<li>`` is an ancestor category rather than the
+    leaf row itself.
+    """
+    header_anchor = li.find("a", recursive=False)
+    if header_anchor is None:
+        first_anchor = li.find("a")
+        if first_anchor is not None and first_anchor is not leaf:
+            header_anchor = first_anchor
+    if header_anchor is None or header_anchor is leaf:
+        return None
+    text = header_anchor.get_text(" ", strip=True)
+    return text or None
 
 
 def _infer_modelo_from_category(category_path: tuple[str, ...]) -> str | None:

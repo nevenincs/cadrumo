@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "714",
+  "retrieved_at": "2026-06-02",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "714",
+      "title": "714 - Ejercicio 2025 (820 KB - xls)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/DR714_2025.xls",
+      "stored_path": "files/DR714_2025.xls",
+      "original_filename": "DR714_2025.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 839168,
+      "sha256": "660e2ce1f4cea1405e27b4251231036e75b78aef33512afc22dec8081c7cb4d3",
+      "retrieved_at": "2026-06-02"
+    }
+  ]
+}

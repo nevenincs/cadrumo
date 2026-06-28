@@ -1,0 +1,143 @@
+{
+  "articulos": [
+    {
+      "numero": "80",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a80",
+      "summary": {
+        "ca": "Fixa els tipus aplicables al càlcul de retencions i ingressos a compte sobre rendiments del treball i estableix les regles de càlcul de la base de retenció i del tipus de retenció.",
+        "en": "Sets the rates and the step-by-step mechanics for computing IRPF withholdings on employment income.",
+        "es": "Fija los tipos aplicables al cálculo de retenciones e ingresos a cuenta sobre rendimientos del trabajo y establece las reglas de cálculo de la base de retención y del tipo de retención.",
+        "hu": "Meghatározza a munkajövedelemre vonatkozó IRPF forrásadó kiszámításának szabályait és mértékeit."
+      },
+      "titulo": {
+        "ca": "Import de las retenciones sobre rendimientos del trabajo",
+        "en": "Amount of withholdings on employment income",
+        "es": "Importe de las retenciones sobre rendimientos del trabajo",
+        "hu": "Munkajövedelmekre vonatkozó forrásadó összege"
+      }
+    },
+    {
+      "numero": "95",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a95",
+      "summary": {
+        "ca": "Estableix els tipus fixos de retenció aplicables als rendiments d'activitats professionals, agrícoles, ramaderes i forestals, i a les activitats en estimació objectiva.",
+        "en": "Sets the fixed withholding rates applicable to professional, farming, livestock and forestry activity income, and to activities under the objective estimation regime.",
+        "es": "Establece los tipos fijos de retención aplicables a los rendimientos de actividades profesionales, agrícolas, ganaderas y forestales, y a las actividades en estimación objetiva.",
+        "hu": "Meghatározza a szabadfoglalkozású, mezőgazdasági és erdészeti tevékenységekre vonatkozó fix forrásadó-mértékeket."
+      },
+      "titulo": {
+        "ca": "Import de las retenciones sobre rendimientos de actividades económicas",
+        "en": "Amount of withholdings on economic-activity income",
+        "es": "Importe de las retenciones sobre rendimientos de actividades económicas",
+        "hu": "Gazdasági tevékenység jövedelmére vonatkozó forrásadó összege"
+      }
+    },
+    {
+      "notes": "Base reglamentaria de la modalidad simplificada de estimacion directa en Modelo 100.",
+      "numero": "30",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a30",
+      "summary": {
+        "ca": "Defineix les especialitats de la modalitat simplificada d'estimacio directa, incloent el percentatge i limit anual de provisions i despeses de dificil justificacio.",
+        "en": "Defines simplified direct-estimation special rules, including the rate and annual cap for provisions and difficult-to-justify expenses.",
+        "es": "Define las especialidades de la modalidad simplificada de estimacion directa, incluido el porcentaje y limite anual de provisiones y gastos de dificil justificacion.",
+        "hu": "Meghatarozza az egyszerusitett kozvetlen becsles kulon szabalyait, beleertve a nehezen igazolhato koltsegek merteket es eves korlatjat."
+      },
+      "titulo": {
+        "ca": "Determinacio del rendiment net en la modalitat simplificada",
+        "en": "Determination of net income under simplified direct estimation",
+        "es": "Determinacion del rendimiento neto en la modalidad simplificada",
+        "hu": "A netto jovedelem meghatarozasa egyszerusitett kozvetlen becslesnel"
+      },
+      "text_es": "Articulo 30. Determinacion del rendimiento neto en la modalidad simplificada del metodo de estimacion directa. El rendimiento neto de las actividades economicas, a las que sea de aplicacion la modalidad simplificada del metodo de estimacion directa, se determinara segun las normas contenidas en los articulos 28 y 30 de la Ley del Impuesto, con las especialidades siguientes: 2.ª El conjunto de las provisiones deducibles y los gastos de dificil justificacion se cuantificara aplicando el porcentaje del 5 por ciento sobre el rendimiento neto, excluido este concepto, sin que la cuantia resultante pueda superar 2.000 euros anuales."
+    },
+    {
+      "notes": "Base reglamentaria del Modelo 115.",
+      "numero": "100",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a100",
+      "summary": {
+        "ca": "Fixa el tipus de retenció aplicable als rendiments procedents de l'arrendament o subarrendament d'immobles urbans.",
+        "en": "Sets the withholding rate for income from the lease or sublease of urban real estate.",
+        "es": "Fija el tipo de retención aplicable a los rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos.",
+        "hu": "Meghatározza a városi ingatlanok bérbeadásából vagy albérletbe adásából származó jövedelmek forrásadó-mértékét."
+      },
+      "titulo": {
+        "ca": "Import de les retencions sobre arrendaments i subarrendaments d'immobles",
+        "en": "Amount of withholdings on real-estate leases and subleases",
+        "es": "Importe de las retenciones sobre arrendamientos y subarrendamientos de inmuebles",
+        "hu": "Ingatlan-bérbeadásból és albérletből származó jövedelmek forrásadója"
+      },
+      "text_es": "Artículo 100. Importe de las retenciones sobre arrendamientos y subarrendamientos de inmuebles. La retención a practicar sobre los rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos, cualquiera que sea su calificación, será el resultado de aplicar el porcentaje del 19 por ciento sobre todos los conceptos que se satisfagan al arrendador, excluido el Impuesto sobre el Valor Añadido."
+    },
+    {
+      "numero": "109",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a109",
+      "summary": {
+        "ca": "Estableix que els contribuents que exerceixen activitats econòmiques estan obligats a autoliquidar i ingressar pagaments fraccionats de l'IRPF, amb excepcions quan almenys el 70% dels ingressos hagin estat sotmesos a retenció o ingrés a compte.",
+        "en": "Establishes that taxpayers carrying on economic activities must self-assess and pay IRPF fractional payments, with exceptions when at least 70% of income was subject to withholding or payment on account.",
+        "es": "Establece que los contribuyentes que ejerzan actividades económicas están obligados a autoliquidar e ingresar pagos fraccionados del IRPF, con excepciones cuando al menos el 70 por ciento de los ingresos haya sido objeto de retención o ingreso a cuenta.",
+        "hu": "Meghatározza, hogy a gazdasági tevékenységet végző adózóknak IRPF előlegrészleteket kell önadózással megállapítaniuk és befizetniük, kivéve ha a bevételek legalább 70%-a forrásadó vagy előlegfizetés tárgya volt."
+      },
+      "titulo": {
+        "ca": "Obligats al pagament fraccionat",
+        "en": "Persons obliged to make fractional payments",
+        "es": "Obligados al pago fraccionado",
+        "hu": "Előlegrészlet-fizetésre kötelezettek"
+      },
+      "text_es": "Artículo 109. Obligados al pago fraccionado. 1. Los contribuyentes que ejerzan actividades económicas estarán obligados a autoliquidar e ingresar en el Tesoro, en concepto de pago a cuenta del Impuesto sobre la Renta de las Personas Físicas, la cantidad que resulte de lo establecido en los artículos siguientes, sin perjuicio de las excepciones previstas en los apartados siguientes. 2. Los contribuyentes que desarrollen actividades profesionales no estarán obligados a efectuar pago fraccionado en relación con las mismas si, en el año natural anterior, al menos el 70 por ciento de los ingresos de la actividad fueron objeto de retención o ingreso a cuenta. 3. Los contribuyentes que desarrollen actividades agrícolas o ganaderas no estarán obligados a efectuar pago fraccionado en relación con las mismas si, en el año natural anterior, al menos el 70 por ciento de los ingresos procedentes de la explotación, con excepción de las subvenciones corrientes y de capital y de las indemnizaciones, fueron objeto de retención o ingreso a cuenta. 4. Los contribuyentes que desarrollen actividades forestales no estarán obligados a efectuar pago fraccionado en relación con las mismas si, en el año natural anterior, al menos el 70 por ciento de los ingresos procedentes de la actividad, con excepción de las subvenciones corrientes y de capital y de las indemnizaciones, fueron objeto de retención o ingreso a cuenta. 5. A efectos de lo dispuesto en los apartados 2, 3 y 4 anteriores, en caso de inicio de la actividad se tendrá en cuenta el porcentaje de ingresos que hayan sido objeto de retención o ingreso a cuenta durante el período a que se refiere el pago fraccionado."
+    },
+    {
+      "notes": "Base reglamentaria del Modelo 130.",
+      "numero": "110",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a110",
+      "summary": {
+        "ca": "Fixa el càlcul del pagament fraccionat trimestral dels contribuents que desenvolupen activitats econòmiques: estimació directa (20% del rendiment net) i estimació objectiva (tipus en funció de magnituds del mòdul).",
+        "en": "Sets the quarterly fractional payment computation for self-employed taxpayers: 20% of net income under direct estimation, and module-based rates under objective estimation.",
+        "es": "Fija el cálculo del pago fraccionado trimestral de los contribuyentes que desarrollan actividades económicas: estimación directa (20% del rendimiento neto) y estimación objetiva (tipos en función de magnitudes del módulo).",
+        "hu": "Meghatározza az önfoglalkoztatók negyedéves részletfizetésének kiszámítását: a közvetlen becslés szerinti nettó jövedelem 20%-a."
+      },
+      "titulo": {
+        "ca": "Import del pago fraccionado",
+        "en": "Amount of fractional payments (Modelo 130 / 131)",
+        "es": "Importe del pago fraccionado",
+        "hu": "Részletfizetés összege (130-as / 131-es nyomtatvány)"
+      },
+      "text_es": "Artículo 110. Importe del fraccionamiento. 1. Los contribuyentes a que se refiere el artículo anterior ingresarán, en cada plazo, las cantidades siguientes: a) Por las actividades que estuvieran en el método de estimación directa, en cualquiera de sus modalidades, el 20 por ciento del rendimiento neto correspondiente al período de tiempo transcurrido desde el primer día del año hasta el último día del trimestre a que se refiere el pago fraccionado. De la cantidad resultante por aplicación de lo dispuesto en esta letra se deducirán los pagos fraccionados que, en relación con estas actividades, habría correspondido ingresar en los trimestres anteriores del mismo año si no se hubiera aplicado lo dispuesto en la letra c) del apartado 3 de este artículo. b) Por las actividades que estuvieran en el método de estimación objetiva, el 4 por ciento de los rendimientos netos resultantes de la aplicación de dicho método en función de los datos-base del primer día del año a que se refiere el pago fraccionado o, en caso de inicio de actividades, del día en que éstas hubiesen comenzado. c) Tratándose de actividades agrícolas, ganaderas, forestales o pesqueras, cualquiera que fuese el método de determinación del rendimiento neto, el 2 por ciento del volumen de ingresos del trimestre, excluidas las subvenciones de capital y las indemnizaciones. 2. Los porcentajes señalados en el apartado anterior se reducirán en un 60 por ciento para las actividades económicas que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de la Ley del Impuesto. 3. De la cantidad resultante por aplicación de lo dispuesto en los apartados anteriores, se podrán deducir, en su caso: c) Cuando la cuantía de los rendimientos netos de actividades económicas del ejercicio anterior sea igual o inferior a 12.000 euros, el importe que resulte del siguiente cuadro: Igual o inferior a 9.000: 100. Entre 9.000,01 y 10.000: 75. Entre 10.000,01 y 11.000: 50. Entre 11.000,01 y 12.000: 25. d) Cuando los contribuyentes destinen cantidades para la adquisición o rehabilitación de su vivienda habitual utilizando financiación ajena, por las que vayan a tener derecho a la deducción por inversión en vivienda habitual regulada en la disposición transitoria decimoctava de la Ley del Impuesto, las cuantías que se citan a continuación: 1.º Tratándose de contribuyentes que ejerzan actividades que estuvieran en el método de estimación directa, en cualquiera de sus modalidades, cuyos rendimientos íntegros previsibles del período impositivo sean inferiores a 33.007,2 euros, se podrá deducir el 2 por ciento del rendimiento neto correspondiente al período de tiempo transcurrido desde el primer día del año hasta el último día del trimestre a que se refiere el pago fraccionado. En ningún caso podrá practicarse una deducción por importe superior a 660,14 euros en cada trimestre. 4. Los contribuyentes podrán aplicar en cada uno de los pagos fraccionados porcentajes superiores a los indicados."
+    },
+    {
+      "notes": "Exencion de M130 cuando retenciones acumuladas >= 70% de rendimientos integros del periodo.",
+      "numero": "110-3-b",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a110",
+      "summary": {
+        "ca": "Exempcio de M130 quan les retencions acumulades representen el 70% o mes dels rendiments integres del periode.",
+        "en": "Exemption from M130 filing when accumulated withholdings represent 70% or more of gross income for the period.",
+        "es": "Exencion de presentar M130 cuando las retenciones e ingresos a cuenta acumulados representen el 70% o mas de los rendimientos integros del periodo.",
+        "hu": "Mentesules az M130 benyujtasa alol, ha a felhalmozott forrasado-eloleg a brutto bevetel 70%-at vagy tobb eteri el."
+      },
+      "titulo": {
+        "ca": "Exempcio M130 per alta retencio (art. 110.3.b)",
+        "en": "M130 exemption on high retention ratio (Art. 110.3.b)",
+        "es": "Exencion M130 por alta retencion (art. 110.3.b)",
+        "hu": "M130 mentesseg magas forrasado-elolegarany eseten (110.3.b cikk)"
+      },
+      "text_es": "Articulo 110.3.b. No obstante lo previsto en el apartado 1 de este articulo, no estaran obligados a efectuar pagos fraccionados los contribuyentes que desarrollen actividades economicas cuando en el ano natural anterior al menos el 70 por ciento de los ingresos de la actividad economica, excluidas las subvenciones de capital y las ganancias patrimoniales, hubiera sido objeto de retencion o ingreso a cuenta."
+    }
+  ],
+  "boe_id": "BOE-A-2007-6820",
+  "boe_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
+  "id": "rd-439-2007",
+  "kind": "real-decreto",
+  "last_reviewed_at": "2026-04-12",
+  "number": "439/2007",
+  "published_at": "2007-03-31",
+  "reviewed_by": "wgergely",
+  "tags": [
+    "irpf",
+    "reglamento"
+  ],
+  "title": {
+    "ca": "Reial Decret 439/2007, de 30 de març, pel qual s'aprova el Reglament de l'Impost sobre la Renda de les Persones Físiques i es modifica el Reglament de Plans i Fons de Pensions, aprovat pel Reial Decret 304/2004, de 20 de febrer",
+    "en": "Royal Decree 439/2007, of 30 March, approving the IRPF Regulation and amending the Pension Plans and Funds Regulation",
+    "es": "Real Decreto 439/2007, de 30 de marzo, por el que se aprueba el Reglamento del Impuesto sobre la Renta de las Personas Físicas y se modifica el Reglamento de Planes y Fondos de Pensiones, aprobado por Real Decreto 304/2004, de 20 de febrero",
+    "hu": "439/2007. sz. királyi rendelet, az IRPF végrehajtási szabályzatának elfogadásáról"
+  }
+}

@@ -1,0 +1,9 @@
+[[revisions."2022".casillas]]
+id = "1822"
+number = "1822"
+label = "Transmisión intervivos onerosa (venta, permuta, etc.)"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "boolean"
+semantic_role = "irpf_ganancia_inmueble_transmision_onerosa"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

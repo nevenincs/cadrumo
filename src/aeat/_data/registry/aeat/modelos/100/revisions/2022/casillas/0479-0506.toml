@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0506"
+number = "0506"
+label = "Reducción por tributación conjunta. Remanente de la casilla [0461] que se aplica"
+section = ["resultados", "base_liquidable_res"]
+semantic_role = "irpf_reduccion_tributacion_conjunta_aplicada"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

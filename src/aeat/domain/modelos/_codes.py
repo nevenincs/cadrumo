@@ -1,45 +1,38 @@
-"""Closed enumeration of every AEAT modelo tracked by the registry.
+"""Validated AEAT modelo identifier value object.
 
-The :class:`ModeloCode` members name every modelo that the v1 catalogue
-materialises under :mod:`aeat.domain.modelos`. The enum values are the canonical
-three-character AEAT code strings (``"036"``, ``"100"``, ...), which
-lets consumers interoperate transparently with string-keyed APIs such
-as :data:`aeat.domain.deadlines.CALENDAR`.
+:class:`ModeloCode` enforces the three-digit identifier shape used by modelo
+work units and registry lookups, raising :class:`ModeloValidationError` before
+filing-grade availability is resolved from registry snapshots.
 """
 
 from __future__ import annotations
 
-from enum import StrEnum
+from typing import Any
+
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import core_schema
+
+from ._errors import ModeloValidationError
 
 
-class ModeloCode(StrEnum):
-    """Canonical AEAT modelo code.
+class ModeloCode(str):
+    """Three-digit AEAT modelo identifier.
 
-    Each member's value is the three-character numeric code AEAT uses
-    on public forms and Sede Electrónica URLs. The closed membership
-    tracks the twenty-one modelos covered by the v1 inventory (see the
-    modelo-inventory research document for the provenance of each
-    code).
+    This type validates identifier shape only. Filing-grade availability is
+    resolved from registry snapshots.
     """
 
-    MODELO_036 = "036"
-    MODELO_037 = "037"
-    MODELO_100 = "100"
-    MODELO_111 = "111"
-    MODELO_115 = "115"
-    MODELO_123 = "123"
-    MODELO_130 = "130"
-    MODELO_131 = "131"
-    MODELO_180 = "180"
-    MODELO_190 = "190"
-    MODELO_193 = "193"
-    MODELO_200 = "200"
-    MODELO_202 = "202"
-    MODELO_232 = "232"
-    MODELO_303 = "303"
-    MODELO_347 = "347"
-    MODELO_349 = "349"
-    MODELO_369 = "369"
-    MODELO_390 = "390"
-    MODELO_720 = "720"
-    MODELO_840 = "840"
+    def __new__(cls, value: str) -> ModeloCode:
+        raw = str(value)
+        if len(raw) != 3 or not raw.isdigit():
+            raise ModeloValidationError(f"modelo code must be a three-digit string, got {value!r}")
+        return str.__new__(cls, raw)
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[Any],
+        handler: GetCoreSchemaHandler,
+    ) -> core_schema.CoreSchema:
+        del source_type, handler
+        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())

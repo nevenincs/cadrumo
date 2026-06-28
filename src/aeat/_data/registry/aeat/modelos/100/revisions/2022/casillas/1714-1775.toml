@@ -1,0 +1,9 @@
+[[revisions."2022".casillas]]
+id = "1775"
+number = "1775"
+label = "Letra de calificación energética anterior (consumo de energía)"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_calificacion_anterior"
+legal_refs = ["ley-35-2006:da-50"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

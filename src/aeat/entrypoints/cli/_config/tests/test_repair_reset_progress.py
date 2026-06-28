@@ -1,0 +1,182 @@
+"""CLI tests for ``aeat config repair reset-progress``."""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Iterator
+from pathlib import Path
+
+import pytest
+
+from .....adapters.persistence.storage import (
+    activate_master_key_provider,
+    get_master_key_provider,
+)
+from .....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from .....application.workflow._models import WorkflowState
+from .....application.workflow._persistence import workflow_state_repository
+from .....core.config import override_settings
+from .....domain.buckets import BucketEventHistoryRepository, BucketEventType
+from .....tests.cli_runner import invoke_cached_cli
+from .....tests.secure_sql import isolated_profile_storage_root
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        override_settings(
+            aeat_token_dir=tmp_path / "tokens",
+            aeat_runs_dir=tmp_path / "runs",
+            aeat_financial_txs_dir=tmp_path / "txs",
+            aeat_invoices_dir=tmp_path / "invoices",
+            aeat_drafts_dir=tmp_path / "drafts",
+        ),
+    ):
+        yield
+
+
+def _seed_workflow_state() -> None:
+    """Create an active profile so a workflow-state envelope exists.
+
+    ``config profile create`` is bootstrap-exempt: it provisions the
+    profile bucket, opens its session, and writes the workflow-state
+    secure-object row that ``reset-progress`` later discards.
+    """
+
+    created = invoke_cached_cli(
+        [
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "natural_person",
+            "--irpf-income-categories",
+            "actividad_economica",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+        ],
+    )
+    assert created.exit_code == 0, created.output
+
+
+def _row_exists() -> bool:
+    with activate_master_key_provider(get_master_key_provider()):
+        return secure_object_repository_for_active_bucket().exists("aeat.workflow", "state")
+
+
+def _assert_operator_text_avoids_storage_terms(output: str) -> None:
+    lowered = output.lower()
+    forbidden_terms = ("workflow state", "workflow-state", "envelope", "fingerprint", "bucket")
+    for term in forbidden_terms:
+        assert term not in lowered
+
+
+def _normalise_help_text(output: str) -> str:
+    return " ".join(output.split())
+
+
+def test_reset_progress_help_uses_operator_progress_wording() -> None:
+    result = invoke_cached_cli(["config", "repair", "reset-progress", "--help"])
+
+    assert result.exit_code == 0, result.output
+    normalised = _normalise_help_text(result.output)
+    assert (
+        "saved interrupted-command progress" in normalised
+        or "progreso guardado de un comando interrumpido" in normalised
+    )
+    _assert_operator_text_avoids_storage_terms(result.output)
+
+
+def test_reset_progress_text_output_uses_operator_labels_not_storage_labels() -> None:
+    _seed_workflow_state()
+
+    result = invoke_cached_cli(["config", "repair", "reset-progress", "--dry-run"])
+
+    assert result.exit_code == 0, result.output
+    assert "progress_schema_version\t1" in result.output
+    assert "stored_bytes\t" in result.output
+    assert "read_status\treadable" in result.output
+    _assert_operator_text_avoids_storage_terms(result.output)
+
+
+def test_reset_progress_dry_run_returns_fingerprint_without_deleting_row() -> None:
+    _seed_workflow_state()
+
+    result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-progress", "--dry-run"])
+
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.output)
+    assert envelope["command"] == "config.repair.reset_progress"
+    payload = envelope["result"]
+    assert payload["dry_run"] is True
+    fingerprint = payload["fingerprint"]
+    assert fingerprint["schema_version"] == 1
+    assert fingerprint["byte_length"] is not None and fingerprint["byte_length"] > 0
+    # A freshly-seeded, healthy workflow-state envelope must classify as
+    # ``readable`` — the dry-run preview must not slander a sound
+    # envelope as ``unreadable`` (persona-fleet finding H4).
+    assert fingerprint["reason_class"] == "readable"
+    assert _row_exists()
+
+
+def test_reset_progress_without_yes_or_dry_run_raises_refusal_and_keeps_row() -> None:
+    _seed_workflow_state()
+
+    result = invoke_cached_cli(["config", "repair", "reset-progress"])
+
+    assert result.exit_code != 0
+    assert _row_exists()
+
+
+def test_reset_progress_with_yes_deletes_row_emits_event_and_reload_is_empty() -> None:
+    _seed_workflow_state()
+    with activate_master_key_provider(get_master_key_provider()):
+        history_before = len(BucketEventHistoryRepository().load().events)
+
+    result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-progress", "--yes"])
+
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.output)
+    assert envelope["command"] == "config.repair.reset_progress"
+    payload = envelope["result"]
+    assert payload["dry_run"] is False
+    # The seeded envelope is healthy, so the reset fingerprint records
+    # ``readable`` — the operator reset a sound envelope deliberately,
+    # not because it was corrupt (persona-fleet finding H4).
+    assert payload["fingerprint"]["reason_class"] == "readable"
+
+    assert not _row_exists()
+
+    with activate_master_key_provider(get_master_key_provider()):
+        catalogue = BucketEventHistoryRepository().load()
+        reset_events = [
+            event for event in catalogue.events.values() if event.event_type is BucketEventType.WORKFLOW_STATE_RESET
+        ]
+        assert len(reset_events) == 1
+        assert len(catalogue.events) == history_before + 1
+
+        reloaded = workflow_state_repository().load()
+    fresh = WorkflowState()
+    assert reloaded.model_dump(exclude={"updated_at"}) == fresh.model_dump(exclude={"updated_at"})
+
+
+def test_retired_reset_state_verb_no_longer_resolves() -> None:
+    """The pre-D1 ``reset-state`` verb is a hard rename, not an alias.
+
+    Per the D1 operator-surface policy the retired spelling must fail to
+    resolve at the click tree — no shim, no deprecation path. A click
+    "No such command" exit guards against a silent re-introduction.
+    """
+
+    result = invoke_cached_cli(["config", "repair", "reset-state", "--dry-run"])
+
+    assert result.exit_code != 0
+    assert "No such command" in result.output or "reset-state" in result.output

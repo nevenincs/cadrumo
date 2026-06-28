@@ -1,11 +1,11 @@
-"""File-backed loader and query API for ``aeat.domain.manuals``.
+"""File-backed loader and query API for :mod:`aeat.domain.manuals`.
 
 The loader walks the ``corpus/manuals/`` directory hierarchy and
-produces strictly-validated :class:`Manual`, :class:`Chapter`, and
-:class:`Section` records. The v1 PR ships the loader without
-populated structured content; tests exercise it against hand-crafted
-temporary-directory fixtures so the contract is locked for the
-follow-up issues that land real chapter trees.
+produces strictly-validated :class:`~aeat.domain.manuals.Manual`,
+:class:`~aeat.domain.manuals.Chapter`, and
+:class:`~aeat.domain.manuals.Section` records. Tests exercise it
+against hand-crafted temporary-directory fixtures so the contract is
+locked for downstream extraction work that lands real chapter trees.
 
 Directory shape per part root::
 
@@ -19,25 +19,26 @@ Directory shape per part root::
 
 For IVA (``ManualPart.SINGLE``) the ``<part_root>`` is
 ``corpus/manuals/iva/<year>/``; for Renta the part root is nested
-inside a ``parte1`` or ``parte2-deducciones-autonomicas`` directory.
+inside the canonical ``ManualPart`` directory value.
 """
 
 from __future__ import annotations
 
 import json
 from collections.abc import Iterable, Iterator
+from functools import lru_cache
 from pathlib import Path
-from typing import Any
 
-from pydantic import TypeAdapter
+from pydantic import TypeAdapter, ValidationError
 
 from ...core.config import Settings, load_settings
-from ...core.i18n import Language, TranslationError, get_translation
 from ...core.logging import get_logger
 from ...core.paths import resolve_relative_subpath
+from ._errors import ManualNotFoundError, ManualParseError
 from ._schema import (
     Chapter,
     Manual,
+    ManualCasillaReference,
     ManualCatalogue,
     ManualId,
     ManualPart,
@@ -46,13 +47,12 @@ from ._schema import (
     Section,
     SectionRef,
 )
-from .errors import ManualNotFoundError, ManualParseError
 
 _logger = get_logger(__name__)
 
 
 def _root_from_settings(settings: Settings | None) -> Path:
-    """Resolve the manuals root directory from settings or default."""
+    """Resolve the manuals root directory from ``settings`` or the project default."""
     return (settings or load_settings()).aeat_manuals_root
 
 
@@ -85,43 +85,47 @@ _CHAPTERS_ADAPTER: TypeAdapter[tuple[Chapter, ...]] = TypeAdapter(tuple[Chapter,
 
 
 def _read_text(path: Path) -> str:
-    """Read a UTF-8 text file, raising :class:`ManualNotFoundError` on miss."""
+    """Read a UTF-8 text file, raising :exc:`ManualNotFoundError` on miss."""
     try:
-        return path.read_text(encoding="utf-8")
+        resolved = path.resolve()
+        stat = resolved.stat()
     except FileNotFoundError as exc:
         raise ManualNotFoundError(f"missing required file: {path}") from exc
-
-
-def _load_json(path: Path) -> Any:
-    """Read and parse a JSON file, raising :class:`ManualParseError` on failure."""
-    raw = _read_text(path)
+    except OSError as exc:
+        raise ManualParseError(f"{path}: cannot stat required file ({exc})") from exc
     try:
-        return json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise ManualParseError(f"{path}: invalid JSON ({exc})") from exc
+        return _read_text_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    except OSError as exc:
+        raise ManualParseError(f"{path}: cannot read required file ({exc})") from exc
+
+
+@lru_cache(maxsize=1024)
+def _read_text_cached(path: str, byte_count: int, modified_ns: int) -> str:
+    del byte_count, modified_ns
+    return Path(path).read_text(encoding="utf-8")
 
 
 def _load_chapters(chapters_path: Path) -> tuple[Chapter, ...]:
-    """Parse ``chapters.json`` into a tuple of :class:`Chapter`.
+    """Parse ``chapters.json`` into a tuple of :class:`~aeat.domain.manuals.Chapter`.
 
-    Uses :meth:`TypeAdapter.validate_json` so strict-mode pydantic
-    models accept JSON arrays as tuples (list→tuple is permitted in
-    JSON mode even when strict validation is enabled).
+    Uses :meth:`pydantic.TypeAdapter.validate_json` so strict-mode
+    pydantic models accept JSON arrays as tuples (the list-to-tuple
+    coercion is permitted in JSON mode even when strict validation is
+    enabled).
     """
     raw = _read_text(chapters_path)
     try:
         return _CHAPTERS_ADAPTER.validate_json(raw)
-    except Exception as exc:  # pydantic ValidationError subclasses Exception
+    except (ValueError, ValidationError) as exc:
         raise ManualParseError(f"{chapters_path}: chapter validation failed: {exc}") from exc
 
 
 def _load_manual_metadata(manual_path: Path, chapters: tuple[Chapter, ...]) -> Manual:
-    """Parse ``manual.json`` plus chapters into a :class:`Manual`.
+    """Parse ``manual.json`` plus chapters into a :class:`~aeat.domain.manuals.Manual`.
 
-    The ``manual.json`` file is loaded via JSON mode and the chapters
-    loaded separately are serialised back through ``model_dump`` and
-    spliced in before final validation. JSON mode allows the
-    list→tuple coercion that strict Python mode refuses.
+    The ``manual.json`` file is loaded via JSON mode. Chapter records are
+    loaded and validated separately, then attached directly so translatable
+    provenance is preserved.
     """
     raw = _read_text(manual_path)
     try:
@@ -130,11 +134,12 @@ def _load_manual_metadata(manual_path: Path, chapters: tuple[Chapter, ...]) -> M
         raise ManualParseError(f"{manual_path}: invalid JSON ({exc})") from exc
     if not isinstance(base_payload, dict):
         raise ManualParseError(f"{manual_path}: expected a JSON object")
-    base_payload["chapters"] = [chapter.model_dump(mode="json") for chapter in chapters]
+    base_payload["chapters"] = []
     try:
-        return Manual.model_validate_json(json.dumps(base_payload))
-    except Exception as exc:
+        manual = Manual.model_validate_json(json.dumps(base_payload))
+    except (ValueError, ValidationError) as exc:
         raise ManualParseError(f"{manual_path}: manual validation failed: {exc}") from exc
+    return manual.model_copy(update={"chapters": chapters})
 
 
 def load_manual(
@@ -159,7 +164,6 @@ def load_manual(
 
     Raises:
         ManualNotFoundError: If the required metadata files are absent.
-        ManualParseError: If a file is malformed or fails validation.
     """
     part_root = resolve_part_root(manual_id=manual_id, year=year, part=part, settings=settings)
     structure_dir = part_root / "structure"
@@ -169,7 +173,33 @@ def load_manual(
         raise ManualNotFoundError(
             f"missing structure for {manual_id.value}/{year}/{part.value} under {part_root}",
         )
-    _logger.info("loading manual %s/%s/%s from %s", manual_id.value, year, part.value, part_root)
+    _logger.debug("loading manual %s/%s/%s from %s", manual_id.value, year, part.value, part_root)
+    resolved_root = part_root.resolve()
+    manual_fingerprint = _path_fingerprint(manual_path)
+    chapters_fingerprint = _path_fingerprint(chapters_path)
+    return _load_manual_cached(str(resolved_root), manual_fingerprint, chapters_fingerprint)
+
+
+def _path_fingerprint(path: Path) -> tuple[str, int, int]:
+    resolved = path.resolve()
+    try:
+        stat = resolved.stat()
+    except FileNotFoundError as exc:
+        raise ManualNotFoundError(f"missing required file: {path}") from exc
+    except OSError as exc:
+        raise ManualParseError(f"{path}: cannot stat required file ({exc})") from exc
+    return (str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=128)
+def _load_manual_cached(
+    part_root: str,
+    manual_fingerprint: tuple[str, int, int],
+    chapters_fingerprint: tuple[str, int, int],
+) -> Manual:
+    del part_root
+    manual_path = Path(manual_fingerprint[0])
+    chapters_path = Path(chapters_fingerprint[0])
     chapters = _load_chapters(chapters_path)
     return _load_manual_metadata(manual_path, chapters)
 
@@ -185,22 +215,27 @@ def load_section(part_root: Path, section_ref: SectionRef) -> Section:
         A fully validated :class:`Section` record.
 
     Raises:
-        ManualNotFoundError: If the referenced file does not exist.
-        ManualParseError: If the file fails schema validation.
+        ManualParseError: If the file path escapes the manual root or
+            fails schema validation.
     """
     try:
         section_path = resolve_relative_subpath(part_root, section_ref.relative_path, context="manual section path")
     except ValueError as exc:
         raise ManualParseError(str(exc)) from exc
+    fingerprint = _path_fingerprint(section_path)
+    return _load_section_cached(fingerprint, section_ref.section_id)
+
+
+@lru_cache(maxsize=2048)
+def _load_section_cached(section_fingerprint: tuple[str, int, int], section_id: str) -> Section:
+    section_path = Path(section_fingerprint[0])
     raw = _read_text(section_path)
     try:
         section = Section.model_validate_json(raw)
-    except Exception as exc:
+    except (ValueError, ValidationError) as exc:
         raise ManualParseError(f"{section_path}: section validation failed: {exc}") from exc
-    if section.section_id != section_ref.section_id:
-        raise ManualParseError(
-            f"{section_path}: section_id mismatch ({section.section_id!r} vs ref {section_ref.section_id!r})"
-        )
+    if section.section_id != section_id:
+        raise ManualParseError(f"{section_path}: section_id mismatch ({section.section_id!r} vs ref {section_id!r})")
     return section
 
 
@@ -255,21 +290,20 @@ def iter_sections(
 def find_rules(
     catalogue: ManualCatalogue,
     *,
-    casilla_id: str | None = None,
+    casilla_reference: ManualCasillaReference | None = None,
     kind: RuleKind | None = None,
-    lang: Language | None = None,
+    lang: str | None = None,
     settings: Settings | None = None,
 ) -> Iterator[Rule]:
     """Iterate every :class:`Rule` in ``catalogue`` matching the filters.
 
     Args:
         catalogue: A loaded :class:`ManualCatalogue`.
-        casilla_id: Optional modelo casilla cross-reference filter,
-            e.g. ``"MODELO_130:01"``. Rules whose
-            ``references_casillas`` does not contain this value are
-            skipped.
-        kind: Optional :class:`RuleKind` filter.
-        lang: Optional :class:`Language` filter. When provided, rules
+        casilla_reference: Optional structured modelo/casilla filter.
+            Rules whose ``references_casillas`` does not contain this
+            value are skipped.
+        kind: Optional ``RuleKind`` filter.
+        lang: Optional :class:`str` filter. When provided, rules
             whose statement cannot be resolved into ``lang`` under the
             configured fallback policy are skipped.
         settings: Optional settings instance.
@@ -277,28 +311,37 @@ def find_rules(
     Yields:
         :class:`Rule` records matching every supplied filter.
     """
+    for rule in _iter_catalogue_rules(catalogue, settings=settings):
+        if _rule_matches(rule, casilla_reference=casilla_reference, kind=kind, lang=lang):
+            yield rule
+
+
+def _iter_catalogue_rules(catalogue: ManualCatalogue, *, settings: Settings | None) -> Iterator[Rule]:
+    """Flatten manual -> section -> rule into a single rule stream."""
     for manual in catalogue.manuals:
         for section in iter_sections(manual, settings=settings):
-            for rule in section.rules:
-                if kind is not None and rule.kind is not kind:
-                    continue
-                if casilla_id is not None and casilla_id not in rule.references_casillas:
-                    continue
-                if lang is not None and not _rule_renders_in_language(rule, lang):
-                    continue
-                yield rule
+            yield from section.rules
 
 
-def _rule_renders_in_language(rule: Rule, lang: Language) -> bool:
+def _rule_matches(
+    rule: Rule,
+    *,
+    casilla_reference: ManualCasillaReference | None,
+    kind: RuleKind | None,
+    lang: str | None,
+) -> bool:
+    """Return True when ``rule`` satisfies every supplied filter (None == no filter)."""
+    if kind is not None and rule.kind is not kind:
+        return False
+    if casilla_reference is not None and casilla_reference not in rule.references_casillas:
+        return False
+    return not (lang is not None and not _rule_renders_in_language(rule, lang))
+
+
+def _rule_renders_in_language(rule: Rule, lang: str) -> bool:
     """Return ``True`` when the rule statement resolves in ``lang``.
 
-    Wrapping the fallback-aware ``get_translation`` lookup in a helper
-    keeps the ``find_rules`` loop free of bare ``except Exception``
-    handlers; translation failures are a recognised skip signal, not
-    a programming error.
+    Translation resolution is delegated to the CLI presentation layer;
+    the domain rule always renders its abstract key.
     """
-    try:
-        get_translation(rule.statement, lang)
-    except TranslationError:
-        return False
     return True

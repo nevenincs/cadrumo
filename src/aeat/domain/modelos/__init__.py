@@ -1,62 +1,130 @@
-"""Authoritative AEAT modelo catalogue and metadata.
+"""Modelo identity codes and informational-declaration row models.
 
-This subpackage exposes the closed, strict, pydantic v2 registry of
-every AEAT modelo the project tracks in v1 (twenty-one codes: 036, 037,
-100, 111, 115, 123, 130, 131, 180, 190, 193, 200, 202, 232, 303, 347,
-349, 369, 390, 720, 840). The registry is built at import time from the
-per-modelo entries under the private ``_entries`` package and is
-frozen as a :class:`types.MappingProxyType`.
+The public surface exposes ``ModeloCode`` (the closed set of AEAT modelo
+identifiers) together with the typed per-row records for the informational
+declarations: ``Modelo184MemberRow``, ``Modelo232VinculadaRow``,
+``Modelo347ContraparteRow``, ``Modelo349OperadorRow``, and ``ModeloDetailRow``
+(plus ``validate_m349_nif_format``). The Modelo 347 declarability threshold is a
+regulatory constant owned by ``core.external_constants`` (``M347_THRESHOLD_EUR``),
+consumed directly from there.
 
-Consumers outside :mod:`aeat.domain.modelos` MUST import from this module
-only; the underscore-prefixed submodules are internal and unstable.
-The public surface is the :data:`__all__` tuple below.
+This module re-exports :class:`CalculationRevision` and :class:`ModeloRecord`
+alongside their catalogues so application services can address calculation and
+filing persistence through the domain aggregate.
 
-Architectural context: see the 2026-04-13 modelo-inventory ADR and
-the accompanying research document for the provenance of each
-modelo's data. Deadlines are resolved at query time through the
-:func:`year_plan` helper, which delegates to
-:mod:`aeat.domain.deadlines` — the catalogue itself is import-time free
-of any deadline dependency.
+The package also hosts, as submodules imported by their consumers directly, the
+domain-layer modelo persistence and identity core: the calculation, filing, and
+verification repositories, calculation revisions, filing records, verification
+reports, and work units.
+
 """
 
 from __future__ import annotations
 
-from ._applicability import ModeloApplicability
-from ._categories import (
-    LegalCitationSource,
-    ModeloCadence,
-    ModeloCategory,
-    TaxpayerProfile,
+from ._calculation_repository import CalculationRevisionCatalogueRepository, upsert_calculation_revision
+from ._calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionAmendmentKind,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
 )
-from ._citations import LegalCitation
 from ._codes import ModeloCode
-from ._errors import (
-    ModeloRegistryError,
-    RegistryIntegrityError,
-    UnknownModeloError,
+from ._filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordStatus,
+    derive_filing_record_id,
 )
-from ._metadata import ModeloMetadata
-from ._registry import (
-    MODELO_REGISTRY,
-    get_modelo,
-    modelos_for_profile,
-    year_plan,
+from ._filing_repository import ModeloRecordCatalogueRepository, upsert_filing_record
+from ._ids import WorkUnitId
+from ._participation_index import (
+    PARTICIPATION_INDEX_NAMESPACE,
+    PARTICIPATION_INDEX_SCHEMA_VERSION,
+    TransactionParticipationIndexPersistenceError,
+    TransactionParticipationIndexRepository,
+    TransactionRevisionParticipation,
+    TransactionRevisionParticipationIndex,
+    derive_participation_index_id,
+    upsert_transaction_participation,
 )
+from ._protocols import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    ModeloRecordCatalogueRepositoryProtocol,
+    VerificationReportCatalogueRepositoryProtocol,
+    WorkUnitCatalogueRepositoryProtocol,
+)
+from ._repository import WorkUnitCatalogueRepository, upsert_work_unit
+from ._row_models import (
+    Modelo184MemberRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349OperadorRow,
+    ModeloDetailRow,
+    validate_m349_nif_format,
+)
+from ._verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+    VerificationReport,
+    VerificationReportCatalogue,
+    derive_verification_report_id,
+)
+from ._verification_repository import VerificationReportCatalogueRepository, upsert_verification_report
+from ._work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 
 __all__ = (
-    "MODELO_REGISTRY",
-    "LegalCitation",
-    "LegalCitationSource",
-    "ModeloApplicability",
-    "ModeloCadence",
-    "ModeloCategory",
+    "PARTICIPATION_INDEX_NAMESPACE",
+    "PARTICIPATION_INDEX_SCHEMA_VERSION",
+    "CalculationRevision",
+    "CalculationRevisionAmendmentKind",
+    "CalculationRevisionCatalogue",
+    "CalculationRevisionCatalogueRepository",
+    "CalculationRevisionCatalogueRepositoryProtocol",
+    "CalculationRevisionState",
+    "ExternalEvidence",
+    "ExternalEvidenceKind",
+    "Modelo184MemberRow",
+    "Modelo232VinculadaRow",
+    "Modelo347ContraparteRow",
+    "Modelo349OperadorRow",
     "ModeloCode",
-    "ModeloMetadata",
-    "ModeloRegistryError",
-    "RegistryIntegrityError",
-    "TaxpayerProfile",
-    "UnknownModeloError",
-    "get_modelo",
-    "modelos_for_profile",
-    "year_plan",
+    "ModeloDetailRow",
+    "ModeloRecord",
+    "ModeloRecordCatalogue",
+    "ModeloRecordCatalogueRepository",
+    "ModeloRecordCatalogueRepositoryProtocol",
+    "ModeloRecordStatus",
+    "ModeloVerificationFinding",
+    "ModeloVerificationFindingKind",
+    "ModeloVerificationFindingSeverity",
+    "TransactionParticipationIndexPersistenceError",
+    "TransactionParticipationIndexRepository",
+    "TransactionRevisionParticipation",
+    "TransactionRevisionParticipationIndex",
+    "VerificationCompletenessStatus",
+    "VerificationReport",
+    "VerificationReportCatalogue",
+    "VerificationReportCatalogueRepository",
+    "VerificationReportCatalogueRepositoryProtocol",
+    "WorkUnit",
+    "WorkUnitCatalogue",
+    "WorkUnitCatalogueRepository",
+    "WorkUnitCatalogueRepositoryProtocol",
+    "WorkUnitId",
+    "derive_calculation_revision_id",
+    "derive_filing_record_id",
+    "derive_participation_index_id",
+    "derive_verification_report_id",
+    "derive_work_unit_id",
+    "upsert_calculation_revision",
+    "upsert_filing_record",
+    "upsert_transaction_participation",
+    "upsert_verification_report",
+    "upsert_work_unit",
+    "validate_m349_nif_format",
 )

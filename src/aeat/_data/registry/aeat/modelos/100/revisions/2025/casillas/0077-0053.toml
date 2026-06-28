@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0053"
+number = "0053"
+label = "Gastos fiscalmente deducibles de capital mobiliario en base general"
+section = ["rendimientos_capital_mobiliario", "base_general"]
+semantic_role = "irpf_rendimiento_capital_mobiliario_general_gastos_deducibles"
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

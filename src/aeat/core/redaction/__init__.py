@@ -1,44 +1,69 @@
-"""Redaction-rule registry and the ``redact`` helper.
+"""Redaction-rule registry and the :func:`redact` helper family.
 
-The rule shape is defined in :mod:`aeat.core.classification` (so the
-classification policy table can reference rule names without a circular
-import). This module ships:
+The :class:`~aeat.core.classification.RedactionRule` shape lives in
+:mod:`aeat.core.classification` so the :class:`SensitivityClass` policy
+table can reference rule names without a circular import. This module ships:
 
-- a small in-memory registry of default :class:`RedactionRule`
-  instances keyed by name (NIF / URL / OAuth bearer token / generic
-  ellipsis);
-- the :func:`redact` helper that applies a tuple of rules to a value
-  in declared order;
-- the :func:`default_rules_for` convenience that resolves the rule
-  references stored in :class:`ClassificationPolicy.redaction_rules`
-  to the actual :class:`RedactionRule` instances.
+* a small in-memory registry of default
+  :class:`~aeat.core.classification.RedactionRule` instances keyed by
+  name (NIF, URL, OAuth bearer token, opaque bearer token);
+* :func:`redact`, the flat-string helper that applies a tuple of
+  rules in declared order;
+* :func:`redact_structured`, the recursive variant that walks dict /
+  list / tuple containers and redacts every string leaf in place;
+* :func:`redact_for_log`, the convenience wrapper for log lines and
+  exception messages;
+* :func:`redact_for_cli_output` and
+  :func:`redact_structured_for_cli_output`, the public CLI success-output
+  profile for rendered text and JSON-shaped payloads;
+* :func:`default_rules_for` and :func:`default_rules_for_class`, the
+  resolvers that turn rule names stored on a
+  :class:`~aeat.core.classification.ClassificationPolicy` into the
+  underlying :class:`~aeat.core.classification.RedactionRule`
+  instances.
 
-Strategies:
+The redaction strategies, defined in
+:class:`~aeat.core.classification.RedactionStrategy`, are:
 
-- ``SHA256_PREFIX`` — replace the matched span with the first 8 hex
-  characters of its SHA-256 digest, prefixed with ``sha256:``.
-- ``HOST_ONLY`` — for URL-shaped values, retain only the URL host
-  component; everything else (path, query, fragment) is dropped.
-- ``FINGERPRINT`` — bearer- / token-shaped value rewrites to
-  ``token:sha256:<8hex>``.
-- ``ELLIPSIS`` — replace the matched span with three ASCII full stops.
+``SHA256_PREFIX``
+    Replace the matched span with ``sha256:<first-8-hex>`` of its
+    SHA-256 digest. Used for stable identifiers (NIF / NIE / CIF).
+
+``HOST_ONLY``
+    For URL-shaped values, retain only ``<scheme>://<host>``;
+    everything else (path, query, fragment) is dropped.
+
+``FINGERPRINT``
+    Bearer- / token-shaped values rewrite to
+    ``token:sha256:<first-8-hex>``.
+
+``ELLIPSIS``
+    Replace the matched span with three ASCII full stops.
 """
 
 from __future__ import annotations
 
-import hashlib
 import re
 from collections.abc import Mapping
 from types import MappingProxyType
 from urllib.parse import urlparse
 
 from ..classification import (
-    ClassificationPolicy,
-    RedactionRule,
-    RedactionStrategy,
-    SensitivityClass,
-    default_policy_for,
+    ClassificationPolicy as _ClassificationPolicy,
 )
+from ..classification import (
+    RedactionRule as _RedactionRule,
+)
+from ..classification import (
+    RedactionStrategy as _RedactionStrategy,
+)
+from ..classification import (
+    SensitivityClass as _SensitivityClass,
+)
+from ..classification import (
+    default_policy_for as _default_policy_for,
+)
+from ..hashing import sha256_hex as _sha256_hex
 
 # NIF / NIE / CIF — Spanish identity numbers. Eight digits + check letter
 # with optional leading X / Y / Z for foreigners.
@@ -59,14 +84,86 @@ _OPAQUE_BEARER_PATTERN = (
 # Generic URL pattern. Drops everything except the host component.
 _URL_PATTERN = r"https?://[^\s\"'<>]+"
 
+CLI_PROFILE_ID_PLACEHOLDER = "<profile-id>"
+CLI_BUCKET_ID_PLACEHOLDER = "<bucket-id>"
+CLI_OBJECT_KEY_PLACEHOLDER = "<object-key>"
+
+_CLI_UUID_PATTERN = re.compile(
+    r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b",
+)
+_CLI_IDENTIFIER_ASSIGNMENT_PATTERN = re.compile(
+    r"(?i)(?P<label>\b(?:"
+    r"active[_-]?profile(?:[_-]?id)?|"
+    r"bucket[_-]?profile[_-]?id|"
+    r"profile[_-]?bucket[_-]?id|"
+    r"profile[_-]?id|"
+    r"repository[_-]?profile[_-]?id|"
+    r"source[_-]?profile[_-]?id|"
+    r"target[_-]?profile[_-]?id|"
+    r"active[_-]?bucket[_-]?id|"
+    r"bucket[_-]?id|"
+    r"repository[_-]?bucket[_-]?id|"
+    r"storage[_-]?bucket[_-]?id|"
+    r"object[_-]?key|"
+    r"lookup[_-]?key|"
+    r"secure[_-]?object[_-]?key|"
+    r"storage[_-]?object[_-]?key"
+    r")\b)"
+    r"(?P<sep>\s*(?::|=|\t)\s*)"
+    r"(?P<value>[^\s,;]+)",
+)
+_CLI_OBJECT_KEY_TOKEN_PATTERN = re.compile(
+    r"(?i)\b(?:wallet|transaction-catalogue|invoice|attachment|justificante):[^\s,;]+",
+)
+# A tab-delimited column-header row is a list of bare field-name tokens, never a
+# ``label<TAB>value`` data pair. The identifier-assignment redactor treats the
+# ``<TAB>`` between two header cells as ``label<sep>value`` and rewrites the
+# *next column name* (e.g. ``modelo`` after ``bucket_id``) into a placeholder,
+# corrupting the header. A header is recognised as three or more cells where
+# every cell is a bare snake-case identifier word; any real id / date / numeric /
+# enum value (UUID, ``bucket-alpha``, ``2026``, ``FILED``) breaks the shape, and a
+# two-cell ``key<TAB>value`` data pair stays below the cell threshold and is still
+# redacted.
+_CLI_HEADER_CELL_PATTERN = re.compile(r"[a-z][a-z0-9_]*")
+_CLI_TABULAR_HEADER_MIN_CELLS = 3
+_CLI_PROFILE_ID_KEYS = frozenset(
+    {
+        "active_profile_id",
+        "bucket_profile_id",
+        "profile_bucket_id",
+        "profile_id",
+        "repository_profile_id",
+        "source_profile_id",
+        "target_profile_id",
+    },
+)
+_CLI_PROFILE_REFERENCE_KEYS = frozenset({"active_profile"})
+_CLI_BUCKET_ID_KEYS = frozenset(
+    {
+        "active_bucket_id",
+        "bucket_id",
+        "repository_bucket_id",
+        "storage_bucket_id",
+    },
+)
+_CLI_OBJECT_KEY_KEYS = frozenset(
+    {
+        "lookup_key",
+        "object_key",
+        "secure_object_key",
+        "storage_object_key",
+    },
+)
+
 
 def _sha256_prefix(value: str) -> str:
-    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()
+    digest = _sha256_hex(value.encode("utf-8"))
     return f"sha256:{digest[:8]}"
 
 
 def _fingerprint(value: str) -> str:
-    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()
+    digest = _sha256_hex(value.encode("utf-8"))
     return f"token:sha256:{digest[:8]}"
 
 
@@ -78,131 +175,160 @@ def _host_only(value: str) -> str:
     return f"{scheme}://{parsed.hostname}"
 
 
-_DEFAULT_RULES: Mapping[str, RedactionRule] = MappingProxyType(
+_DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
     {
-        "nif-hash": RedactionRule(
+        "nif-hash": _RedactionRule(
             name="nif-hash",
             pattern=_NIF_PATTERN,
-            strategy=RedactionStrategy.SHA256_PREFIX,
+            strategy=_RedactionStrategy.SHA256_PREFIX,
             applies_to=(
-                SensitivityClass.IDENTITY,
-                SensitivityClass.FINANCIAL,
-                SensitivityClass.AUDIT,
-                SensitivityClass.DIAGNOSTIC,
+                _SensitivityClass.IDENTITY,
+                _SensitivityClass.FINANCIAL,
+                _SensitivityClass.AUDIT,
+                _SensitivityClass.DIAGNOSTIC,
             ),
         ),
-        "url-host-only": RedactionRule(
+        "url-host-only": _RedactionRule(
             name="url-host-only",
             pattern=_URL_PATTERN,
-            strategy=RedactionStrategy.HOST_ONLY,
+            strategy=_RedactionStrategy.HOST_ONLY,
             applies_to=(
-                SensitivityClass.SESSION,
-                SensitivityClass.AUDIT,
-                SensitivityClass.DIAGNOSTIC,
+                _SensitivityClass.SESSION,
+                _SensitivityClass.AUDIT,
+                _SensitivityClass.DIAGNOSTIC,
             ),
         ),
-        "token-fingerprint": RedactionRule(
+        "token-fingerprint": _RedactionRule(
             name="token-fingerprint",
             pattern=_BEARER_PATTERN,
-            strategy=RedactionStrategy.FINGERPRINT,
+            strategy=_RedactionStrategy.FINGERPRINT,
             applies_to=(
-                SensitivityClass.SECRET,
-                SensitivityClass.SESSION,
-                SensitivityClass.AUDIT,
-                SensitivityClass.DIAGNOSTIC,
+                _SensitivityClass.SECRET,
+                _SensitivityClass.SESSION,
+                _SensitivityClass.AUDIT,
+                _SensitivityClass.DIAGNOSTIC,
             ),
         ),
-        "bearer-token-fingerprint": RedactionRule(
+        "bearer-token-fingerprint": _RedactionRule(
             name="bearer-token-fingerprint",
             pattern=_OPAQUE_BEARER_PATTERN,
-            strategy=RedactionStrategy.FINGERPRINT,
+            strategy=_RedactionStrategy.FINGERPRINT,
             applies_to=(
-                SensitivityClass.SECRET,
-                SensitivityClass.SESSION,
-                SensitivityClass.AUDIT,
-                SensitivityClass.DIAGNOSTIC,
+                _SensitivityClass.SECRET,
+                _SensitivityClass.SESSION,
+                _SensitivityClass.AUDIT,
+                _SensitivityClass.DIAGNOSTIC,
             ),
         ),
-    }
+    },
 )
 
 
-def default_rules() -> Mapping[str, RedactionRule]:
-    """Return the immutable default-rule registry keyed by rule name."""
+def default_rules() -> Mapping[str, _RedactionRule]:
+    """Return the immutable default-rule registry keyed by rule name.
+
+    Returns:
+        A read-only :class:`~collections.abc.Mapping` from rule name
+        to :class:`~aeat.core.classification.RedactionRule`.
+    """
     return _DEFAULT_RULES
 
 
-def default_rules_for(policy: ClassificationPolicy) -> tuple[RedactionRule, ...]:
-    """Resolve the rule references in ``policy.redaction_rules`` to instances.
+def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ...]:
+    """Resolve the rule references on a policy to concrete rule instances.
 
     Args:
-        policy: A classification policy whose ``redaction_rules`` field
-            carries rule names.
+        policy: A :class:`~aeat.core.classification.ClassificationPolicy`
+            whose ``redaction_rules`` field carries rule names.
 
     Returns:
-        A tuple of :class:`RedactionRule` instances in the order they
-        were declared on the policy. Names that are not in the default
-        registry are silently skipped — this is deliberate so per-domain
-        policies can reference custom rules registered later.
+        A tuple of :class:`~aeat.core.classification.RedactionRule`
+        instances in the order they were declared on the policy.
+        Names that are not in the default registry are silently
+        skipped: this is deliberate so per-domain policies can
+        reference custom rules registered by other modules.
     """
     return tuple(_DEFAULT_RULES[name] for name in policy.redaction_rules if name in _DEFAULT_RULES)
 
 
-def default_rules_for_class(sensitivity: SensitivityClass) -> tuple[RedactionRule, ...]:
-    """Resolve the default rule set for ``sensitivity`` via the policy table."""
-    return default_rules_for(default_policy_for(sensitivity))
+def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionRule, ...]:
+    """Resolve the default rule set for a sensitivity class.
+
+    Convenience wrapper that goes through
+    ``aeat.core.classification._default_policy_for`` and then
+    :func:`default_rules_for` so callers do not need to know about
+    the policy table.
+
+    Args:
+        sensitivity: The
+            :class:`~aeat.core.classification.SensitivityClass` whose
+            default rules should apply.
+
+    Returns:
+        Ordered tuple of rules for that class.
+    """
+    return default_rules_for(_default_policy_for(sensitivity))
 
 
-def _apply_one(rule: RedactionRule, value: str) -> str:
+def _apply_one(rule: _RedactionRule, value: str) -> str:
     pattern = re.compile(rule.pattern, re.MULTILINE)
-    if rule.strategy is RedactionStrategy.ELLIPSIS:
+    if rule.strategy is _RedactionStrategy.ELLIPSIS:
         return pattern.sub("...", value)
-    if rule.strategy is RedactionStrategy.SHA256_PREFIX:
+    if rule.strategy is _RedactionStrategy.SHA256_PREFIX:
         return pattern.sub(lambda m: _sha256_prefix(m.group(0)), value)
-    if rule.strategy is RedactionStrategy.HOST_ONLY:
+    if rule.strategy is _RedactionStrategy.HOST_ONLY:
         return pattern.sub(lambda m: _host_only(m.group(0)), value)
-    if rule.strategy is RedactionStrategy.FINGERPRINT:
+    if rule.strategy is _RedactionStrategy.FINGERPRINT:
         return pattern.sub(lambda m: _fingerprint(m.group(0)), value)
     return value  # pragma: no cover - exhaustive enum
 
 
-def redact(value: str, *, rules: tuple[RedactionRule, ...]) -> str:
-    """Apply ``rules`` to ``value`` in declared order.
+def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
+    """Apply ``rules`` to a flat string in declared order.
 
     Args:
         value: The candidate string. Non-string inputs raise
-            :class:`TypeError`; consumers stringify upstream.
-        rules: Ordered tuple of rules.
+            :exc:`TypeError`; consumers must stringify upstream.
+        rules: Ordered tuple of
+            :class:`~aeat.core.classification.RedactionRule` instances.
+            Each rule's pattern is compiled with :data:`re.MULTILINE`
+            and its strategy is applied to every match.
 
     Returns:
         The redacted string.
+
+    Raises:
+        RedactionError: When ``value`` is not a :class:`str`.
     """
     if not isinstance(value, str):
-        raise TypeError(f"redact() expects str; got {type(value).__name__}")
+        from ..errors import RedactionError
+
+        raise RedactionError(f"redact() expects str; got {type(value).__name__}")
     result = value
     for rule in rules:
         result = _apply_one(rule, result)
     return result
 
 
-def redact_structured(value: object, *, rules: tuple[RedactionRule, ...]) -> object:
-    """Apply ``rules`` to every string leaf inside ``value``, recursively.
+def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> object:
+    """Recursively apply ``rules`` to every string leaf inside a structure.
 
     Walks dicts, lists, and tuples; redacts every string at the
     leaves. Non-string non-container values pass through unchanged.
-    The container shape is preserved (dict stays dict; list stays
-    list; tuple stays tuple). The resulting object is a fresh copy at
-    every container level — the input is never mutated.
+    The container shape is preserved (dict stays dict, list stays
+    list, tuple stays tuple). The resulting object is a fresh copy
+    at every container level — the input is never mutated.
 
-    This is the load-bearing primitive for the audit-sink relocation:
+    This is the load-bearing primitive for nested audit payloads:
     submission audit events and run-trace records are nested dicts,
-    and a flat ``redact()`` call would not reach the NIF nested under
-    e.g. ``event["payload"]["taxpayer"]["nif"]``.
+    and a flat :func:`redact` call would not reach the NIF nested
+    under e.g. ``event["payload"]["taxpayer"]["nif"]``.
 
     Args:
-        value: Any JSON-shaped value (str, int, float, bool, None,
-            dict, list, tuple, or a typed model that is dumped via
-            ``model_dump()`` upstream).
+        value: Any JSON-shaped value: :class:`str`, :class:`int`,
+            :class:`float`, :class:`bool`, ``None``, :class:`dict`,
+            :class:`list`, :class:`tuple`, or a typed model that has
+            been dumped via ``model_dump()`` upstream.
         rules: Ordered tuple of rules.
 
     Returns:
@@ -222,35 +348,243 @@ def redact_structured(value: object, *, rules: tuple[RedactionRule, ...]) -> obj
     return value
 
 
-def redact_for_log(text: str) -> str:
-    """Redact ``text`` against the AUDIT-class rule set for log/error use.
+def _normalise_cli_key(key: object | None) -> str | None:
+    if key is None:
+        return None
+    return re.sub(r"[^a-z0-9]+", "_", str(key).strip().lower()).strip("_")
 
-    Convenience wrapper for the call sites that construct
-    exception messages or log lines containing operator-controlled
-    PII (NIF / NIE / CIF, OAuth tokens, session URLs). Issue #469
-    M-3: raised exceptions previously interpolated raw NIF into
-    ``exc.args[0]``; the ``SecretScrubbingFilter`` covers the
-    ``logging`` path but not ``str(exc)`` flowing through typer's
-    default error renderer / JSON envelope / observability sinks
-    that capture exception text without going through the filter.
-    Redact at the construction site so the secret is never in the
-    exception's message field to begin with.
+
+def _is_cli_profile_reference(value: object) -> bool:
+    return isinstance(value, str) and _CLI_UUID_PATTERN.fullmatch(value.strip()) is not None
+
+
+def _cli_placeholder_for_key(
+    key: object | None,
+    value: object,
+    *,
+    reveal_identifiers: bool = False,
+) -> str | None:
+    if value is None or value == "":
+        return None
+    normalised = _normalise_cli_key(key)
+    # The profile/bucket opt-out only un-redacts the opaque profile/bucket
+    # identifier surfaces; object keys (which can embed a NIF / period) and
+    # every PII / token / URL pass stay redacted unconditionally.
+    if not reveal_identifiers:
+        if normalised in _CLI_PROFILE_ID_KEYS:
+            return CLI_PROFILE_ID_PLACEHOLDER
+        if normalised in _CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value):
+            return CLI_PROFILE_ID_PLACEHOLDER
+        if normalised in _CLI_BUCKET_ID_KEYS:
+            return CLI_BUCKET_ID_PLACEHOLDER
+    if normalised in _CLI_OBJECT_KEY_KEYS:
+        return CLI_OBJECT_KEY_PLACEHOLDER
+    return None
+
+
+def _is_revealed_identifier_key(key: object | None, value: object) -> bool:
+    """Whether ``key`` is an opaque profile/bucket id the reveal opt-out exposes raw.
+
+    A revealed profile/bucket identifier is an opaque UUID and MUST pass through
+    verbatim — running it through the free-text redactor would let the NIF
+    pattern hash a UUID hex segment (``1470176e`` reads as 7 digits + letter)
+    and corrupt the value the operator opted in to see.
+    """
+    if value is None or value == "":
+        return False
+    normalised = _normalise_cli_key(key)
+    if normalised in _CLI_PROFILE_ID_KEYS or normalised in _CLI_BUCKET_ID_KEYS:
+        return True
+    return normalised in _CLI_PROFILE_REFERENCE_KEYS and _is_cli_profile_reference(value)
+
+
+def _is_cli_tabular_header_line(text: str) -> bool:
+    cells = text.split("\t")
+    if len(cells) < _CLI_TABULAR_HEADER_MIN_CELLS:
+        return False
+    return all(_CLI_HEADER_CELL_PATTERN.fullmatch(cell) is not None for cell in cells)
+
+
+def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
+    # A column-header row carries no identifier values, only field names; the
+    # ``label<TAB>value`` heuristic would otherwise rewrite the *next column
+    # name* into a placeholder. Skip the assignment redactor for headers; the
+    # remaining UUID / token passes are no-ops on bare field names.
+    if _is_cli_tabular_header_line(text):
+        redacted = redact_for_log(text)
+        if not reveal_identifiers:
+            redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
+        return _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
+    # Under the reveal opt-out a revealed profile/bucket id is an opaque UUID
+    # that must survive the downstream free-text passes verbatim — otherwise the
+    # NIF pattern hashes a UUID hex segment (``1470176e`` reads as 7 digits + a
+    # letter). Park each revealed value behind a NUL-delimited sentinel that
+    # matches no redaction pattern, run the passes, then restore it.
+    protected: list[str] = []
+
+    def _substitute_assignment(match: re.Match[str]) -> str:
+        label = match.group("label")
+        value = match.group("value")
+        sep = match.group("sep")
+        placeholder = _cli_placeholder_for_key(label, value, reveal_identifiers=reveal_identifiers)
+        if placeholder is not None:
+            return f"{label}{sep}{placeholder}"
+        if reveal_identifiers and _is_revealed_identifier_key(label, value):
+            sentinel = f"\x00{len(protected)}\x00"
+            protected.append(value)
+            return f"{label}{sep}{sentinel}"
+        return f"{label}{sep}{value}"
+
+    redacted = _CLI_IDENTIFIER_ASSIGNMENT_PATTERN.sub(_substitute_assignment, text)
+    redacted = redact_for_log(redacted)
+    # The bare-UUID catch-all collapses every UUID to ``<profile-id>``; it is the
+    # other profile/bucket-identifier surface the opt-out un-redacts. PII, token,
+    # URL, and object-key passes above/below stay unconditional.
+    if not reveal_identifiers:
+        redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
+    redacted = _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
+    for index, original in enumerate(protected):
+        redacted = redacted.replace(f"\x00{index}\x00", original)
+    return redacted
+
+
+def _redact_structured_for_cli_output(
+    value: object,
+    *,
+    key: object | None = None,
+    reveal_identifiers: bool = False,
+) -> object:
+    placeholder = _cli_placeholder_for_key(key, value, reveal_identifiers=reveal_identifiers)
+    if placeholder is not None:
+        return placeholder
+    # A revealed profile/bucket id is an opaque UUID; emit it verbatim so the
+    # free-text redactor does not hash a UUID hex segment as a NIF.
+    if reveal_identifiers and _is_revealed_identifier_key(key, value):
+        return value
+    if isinstance(value, str):
+        return _redact_cli_string(value, reveal_identifiers=reveal_identifiers)
+    if isinstance(value, dict):
+        redacted: dict[object, object] = {}
+        for item_key, item_value in value.items():
+            redacted_key = (
+                _redact_cli_string(item_key, reveal_identifiers=reveal_identifiers)
+                if isinstance(item_key, str)
+                else item_key
+            )
+            unique_key = _unique_mapping_key(redacted_key, redacted)
+            redacted[unique_key] = _redact_structured_for_cli_output(
+                item_value,
+                key=item_key,
+                reveal_identifiers=reveal_identifiers,
+            )
+        return redacted
+    if isinstance(value, list):
+        return [_redact_structured_for_cli_output(item, reveal_identifiers=reveal_identifiers) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_redact_structured_for_cli_output(item, reveal_identifiers=reveal_identifiers) for item in value)
+    return value
+
+
+def _unique_mapping_key(candidate: object, existing: Mapping[object, object]) -> object:
+    if candidate not in existing:
+        return candidate
+    base = str(candidate)
+    suffix = 2
+    while f"{base}#{suffix}" in existing:
+        suffix += 1
+    return f"{base}#{suffix}"
+
+
+def redact_for_log(text: str) -> str:
+    """Redact a string against the AUDIT-class rule set for log/error use.
+
+    Convenience wrapper for call sites that construct exception
+    messages or log lines containing operator-controlled PII
+    (NIF / NIE / CIF, OAuth tokens, session URLs). Raised exceptions
+    interpolate user-controlled identifiers into ``exc.args[0]``;
+    the standard logging filter covers the :mod:`logging` path but
+    not ``str(exc)`` flowing through Typer's default error renderer,
+    JSON envelopes, or observability sinks that capture exception
+    text without going through the filter. Redact at the construction
+    site so the secret is never in the exception's message field to
+    begin with.
 
     The AUDIT rule set is the right default for exception text: it
     redacts NIF (sha256-prefix), URL host-only, and bearer-token
-    fingerprints. The IDENTITY class is for ciphertext-at-rest, not
-    log-shaped strings; the DIAGNOSTIC class has the same rules but
-    is named for observability sinks specifically. AUDIT is the
-    log/error path's canonical class.
+    fingerprints. The :class:`~aeat.core.classification.SensitivityClass`
+    identity and diagnostic classes are named for at-rest identity data
+    and observability sinks respectively; ``AUDIT`` is the canonical
+    class for the log/error path.
+
+    Args:
+        text: The log-shaped string to redact.
+
+    Returns:
+        The redacted string.
     """
-    return redact(text, rules=default_rules_for_class(SensitivityClass.AUDIT))
+    return redact(text, rules=default_rules_for_class(_SensitivityClass.AUDIT))
+
+
+def redact_for_cli_output(text: str, *, reveal_identifiers: bool = False) -> str:
+    """Redact a rendered operator-facing CLI output line.
+
+    The CLI public-output profile composes the AUDIT rule set used by
+    logs/errors with additional profile, bucket, and secure-object key
+    handling. It deliberately keeps display labels untouched and targets
+    machine identifiers, storage lookup values, URL paths, bearer tokens,
+    and tax identities that should not be emitted as success output.
+
+    Args:
+        text: Rendered CLI text.
+        reveal_identifiers: When ``True``, opaque profile and bucket
+            identifier surfaces are emitted raw (the operator opt-out for
+            multi-client disambiguation). Tax identities, tokens, URLs,
+            and secure-object keys stay redacted regardless.
+
+    Returns:
+        Redacted CLI-safe text.
+
+    Raises:
+        RedactionError: When ``text`` is not a :class:`str`.
+    """
+    if not isinstance(text, str):
+        from ..errors import RedactionError
+
+        raise RedactionError(f"redact_for_cli_output() expects str; got {type(text).__name__}")
+    return _redact_cli_string(text, reveal_identifiers=reveal_identifiers)
+
+
+def redact_structured_for_cli_output(value: object, *, reveal_identifiers: bool = False) -> object:
+    """Recursively redact a JSON-shaped value for public CLI output.
+
+    Unlike :func:`redact_structured`, this helper is key-aware so values
+    under canonical profile, bucket, and secure-object key fields become
+    stable placeholders before JSON serialization. Container shape is
+    preserved and the input object is never mutated.
+
+    Args:
+        value: JSON-shaped payload to prepare for CLI success output.
+        reveal_identifiers: When ``True``, opaque profile and bucket
+            identifier surfaces are emitted raw (the operator opt-out for
+            multi-client disambiguation). Tax identities, tokens, URLs,
+            and secure-object keys stay redacted regardless.
+
+    Returns:
+        A redacted copy with the same nested shape.
+    """
+    return _redact_structured_for_cli_output(value, reveal_identifiers=reveal_identifiers)
 
 
 __all__ = [
+    "CLI_BUCKET_ID_PLACEHOLDER",
+    "CLI_OBJECT_KEY_PLACEHOLDER",
+    "CLI_PROFILE_ID_PLACEHOLDER",
     "default_rules",
     "default_rules_for",
     "default_rules_for_class",
     "redact",
+    "redact_for_cli_output",
     "redact_for_log",
     "redact_structured",
+    "redact_structured_for_cli_output",
 ]

@@ -1,0 +1,31 @@
+{
+  "scenario_id": "modelo-100-2025-employee-default-minimo-galicia",
+  "profile_overrides": {
+    "autonomous_community": "GALICIA"
+  },
+  "expected": {
+    "Cuota diferencial": "0.00",
+    "Mínimo personal y familiar. Parte autonómica": "5789.00",
+    "Mínimo personal y familiar. Parte estatal": "5550.00",
+    "Resultado de la declaración": "0.00"
+  },
+  "observed": {
+    "Cuota diferencial": "0,00",
+    "Mínimo personal y familiar. Parte autonómica": "5.789,00",
+    "Mínimo personal y familiar. Parte estatal": "5.550,00",
+    "Resultado de la declaración": "0,00"
+  },
+  "expected_by_casilla_id": {
+    "0610": "0.00",
+    "0520": "5789.00",
+    "0519": "5550.00",
+    "0670": "0.00"
+  },
+  "observed_by_casilla_id": {
+    "0610": "0,00",
+    "0520": "5.789,00",
+    "0519": "5.550,00",
+    "0670": "0,00"
+  },
+  "raw_evidence_locator": "https://www2.agenciatributaria.gob.es/wlpl/PARE-RW25/OPEN/index.zul?EJER=2025&TACCESO=COLAB"
+}

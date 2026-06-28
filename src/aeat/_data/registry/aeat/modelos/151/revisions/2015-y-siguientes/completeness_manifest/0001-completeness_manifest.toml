@@ -1,0 +1,26 @@
+# Calculation-completeness manifest. The test_record_design gate requires this
+# to match the calculation closure EXACTLY (no manifest-only / closure-only
+# drift). The 151 calculation closure is the cuota chain: base liquidable
+# general (manual input feeding the escala), cuota integra general (computed via
+# the art.93.2.e.1º lookup_bracket), retenciones (manual pago a cuenta), and
+# cuota diferencial (computed). Those are the manifest casillas.
+[revisions."2015-y-siguientes".completeness_manifest]
+source_ref = "aeat-modelo-151-procedure"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure"]
+
+[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "impatriado.base-liquidable-general"
+number = "impatriado.base-liquidable-general"
+
+[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "impatriado.cuota-integra-general"
+number = "impatriado.cuota-integra-general"
+
+[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "impatriado.retenciones"
+number = "impatriado.retenciones"
+
+[[revisions."2015-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "impatriado.cuota-diferencial"
+number = "impatriado.cuota-diferencial"

@@ -9,7 +9,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ....core.i18n import normalize_language_code
+from ._errors import LLMValidationError
 
 _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 
@@ -21,6 +21,31 @@ class LLMProvider(StrEnum):
     OPENAI = "OPENAI"
     GEMINI = "GEMINI"
     LOCAL = "LOCAL"
+
+
+class MultimodalImageInput(BaseModel):
+    """One on-host-prepared image attached to a multimodal LLM request.
+
+    Transient and in-memory only. Carries the base64-encoded image bytes the
+    provider adapter forwards to a local vision model and the content address
+    (an attachment-store SHA-256) the cache key folds in so two distinct
+    evidence documents under the same prompt never collide. The base64 payload
+    is never persisted -- only its content address enters the cache key
+    (``sensitive-financial-data-secure-storage-only``).
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True)
+
+    content_sha256: str = Field(
+        min_length=64,
+        max_length=64,
+        description="Lowercase hex SHA-256 content address of the source evidence bytes.",
+    )
+    base64_data: str = Field(
+        min_length=1,
+        repr=False,
+        description="Base64-encoded image bytes forwarded to the provider; never persisted.",
+    )
 
 
 class LLMRequest(BaseModel):
@@ -36,23 +61,25 @@ class LLMRequest(BaseModel):
     cache_key: str | None = Field(default=None, description="Optional cache grouping key.")
     provider_override: LLMProvider | None = Field(default=None, description="Override the configured provider.")
     model_override: str | None = Field(default=None, min_length=1, description="Override the configured model.")
+    images: tuple[MultimodalImageInput, ...] = Field(
+        default=(),
+        description="On-host-prepared multimodal image inputs (empty for a text-only request).",
+    )
 
     @field_validator("prompt")
     @classmethod
     def validate_prompt(cls, value: str) -> str:
         """Ensure prompts are not empty or whitespace-only."""
-
         normalized = value.strip()
         if not normalized:
             msg = "Prompt must not be empty."
-            raise ValueError(msg)
+            raise LLMValidationError(msg)
         return normalized
 
     @field_validator("system")
     @classmethod
     def validate_system(cls, value: str | None) -> str | None:
         """Normalize empty system prompts to ``None``."""
-
         if value is None:
             return None
         normalized = value.strip()
@@ -62,10 +89,9 @@ class LLMRequest(BaseModel):
     @classmethod
     def validate_language(cls, value: str | None) -> str | None:
         """Validate optional ISO 639-1 language codes."""
-
         if value is None:
             return None
-        return normalize_language_code(value)
+        return value
 
 
 class LLMResponse(BaseModel):
@@ -102,10 +128,9 @@ class PromptDefinition(BaseModel):
     @classmethod
     def validate_id(cls, value: str) -> str:
         """Ensure prompt identifiers are kebab-case."""
-
         if not _PROMPT_ID_PATTERN.fullmatch(value):
             msg = f"Prompt id must be kebab-case, got {value!r}"
-            raise ValueError(msg)
+            raise LLMValidationError(msg)
         return value
 
 
@@ -121,12 +146,10 @@ class PromptRegistry(BaseModel):
 
     def register(self, definition: PromptDefinition) -> None:
         """Add or replace a prompt definition."""
-
         self.definitions[self._composite_key(definition.id, definition.version)] = definition
 
     def get(self, prompt_id: str, version: int | None = None) -> PromptDefinition:
-        """Return a prompt definition by id and optional version."""
-
+        """Return a :class:`PromptDefinition` by id and optional version."""
         if version is not None:
             return self.definitions[self._composite_key(prompt_id, version)]
         candidates = [item for item in self.definitions.values() if item.id == prompt_id]
@@ -136,13 +159,11 @@ class PromptRegistry(BaseModel):
 
     def prompt_ids(self) -> tuple[str, ...]:
         """Return the distinct prompt identifiers in the registry."""
-
         return tuple(sorted({item.id for item in self.definitions.values()}))
 
     @classmethod
     def seeded(cls) -> PromptRegistry:
-        """Return the default prompt registry for current downstream consumers."""
-
+        """Return a :class:`PromptRegistry` seeded with the default prompts for current downstream consumers."""
         registry = cls()
         registry.register(
             PromptDefinition(
@@ -156,7 +177,7 @@ class PromptRegistry(BaseModel):
                 ),
                 expected_output_schema=None,
                 description="Faithful legal- and tax-aware translation prompt.",
-            )
+            ),
         )
         registry.register(
             PromptDefinition(
@@ -164,8 +185,8 @@ class PromptRegistry(BaseModel):
                 version=1,
                 template=("Extract structured casilla information from the supplied source text.\n\nSource:\n{text}"),
                 expected_output_schema=None,
-                description="Placeholder seed for issue #23 casilla extraction workflows.",
-            )
+                description="Placeholder seed for casilla extraction workflows.",
+            ),
         )
         registry.register(
             PromptDefinition(
@@ -173,15 +194,14 @@ class PromptRegistry(BaseModel):
                 version=1,
                 template=("Extract structured tax rules from the supplied manual excerpt.\n\nManual excerpt:\n{text}"),
                 expected_output_schema=None,
-                description="Placeholder seed for issue #25 manual rule extraction workflows.",
-            )
+                description="Placeholder seed for manual rule extraction workflows.",
+            ),
         )
         return registry
 
     @staticmethod
     def _composite_key(prompt_id: str, version: int) -> str:
         """Build the storage key for a versioned prompt."""
-
         return f"{prompt_id}:v{version}"
 
 
@@ -234,8 +254,7 @@ class Translation(BaseModel):
     @classmethod
     def validate_translation_language(cls, value: str) -> str:
         """Validate translation language codes."""
-
-        return normalize_language_code(value)
+        return value
 
 
 class CacheKey(BaseModel):

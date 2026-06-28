@@ -3,6 +3,7 @@ tags:
   - "#plan"
   - "#aeat-access-gate"
 date: 2026-04-17
+modified: '2026-04-17'
 title: "Implementation Plan: Live AEAT Access Blocker & Verification Gate (#167)"
 related:
   - "[[2026-04-17-aeat-access-gate-adr]]"

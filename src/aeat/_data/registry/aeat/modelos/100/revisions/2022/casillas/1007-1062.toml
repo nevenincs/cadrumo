@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "1062"
+number = "1062"
+label = "Por las cantidades invertidas en obras de rehabilitación de vivienda habitual"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_obras_rehabilitacion"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

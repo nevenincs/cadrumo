@@ -1,0 +1,14 @@
+[[revisions."2022".formulas]]
+id = "renta-2022-cuota-base-liquidable-ahorro-autonomica"
+target_casilla_id = "0541"
+expression = { op = "subtract", args = [
+    { casilla_id = "0537" },
+    { casilla_id = "0539" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-76"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]

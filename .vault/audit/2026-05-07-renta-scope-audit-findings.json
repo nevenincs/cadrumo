@@ -1,0 +1,533 @@
+{
+  "audit_date": "2026-05-07",
+  "modelo": "100",
+  "layer1": {
+    "2020": {
+      "total_casillas": 1531,
+      "input_kind": {
+        "manual": 1531
+      },
+      "computed_targets": 126,
+      "casillas_consumed_by_formulas": 369,
+      "casillas_declared_but_never_read": 1125,
+      "bindings_consumed_count": 1
+    },
+    "2021": {
+      "total_casillas": 1693,
+      "input_kind": {
+        "informational": 4,
+        "manual": 1689
+      },
+      "computed_targets": 127,
+      "casillas_consumed_by_formulas": 377,
+      "casillas_declared_but_never_read": 1278,
+      "bindings_consumed_count": 1
+    },
+    "2022": {
+      "total_casillas": 1852,
+      "input_kind": {
+        "informational": 4,
+        "manual": 1848
+      },
+      "computed_targets": 141,
+      "casillas_consumed_by_formulas": 420,
+      "casillas_declared_but_never_read": 1388,
+      "bindings_consumed_count": 1
+    },
+    "2023": {
+      "total_casillas": 1929,
+      "input_kind": {
+        "informational": 4,
+        "manual": 1925
+      },
+      "computed_targets": 142,
+      "casillas_consumed_by_formulas": 434,
+      "casillas_declared_but_never_read": 1450,
+      "bindings_consumed_count": 1
+    },
+    "2024": {
+      "total_casillas": 2062,
+      "input_kind": {
+        "informational": 4,
+        "manual": 2058
+      },
+      "computed_targets": 142,
+      "casillas_consumed_by_formulas": 428,
+      "casillas_declared_but_never_read": 1589,
+      "bindings_consumed_count": 1
+    },
+    "2025": {
+      "total_casillas": 2235,
+      "input_kind": {
+        "bound": 30,
+        "manual": 2167,
+        "computed": 35,
+        "informational": 3
+      },
+      "computed_targets": 151,
+      "casillas_consumed_by_formulas": 489,
+      "casillas_declared_but_never_read": 1700,
+      "bindings_consumed_count": 1
+    }
+  },
+  "layer3": {
+    "envelope": {
+      "label": "Declarante envelope (NIF, CCAA, tributación)",
+      "total_casillas": 30,
+      "computed": 0,
+      "bound": 30,
+      "manual": 0,
+      "coverage_pct": 100.0
+    },
+    "trabajo": {
+      "label": "Rendimientos del trabajo",
+      "total_casillas": 32,
+      "computed": 6,
+      "bound": 0,
+      "manual": 26,
+      "coverage_pct": 18.8
+    },
+    "capital_mobiliario": {
+      "label": "Rendimientos del capital mobiliario",
+      "total_casillas": 29,
+      "computed": 8,
+      "bound": 0,
+      "manual": 21,
+      "coverage_pct": 27.6
+    },
+    "capital_inmobiliario": {
+      "label": "Rendimientos del capital inmobiliario",
+      "total_casillas": 154,
+      "computed": 5,
+      "bound": 0,
+      "manual": 150,
+      "coverage_pct": 3.2
+    },
+    "actividades_economicas_directa": {
+      "label": "Actividades económicas — estimación directa",
+      "total_casillas": 64,
+      "computed": 10,
+      "bound": 0,
+      "manual": 51,
+      "coverage_pct": 15.6
+    },
+    "actividades_economicas_objetiva": {
+      "label": "Actividades económicas — estimación objetiva (módulos)",
+      "total_casillas": 113,
+      "computed": 1,
+      "bound": 0,
+      "manual": 113,
+      "coverage_pct": 0.9
+    },
+    "regimenes_especiales": {
+      "label": "Regímenes especiales / atribución de rentas",
+      "total_casillas": 85,
+      "computed": 4,
+      "bound": 0,
+      "manual": 85,
+      "coverage_pct": 4.7
+    },
+    "ganancias_capital_mobiliario_ahorro": {
+      "label": "G/P y capital mobiliario en base ahorro",
+      "total_casillas": 219,
+      "computed": 20,
+      "bound": 0,
+      "manual": 219,
+      "coverage_pct": 9.1
+    },
+    "base_y_cuota": {
+      "label": "Base imponible/liquidable y cuota chain",
+      "total_casillas": 189,
+      "computed": 29,
+      "bound": 0,
+      "manual": 185,
+      "coverage_pct": 15.3
+    },
+    "anexo_a_estatal": {
+      "label": "Anexo A — deducciones generales (vivienda, donativos, cultural)",
+      "total_casillas": 173,
+      "computed": 2,
+      "bound": 0,
+      "manual": 173,
+      "coverage_pct": 1.2
+    },
+    "anexo_b_autonomicas": {
+      "label": "Anexo B — deducciones autonómicas (17 CCAA)",
+      "total_casillas": 482,
+      "computed": 1,
+      "bound": 0,
+      "manual": 482,
+      "coverage_pct": 0.2
+    },
+    "anexo_c_canarias": {
+      "label": "Anexo C — Canarias (RIC, ZEC)",
+      "total_casillas": 179,
+      "computed": 3,
+      "bound": 0,
+      "manual": 179,
+      "coverage_pct": 1.7
+    },
+    "retenciones_pagos_a_cuenta": {
+      "label": "Retenciones e ingresos a cuenta + pagos fraccionados",
+      "total_casillas": 27,
+      "computed": 4,
+      "bound": 0,
+      "manual": 24,
+      "coverage_pct": 14.8
+    },
+    "regimenes_atribucion": {
+      "label": "Atribución de rentas + regímenes especiales (transparencia, art. 85)",
+      "total_casillas": 312,
+      "computed": 4,
+      "bound": 0,
+      "manual": 312,
+      "coverage_pct": 1.3
+    },
+    "uncategorised": {
+      "label": "Uncategorised (section[0] not anchor-mapped)",
+      "total_casillas": 147,
+      "computed": 54,
+      "bound": 0,
+      "manual": 147
+    }
+  },
+  "layer4": {
+    "catalogued_count": 119,
+    "cited_count": 38,
+    "catalogued_but_uncited_count": 81,
+    "cited_but_uncatalogued_count": 0,
+    "top_cited": [
+      [
+        "ley-35-2006:art-33",
+        301
+      ],
+      [
+        "ley-35-2006:art-34",
+        301
+      ],
+      [
+        "ley-35-2006:art-37",
+        301
+      ],
+      [
+        "orden-hac-277-2026:art-3",
+        98
+      ],
+      [
+        "ley-35-2006:art-50",
+        89
+      ],
+      [
+        "ley-35-2006:art-25",
+        78
+      ],
+      [
+        "ley-35-2006:art-49",
+        72
+      ],
+      [
+        "ley-35-2006:art-30",
+        72
+      ],
+      [
+        "ley-35-2006:art-28",
+        66
+      ],
+      [
+        "ley-35-2006:art-77",
+        54
+      ],
+      [
+        "ley-35-2006:art-22",
+        48
+      ],
+      [
+        "ley-35-2006:art-26",
+        42
+      ],
+      [
+        "ley-35-2006:art-23",
+        36
+      ],
+      [
+        "ley-35-2006:art-74",
+        36
+      ],
+      [
+        "ley-35-2006:art-56",
+        36
+      ]
+    ],
+    "uncited_articles": [
+      "ley-27-2014:art-124",
+      "ley-27-2014:art-18",
+      "ley-27-2014:art-40",
+      "ley-27-2014:art-41",
+      "ley-35-2006:art-68.4",
+      "ley-35-2006:art-82",
+      "ley-35-2006:art-83",
+      "ley-37-1992:art-161",
+      "ley-37-1992:art-163-octiesdecies",
+      "ley-37-1992:art-163-quinvicies",
+      "ley-37-1992:art-163-unvicies",
+      "ley-37-1992:art-84",
+      "ley-37-1992:art-88",
+      "ley-37-1992:art-90",
+      "ley-37-1992:art-91",
+      "ley-37-1992:art-92",
+      "ley-58-2003:da-18",
+      "orden-eha-3012-2008:art-1",
+      "orden-eha-3012-2008:art-10",
+      "orden-eha-3111-2009:art-1"
+    ],
+    "uncatalogued_articles": []
+  },
+  "layer7": {
+    "A1_employee_only": {
+      "label": "Employee only (single income, no deductions)",
+      "covered": true,
+      "matching_scenarios": [
+        "modelo-100-2025-employee-default-minimo"
+      ]
+    },
+    "A2_employee_capital_savings": {
+      "label": "Employee + capital mobiliario savings interest",
+      "covered": true,
+      "matching_scenarios": [
+        "modelo-100-2025-real-estate-capital-rollup"
+      ]
+    },
+    "A3_employee_property_rental": {
+      "label": "Employee + property rental income",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "B1_autonomo_directa_normal": {
+      "label": "Autónomo direct estimation normal mode",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "B2_autonomo_directa_simplified": {
+      "label": "Autónomo direct estimation simplified mode",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "B3_autonomo_objetiva": {
+      "label": "Autónomo objective estimation (modules)",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "C1_family_joint": {
+      "label": "Family unit joint declaration",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "C2_family_descendientes": {
+      "label": "Family with descendants / ascendants / discapacidad",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "D1_capital_gains_transactions": {
+      "label": "Capital gains transactions (sale of fund / property)",
+      "covered": false,
+      "matching_scenarios": []
+    },
+    "E1_ccaa_autonomic_deduction": {
+      "label": "CCAA-specific autonomic deduction",
+      "covered": false,
+      "matching_scenarios": []
+    }
+  },
+  "layer8": {
+    "by_file": {
+      "src/aeat/domain/calculations/registry/test_renta_2025_synthetic_profile.py": {
+        "test_count": 2,
+        "tests": [
+          "test_modelo_100_2025_employee_synthetic_profile_calculates_full_cuota_chain",
+          "test_modelo_100_employee_30k_synthetic_profile_calculates_consistently_in_every_revision"
+        ],
+        "kind": "behaviour",
+        "zero_value_assertions": 8,
+        "nonzero_value_assertions": 31,
+        "nonzero_decimal_inputs": 47,
+        "contains_vacuous_smoke_pattern": false
+      },
+      "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py": {
+        "test_count": 8,
+        "tests": [
+          "test_minimo_personal_y_familiar_aggregates_all_four_components_estatal",
+          "test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_minimo",
+          "test_cuota_integra_estatal_combines_general_and_ahorro_components",
+          "test_cuota_liquida_estatal_subtracts_state_side_deduction_columns",
+          "test_cuota_liquida_incrementada_adds_back_perdida_derecho_increments",
+          "test_cuota_liquida_total_sums_estatal_plus_autonomica",
+          "test_base_imponible_general_subtracts_negative_capital_gains_balance",
+          "test_base_liquidable_general_applies_reductions"
+        ],
+        "kind": "behaviour",
+        "zero_value_assertions": 1,
+        "nonzero_value_assertions": 16,
+        "nonzero_decimal_inputs": 42,
+        "contains_vacuous_smoke_pattern": false
+      },
+      "src/aeat/domain/calculations/registry/test_renta_cuota_chain_contract.py": {
+        "test_count": 8,
+        "tests": [
+          "test_renta_cuota_chain_articles_are_catalogued",
+          "test_renta_minimo_personal_y_familiar_formulas_present_2025",
+          "test_renta_base_imponible_liquidable_formulas_present_2025",
+          "test_renta_cuota_integra_formulas_present_2025",
+          "test_renta_cuota_liquida_formulas_present_2025",
+          "test_renta_multi_year_cuota_chain_sources_are_catalogued",
+          "test_renta_cuota_chain_present_in_all_supported_revisions",
+          "test_renta_cuota_chain_can_support_multi_year_calculation_parity"
+        ],
+        "kind": "structural",
+        "zero_value_assertions": 0,
+        "nonzero_value_assertions": 0,
+        "nonzero_decimal_inputs": 0,
+        "contains_vacuous_smoke_pattern": false
+      },
+      "src/aeat/domain/calculations/registry/test_modelo_100_drift_detection.py": {
+        "test_count": 8,
+        "tests": [
+          "test_top_level_cuota_chain_targets_present_in_every_supported_revision",
+          "test_every_revision_with_formulas_exposes_a_calculation_application_link",
+          "test_every_supported_revision_carries_a_filing_application_link",
+          "test_no_orphan_formula_feeding_bindings_in_any_revision",
+          "test_no_orphan_parameters_in_any_revision",
+          "test_every_relation_references_an_existing_target_binding",
+          "test_every_formula_binding_reference_resolves_to_a_declared_binding",
+          "test_every_formula_parameter_reference_resolves_to_a_declared_parameter"
+        ],
+        "kind": "structural",
+        "zero_value_assertions": 0,
+        "nonzero_value_assertions": 0,
+        "nonzero_decimal_inputs": 0,
+        "contains_vacuous_smoke_pattern": false
+      },
+      "src/aeat/domain/calculations/registry/test_schema_hygiene.py": {
+        "test_count": 9,
+        "tests": [
+          "test_no_duplicate_casilla_ids_within_a_revision",
+          "test_no_duplicate_casilla_numbers_within_a_revision",
+          "test_section_paths_are_non_empty",
+          "test_section_parts_are_snake_case",
+          "test_section_paths_do_not_leak_xml_root_containers",
+          "test_registry_tests_describe_current_behaviour_not_removed_work",
+          "test_registry_tests_do_not_define_schema_authority_objects",
+          "test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_outputs",
+          "test_renta_typed_binding_candidates_declare_substrate_enum_class"
+        ],
+        "kind": "structural",
+        "zero_value_assertions": 0,
+        "nonzero_value_assertions": 0,
+        "nonzero_decimal_inputs": 0,
+        "contains_vacuous_smoke_pattern": false
+      }
+    },
+    "summary": {
+      "behaviour_files": [
+        "src/aeat/domain/calculations/registry/test_renta_2025_synthetic_profile.py",
+        "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py"
+      ],
+      "structural_files": [
+        "src/aeat/domain/calculations/registry/test_renta_cuota_chain_contract.py",
+        "src/aeat/domain/calculations/registry/test_modelo_100_drift_detection.py",
+        "src/aeat/domain/calculations/registry/test_schema_hygiene.py"
+      ],
+      "files_with_vacuous_pattern": [],
+      "total_zero_value_assertions": 9,
+      "total_nonzero_value_assertions": 47
+    }
+  },
+  "layer9": {
+    "by_revision": {
+      "2020": {
+        "renta-2020-modelo-100-estimacion-directa-es-normal": {
+          "expected_enum": "EstimacionDirectaModalidad",
+          "declares_typed_enum_field": true,
+          "selector_values": [
+            "n",
+            "s"
+          ],
+          "informal_match_count": 0,
+          "free_form": false
+        }
+      },
+      "2021": {
+        "renta-2021-modelo-100-estimacion-directa-es-normal": {
+          "expected_enum": "EstimacionDirectaModalidad",
+          "declares_typed_enum_field": true,
+          "selector_values": [
+            "n",
+            "s"
+          ],
+          "informal_match_count": 0,
+          "free_form": false
+        }
+      },
+      "2022": {
+        "renta-2022-modelo-100-estimacion-directa-es-normal": {
+          "expected_enum": "EstimacionDirectaModalidad",
+          "declares_typed_enum_field": true,
+          "selector_values": [
+            "n",
+            "s"
+          ],
+          "informal_match_count": 0,
+          "free_form": false
+        }
+      },
+      "2023": {
+        "renta-2023-modelo-100-estimacion-directa-es-normal": {
+          "expected_enum": "EstimacionDirectaModalidad",
+          "declares_typed_enum_field": true,
+          "selector_values": [
+            "n",
+            "s"
+          ],
+          "informal_match_count": 0,
+          "free_form": false
+        }
+      },
+      "2024": {
+        "renta-2024-modelo-100-estimacion-directa-es-normal": {
+          "expected_enum": "EstimacionDirectaModalidad",
+          "declares_typed_enum_field": true,
+          "selector_values": [
+            "n",
+            "s"
+          ],
+          "informal_match_count": 0,
+          "free_form": false
+        }
+      },
+      "2025": {
+        "renta-2025-modelo-100-estimacion-directa-es-normal": {
+          "expected_enum": "EstimacionDirectaModalidad",
+          "declares_typed_enum_field": true,
+          "selector_values": [
+            "n",
+            "s"
+          ],
+          "informal_match_count": 0,
+          "free_form": false
+        },
+        "renta-2025-profile-tax-residence-ccaa": {
+          "expected_enum": "RentaCCAA",
+          "declares_typed_enum_field": true,
+          "selector_values": [],
+          "informal_match_count": 0,
+          "free_form": false
+        }
+      }
+    },
+    "summary": {
+      "total_bridge_candidates": 7,
+      "formally_typed": 7,
+      "informally_typed": 0,
+      "free_form": 0
+    }
+  }
+}

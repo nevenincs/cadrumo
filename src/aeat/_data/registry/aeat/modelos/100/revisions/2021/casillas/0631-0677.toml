@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0677"
+number = "0677"
+label = "Devoluciones acordadas por la Agencia Tributaria como consecuencia de la tramitación de anteriores autoliquidaciones correspondientes al ejercicio 2021"
+section = ["resultados", "regularizacion_res"]
+semantic_role = "irpf_regularizacion_autoliquidaciones_anteriores_devolver"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

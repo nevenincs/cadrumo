@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0898"
+number = "0898"
+label = "Por determinadas inversiones de mejora de la sostenibilidad de la vivienda habitual (importe de la casilla [2001] del anexo B.12)"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_deduccion_baleares_sostenibilidad_vivienda"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

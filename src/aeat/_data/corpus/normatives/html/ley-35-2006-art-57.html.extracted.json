@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-57.html",
+  "source_sha256": "36bccb9bed9af744ec1b503572691f70dc46ab82bfa93fcfc741d3262fbe93b0",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. El mínimo del contribuyente será, con carácter general, de 5.550 euros anuales.\n2. Cuando el contribuyente tenga una edad superior a 65 años, el mínimo se aumentará en 1.150 euros anuales. Si la edad es superior a 75 años, el mínimo se aumentará adicionalmente en 1.400 euros anuales.",
+      "title": "Artículo 57. Mínimo del contribuyente.",
+      "section": "Artículo 57. Mínimo del contribuyente.",
+      "anchor": null
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0152"
+number = "0152"
+label = "Rendimiento mínimo computable en caso de parentesco (artículo 24 de la Ley del Impuesto)"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_rendimiento_capital_inmobiliario_rendimiento_minimo_parentesco"
+legal_refs = ["ley-35-2006:art-24"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

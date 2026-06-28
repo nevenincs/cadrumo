@@ -1,0 +1,10 @@
+[[revisions."2020".casillas]]
+id = "0433"
+number = "0433"
+label = "Saldo neto negativo de las ganancias y pérdidas patrimoniales de 2020 a integrar en la base imponible general, con el límite del 25 por 100 del importe de la casilla [0432] (*) (traslade el importe..."
+section = ["resultados", "base_imponible_res"]
+semantic_role = "irpf_saldo_neto_gyp_general_limite_25pct"
+input_kind = "computed"
+formula = "renta-2020-saldo-gp-base-general-cap-25"
+legal_refs = ["ley-35-2006:art-48"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,9 @@
+[[revisions."2024".casillas]]
+id = "0391"
+number = "0391"
+label = "Contribuyente a quien corresponde la imputación"
+section = ["toma_datos_ampliada"]
+data_type = "text"
+semantic_role = "irpf_toma_datos_declarante_selector"
+legal_refs = ["ley-35-2006:art-11"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

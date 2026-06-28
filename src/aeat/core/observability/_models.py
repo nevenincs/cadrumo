@@ -1,39 +1,39 @@
-"""Strict pydantic v2 record types for the run-trace observability layer (#99).
+"""Strict pydantic v2 record types for the run-trace observability layer.
 
-Every type is ``strict=True``, ``frozen=True``, ``extra="forbid"``. Closed
-sets are :class:`enum.StrEnum`. The :class:`RunEventPayload` is a tagged
-union with an exactly-one-variant invariant enforced by a
-``model_validator(mode="after")`` — we deliberately avoid bare
-``dict[str, Any]`` anywhere on the wire so every persisted JSONL line
+Every type is ``strict=True``, ``frozen=True``, ``extra="forbid"``.
+Closed sets are :class:`enum.StrEnum`. The :class:`RunEventPayload` is
+a tagged union with an exactly-one-variant invariant enforced by a
+``model_validator(mode="after")`` — bare ``dict[str, Any]`` is
+deliberately absent from the wire so every persisted JSONL line
 round-trips through the model.
 
-Audit data policy (#99, live-write safety charter #116)
--------------------------------------------------------
+Audit data policy
+-----------------
 Run traces are audit artefacts; payloads will contain data that is
 sensitive in a tax / PII sense:
 
-- :class:`FormFillPayload.value` is the literal casilla value — i.e.
-  the tax figure the operator put into an AEAT draft. Treat this file
-  as containing tax-return data.
-- :class:`NavigationPayload.url` / ``description`` capture the user's
-  navigation path through AEAT sede. URLs may embed session
-  identifiers; callers must not record authentication tokens here.
-- :class:`ErrorPayload.message` is free-form and may contain
-  traceback fragments with file paths or captured user input.
-- :class:`ArgumentRecord` values are redacted for secret-named
-  parameters by :func:`aeat.entrypoints.cli._observability.build_arguments`
+* :attr:`FormFillPayload.value` is the literal form-field value — i.e.
+  the tax figure the operator put into an AEAT draft. Treat the file as
+  containing tax-return data.
+* :attr:`NavigationPayload.url` / :attr:`NavigationPayload.description`
+  capture the user's navigation path through AEAT sede. URLs may embed
+  session identifiers; callers must not record authentication tokens
+  here.
+* :attr:`ErrorPayload.message` is free-form and may contain traceback
+  fragments with file paths or captured user input.
+* :class:`ArgumentRecord` values are redacted for secret-named
+  parameters by
+  :func:`aeat.entrypoints.cli._observability.build_arguments`
   (``password`` / ``secret`` / ``token`` / etc. → ``"***"``). Other
   argument values are recorded verbatim.
-- :class:`RunTrace.cert_fingerprint` is a SHA-256 of the configured
+* :attr:`RunTrace.cert_fingerprint` is a SHA-256 of the configured
   PKCS#12 on disk — a stable identity marker of the operator's cert,
   not a secret, but identifying.
 
-Callers that sync ``var/runs/`` to cloud storage must understand
-that every one of these fields is in scope. The framework does not
-attempt DLP-style scanning — it trusts callers not to feed secrets
-into the payload fields they control.
-
-See [[2026-04-14-run-trace-adr]] decision D3 for the rationale.
+Callers that sync ``var/runs/`` to cloud storage must understand that
+every one of these fields is in scope. The framework does not attempt
+DLP-style scanning — it trusts callers not to feed secrets into the
+payload fields they control.
 """
 
 from __future__ import annotations
@@ -41,20 +41,26 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, model_validator
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..time._utc import validate_utc_aware
 
 
 class ArgumentSource(StrEnum):
-    """Where a CLI argument value originated from.
+    """Provenance label for a CLI argument captured on a :class:`RunTrace`.
 
-    ``FLAG`` captures option-style flags (e.g. ``--since 2026-01-01``).
-    ``POSITIONAL`` captures positional arguments that must be
-    re-emitted in the original order with no ``--`` prefix during
-    replay (e.g. ``notificacion_id`` on ``aeat inbox show``). ``ENV``,
-    ``CONFIG`` and ``DEFAULT`` are captured for audit completeness but
-    are not re-emitted on argv.
+    ``ENV``, ``CONFIG`` and ``DEFAULT`` values are recorded for audit
+    completeness but are not re-emitted on argv during replay.
+
+    Attributes:
+        FLAG: Option-style flag (e.g. ``--since 2026-01-01``).
+        POSITIONAL: Positional argument that must be re-emitted in the
+            original order with no ``--`` prefix during replay
+            (e.g. ``notificacion_id`` on ``aeat inbox show``).
+        ENV: Value sourced from a process environment variable.
+        CONFIG: Value sourced from a configuration file.
+        DEFAULT: Value sourced from the option's declared default.
     """
 
     FLAG = "FLAG"
@@ -65,7 +71,19 @@ class ArgumentSource(StrEnum):
 
 
 class RunEventKind(StrEnum):
-    """Closed catalogue of run-event kinds emitted by the observability layer."""
+    """Closed catalogue of run-event kinds emitted by the observability layer.
+
+    Attributes:
+        STEP_START: Boundary marker entering a logical step.
+        STEP_END: Boundary marker leaving a logical step.
+        NAVIGATION: A page navigation inside the AEAT sede browser.
+        FORM_FILL: A form-field value written into an AEAT draft form.
+        ASSERTION: A workflow-level expectation evaluation.
+        CACHE_HIT: Indicates a cached lookup served the request.
+        ERROR: A captured failure surfaced during the run.
+        WORKFLOW_STARTED: Links the run to a workflow-engine run id.
+        WORKFLOW_COMPLETED: Marks workflow-engine completion.
+    """
 
     STEP_START = "STEP_START"
     STEP_END = "STEP_END"
@@ -79,7 +97,14 @@ class RunEventKind(StrEnum):
 
 
 class RunOutcome(StrEnum):
-    """Terminal outcome recorded on a :class:`RunTrace`."""
+    """Terminal outcome recorded on a :class:`RunTrace`.
+
+    Attributes:
+        OK: The yielded body returned cleanly.
+        FAILED: The yielded body raised, or never executed because
+            ``STEP_START`` itself failed.
+        ABORTED: The run was cancelled before completion.
+    """
 
     OK = "OK"
     FAILED = "FAILED"
@@ -89,15 +114,19 @@ class RunOutcome(StrEnum):
 class ArgumentRecord(BaseModel):
     """A single CLI argument captured for replay.
 
-    ``cli_flag`` is an optional override carrying the *actual* Typer
-    option name (e.g. ``"--json"``) when the Python parameter name
-    (``as_json``) differs from the user-facing flag. Without the
-    override, :func:`aeat.core.observability._replay._argv_from_arguments`
-    derives the flag name by replacing underscores with dashes, which
-    is wrong for renamed options like
-    ``typer.Option(False, "--json")`` bound to parameter ``as_json``.
-    See audit finding NEW-1 (vaultspec-code-reviewer round 9,
-    2026-04-21).
+    Attributes:
+        name: Python parameter name as bound by the wrapped command
+            (e.g. ``"as_json"``).
+        value: Stringified argument value.
+        source: Where the value originated; see :class:`ArgumentSource`.
+        cli_flag: Optional override carrying the actual Typer option
+            spelling (e.g. ``"--json"``) when the Python parameter name
+            differs from the user-facing flag. Without the override,
+            :func:`aeat.core.observability._replay._argv_from_arguments`
+            derives the flag by replacing underscores with dashes —
+            which is wrong for renamed options like
+            ``typer.Option(False, "--json")`` bound to parameter
+            ``as_json``.
     """
 
     model_config = _STRICT_FROZEN
@@ -109,7 +138,12 @@ class ArgumentRecord(BaseModel):
 
 
 class NavigationPayload(BaseModel):
-    """Payload for :attr:`RunEventKind.NAVIGATION`."""
+    """Payload for :attr:`RunEventKind.NAVIGATION`.
+
+    Attributes:
+        url: Destination URL of the navigation event.
+        description: Optional human-readable label for the navigation.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -118,17 +152,30 @@ class NavigationPayload(BaseModel):
 
 
 class FormFillPayload(BaseModel):
-    """Payload for :attr:`RunEventKind.FORM_FILL`."""
+    """Payload for :attr:`RunEventKind.FORM_FILL`.
+
+    Attributes:
+        form_id: Identifier of the AEAT form being filled
+            (e.g. ``"aeat-130"``).
+        display_number: Browser-visible box number within the form.
+        value: Literal value written to the box.
+    """
 
     model_config = _STRICT_FROZEN
 
     form_id: str
-    casilla: str
+    display_number: str
     value: str
 
 
 class AssertionPayload(BaseModel):
-    """Payload for :attr:`RunEventKind.ASSERTION`."""
+    """Payload for :attr:`RunEventKind.ASSERTION`.
+
+    Attributes:
+        expectation: Stable string identifying the assertion.
+        passed: Whether the assertion held.
+        detail: Optional free-form diagnostic text.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -138,7 +185,12 @@ class AssertionPayload(BaseModel):
 
 
 class CacheHitPayload(BaseModel):
-    """Payload for :attr:`RunEventKind.CACHE_HIT`."""
+    """Payload for :attr:`RunEventKind.CACHE_HIT`.
+
+    Attributes:
+        cache_name: Stable identifier of the cache that served the value.
+        key: Cache key whose lookup succeeded.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -147,7 +199,14 @@ class CacheHitPayload(BaseModel):
 
 
 class ErrorPayload(BaseModel):
-    """Payload for :attr:`RunEventKind.ERROR`."""
+    """Payload for :attr:`RunEventKind.ERROR`.
+
+    Attributes:
+        error_type: Class name of the captured exception.
+        message: Free-form diagnostic text; may include traceback
+            fragments. See the module docstring for the redaction
+            contract this field is subject to.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -156,7 +215,12 @@ class ErrorPayload(BaseModel):
 
 
 class StepBoundaryPayload(BaseModel):
-    """Payload for :attr:`RunEventKind.STEP_START` / ``STEP_END``."""
+    """Payload for :attr:`RunEventKind.STEP_START` and :attr:`RunEventKind.STEP_END`.
+
+    Attributes:
+        step_id: Identifier of the step the boundary refers to.
+        label: Human-readable label (typically the entrypoint string).
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -165,11 +229,15 @@ class StepBoundaryPayload(BaseModel):
 
 
 class WorkflowLinkPayload(BaseModel):
-    """Payload for ``WORKFLOW_STARTED`` / ``WORKFLOW_COMPLETED`` events.
+    """Payload for :attr:`RunEventKind.WORKFLOW_STARTED` / ``WORKFLOW_COMPLETED``.
 
     Links the observability ``run_id`` to a workflow-engine ``run_id``
-    via a ``workflow_run_id`` field (the two identifiers are
-    deliberately distinct — see ADR D2).
+    via a ``workflow_run_id`` field; the two identifiers are
+    deliberately distinct so the observability layer can wrap a workflow
+    invocation without conflating its identity.
+
+    Attributes:
+        workflow_run_id: Workflow-engine run id linked to this trace.
     """
 
     model_config = _STRICT_FROZEN
@@ -178,11 +246,14 @@ class WorkflowLinkPayload(BaseModel):
 
 
 class GenericPayload(BaseModel):
-    """Free-form, structured-but-typed kv payload.
+    """Structured-but-typed key/value payload for ad-hoc events.
 
     Fields are a tuple of ``(name, str_value)`` pairs so the wire shape
     stays free of bare ``dict[str, Any]`` while still allowing
     extensibility for downstream call sites.
+
+    Attributes:
+        fields: Ordered tuple of ``(name, str_value)`` pairs.
     """
 
     model_config = _STRICT_FROZEN
@@ -203,10 +274,20 @@ _PAYLOAD_FIELDS: tuple[str, ...] = (
 
 
 class RunEventPayload(BaseModel):
-    """Tagged-union payload wrapper.
+    """Tagged-union wrapper for the per-event payload variants.
 
-    Exactly one variant field must be set; enforced by a
-    ``model_validator(mode="after")``.
+    Exactly one variant field must be set; the invariant is enforced
+    post-construction by :meth:`_exactly_one`.
+
+    Attributes:
+        navigation: :class:`NavigationPayload` variant, or ``None``.
+        form_fill: :class:`FormFillPayload` variant, or ``None``.
+        assertion: :class:`AssertionPayload` variant, or ``None``.
+        cache_hit: :class:`CacheHitPayload` variant, or ``None``.
+        error: :class:`ErrorPayload` variant, or ``None``.
+        step: :class:`StepBoundaryPayload` variant, or ``None``.
+        workflow_link: :class:`WorkflowLinkPayload` variant, or ``None``.
+        generic: :class:`GenericPayload` variant, or ``None``.
     """
 
     model_config = _STRICT_FROZEN
@@ -232,25 +313,36 @@ class RunEventPayload(BaseModel):
 
 
 def _require_tz_aware(value: datetime) -> datetime:
-    """Reject naive datetimes at the pydantic boundary.
+    """Reject naive or non-UTC datetimes at the pydantic boundary.
 
-    ``pairs.sort(key=lambda ...)`` in :func:`iter_runs` crashes with
+    The sort in :func:`aeat.core.observability.iter_runs` crashes with
     ``TypeError: can't compare offset-naive and offset-aware datetimes``
     if the runs directory mixes both shapes. Every writer inside the
     observability layer constructs datetimes with ``tzinfo=UTC``, but a
     hand-edited or externally-produced ``trace.json`` could slip a
-    naive timestamp past strict validation unless we enforce it here.
-    See audit finding S5 (vaultspec-code-reviewer, 2026-04-21).
+    naive timestamp past strict validation unless this gate enforces
+    timezone awareness up front.
+
+    Args:
+        value: Datetime to validate.
+
+    Returns:
+        The same datetime, unmodified, when it is UTC-aware.
     """
-    if value.tzinfo is None:
-        raise ValueError(
-            "observability datetimes must be timezone-aware; got naive value",
-        )
-    return value
+    return validate_utc_aware(value)
 
 
 class RunEvent(BaseModel):
-    """A single observability event captured during a run."""
+    """A single observability event captured during a run.
+
+    Attributes:
+        run_id: Owning run identifier (16-char lowercase hex).
+        step_id: Step identifier active when the event was emitted.
+        kind: One of :class:`RunEventKind`.
+        payload: Tagged-union payload; see :class:`RunEventPayload`.
+        timestamp: UTC capture time; must be timezone-aware.
+        module: ``__name__`` of the caller that emitted the event.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -263,12 +355,38 @@ class RunEvent(BaseModel):
 
     @model_validator(mode="after")
     def _require_tz_aware_timestamp(self) -> RunEvent:
+        """Reject naive ``timestamp`` values; see :func:`_require_tz_aware`."""
         _require_tz_aware(self.timestamp)
         return self
 
 
 class RunTrace(BaseModel):
-    """The metadata header for a single CLI invocation."""
+    """Metadata header persisted as ``trace.json`` for a CLI invocation.
+
+    Attributes:
+        run_id: 16-char lowercase hex identifier for the run.
+        started_at: UTC enter time of the outermost run context.
+        finished_at: UTC exit time, or ``None`` if persistence happens
+            before exit (legacy traces only).
+        entrypoint: Stable CLI entrypoint string.
+        arguments: Tuple of :class:`ArgumentRecord` captured for replay.
+        corpus_sha256: Fingerprint of ``.vault/`` plus
+            :class:`aeat.core.config.Settings` plus ``env/.env`` at
+            enter time; gates :func:`replay_run`.
+        db_sha256: Fingerprint of the local ``var/`` state tree at
+            enter time.
+        cert_fingerprint: SHA-256 of the configured PKCS#12 cert, or
+            ``""`` when no cert is configured.
+        outcome: Terminal run outcome; see :class:`RunOutcome`.
+        replay_of: Run id of the *immediate* original trace when this
+            trace was produced by a replay re-entry, otherwise ``None``.
+            Replaying a replay produces a new trace whose ``replay_of``
+            points at the second-level trace, NOT at the chain root —
+            walk the chain by following each ``replay_of`` link until
+            you reach ``None``. Each link is a supervised replay in its
+            own right. The default keeps strict validation backwards-
+            compatible with traces produced before the field was added.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -282,23 +400,10 @@ class RunTrace(BaseModel):
     cert_fingerprint: str
     outcome: RunOutcome
     replay_of: str | None = None
-    """Run id of the *immediate* original trace when this trace was
-    produced by a replay re-entry, otherwise ``None``. Default keeps
-    strict validation backward-compatible with pre-S7 traces on disk:
-    old files do not carry this field and load cleanly via the
-    default.
-
-    Chain semantics: replaying a replay produces a new trace whose
-    ``replay_of`` points at the second-level trace, NOT at the chain
-    root. To walk the chain, follow each trace's ``replay_of`` in
-    turn until you reach ``None``. Each link is a supervised replay
-    in its own right.
-
-    See audit finding S7 (vaultspec-code-reviewer round 8,
-    2026-04-21) and the round-10 polish note N2."""
 
     @model_validator(mode="after")
     def _require_tz_aware_timestamps(self) -> RunTrace:
+        """Reject naive ``started_at`` / ``finished_at``."""
         _require_tz_aware(self.started_at)
         if self.finished_at is not None:
             _require_tz_aware(self.finished_at)

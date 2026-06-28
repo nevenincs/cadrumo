@@ -1,0 +1,19 @@
+[revisions.2019-2022]
+id = "2019-2022"
+label = "Orden HAP/1732/2014, ejercicios 2019 a 2022"
+valid_from = 2019-01-01
+valid_to = 2022-12-31
+period_selector = { year_from = 2019, year_to = 2022, periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-100",
+    "orden-hap-1732-2014:art-2",
+    "rd-439-2007:art-108",
+    "ley-35-2006:art-101",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-180-2014",
+    "aeat-modelo-180-ayuda-presentacion",
+    "boe-modelo-180-2014-form",
+]

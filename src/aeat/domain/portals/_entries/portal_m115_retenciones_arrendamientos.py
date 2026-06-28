@@ -1,17 +1,22 @@
-"""Portal: Modelo 115 — retenciones arrendamientos urbanos."""
+"""Catalogue entry for the *Modelo 115* urban-rental withholdings procedure.
+
+Exposes :data:`ENTRY`, a :class:`PortalMetadata` record for
+:class:`Portal` ``PORTAL_M115_RETENCIONES_ARRENDAMIENTOS`` under
+:class:`PortalCategory` ``FILING``. Backs the periodic
+self-assessment of withholdings on urban property lease income.
+"""
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M115_RETENCIONES_ARRENDAMIENTOS,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH02.shtml",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_M115_RETENCIONES_ARRENDAMIENTOS),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(
         AuthMethod.CERTIFICATE,
@@ -21,14 +26,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_115,
-    label={
-        "es": "Modelo 115 — Retenciones arrendamientos urbanos",
-        "en": "Modelo 115 — Withholdings on urban rentals",
-        "hu": "115-ös űrlap — Városi bérleti forrásadók",
-    },
-    purpose_es=(
-        "Autoliquidación periódica de retenciones e ingresos a cuenta "
-        "sobre rendimientos de arrendamiento de inmuebles urbanos."
-    ),
+    label="entries.portal_m115_retenciones_arrendamientos.label",
+    purpose="entries.portal_m115_retenciones_arrendamientos.purpose",
 )
+"""Frozen :class:`aeat.domain.portals.PortalMetadata` for the Modelo 115 procedure page."""

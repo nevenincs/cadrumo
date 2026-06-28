@@ -1,0 +1,13 @@
+[[revisions."2025".formulas]]
+id = "modelo-131-2025-saldo-negativo-fin-periodo"
+target_casilla_id = "saldo-negativo-fin-periodo"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "negate", args = [{ casilla_id = "10" }] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]

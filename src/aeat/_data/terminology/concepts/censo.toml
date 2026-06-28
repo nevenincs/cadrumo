@@ -1,0 +1,44 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "censo"
+domain = "concepto"
+lifecycle = "approved"
+legal_refs = ["rd-1065-2007:art-3"]
+related = ["modelo-036"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "Los datos censales que la AEAT mantiene sobre el contribuyente."
+definition = "Conjunto de datos de registro que la AEAT mantiene sobre el obligado tributario (actividades, domicilio, obligaciones), declarado mediante los modelos 036 o 037 y que la aplicacion puede sincronizar en un perfil."
+
+[language.es.source]
+citation = "Modelos 036 y 037 (declaracion censal) de la AEAT."
+authority = "aeat"
+
+[[language.es.term]]
+label = "censo"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "datos censales"
+term_status = "admitted"
+
+[language.en]
+short_description = "The AEAT census: the registration data the agency holds about you."
+
+[[language.en.term]]
+label = "census"
+term_status = "preferred"
+
+[language.ca]
+short_description = "Les dades censals que l'AEAT manté sobre el contribuent."
+
+[language.hu]
+short_description = "A nyilvantartasi adatok, amelyeket az AEAT az adozorol vezet."

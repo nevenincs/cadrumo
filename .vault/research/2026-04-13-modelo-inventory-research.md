@@ -6,6 +6,7 @@ tags:
   - "#research"
   - "#modelo-inventory"
 date: 2026-04-13
+modified: '2026-04-13'
 related:
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-12-casilla-db-adr]]"

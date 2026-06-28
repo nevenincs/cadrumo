@@ -1,0 +1,11 @@
+[[revisions."2025".bindings]]
+id = "renta-2025-profile-tax-id"
+source = "profile"
+selector = { profile_key = "identity.tax_id", xsd_path = "/DatosIdentificativos/Declarante/DPNIF_D", dictionary_field = "DPNIF_D" }
+aggregation = { op = "copy" }
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["Comunidad Autónoma de régimen común", "residencia en el ejercicio 2025"]

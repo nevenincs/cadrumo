@@ -1,0 +1,5 @@
+[modelo]
+modelo = "349"
+renta_years = [2024, 2025]
+evidence_class = "data_fidelity"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_349_intracomunitario_fidelity.py"

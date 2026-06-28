@@ -1,0 +1,227 @@
+# Modelo 232 calculation-completeness manifest.
+#
+# Enumerates the casillas in this revision's calculation closure --
+# every formula target, every casilla referenced inside a formula
+# expression, every formula/binding endpoint casilla, and every
+# verification-expectation operand. Cross-modelo binding source
+# casillas belong to foreign modelos and are excluded. Derived
+# off-load-path from the calculation surface; re-derived by the
+# drift re-verification test.
+
+
+[revisions."2018-y-siguientes".completeness_manifest]
+source_ref = "aeat-dr-232-2018"
+legal_refs = ["ley-27-2014:art-19", "ley-58-2003:art-93", "orden-hfp-816-2017:art-1", "orden-hfp-816-2017:art-3"]
+source_refs = ["aeat-dr-232-2018"]
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.cnae"
+number = "2.devengo.cnae"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.ejercicio"
+number = "2.devengo.ejercicio"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.tipo-ejercicio"
+number = "2.devengo.tipo"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-1-fjo"
+number = "3.vinculada.1.fjo"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-1-importe"
+number = "3.vinculada.1.importe"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-1-ingreso-pago"
+number = "3.vinculada.1.ingreso-pago"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-1-metodo-valoracion"
+number = "3.vinculada.1.metodo-valoracion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-1-nif"
+number = "3.vinculada.1.nif"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-1-provincia-pais"
+number = "3.vinculada.1.provincia-pais"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-1-razon-social"
+number = "3.vinculada.1.razon-social"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-1-reservado-nombre"
+number = "3.vinculada.1.reservado-nombre"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-1-tipo-operacion"
+number = "3.vinculada.1.tipo-operacion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-1-tipo-vinculacion"
+number = "3.vinculada.1.tipo-vinculacion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-2-fjo"
+number = "3.vinculada.2.fjo"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-2-importe"
+number = "3.vinculada.2.importe"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-2-ingreso-pago"
+number = "3.vinculada.2.ingreso-pago"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-2-metodo-valoracion"
+number = "3.vinculada.2.metodo-valoracion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-2-nif"
+number = "3.vinculada.2.nif"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-2-provincia-pais"
+number = "3.vinculada.2.provincia-pais"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-2-razon-social"
+number = "3.vinculada.2.razon-social"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-2-reservado-nombre"
+number = "3.vinculada.2.reservado-nombre"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-2-tipo-operacion"
+number = "3.vinculada.2.tipo-operacion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-2-tipo-vinculacion"
+number = "3.vinculada.2.tipo-vinculacion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-3-fjo"
+number = "3.vinculada.3.fjo"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-3-importe"
+number = "3.vinculada.3.importe"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-3-ingreso-pago"
+number = "3.vinculada.3.ingreso-pago"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-3-metodo-valoracion"
+number = "3.vinculada.3.metodo-valoracion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-3-nif"
+number = "3.vinculada.3.nif"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-3-provincia-pais"
+number = "3.vinculada.3.provincia-pais"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-3-razon-social"
+number = "3.vinculada.3.razon-social"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-3-reservado-nombre"
+number = "3.vinculada.3.reservado-nombre"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-3-tipo-operacion"
+number = "3.vinculada.3.tipo-operacion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-3-tipo-vinculacion"
+number = "3.vinculada.3.tipo-vinculacion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-4-fjo"
+number = "3.vinculada.4.fjo"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-4-importe"
+number = "3.vinculada.4.importe"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-4-ingreso-pago"
+number = "3.vinculada.4.ingreso-pago"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-4-metodo-valoracion"
+number = "3.vinculada.4.metodo-valoracion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-4-nif"
+number = "3.vinculada.4.nif"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-4-provincia-pais"
+number = "3.vinculada.4.provincia-pais"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-4-razon-social"
+number = "3.vinculada.4.razon-social"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-4-reservado-nombre"
+number = "3.vinculada.4.reservado-nombre"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-4-tipo-operacion"
+number = "3.vinculada.4.tipo-operacion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-4-tipo-vinculacion"
+number = "3.vinculada.4.tipo-vinculacion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-5-fjo"
+number = "3.vinculada.5.fjo"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-5-importe"
+number = "3.vinculada.5.importe"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-5-ingreso-pago"
+number = "3.vinculada.5.ingreso-pago"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-5-metodo-valoracion"
+number = "3.vinculada.5.metodo-valoracion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-5-nif"
+number = "3.vinculada.5.nif"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-5-provincia-pais"
+number = "3.vinculada.5.provincia-pais"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-5-razon-social"
+number = "3.vinculada.5.razon-social"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-5-reservado-nombre"
+number = "3.vinculada.5.reservado-nombre"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-5-tipo-operacion"
+number = "3.vinculada.5.tipo-operacion"
+
+[[revisions."2018-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "vinculada-5-tipo-vinculacion"
+number = "3.vinculada.5.tipo-vinculacion"

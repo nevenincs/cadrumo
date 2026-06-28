@@ -1,10 +1,17 @@
-"""Domain exceptions for ``aeat.domain.invoices``."""
+"""Domain exceptions for the invoice catalogue.
+
+Defines the typed error hierarchy raised by :mod:`aeat.domain.invoices`.
+Every failure path inherits from :class:`InvoiceError` so callers can
+catch the whole domain, while :class:`InvoiceCatalogueError` and its
+subclasses narrow to catalogue-level faults (persistence, missing
+records, broken cross-catalogue links).
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from ...core.errors import AeatError
+from ...core.errors import AeatError, CoreValidationError
 
 __all__ = [
     "InvoiceCatalogueError",
@@ -13,6 +20,7 @@ __all__ = [
     "InvoiceLinkInconsistencyError",
     "InvoiceNotFoundError",
     "InvoicePersistenceError",
+    "InvoiceValidationError",
 ]
 
 
@@ -41,6 +49,12 @@ class InvoiceLinkInconsistencyError(InvoiceLinkError):
 
     Carries both filesystem paths and both identifiers so an operator can
     manually reconcile the invoice and transaction catalogues.
+
+    Attributes:
+        invoice_path: Path to the invoice catalogue file.
+        transactions_path: Path to the transaction catalogue file.
+        invoice_id: Invoice identifier involved in the failed link.
+        transaction_id: Transaction identifier involved in the failed link.
     """
 
     def __init__(
@@ -66,3 +80,12 @@ class InvoiceLinkInconsistencyError(InvoiceLinkError):
         self.transactions_path: Path = transactions_path
         self.invoice_id: str = invoice_id
         self.transaction_id: str = transaction_id
+
+
+class InvoiceValidationError(InvoiceError, CoreValidationError):
+    """Raised when invoice records violate state or shape invariants.
+
+    Inherits from CoreValidationError (which itself inherits from CoreError
+    and ValueError) to participate in the shared CoreValidationError catch
+    surface and remain compatible with pydantic validators.
+    """

@@ -1,0 +1,19 @@
+[modelo]
+id = "210"
+title = "IRNR autoliquidación no residentes sin establecimiento permanente"
+official_name = "Modelo 210. Impuesto sobre la Renta de no Residentes. No residentes sin establecimiento permanente. Autoliquidación."
+tax_domain = "irnr"
+cadence = "ad_hoc"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-2",
+    "trlirnr-rdleg-5-2004:art-10",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = [
+    "aeat-modelo-210-procedure",
+    "boe-modelo-210-2024-form-layout",
+]

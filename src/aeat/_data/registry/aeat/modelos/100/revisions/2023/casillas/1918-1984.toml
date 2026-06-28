@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1984"
+number = "1984"
+label = "Valor de adquisición del elemento patrimonial transmitido (valor de adquisición a efectos fiscales)"
+section = ["toma_datos_ampliada", "regimen_especial", "feac"]
+semantic_role = "irpf_feac_valor_adquisicion_elemento"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0011"
+number = "0011"
+label = "Reducciones (artículo 18, apartados 2 y 3, y disposiciones transitorias 11.ª, 12.ª y 25.ª de la Ley del Impuesto)"
+section = ["toma_datos_ampliada", "rdto_trabajo"]
+data_type = "decimal"
+semantic_role = "irpf_rendimiento_trabajo_reduccion"
+legal_refs = ["ley-35-2006:art-18"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

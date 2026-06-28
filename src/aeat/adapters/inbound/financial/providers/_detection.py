@@ -1,39 +1,91 @@
-"""Provider registry and file-format auto-detection."""
+"""Provider registry and file-format auto-detection.
+
+Exposes :func:`detect_provider`, the entry point the financial-ingest
+application layer calls to pick a concrete
+:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
+for an arbitrary path. The detection strategy combines extension
+hinting with magic-byte sniffing so a misnamed file (a PDF saved as
+``.csv``, an XLSX inside a ``.txt``, etc.) still routes to the right
+parser.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
 
+from .....core.logging import get_logger
 from ._base import FinancialProvider
+from ._constants import CSV_EXTENSIONS, PDF_EXTENSION, XLSX_EXTENSION
 from ._csv import CsvProvider
 from ._ofx import OfxProvider
 from ._pdf_n26 import PdfN26Provider
 from ._xlsx import XlsxProvider
 
+_logger = get_logger(__name__)
+
+
+def provider_for_extension(path: Path) -> FinancialProvider | None:
+    """Return a :class:`FinancialProvider` keyed strictly off ``path``'s suffix.
+
+    Cheap fallback used by CLI command surfaces when content-aware
+    detection (:func:`detect_provider`) returns ``None`` but the path's
+    suffix is unambiguous. Unlike :func:`detect_provider` this does not
+    open the file or sniff its bytes.
+
+    Returns ``None`` for every extension the project does not recognise
+    (PDF among them — :class:`PdfN26Provider` requires content-aware
+    detection because the bare ``.pdf`` suffix carries no statement
+    flavour information).
+    """
+    suffix = path.suffix.lower()
+    if suffix in CSV_EXTENSIONS:
+        return CsvProvider()
+    if suffix == XLSX_EXTENSION:
+        return XlsxProvider()
+    if suffix in {".ofx", ".qfx"}:
+        return OfxProvider()
+    return None
+
 
 def detect_provider(path: Path) -> FinancialProvider | None:
-    """Return the first provider that validates the source successfully."""
+    """Return the first provider that validates the source successfully.
+
+    Walks an extension- and content-prioritised candidate list and
+    returns the first provider whose
+    :meth:`~aeat.adapters.inbound.financial.providers._base.FinancialProvider.validate_source`
+    returns an ``is_valid`` :class:`ProviderValidation`.
+
+    Args:
+        path: Source document to classify.
+
+    Returns:
+        The matching :class:`FinancialProvider`, or ``None`` when no
+        provider can interpret ``path``.
+    """
     providers = _ordered_candidates(path)
     for provider in providers:
         if provider.validate_source(path).is_valid:
+            _logger.debug("detect_provider: matched %s for %s", provider.name, path.name)
             return provider
+    _logger.warning("detect_provider: no provider matched %s", path.name)
     return None
 
 
 def _ordered_candidates(path: Path) -> tuple[FinancialProvider, ...]:
     """Order providers by extension hint, then fall back to content sniffing."""
     suffix = path.suffix.lower()
-    if suffix == ".pdf":
+    if suffix == PDF_EXTENSION:
         return (PdfN26Provider(), CsvProvider(), XlsxProvider(), OfxProvider())
-    if suffix == ".xlsx":
+    if suffix == XLSX_EXTENSION:
         return (XlsxProvider(), CsvProvider(), OfxProvider(), PdfN26Provider())
     if suffix in {".ofx", ".qfx"}:
         return (OfxProvider(), CsvProvider(), XlsxProvider(), PdfN26Provider())
-    if suffix in {".csv", ".txt"}:
+    if suffix in CSV_EXTENSIONS:
         return (CsvProvider(), OfxProvider(), XlsxProvider(), PdfN26Provider())
     try:
         head = path.read_bytes()[:256]
     except OSError:
+        _logger.warning("detect_provider: cannot read file header for sniffing path=%s", path, exc_info=True)
         return (CsvProvider(), XlsxProvider(), OfxProvider(), PdfN26Provider())
     upper_head = head.upper()
     if head.startswith(b"%PDF"):

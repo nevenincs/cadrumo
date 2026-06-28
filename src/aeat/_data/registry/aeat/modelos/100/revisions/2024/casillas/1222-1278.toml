@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "1278"
+number = "1278"
+label = "Ejercicio 2022: Aplicado en esta  declaración"
+section = ["resultados", "anexo_c_res", "rdtos_cm_negativos_res"]
+semantic_role = "irpf_anexo_c_rdto_cm_negativo_aplicado"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

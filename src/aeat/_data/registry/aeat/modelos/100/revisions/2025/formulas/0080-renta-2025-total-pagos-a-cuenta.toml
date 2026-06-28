@@ -1,0 +1,33 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-total-pagos-a-cuenta"
+target_casilla_id = "0609"
+expression = { op = "sum", args = [
+    { casilla_id = "0592" },
+    { casilla_id = "0593" },
+    { casilla_id = "0594" },
+    { casilla_id = "0596" },
+    { casilla_id = "0597" },
+    { casilla_id = "0598" },
+    { casilla_id = "0599" },
+    { casilla_id = "0600" },
+    { casilla_id = "0601" },
+    { casilla_id = "0602" },
+    { casilla_id = "0603" },
+    { casilla_id = "0604" },
+    { casilla_id = "0605" },
+    { casilla_id = "0606" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+source_refs = ["boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+
+# -----------------------------------------------------------------------------
+# Minimo del contribuyente formulas (LIRPF arts. 56 + 57 + 73).
+# Casilla 0511 (estatal) is the statutory 5,550 EUR per art. 57. Casilla 0512
+# (autonomica) is CCAA-dispatched per art. 73 — Madrid / Canarias / Galicia
+# apply documented uplifts; other CCAAs default to the estatal baseline.
+# -----------------------------------------------------------------------------

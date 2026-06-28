@@ -1,0 +1,14 @@
+# Modelo 390 (resumen anual IVA). Enrolled by the cross-renta annual
+# reconciliation: for each renta year the four quarterly Modelo 303
+# autoliquidaciones (1T-4T) are summed into the 390 annual resumen via the
+# direct previous_filing bindings modelo-390-prev-303-cuota-devengada-total /
+# -deducible-total / -resultado-regimen-general (op=sum, source_periods
+# 1T-4T, Orden EHA/3111/2009 art. 1). The wiring invariant — each 390 annual
+# computed total equals its 303-quarter-summed reconciliation casilla — is
+# asserted for two distinct renta years (2025, 2026) with year-isolation
+# verified. Both annual computations run through the real registry engine.
+[modelo]
+modelo = "390"
+renta_years = [2025, 2026]
+evidence_class = "reconciliation"
+enrolling_test = "src/aeat/application/calculations/tests/test_modelo_390_303_reconciliation_continuity.py"

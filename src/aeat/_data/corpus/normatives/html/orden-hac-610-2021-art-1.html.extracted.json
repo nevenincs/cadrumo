@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-610-2021-art-1.html",
+  "source_sha256": "0a8e9524b415c099c1155481975fd5fb8ec5587133eb24296839f3c5682a4e64",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se aprueba el modelo 369 «Impuesto sobre el Valor Añadido. Autoliquidación de los regímenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condición de sujetos pasivos, que efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes», de formato electrónico, cuyo contenido figura en el anexo de esta orden.\nEl número identificativo que habrá de figurar en el modelo 369 será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 369.",
+      "title": "Artículo 1. Aprobación del modelo 369 «Impuesto sobre el Valor Añadido. Autoliquidación de los regímenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condición de sujetos pasivos, que efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes».",
+      "section": "Artículo 1. Aprobación del modelo 369 «Impuesto sobre el Valor Añadido. Autoliquidación de los regímenes especiales aplicables a los sujetos pasivos que presten servicios a personas que no tengan la condición de sujetos pasivos, que efectúen ventas a distancia de bienes y ciertas entregas interiores de bienes».",
+      "anchor": null
+    }
+  ]
+}

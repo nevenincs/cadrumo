@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "1114"
+number = "1114"
+label = "Por inversión en instalaciones de autoconsumo de energía eléctrica o para aprovechamiento de fuentes de energía renovable en la vivienda o edificio dónde se ubique (importe de la casilla [1114] del..."
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_autoconsumo_hasta_2022"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

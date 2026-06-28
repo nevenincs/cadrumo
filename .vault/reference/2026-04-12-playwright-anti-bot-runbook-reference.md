@@ -3,6 +3,7 @@ tags:
   - "#reference"
   - "#playwright-anti-bot"
 date: 2026-04-12
+modified: '2026-04-12'
 title: Operational Runbook - Playwright Anti-Bot
 related:
   - "[[2026-04-12-playwright-anti-bot-adr]]"

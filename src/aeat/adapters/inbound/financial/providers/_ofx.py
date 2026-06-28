@@ -1,24 +1,41 @@
-"""OFX financial provider backed by `ofxparse`."""
+"""OFX financial provider backed by ``ofxparse``.
+
+Provides :class:`OfxProvider`, an
+:class:`aeat.adapters.inbound.financial.providers._base.FinancialProvider`
+implementation that wraps ``ofxparse`` to ingest every account and
+statement block exposed by an OFX or QFX file. The
+:class:`_OfxAccountLike`, :class:`_OfxStatementLike` and
+:class:`_OfxTransactionLike` Protocol surfaces let the adapter type-
+check against the duck-typed objects ``ofxparse`` returns without
+introducing an extra dependency.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
-from typing import Protocol, cast
+from typing import Protocol, override, runtime_checkable
 
 from ofxparse import OfxParser
 
-from .._raw_transaction import RawTransaction, SourceFormat
+from .....core.decimal import coerce_decimal
+from .....core.logging import get_logger
+from .....domain.transactions import SourceFormat
 from ._base import (
     FinancialProvider,
+    FinancialValidationError,
     InvalidFinancialSourceError,
+    ParsedLedgerRow,
     ProviderValidation,
     build_raw_transaction,
     default_currency,
     parse_date_value,
     synthesize_transaction_id,
 )
+
+_logger = get_logger(__name__)
+_INPUT_OFX_SOURCE_LABEL = "<input-ofx>"
 
 
 class _OfxTransactionLike(Protocol):
@@ -32,6 +49,7 @@ class _OfxTransactionLike(Protocol):
     type: str | None
 
 
+@runtime_checkable
 class _OfxStatementLike(Protocol):
     """Minimal OFX statement surface used by the provider."""
 
@@ -39,6 +57,7 @@ class _OfxStatementLike(Protocol):
     currency: str | None
 
 
+@runtime_checkable
 class _OfxAccountLike(Protocol):
     """Minimal OFX account surface used by the provider."""
 
@@ -48,14 +67,30 @@ class _OfxAccountLike(Protocol):
 
 
 class OfxProvider(FinancialProvider):
-    """Ingest raw transactions from OFX and QFX files."""
+    """Ingest raw transactions from OFX and QFX files.
+
+    Multi-account OFX files emit transactions from every statement
+    block; the provider names the account in the synthetic
+    transaction id and copies the OFX-native fields
+    (``ACCTID``, ``TRNTYPE``, ``DTPOSTED``, ``TRNAMT``, ``FITID``,
+    ``NAME``, ``MEMO``) into ``raw_fields`` for downstream auditing.
+    """
 
     name = "OFX provider"
     supported_extensions = frozenset({".ofx", ".qfx"})
     source_format = SourceFormat.OFX
+    # Corpus fixture is a synthetic OFX generated from the standard OFX 1.x spec;
+    # the format is self-describing so structural fidelity is confirmed by parsing.
+    verification_source = "synthetic_from_bank_published_text"
+    provisional_pending_specimen = False
 
+    @override
     def validate_source(self, path: Path) -> ProviderValidation:
-        """Validate that the OFX file can be parsed and contains transactions."""
+        """Validate that the OFX file can be parsed and carries at least one transaction.
+
+        Returns:
+            A :class:`ProviderValidation` with the validation outcome.
+        """
         try:
             accounts = self._load_accounts(path)
         except InvalidFinancialSourceError as exc:
@@ -67,19 +102,17 @@ class OfxProvider(FinancialProvider):
                 is_valid=False,
                 warnings=("OFX statement contains no transactions",),
             )
-        account_ids = [
-            (getattr(account, "account_id", "") or getattr(account, "number", "") or "unknown").strip() or "unknown"
-            for account, _ in statements
-        ]
         return ProviderValidation(
             is_valid=True,
             warnings=(),
             detected_encoding="ofxparse",
-            detected_dialect=f"accounts={','.join(account_ids)}",
+            detected_dialect=f"account_count={len(statements)}",
         )
 
-    def ingest(self, path: Path) -> Iterator[RawTransaction]:
-        """Yield strict raw transactions from every OFX account statement."""
+    @override
+    def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:
+        """Yield :class:`ParsedLedgerRow` records (magnitude + direction) from every OFX account statement."""
+        _logger.debug("ofx_provider ingest: loading source=<input-ofx>")
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
         source_row_index = 0
@@ -101,9 +134,14 @@ class OfxProvider(FinancialProvider):
                     name = (getattr(transaction, "type", None) or "").strip().upper()
                     description = memo or payee or name or "OFX transaction"
                     posted_at = getattr(transaction, "date", None)
-                    amount = Decimal(str(getattr(transaction, "amount", "0")))
+                    amount = coerce_decimal(getattr(transaction, "amount", None), default=Decimal("0")) or Decimal("0")
                     booked_date = parse_date_value(posted_at, day_first=False)
-                except ValueError as exc:
+                except (ValueError, FinancialValidationError) as exc:
+                    _logger.warning(
+                        "ofx_provider: parse error transaction=%d source=<input-ofx>",
+                        source_row_index,
+                        exc_info=True,
+                    )
                     raise InvalidFinancialSourceError(
                         f"OFX transaction {source_row_index} could not be parsed: {exc}",
                     ) from exc
@@ -136,13 +174,30 @@ class OfxProvider(FinancialProvider):
         try:
             with path.open("rb") as handle:
                 parsed = OfxParser.parse(handle)
-        except Exception as exc:  # pragma: no cover - validated in tests through error path
-            raise InvalidFinancialSourceError(f"could not parse OFX file: {path}") from exc
+        # BROAD-EXCEPT-RATIONALE-OFX-TEARDOWN: ofxparse raises base
+        # Exception, ValueError, and TypeError from its parsing surface.
+        # The library does not expose a typed exception hierarchy, so a
+        # broad catch is required to guarantee conversion.
+        except Exception as exc:
+            # Debug, not error: this is reached during the ``--provider auto``
+            # detection probe loop for every non-OFX (or unreadable) input,
+            # where a parse miss is the expected, non-fatal signal that this
+            # provider does not match. The failure is converted to an
+            # InvalidFinancialSourceError that detection treats as a miss; the
+            # operator-facing refusal is raised once by the caller. exc_info is
+            # dropped so a probe miss never dumps a traceback to the operator.
+            _logger.debug(
+                "ofx_provider: failed to parse OFX file <input-ofx>: %s",
+                type(exc).__name__,
+            )
+            raise InvalidFinancialSourceError(f"could not parse OFX file: {_INPUT_OFX_SOURCE_LABEL}") from exc
         accounts = []
-        if getattr(parsed, "accounts", None):
-            accounts.extend(parsed.accounts)
-        if getattr(parsed, "account", None):
-            accounts.append(parsed.account)
+        _multi = getattr(parsed, "accounts", None)
+        if _multi:
+            accounts.extend(_multi)
+        _single = getattr(parsed, "account", None)
+        if _single:
+            accounts.append(_single)
         if not accounts:
             raise InvalidFinancialSourceError("OFX file does not contain a bank account statement")
         typed_accounts: list[_OfxAccountLike] = []
@@ -152,7 +207,11 @@ class OfxProvider(FinancialProvider):
             if marker in seen_accounts:
                 continue
             seen_accounts.add(marker)
-            typed_accounts.append(cast(_OfxAccountLike, account))
+            if not isinstance(account, _OfxAccountLike):
+                raise InvalidFinancialSourceError(
+                    f"OFX account object is missing expected attributes: {type(account).__name__}",
+                )
+            typed_accounts.append(account)
         if not any(getattr(account, "statement", None) is not None for account in typed_accounts):
             raise InvalidFinancialSourceError("OFX account does not expose a statement block")
         return tuple(typed_accounts)
@@ -164,5 +223,5 @@ def _iter_account_statements(
     """Yield every account that exposes a statement block."""
     for account in accounts:
         statement = getattr(account, "statement", None)
-        if statement is not None:
-            yield account, cast(_OfxStatementLike, statement)
+        if statement is not None and isinstance(statement, _OfxStatementLike):
+            yield account, statement

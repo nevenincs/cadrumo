@@ -1,0 +1,14 @@
+[[revisions.2025-y-siguientes.casillas]]
+id = "22"
+number = "22"
+label = "Mod. 40.3 LIS B2 — Importe pago fraccionado tipo 1"
+section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_b2_importe_pago_fraccionado"
+constraints = { sign = "non_negative", legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"], source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"] }
+required = false
+input_kind = "computed"
+formula = "modelo-202-importe-pago-fraccionado-b2-tipo-1"
+export_refs = ["modelo-202-page-02-casilla-22"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]

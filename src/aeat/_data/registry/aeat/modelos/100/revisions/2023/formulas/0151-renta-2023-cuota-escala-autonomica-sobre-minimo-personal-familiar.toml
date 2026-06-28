@@ -1,0 +1,31 @@
+[[revisions."2023".formulas]]
+id = "renta-2023-cuota-escala-autonomica-sobre-minimo-personal-familiar"
+target_casilla_id = "0531"
+expression = { op = "lookup_bracket_by_ccaa", args = [
+    { casilla_id = "0521" },
+    { binding = "renta-2023-profile-tax-residence-ccaa" },
+    { dispatch_table_entries = [
+        { key = "andalucia", parameter = "renta-2023-escala-autonomica-andalucia-base-general" },
+        { key = "aragon", parameter = "renta-2023-escala-autonomica-aragon-base-general" },
+        { key = "asturias", parameter = "renta-2023-escala-autonomica-asturias-base-general" },
+        { key = "baleares", parameter = "renta-2023-escala-autonomica-baleares-base-general" },
+        { key = "canarias", parameter = "renta-2023-escala-autonomica-canarias-base-general" },
+        { key = "cantabria", parameter = "renta-2023-escala-autonomica-cantabria-base-general" },
+        { key = "castilla_la_mancha", parameter = "renta-2023-escala-autonomica-castilla-la-mancha-base-general" },
+        { key = "castilla_y_leon", parameter = "renta-2023-escala-autonomica-castilla-y-leon-base-general" },
+        { key = "cataluna", parameter = "renta-2023-escala-autonomica-cataluna-base-general" },
+        { key = "comunidad_valenciana", parameter = "renta-2023-escala-autonomica-comunidad-valenciana-base-general" },
+        { key = "extremadura", parameter = "renta-2023-escala-autonomica-extremadura-base-general" },
+        { key = "galicia", parameter = "renta-2023-escala-autonomica-galicia-base-general" },
+        { key = "la_rioja", parameter = "renta-2023-escala-autonomica-la-rioja-base-general" },
+        { key = "madrid", parameter = "renta-2023-escala-autonomica-madrid-base-general" },
+        { key = "murcia", parameter = "renta-2023-escala-autonomica-murcia-base-general" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["escala autonómica", "mínimo personal"]

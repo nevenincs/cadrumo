@@ -1,17 +1,23 @@
-"""Portal: Modelo 190 — resumen anual retenciones trabajo."""
+"""Registry entry for Modelo 190 - annual summary of labour withholdings.
+
+Defines the :class:`PortalMetadata` record identified by the :class:`Portal`
+code ``PORTAL_M190_RESUMEN_TRABAJO``, exposed as :data:`ENTRY` under the
+:class:`PortalCategory` member ``FILING``, consumed by
+:data:`aeat.domain.portals.PORTAL_REGISTRY` via
+:mod:`aeat.domain.portals._registry`.
+"""
 
 from __future__ import annotations
 
-from ...modelos import ModeloCode
-from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
+from .._categories import AuthMethod, PortalCategory, PortalHost, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata
-from ._common import build_entry
+from ._common import build_entry, portal_path
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M190_RESUMEN_TRABAJO,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI10.shtml",
-    subdomain=Subdomain.SEDE,
+    path=portal_path(Portal.PORTAL_M190_RESUMEN_TRABAJO),
+    subdomain=PortalHost.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(
         AuthMethod.CERTIFICATE,
@@ -20,13 +26,7 @@ ENTRY: PortalMetadata = build_entry(
         AuthMethod.DNIE,
     ),
     url_stability=UrlStability.STABLE_PROTOCOL_GRADE,
-    related_modelo=ModeloCode.MODELO_190,
-    label={
-        "es": "Modelo 190 — Resumen anual retenciones trabajo",
-        "en": "Modelo 190 — Annual summary of labour withholdings",
-        "hu": "190-es űrlap — Éves munkabér-forrásadó összefoglaló",
-    },
-    purpose_es=(
-        "Resumen anual de retenciones e ingresos a cuenta sobre trabajo y actividades (complementa al Modelo 111)."
-    ),
+    label="entries.portal_m190_resumen_trabajo.label",
+    purpose="entries.portal_m190_resumen_trabajo.purpose",
 )
+"""Portal entry for Modelo 190 (annual summary of labour withholdings)."""

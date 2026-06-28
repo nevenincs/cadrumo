@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "corpus_pdf",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_111/files/04-111-ejercicios-anteriores-al-2001-65-kb-pdf.pdf",
+  "source_sha256": "9d862b0552e5aa4674b483de9e7e02c67caec040205973fe693a026275e2fd37",
+  "preprocessor_id": "corpus-pdf",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution. Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr111_2000.pdf",
+  "units": [
+    {
+      "text": "Diseños de ficheros de declaraciones\nDiseño de registro modelo 111\nModelo 111\nIMPUESTO SOBRE LA RENTA DE LAS PERSONAS FÍSICAS.\nRetenciones e ingresos a cuenta de rendimientos del trabajo, de actividades profesionales, de\nactividades agrícolas, ganaderas y premios\nNº POS. LON. TIPO DESCRIPCION\n1 1 3 An Concepto fiscal. Constante '111'\n2 4 1 An Constante 'P'\n3 5 9 An NIF\n4 14 2 An Ejercicio\n5 16 2 An Período\n6 18 17 N Rendimientos dinerarios del Trabajo, nº perceptores\n7 35 17 N Rendimientos dinerarios del Trabajo, importe percepciones\n8 52 17 N Rendimientos dinerarios del Trabajo, importe retenciones\n9 69 17 N Rendimientos en especie del Trabajo, nº perceptores\n10 86 17 N Rendimientos en especie del Trabajo, valor percepciones\n11 103 17 N Rendimientos en especie del Trabajo, importe de los ingresos a cuenta\n12 120 17 N Rendimientos dinerarios de actividades profesionales, nº percep.\n13 137 17 N Rendimientos dinerarios de actividades profesionales, imp. perc.\n14 154 17 N Rendimientos dinerarios de actividades profesionales, imp. reten.\n15 171 17 N Rendimientos en especie de actividades profesionales, nº perc.\n16 188 17 N Rendimientos en especie de actividades prof., valor percepciones\nRendimientos en especie de actividades profesionales, importe de los ingresos a\n17 205 17 N\ncuenta\n18 222 17 N Rendimientos dinerarios de act. agrícolas y ganaderas, nº per.\nRendimientos dinerarios de actividades agrícolas y ganaderas, importe\n19 239 17 N\npercepciones\nRendimientos dinerarios de actividades agrícolas y ganaderas, importe\n20 256 17 N\nretenciones\n21 273 17 N Rendimientos en especie de actividades agrícolas y ganaderas, nº perceptores\nRendimientos en especie de actividades agrícolas y ganaderas, valor\n22 290 17 N\npercepciones\nRendimientos en especie de actividades agrícolas y ganaderas, importe de los\n23 307 17 N\ningresos a cuenta\n24 324 17 N Premios dinerarios. Nº Perceptores\n25 341 17 N Premios dinerarios. Importe de las percepciones\n26 358 17 N Premios dinerarios. Importe de las retenciones\n27 375 17 N Premios en especie. Nº Perceptores\n28 392 17 N Premios en especie. Valor de las percepciones\n29 409 17 N Premios en especie. Importe de los ingresos a cuenta\n30 426 17 N Total Liquidación\n31 443 100 An Persona de Contacto",
+      "title": "Pag. 1",
+      "section": "Pag. 1",
+      "anchor": null
+    },
+    {
+      "text": "32 543 10 An Teléfono de Contacto\n33 553 350 An Observaciones\nTOTAL 902 POSICIONES\nPara facilitar la incorporación de datos al formulario se espera en C:\\AEAT\\111.txt",
+      "title": "Pag. 2",
+      "section": "Pag. 2",
+      "anchor": null
+    }
+  ]
+}

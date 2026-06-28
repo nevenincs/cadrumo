@@ -24,8 +24,8 @@ page index, instruction index, and SHA-256 of the cleartext.
 
 from __future__ import annotations
 
-import hashlib
-from typing import TYPE_CHECKING, Literal
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Literal, cast
 
 import pikepdf
 from pikepdf import (
@@ -37,6 +37,11 @@ from pikepdf import (
     parse_content_stream,
     unparse_content_stream,
 )
+from pikepdf import (
+    Object as PikepdfObject,
+)
+
+from ....core.hashing import sha256_hex
 
 if TYPE_CHECKING:
     from pikepdf.models._content_stream import UnparseableContentStreamInstructions
@@ -100,7 +105,7 @@ def _flatten_mapping(mapping: TokenMap) -> tuple[tuple[str, str, str], ...]:
     for category in categories:
         for entry in category:
             real = entry.real.get_secret_value()
-            sha = hashlib.sha256(real.encode("utf-8")).hexdigest()
+            sha = sha256_hex(real.encode("utf-8"))
             triples.append((real, entry.synthetic, sha))
     triples.sort(key=lambda triple: len(triple[0]), reverse=True)
     return tuple(triples)
@@ -136,69 +141,25 @@ def _rewrite_page(
             rebuilt.append(instruction)
             continue
 
-        operands = instruction.operands
         operator = instruction.operator
-
         if operator not in _TEXT_OPERATORS:
             rebuilt.append(instruction)
             continue
 
-        new_operands: list[object] | None = None
-        if operator in (_TJ, _QUOTE):
-            first_operand = operands[0]
-            if isinstance(first_operand, String):
-                new_operand, hits = _rewrite_string_operand(
-                    first_operand,
-                    triples,
-                    page_index=page_index,
-                    instruction_index=instruction_index,
-                )
-                if hits:
-                    new_operands = [new_operand, *list(operands)[1:]]
-                    edits.extend(hits)
-        elif operator == _DOUBLEQUOTE:
-            # `aw Tw ac Tc string "`  → operands = [aw, ac, string]
-            target_index = 2
-            target_operand = operands[target_index]
-            if isinstance(target_operand, String):
-                new_operand, hits = _rewrite_string_operand(
-                    target_operand,
-                    triples,
-                    page_index=page_index,
-                    instruction_index=instruction_index,
-                )
-                if hits:
-                    operand_list = list(operands)
-                    operand_list[target_index] = new_operand
-                    new_operands = list(operand_list)
-                    edits.extend(hits)
-        elif operator == _TJ_ARRAY:
-            # operands[0] is an Array of String + numeric kerning entries.
-            array = operands[0]
-            new_array_elements: list[object] = []
-            local_hits: list[Replacement] = []
-            array_mutated = False
-            for element_index in range(len(array)):
-                element = array[element_index]
-                if not isinstance(element, String):
-                    new_array_elements.append(element)
-                    continue
-                new_operand, hits = _rewrite_string_operand(
-                    element,
-                    triples,
-                    page_index=page_index,
-                    instruction_index=instruction_index,
-                )
-                if hits:
-                    new_array_elements.append(new_operand)
-                    local_hits.extend(hits)
-                    array_mutated = True
-                else:
-                    new_array_elements.append(element)
-            if array_mutated:
-                new_operands = [pikepdf.Array(new_array_elements)]
-                edits.extend(local_hits)
-
+        new_operands = _rewrite_text_show_operands(
+            # CAST-RATIONALE-SANITIZER-PIKEPDF-OPERAND-LIST: pikepdf's
+            # ``ContentStreamInstruction.operands`` is the private QPDF
+            # ``_ObjectList`` type; it is a runtime sequence but is not
+            # statically typed as ``Sequence[...]``, so the cast is
+            # required to satisfy the type checker without any loss of
+            # safety — the actual runtime object is already sequence-like.
+            cast("Sequence[PikepdfObject | int | float]", instruction.operands),
+            operator=operator,
+            triples=triples,
+            page_index=page_index,
+            instruction_index=instruction_index,
+            edits=edits,
+        )
         if new_operands is None:
             rebuilt.append(instruction)
         else:
@@ -213,6 +174,114 @@ def _rewrite_page(
         new_bytes = unparse_content_stream(rebuilt)
         page.Contents = pdf.make_stream(new_bytes)
     return edits
+
+
+def _rewrite_text_show_operands(
+    operands: Sequence[PikepdfObject | int | float],
+    *,
+    operator: object,
+    triples: tuple[tuple[str, str, str], ...],
+    page_index: int,
+    instruction_index: int,
+    edits: list[Replacement],
+) -> list[PikepdfObject | int | float] | None:
+    """Rewrite text-show operands for one instruction.
+
+    Returns ``None`` when nothing changed, otherwise the full new operand list.
+    """
+    if operator in (_TJ, _QUOTE):
+        return _rewrite_single_string_at(
+            operands,
+            target_index=0,
+            triples=triples,
+            page_index=page_index,
+            instruction_index=instruction_index,
+            edits=edits,
+        )
+    if operator == _DOUBLEQUOTE:
+        # `aw Tw ac Tc string "`  → operands = [aw, ac, string]
+        return _rewrite_single_string_at(
+            operands,
+            target_index=2,
+            triples=triples,
+            page_index=page_index,
+            instruction_index=instruction_index,
+            edits=edits,
+        )
+    if operator == _TJ_ARRAY:
+        return _rewrite_array_string_elements(
+            operands,
+            triples=triples,
+            page_index=page_index,
+            instruction_index=instruction_index,
+            edits=edits,
+        )
+    return None
+
+
+def _rewrite_single_string_at(
+    operands: Sequence[PikepdfObject | int | float],
+    *,
+    target_index: int,
+    triples: tuple[tuple[str, str, str], ...],
+    page_index: int,
+    instruction_index: int,
+    edits: list[Replacement],
+) -> list[PikepdfObject | int | float] | None:
+    target_operand = operands[target_index]
+    if not isinstance(target_operand, String):
+        return None
+    new_operand, hits = _rewrite_string_operand(
+        target_operand,
+        triples,
+        page_index=page_index,
+        instruction_index=instruction_index,
+    )
+    if not hits:
+        return None
+    operand_list: list[PikepdfObject | int | float] = list(operands)
+    operand_list[target_index] = new_operand
+    edits.extend(hits)
+    return operand_list
+
+
+def _rewrite_array_string_elements(
+    operands: Sequence[PikepdfObject | int | float],
+    *,
+    triples: tuple[tuple[str, str, str], ...],
+    page_index: int,
+    instruction_index: int,
+    edits: list[Replacement],
+) -> list[PikepdfObject | int | float] | None:
+    # CAST-RATIONALE-SANITIZER-PIKEPDF-ARRAY-ELEMENT: operands[0] is a
+    # pikepdf ``Array`` of String + numeric kerning entries; the static
+    # operand union ``PikepdfObject | int | float`` cannot express that
+    # narrowing, so the cast is required at this third-party type boundary.
+    array = cast("pikepdf.Array", operands[0])
+    new_array_elements: list[PikepdfObject] = []
+    local_hits: list[Replacement] = []
+    array_mutated = False
+    for element_index in range(len(array)):
+        element = array[element_index]
+        if not isinstance(element, String):
+            new_array_elements.append(element)
+            continue
+        new_operand, hits = _rewrite_string_operand(
+            element,
+            triples,
+            page_index=page_index,
+            instruction_index=instruction_index,
+        )
+        if hits:
+            new_array_elements.append(new_operand)
+            local_hits.extend(hits)
+            array_mutated = True
+        else:
+            new_array_elements.append(element)
+    if not array_mutated:
+        return None
+    edits.extend(local_hits)
+    return [pikepdf.Array(new_array_elements)]
 
 
 def _rewrite_string_operand(
@@ -255,7 +324,7 @@ def _rewrite_string_operand(
                         real_sha256=sha,
                         synthetic=synthetic,
                         encoding=encoding,
-                    )
+                    ),
                 )
     if not edits:
         return operand, edits
@@ -296,7 +365,7 @@ def _classify_encoding(operand: String) -> Literal["literal", "hex"]:
 
 
 def _build_instruction(
-    operands: list[object],
+    operands: list[PikepdfObject | int | float],
     operator: Operator,
 ) -> ContentStreamInstruction:
     """Construct a :class:`ContentStreamInstruction` from a plain operand list.
@@ -304,13 +373,7 @@ def _build_instruction(
     Centralises the construction so the static-type-checker comment
     lives in one place and call sites stay legible.
     """
-    # Cast to the iterable-overload signature: pikepdf's typed
-    # stub declares the iterable accepts ``Object | int | float``;
-    # the runtime accepts any operand type the operator allows.
-    from typing import cast
-
-    iterable_operands = cast("list[pikepdf.Object | int | float]", operands)
-    return ContentStreamInstruction(iterable_operands, operator)
+    return ContentStreamInstruction(operands, operator)
 
 
 # Keep the runtime dep edge explicit so the type checker does not

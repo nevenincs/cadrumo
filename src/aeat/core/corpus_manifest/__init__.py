@@ -13,9 +13,9 @@ fields are validated against path-traversal at construction.
 
 Operator workflow (via the ``aeat security verify-corpus`` CLI):
 
-- ``aeat security verify-corpus --corpus casillas`` — re-walk the
-  casillas root and exit non-zero with a per-file diff on drift.
-- ``aeat security verify-corpus --corpus casillas --regenerate``
+- ``aeat security verify-corpus --corpus manuals`` — re-walk the
+  manuals root and exit non-zero with a per-file diff on drift.
+- ``aeat security verify-corpus --corpus manuals --regenerate``
   — re-walk and rewrite the manifest in place after intentional
   corpus updates.
 """
@@ -28,15 +28,19 @@ import os
 import tempfile
 from collections.abc import Iterator
 from datetime import datetime
-from importlib import import_module
 from pathlib import Path, PurePosixPath
+from typing import TypedDict
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ..logging import get_logger
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..errors import CoreValidationError as _CoreValidationError
+from ..hashing import sha256_hex as _sha256_hex
+from ..logging import get_logger as _get_logger
+from ..time._utc import validate_utc_aware
+from ._errors import CorpusManifestDriftError, CorpusManifestError, CorpusManifestTamperError
 
-_log = get_logger(__name__)
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_logger = _get_logger(__name__)
 
 _MANIFEST_VERSION = 1
 """Wire-format version of the on-disk manifest schema."""
@@ -45,13 +49,21 @@ _MANIFEST_FILENAME = "corpus.manifest.json"
 """Canonical filename for the manifest sidecar inside each corpus root."""
 
 
-def _corpus_error_types() -> tuple[type[Exception], type[Exception], type[Exception]]:
-    errors = import_module("aeat.adapters.persistence.storage.errors")
-    return (
-        errors.CorpusManifestDriftError,
-        errors.CorpusManifestError,
-        errors.CorpusManifestTamperError,
-    )
+# Sha-256 content-fingerprint shape shared by the per-entry file digest and
+# the self-attesting manifest digest. Stays bare-str under ADR Rule 7
+# (fingerprint, not identity); factored to a single module-local constraint
+# kwargs mapping to remove the duplication of the shape literal.
+class _Sha256FieldKwargs(TypedDict):
+    min_length: int
+    max_length: int
+    pattern: str
+
+
+_CORPUS_SHA256_KWARGS: _Sha256FieldKwargs = {
+    "min_length": 64,
+    "max_length": 64,
+    "pattern": r"^[0-9a-f]{64}$",
+}
 
 
 class CorpusEntry(BaseModel):
@@ -68,27 +80,27 @@ class CorpusEntry(BaseModel):
     model_config = _STRICT_FROZEN
 
     relative_path: str = Field(min_length=1, max_length=4096)
-    sha256: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    sha256: str = Field(**_CORPUS_SHA256_KWARGS)
     content_length: int = Field(ge=0)
 
     @field_validator("relative_path")
     @classmethod
     def _validate_relative_path(cls, value: str) -> str:
         if value in {".", "..", ""}:
-            raise ValueError(f"relative_path must not be a dot token: {value!r}")
+            raise CorpusManifestError(f"relative_path must not be a dot token: {value!r}")
         # PurePosixPath ignores backslashes (treats them as part of a
         # single path token), so a Windows-style ``..\\escape`` would
         # slip past the dot-part walk below. Reject them explicitly.
         if "\\" in value:
-            raise ValueError(
+            raise CorpusManifestError(
                 f"relative_path must use POSIX-style separators only: {value!r}",
             )
         pure = PurePosixPath(value)
         if pure.is_absolute():
-            raise ValueError(f"relative_path must not be absolute: {value!r}")
+            raise CorpusManifestError(f"relative_path must not be absolute: {value!r}")
         for part in pure.parts:
             if part in {"..", "."}:
-                raise ValueError(f"relative_path must not contain dot tokens: {value!r}")
+                raise CorpusManifestError(f"relative_path must not contain dot tokens: {value!r}")
         return value
 
 
@@ -105,7 +117,7 @@ class CorpusManifest(BaseModel):
         manifest_version: Wire-format version. Higher than the consumer
             supports raises :class:`CorpusManifestError` at load time.
         corpus_root_name: Stable identifier for the corpus
-            (``"casillas"``, ``"manuals"``, etc.).
+            (``"manuals"``, ``"legal"``, etc.).
         generated_at: UTC timestamp the manifest was built.
         entries: Frozen tuple of :class:`CorpusEntry` records, sorted by
             ``relative_path`` for deterministic ``manifest_sha256``.
@@ -118,14 +130,15 @@ class CorpusManifest(BaseModel):
     corpus_root_name: str = Field(min_length=1, max_length=64)
     generated_at: datetime
     entries: tuple[CorpusEntry, ...]
-    manifest_sha256: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    manifest_sha256: str = Field(**_CORPUS_SHA256_KWARGS)
 
     @field_validator("generated_at")
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("generated_at must be timezone-aware")
-        return value
+        try:
+            return validate_utc_aware(value)
+        except _CoreValidationError as exc:
+            raise CorpusManifestError(str(exc)) from exc
 
 
 class CorpusManifestDiff(BaseModel):
@@ -263,17 +276,24 @@ def build_corpus_manifest(
                 relative_path=relative,
                 sha256=sha256_hex,
                 content_length=length,
-            )
+            ),
         )
     raw_entries.sort(key=lambda entry: entry.relative_path)
     entries = tuple(raw_entries)
+    _logger.debug("build_corpus_manifest: hashed %d files under %s", len(entries), corpus_root)
     body = _canonical_manifest_body(
         manifest_version=_MANIFEST_VERSION,
         corpus_root_name=corpus_root_name,
         generated_at=generated_at,
         entries=entries,
     )
-    manifest_sha256 = hashlib.sha256(body).hexdigest()
+    manifest_sha256 = _sha256_hex(body)
+    _logger.debug(
+        "build_corpus_manifest: built manifest for %r with %d entries (sha256=%s)",
+        corpus_root_name,
+        len(entries),
+        manifest_sha256[:12],
+    )
     return CorpusManifest(
         manifest_version=_MANIFEST_VERSION,
         corpus_root_name=corpus_root_name,
@@ -297,6 +317,10 @@ def verify_corpus_manifest(
     Args:
         corpus_root: The corpus directory to verify.
         manifest: The manifest to verify against.
+
+    Returns:
+        A :class:`CorpusManifestDiff` enumerating added, removed,
+        and changed files. An empty diff means the corpus is clean.
 
     Raises:
         FileNotFoundError: If ``corpus_root`` does not exist.
@@ -331,20 +355,19 @@ def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
     resolved = target.resolve()
     resolved.parent.mkdir(parents=True, exist_ok=True)
     payload = manifest.model_dump_json()
-    # Capture tmp_path BEFORE the ``with`` so cleanup works when
-    # context entry raises. NamedTemporaryFile raising means no file
-    # was created; the outer except re-raises cleanly.
-    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
-        mode="w",
-        encoding="utf-8",
-        dir=resolved.parent,
-        prefix=f"{resolved.stem}.",
-        suffix=".tmp",
-        delete=False,
-    )
-    tmp_path = Path(handle.name)
+    # NamedTemporaryFile raising means no file was created; the outer
+    # except re-raises cleanly.
+    tmp_path: Path | None = None
     try:
-        with handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=resolved.parent,
+            prefix=f"{resolved.stem}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
             handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
@@ -352,8 +375,11 @@ def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
         from ..locks import fsync_parent_dir
 
         fsync_parent_dir(resolved)
+        _logger.debug("save_corpus_manifest: wrote manifest to %s", resolved)
     except OSError:
-        tmp_path.unlink(missing_ok=True)
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+        _logger.error("save_corpus_manifest: failed to write manifest to %s", resolved, exc_info=True)
         raise
 
 
@@ -362,6 +388,9 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
 
     Args:
         target: Source file. Must exist.
+
+    Returns:
+        The validated :class:`CorpusManifest` loaded from ``target``.
 
     Raises:
         FileNotFoundError: If ``target`` does not exist.
@@ -375,10 +404,10 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
     if not target.exists():
         raise FileNotFoundError(target)
     raw = target.read_text(encoding="utf-8")
-    _, CorpusManifestError, CorpusManifestTamperError = _corpus_error_types()
     try:
         manifest = CorpusManifest.model_validate_json(raw)
-    except Exception as exc:
+    except (OSError, ValueError, ValidationError) as exc:
+        _logger.error("load_corpus_manifest: structurally invalid manifest at %s", target, exc_info=True)
         raise CorpusManifestError(f"manifest at {target} is structurally invalid: {exc}") from exc
     if manifest.manifest_version > _MANIFEST_VERSION:
         raise CorpusManifestError(
@@ -391,12 +420,22 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
         generated_at=manifest.generated_at,
         entries=manifest.entries,
     )
-    expected_sha256 = hashlib.sha256(body).hexdigest()
+    expected_sha256 = _sha256_hex(body)
     if manifest.manifest_sha256 != expected_sha256:
+        _logger.error(
+            "load_corpus_manifest: tamper detected in manifest at %s (recorded sha256 does not match body)",
+            target,
+        )
         raise CorpusManifestTamperError(
             f"manifest at {target}: recorded manifest_sha256 does not match the body digest "
             "(an attacker may have edited the manifest body without recomputing the digest).",
         )
+    _logger.debug(
+        "load_corpus_manifest: loaded %r with %d entries from %s",
+        manifest.corpus_root_name,
+        len(manifest.entries),
+        target,
+    )
     return manifest
 
 
@@ -415,17 +454,27 @@ def assert_corpus_clean(corpus_root: Path) -> None:
     manifest = load_corpus_manifest(manifest_path_for(corpus_root))
     diff = verify_corpus_manifest(corpus_root, manifest=manifest)
     if not diff.is_clean:
-        CorpusManifestDriftError, _, _ = _corpus_error_types()
+        _logger.warning(
+            "assert_corpus_clean: drift detected in %r (added=%d removed=%d changed=%d)",
+            manifest.corpus_root_name,
+            len(diff.added),
+            len(diff.removed),
+            len(diff.changed),
+        )
         raise CorpusManifestDriftError(
             f"corpus drift in {manifest.corpus_root_name!r}: "
             f"added={list(diff.added)} removed={list(diff.removed)} changed={list(diff.changed)}",
         )
+    _logger.debug("assert_corpus_clean: corpus %r is clean", manifest.corpus_root_name)
 
 
 __all__ = [
     "CorpusEntry",
     "CorpusManifest",
     "CorpusManifestDiff",
+    "CorpusManifestDriftError",
+    "CorpusManifestError",
+    "CorpusManifestTamperError",
     "assert_corpus_clean",
     "build_corpus_manifest",
     "load_corpus_manifest",

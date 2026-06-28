@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0395"
+number = "0395"
+label = "Importe de la pérdida patrimonial que procede imputar a 2024"
+section = ["toma_datos_ampliada", "gp_otras_ganancias_ejer_ant", "gp_imp_per_ant"]
+semantic_role = "irpf_perdida_otras_ejer_ant_imputable"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

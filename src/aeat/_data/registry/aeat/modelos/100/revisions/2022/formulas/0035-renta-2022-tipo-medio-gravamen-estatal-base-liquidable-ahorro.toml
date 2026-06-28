@@ -1,0 +1,18 @@
+[[revisions."2022".formulas]]
+id = "renta-2022-tipo-medio-gravamen-estatal-base-liquidable-ahorro"
+target_casilla_id = "0542"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla_id = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla_id = "0540" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla_id = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]

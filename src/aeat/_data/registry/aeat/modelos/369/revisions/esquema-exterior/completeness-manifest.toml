@@ -1,0 +1,28 @@
+# Modelo 369 calculation-completeness manifest.
+#
+# Enumerates the casillas in this revision's calculation closure --
+# the casilla set the cross-connecting calculation engine traverses:
+# every formula target, every casilla referenced inside a formula
+# expression, every formula/binding endpoint casilla, and every
+# verification-expectation operand. Cross-modelo binding source
+# casillas belong to foreign modelos and are excluded.
+#
+# Derived off-load-path from the modelo's calculation surface, keyed
+# on each closure casilla's canonical casilla_id plus reviewed segment/number metadata.
+# A casilla the revision declares but the manifest does not list (a
+# pure data-entry field that feeds no calculation) is not a gate
+# failure. The off-load-path drift re-verification test re-derives
+# this set from the registry calculation surface.
+
+[revisions."esquema-exterior".completeness_manifest]
+source_ref = "aeat-dr-369-2021"
+legal_refs = ["ley-37-1992:art-163-octiesdecies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-exterior".completeness_manifest.casillas]]
+casilla_id = "iva.exterior.cuota-total"
+number = "iva.exterior.cuota-total"
+
+[[revisions."esquema-exterior".completeness_manifest.casillas]]
+casilla_id = "iva.exterior.de.services-cuota"
+number = "iva.exterior.de.services-cuota"

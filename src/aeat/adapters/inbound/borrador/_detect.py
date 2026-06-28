@@ -1,4 +1,9 @@
-"""Artefact-kind detection for Modelo 100 PDFs (#305)."""
+"""Artefact-kind detection for Modelo 100 PDFs.
+
+Inspects the printed text of a borrador / predeclaración / declaración
+PDF and returns the matching :class:`aeat.adapters.inbound.borrador._schema.ArtefactKind`.
+The detection ladder is documented on :func:`detect_artefact_kind`.
+"""
 
 from __future__ import annotations
 
@@ -12,18 +17,29 @@ from ._schema import ArtefactKind
 _VISTA_PREVIA_RE = re.compile(r"\bVISTA\s+PREVIA\b", re.IGNORECASE)
 _BORRADOR_RE = re.compile(r"\bBORRADOR\b", re.IGNORECASE)
 _CSV_RE = re.compile(r"C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n", re.IGNORECASE)
+_INPUT_PDF_SOURCE_LABEL = "<input-pdf>"
 
 
 def detect_artefact_kind(pdf_path: Path) -> ArtefactKind:
-    """Return the detected Modelo 100 artefact kind.
+    """Return the detected Modelo 100 artefact kind for ``pdf_path``.
 
-    Precedence when markers overlap: PREDECLARACION > DECLARACION >
-    BORRADOR. The *VISTA PREVIA* watermark is the strongest signal of
-    non-binding status; CSV stamp trumps BORRADOR header since a filed
+    Precedence when markers overlap is
+    :attr:`~aeat.adapters.inbound.borrador._schema.ArtefactKind.PREDECLARACION`
+    > :attr:`~aeat.adapters.inbound.borrador._schema.ArtefactKind.DECLARACION`
+    > :attr:`~aeat.adapters.inbound.borrador._schema.ArtefactKind.BORRADOR`.
+    The *VISTA PREVIA* watermark is the strongest signal of non-binding
+    status; the CSV stamp trumps the BORRADOR header because a filed
     declaración always ships with a CSV.
 
+    Args:
+        pdf_path: Path to the Modelo 100 PDF to inspect.
+
+    Returns:
+        The detected :class:`~aeat.adapters.inbound.borrador._schema.ArtefactKind`.
+
     Raises:
-        ArtefactNotRecognisedError: When none of the three markers matches.
+        ArtefactNotRecognisedError: When none of the three markers
+            (VISTA PREVIA watermark, BORRADOR header, CSV stamp) match.
     """
     pages = extract_pages_text(pdf_path)
     text = "\n".join(pages)
@@ -36,6 +52,6 @@ def detect_artefact_kind(pdf_path: Path) -> ArtefactKind:
         return ArtefactKind.BORRADOR
 
     raise ArtefactNotRecognisedError(
-        f"could not recognise Modelo 100 artefact type in {pdf_path}; "
-        "expected one of: VISTA PREVIA watermark, BORRADOR header, CSV stamp"
+        f"could not recognise Modelo 100 artefact type in {_INPUT_PDF_SOURCE_LABEL}; "
+        "expected one of: VISTA PREVIA watermark, BORRADOR header, CSV stamp",
     )

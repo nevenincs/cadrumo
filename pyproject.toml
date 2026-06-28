@@ -1,83 +1,132 @@
 [project]
 name = "aeat"
 version = "0.1.0"
-description = "Spanish tax authority (AEAT) automation - tax information and filing tools"
+description = "A utility that turns your financial records into Spanish tax-form (modelo) data, ready to submit to the AEAT"
 readme = "README.md"
-license = "Apache-2.0"
 requires-python = ">=3.13"
+license = "Apache-2.0"
 authors = [
-    { name = "wgergely" },
+  { name = "wgergely" },
 ]
-keywords = ["aeat", "tax", "spain", "hacienda", "impuestos"]
+keywords = ["aeat", "hacienda", "impuestos", "spain", "tax", "toolkit", "utility", "cli"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3.13",
-    "Topic :: Office/Business :: Financial",
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Office/Business :: Financial",
 ]
 
 dependencies = [
-    # LLM providers
-    "anthropic>=0.74.1",
-    # Google Cloud / Workspace
-    "google-api-python-client>=2.194.0",
-    "google-auth>=2.49.1",
-    "google-auth-oauthlib>=1.3.1",
-    "google-auth-httplib2>=0.3.1",
-    "gspread>=6.2.1",
-    "google-cloud-storage>=3.10.1",
-    "google-cloud-functions>=1.20.0",
-    "google-cloud-run>=0.10.18",
-    # CLI
-    "typer>=0.20.0",
-    "rich>=14.2.0",
-    # Browser automation
-    "playwright>=1.58.0",
-    # Data validation & models
-    "pydantic>=2.12.5",
-    "pydantic-settings>=2.9.1",
-    # HTTP client
-    "httpx>=0.28.1",
-    # HTML parsing (status reader, #43)
-    "beautifulsoup4>=4.12",
-    # IANA tz database (bundled on Linux/macOS, missing on Windows
-    # CPython — required by aeat.status._parsers.expedientes to
-    # localise AEAT timestamps to Europe/Madrid).
-    "tzdata>=2026.2 ; sys_platform == 'win32'",
-    # PKCS#12 parsing for client-certificate auth (#8)
-    "cryptography>=47.0.0",
-    # Argon2id KDF for the file-fallback master-key provider's
-    # passphrase-to-KEK derivation (wave-12). OWASP-current top-tier
-    # password-hashing primitive; ships pre-built wheels for
-    # Linux/macOS/Windows.
-    "argon2-cffi>=23.1.0",
-    # OS-keychain abstraction for the master-key provider (Windows
-    # Credential Manager, macOS Keychain, Linux Secret Service via
-    # libsecret). Pure-Python, gracefully degrades when no usable backend
-    # is detected; the substrate's file fallback covers headless / CI.
-    "keyring>=25.6.0",
-    # Configuration
-    "python-dotenv>=1.2.2",
-    # Persistence
-    "sqlalchemy>=2.0.36",
-    "alembic>=1.14.0",
-    # PDF parsing (#44 justificante)
-    "pdfplumber>=0.11.9",
-    # Financial ingest (#73)
-    "ofxparse>=0.21",
-    "openpyxl>=3.1.5",
-    # PDF sanitiser (#239) — content-stream rewriter for PII redaction.
-    "pikepdf>=10.0.0",
+  # NOTE: capability-gated optional integrations live in
+  # [project.optional-dependencies], not here, so a bare `pip install aeat`
+  # stays lean. `anthropic` (Anthropic-API LLM provider), the `google-*`
+  # stack (Drive/Sheets export), and `playwright*` (live AEAT browser) are
+  # all lazily imported — the core CLI builds without them — and map to the
+  # `anthropic`, `google`, and `browser` extras below.
+  # Argon2id KDF for the file-fallback master-key provider's
+  # passphrase-to-KEK derivation. OWASP-current top-tier
+  # password-hashing primitive; ships pre-built wheels for
+  # Linux/macOS/Windows.
+  "argon2-cffi>=23.1.0,<26",
+  # HTML parsing for status readers.
+  "beautifulsoup4>=4.12,<5",
+  # PKCS#12 parsing for client-certificate auth.
+  "cryptography>=47.0.0,<48",
+  # XML parsing.
+  "defusedxml>=0.7.1,<1",
+  # In-process Excel-formula evaluator reserved for the schema-to-sheet
+  # parity oracle. The production registry formula runtime does not import
+  # this package directly; the workbook parity gate owns the dependency.
+  "formulas>=1.2.0,<2",
+  # HTTP client
+  "httpx>=0.28.1,<1",
+  # OS-keychain abstraction for the master-key provider (Windows
+  # Credential Manager, macOS Keychain, Linux Secret Service via
+  # libsecret). Pure-Python, gracefully degrades when no usable backend
+  # is detected; the substrate's file fallback covers headless / CI.
+  "keyring>=25.6.0,<26",
+  # Financial ingest.
+  "ofxparse>=0.21,<1",
+  "openpyxl>=3.1.5,<4",
+  # PDF parsing for justificantes.
+  "pdfplumber>=0.11.9,<1",
+  # Fast text extraction from official AEAT manual PDFs for registry
+  # source-citation validation.
+  "pypdfium2>=5.7.1,<6",
+  # PDF sanitiser; content-stream rewriter for PII redaction.
+  "pikepdf>=10.0.0,<11",
+  # Data validation & models
+  "pydantic>=2.12.5,<3",
+  "pydantic-settings>=2.9.1,<3",
+  # Interactive prompt backend for the wizard descriptor runtime.
+  "questionary>=2.1.1,<3",
+  # Direct prompt_toolkit imports support wizard console validation and tests.
+  "prompt-toolkit>=3.0,<4",
+  # Configuration
+  "python-dotenv>=1.2.2,<2",
+  # CLI localization backend.
+  "python-i18n>=0.3.9,<1",
+  # Typer imports Rich at runtime for help/error rendering. Keep the direct
+  # pin version-bounded here; application code should not import Rich directly.
+  "rich>=14.2.0,<16",
+  # Persistence
+  "sqlalchemy>=2.0.36,<3",
+  # CLI
+  "typer>=0.20.0,<1",
+  # IANA tz database (bundled on Linux/macOS, missing on Windows
+  # CPython — required by aeat.status._parsers.expedientes to
+  # localise AEAT timestamps to Europe/Madrid).
+  "tzdata>=2026.2 ; sys_platform == 'win32'",
+  "xlrd>=2.0.1,<3",
 ]
 
 [project.scripts]
-aeat = "aeat.entrypoints.cli:app"
+aeat = "aeat.entrypoints.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/wgergely/aeat"
-Repository = "https://github.com/wgergely/aeat"
 Issues = "https://github.com/wgergely/aeat/issues"
+Repository = "https://github.com/wgergely/aeat"
+
+[project.optional-dependencies]
+workbook-windows = [
+  "pywin32>=311 ; sys_platform == 'win32'",
+]
+# ── Capability-gated optional integrations ───────────────────────────────────
+# Each extra maps to an operator-facing capability/feature. All are lazily
+# imported, so `pip install aeat` (no extras) builds and runs the core CLI; the
+# feature refuses with an install hint when its extra is absent (graceful
+# degradation, per `dependency-provisioning` ADR). `aeat config check` reports
+# which extras are importable.
+#
+# Google Drive + Sheets export (the `google_export` capability). OAuth Desktop
+# flow (ADR `2026-05-08-google-oauth-adr`): loopback IP + PKCE via
+# google-auth-oauthlib's InstalledAppFlow; the storage provider drives Drive v3
+# / Sheets v4 through the discovery client. google-auth-httplib2 is intentionally
+# NOT pinned — transport is satisfied by `requests` (transitive via google-auth).
+google = [
+  "google-auth>=2.50.0,<3",
+  "google-auth-oauthlib>=1.3.1,<2",
+  "google-api-python-client>=2.195.0,<3",
+]
+# Live AEAT browser automation (the `aeat app live ...` sede sessions).
+browser = [
+  "playwright>=1.58.0,<2",
+  # Runtime browser evasion used by AEAT live browser sessions.
+  "playwright-stealth>=2.0.3,<3",
+]
+# Direct Anthropic-API LLM classification provider (distinct from the
+# subprocess CLI providers, which need no Python SDK).
+anthropic = [
+  "anthropic>=0.74.1,<1",
+]
+# Convenience aggregate: every optional integration at once.
+all = [
+  "aeat[google]",
+  "aeat[browser]",
+  "aeat[anthropic]",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -89,114 +138,439 @@ packages = ["src/aeat"]
 # `importlib.resources.files()` can locate it at runtime in installed
 # wheels.
 include = [
-    "src/aeat/adapters/persistence/storage/master_key/_bip39_wordlist.txt",
+  "src/aeat/adapters/persistence/storage/master_key/_bip39_wordlist.txt",
+  "src/aeat/core/external_constants.toml",
 ]
 
 # ── uv ───────────────────────────────────────────────────────────────────────
 [tool.uv]
-# tree-sitter-language-pack 1.6.3 (2026-04-23) shipped wheels only for cp312 and
-# cp314; cp313 (our interpreter) has no wheel and no sdist. Pin below 1.6.3 until
-# upstream restores cp313 support.
+# vaultspec-rag 0.2.14 requires tree-sitter-language-pack below 1.6.2, and shared
+# Windows worktrees can keep the native parser DLL locked indefinitely. Keep the
+# resolver bound aligned with vaultspec-rag so additive installs and lock checks
+# do not select the incompatible 1.6.2 parser package.
 override-dependencies = [
-    "tree-sitter-language-pack<1.6.3",
+  "tree-sitter-language-pack<1.6.2",
 ]
 
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+    {index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
+]
+
+[tool.vaultspec-rag]
+managed-torch-direct-dependency = true
 [dependency-groups]
 dev = [
-    # Vault tooling — contributor-only; not imported by src/aeat/.
-    "vaultspec-core>=0.1.14",
-    "vaultspec-rag>=0.2.3",
-    "ruff>=0.15.12",
-    "ty>=0.0.1a1",
-    "prek>=0.2.0",
-    "pytest>=9.0.3",
-    "pytest-asyncio>=1.0.0",
-    # Live browser harness — #15 ADR (live only).
-    "pytest-playwright>=0.6.0",
-    # httpx wire-shape assertions — #15 ADR (unit only; banned in live files).
-    "pytest-httpx>=0.35.0",
-    # Per-test retries for genuinely flaky live endpoints — #15 ADR (live only, opt-in per test).
-    "pytest-rerunfailures>=15.0",
-    # Snapshot diffing for modelo schemas / casilla extractions — #15 ADR (both scopes).
-    "syrupy>=4.7.0",
-    # Parallel unit suite via opt-in `just test-parallel` — #15 ADR (unit only).
-    "pytest-xdist>=3.6.0",
-    # Coverage measurement + fail-under gate — #15 ADR (unit only).
-    "pytest-cov>=6.0.0",
-    # Wall-clock control for deadline/expedientes tests — #15 ADR (unit only; banned in live files).
-    "time-machine>=2.16.0",
-    "playwright>=1.58.0",
-    "playwright-stealth>=2.0.3",
-    # Used only to generate synthetic fixture PDFs in tests (#44).
-    "reportlab>=4.4.10",
-    # Import-linter for layered-architecture boundary enforcement (#475/#476).
-    # Contract definition lives in `.importlinter` at repo root; activated by
-    # the Step 7 keystone PR when the hexagonal layout move lands.
-    "import-linter>=2.0",
+  # Dependency declaration drift: missing, unused, transitive, and misplaced deps.
+  "deptry>=0.24",
+  # torch is the vaultspec-rag embedding backend (dev-only semantic search); no
+  # `src/aeat/` runtime path imports it. It lives here, not in [project.dependencies],
+  # so production installs stay lean — a PEP 735 group is a valid direct-dep location
+  # for the `[tool.uv.sources]` cu130 pin per vaultspec-rag's torch_config, and
+  # `just install` installs the dev group so contributors still get GPU torch.
+  "torch>=2.4",
+  # Import-linter for layered-architecture boundary enforcement.
+  # Contract definition lives in `.importlinter` at repo root; activated by
+  # the architecture boundary checks.
+  "import-linter>=2.0",
+  # The capability-gated optional integrations (now in
+  # [project.optional-dependencies]) are pulled into the dev/test/CI
+  # environment here so the full test suite — which imports every adapter —
+  # installs unchanged. Production `pip install aeat` stays lean without them.
+  "google-auth>=2.50.0,<3",
+  "google-auth-oauthlib>=1.3.1,<2",
+  "google-api-python-client>=2.195.0,<3",
+  "playwright>=1.58.0",
+  "playwright-stealth>=2.0.3,<3",
+  "anthropic>=0.74.1,<1",
+  "prek>=0.2.0",
+  "pytest>=9.0.3",
+  "pytest-asyncio>=1.0.0",
+  # Coverage measurement + fail-under gate for unit tests.
+  "pytest-cov>=6.0.0",
+  # httpx wire-shape assertions for unit tests; banned in live files.
+  "pytest-httpx>=0.35.0",
+  # Live browser harness.
+  "pytest-playwright>=0.6.0",
+  # Per-test retries for genuinely flaky live endpoints; live only, opt-in per test.
+  "pytest-rerunfailures>=15.0",
+  # Parallel unit suite via opt-in `uv run pytest -n auto -m unit`.
+  "pytest-xdist>=3.6.0",
+  # pytest-xdist's `-n auto` calls psutil.cpu_count; pin so `uv sync` restores
+  # a clean install if the cached one is corrupted (observed on this worktree:
+  # __init__.py missing, only the .pyc remained, so AttributeError evaded the
+  # xdist ImportError fallback).
+  "psutil>=5.9",
+  # Used only to generate synthetic fixture PDFs in tests.
+  "reportlab>=4.4.10",
+  "ruff>=0.15.12",
+  # Snapshot diffing for registry behaviour.
+  "syrupy>=4.7.0",
+  # Wall-clock control for deadline/expedientes tests; banned in live files.
+  "time-machine>=2.16.0",
+  "ty>=0.0.1a1",
+  # Vault tooling — contributor-only; not imported by src/aeat/.
+  "vaultspec-core>=0.1.25",
+  "vaultspec-rag>=0.2.14",
+  # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
+  # the Google-style + Sphinx-cross-referenced docstrings under src/aeat/.
+  "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited
+  "sphinx-autodoc-typehints>=2.5",
+  "sphinx-markdown-builder>=0.6",
+  "furo>=2024.8",
+  "myst-parser>=4.0",
+  "sphinx-copybutton>=0.5.2",
+  "sphinx-design>=0.6",
+  "sphinx-notfound-page>=1.1",
+  "sphinxext-opengraph>=0.9",
+  "sphinx-sitemap>=2.6",
+  # Hover tooltip cards on :term: cross-references. With hoverxref_roles=["term"],
+  # every :term: reference to a generated glossary entry shows the definition on
+  # hover - the curated short description surfaces without a page load. The
+  # generated glossary's :term: anchors are the load-bearing part; this is the
+  # presentation enhancement over them.
+  "sphinx-hoverxref>=1.4",
+  # Precompiled docs search backend (MIT). `pagefind` is the pure-Python API
+  # wrapper; the `extended` extra pins `pagefind-bin-extended`, whose wheel
+  # BUNDLES the platform Rust binary WITH the es/ca/hu/en Snowball stemmers
+  # (the standard `bin` extra omits the non-English stemmers). Vendoring the
+  # binary inside the pinned wheel keeps the docs build offline-hermetic: the
+  # post-build index pass invokes the bundled binary and makes no network
+  # fetch. The compiled index is an uncommitted build artifact, like docs/cli/.
+  "pagefind[extended]>=1.5,<2",
+  # Live-reloading docs dev server (`just docs-serve`): wraps the Sphinx build
+  # with a filesystem watcher and a livereload websocket so edits to docs/ and
+  # the src/aeat/ docstring surface refresh the browser without a manual rebuild.
+  "sphinx-autobuild>=2024.10",
+  # Documentation conformance enforcement: docstring presence/style,
+  # signature-vs-docstring accuracy, and RST formatting.
+  "pydoclint>=0.6",
+  "interrogate>=1.7.0",
+  "doc8>=1.1",
+  "types-defusedxml>=0.7.0.20260504",
+  "types-openpyxl>=3.1.5.20260408",
+  "types-reportlab>=4.4.10.20260408",
+  "types-pyyaml>=6.0.12.20260510",
+  "types-xlrd>=2.0.0.20260408",
+  "types-pywin32>=311.0.0.20260508",
+  "google-api-python-client-stubs>=1.36",
+  "pyright>=1.1.409",
+  "semgrep>=1.85.0",
+  "radon>=6.0.1",
+  "complexipy>=3.3.0",
+  "vulture>=2.16",
+  "sphinxcontrib-mermaid>=1.0",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────
 [tool.ruff]
 target-version = "py313"
 line-length = 120
-src = ["src", "tests"]
+src = ["src"]
+extend-exclude = [
+  # Root scratch/probe artifacts are one-off investigation tools owned by
+  # vault-tracked execution slices, not production package code.
+  "run_p04_s11_test.py",
+  "scratch_probe*.py",
+  "test_attachment_fix.py",
+  "test_m714.py",
+  "scripts/classify_m200.py",
+]
 
 [tool.ruff.lint]
 select = [
-    "E",    # pycodestyle errors
-    "W",    # pycodestyle warnings
-    "F",    # pyflakes
-    "I",    # isort
-    "N",    # pep8-naming
-    "UP",   # pyupgrade
-    "B",    # flake8-bugbear
-    "S",    # flake8-bandit (security)
-    "T20",  # flake8-print
-    "SIM",  # flake8-simplify
-    "TID",  # flake8-tidy-imports (enforces banned-api below) — #15 ADR
-    "RUF",  # ruff-specific rules
+  "E",  # pycodestyle errors
+  "W",  # pycodestyle warnings
+  "F",  # pyflakes
+  "I",  # isort
+  "N",  # pep8-naming
+  "UP",  # pyupgrade
+  "B",  # flake8-bugbear
+  "S",  # flake8-bandit (security)
+  "T20",  # flake8-print
+  "SIM",  # flake8-simplify
+  "TID",  # flake8-tidy-imports; enforces banned-api below
+  "RUF",  # ruff-specific rules
+  "D",  # pydocstyle (Google-style docstring conventions)
 ]
 ignore = [
-    "S101",   # allow assert in tests
-    "TID252", # tolerate relative parent imports within subpackages; #15 + #162 require relative imports inside src/aeat/
+  "S101",  # allow assert in tests
+  "TID252",  # tolerate relative parent imports within subpackages
+  "N813",  # `Translatable as tr` is the canonical i18n alias across the codebase
+  # Spanish-language ambiguous-unicode checks are noise on this project:
+  # the codebase quotes BOE, AEAT, and other regulatory sources verbatim,
+  # which contains accented Latin glyphs (á é í ó ú ñ) and the inverted
+  # punctuation marks (¿ ¡). These are linguistically correct, not
+  # confusables, and tagging them as ambiguous would degrade legal-source
+  # fidelity. RUF001/002/003 are turned off project-wide on that basis.
+  "RUF001",  # ambiguous-unicode-character-string (Spanish chars in literals)
+  "RUF002",  # ambiguous-unicode-character-docstring (Spanish chars in docstrings)
+  "RUF003",  # ambiguous-unicode-character-comment (Spanish chars in comments)
+  # RUF012 (mutable-class-default) is a false positive for pydantic
+  # BaseModel subclasses, which are the dominant boundary-record
+  # pattern in this codebase. pydantic deep-copies field defaults on
+  # every instance construction (see pydantic-core's `deepcopy_default`
+  # path) so a `list[str] = []` default on a BaseModel attribute does
+  # NOT exhibit the shared-mutable-state bug ruff is warning about.
+  # The check would still be useful on plain @dataclass / NamedTuple /
+  # bare class state but the project's models are predominantly
+  # pydantic; ignoring project-wide is the right trade.
+  "RUF012",  # mutable-class-default (pydantic field defaults — safe)
+  # N806 (non-lowercase-variable-in-function) fires on the project's
+  # uppercase-with-leading-underscore "function-local constant" naming
+  # pattern: `_EXPECTED`, `_CASILLA_28_LEAVES`, `_SENTINEL_NAME_FRAGMENTS`,
+  # `_AUTOCONSUMO_PROMOTOR_BINDING`, etc. — sentinels, expected-data
+  # fixtures, and configuration-table snapshots that ARE constants
+  # within their scope but happen to be declared inside a function for
+  # readability or closure reasons. The naming is intentional and the
+  # pattern is widespread; project-wide ignore is the right call.
+  "N806",  # non-lowercase-variable-in-function (intentional local constants)
 ]
 
+[tool.ruff.lint.pydocstyle]
+# Google-style docstrings are the project standard (matches napoleon in
+# docs/conf.py).
+convention = "google"
+
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "T20"]
+# Bundled test modules colocated under src/aeat/. Docstring (D) rules are
+# audience-scoped out of the test surface (tests are excluded from autodoc
+# and interrogate too).
+"src/aeat/**/tests/**/*.py" = ["S101", "T20", "D"]
+"src/aeat/tests/**/*.py" = ["S101", "T20", "D"]
+"src/aeat/**/conftest.py" = ["D"]
+# Sphinx build configuration is tooling, not the documented package API.
+"docs/conf.py" = ["D"]
+# dev/docs/ holds contributor-only documentation tools and tests.
+"dev/docs/**/*.py" = ["T20", "D", "E402"]
+# `dev/` holds contributor-only developer tooling (quality gates, audits,
+# docs build); print() is the canonical CLI output surface for these.
+"dev/**/*.py" = ["T20"]
+# Developer quality/docs/audit runners invoke fixed tool argv or explicit
+# wrapper argv; Ruff's subprocess heuristic cannot infer those local contracts.
+"dev/audit/complexity.py" = ["S603"]
+"dev/audit/semantic.py" = ["S603"]
+"dev/docs/build.py" = ["S603"]
+"dev/docs/serve.py" = ["S603"]
+"dev/quality/quiet.py" = ["S603"]
+"dev/quality/suite.py" = ["S603", "S607"]
+"dev/quality/types.py" = ["S603", "S607"]
 # `password_env_var` is an env-var NAME, not a password; S106 false-positives
 # on cert-auth tests. Test modules also commonly use assert and print.
-"src/aeat/adapters/outbound/aeat/auth/test_*.py" = ["S101", "S105", "S106", "T20"]
+"src/aeat/adapters/outbound/aeat/auth/tests/test_*.py" = [
+  "S101",
+  "S105",
+  "S106",
+  "T20"
+]
+# Google OAuth tests use synthetic OAuth client_secret + refresh_token
+# literals as fixtures; ruff's S105/S106 heuristic flags every fake
+# `GOCSPX-*` and `1//*` token even though they're documented test data.
+"src/aeat/adapters/outbound/google/tests/test_*.py" = [
+  "S101",
+  "S105",
+  "S106",
+  "S603",
+  "T20"
+]
+# `_NAMESPACE_TOKEN` is a SecureObjectRepository namespace identifier,
+# not a password literal; ruff's S105 misreads the constant name.
+"src/aeat/adapters/outbound/google/_session_store.py" = ["S105"]
+# Drive provider tests build long inline `_FakeFile(...)` fixtures with
+# stable id + name + parents + payload tuples that read better on one
+# line; E501 wrapping would obscure intent.
+"src/aeat/adapters/outbound/storage/tests/test_google_drive.py" = [
+  "S101",
+  "E501",
+  "T20"
+]
+# Storage factory tests instantiate fake OAuthClient/OAuthToken records
+# whose synthetic `client_secret` + `token_uri` + `refresh_token`
+# values trip ruff's hardcoded-password heuristic.
+"src/aeat/adapters/outbound/storage/tests/test_factory.py" = [
+  "S101",
+  "S105",
+  "S106",
+  "E501",
+  "T20"
+]
+# Google CLI tests use synthetic OAuth refresh_token + token_uri
+# fixtures and emit long inline kwargs that are easier to read on one
+# line than wrapped.
+"src/aeat/entrypoints/cli/_config/tests/test_google_*.py" = [
+  "S101",
+  "S105",
+  "S106",
+  "T20",
+  "E501"
+]
 # `certificate_password_secret_var_name` is the NAME of an env var, not a
 # password. `_PASSWORD_COMMENT_PREFIX` is a file-format prefix, not a secret.
 "src/aeat/application/setup/_env_writer.py" = ["S105"]
-"src/aeat/application/setup/test_*.py" = ["S101", "S105", "S106", "T20"]
+"src/aeat/application/setup/tests/test_*.py" = ["S101", "S105", "S106", "T20"]
 # Encrypted-column tests deliberately use literal "secret_text" / "secret_*"
 # as column / attribute names; ruff's S105/S106 heuristic flags them as
 # hardcoded passwords when they are in fact attribute identifiers.
-"src/aeat/adapters/persistence/storage/_test_encrypted_columns.py" = ["S101", "S105", "S106"]
-"src/aeat/adapters/persistence/storage/_test_master_key.py" = ["S101", "S105", "S106"]
 # Redaction tests construct synthetic bearer-shaped strings to verify
 # the rule patterns; ruff's S105 heuristic flags the synthetic literals.
-"src/aeat/adapters/persistence/storage/_test_redaction.py" = ["S101", "S105", "S106"]
-"src/aeat/adapters/persistence/storage/_test_secret_store.py" = ["S101", "S105", "S106"]
 # Typer requires `typer.Argument(...)` / `typer.Option(...)` literally inside
 # parameter defaults; B008 flags this idiom but it is the documented usage.
 "src/aeat/entrypoints/cli/**/*.py" = ["B008"]
-"src/aeat/domain/modelos/_cli.py" = ["B008"]
 "src/aeat/domain/portals/_cli.py" = ["B008"]
 
-[tool.ruff.lint.flake8-tidy-imports.banned-api]
-# #15 ADR: lock the project into pytest-only testing. See .vault/adr/2026-04-17-pytest-only-testing-adr.md.
-"unittest".msg = "Project is pytest-only. Use pytest primitives — fixtures, parametrise, tmp_path. See tests/README.md."
-"unittest.mock".msg = "Mocks are banned in live tests and discouraged in unit tests. Use real objects or fakes-as-classes. See tests/README.md."
-"mock".msg = "Third-party 'mock' is banned for the same reason as unittest.mock. See tests/README.md."
+# `_CERT_PASSWORD_SECRET_ENV` is the NAME of an env var, not a password literal.
+"src/aeat/adapters/outbound/aeat/auth/_authenticator.py" = ["S105"]
+# Registry applicability enum + legal-text rationale strings are not passwords.
+"src/aeat/domain/calculations/registry/_applicability.py" = ["S105"]
+# Module-walking test fixtures use file paths and rationale tokens as constants
+# that ruff misreads as hardcoded secret strings.
+"src/aeat/tests/test_diagnostics_and_sidecar_rationale.py" = ["S105"]
+"src/aeat/tests/test_semantic_intent_sampler.py" = ["S105", "S311"]
+# Token catalogue test fixture identifiers (e.g. "BTC") are not passwords.
+# Modelo 720 fichero-BOE roundtrip fixture pins fixed-width AEAT envelope rows
+# (key + 18-char numeric value) that exceed 120 columns and cannot be split.
+"src/aeat/application/calculations/tests/test_modelo_720_fichero_boe_roundtrip.py" = ["E501"]
+# Bundled `git ls-files` invocation reads from PATH; the explicit command list
+# is reviewed and audited rather than a partial path risk.
+"src/aeat/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
+# Setup-answers subprocess test shells out to `sys.executable -c <script>` to
+# observe the project_answers registration error path; the script is a vetted
+# literal in this file.
+"src/aeat/core/tests/test_setup_answers.py" = ["S603"]
+# `aeat_secret_store_backend="file"` names the backend enum value, not a
+# password literal.
+"src/aeat/tests/secure_sql.py" = ["S106"]
+# ── Group G structural / domain-justified per-file-ignores ────────────────
 
-# #162 — the relative-imports mandate is enforced by the custom
-# scripts/check_relative_imports.py script, not by Ruff TID251. Ruff's
+# Package __init__ files defer submodule imports below module-level helpers
+# to break circular imports. E402 (module-import-not-at-top) is structurally
+# unavoidable here.
+"src/aeat/application/auth/__init__.py" = ["E402"]
+"src/aeat/core/errors/__init__.py" = ["E402"]
+"src/aeat/core/errors/_registry.py" = ["E402"]
+"src/aeat/entrypoints/cli/__init__.py" = ["E402"]
+"src/aeat/entrypoints/cli/_config/__init__.py" = ["E402"]
+# Mid-file imports in these modules sit after a forward-reference-resolving
+# block; moving them to the top would re-introduce the circular import.
+"src/aeat/application/workflow/_models.py" = ["E402"]
+"src/aeat/domain/calculations/registry/_bindings.py" = ["E402"]
+"src/aeat/domain/currency/tests/test_service.py" = ["E402"]
+"src/aeat/adapters/outbound/aeat/sede/tests/test_groi_check.py" = ["E402"]
+
+# AEAT corpus / form-spec strings carry mandatory Spanish typography
+# (ambiguous unicode characters by RUF001/003 heuristic) and locale-aware
+# label patterns. Treating these as defects would force lossy ASCII
+# conversion of legal-source text.
+"src/aeat/adapters/inbound/pdf/_label_regex.py" = ["RUF001", "RUF003"]
+"src/aeat/adapters/outbound/google/_calc_sheets_apply.py" = ["RUF001"]
+"src/aeat/application/storage/calc_sheets/_engine.py" = ["RUF001"]
+
+# PDF scrubbing draws synthetic replacement bytes; the scrubber is local-
+# only and the values never leave the operator host, so S311 (non-crypto
+# random) is the correct primitive — random.Random is cheap and stable.
+"src/aeat/adapters/inbound/pdf/_scrub.py" = ["S311"]
+
+# Test fixtures construct synthetic env-var names / temp-file paths /
+# subprocess invocations that ruff's S105/S106/S108/S603 heuristics
+# misread as secrets or unsafe shell calls.
+# The docs build gate runs sphinx via `sys.executable -m sphinx` with a fixed,
+# literal argv (no user/untrusted input), in an isolated subprocess so the
+# build's package imports and global state do not leak into the test process.
+"dev/docs/tests/test_docs_build.py" = ["S603"]
+"src/aeat/adapters/persistence/storage/bucket/tests/test_lockfile.py" = ["S603"]
+"src/aeat/adapters/persistence/storage/tests/test_substrate_smoke.py" = ["S603"]
+"src/aeat/domain/calculations/registry/tests/test_cross_domain_snapshot_registration.py" = ["S603"]
+"src/aeat/adapters/persistence/storage/master_key/_master_key.py" = ["S105"]
+"src/aeat/adapters/outbound/aeat/browser/tests/test_live_evasion.py" = ["S603"]
+# `ATTRIBUTION_PASS_THROUGH` is a tax-routing verdict / enum value, not a
+# password literal; ruff's S105 heuristic flags the constant name.
+"src/aeat/application/overview/_applicability.py" = ["S105"]
+"src/aeat/application/wizard/_models.py" = ["S105"]
+"src/aeat/core/config.py" = ["S105"]
+"src/aeat/adapters/persistence/storage/crypto/tests/test_encrypted_columns.py" = ["S105", "S106"]
+"src/aeat/adapters/outbound/fx/_ecb_refresh.py" = ["S310"]
+# AEAT registry uses ``Q1..Q4`` casing on the BOE-published row model field names; the
+# domain model preserves the canonical AEAT casing so the registry-binding mapping
+# stays 1:1 with the published source. N815's mixedCase heuristic mis-flags these.
+"src/aeat/domain/modelos/_row_models.py" = ["N815"]
+# Tests alias the canonical private constant into a per-scenario local name; N811's
+# constant-aliased-as-non-constant heuristic mis-flags the rebinding.
+"src/aeat/application/aggregation/tests/test_service.py" = ["N811"]
+# Test files use nested `with`/`if` blocks for legibility around AEAT fixtures; the
+# SIM refactors hurt readability for boundary-shaped tests.
+"src/aeat/adapters/outbound/aeat/auth/tests/test_certificate.py" = ["SIM117"]
+"src/aeat/adapters/outbound/aeat/sede/tests/test_browser_timeouts.py" = ["SIM102"]
+"src/aeat/entrypoints/cli/tests/test_cold_start_no_profile.py" = ["SIM117"]
+"src/aeat/entrypoints/cli/tests/test_repair_bootstrap_exempt.py" = ["SIM117"]
+"src/aeat/tests/test_config.py" = ["SIM117"]
+"src/aeat/tests/test_relative_imports_only.py" = ["SIM102"]
+"src/aeat/tests/test_cross_module_imports_resolve.py" = ["SIM103", "SIM108"]
+"src/aeat/tests/test_every_module_has_test_coverage.py" = ["SIM103", "SIM108"]
+"src/aeat/tests/test_locale_tr_positional_inventory.py" = ["SIM103"]
+"src/aeat/domain/calculations/tests/test_calculation_grounding.py" = ["SIM102"]
+# Per-line concatenation of AEAT casilla code groups documents each group inline; the
+# RUF005 iterable-unpacking refactor would erase those per-group comments.
+"src/aeat/application/calculations/tests/test_modelo_190_111_reconciliation_continuity.py" = ["RUF005"]
+"src/aeat/core/classification/__init__.py" = ["S105"]
+"src/aeat/core/tests/test_config_override.py" = ["S108"]
+"src/aeat/core/file_permissions.py" = ["S603"]
+"src/aeat/domain/auth/apoderamientos/_catalogue.py" = ["S105"]
+"src/aeat/domain/calculations/registry/_workbook_parity.py" = ["S603"]
+"src/aeat/domain/deadlines/_festivos.py" = ["S105"]
+"src/aeat/domain/transactions/_llm.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_language_flag_help_honesty.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_root_help_shape.py" = ["S603"]
+# Rationale-marker ratchets enumerate strings that ruff's S105/S106
+# heuristic flags as hardcoded passwords. They are assertion tokens,
+# not credentials.
+"src/aeat/tests/test_any_return_rationale_markers.py" = ["S105", "S106"]
+"src/aeat/tests/test_broad_except_and_any_return_rationale.py" = ["S105", "S106"]
+"src/aeat/tests/test_narrowed_except_and_path_constants.py" = ["S105", "S106"]
+"src/aeat/tests/test_ratchet_extensions_and_marker_completion.py" = ["S105", "S106"]
+# OAuth / mTLS / clave-pin fixture authoring uses literal credential
+# shape examples (e.g., the example access_token "ya29.fake-bearer"
+# documented in the AEAT auth ADR); they are not real credentials.
+"src/aeat/adapters/outbound/aeat/auth/_fixtures.py" = ["S105", "S106"]
+# Test modules under master_key/ exercise the passphrase-rejection paths
+# with literal short / weak / sentinel passphrases as assertion inputs.
+"src/aeat/adapters/persistence/storage/master_key/tests/test_master_key.py" = ["S105", "S106"]
+"src/aeat/adapters/persistence/storage/master_key/tests/test_master_key_failclosed.py" = ["S105", "S106"]
+"src/aeat/adapters/persistence/storage/tests/test_path_safety.py" = ["S105", "S106"]
+"src/aeat/core/tests/test_logging.py" = ["S105", "S106"]
+# Subprocess invocations from tests and from the CLI's own doc-reference
+# helper use fixed argv built from controlled inputs. S603 ("subprocess
+# without shell=True") is a heuristic ban that does not recognise our
+# controlled-argv pattern; granted per-file.
+"dev/docs/cli_reference.py" = ["S603", "F401"]
+"dev/docs/terminology/_cli_projection.py" = ["S603"]
+"dev/docs/tests/test_cli_reference_conformance.py" = ["F401"]
+"src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_help_without_secrets.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_json_error_contract.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_lazy_command_tree.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_root_fallback_write_guard.py" = ["S603"]
+"src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py" = ["S603"]
+"src/aeat/application/user_profile/tests/test_lazy_boundary.py" = ["S603"]
+"src/aeat/domain/user_profile/tests/test_lazy_boundary.py" = ["S603"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+# Lock the project into pytest-only testing.
+"unittest".msg = "Project is pytest-only. Use pytest primitives — fixtures, parametrise, tmp_path. See src/aeat/tests/README.md."
+"unittest.mock".msg = "Mocks are banned in live tests and discouraged in unit tests. Use real objects or fakes-as-classes. See src/aeat/tests/README.md."
+"mock".msg = "Third-party 'mock' is banned for the same reason as unittest.mock. See src/aeat/tests/README.md."
+
+# The relative-imports mandate is enforced by the custom
+# dev/quality/relative_imports.py module, not by Ruff TID251. Ruff's
 # banned-api resolves relative imports back to their absolute path
 # before matching the banned prefix, which would flag every legitimate
 # `from .module import X` inside src/aeat/ when `aeat` is banned.
-# See .vault/adr/2026-04-17-relative-imports-adr.md.
 
 [tool.ruff.format]
 quote-style = "double"
@@ -205,71 +579,205 @@ indent-style = "space"
 # ── ty ───────────────────────────────────────────────────────────────────────
 [tool.ty.environment]
 python-version = "3.13"
+extra-paths = ["stubs"]
 
 [tool.ty.rules]
 all = "error"
 
 [tool.ty.analysis]
-allowed-unresolved-imports = [
-    "gspread",
-    "googleapiclient",
-    "google.auth",
-    "google.oauth2",
-    "google.cloud",
-    "google_auth_oauthlib",
-    "playwright",
-    "typer",
-    "rich",
-    "playwright_stealth",
-    "bs4",
-]
+# Hand-written stubs under `stubs/` cover packages without `py.typed`
+# and without `types-*` distributions on PyPI (currently `pypdfium2` and
+# `playwright_stealth`). All other previously-listed unresolved imports
+# (playwright, typer, rich, bs4) now ship `py.typed` themselves.
+# `google-api-python-client-stubs` (installed as a dev dep) covers
+# google-api-python-client / googleapiclient surface.
+allowed-unresolved-imports = []
+
+# ── mypy ─────────────────────────────────────────────────────────────────────
+# The project does not run mypy in CI (ty is the canonical checker) but
+# external auditors do. Mirror ty's stance so a mypy invocation against
+# this project picks up the same stub set.
+[tool.mypy]
+python_version = "3.13"
+mypy_path = ["src", "stubs"]
+explicit_package_bases = true
+namespace_packages = true
+
+[[tool.mypy.overrides]]
+# Only packages that still lack py.typed and have no community stubs.
+# playwright, typer, rich, bs4 all ship py.typed; google-api-python-client
+# is covered by google-api-python-client-stubs (installed as a dev dep).
+module = ["i18n.*", "ofxparse.*"]
+ignore_missing_imports = true
+
+# ── pyrefly ──────────────────────────────────────────────────────────────────
+# Same rationale as `[tool.mypy]`: declare the project's stub policy so
+# external pyrefly invocations resolve `pypdfium2` and `playwright_stealth`
+# against `stubs/` rather than reporting them as unresolved imports.
+[tool.pyrefly]
+python_version = "3.13"
+search_path = ["src", "stubs"]
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-testpaths = ["src", "tests"]
+testpaths = ["src/aeat"]
 pythonpath = ["src"]
-python_files = ["test_*.py", "_test_*.py"]
-addopts = "-v --tb=short -m 'unit' --strict-markers"
+python_files = ["test_*.py"]
+addopts = "-v --tb=short -m 'unit' --strict-markers --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity"
 asyncio_mode = "strict"
 markers = [
-    "unit: deterministic tests with no external I/O; mocks/stubs permitted per CLAUDE.md",
-    "live_read: opt-in tests that READ from a real external service (covers Google scratch round-trips; see tests/README.md)",
-    "live_write: permanently forbidden external write-shaped tests; collection-dropped with no bypass",
-    "domain_outbound: exercises AEAT Sede Electronica read paths (auth, browser, casillas, inbox, justificante, portals, status, sync)",
-    "domain_submission: exercises local filing export, preflight, and historical submission records; no AEAT write surface",
-    "domain_inbound: exercises financial ingest (financial, cli/financial)",
-    "domain_persistence: exercises on-disk catalogues and local SQLite mirror (storage, models, normatives, manuals, corpus, schema, deadlines, cli/deadlines)",
-    "domain_application: exercises workflow orchestration, LLM, i18n, testing subpackages",
-    "domain_core: exercises project plumbing (root modules, non-domain cli, setup, top-level tests/*.py)",
-    # Hexagonal layered markers — restructure ADR (#476) Test-marker realignment.
-    # Registered alongside the legacy markers for the restructure soak window;
-    # legacy markers retire at the post-restructure Step 11 sanitization rollup.
-    "domain_inbound: exercises adapters.inbound.* (financial providers, borrador, declaracion, identity, sanitizer, pdf shared, schema extraction)",
-    "domain_outbound: exercises adapters.outbound.* (aeat auth/browser/sede/export/verify, google, llm)",
-    "domain_export: sub-marker on adapters.outbound.aeat.export.* (fichero-BOE serialise / verify pipelines)",
-    "domain_persistence: exercises adapters.persistence.* (storage substrate)",
-    "domain_model: exercises domain.* business model + computation (modelos, casillas, formulas, manuals, deadlines, profile, rental, ...)",
-    "domain_application: exercises application.* use-cases / orchestration (filing, workflow, sync, setup, review, verification)",
-    "domain_core: exercises core.* foundational cross-cutting (config, logging, errors, paths, observability, identity, i18n, env_io)",
-    "flaky: opt-in retry via pytest-rerunfailures; live_read / live_write tests only — #15 ADR",
-    "fixture_tier_l1: test uses committed or fetched public AEAT anchors (BOE / Manual práctico / Renta Web Open — EPIC #305 cluster C)",
-    "fixture_tier_l2: test uses scrubbed private anchors from the user archive (contributor-local only — EPIC #305 cluster C)",
-    "fixture_tier_l3: test uses synthetic generator output; no fixtures on disk (EPIC #305 cluster C)",
+  "unit: deterministic tests with no external I/O",
+  "integration: deterministic in-process tests that cross architectural layers",
+  "aeat_live: opt-in tests that read from a real external service; see src/aeat/tests/README.md",
+  "hex_domain: exercises domain.* business model and computation",
+  "hex_application: exercises application.* use-cases and orchestration",
+  "hex_inbound_adapter: exercises adapters.inbound.* boundaries",
+  "hex_outbound_adapter: exercises adapters.outbound.* boundaries",
+  "hex_persistence_adapter: exercises adapters.persistence.* boundaries",
+  "hex_entrypoint: exercises entrypoints.* command and presentation surfaces",
+  "hex_core: exercises core.* foundational cross-cutting utilities",
+  "docs: documentation build, stubs, and docstring structure verification",
 ]
 
-# ── Coverage (pytest-cov) — #15 ADR ──────────────────────────────────────────
+# ── Coverage (pytest-cov) ────────────────────────────────────────────────────
 [tool.coverage.run]
 source = ["src/aeat"]
 branch = true
 omit = [
-    "*/test_*.py",
-    "*/_test_*.py",
-    "*/tests/*",
+  "*/test_*.py",
+  "src/aeat/tests/*",
 ]
 
 [tool.coverage.report]
-# Starting floor per #15 ADR. Ratchet upward in a follow-up ADR once the
-# first real measurement is in. Never lower without a documented ADR update.
+# Starting floor. Ratchet upward after real measurement, and never lower
+# without a documented architectural update.
 fail_under = 60
 show_missing = true
 skip_covered = false
+
+# ── Bandit (security lint) ───────────────────────────────────────────────────
+# The aeat-audit pipeline runs bandit against the full source tree. Without
+# this filter every test file triggers B101 (assert_used) once per assertion
+# and B311 (random) once per fixture seed, accounting for ~4500 of the
+# ~5900 raw security findings. Suppress test-only false positives at the
+# config layer; production code stays under the full bandit ruleset.
+[tool.bandit]
+# Skip the bundled test tree — every signal there is a false positive at
+# the boundary (assert is the test language, fixtures use random for
+# synthetic data, hardcoded credentials are obvious test stubs).
+exclude_dirs = [
+  "src/aeat/tests",
+  ".venv",
+  "stubs",
+]
+# B101 (assert_used) is silenced globally because pytest's contract IS
+# `assert`. Production code occasionally uses `assert` for invariants;
+# those should migrate to explicit `raise` where they are load-bearing.
+# Every other rule stays active.
+skips = ["B101"]
+
+# Per-rule per-glob skips for colocated test files mirror the bundled
+# src/aeat/tests tree's noise profile.
+[tool.bandit.assert_used]
+skips = ["*/test_*.py", "**/conftest.py"]
+
+# ── Interrogate (docstring coverage) ─────────────────────────────────────────
+# Without configuration interrogate counts every public symbol missing a
+# Google-style docstring as a finding. The audit pipeline reported ~3800
+# such findings across the codebase; ~70% are private helpers, magic
+# methods, nested closures, and test fixtures that don't carry docstrings
+# by convention. Filter those at the config layer so the dashboard tracks
+# the public surface that genuinely warrants prose documentation.
+# ── doc8 (reStructuredText style for hand-authored docs) ─────────────────────
+# Scope doc8 to hand-written documentation. The gitignored build output and the
+# machine-generated API / CLI stub trees (long dotted module paths in headings)
+# are excluded so `just docs-check` stays green in any working tree, including
+# one that has already built the docs.
+[tool.doc8]
+ignore-path = [
+  "docs/_build",
+  "docs/_inventories",
+  "docs/api",
+  "docs/cli",
+]
+max-line-length = 100
+
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = true
+ignore-magic = true
+ignore-nested-functions = true
+ignore-private = true
+ignore-semiprivate = true
+ignore-property-decorators = true
+ignore-module = false
+fail-under = 80
+exclude = [
+  "stubs",
+  "src/aeat/tests",
+  "src/aeat/**/tests/test_*.py",
+]
+
+# ── pydoclint (docstring-vs-signature accuracy) ──────────────────────────────
+# Verifies documented Args/Returns/Raises match the real signature - the
+# true-to-reality docstring gate. Configured to the project convention: types
+# live in signatures (rendered by autodoc_typehints="description"), so
+# docstrings carry no arg type hints; pydantic Field(description=...) covers
+# attribute docs, so class-attribute checks are off. Tests are out of scope.
+[tool.pydoclint]
+style = "google"
+arg-type-hints-in-docstring = false
+check-return-types = false
+check-yield-types = false
+check-class-attributes = false
+skip-checking-short-docstrings = true
+allow-init-docstring = true
+exclude = 'tests|test_'
+
+# ── Vulture (dead-code) ──────────────────────────────────────────────────────
+# Vulture defaults to confidence threshold 60 which surfaces many
+# false-positive "unused" guesses (decorators, dynamic dispatch, test
+# fixtures, lazily-bound CLI entrypoints). Bump to 80 and exclude tests so
+# the dashboard tracks code that is plausibly dead in production paths.
+[tool.vulture]
+min_confidence = 80
+paths = ["src/aeat"]
+exclude = [
+  "*test_*.py",
+  "*/tests/*",
+  "*\\tests\\*",
+  "stubs",
+]
+ignore_decorators = [
+  "@app.command",
+  "@cli.command",
+  "@click.command",
+  "@click.group",
+  "@app.callback",
+  "@app.result_callback",
+  "@pytest.fixture",
+  "@field_validator",
+  "@model_validator",
+  "@field_serializer",
+  "@classmethod",
+  "@staticmethod",
+  "@property",
+]
+
+# ── Deptry (unused / transitive dependency lint) ─────────────────────────────
+# Suppress the false positives surfaced by deptry's default heuristics.
+# `formulas` is owned by the workbook parity oracle even though production
+# imports do not reference it directly yet. `rich` is the direct version pin for
+# Typer's console rendering. `pydantic_core` is re-exported by pydantic
+# (legitimate transitive use), `click` ships under typer (typer's CLI surface is
+# built on click), and `yaml` ships as `PyYAML`. The remaining diagnostics flag
+# genuine drift and stay active.
+[tool.deptry.package_module_name_map]
+"PyYAML" = ["yaml"]
+"pyyaml" = ["yaml"]
+[tool.deptry.per_rule_ignores]
+# `aeat`: the `all` convenience extra self-references the capability extras
+# (`aeat[google]` etc.); deptry reads the self-reference as an unused dependency.
+DEP002 = ["aeat", "formulas", "python-dotenv", "rich", "tzdata"]
+DEP003 = ["click", "pydantic_core", "yaml"]
+DEP004 = ["pytest", "reportlab"]

@@ -1,0 +1,10 @@
+[[revisions."2024".casillas]]
+id = "0695"
+number = "0695"
+label = "Resto a ingresar del resultado de su declaración: diferencia ([0670] - [0693]) positiva o igual a cero"
+section = ["resultados", "compensacion_conyuges_res"]
+semantic_role = "irpf_compensacion_conyuges_resto_ingresar"
+input_kind = "computed"
+formula = "renta-2024-resto-a-ingresar-positivo"
+legal_refs = ["ley-35-2006:art-97"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

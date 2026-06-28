@@ -1,0 +1,11 @@
+[[revisions."2021".casillas]]
+id = "0265"
+number = "0265"
+label = "Suma de bases imponibles imputadas: (suma de las casillas [0259] )"
+section = ["resultados", "regimenes_especiales_res", "re_agrup_interes_economico_res"]
+input_kind = "computed"
+formula = "renta-2021-bases-imputadas-suma"
+data_type = "decimal"
+semantic_role = "irpf_re_aie_suma_bases_imponibles"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0117"
+number = "0117"
+label = "Amortizacion de bienes muebles"
+section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
+semantic_role = "irpf_rendimiento_capital_inmobiliario_amortizacion_bienes_muebles"
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

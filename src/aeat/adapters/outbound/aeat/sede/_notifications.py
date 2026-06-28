@@ -1,7 +1,7 @@
 """Read-only notifications/messages reader for the authenticated AEAT sede.
 
-Captured live on 2026-04-24 against Kent's production account. The
-sede exposes two notification surfaces:
+Captured against a production account; the sede exposes two
+notification surfaces:
 
 * **Summary** (``/wlpl/GNNO-JDIT/ResumenInteresados``) — unread
   notifications + unread communications, two tables keyed by
@@ -11,31 +11,39 @@ sede exposes two notification surfaces:
   (notification, communication, or pending) item.
 
 Both surfaces are reachable on the ``www6`` Cl@ve-dispatched
-subdomain; the pre-discovery assumption that notifications lived only
-on ``www1`` (cert-only) was wrong.
+subdomain; an earlier assumption that notifications lived only on
+``www1`` (cert-only) was wrong.
 
-The reader is structurally read-only: no form submission, no state-
-changing URL. Acknowledgement (``acuse``) is a strictly local
-concern (inbox tracks read/unread locally); we never tell AEAT "this
-was read".
+The reader is structurally read-only: no form submission, no
+state-changing URL. Acknowledgement (``acuse``) is a strictly local
+concern (the local inbox tracks read/unread); the reader never
+tells AEAT "this was read".
+
+Public surface: :class:`RemoteNotification`, :class:`NotificationsSnapshot`,
+:func:`parse_notifications_query`, :func:`parse_notifications_summary`,
+:func:`fetch_notifications_query`, :func:`fetch_notifications_summary`.
 """
 
 from __future__ import annotations
 
-import contextlib
 import re
 from collections.abc import Callable
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Final, Literal
 
 from bs4 import BeautifulSoup
-from playwright.async_api import async_playwright
-from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
+from pydantic import AnyHttpUrl, BaseModel, Field
 
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import Settings
+from .....core.i18n import tr
 from .....core.logging import get_logger
-from ..browser import Profile
-from ..browser.session import BrowserSession
+from .....core.parsing._dates import _parse_date
+from .....core.time import now
+from .._playwright import PlaywrightError
+from ..browser import default_browser_session_factory
+from ._auth_state import storage_state_for_session
+from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from ._errors import SedeNavigationError, SedeParseError
 
 if TYPE_CHECKING:
@@ -44,32 +52,26 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_SEDE_BASE = "https://www6.agenciatributaria.gob.es"
-_RESUMEN_URL = f"{_SEDE_BASE}/wlpl/TEWV-CORE/ResumenVlt"
-_NOTIF_SUMMARY_URL = f"{_SEDE_BASE}/wlpl/GNNO-JDIT/ResumenInteresados"
-_NOTIF_QUERY_URL = f"{_SEDE_BASE}/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
+_EXTERNAL = Settings.external_constants()
+_SEDE_BASE = _EXTERNAL.aeat.domains.www6
+_RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
+_NOTIF_SUMMARY_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_summary}"
+_NOTIF_QUERY_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_query}"
 
-_STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
-    strict=True,
-    frozen=True,
-    extra="forbid",
-)
 
 # Número de certificado: 13 digits. Captured: 2699101808461 / 2596230606502.
 _CERT_RE: Final[re.Pattern[str]] = re.compile(r"^\d{10,16}$")
-# Spanish DD-MM-YYYY date format used on notification rows.
-_DATE_RE: Final[re.Pattern[str]] = re.compile(r"^(\d{2})-(\d{2})-(\d{4})$")
+# _DATE_RE removed — date parsing delegated to core.parsing._dates._parse_ddmmyyyy_date
 
 
 class RemoteNotification(BaseModel):
     """One row of AEAT's notifications/communications surface.
 
-    Captured live 2026-04-24. ``tipo`` distinguishes a formal
-    ``Notificación`` (legally binding, triggers ten-day acuse window)
-    from a lighter-weight ``Comunicación``. ``pendiente_notificar`` is
-    True when the row is the placeholder state AEAT shows for items
-    that have been issued but not yet delivered (Kent's *20-04-2026*
-    notification is one of these).
+    ``tipo`` distinguishes a formal ``Notificación`` (legally binding,
+    triggers the ten-day ``acuse`` window) from a lighter-weight
+    ``Comunicación``. The ``pendiente`` value marks the placeholder
+    state AEAT shows for items that have been issued but not yet
+    delivered.
 
     Attributes:
         certificado_id: ``Nº de certificado`` — 13-digit (or longer)
@@ -136,15 +138,23 @@ class NotificationsSnapshot(BaseModel):
 def parse_notifications_query(html: str, *, source_url: str) -> NotificationsSnapshot:
     """Parse the full ``SvInteresadosQuery`` results table.
 
-    This is the canonical list view — every row carries the full
-    column set (tipo, leída, modo de notificación, etc.). Prefer this
-    over :func:`parse_notifications_summary` when you need a complete
-    picture.
+    This is the canonical list view; every row carries the full
+    column set (``tipo``, ``leída``, ``modo de notificación``, etc.).
+    Prefer this over :func:`parse_notifications_summary` when a
+    complete picture is needed.
+
+    Args:
+        html: Raw HTML body of a SvInteresadosQuery results page.
+        source_url: URL the HTML was scraped from (recorded on the
+            returned snapshot).
+
+    Returns:
+        A :class:`NotificationsSnapshot` with one row per item.
     """
     rows = _parse_rows(html, source_url=source_url, is_summary=False)
     return NotificationsSnapshot(
         rows=tuple(rows),
-        captured_at=datetime.now(tz=UTC),
+        captured_at=now(),
         source_url=AnyHttpUrl(source_url),
     )
 
@@ -152,14 +162,21 @@ def parse_notifications_query(html: str, *, source_url: str) -> NotificationsSna
 def parse_notifications_summary(html: str, *, source_url: str) -> NotificationsSnapshot:
     """Parse the unread-summary ``ResumenInteresados`` tables.
 
-    The summary carries fewer columns per row (no leída / modo), so
-    the returned :class:`RemoteNotification` records leave those as
+    The summary carries fewer columns per row (no ``leída`` / ``modo``),
+    so the returned :class:`RemoteNotification` records leave those as
     ``None``. Useful for a cheap unread count / dashboard view.
+
+    Args:
+        html: Raw HTML body of a ResumenInteresados page.
+        source_url: URL the HTML was scraped from.
+
+    Returns:
+        A :class:`NotificationsSnapshot` with one row per item.
     """
     rows = _parse_rows(html, source_url=source_url, is_summary=True)
     return NotificationsSnapshot(
         rows=tuple(rows),
-        captured_at=datetime.now(tz=UTC),
+        captured_at=now(),
         source_url=AnyHttpUrl(source_url),
     )
 
@@ -170,6 +187,7 @@ def _parse_rows(
     source_url: str,
     is_summary: bool,
 ) -> list[RemoteNotification]:
+    """Walk every certificate-bearing table in ``html`` and yield typed rows."""
     try:
         soup = BeautifulSoup(html, "lxml")
     except Exception as exc:  # pragma: no cover — lxml always available
@@ -187,8 +205,8 @@ def _parse_rows(
         if not has_cert:
             continue
         header_index = _index_columns(normalised)
-        for tr in table.find_all("tr"):
-            cells = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
+        for table_row in table.find_all("tr"):
+            cells = [td.get_text(" ", strip=True) for td in table_row.find_all("td")]
             if not cells:
                 continue
             row = _row_from_cells(
@@ -203,7 +221,7 @@ def _parse_rows(
 
 
 def _index_columns(headers: list[str]) -> dict[str, int]:
-    """Map column labels to column indices so column order can drift."""
+    """Map normalised column labels to column indices so column order can drift safely."""
     idx: dict[str, int] = {}
     for i, h in enumerate(headers):
         lower = h.lower()
@@ -236,6 +254,7 @@ def _row_from_cells(
     source_url: str,
     is_summary: bool,
 ) -> RemoteNotification | None:
+    """Build a :class:`RemoteNotification` from one table row, or ``None`` if it cannot be classified."""
     cert_idx = header_index.get("certificado")
     if cert_idx is None or cert_idx >= len(cells):
         return None
@@ -252,10 +271,10 @@ def _row_from_cells(
     emision_raw = _safe_cell(cells, header_index.get("fecha_emision"))
     notif_raw = _safe_cell(cells, header_index.get("fecha_notificacion"))
 
-    fecha_emision = _parse_date(emision_raw)
+    fecha_emision = _parse_date_local(emision_raw)
     if fecha_emision is None:
         return None
-    fecha_notificacion = _parse_date(notif_raw)
+    fecha_notificacion = _parse_date_local(notif_raw)
 
     titular_nif, titular_nombre = _split_nif_name(titular_raw)
     destinatario_nif, destinatario_nombre = _split_nif_name(destinatario_raw)
@@ -280,31 +299,25 @@ def _row_from_cells(
             source_url=AnyHttpUrl(source_url),
         )
     except Exception as exc:  # pragma: no cover — schema drift guard
-        log.debug("notifications: skipped row id=%r: %s", certificado_id, exc)
+        log.debug("notifications: skipped row id=%r: %s", certificado_id, exc, exc_info=True)
         return None
 
 
 def _safe_cell(cells: list[str], idx: int | None) -> str | None:
+    """Return ``cells[idx]`` stripped, or ``None`` if absent / empty."""
     if idx is None or idx >= len(cells):
         return None
     value = cells[idx].strip()
     return value or None
 
 
-def _parse_date(raw: str | None) -> date | None:
-    if not raw:
-        return None
-    match = _DATE_RE.match(raw)
-    if match is None:
-        return None
-    try:
-        return date(int(match.group(3)), int(match.group(2)), int(match.group(1)))
-    except ValueError:
-        return None
+def _parse_date_local(raw: str | None) -> date | None:
+    """Parse a Spanish ``DD-MM-YYYY`` date string, returning ``None`` on any failure."""
+    return _parse_date(raw, fmt="ddmmyyyy", on_error="none")
 
 
 def _split_nif_name(raw: str) -> tuple[str, str]:
-    """Split ``"Y4113523X WOOTSCH GERGELY DOMOKOS"`` into ``(nif, name)``."""
+    """Split ``"Y1234567X PERSONA PRUEBA UNO"`` into ``(nif, name)``."""
     parts = raw.split(maxsplit=1)
     if not parts:
         return "", ""
@@ -318,6 +331,7 @@ def _classify_tipo(
     concepto_raw: str,
     is_summary: bool,
 ) -> Literal["notificacion", "comunicacion", "pendiente", "unknown"]:
+    """Classify a row into ``notificacion`` / ``comunicacion`` / ``pendiente`` / ``unknown``."""
     lower = tipo_raw.lower()
     if "pendiente" in concepto_raw.lower() or "pendiente" in lower:
         return "pendiente"
@@ -336,6 +350,7 @@ def _classify_tipo(
 
 
 def _parse_leida(raw: str | None) -> bool | None:
+    """Parse a Spanish ``Leída`` cell into a tri-state boolean (``None`` for blank)."""
     if not raw:
         return None
     lower = raw.strip().lower()
@@ -356,7 +371,16 @@ async def fetch_notifications_summary(
     *,
     settings: Settings | None = None,
 ) -> NotificationsSnapshot:
-    """Live-fetch ``ResumenInteresados`` using the authenticated session."""
+    """Live-fetch ``ResumenInteresados`` using the authenticated session.
+
+    Args:
+        session: An authenticated :class:`AeatSession` whose encrypted
+            browser state carries valid AEAT cookies.
+        settings: Optional :class:`aeat.core.config.Settings` override.
+
+    Returns:
+        A :class:`NotificationsSnapshot` parsed from the live HTML.
+    """
     return await _fetch_and_parse(
         session,
         url=_NOTIF_SUMMARY_URL,
@@ -370,7 +394,15 @@ async def fetch_notifications_query(
     *,
     settings: Settings | None = None,
 ) -> NotificationsSnapshot:
-    """Live-fetch ``SvInteresadosQuery`` (the full table) using Cl@ve."""
+    """Live-fetch ``SvInteresadosQuery`` (the full table) using Cl@ve.
+
+    Args:
+        session: An authenticated :class:`AeatSession`.
+        settings: Optional :class:`aeat.core.config.Settings` override.
+
+    Returns:
+        A :class:`NotificationsSnapshot` parsed from the live HTML.
+    """
     return await _fetch_and_parse(
         session,
         url=_NOTIF_QUERY_URL,
@@ -386,33 +418,53 @@ async def _fetch_and_parse(
     parser: Callable[..., NotificationsSnapshot],
     settings: Settings | None,
 ) -> NotificationsSnapshot:
+    """Drive Playwright to ``url`` under the authenticated session and parse the HTML."""
     settings = settings or Settings()
-    if session.storage_state_path is None:
-        raise SedeNavigationError("AeatSession.storage_state_path is None; run `aeat auth login` first")
-    profile = Profile(
-        name=settings.aeat_default_profile_name,
-        storage_state_path=session.storage_state_path,
-    )
-    async with async_playwright() as pw:
-        browser_session = BrowserSession(pw, settings, profile)
-        context = await browser_session.create_context(
-            storage_state_path=session.storage_state_path,
+    storage_state = storage_state_for_session(session)
+    storage_state_path = session.storage_state_path
+    if storage_state_path is None:
+        raise SedeNavigationError(
+            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
+    browser_session = await default_browser_session_factory(settings)
+    try:
+        context = await browser_session.create_context(storage_state=storage_state)
         try:
             page = await context.new_page()
             # Warm the cookie jar on the authenticated landing.
-            with contextlib.suppress(Exception):
-                await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
+            # Non-Playwright failures (e.g. domain errors, keyboard interrupts)
+            # propagate unmodified; only browser-level transport and OS-level
+            # I/O errors are suppressed here since they do not prevent the
+            # primary goto from succeeding.
             try:
-                await page.goto(url, wait_until="domcontentloaded")
-            except Exception as exc:
+                await page.goto(_RESUMEN_URL, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
+            except (PlaywrightError, OSError) as exc:
+                log.debug(
+                    "fetch_notifications: warm-up navigation to %s suppressed: %s",
+                    _RESUMEN_URL,
+                    exc,
+                    exc_info=True,
+                )
+            try:
+                await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
+            except PlaywrightError as exc:
                 raise SedeNavigationError(f"goto {url!r} failed: {exc}") from exc
             html = await page.content()
-            return parser(html, source_url=url)
+            snapshot = parser(html, source_url=url)
+            log.info(
+                "fetch_notifications: fetched %d row(s) from %s",
+                len(snapshot.rows),
+                url,
+            )
+            return snapshot
         finally:
-            with contextlib.suppress(Exception):
+            try:
                 await context.close()
-            await browser_session.close()
+            except Exception as _exc:
+                log.debug("fetch_notifications: context.close suppressed: %s", _exc, exc_info=True)
+    finally:
+        await browser_session.close()
 
 
 __all__ = [

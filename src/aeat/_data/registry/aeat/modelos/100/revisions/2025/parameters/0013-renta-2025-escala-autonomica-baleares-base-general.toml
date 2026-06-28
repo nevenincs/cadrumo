@@ -1,0 +1,82 @@
+[[revisions."2025".parameters]]
+id = "renta-2025-escala-autonomica-baleares-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Illes Balears", "escala autonómica"]
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "10000"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "10000"
+upper_bound = "18000"
+fixed_addition = "900"
+marginal_rate = "0.1125"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "18000"
+upper_bound = "30000"
+fixed_addition = "1800"
+marginal_rate = "0.1425"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "30000"
+upper_bound = "48000"
+fixed_addition = "3510"
+marginal_rate = "0.175"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "48000"
+upper_bound = "70000"
+fixed_addition = "6660"
+marginal_rate = "0.19"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "70000"
+upper_bound = "90000"
+fixed_addition = "10840"
+marginal_rate = "0.2175"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "90000"
+upper_bound = "120000"
+fixed_addition = "15190"
+marginal_rate = "0.2275"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "120000"
+upper_bound = "175000"
+fixed_addition = "22015"
+marginal_rate = "0.2375"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "175000"
+fixed_addition = "35077.50"
+marginal_rate = "0.2475"
+valid_from = 2025-01-01
+valid_to = 2025-12-31

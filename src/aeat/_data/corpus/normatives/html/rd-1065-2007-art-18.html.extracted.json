@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-1065-2007-art-18.html",
+  "source_sha256": "9e5c61e0700ba0774fda9395ca2c2b50615eb6e61b3cd9792c53e129e04222d5",
+  "preprocessor_id": "normatives-html-example",
+  "preprocessor_version": "0.1",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution; consult the sibling normatives manifest for the BOE permalink.",
+  "units": [
+    {
+      "text": "1. Las personas físicas y jurídicas, así como los obligados tributarios a que se refiere el artículo 35.4 de la Ley 58/2003, de 17 de diciembre, General Tributaria, tendrán un número de identificación fiscal para sus relaciones de naturaleza o con trascendencia tributaria.\n\n2. El número de identificación fiscal podrá acreditarse por su titular mediante la exhibición del documento expedido para su constancia por la Administración tributaria, del documento nacional de identidad o del documento oficial en que se asigne el número personal de identificación de extranjero.\n\n3. El cumplimiento de lo dispuesto en los apartados anteriores no exime de la obligación de disponer de otros códigos o claves de identificación adicionales según lo que establezca la normativa propia de cada tributo.",
+      "title": "Artículo 18. Obligación de disponer de un número de identificación fiscal y forma de acreditación.",
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

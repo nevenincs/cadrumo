@@ -1,0 +1,117 @@
+aeat.domain.calculations.registry package
+=========================================
+
+.. automodule:: aeat.domain.calculations.registry
+   :members:
+   :show-inheritance:
+   :ignore-module-all:
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   aeat.domain.calculations.registry._aeat_hosts
+   aeat.domain.calculations.registry._aeat_nif_iva_oracle
+   aeat.domain.calculations.registry._applicability
+   aeat.domain.calculations.registry._applicability_modelo202
+   aeat.domain.calculations.registry._applicability_payer_facts
+   aeat.domain.calculations.registry._applicability_routes
+   aeat.domain.calculations.registry._authority
+   aeat.domain.calculations.registry._binding_aggregation
+   aeat.domain.calculations.registry._binding_selector_utils
+   aeat.domain.calculations.registry._bindings
+   aeat.domain.calculations.registry._bindings_previous_filing
+   aeat.domain.calculations.registry._casilla_membership
+   aeat.domain.calculations.registry._censo_modelos
+   aeat.domain.calculations.registry._checker_oracle_flow
+   aeat.domain.calculations.registry._citation_blocklist
+   aeat.domain.calculations.registry._constructs
+   aeat.domain.calculations.registry._corpus_catalogue
+   aeat.domain.calculations.registry._counterpart_bindings
+   aeat.domain.calculations.registry._coverage
+   aeat.domain.calculations.registry._cross_revision_divergence
+   aeat.domain.calculations.registry._detail_record_bindings
+   aeat.domain.calculations.registry._errors
+   aeat.domain.calculations.registry._export
+   aeat.domain.calculations.registry._export_parse
+   aeat.domain.calculations.registry._filed_state
+   aeat.domain.calculations.registry._formula_initial_values
+   aeat.domain.calculations.registry._formula_runtime
+   aeat.domain.calculations.registry._formula_text_inputs
+   aeat.domain.calculations.registry._groi_oracle
+   aeat.domain.calculations.registry._ids
+   aeat.domain.calculations.registry._invoice_bindings
+   aeat.domain.calculations.registry._ledger_bindings
+   aeat.domain.calculations.registry._legal
+   aeat.domain.calculations.registry._live_parity
+   aeat.domain.calculations.registry._loader
+   aeat.domain.calculations.registry._observation_fold
+   aeat.domain.calculations.registry._parity_tapes
+   aeat.domain.calculations.registry._period_offset_math
+   aeat.domain.calculations.registry._queries
+   aeat.domain.calculations.registry._record_design
+   aeat.domain.calculations.registry._record_design_coverage
+   aeat.domain.calculations.registry._record_design_schema
+   aeat.domain.calculations.registry._record_spec
+   aeat.domain.calculations.registry._relation_aggregation
+   aeat.domain.calculations.registry._relations
+   aeat.domain.calculations.registry._remote_state_guard
+   aeat.domain.calculations.registry._renta_web_open_oracle
+   aeat.domain.calculations.registry._retenciones_bindings
+   aeat.domain.calculations.registry._runtime_graph
+   aeat.domain.calculations.registry._scenarios
+   aeat.domain.calculations.registry._schedules
+   aeat.domain.calculations.registry._schema
+   aeat.domain.calculations.registry._schema_base
+   aeat.domain.calculations.registry._schema_formula
+   aeat.domain.calculations.registry._schema_input_kind
+   aeat.domain.calculations.registry._schema_references
+   aeat.domain.calculations.registry._schema_rounding
+   aeat.domain.calculations.registry._schema_scalars
+   aeat.domain.calculations.registry._schema_surfaces
+   aeat.domain.calculations.registry._snapshot
+   aeat.domain.calculations.registry._temporal
+   aeat.domain.calculations.registry._text
+   aeat.domain.calculations.registry._validate
+   aeat.domain.calculations.registry._validate_algorithms
+   aeat.domain.calculations.registry._validate_application_links
+   aeat.domain.calculations.registry._validate_cache
+   aeat.domain.calculations.registry._validate_completeness
+   aeat.domain.calculations.registry._validate_constructs
+   aeat.domain.calculations.registry._validate_cross_domain_snapshot
+   aeat.domain.calculations.registry._validate_cross_revision
+   aeat.domain.calculations.registry._validate_cross_revision_advisory
+   aeat.domain.calculations.registry._validate_dependency_sections
+   aeat.domain.calculations.registry._validate_evidence
+   aeat.domain.calculations.registry._validate_exports
+   aeat.domain.calculations.registry._validate_extraction_profiles
+   aeat.domain.calculations.registry._validate_formulas
+   aeat.domain.calculations.registry._validate_helpers
+   aeat.domain.calculations.registry._validate_label_artifacts
+   aeat.domain.calculations.registry._validate_orden_aplicabilidad
+   aeat.domain.calculations.registry._validate_previous_filing_sources
+   aeat.domain.calculations.registry._validate_record_sections
+   aeat.domain.calculations.registry._validate_reference_checker
+   aeat.domain.calculations.registry._validate_reference_sections
+   aeat.domain.calculations.registry._validate_references
+   aeat.domain.calculations.registry._validate_registry_scope
+   aeat.domain.calculations.registry._validate_relation_periods
+   aeat.domain.calculations.registry._validate_relation_sources
+   aeat.domain.calculations.registry._validate_revision_context
+   aeat.domain.calculations.registry._validate_revision_identity
+   aeat.domain.calculations.registry._validate_revision_rules
+   aeat.domain.calculations.registry._validate_revision_sections
+   aeat.domain.calculations.registry._validate_semantic_role_axes
+   aeat.domain.calculations.registry._validate_semantic_role_required
+   aeat.domain.calculations.registry._validate_semantic_role_typos
+   aeat.domain.calculations.registry._validate_semantic_roles
+   aeat.domain.calculations.registry._validate_source_casilla_ids
+   aeat.domain.calculations.registry._validate_surfaces
+   aeat.domain.calculations.registry._withholding_bindings
+   aeat.domain.calculations.registry._workbook_parity
+   aeat.domain.calculations.registry._workbook_parity_models
+   aeat.domain.calculations.registry._workbook_parity_types
+   aeat.domain.calculations.registry.applicability

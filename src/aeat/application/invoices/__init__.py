@@ -1,25 +1,122 @@
-"""Invoice orchestration surface."""
+"""Invoice orchestration surface.
+
+Re-exports the application-level invoice service entry points from
+:mod:`aeat.domain.invoices._service`. Callers outside the subpackage
+must import only from this module so the private underscore-prefixed
+implementation can evolve freely.
+
+Key exports:
+
+* :func:`find_invoice`, :func:`find_unmatched` — read paths against the
+  invoice catalogue.
+* :func:`link_transaction` — link an invoice to one or more transactions.
+* :func:`link_invoice_transaction_repositories` — persisted
+  bidirectional invoice/transaction linking.
+* :func:`suggest_reconciliations` — heuristic matcher for unlinked
+  invoices.
+* :func:`verify_link_consistency` and :class:`LinkInconsistency` —
+  audit helpers for cross-side link integrity.
+"""
 
 from __future__ import annotations
 
 from ...domain.invoices._service import (
-    LinkInconsistency,
-    ReconciliationSuggestion,
     find_invoice,
     find_unmatched,
     link_transaction,
-    link_transaction_bidirectional,
     suggest_reconciliations,
     verify_link_consistency,
 )
+from ._creation import (
+    CatalogueInvoiceCreateResult,
+    build_catalogue_invoice,
+    create_catalogue_invoice,
+)
+from ._importing import (
+    InvoiceImportResult,
+    import_invoices_from_path,
+    merge_invoice_import,
+    parse_invoice_payload,
+)
+from ._lifecycle import (
+    CatalogueInvoiceRemoveResult,
+    remove_catalogue_invoice,
+    resolve_catalogue_invoice,
+    resolve_catalogue_invoice_from_repository,
+)
+from ._linking import (
+    InvoiceTransactionLinkResult,
+    link_invoice_transaction_catalogues,
+    link_invoice_transaction_repositories,
+)
+from ._projection import (
+    InvoiceMatchProjection,
+    InvoiceMatchRow,
+    InvoiceReviewProjection,
+    apply_manual_invoice_match,
+    invoice_display_amounts,
+    invoice_review_status,
+    project_invoice_payment_matches,
+    project_invoice_review,
+    project_invoice_reviews,
+)
+from ._queries import (
+    InvoiceListRow,
+    get_invoice_from_repository,
+    list_invoice_repository_rows,
+    list_invoice_rows,
+    list_unmatched_invoice_repository_rows,
+    list_unmatched_invoice_rows,
+    verify_invoice_repository_links,
+)
+from ._reconciliation import (
+    InvoiceReconciliationResult,
+    ReconciliationSkippedSuggestion,
+    reconcile_invoice_catalogues,
+    reconcile_invoice_repositories,
+)
+from ._source_resolver import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
 
 __all__ = [
-    "LinkInconsistency",
-    "ReconciliationSuggestion",
+    "CatalogueInvoiceCreateResult",
+    "CatalogueInvoiceRemoveResult",
+    "InvoiceCatalogueSourceResolver",
+    "InvoiceImportResult",
+    "InvoiceListRow",
+    "InvoiceMatchProjection",
+    "InvoiceMatchRow",
+    "InvoiceReconciliationResult",
+    "InvoiceReviewProjection",
+    "InvoiceTransactionLinkResult",
+    "ReconciliationSkippedSuggestion",
+    "apply_manual_invoice_match",
+    "build_catalogue_invoice",
+    "create_catalogue_invoice",
     "find_invoice",
     "find_unmatched",
+    "get_invoice_from_repository",
+    "import_invoices_from_path",
+    "invoice_direction_to_source_kind",
+    "invoice_display_amounts",
+    "invoice_review_status",
+    "link_invoice_transaction_catalogues",
+    "link_invoice_transaction_repositories",
     "link_transaction",
-    "link_transaction_bidirectional",
+    "list_invoice_repository_rows",
+    "list_invoice_rows",
+    "list_unmatched_invoice_repository_rows",
+    "list_unmatched_invoice_rows",
+    "merge_invoice_import",
+    "parse_invoice_payload",
+    "project_invoice_payment_matches",
+    "project_invoice_review",
+    "project_invoice_reviews",
+    "reconcile_invoice_catalogues",
+    "reconcile_invoice_repositories",
+    "remove_catalogue_invoice",
+    "resolve_catalogue_invoice",
+    "resolve_catalogue_invoice_from_repository",
     "suggest_reconciliations",
+    "verify_invoice_repository_links",
     "verify_link_consistency",
 ]

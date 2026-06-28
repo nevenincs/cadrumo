@@ -1,16 +1,9 @@
 ---
-# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
-# DIRECTORY TAGS: #adr #audit #exec #plan #reference #research
-# Directory tag (hardcoded - DO NOT CHANGE - based on .vault/plan/ location)
-# Feature tag (replace aeat-verify with your feature name, e.g., #editor-demo)
-# Additional tags may be appended below the required pair
 tags:
   - '#plan'
   - '#aeat-verify'
-# ISO date format (e.g., 2026-02-06)
 date: '2026-04-25'
-# Related documents as quoted wiki-links
-# (e.g., "[[2026-02-04-feature-adr]]")
+modified: '2026-04-25'
 related:
   - "[[2026-04-25-aeat-verify-adr]]"
   - "[[2026-04-25-aeat-verify-research]]"
@@ -21,14 +14,7 @@ related:
   - "[[2026-04-25-pdf-sanitizer-plan]]"
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `aeat-verify` `per-modelo-justificante-pipeline` plan
 
@@ -90,7 +76,7 @@ across-the-board P1 to learn which modelos exist on the account.
 Cost: one Cl@ve session (~17 min budget); the sweep is fast — under
 a minute end-to-end against Kent's account.
 
-### Result (2026-04-25, NIE `Y4113523X`)
+### Result (2026-04-25, redacted operator NIE)
 
 **Partial — walker covers wrong surface for this question.**
 
@@ -109,7 +95,7 @@ Distribution:
 Crucially, the listing **does not include** the routine
 quarterly modelos (130, 303) and informativas (347, 390) that a
 direct-estimación autónomo enrolled per the 036 census file
-every year. The user (NIE `Y4113523X`) confirmed this on
+every year. The user (redacted NIE) confirmed this on
 2026-04-25: as a direct-estimación autónomo he files the usual
 IRPF + IVA quarterly + annual forms plus retentions /
 informativas; only filings outside his 036 census enrolment

@@ -1,0 +1,8 @@
+[[revisions."2022".casillas]]
+id = "0144"
+number = "0144"
+label = "Importe de las mejoras realizadas en 2022 en el inmueble accesorio (Desglose en el anexo D, cumplimentación voluntaria)"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_mejoras_ejercicio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

@@ -3,6 +3,7 @@ tags:
   - "#audit"
   - "#release-please"
 date: 2026-04-12
+modified: '2026-04-12'
 title: release-please local-only — code review audit
 related:
   - "[[2026-04-12-release-please-adr]]"

@@ -1,0 +1,8 @@
+[[revisions."2023".casillas]]
+id = "1866"
+number = "1866"
+label = "Importe a percibir"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_importe_percibir_2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

@@ -3,6 +3,7 @@ tags:
   - '#audit'
   - '#n26-data-source'
 date: '2026-04-21'
+modified: '2026-04-21'
 related:
   - '[[2026-04-21-n26-data-source-implementation-adr]]'
   - '[[2026-04-21-n26-data-source-phase-2-plan]]'

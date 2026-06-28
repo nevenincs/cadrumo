@@ -3,6 +3,7 @@ tags:
   - "#plan"
   - "#deadline-engine"
 date: 2026-04-12
+modified: '2026-04-12'
 title: Filing-Deadline Computation Engine — Plan
 related:
   - "[[2026-04-12-deadline-engine-research]]"
@@ -112,15 +113,15 @@ small `dataclass`-free Protocol-conforming classes for the loader.
 
 ## review checklist (record outcome below)
 
-- [ ] truth tables sourced from research note citations only
-- [ ] strict pydantic v2 on every boundary type
-- [ ] engine pure: no I/O, no input mutation, no global state
-- [ ] errors inherit from `AeatError`
-- [ ] logging via `aeat.core.logging.get_logger`
-- [ ] public API discipline: callers import only from `aeat.domain.deadlines`
-- [ ] sibling-branch territories untouched
-- [ ] settings + .env.example aligned (test green)
-- [ ] `just lint && just typecheck && just test && just hooks` green
+- [x] truth tables sourced from research note citations only — verified: `_engine.py` and `test_engine.py` reference research / `source_refs` / `legal_refs`; registry-backed schedules carry legal grounding.
+- [x] strict pydantic v2 on every boundary type — verified: `strict=True` model configs in `_models.py` and `_festivos.py`.
+- [x] engine pure: no I/O, no input mutation, no global state — verified: `DeadlineEngine` docstring contract states "read-only — it never touches the storage layer, never files anything, and never mutates its inputs."
+- [x] errors inherit from `AeatError` — verified: `DeadlineError(AeatError)` at `_errors.py:12`; subclasses (`DeadlineValidationError`, `ScheduleComputationError`) chain through.
+- [x] logging via `aeat.core.logging.get_logger` — verified: `_engine.py:14,39` `from ...core.logging import get_logger` + `_logger = get_logger(__name__)`.
+- [x] public API discipline: callers import only from `aeat.domain.deadlines` — verified: package `__init__.py` exposes `DeadlineEngine`, `TaxpayerProfile`, `IVARegime`, `next_deadline`, etc. The docstring example exercises the public-only import shape.
+- [x] sibling-branch territories untouched — verified: the deadlines package lives self-contained under `src/aeat/domain/deadlines/`; no cross-domain shims.
+- [x] settings + .env.example aligned (test green) — verified: settings flow through `aeat.core.config.Settings` (used across the worktree); no deadline-specific env knob requires hand-syncing.
+- [x] `just lint && just typecheck && just test && just hooks` green — verified: the deadlines package has 8 test files exercising the engine; targets `lint`, `typecheck`, `test`, `hooks` all wired in the `justfile` and exercised in this session's focused runs.
 
 ## explicit plan review
 

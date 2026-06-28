@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "0123"
+number = "0123"
+label = "Valor catastral"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_2_valor_catastral"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

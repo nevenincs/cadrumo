@@ -1,0 +1,8 @@
+[[revisions."2021".casillas]]
+id = "0262"
+number = "0262"
+label = "Deducción por rentas obtenidas en Ceuta o Melilla (base imputada)"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_agrup_interes_economico"]
+semantic_role = "irpf_re_aie_deduccion_ceuta_melilla"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

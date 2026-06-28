@@ -1,0 +1,741 @@
+[[revisions.2009-y-siguientes.casillas]]
+id = "23"
+number = "23"
+label = "Recargo equivalencia tipo 5.2pct - Tipo porcentaje"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_23"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "24"
+number = "24"
+label = "Recargo equivalencia tipo 5.2pct - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_24"
+required = false
+input_kind = "bound"
+binding = "modelo-303-recargo-equivalencia-general-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-24"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "25"
+number = "25"
+label = "Modificacion bases y cuotas recargo equivalencia - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_25"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-25"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "26"
+number = "26"
+label = "Modificacion bases y cuotas recargo equivalencia - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_26"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-26"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "27"
+number = "27"
+label = "Total cuota devengada"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_27"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-27"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "28"
+number = "28"
+label = "IVA deducible ops interiores corrientes - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_28"
+required = false
+input_kind = "bound"
+binding = "modelo-303-iva-soportado-interiores-base"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-28"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "29"
+number = "29"
+label = "IVA deducible ops interiores corrientes - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_29"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-29"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "30"
+number = "30"
+label = "IVA deducible ops interiores bienes inversion - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_30"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-30"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "31"
+number = "31"
+label = "IVA deducible ops interiores bienes inversion - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_31"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-31"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "32"
+number = "32"
+label = "IVA deducible importaciones bienes corrientes - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_32"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-32"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "33"
+number = "33"
+label = "IVA deducible importaciones bienes corrientes - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_33"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-33"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "34"
+number = "34"
+label = "IVA deducible importaciones bienes inversion - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_34"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-34"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "35"
+number = "35"
+label = "IVA deducible importaciones bienes inversion - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_35"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-35"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "36"
+number = "36"
+label = "IVA deducible adquisiciones intracomunitarias corrientes - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_36"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-36"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "37"
+number = "37"
+label = "IVA deducible adquisiciones intracomunitarias corrientes - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_37"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-37"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "38"
+number = "38"
+label = "IVA deducible adquisiciones intracomunitarias bienes inversion - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_38"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-38"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "39"
+number = "39"
+label = "IVA deducible adquisiciones intracomunitarias bienes inversion - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_39"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-39"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "40"
+number = "40"
+label = "Rectificacion deducciones - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_40"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-40"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "41"
+number = "41"
+label = "Rectificacion deducciones - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_41"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-41"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "42"
+number = "42"
+label = "Compensaciones regimen especial agricultura ganaderia y pesca - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_42"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-42"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "43"
+number = "43"
+label = "Regularizacion bienes de inversion - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_43"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-43"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "44"
+number = "44"
+label = "Regularizacion prorrata por porcentaje definitivo - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_44"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-44"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "45"
+number = "45"
+label = "Total a deducir - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_45"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-45"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "47"
+number = "47"
+label = "RS - 1T-2T-3T - Suma ingresos a cuenta conjunto actividades"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_47"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-47"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "48"
+number = "48"
+label = "RS - 4T - Suma cuotas derivadas regimen simplificado conjunto actividades"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_48"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-48"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "49"
+number = "49"
+label = "RS - 4T - Suma ingresos a cuenta realizados en el ejercicio"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_49"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-49"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "50"
+number = "50"
+label = "RS - 4T - Resultado ([48]-[49])"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_50"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-50"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "51"
+number = "51"
+label = "RS - Cuotas devengadas adquisiciones intracomunitarias bienes"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_51"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-51"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "52"
+number = "52"
+label = "RS - Cuotas devengadas entregas activos fijos"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_52"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-52"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "53"
+number = "53"
+label = "RS - Cuotas devengadas IVA devengado inversion sujeto pasivo"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_53"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-53"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "54"
+number = "54"
+label = "RS - Total cuota resultante"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_54"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-54"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "55"
+number = "55"
+label = "RS - IVA deducible adquisicion o importacion activos fijos"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_55"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-55"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "56"
+number = "56"
+label = "RS - IVA deducible regularizacion bienes inversion"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_56"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-56"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "57"
+number = "57"
+label = "RS - Total IVA deducible regimen simplificado ([55]+[56])"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_57"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-57"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "58"
+number = "58"
+label = "RS - Resultado regimen simplificado ([54]-[57])"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_58"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-58"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "59"
+number = "59"
+label = "Informacion adicional - Entregas intracomunitarias bienes y servicios"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_59"
+required = false
+input_kind = "bound"
+binding = "modelo-303-casilla-59-entregas-intracomunitarias-base"
+# Casilla 59 reports the base imponible of exempt intra-community supplies
+# (entregas intracomunitarias exentas). The substantive ground is LIVA art. 25
+# (exenciones en las entregas de bienes destinados a otro Estado miembro), not
+# the repercusión/deducción articles 88/92 — an exempt entrega carries no cuota
+# repercutida nor deducible, so this is an informativa base-only box.
+legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-59"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "60"
+number = "60"
+label = "Informacion adicional - Exportaciones y operaciones asimiladas"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_60"
+required = false
+input_kind = "bound"
+binding = "modelo-303-casilla-60-exportaciones-base"
+# Casilla 60 reports the base imponible of exempt exports and operations
+# treated as exports. The substantive grounds are LIVA art. 21 (exenciones en
+# las exportaciones de bienes) for the "Exportaciones" leg and art. 22
+# (exenciones en las operaciones asimiladas a las exportaciones) for the
+# "operaciones asimiladas" leg the label names. Both are exempt (zero cuota),
+# so the repercusión/deducción articles 88/92 do not apply — base-only box.
+legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-60"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "120"
+number = "120"
+label = "Informacion adicional - Ops no sujetas reglas localizacion (excl casilla 123)"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_120"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-120"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "122"
+number = "122"
+label = "Informacion adicional - Ops sujetas inversion sujeto pasivo"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_122"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-122"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "123"
+number = "123"
+label = "Informacion adicional - Ops no sujetas localizacion regimenes especiales ventanilla unica"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_123"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-123"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "124"
+number = "124"
+label = "Informacion adicional - Ops sujetas regimenes especiales ventanilla unica"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_124"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-124"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "62"
+number = "62"
+label = "Informacion adicional - Entregas criterio caja devengado art 75 LIVA - Base imponible"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_62"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-62"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "63"
+number = "63"
+label = "Informacion adicional - Entregas criterio caja devengado art 75 LIVA - Cuota"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_63"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-63"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "74"
+number = "74"
+label = "Informacion adicional - Adquisiciones criterio caja - Base imponible"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_74"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-74"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "75"
+number = "75"
+label = "Informacion adicional - Adquisiciones criterio caja - Cuota"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_75"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-75"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "76"
+number = "76"
+label = "Resultado - Regularizacion cuotas art 80 cinco 5a LIVA"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_76"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-76"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "64"
+number = "64"
+label = "Resultado - Suma de resultados ([46]+[58]+[76])"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_64"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-64"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "65"
+number = "65"
+label = "Resultado - Porcentaje atribuible Administracion del Estado"
+section = ["iva", "resultado"]
+data_type = "ratio"
+semantic_role = "dr303_65"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-65"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "66"
+number = "66"
+label = "Resultado - Importe atribuible Administracion del Estado"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_66"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-66"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "77"
+number = "77"
+label = "Resultado - IVA a la importacion liquidado por la Aduana pendiente de ingreso"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_77"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-77"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "68"
+number = "68"
+label = "Resultado - Tributacion conjunta resultado regularizacion anual"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_68"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-68"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "70"
+number = "70"
+label = "Resultado - Resultados a ingresar de anteriores autoliquidaciones del ejercicio y periodo"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_70"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-70"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "109"
+number = "109"
+label = "Resultado - Devoluciones acordadas AEAT anteriores autoliquidaciones del ejercicio y periodo"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_109"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-109"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "71"
+number = "71"
+label = "Resultado final ([69]-[70]+[109])"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_71"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-71"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "108"
+number = "108"
+label = "Rectificativa - Otros ajustes determinados supuestos por discrepancia criterio administrativo"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_108"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-108"]
+
+[[revisions.2009-y-siguientes.casillas]]
+id = "111"
+number = "111"
+label = "Rectificativa - Importe de la rectificacion"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_111"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-111"]

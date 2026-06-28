@@ -1,4 +1,12 @@
-"""Stable CLI exit-code table for the JSON output contract."""
+"""Stable CLI exit-code table for the JSON output contract.
+
+Defines :class:`ExitCode`, the canonical exit-code reservation used by
+every command in :mod:`aeat.entrypoints.cli`, and :func:`exit_with`, the
+thin helper that emits an optional stderr message and raises
+:class:`typer.Exit` with the chosen code. Keeping the table centralised
+guarantees that the CLI contract — both the human-readable text mode and
+the structured JSON envelope — speaks the same exit-code vocabulary.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +16,25 @@ import typer
 
 
 class ExitCode(IntEnum):
-    """Stable process exit codes reserved for the AEAT CLI contract."""
+    """Stable process exit codes reserved for the AEAT CLI contract.
+
+    The values map one-to-one with categories in
+    :mod:`aeat.core.errors` so the JSON envelope's ``exit_code`` field
+    is always derived from the same table the operating shell sees.
+
+    Attributes:
+        SUCCESS: Command completed without error.
+        ERROR: Generic, recoverable failure.
+        REFUSED: Operator-driven refusal (e.g. interactive stdin missing).
+        AUTH: Authentication or authorisation failure.
+        INTEGRITY: Data-integrity violation (checksum mismatch, etc.).
+        FAIL: Operation attempted but failed mid-flight.
+        INTERNAL: Unexpected internal error (programming bug surfaced).
+        LOCKED_BY_DESIGN: Operation blocked by an intentional safety lock.
+        LOCKED_BY_CONCURRENCY: Operation blocked by another in-flight run.
+        NO_NETWORK: Required network endpoint unreachable.
+        USAGE: Invalid CLI usage (bad flag combination, missing argument).
+    """
 
     SUCCESS = 0
     ERROR = 1
@@ -26,15 +52,13 @@ class ExitCode(IntEnum):
 def exit_with(code: ExitCode, *, message: str | None = None) -> None:
     """Emit an optional stderr message and terminate with ``code``.
 
-     will route this helper through the sibling error-envelope
-    implementation from issue #398. Until then, emission stays plain
-    stderr so callers can still standardize on the shared exit table.
-
     Args:
         code: Stable CLI exit code to raise.
         message: Optional stderr message to emit before exiting.
-    """
 
+    Raises:
+        typer.Exit: Always, with the integer value of ``code``.
+    """
     if message:
         typer.echo(message, err=True)
     raise typer.Exit(int(code))

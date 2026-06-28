@@ -15,15 +15,6 @@
         "@upstash/context7-mcp"
       ]
     },
-    "google-workspace": {
-      "command": "uv",
-      "args": [
-        "run",
-        "python",
-        "-m",
-        "aeat.entrypoints.mcp.launch_google_workspace"
-      ]
-    },
     "vaultspec-core": {
       "command": "uv",
       "args": [
@@ -32,9 +23,17 @@
         "-m",
         "vaultspec_core.mcp_server.app"
       ]
+    },
+    "vaultspec-rag": {
+      "command": "uv",
+      "args": [
+        "run",
+        "vaultspec-search-mcp"
+      ]
     }
   },
   "_vaultspecManaged": [
-    "vaultspec-core"
+    "vaultspec-core",
+    "vaultspec-rag"
   ]
 }

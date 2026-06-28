@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "0457"
+number = "0457"
+label = "Si no tiene NIF o NIE, marque con una \"X\" esta casilla"
+section = ["toma_datos_ampliada", "datos_adicionales"]
+data_type = "boolean"
+semantic_role = "irpf_descendiente_nif_ausente_flag"
+legal_refs = ["ley-35-2006:art-58"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

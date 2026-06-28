@@ -1,0 +1,65 @@
+# AEAT apoderamientos scope catalogue (W75A apoderado-scope-vocabulary).
+#
+# --scope SCOPE accepts uppercase AEAT apoderamiento
+# codes from this shipped catalogue; ALL expands at command time into
+# the union of every listed code. Comma-separated values are rejected
+# at the parser boundary; --scope must be passed repeatedly.
+#
+# The catalogue is intentionally bootstrap-scoped. Additional codes
+# land per AEAT publication and require a catalogue version bump.
+
+catalogue_version = "2026.05.bootstrap"
+
+[[scopes]]
+code = "GENERALNT"
+name_es = "Trámites tributarios (general)"
+name_en = "General tax procedures"
+modelo_codes = []
+
+[[scopes]]
+code = "RENT"
+name_es = "Renta y patrimonio (modelo 100, 714)"
+name_en = "Income tax and wealth declaration"
+modelo_codes = ["100", "714"]
+
+[[scopes]]
+code = "IVA"
+name_es = "IVA (modelo 303, 390)"
+name_en = "IVA periodic and annual returns"
+modelo_codes = ["303", "390"]
+
+[[scopes]]
+code = "PAGOSF"
+name_es = "Pagos fraccionados (modelo 130, 131)"
+name_en = "Quarterly self-employed instalments"
+modelo_codes = ["130", "131"]
+
+[[scopes]]
+code = "RETEN"
+name_es = "Retenciones (modelo 111, 115, 123, 180, 190, 193)"
+name_en = "Withholding tax declarations"
+modelo_codes = ["111", "115", "123", "180", "190", "193"]
+
+[[scopes]]
+code = "CENSO"
+name_es = "Censo (modelo 036, 037)"
+name_en = "Censo declarations (registration, modification, deregistration)"
+modelo_codes = ["036", "037"]
+
+[[scopes]]
+code = "INFORM"
+name_es = "Declaraciones informativas (modelo 347, 349, 720)"
+name_en = "Informational declarations"
+modelo_codes = ["347", "349", "720"]
+
+[[scopes]]
+code = "NOTIFIC"
+name_es = "Notificaciones electrónicas DEHú"
+name_en = "Electronic notifications (DEHú)"
+modelo_codes = []
+
+[[scopes]]
+code = "EXPED"
+name_es = "Expedientes y consultas"
+name_en = "Filing records and queries"
+modelo_codes = []

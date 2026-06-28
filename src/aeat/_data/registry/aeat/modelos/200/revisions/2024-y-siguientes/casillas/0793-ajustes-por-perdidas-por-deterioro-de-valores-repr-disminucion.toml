@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02686"
+number = "02686"
+label = "Ajustes por pérdidas por deterioro de valores representativos de la participación en el capital o fondos propios (art. 13.2 b) LIS) - Disminución - Correcciones del ejercicio - Permanentes [02686]"
+section = ["ajustes_por_perdidas_por_deterioro_de_valores_repr", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_valores_participaciones_art13_2b_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02686"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02687"
+number = "02687"
+label = "Ajustes por pérdidas por deterioro de valores representativos de la participación en el capital o fondos propios (art. 13.2 b) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con ori..."
+section = ["ajustes_por_perdidas_por_deterioro_de_valores_repr", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_valores_participaciones_art13_2b_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02687"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02688"
+number = "02688"
+label = "Ajustes por pérdidas por deterioro de valores representativos de la participación en el capital o fondos propios (art. 13.2 b) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con ori..."
+section = ["ajustes_por_perdidas_por_deterioro_de_valores_repr", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_valores_participaciones_art13_2b_permanente_disminucion"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02688"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02689"
+number = "02689"
+label = "Ajustes por pérdidas por deterioro de valores representativos de la participación en el capital o fondos propios (art. 13.2 b) LIS) - Disminución - Saldo pendiente a principio de ejercicio [02689]"
+section = ["ajustes_por_perdidas_por_deterioro_de_valores_repr", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_valores_participaciones_art13_2b_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02689"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02690"
+number = "02690"
+label = "Ajustes por pérdidas por deterioro de valores representativos de la participación en el capital o fondos propios (art. 13.2 b) LIS) - Disminución - Saldo pendiente a fin de ejercicio [02690]"
+section = ["ajustes_por_perdidas_por_deterioro_de_valores_repr", "disminucion"]
+data_type = "money"
+semantic_role = "is_correccion_deterioro_valores_participaciones_art13_2b_saldo_final_neto"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026c-casilla-02690"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

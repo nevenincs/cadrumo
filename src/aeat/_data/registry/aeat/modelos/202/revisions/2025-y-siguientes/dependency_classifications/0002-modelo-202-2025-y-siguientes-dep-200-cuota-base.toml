@@ -1,0 +1,23 @@
+# Modelo 202 modalidad 40.2 depends on the prior Modelo 200 cuota líquida as
+# factual evidence for the instalment base (casilla 01). This classifies the
+# cross-model 202 -> 200 dependency introduced by the cuota-base relation.
+#
+# Per-period vencimiento (LIS art. 40.2 "último período cuyo plazo estuviese
+# vencido"): 2P (October) and 3P (December) bind the prior year's M200
+# (filing_year_delta = -1, after its July deadline has elapsed); 1P (April)
+# binds two years back (filing_year_delta = -2) because the prior-year M200's
+# July deadline has not yet elapsed in April. Both relations are modelled here.
+# The 1P -2 carry references a source year that may predate the earliest
+# modelled M200 revision (year_from = 2024); that is permitted because the
+# source is the operator's historical filing (an observation), not a modelled
+# computation — see the previous_filing coverage-semantics rule in
+# validate_source_year_coverage. At resolution a missing prior M200 yields a
+# zero-carry (a first-year filer has no prior cuota), never a wrong-year bind.
+[[revisions.2025-y-siguientes.dependency_classifications]]
+id = "modelo-202-2025-y-siguientes-dep-200-cuota-base"
+source_modelo = "200"
+treatment = "factual_evidence"
+target_constructs = ["modelo-202-foundation"]
+relation_refs = ["modelo-202-2025-y-siguientes-rel-cuota-base-1p", "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-modelo-202-instructions"]

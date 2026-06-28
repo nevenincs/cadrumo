@@ -1,0 +1,20 @@
+# Production security scan policy.
+#
+# `just audit-security` scans `src/aeat` with Semgrep's stock security rules.
+# Keep that lane focused on production source. Mirrored legal data, tests, and
+# explicit test-support files are audited through separate provenance,
+# redaction, fixture, and test-hygiene gates instead of the stock security lane.
+# Production findings must be fixed in source or justified at the exact audited
+# line; do not add production-source exclusions here to force a green scan.
+
+# Mirrored AEAT/BOE/legal corpus and generated registry data.
+src/aeat/_data/
+
+# Tests and test-support packages.
+src/aeat/test_*.py
+src/aeat/**/test_*.py
+src/aeat/**/_test_*.py
+src/aeat/tests/
+
+# Test-only support modules whose names intentionally avoid pytest collection.
+src/aeat/adapters/outbound/aeat/auth/_fixtures.py

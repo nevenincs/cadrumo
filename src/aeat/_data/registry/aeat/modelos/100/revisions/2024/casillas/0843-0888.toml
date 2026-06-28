@@ -1,0 +1,8 @@
+[[revisions."2024".casillas]]
+id = "0888"
+number = "0888"
+label = "Por gastos en formación para la autonomía y la vida independiente de menores con discapacidad"
+section = ["resultados", "deduccion_autonomica_res", "aragon_res"]
+semantic_role = "irpf_deduccion_aragon_formacion_autonomia"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

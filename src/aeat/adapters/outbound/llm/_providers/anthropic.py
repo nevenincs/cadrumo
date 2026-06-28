@@ -1,8 +1,18 @@
-"""Anthropic provider adapter."""
+"""Anthropic Messages API adapter for the LLM outbound port.
+
+Implements the :class:`aeat.adapters.outbound.llm._providers.base._ProviderAdapter`
+contract by translating a normalized :class:`aeat.adapters.outbound.llm._providers.base.ProviderRequest`
+into an :class:`anthropic.AsyncAnthropic` ``messages.create`` call and
+converting the response (or any provider error) into the substrate's
+typed completion / error envelope. Network I/O is async; all SDK
+exceptions are mapped to :exc:`aeat.adapters.outbound.llm._errors.LLMProviderError`,
+:exc:`aeat.adapters.outbound.llm._errors.LLMRateLimitError`, or
+:exc:`aeat.adapters.outbound.llm._errors.LLMConfigError`.
+"""
 
 from __future__ import annotations
 
-from typing import cast
+from typing import override
 
 from anthropic import (
     APIConnectionError,
@@ -21,20 +31,60 @@ from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_r
 
 
 class AnthropicAdapter(_ProviderAdapter):
-    """Execute requests against Anthropic's Messages API."""
+    """Provider adapter that talks to Anthropic's Messages API.
+
+    Holds a bound :class:`anthropic.AsyncAnthropic` client configured with
+    the operator's API key and a per-call timeout. The :attr:`provider`
+    class attribute identifies this adapter to the :mod:`aeat.adapters.outbound.llm`
+    factory.
+
+    Attributes:
+        provider: The :class:`aeat.adapters.outbound.llm._models.LLMProvider`
+            tag selecting this adapter.
+    """
 
     provider = LLMProvider.ANTHROPIC
 
     def __init__(self, api_key: str, timeout_s: int) -> None:
+        """Construct the adapter and bind a fresh async client.
+
+        Args:
+            api_key: Anthropic API key. Empty string raises
+                :exc:`aeat.adapters.outbound.llm._errors.LLMConfigError`.
+            timeout_s: Default per-request timeout passed to the SDK.
+
+        Raises:
+            LLMConfigError: When ``api_key`` is empty.
+        """
         if not api_key:
             msg = "AEAT_LLM_ANTHROPIC_API_KEY must be set for the Anthropic provider."
             raise LLMConfigError(msg)
         self._client = AsyncAnthropic(api_key=api_key, timeout=timeout_s)
 
+    @override
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:
-        """Execute a completion request."""
+        """Execute a completion request against Anthropic and normalize the result.
 
-        messages: tuple[MessageParam, ...] = (cast(MessageParam, {"role": "user", "content": request.prompt}),)
+        Issues a ``messages.create`` call (with or without a ``system``
+        prompt), concatenates every :class:`anthropic.types.TextBlock` in
+        the response, and returns a :class:`ProviderCompletion`. SDK
+        errors are mapped to the substrate's typed exception hierarchy.
+
+        Args:
+            request: Normalized provider request carrying the model id,
+                prompt, optional system prompt, sampling parameters, and
+                a request-id used as Anthropic ``metadata.user_id``.
+
+        Returns:
+            A :class:`ProviderCompletion` with the joined text, model id
+            echoed by the server, token usage, and the provider's request id.
+
+        Raises:
+            LLMProviderError: On authentication failures, bad requests, connection
+                or timeout failures, and non-2xx API status codes.
+        """
+        user_message: MessageParam = {"role": "user", "content": request.prompt}
+        messages: tuple[MessageParam, ...] = (user_message,)
         metadata: MetadataParam = {"user_id": request.request_id}
         response: Message | None = None
         try:

@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02611"
+number = "02611"
+label = "Libertad de amortización inmovilizado material nuevo (art. 12.3 e) LIS) - Aumento - Correcciones del ejercicio - Permanentes [02611]"
+section = ["libertad_de_amortizacion_inmovilizado_material_nue", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_inmovilizado_nuevo_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02611"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02612"
+number = "02612"
+label = "Libertad de amortización inmovilizado material nuevo (art. 12.3 e) LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02612]"
+section = ["libertad_de_amortizacion_inmovilizado_material_nue", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_inmovilizado_nuevo_temporaria_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02612"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02613"
+number = "02613"
+label = "Libertad de amortización inmovilizado material nuevo (art. 12.3 e) LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02613]"
+section = ["libertad_de_amortizacion_inmovilizado_material_nue", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_inmovilizado_nuevo_temporaria_anteriores_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02613"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02614"
+number = "02614"
+label = "Libertad de amortización inmovilizado material nuevo (art. 12.3 e) LIS) - Aumento - Saldo pendiente a principio de ejercicio [02614]"
+section = ["libertad_de_amortizacion_inmovilizado_material_nue", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_inmovilizado_nuevo_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02614"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02615"
+number = "02615"
+label = "Libertad de amortización inmovilizado material nuevo (art. 12.3 e) LIS) - Aumento - Saldo pendiente a fin de ejercicio [02615]"
+section = ["libertad_de_amortizacion_inmovilizado_material_nue", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_libertad_amortizacion_inmovilizado_nuevo_saldo_final_neto"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026b-casilla-02615"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

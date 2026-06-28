@@ -1,0 +1,103 @@
+[[revisions."2010-y-siguientes".constructs]]
+id = "modelo-390-iva-resumen-anual"
+title = "Modelo 390 IVA annual summary declaration"
+legal_refs = [
+    "orden-eha-3111-2009:art-1",
+    "orden-eha-3111-2009:art-8",
+    "ley-37-1992:art-17",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-88",
+    "ley-37-1992:art-90",
+    "ley-37-1992:art-91",
+    "ley-37-1992:art-92",
+    "ley-37-1992:art-99",
+    "ley-37-1992:art-115",
+    "ley-37-1992:art-116",
+    "rd-1624-1992:art-71",
+    "rd-1624-1992:art-29",
+    "rd-1624-1992:art-30",
+]
+source_refs = [
+    "aeat-dr-390-2025",
+    "aeat-modelo-390-procedure",
+    "boe-modelo-390-2009-form",
+]
+casilla_ids = [
+    "iva.anual.repercutido.general",
+    "iva.anual.repercutido.reducido",
+    "iva.anual.repercutido.super-reducido",
+    "iva.anual.soportado.interiores",
+    "iva.anual.soportado.importaciones",
+    "iva.anual.autorepercutido.intracomunitaria",
+    "iva.anual.reconciliacion.devengada-303",
+    "iva.anual.reconciliacion.deducible-303",
+    "iva.anual.reconciliacion.resultado-303",
+    "iva.anual.compensacion-ultimo-periodo-97",
+    "iva.anual.compensacion-generada-ejercicio-no-97",
+    "iva.anual.cuota-devengada-total",
+    "iva.anual.cuota-deducible-total",
+    "iva.anual.resultado-regimen-general",
+    "decl.ejercicio",
+    "decl.tipo-declaracion",
+]
+formulas = [
+    "modelo-390-iva-anual-cuota-devengada-total",
+    "modelo-390-iva-anual-cuota-deducible-total",
+    "modelo-390-iva-anual-resultado-regimen-general",
+]
+bindings = [
+    "modelo-390-iva-repercutido-general-cuota",
+    "modelo-390-iva-repercutido-reducido-cuota",
+    "modelo-390-iva-repercutido-super-reducido-cuota",
+    "modelo-390-iva-soportado-interiores-cuota",
+    "modelo-390-iva-soportado-importaciones-cuota",
+    "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
+    "modelo-390-prev-303-cuota-devengada-total",
+    "modelo-390-prev-303-cuota-deducible-total",
+    "modelo-390-prev-303-resultado-regimen-general",
+    "modelo-390-prev-303-compensacion-ultimo-periodo",
+    "modelo-390-prev-303-compensacion-generada-ejercicio-no-97",
+]
+relations = [
+    "modelo-390-rel-303-cuota-devengada-total",
+    "modelo-390-rel-303-cuota-deducible-total",
+    "modelo-390-rel-303-resultado-regimen-general",
+    "modelo-390-rel-303-compensacion-ultimo-periodo",
+    "modelo-390-rel-303-compensacion-generada-ejercicio-no-97",
+]
+dependency_classifications = ["modelo-390-dep-303"]
+workbook_parity_refs = ["modelo-390-dr-2025"]
+extraction_profiles = ["modelo-390-declaracion-pdf"]
+live_cross_references = [
+    "modelo-390-static-documentation",
+    "modelo-390-filed-declarations-read",
+]
+application_links = [
+    "modelo-390-portal",
+    "modelo-390-filing",
+    "modelo-390-extractor",
+    "modelo-390-verification",
+    "modelo-390-review",
+    "modelo-390-approval",
+    "modelo-390-reconciliation",
+    "modelo-390-workflow",
+    "modelo-390-deadline",
+    "modelo-390-calculation",
+]
+filing_schedules = ["modelo-390-anual"]
+deadline_windows = [
+    "modelo-390-2020-0a",
+    "modelo-390-2021-0a",
+    "modelo-390-2022-0a",
+    "modelo-390-2023-0a",
+    "modelo-390-2024-0a",
+    "modelo-390-2025-0a",
+    "modelo-390-2026-0a",
+]
+
+# Calculation-completeness manifest for revision 2010-y-siguientes: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed by canonical casilla_id plus reviewed segment/number
+# metadata. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.

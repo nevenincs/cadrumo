@@ -1,0 +1,13 @@
+[[revisions.2025-y-siguientes.casillas]]
+id = "34"
+number = "34"
+label = "Mod. 40.3 LIS — Cantidad a ingresar (mayor de claves [32] y [33])"
+section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
+data_type = "money"
+semantic_role = "is_pf_mod_40_3_cantidad_a_ingresar"
+required = false
+input_kind = "computed"
+formula = "modelo-202-cantidad-a-ingresar"
+export_refs = ["modelo-202-page-02-casilla-34"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]

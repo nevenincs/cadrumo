@@ -1,0 +1,9 @@
+[[revisions."2021".casillas]]
+id = "0027"
+number = "0027"
+label = "Intereses de cuentas y depósitos y de activos financieros en general (*)"
+section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_ahorro"]
+data_type = "decimal"
+semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_intereses_cuentas"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

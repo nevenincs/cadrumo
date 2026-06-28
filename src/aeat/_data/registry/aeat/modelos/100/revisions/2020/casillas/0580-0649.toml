@@ -1,0 +1,9 @@
+[[revisions."2020".casillas]]
+id = "0649"
+number = "0649"
+label = "Indique la categoría de familia numerosa (marque la casilla que corresponda): Especial"
+section = ["resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res"]
+data_type = "boolean"
+semantic_role = "irpf_familia_numerosa_categoria_especial_flag"
+legal_refs = ["ley-35-2006:art-81-bis"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

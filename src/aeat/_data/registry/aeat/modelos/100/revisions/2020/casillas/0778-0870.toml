@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "0870"
+number = "0870"
+label = "Por donaciones con finalidad ecológica y en investigación y desarrollo científico y técnico"
+section = ["resultados", "deduccion_autonomica_res", "aragon_res"]
+semantic_role = "irpf_deduccion_aragon_donativos_ecologicos"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

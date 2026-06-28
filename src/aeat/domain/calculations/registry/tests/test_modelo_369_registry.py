@@ -1,0 +1,732 @@
+"""Tests for the committed Modelo 369 OSS/IOSS registry foundation."""
+
+from __future__ import annotations
+
+import warnings
+from datetime import date
+from functools import lru_cache
+
+import pytest
+
+from .....core import Period
+from .....core.resources import bundled_path
+from .....tests.aeat_literal_fixtures import aeat_host
+from .. import (
+    CasillaId,
+    ModeloDefinition,
+    OssIossLedgerObservation,
+    RegistryCatalogues,
+    RegistryValidator,
+    build_snapshot,
+    extract_record_design,
+    load_registry_tree,
+    resolve_ledger_oss_aggregation_binding_values,
+    validated_casilla_id,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+_WWW1_HOST = aeat_host("www1")
+_WWW6_HOST = aeat_host("www6")
+
+
+def _casilla_id(value: object) -> CasillaId:
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"Modelo 369 fixture casilla key {value!r} is not a CasillaId") from exc
+
+
+_M369_EXTERIOR_DE_SERVICES_CUOTA_CASILLA: CasillaId = _casilla_id("iva.exterior.de.services-cuota")
+_M369_EXTERIOR_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.exterior.cuota-total")
+_M369_UNION_DE_SERVICES_CUOTA_CASILLA: CasillaId = _casilla_id("iva.union.de.services-cuota")
+_M369_UNION_FR_SERVICES_CUOTA_CASILLA: CasillaId = _casilla_id("iva.union.fr.services-cuota")
+_M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA: CasillaId = _casilla_id(
+    "iva.union.de.goods-distance-cuota",
+)
+_M369_UNION_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.union.cuota-total")
+_M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA: CasillaId = _casilla_id(
+    "iva.importacion.de.low-value-cuota",
+)
+_M369_IMPORTACION_CUOTA_TOTAL_CASILLA: CasillaId = _casilla_id("iva.importacion.cuota-total")
+
+
+_FORBIDDEN_REMOTE_ACTIONS = frozenset(
+    [
+        "server-side-save",
+        "signing",
+        "presentation",
+        "payment",
+        "amendment",
+        "cancellation",
+        "document-submission",
+        "declaration-submission",
+    ],
+)
+
+
+@lru_cache(maxsize=1)
+def _load_modelo_369() -> tuple[ModeloDefinition, RegistryCatalogues]:
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(m for m in modelos if m.id == "369")
+    return modelo, catalogues
+
+
+def test_modelo_369_validator_accepts_committed_definition() -> None:
+    modelo, catalogues = _load_modelo_369()
+    assert modelo.id == "369"
+    assert modelo.revisions, "369 must declare at least one revision"
+    assert any(rev.casillas for rev in modelo.revisions.values()), "369 must declare casillas"
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
+def test_modelo_369_metadata_matches_hac_610_2021() -> None:
+    modelo, _ = _load_modelo_369()
+
+    assert modelo.tax_domain == "iva"
+    assert modelo.cadence == "ad_hoc"
+    assert modelo.jurisdiction == "ES-AEAT"
+    assert "orden-hac-610-2021:art-1" in modelo.legal_refs
+    assert "orden-hac-610-2021:art-2" in modelo.legal_refs
+    assert "orden-hac-610-2021:art-3" in modelo.legal_refs
+    assert "aeat-dr-369-2021" in modelo.source_refs
+    assert "aeat-modelo-369-procedure" in modelo.source_refs
+
+
+def test_modelo_369_revisions_split_exterior_union_importacion_periods() -> None:
+    modelo, _ = _load_modelo_369()
+
+    exterior = modelo.revisions["esquema-exterior"]
+    union = modelo.revisions["esquema-union"]
+    importacion = modelo.revisions["esquema-importacion"]
+
+    assert exterior.valid_from == date(2021, 7, 1)
+    assert exterior.period_selector.year_from == 2021
+    assert exterior.period_selector.periods == ("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T")
+
+    assert union.valid_from == date(2021, 7, 1)
+    assert union.period_selector.year_from == 2021
+    assert union.period_selector.periods == ("1T", "2T", "3T", "4T")
+
+    assert importacion.valid_from == date(2021, 7, 1)
+    assert importacion.period_selector.year_from == 2021
+    assert importacion.period_selector.periods == (
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+    )
+
+
+@pytest.mark.parametrize(
+    ("period", "expected_revision"),
+    [
+        ("EXT-1T", "esquema-exterior"),
+        ("1T", "esquema-union"),
+        ("01", "esquema-importacion"),
+    ],
+)
+def test_modelo_369_snapshot_selects_scheme_by_period(period: str, expected_revision: str) -> None:
+    modelo, catalogues = _load_modelo_369()
+
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period=period,
+    )
+
+    assert snapshot.revision.id == expected_revision
+
+
+@pytest.mark.parametrize(
+    ("period", "revision_id", "legal_ref"),
+    [
+        ("EXT-1T", "esquema-exterior", "ley-37-1992:art-163-octiesdecies"),
+        ("1T", "esquema-union", "ley-37-1992:art-163-unvicies"),
+        ("01", "esquema-importacion", "ley-37-1992:art-163-quinvicies"),
+    ],
+)
+def test_modelo_369_snapshots_carry_scheme_authority(period: str, revision_id: str, legal_ref: str) -> None:
+    modelo, catalogues = _load_modelo_369()
+
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period=period,
+        revision_id=revision_id,
+    )
+
+    assert "orden-hac-610-2021:art-1" in snapshot.legal
+    assert "orden-hac-610-2021:art-2" in snapshot.legal
+    assert "orden-hac-610-2021:art-3" in snapshot.legal
+    assert legal_ref in snapshot.legal
+    assert "aeat-dr-369-2021" in snapshot.sources
+    assert "aeat-modelo-369-procedure" in snapshot.sources
+    assert "boe-modelo-369-2021-form" in snapshot.sources
+
+
+def test_modelo_369_filing_schedules_match_scheme_period_selectors() -> None:
+    modelo, _ = _load_modelo_369()
+
+    expected = {
+        "esquema-exterior": ("quarterly", ("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T")),
+        "esquema-union": ("quarterly", ("1T", "2T", "3T", "4T")),
+        "esquema-importacion": (
+            "monthly",
+            ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"),
+        ),
+    }
+
+    for revision_id, (period_kind, periods) in expected.items():
+        revision = modelo.revisions[revision_id]
+        assert len(revision.filing_schedules) == 1
+        schedule = revision.filing_schedules[0]
+        assert schedule.period_kind == period_kind
+        assert schedule.periods == periods
+        assert schedule.periods == revision.period_selector.periods
+        assert "orden-hac-610-2021:art-2" in schedule.legal_refs
+        assert "orden-hac-610-2021:art-3" in schedule.legal_refs
+
+
+@pytest.mark.parametrize(
+    ("revision_id", "window_id", "period", "opens_on", "closes_on"),
+    [
+        (
+            "esquema-exterior",
+            "modelo-369-exterior-2025-ext-1t",
+            Period.from_year_and_code(2025, "EXT-1T"),
+            date(2025, 4, 1),
+            date(2025, 4, 30),
+        ),
+        (
+            "esquema-exterior",
+            "modelo-369-exterior-2025-ext-4t",
+            Period.from_year_and_code(2025, "EXT-4T"),
+            date(2026, 1, 1),
+            date(2026, 1, 31),
+        ),
+        (
+            "esquema-union",
+            "modelo-369-union-2025-1t",
+            Period.from_year_and_code(2025, "1T"),
+            date(2025, 4, 1),
+            date(2025, 4, 30),
+        ),
+        (
+            "esquema-union",
+            "modelo-369-union-2025-4t",
+            Period.from_year_and_code(2025, "4T"),
+            date(2026, 1, 1),
+            date(2026, 1, 31),
+        ),
+        (
+            "esquema-importacion",
+            "modelo-369-importacion-2025-01",
+            Period.from_year_and_code(2025, "01"),
+            date(2025, 2, 1),
+            date(2025, 2, 28),
+        ),
+        (
+            "esquema-importacion",
+            "modelo-369-importacion-2025-12",
+            Period.from_year_and_code(2025, "12"),
+            date(2026, 1, 1),
+            date(2026, 1, 31),
+        ),
+        (
+            "esquema-importacion",
+            "modelo-369-importacion-2026-01",
+            Period.from_year_and_code(2026, "01"),
+            date(2026, 2, 1),
+            date(2026, 2, 28),
+        ),
+    ],
+)
+def test_modelo_369_deadline_windows_close_last_day_next_natural_month(
+    revision_id: str,
+    window_id: str,
+    period: Period,
+    opens_on: date,
+    closes_on: date,
+) -> None:
+    modelo, _ = _load_modelo_369()
+    revision = modelo.revisions[revision_id]
+    windows = {w.id: w for w in revision.deadline_windows}
+
+    window = windows[window_id]
+    assert window.period == period
+    assert window.opens_on == opens_on
+    assert window.closes_on == closes_on
+    assert "orden-hac-610-2021:art-3" in window.legal_refs
+
+
+def test_modelo_369_live_cross_references_are_read_only() -> None:
+    modelo, _ = _load_modelo_369()
+
+    for revision in modelo.revisions.values():
+        cross_refs = {ref.surface: ref for ref in revision.live_cross_references}
+
+        static_ref = cross_refs["static_official_documentation"]
+        assert static_ref.requires_authentication is False
+        assert static_ref.synthetic_data_allowed is False
+        assert _FORBIDDEN_REMOTE_ACTIONS.issubset(static_ref.forbidden_actions)
+
+        filed_ref = cross_refs["authenticated_read_surface"]
+        assert filed_ref.requires_authentication is True
+        assert filed_ref.requires_aeat_authorization is True
+        assert filed_ref.synthetic_data_allowed is False
+        assert set(filed_ref.allowed_methods) == {"GET", "HEAD", "OPTIONS"}
+        assert set(filed_ref.allowed_hosts) == {
+            _WWW1_HOST,
+            _WWW6_HOST,
+        }
+        assert _FORBIDDEN_REMOTE_ACTIONS.issubset(filed_ref.forbidden_actions)
+
+
+def test_modelo_369_workbook_parity_refs_resolve_to_official_record_design() -> None:
+    modelo, catalogues = _load_modelo_369()
+
+    for revision in modelo.revisions.values():
+        assert len(revision.workbook_parity_refs) == 1
+        ref = revision.workbook_parity_refs[0]
+        source = catalogues.sources[ref.workbook_source]
+
+        assert ref.workbook_source == "aeat-dr-369-2021"
+        assert ref.formula_coverage == "record_design_layout"
+        assert ref.runner_required is False
+        assert source.evidence_tier == "layout_authority"
+        assert (bundled_path() / source.corpus_path).is_file()
+
+
+def test_modelo_369_official_record_design_workbook_is_parseable() -> None:
+    _, catalogues = _load_modelo_369()
+    source = catalogues.sources["aeat-dr-369-2021"]
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        sheets = extract_record_design(bundled_path() / source.corpus_path)
+    by_name = {sheet.name: sheet for sheet in sheets}
+
+    assert len(sheets) == 14
+    assert sum(len(sheet.fields) for sheet in sheets) == 1515
+    assert by_name["T3690 Estruc. gral"].fields[0].offset == 1
+    assert by_name["T3690 Estruc. gral"].fields[0].length == 2
+    assert by_name["T3690 Estruc. gral"].fields[0].content == 'Constante "<T"'
+    assert by_name["T36900 Info Adicional"].total_positions == 110
+    assert by_name["T36901 Ext"].total_positions == 1422
+    assert by_name["T36904 Un"].fields[4].description == "Régimen"
+    assert by_name["T36910 Imp"].fields[4].content == '"IMPO"'
+
+
+def test_modelo_369_constructs_close_over_revision_members() -> None:
+    modelo, _ = _load_modelo_369()
+
+    for revision in modelo.revisions.values():
+        assert len(revision.constructs) == 1
+        construct = revision.constructs[0]
+
+        assert construct.casilla_ids == tuple(c.id for c in revision.casillas)
+        assert construct.workbook_parity_refs == tuple(w.id for w in revision.workbook_parity_refs)
+        assert construct.live_cross_references == tuple(r.id for r in revision.live_cross_references)
+        assert construct.application_links == tuple(link.id for link in revision.application_links)
+        assert construct.deadline_windows == tuple(w.id for w in revision.deadline_windows)
+        assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
+
+
+def test_modelo_369_each_revision_declares_at_least_one_oss_aggregation_binding() -> None:
+    """Each Esquema revision must carry at least one ledger_oss_aggregation
+    binding so the calculation chain has a substrate-grounded source for
+    its destination-MS aggregations."""
+    modelo, _ = _load_modelo_369()
+    expected_revisions = ("esquema-exterior", "esquema-union", "esquema-importacion")
+    checked = 0
+    for revision_id in expected_revisions:
+        revision = modelo.revisions[revision_id]
+        oss_bindings = [binding for binding in revision.bindings if binding.source == "ledger_oss_aggregation"]
+        assert len(oss_bindings) >= 1, f"{revision_id} declares no ledger_oss_aggregation bindings"
+        checked += 1
+    assert checked == len(expected_revisions)
+
+
+def test_modelo_369_esquema_union_demonstrator_bindings_resolve_end_to_end() -> None:
+    """End-to-end smoke test: the runtime resolver returns the expected
+    per-binding totals for a small ledger of substrate-classified
+    Esquema Unión observations."""
+    from decimal import Decimal
+
+    from ....iva import (
+        EUMemberState,
+        InvoiceKind,
+        IvaRateKind,
+        OssIossRegime,
+        TransactionKind,
+    )
+
+    modelo, _ = _load_modelo_369()
+    revision = modelo.revisions["esquema-union"]
+
+    observations = [
+        OssIossLedgerObservation(
+            ledger_id="inv-de-services",
+            transaction_date=date(2025, 6, 15),
+            regime=OssIossRegime.UNION_SCHEME,
+            destination_member_state=EUMemberState.DE,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
+            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+            base_amount=Decimal("1000"),
+            iva_amount=Decimal("190"),
+        ),
+        OssIossLedgerObservation(
+            ledger_id="inv-fr-services",
+            transaction_date=date(2025, 6, 20),
+            regime=OssIossRegime.UNION_SCHEME,
+            destination_member_state=EUMemberState.FR,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
+            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+            base_amount=Decimal("500"),
+            iva_amount=Decimal("100"),
+        ),
+        OssIossLedgerObservation(
+            ledger_id="inv-de-goods",
+            transaction_date=date(2025, 7, 1),
+            regime=OssIossRegime.UNION_SCHEME,
+            destination_member_state=EUMemberState.DE,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
+            transaction_kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
+            base_amount=Decimal("200"),
+            iva_amount=Decimal("38"),
+        ),
+    ]
+
+    result = resolve_ledger_oss_aggregation_binding_values(revision, observations)
+    assert result == {
+        "modelo-369-union-de-services-21pct": Decimal("190"),
+        "modelo-369-union-fr-services-21pct": Decimal("100"),
+        "modelo-369-union-de-goods-distance-21pct": Decimal("38"),
+    }
+
+
+def test_modelo_369_esquema_importacion_ioss_binding_resolves_low_value_sale() -> None:
+    """End-to-end smoke test for the IOSS Importación binding.
+
+    Asserts that the binding resolver populates the expected key and
+    that the resolved value equals the sum of iva_amounts from the
+    supplied observations — derived programmatically from the test's
+    own input data, not hand-computed.
+    """
+    from decimal import Decimal
+
+    from ....iva import (
+        EUMemberState,
+        InvoiceKind,
+        IvaRateKind,
+        OssIossRegime,
+        TransactionKind,
+    )
+
+    modelo, _ = _load_modelo_369()
+    revision = modelo.revisions["esquema-importacion"]
+
+    iva_amounts = [Decimal("15.20"), Decimal("22.80")]
+    observations = [
+        OssIossLedgerObservation(
+            ledger_id=f"ioss-de-{idx}",
+            transaction_date=date(2025, 6, idx),
+            regime=OssIossRegime.IMPORT_SCHEME,
+            destination_member_state=EUMemberState.DE,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
+            transaction_kind=TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE,
+            base_amount=base,
+            iva_amount=iva,
+        )
+        for idx, (base, iva) in enumerate(
+            [
+                (Decimal("80"), iva_amounts[0]),
+                (Decimal("120"), iva_amounts[1]),
+            ],
+            start=1,
+        )
+    ]
+
+    result = resolve_ledger_oss_aggregation_binding_values(revision, observations)
+
+    # Assert structural wiring: the expected binding key must be present.
+    expected_binding_key = "modelo-369-importacion-de-low-value-21pct"
+    assert expected_binding_key in result, f"{expected_binding_key!r} must be resolved by the IOSS binding"
+
+    # The binding aggregates iva_amount via sum — the resolved value must equal
+    # the sum of the iva_amounts from the observations provided to the resolver.
+    expected_total = sum(iva_amounts, Decimal("0"))
+    assert result[expected_binding_key] == expected_total
+
+
+def test_modelo_369_esquema_union_constructs_link_oss_bindings() -> None:
+    """The Esquema Unión construct must include each ledger_oss_aggregation
+    binding so downstream consumers see a complete construct envelope."""
+    modelo, _ = _load_modelo_369()
+    union = modelo.revisions["esquema-union"]
+    construct = next(c for c in union.constructs if c.id == "modelo-369-esquema-union")
+    assert "modelo-369-union-de-services-21pct" in construct.bindings
+    assert "modelo-369-union-fr-services-21pct" in construct.bindings
+    assert "modelo-369-union-de-goods-distance-21pct" in construct.bindings
+
+
+# ---------------------------------------------------------------------------
+# Per-Esquema bound + computed result casillas
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("revision_id", "bound_casilla_ids", "total_casilla_id", "formula_id", "app_link_id"),
+    [
+        (
+            "esquema-exterior",
+            (_M369_EXTERIOR_DE_SERVICES_CUOTA_CASILLA,),
+            _M369_EXTERIOR_CUOTA_TOTAL_CASILLA,
+            "modelo-369-exterior-cuota-total",
+            "modelo-369-exterior-calculation",
+        ),
+        (
+            "esquema-union",
+            (
+                _M369_UNION_DE_SERVICES_CUOTA_CASILLA,
+                _M369_UNION_FR_SERVICES_CUOTA_CASILLA,
+                _M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA,
+            ),
+            _M369_UNION_CUOTA_TOTAL_CASILLA,
+            "modelo-369-union-cuota-total",
+            "modelo-369-union-calculation",
+        ),
+        (
+            "esquema-importacion",
+            (_M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA,),
+            _M369_IMPORTACION_CUOTA_TOTAL_CASILLA,
+            "modelo-369-importacion-cuota-total",
+            "modelo-369-importacion-calculation",
+        ),
+    ],
+)
+def test_modelo_369_per_esquema_result_casillas_present(
+    revision_id: str,
+    bound_casilla_ids: tuple[CasillaId, ...],
+    total_casilla_id: CasillaId,
+    formula_id: str,
+    app_link_id: str,
+) -> None:
+    modelo, _ = _load_modelo_369()
+    revision = modelo.revisions[revision_id]
+    casilla_ids = {c.id for c in revision.casillas}
+    formula_ids = {f.id for f in revision.formulas}
+    app_link_ids = {link.id for link in revision.application_links}
+
+    for bound_id in bound_casilla_ids:
+        assert bound_id in casilla_ids
+    assert total_casilla_id in casilla_ids
+    assert formula_id in formula_ids
+    assert app_link_id in app_link_ids
+
+
+def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
+    """Full chain: ledger observations → ledger_oss_aggregation bindings →
+    bound casillas → cuota-total formula sum."""
+    from decimal import Decimal
+
+    from ....iva import (
+        EUMemberState,
+        InvoiceKind,
+        IvaRateKind,
+        OssIossRegime,
+        TransactionKind,
+    )
+    from .. import (
+        build_snapshot,
+        calculate_registry_snapshot,
+        resolve_bound_inputs_by_casilla_id,
+    )
+
+    modelo, catalogues = _load_modelo_369()
+    revision = modelo.revisions["esquema-union"]
+
+    observations = [
+        OssIossLedgerObservation(
+            ledger_id="inv-de-services",
+            transaction_date=date(2025, 6, 15),
+            regime=OssIossRegime.UNION_SCHEME,
+            destination_member_state=EUMemberState.DE,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
+            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+            base_amount=Decimal("1000"),
+            iva_amount=Decimal("190"),
+        ),
+        OssIossLedgerObservation(
+            ledger_id="inv-fr-services",
+            transaction_date=date(2025, 6, 20),
+            regime=OssIossRegime.UNION_SCHEME,
+            destination_member_state=EUMemberState.FR,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
+            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+            base_amount=Decimal("500"),
+            iva_amount=Decimal("100"),
+        ),
+        OssIossLedgerObservation(
+            ledger_id="inv-de-goods",
+            transaction_date=date(2025, 7, 1),
+            regime=OssIossRegime.UNION_SCHEME,
+            destination_member_state=EUMemberState.DE,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
+            transaction_kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
+            base_amount=Decimal("200"),
+            iva_amount=Decimal("38"),
+        ),
+    ]
+
+    binding_values = resolve_ledger_oss_aggregation_binding_values(revision, observations)
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period="1T",
+        revision_id="esquema-union",
+    )
+    casilla_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=casilla_inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": date(2025, 4, 15)},
+    )
+
+    # Identity threading: each bound casilla equals its binding fact value.
+    # The cuota-total formula is verified structurally (operands present);
+    # the arithmetic itself stays bound to workbook-parity / oracle replays.
+    assert result.values[_M369_UNION_DE_SERVICES_CUOTA_CASILLA] == binding_values[
+        "modelo-369-union-de-services-21pct"
+    ]
+    assert result.values[_M369_UNION_FR_SERVICES_CUOTA_CASILLA] == binding_values[
+        "modelo-369-union-fr-services-21pct"
+    ]
+    assert (
+        result.values[_M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA]
+        == binding_values["modelo-369-union-de-goods-distance-21pct"]
+    )
+    assert _M369_UNION_CUOTA_TOTAL_CASILLA in result.values
+    union_total_entry = next(e for e in result.entries if e.target_casilla_id == _M369_UNION_CUOTA_TOTAL_CASILLA)
+    assert set(union_total_entry.operand_refs) == {
+        _M369_UNION_DE_SERVICES_CUOTA_CASILLA,
+        _M369_UNION_FR_SERVICES_CUOTA_CASILLA,
+        _M369_UNION_DE_GOODS_DISTANCE_CUOTA_CASILLA,
+    }
+
+
+def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> None:
+    from decimal import Decimal
+
+    from ....iva import (
+        EUMemberState,
+        InvoiceKind,
+        IvaRateKind,
+        OssIossRegime,
+        TransactionKind,
+    )
+    from .. import (
+        build_snapshot,
+        calculate_registry_snapshot,
+        resolve_bound_inputs_by_casilla_id,
+    )
+
+    modelo, catalogues = _load_modelo_369()
+    revision = modelo.revisions["esquema-importacion"]
+
+    observations = [
+        OssIossLedgerObservation(
+            ledger_id="ioss-de-1",
+            transaction_date=date(2025, 6, 1),
+            regime=OssIossRegime.IMPORT_SCHEME,
+            destination_member_state=EUMemberState.DE,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
+            transaction_kind=TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE,
+            base_amount=Decimal("80"),
+            iva_amount=Decimal("15.20"),
+        ),
+        OssIossLedgerObservation(
+            ledger_id="ioss-de-2",
+            transaction_date=date(2025, 6, 2),
+            regime=OssIossRegime.IMPORT_SCHEME,
+            destination_member_state=EUMemberState.DE,
+            rate_kind=IvaRateKind.GENERAL,
+            invoice_direction=InvoiceKind.ISSUED,
+            transaction_kind=TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE,
+            base_amount=Decimal("120"),
+            iva_amount=Decimal("22.80"),
+        ),
+    ]
+
+    binding_values = resolve_ledger_oss_aggregation_binding_values(revision, observations)
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period="01",
+        revision_id="esquema-importacion",
+    )
+    casilla_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=casilla_inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": date(2025, 2, 15)},
+    )
+
+    # The Esquema Importación registers a single destination/rate construct
+    # (DE low-value 21%), so the registry cuota-total formula is an `add` over
+    # exactly one operand. The two ledger observations above (80 + 120 base,
+    # 15.20 + 22.80 IVA) exercise genuine resolver aggregation INTO that single
+    # bound casilla, so a broken aggregation surfaces in the bound input.
+    expected_cuota = binding_values["modelo-369-importacion-de-low-value-21pct"]
+    assert result.values[_M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA] == expected_cuota
+    assert result.values[_M369_IMPORTACION_CUOTA_TOTAL_CASILLA] == expected_cuota
+
+    # Mirror the union companion test: verify the cuota-total formula
+    # structurally. Asserting the formula entry's operand_refs defends the
+    # wiring — a registry edit that drops or mis-points the operand fails
+    # here even though the single-operand arithmetic stays an identity.
+    importacion_total_entry = next(
+        e for e in result.entries if e.target_casilla_id == _M369_IMPORTACION_CUOTA_TOTAL_CASILLA
+    )
+    assert importacion_total_entry.op == "add"
+    assert set(importacion_total_entry.operand_refs) == {_M369_IMPORTACION_DE_LOW_VALUE_CUOTA_CASILLA}
+
+
+def test_modelo_369_constructs_link_calculation_application_link() -> None:
+    """Each Esquema construct must reference its own calculation app link."""
+    modelo, _ = _load_modelo_369()
+    expected = {
+        "esquema-exterior": "modelo-369-exterior-calculation",
+        "esquema-union": "modelo-369-union-calculation",
+        "esquema-importacion": "modelo-369-importacion-calculation",
+    }
+    for revision_id, calc_link_id in expected.items():
+        revision = modelo.revisions[revision_id]
+        construct = revision.constructs[0]
+        assert calc_link_id in construct.application_links

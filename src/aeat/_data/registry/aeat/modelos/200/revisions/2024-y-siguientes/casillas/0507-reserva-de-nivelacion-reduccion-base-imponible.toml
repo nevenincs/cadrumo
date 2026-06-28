@@ -1,0 +1,36 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "01604"
+number = "01604"
+label = "Reserva de nivelación - Reducción base imponible - Ejercicio generación 2020 - Importe integrado en la declaración por incumplimiento de requisitos [01604]"
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_incumplimiento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-01604"]
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01605"
+number = "01605"
+label = "Reserva de nivelación - Reducción base imponible - Ejercicio generación 2021 - Importe integrado en la declaración por incumplimiento de requisitos [01605]"
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_incumplimiento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-01605"]
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "01606"
+number = "01606"
+label = "Reserva de nivelación - Reducción base imponible - Total - Importe integrado en la declaración por incumplimiento de requisitos [01606]"
+section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
+data_type = "money"
+semantic_role = "is_reserva_nivelacion_incumplimiento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-020b-casilla-01606"]
+legal_refs = ["ley-27-2014:art-105"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

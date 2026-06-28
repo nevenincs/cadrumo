@@ -1,0 +1,59 @@
+"""Public facade for :class:`EvidenceBundle` audit services.
+
+The evidence bundle is a bucket-scoped, work-unit-bound
+:class:`EvidenceBundle` manifest plus :class:`EvidenceRecordRef` records
+used to package the provenance of a modelo calculation, verification, or
+filing for offline replay and audit handoff. Bundles are durable
+artifacts stored inside the active bucket; they are not the source of
+relational truth.
+
+Verbs supported by the operator surface (`aeat app modelo audit ...`):
+    show     - render the bundle's manifest and referenced records
+    check    - re-verify the bundle's integrity (report-only)
+    export   - write a ZIP archive with the manifest emitted last
+    replay   - evidence-case replay (never contacts AEAT)
+
+Bucket events emitted by mutating operations:
+    modelo.audit.verified  - a fresh verify-pass completed
+    modelo.audit.exported  - a ZIP was successfully written
+    modelo.audit.replayed  - an evidence-case replay completed
+
+Replay never contacts AEAT and never performs live submission. Export
+refuses on failed verification unless ``--force-incomplete`` is
+explicitly passed at the operator boundary.
+
+See Also:
+    :class:`EvidenceBundleService`,
+    :class:`EvidenceBundleVerificationReport`, and
+    :class:`BundleVerificationState`.
+"""
+
+from __future__ import annotations
+
+from ._models import (
+    BundleVerificationState,
+    EvidenceBundle,
+    EvidenceBundleCheckResult,
+    EvidenceBundleNotFoundError,
+    EvidenceBundleVerificationError,
+    EvidenceRecordRef,
+    VerificationCheck,
+)
+from ._service import (
+    EvidenceBundleRepository,
+    EvidenceBundleService,
+    EvidenceBundleVerificationReport,
+)
+
+__all__ = [
+    "BundleVerificationState",
+    "EvidenceBundle",
+    "EvidenceBundleCheckResult",
+    "EvidenceBundleNotFoundError",
+    "EvidenceBundleRepository",
+    "EvidenceBundleService",
+    "EvidenceBundleVerificationError",
+    "EvidenceBundleVerificationReport",
+    "EvidenceRecordRef",
+    "VerificationCheck",
+]

@@ -1,0 +1,10 @@
+[[revisions."2025".casillas]]
+id = "0519"
+number = "0519"
+label = "Parte estatal: Mínimo personal y familiar"
+section = ["resultados", "minimo_per_fam_res"]
+semantic_role = "irpf_minimo_personal_familiar_estatal"
+input_kind = "computed"
+formula = "renta-2025-minimo-personal-y-familiar-estatal"
+legal_refs = ["ley-35-2006:art-56", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

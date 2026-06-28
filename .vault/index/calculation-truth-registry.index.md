@@ -1,0 +1,497 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#calculation-truth-registry'
+date: '2026-06-15'
+modified: '2026-06-15'
+related:
+  - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step1-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step10-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step10-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step11-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step11-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step12-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step12-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step13-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step13-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step14-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step14-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step15-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step15-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step16-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step16-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step2-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step2-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step3-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step3-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step4-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step4-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step5-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step5-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step6-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step6-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step7-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step7-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step8-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step8-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step9-exec]]'
+  - '[[2026-05-03-calculation-truth-registry-phase5-step9-review-audit]]'
+  - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
+  - '[[2026-05-04-calculation-authority-evidence-tiering-adr]]'
+  - '[[2026-05-04-calculation-authority-evidence-tiering-research]]'
+  - '[[2026-05-04-calculation-truth-registry-legal-grounding-review-audit]]'
+  - '[[2026-05-04-calculation-truth-registry-phase-0c-review-audit]]'
+  - '[[2026-05-04-calculation-truth-registry-phase-0c-submitted-file-observation-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase0b-step32-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase0b-step33-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase0b-step34-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase0b-step35-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase0c-step1-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase1-step2-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase1-step2-review-audit]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step17-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step17-review-audit]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step18-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step18-review-audit]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step19-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step20-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step21-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step22-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step23-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step24-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step25-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step26-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step27-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step28-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step29-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step30-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-phase5-step31-exec]]'
+  - '[[2026-05-04-calculation-truth-registry-source-grounding-review-audit]]'
+  - '[[2026-05-04-live-filing-data-capture-adr]]'
+  - '[[2026-05-04-live-filing-data-capture-research]]'
+  - '[[2026-05-05-calculation-truth-registry-adjacent-modelo-registry-closure-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-adjacent-modelo-registry-closure-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-construct-classification-reciprocity-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-construct-classification-reciprocity-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-cross-dependency-binding-contracts-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-cross-dependency-contract-tests-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-cross-model-relation-closure-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-filing-modelo-backend-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-formula-runtime-external-value-closure-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-invoice-binding-validation-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-invoice-binding-validation-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-invoice-rectification-scope-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-invoice-rectification-scope-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-invoice-source-bindings-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-invoice-source-bindings-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-period-aware-relation-resolution-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-period-aware-relation-resolution-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase0b-cross-dependency-binding-contracts-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase0b-cross-dependency-contract-tests-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase0b-cross-model-relation-closure-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase0b-deadline-schedule-gate-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase0b-previous-filing-period-chain-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase0b-relation-dependency-roles-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase0b-relation-observation-resolution-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase0b-relation-reporting-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase0b-relation-source-requirements-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase0b-schedule-dependencies-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase0b-source-output-contracts-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase0c-step2-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase1-step3-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase1-step3-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step1-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step1-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step10-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step10-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step11-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step11-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step12-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step12-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step13-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step13-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step14-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step14-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step15-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step16-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step16-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step17-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step18-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step2-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step2-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step3-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step3-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step4-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step4-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step5-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step5-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step6-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step6-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step7-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step7-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step8-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step8-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step9-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase2-step9-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-phase4r-modelo-100-scaffold-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-phase4r-renta-direct-estimation-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-relation-dependency-roles-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-relation-observation-resolution-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-relation-reporting-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-relation-source-requirements-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-relation-treatment-requirements-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-renta-annual-summary-dependencies-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-renta-construct-dependency-closure-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-renta-dependency-classification-gate-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-renta-dependency-gate-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-renta-dependency-gate-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-renta-parity-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-renta-parity-tape-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-scenario-parity-harness-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-snapshot-filing-context-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-snapshot-filing-context-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-source-output-contracts-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave1-modelo-130-verification-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave1-step1-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave1-step2-cleanup-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave1-step2-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave1-step2-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave2-modelo-111-registry-foundation-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave2-modelo-111-registry-foundation-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave2-step2-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave2-step3-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave3-step1-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave3-step1-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave3-step2-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave3-step2-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave3-step3-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave3-step3-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave4-step1-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave4-step1-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave4-step2-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave4-step2-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave4-step3-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave4-step3-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave4-step4-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave4-step4-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave4-step5-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave4-step5-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave4-step6-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave4-step6-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step1-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step1-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step2-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step2-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step3-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step3-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step4-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step4-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step5-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step5-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step6-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step6-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step7-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave5-step7-review-audit]]'
+  - '[[2026-05-05-calculation-truth-registry-wave6-step1-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave6-step2-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave6-step3-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave6-step4-exec]]'
+  - '[[2026-05-05-calculation-truth-registry-wave6-step5-exec]]'
+  - '[[2026-05-05-modelo-100-renta-aggregation-audit]]'
+  - '[[2026-05-05-modelo-100-renta-source-dependency-reference]]'
+  - '[[2026-05-06-calculation-truth-registry-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-formula-modelo-standardization-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-informative-workflow-links-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-informative-workflow-links-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-invoice-row-bindings-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-invoice-row-bindings-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-invoice-row-indexes-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-invoice-row-indexes-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-115-construct-workflow-closure-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-115-construct-workflow-closure-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-123-construct-workflow-closure-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-123-construct-workflow-closure-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-190-application-links-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-190-application-links-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-193-application-links-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-193-application-links-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-200-application-links-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-200-application-links-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-200-deadline-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-200-deadline-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-200-foundation-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-modelo-200-foundation-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-parity-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-phase4-renta-family-row-profile-bindings-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-phase4-renta-personal-family-profile-bindings-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-renta-difficult-justification-expenses-exec]]'
+  - '[[2026-05-06-calculation-truth-registry-renta-difficult-justification-expenses-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-renta-personal-family-profile-bindings-review-audit]]'
+  - '[[2026-05-06-calculation-truth-registry-review-audit]]'
+  - '[[2026-05-06-modelo-chain-tier-passage-adr]]'
+  - '[[2026-05-06-registry-authority-cache-review-audit]]'
+  - '[[2026-05-07-calculation-truth-registry-coverage-audit]]'
+  - '[[2026-05-07-calculation-truth-registry-phase0b-coverage-exec]]'
+  - '[[2026-05-08-modelo-100-bulk-segmentation-audit]]'
+  - '[[2026-05-08-modelo-directory-segmentation-adr]]'
+---
+
+# `calculation-truth-registry` feature index
+
+Auto-generated index of all documents tagged with `#calculation-truth-registry`.
+
+## Documents
+
+### adr
+
+- `2026-05-03-calculation-truth-registry-pending-adr` - `calculation-truth-registry` adr: `Central AEAT legal calculation registry` | (**status:** `accepted`)
+- `2026-05-04-calculation-authority-evidence-tiering-adr` - `calculation-truth-registry` adr: `Calculation authority evidence tiering` | (**status:** `accepted`)
+- `2026-05-04-live-filing-data-capture-adr` - `calculation-truth-registry` adr: `Live filed-declaration data capture` | (**status:** `accepted`)
+- `2026-05-06-modelo-chain-tier-passage-adr` - `modelo-chain-tier-passage` adr: `Three-tier passage spec for modelo linkage-chain implementation work` | (**status:** `accepted`)
+- `2026-05-08-modelo-directory-segmentation-adr` - modelo-directory-segmentation-adr
+
+### audit
+
+- `2026-05-03-calculation-truth-registry-phase5-step10-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step11-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step12-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step13-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step14-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step15-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step16-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step2-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step3-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step4-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step5-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step6-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step7-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step8-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-03-calculation-truth-registry-phase5-step9-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-04-calculation-truth-registry-legal-grounding-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-04-calculation-truth-registry-phase-0c-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-04-calculation-truth-registry-phase1-step2-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-04-calculation-truth-registry-phase5-step17-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-04-calculation-truth-registry-phase5-step18-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-04-calculation-truth-registry-source-grounding-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-adjacent-modelo-registry-closure-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-construct-classification-reciprocity-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-cross-dependency-binding-contracts-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-cross-dependency-contract-tests-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-cross-model-relation-closure-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-filing-modelo-backend-review-audit` - `calculation-truth-registry filing/modelo backend` Code Review
+- `2026-05-05-calculation-truth-registry-invoice-binding-validation-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-invoice-rectification-scope-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-invoice-source-bindings-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-period-aware-relation-resolution-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase1-step3-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step1-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step10-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step11-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step12-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step13-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step14-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step16-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step2-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step3-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step4-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step5-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step6-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step7-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step8-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase2-step9-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-phase4r-renta-direct-estimation-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-relation-dependency-roles-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-relation-observation-resolution-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-relation-reporting-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-relation-source-requirements-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-renta-dependency-gate-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-renta-parity-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-snapshot-filing-context-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-source-output-contracts-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-wave1-modelo-130-verification-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-wave1-step2-cleanup-review-audit` - `calculation-truth-registry-wave1-step2-cleanup` Code Review
+- `2026-05-05-calculation-truth-registry-wave1-step2-review-audit` - `calculation-truth-registry-wave1-step2` Code Review
+- `2026-05-05-calculation-truth-registry-wave2-modelo-111-registry-foundation-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-wave3-step1-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-wave3-step2-review-audit` - `calculation-truth-registry-wave3-step2` Code Review
+- `2026-05-05-calculation-truth-registry-wave3-step3-review-audit` - `calculation-truth-registry-wave3-step3` Code Review
+- `2026-05-05-calculation-truth-registry-wave4-step1-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-05-calculation-truth-registry-wave4-step2-review-audit` - `calculation-truth-registry-wave4-step2` Code Review
+- `2026-05-05-calculation-truth-registry-wave4-step3-review-audit` - `calculation-truth-registry-wave4-step3` Code Review
+- `2026-05-05-calculation-truth-registry-wave4-step4-review-audit` - `calculation-truth-registry-wave4-step4` Code Review
+- `2026-05-05-calculation-truth-registry-wave4-step5-review-audit` - `calculation-truth-registry-wave4-step5` Code Review
+- `2026-05-05-calculation-truth-registry-wave4-step6-review-audit` - Modelo 123 Extraction And Export Behaviour Review
+- `2026-05-05-calculation-truth-registry-wave5-step1-review-audit` - Modelo 131 Source Grounding Review
+- `2026-05-05-calculation-truth-registry-wave5-step2-review-audit` - Modelo 131 Current Registry Foundation Review
+- `2026-05-05-calculation-truth-registry-wave5-step3-review-audit` - Modelo 131 Behaviour Gate Review
+- `2026-05-05-calculation-truth-registry-wave5-step4-review-audit` - Modelo 131 Annual Legal Grounding Review
+- `2026-05-05-calculation-truth-registry-wave5-step5-review-audit` - Modelo 131 2024 And 2025 Revision Review
+- `2026-05-05-calculation-truth-registry-wave5-step6-review-audit` - `calculation-truth-registry` audit: `wave5-step6`
+- `2026-05-05-calculation-truth-registry-wave5-step7-review-audit` - `calculation-truth-registry` audit: `wave5-step7`
+- `2026-05-05-modelo-100-renta-aggregation-audit` - `modelo-100-renta-aggregation` audit
+- `2026-05-06-calculation-truth-registry-informative-workflow-links-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-invoice-row-bindings-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-invoice-row-indexes-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-modelo-115-construct-workflow-closure-review-audit` - Calculation Truth Registry Modelo 115 Construct Workflow Closure Review
+- `2026-05-06-calculation-truth-registry-modelo-123-construct-workflow-closure-review-audit` - Calculation Truth Registry Modelo 123 Construct Workflow Closure Review
+- `2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage-review-audit` - Calculation Truth Registry Modelo 180 Workflow Linkage Review
+- `2026-05-06-calculation-truth-registry-modelo-190-application-links-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-modelo-193-application-links-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-modelo-200-application-links-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-modelo-200-deadline-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-modelo-200-foundation-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-parity-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-renta-difficult-justification-expenses-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-renta-personal-family-profile-bindings-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-06-calculation-truth-registry-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-06-registry-authority-cache-review-audit` - `calculation-truth-registry` Code Review
+- `2026-05-07-calculation-truth-registry-coverage-audit` - `calculation-truth-registry` Code Review
+- `2026-05-08-modelo-100-bulk-segmentation-audit` - modelo-100-bulk-segmentation-audit
+
+### exec
+
+- `2026-05-03-calculation-truth-registry-phase5-step1-exec` - `calculation-truth-registry` `phase5` `step1`
+- `2026-05-03-calculation-truth-registry-phase5-step10-exec` - Phase 5 Step 10 Execution
+- `2026-05-03-calculation-truth-registry-phase5-step11-exec` - Phase 5 Step 11 Execution
+- `2026-05-03-calculation-truth-registry-phase5-step12-exec` - Phase 5 Step 12 Execution
+- `2026-05-03-calculation-truth-registry-phase5-step13-exec` - Phase 5 Step 13 Execution
+- `2026-05-03-calculation-truth-registry-phase5-step14-exec` - Phase 5 Step 14 Execution
+- `2026-05-03-calculation-truth-registry-phase5-step15-exec` - Phase 5 Step 15 Execution
+- `2026-05-03-calculation-truth-registry-phase5-step16-exec` - Phase 5 Step 16 Execution
+- `2026-05-03-calculation-truth-registry-phase5-step2-exec` - `calculation-truth-registry` `phase5` `step2`
+- `2026-05-03-calculation-truth-registry-phase5-step3-exec` - `calculation-truth-registry` `phase5` `step3`
+- `2026-05-03-calculation-truth-registry-phase5-step4-exec` - `calculation-truth-registry` `phase5` `step4`
+- `2026-05-03-calculation-truth-registry-phase5-step5-exec` - `calculation-truth-registry` `phase5` `step5`
+- `2026-05-03-calculation-truth-registry-phase5-step6-exec` - `calculation-truth-registry` `phase5` `step6`
+- `2026-05-03-calculation-truth-registry-phase5-step7-exec` - Phase 5 Step 7 Execution
+- `2026-05-03-calculation-truth-registry-phase5-step8-exec` - Phase 5 Step 8 Execution
+- `2026-05-03-calculation-truth-registry-phase5-step9-exec` - Phase 5 Step 9 Execution
+- `2026-05-04-calculation-truth-registry-phase-0c-submitted-file-observation-exec` - `calculation-truth-registry` `phase-0c` `submitted-file-observation`
+- `2026-05-04-calculation-truth-registry-phase0b-step32-exec` - `calculation-truth-registry` `phase0b` `step32`
+- `2026-05-04-calculation-truth-registry-phase0b-step33-exec` - `calculation-truth-registry` `phase0b` `step33`
+- `2026-05-04-calculation-truth-registry-phase0b-step34-exec` - `calculation-truth-registry` `phase0b` `step34`
+- `2026-05-04-calculation-truth-registry-phase0b-step35-exec` - `calculation-truth-registry` `phase0b` `step35`
+- `2026-05-04-calculation-truth-registry-phase0c-step1-exec` - `calculation-truth-registry` `phase0c` `step1`
+- `2026-05-04-calculation-truth-registry-phase1-step2-exec` - `calculation-truth-registry` `phase1` `step2`
+- `2026-05-04-calculation-truth-registry-phase5-step17-exec` - `calculation-truth-registry` `phase5` `step17`
+- `2026-05-04-calculation-truth-registry-phase5-step18-exec` - `calculation-truth-registry` `phase5` `step18`
+- `2026-05-04-calculation-truth-registry-phase5-step19-exec` - `calculation-truth-registry` `phase5` `step19`
+- `2026-05-04-calculation-truth-registry-phase5-step20-exec` - `calculation-truth-registry` `phase5` `step20`
+- `2026-05-04-calculation-truth-registry-phase5-step21-exec` - `calculation-truth-registry` `phase5` `step21`
+- `2026-05-04-calculation-truth-registry-phase5-step22-exec` - `calculation-truth-registry` `phase5` `step22`
+- `2026-05-04-calculation-truth-registry-phase5-step23-exec` - `calculation-truth-registry` `phase5` `step23`
+- `2026-05-04-calculation-truth-registry-phase5-step24-exec` - `calculation-truth-registry` `phase5` `step24`
+- `2026-05-04-calculation-truth-registry-phase5-step25-exec` - `calculation-truth-registry` `phase5` `step25`
+- `2026-05-04-calculation-truth-registry-phase5-step26-exec` - `calculation-truth-registry` `phase5` `step26`
+- `2026-05-04-calculation-truth-registry-phase5-step27-exec` - `calculation-truth-registry` `phase5` `step27`
+- `2026-05-04-calculation-truth-registry-phase5-step28-exec` - `calculation-truth-registry` `phase5` `step28`
+- `2026-05-04-calculation-truth-registry-phase5-step29-exec` - `calculation-truth-registry` `phase5` `step29`
+- `2026-05-04-calculation-truth-registry-phase5-step30-exec` - `calculation-truth-registry` `phase5` `step30`
+- `2026-05-04-calculation-truth-registry-phase5-step31-exec` - `calculation-truth-registry` `phase5` `step31`
+- `2026-05-05-calculation-truth-registry-adjacent-modelo-registry-closure-exec` - `calculation-truth-registry` `adjacent-modelo` `registry-closure`
+- `2026-05-05-calculation-truth-registry-construct-classification-reciprocity-exec` - `calculation-truth-registry` `construct classification reciprocity`
+- `2026-05-05-calculation-truth-registry-formula-runtime-external-value-closure-exec` - `calculation-truth-registry` `formula runtime external value closure`
+- `2026-05-05-calculation-truth-registry-invoice-binding-validation-exec` - `calculation-truth-registry` `invoice binding validation`
+- `2026-05-05-calculation-truth-registry-invoice-rectification-scope-exec` - `calculation-truth-registry` `invoice rectification scope`
+- `2026-05-05-calculation-truth-registry-invoice-source-bindings-exec` - `calculation-truth-registry` `invoice source bindings`
+- `2026-05-05-calculation-truth-registry-period-aware-relation-resolution-exec` - `calculation-truth-registry` `period-aware relation resolution`
+- `2026-05-05-calculation-truth-registry-phase0b-cross-dependency-binding-contracts-exec` - `calculation-truth-registry` `Phase 0B` `cross-dependency-binding-contracts`
+- `2026-05-05-calculation-truth-registry-phase0b-cross-dependency-contract-tests-exec` - `calculation-truth-registry` `Phase 0B` `cross-dependency-contract-tests`
+- `2026-05-05-calculation-truth-registry-phase0b-cross-model-relation-closure-exec` - `calculation-truth-registry` `phase0b` `cross-model-relation-closure`
+- `2026-05-05-calculation-truth-registry-phase0b-deadline-schedule-gate-exec` - `calculation-truth-registry` `Phase 0B` `deadline-schedule-gate`
+- `2026-05-05-calculation-truth-registry-phase0b-previous-filing-period-chain-exec` - `calculation-truth-registry` `Phase 0B` `previous-filing-period-chain`
+- `2026-05-05-calculation-truth-registry-phase0b-relation-dependency-roles-exec` - `calculation-truth-registry` `phase0b` `relation-dependency-roles`
+- `2026-05-05-calculation-truth-registry-phase0b-relation-observation-resolution-exec` - `calculation-truth-registry` `Phase 0B` `relation-observation-resolution`
+- `2026-05-05-calculation-truth-registry-phase0b-relation-reporting-exec` - `calculation-truth-registry` `phase0b` `relation-reporting`
+- `2026-05-05-calculation-truth-registry-phase0b-relation-source-requirements-exec` - `calculation-truth-registry` `Phase 0B` `relation-source-requirements`
+- `2026-05-05-calculation-truth-registry-phase0b-schedule-dependencies-exec` - `calculation-truth-registry` `Phase 0B` `schedule-dependencies`
+- `2026-05-05-calculation-truth-registry-phase0b-source-output-contracts-exec` - `calculation-truth-registry` `Phase 0B` `source-output-contracts`
+- `2026-05-05-calculation-truth-registry-phase0c-step2-exec` - `calculation-truth-registry` `phase0c` `step2`
+- `2026-05-05-calculation-truth-registry-phase1-step3-exec` - `calculation-truth-registry` `Phase 1` `Step 3`
+- `2026-05-05-calculation-truth-registry-phase2-step1-exec` - `calculation-truth-registry` `Phase 2` `Step 1`
+- `2026-05-05-calculation-truth-registry-phase2-step10-exec` - `calculation-truth-registry` `phase2` `step10`
+- `2026-05-05-calculation-truth-registry-phase2-step11-exec` - `calculation-truth-registry` `phase2` `step11`
+- `2026-05-05-calculation-truth-registry-phase2-step12-exec` - `calculation-truth-registry` `phase2` `step12`
+- `2026-05-05-calculation-truth-registry-phase2-step13-exec` - `calculation-truth-registry` `phase2` `step13`
+- `2026-05-05-calculation-truth-registry-phase2-step14-exec` - `calculation-truth-registry` `phase2` `step14`
+- `2026-05-05-calculation-truth-registry-phase2-step15-exec` - `calculation-truth-registry` `phase2` `step15`
+- `2026-05-05-calculation-truth-registry-phase2-step16-exec` - `calculation-truth-registry` `Phase 2` `Step 16`
+- `2026-05-05-calculation-truth-registry-phase2-step17-exec` - `calculation-truth-registry` `Phase 2` `Step 17`
+- `2026-05-05-calculation-truth-registry-phase2-step18-exec` - `calculation-truth-registry` `Phase 2` `Step 18`
+- `2026-05-05-calculation-truth-registry-phase2-step2-exec` - `calculation-truth-registry` `Phase 2` `Step 2`
+- `2026-05-05-calculation-truth-registry-phase2-step3-exec` - `calculation-truth-registry` `Phase 2` `Step 3`
+- `2026-05-05-calculation-truth-registry-phase2-step4-exec` - `calculation-truth-registry` `Phase 2` `Step 4`
+- `2026-05-05-calculation-truth-registry-phase2-step5-exec` - `calculation-truth-registry` `Phase 2` `Step 5`
+- `2026-05-05-calculation-truth-registry-phase2-step6-exec` - `calculation-truth-registry` `Phase 2` `Step 6`
+- `2026-05-05-calculation-truth-registry-phase2-step7-exec` - `calculation-truth-registry` `Phase 2` `Step 7`
+- `2026-05-05-calculation-truth-registry-phase2-step8-exec` - `calculation-truth-registry` `Phase 2` `Step 8`
+- `2026-05-05-calculation-truth-registry-phase2-step9-exec` - `calculation-truth-registry` `Phase 2` `Step 9`
+- `2026-05-05-calculation-truth-registry-phase4r-modelo-100-scaffold-exec` - `calculation-truth-registry` `Phase 4R` `modelo-100-scaffold`
+- `2026-05-05-calculation-truth-registry-relation-treatment-requirements-exec` - `calculation-truth-registry` `relation treatment requirements`
+- `2026-05-05-calculation-truth-registry-renta-annual-summary-dependencies-exec` - `calculation-truth-registry` `Renta` `annual summary dependencies`
+- `2026-05-05-calculation-truth-registry-renta-construct-dependency-closure-exec` - `calculation-truth-registry` `Renta` `construct dependency closure`
+- `2026-05-05-calculation-truth-registry-renta-dependency-classification-gate-exec` - `calculation-truth-registry` `Renta` `dependency classification gate`
+- `2026-05-05-calculation-truth-registry-renta-dependency-gate-exec` - `calculation-truth-registry` `phase-4r` `renta-dependency-gate`
+- `2026-05-05-calculation-truth-registry-renta-parity-tape-exec` - `calculation-truth-registry` `phase-4r` `renta-parity-tape`
+- `2026-05-05-calculation-truth-registry-scenario-parity-harness-exec` - `calculation-truth-registry` `scenario-parity-harness`
+- `2026-05-05-calculation-truth-registry-snapshot-filing-context-exec` - `calculation-truth-registry` `snapshot filing context`
+- `2026-05-05-calculation-truth-registry-wave1-step1-exec` - `calculation-truth-registry` `modelo-130` `legal-live-verification`
+- `2026-05-05-calculation-truth-registry-wave1-step2-exec` - `calculation-truth-registry` `modelo-130` `shared-surface-teardown`
+- `2026-05-05-calculation-truth-registry-wave2-modelo-111-registry-foundation-exec` - `calculation-truth-registry` `Wave 2` `Modelo 111 registry foundation`
+- `2026-05-05-calculation-truth-registry-wave2-step2-exec` - `calculation-truth-registry` `Wave 2` `Modelo 111 filing linkage`
+- `2026-05-05-calculation-truth-registry-wave2-step3-exec` - `calculation-truth-registry` `Wave 2` `Modelo 111 reconciliation totals`
+- `2026-05-05-calculation-truth-registry-wave3-step1-exec` - `calculation-truth-registry` `Wave 3` `Modelo 115 registry foundation`
+- `2026-05-05-calculation-truth-registry-wave3-step2-exec` - `calculation-truth-registry` `Wave 3` `Modelo 115 filing boundary hardening`
+- `2026-05-05-calculation-truth-registry-wave3-step3-exec` - `calculation-truth-registry` `Wave 3` `Modelo 115 verification boundary`
+- `2026-05-05-calculation-truth-registry-wave4-step1-exec` - `calculation-truth-registry` `Wave 4` `Modelo 123 registry foundation`
+- `2026-05-05-calculation-truth-registry-wave4-step2-exec` - `calculation-truth-registry` `Wave 4` `Modelo 123 deadline boundary`
+- `2026-05-05-calculation-truth-registry-wave4-step3-exec` - `calculation-truth-registry` `Wave 4` `Modelo 123 verification boundary`
+- `2026-05-05-calculation-truth-registry-wave4-step4-exec` - `calculation-truth-registry` `Wave 4` `Modelo 123 filing boundary`
+- `2026-05-05-calculation-truth-registry-wave4-step5-exec` - `calculation-truth-registry` `Wave 4` `Modelo 123 reconciliation boundary`
+- `2026-05-05-calculation-truth-registry-wave4-step6-exec` - Modelo 123 Extraction And Export Behaviour Step
+- `2026-05-05-calculation-truth-registry-wave5-step1-exec` - Modelo 131 Source Grounding Step
+- `2026-05-05-calculation-truth-registry-wave5-step2-exec` - Modelo 131 Current Registry Foundation Step
+- `2026-05-05-calculation-truth-registry-wave5-step3-exec` - Modelo 131 Behaviour Gate Step
+- `2026-05-05-calculation-truth-registry-wave5-step4-exec` - Modelo 131 Annual Legal Grounding Step
+- `2026-05-05-calculation-truth-registry-wave5-step5-exec` - Modelo 131 2024 And 2025 Revision Step
+- `2026-05-05-calculation-truth-registry-wave5-step6-exec` - `calculation-truth-registry` `wave5` `step6`
+- `2026-05-05-calculation-truth-registry-wave5-step7-exec` - `calculation-truth-registry` `wave5` `step7`
+- `2026-05-05-calculation-truth-registry-wave6-step1-exec` - `calculation-truth-registry` `wave6` `step1`
+- `2026-05-05-calculation-truth-registry-wave6-step2-exec` - `calculation-truth-registry` `Wave 6` `Modelo 180 annual-summary core`
+- `2026-05-05-calculation-truth-registry-wave6-step3-exec` - `calculation-truth-registry` `Wave 6` `Modelo 180 perceptor coverage`
+- `2026-05-05-calculation-truth-registry-wave6-step4-exec` - `calculation-truth-registry` `Wave 6` `Modelo 180 address block`
+- `2026-05-05-calculation-truth-registry-wave6-step5-exec` - `calculation-truth-registry` `Wave 6` `Modelo 180 representative NIF`
+- `2026-05-06-calculation-truth-registry-exec` - `calculation-truth-registry` `renta local scenario verification`
+- `2026-05-06-calculation-truth-registry-formula-modelo-standardization-exec` - `calculation-truth-registry` formula-modelo standardization
+- `2026-05-06-calculation-truth-registry-informative-workflow-links-exec` - `calculation-truth-registry` `informative-modelos` `workflow-links`
+- `2026-05-06-calculation-truth-registry-invoice-row-bindings-exec` - `calculation-truth-registry` `factual invoice row bindings`
+- `2026-05-06-calculation-truth-registry-invoice-row-indexes-exec` - `calculation-truth-registry` `invoice row indexes`
+- `2026-05-06-calculation-truth-registry-modelo-115-construct-workflow-closure-exec` - Calculation Truth Registry Modelo 115 Construct Workflow Closure Execution
+- `2026-05-06-calculation-truth-registry-modelo-123-construct-workflow-closure-exec` - Calculation Truth Registry Modelo 123 Construct Workflow Closure Execution
+- `2026-05-06-calculation-truth-registry-modelo-180-workflow-linkage-exec` - Calculation Truth Registry Modelo 180 Workflow Linkage Execution
+- `2026-05-06-calculation-truth-registry-modelo-190-application-links-exec` - `calculation-truth-registry` `modelo-190` `application-links`
+- `2026-05-06-calculation-truth-registry-modelo-193-application-links-exec` - `calculation-truth-registry` `modelo-193` `application-links`
+- `2026-05-06-calculation-truth-registry-modelo-200-application-links-exec` - `calculation-truth-registry` `modelo-200` `application-links`
+- `2026-05-06-calculation-truth-registry-modelo-200-deadline-exec` - `calculation-truth-registry` `modelo-200` `deadline`
+- `2026-05-06-calculation-truth-registry-modelo-200-foundation-exec` - `calculation-truth-registry` `modelo-200` `foundation`
+- `2026-05-06-calculation-truth-registry-phase4-renta-family-row-profile-bindings-exec` - `calculation-truth-registry` `phase-4` `renta-family-row-profile-bindings`
+- `2026-05-06-calculation-truth-registry-phase4-renta-personal-family-profile-bindings-exec` - `calculation-truth-registry` `phase-4` `renta-personal-family-profile-bindings`
+- `2026-05-06-calculation-truth-registry-renta-difficult-justification-expenses-exec` - `calculation-truth-registry` `renta difficult justification expenses`
+- `2026-05-07-calculation-truth-registry-phase0b-coverage-exec` - `calculation-truth-registry` `Phase 0B` `Coverage Audit Gate`
+
+### plan
+
+- `2026-05-03-calculation-truth-registry-rebuild-plan` - `calculation-truth-registry` `teardown-rebuild` plan
+
+### reference
+
+- `2026-05-05-modelo-100-renta-source-dependency-reference` - `modelo-100-renta` reference: source families and dependency boundaries
+
+### research
+
+- `2026-05-04-calculation-authority-evidence-tiering-research` - `calculation-truth-registry` research: `calculation authority evidence tiering`
+- `2026-05-04-live-filing-data-capture-research` - `calculation-truth-registry` research: `live filing data capture`

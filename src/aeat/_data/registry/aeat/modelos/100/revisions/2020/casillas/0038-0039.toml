@@ -1,0 +1,8 @@
+[[revisions."2020".casillas]]
+id = "0039"
+number = "0039"
+label = "Reducción aplicable a rendimientos derivados de determinados contratos de seguro (d. transit. 4.ª Ley Impuesto)"
+section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_ahorro"]
+semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_reduccion_seguros_antiguos"
+legal_refs = ["ley-35-2006:art-26"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

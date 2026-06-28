@@ -1,0 +1,13 @@
+[[revisions."2021".formulas]]
+id = "renta-2021-estimacion-objetiva-agricola-suma"
+target_casilla_id = "1558"
+expression = { op = "sum", args = [
+    { casilla_id = "1555" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "actividades agrícolas"]

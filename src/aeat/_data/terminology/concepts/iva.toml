@@ -1,0 +1,48 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "iva"
+domain = "concepto"
+lifecycle = "approved"
+legal_refs = ["ley-37-1992:art-1"]
+related = ["tema-iva-regime", "recargo-equivalencia", "iva-regimen-simplificado", "prorrata", "modelo-303"]
+created_at = 2026-06-11
+updated_at = 2026-06-11
+
+[language.es]
+short_description = "El Impuesto sobre el Valor Anadido, el impuesto espanol sobre el consumo."
+definition = "Impuesto indirecto que recae sobre el consumo y grava las entregas de bienes y prestaciones de servicios efectuadas por empresarios o profesionales, las adquisiciones intracomunitarias y las importaciones de bienes. Se declara mediante los Modelos 303, 322, 349 y el resumen anual 390, e incluye regimenes especiales como el recargo de equivalencia, el simplificado o el criterio de caja. No abarca el IGIC de Canarias ni el IPSI de Ceuta y Melilla."
+
+[language.es.source]
+citation = "Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Anadido (BOE-A-1992-28740)."
+authority = "boe"
+
+[[language.es.term]]
+label = "IVA"
+term_status = "preferred"
+part_of_speech = "abbreviation"
+
+[[language.es.term]]
+label = "Impuesto sobre el Valor Anadido"
+term_status = "admitted"
+part_of_speech = "noun"
+hidden_search_forms = ["impuesto sobre el valor anyadido"]
+
+[language.en]
+short_description = "Spanish value-added tax, the consumption tax on goods and services."
+
+[[language.en.term]]
+label = "value-added tax"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "L'Impost sobre el Valor Afegit, l'impost espanyol sobre el consum."
+
+[language.hu]
+short_description = "A spanyol hozzaadottertek-ado, a fogyasztast terhelo ado."

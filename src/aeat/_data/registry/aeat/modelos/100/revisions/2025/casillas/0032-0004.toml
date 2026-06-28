@@ -1,0 +1,8 @@
+[[revisions."2025".casillas]]
+id = "0004"
+number = "0004"
+label = "Rendimientos del trabajo en especie. Valoracion"
+section = ["rendimientos_trabajo"]
+semantic_role = "irpf_rendimiento_trabajo_especie_valoracion"
+legal_refs = ["ley-35-2006:art-17"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

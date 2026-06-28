@@ -1,0 +1,10 @@
+[[revisions."2021".casillas]]
+id = "1607"
+number = "1607"
+label = "Suma de pérdidas patrimoniales no derivadas de transmisiones (a integrar en la B.I. general), atribuidas (suma de las casillas [1585] )"
+section = ["resultados", "regimenes_especiales_res", "re_at_rentas_res"]
+semantic_role = "irpf_re_atrib_suma_gp_no_transmision_perdidas"
+input_kind = "computed"
+formula = "renta-2021-atribucion-perdidas-no-transmision-base-general"
+legal_refs = ["ley-35-2006:art-86"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

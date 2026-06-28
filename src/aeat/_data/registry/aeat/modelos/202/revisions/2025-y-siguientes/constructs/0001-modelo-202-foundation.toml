@@ -1,0 +1,28 @@
+[[revisions.2025-y-siguientes.constructs]]
+id = "modelo-202-foundation"
+title = "Modelo 202 registry-backed fractional payment foundation"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
+parameters = ["is.modalidad_cuota.percentage"]
+formulas = [
+    "modelo-202-modalidad-40-2-a-ingresar",
+    "modelo-202-total-correcciones-aumentos",
+    "modelo-202-total-correcciones-disminuciones",
+    "modelo-202-base-imponible-previa",
+    "modelo-202-base-imponible-corregida",
+    "modelo-202-resultado-previo-b1",
+    "modelo-202-importe-pago-fraccionado-b2-tipo-1",
+    "modelo-202-importe-pago-fraccionado-b2-tipo-2",
+    "modelo-202-importe-pago-fraccionado-b2-tipo-3",
+    "modelo-202-importe-pago-fraccionado-b2-tipo-4",
+    "modelo-202-resultado-previo-b2",
+    "modelo-202-modalidad-40-3-resultado",
+    "modelo-202-cantidad-a-ingresar",
+]
+workbook_parity_refs = ["modelo-202-dr-xlsx-2025"]
+live_cross_references = ["modelo-202-static-documentation"]
+export_layouts = ["modelo-202-fichero-boe"]
+bindings = ["modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores", "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"]
+relations = ["modelo-202-2025-y-siguientes-rel-self-pagos-2p", "modelo-202-2025-y-siguientes-rel-self-pagos-3p", "modelo-202-2025-y-siguientes-rel-cuota-base-1p", "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p"]
+dependency_classifications = ["modelo-202-2025-y-siguientes-dep-self-prior-pagos", "modelo-202-2025-y-siguientes-dep-200-cuota-base"]
+application_links = ["modelo-202-portal", "modelo-202-calculation", "modelo-202-filing", "modelo-202-verification", "modelo-202-review", "modelo-202-approval", "modelo-202-reconciliation", "modelo-202-export", "modelo-202-workflow"]

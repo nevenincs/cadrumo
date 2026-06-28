@@ -1,0 +1,77 @@
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-filing"
+surface = "filing"
+consumer = "aeat.application.filing"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-procedure"]
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-export"
+surface = "export"
+consumer = "aeat.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-extractor"
+surface = "extractor"
+consumer = "aeat.domain.calculations.registry.parse_export_payload"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2024"]
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-verification"
+surface = "verification"
+consumer = "aeat.application.verification"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-instructions"]
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-filed-declarations-observation"
+surface = "portal"
+consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
+[[revisions."2024".application_links]]
+id = "modelo-131-2024-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2024", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
+
+# Calculation-completeness manifest for revision 2024: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed by canonical casilla_id plus reviewed segment/number
+# metadata. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.

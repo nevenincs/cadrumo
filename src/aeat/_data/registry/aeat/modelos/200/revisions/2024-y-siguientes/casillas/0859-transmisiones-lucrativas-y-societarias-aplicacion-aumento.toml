@@ -1,0 +1,60 @@
+[[revisions."2024-y-siguientes".casillas]]
+id = "02921"
+number = "02921"
+label = "Transmisiones lucrativas y societarias: aplicación del valor de mercado (art. 17.4 LIS) - Aumento - Correcciones del ejercicio - Permanentes [02921]"
+section = ["transmisiones_lucrativas_y_societarias_aplicacion", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_transmisiones_lucrativas_societarias_permanente_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02921"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02922"
+number = "02922"
+label = "Transmisiones lucrativas y societarias: aplicación del valor de mercado (art. 17.4 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02922]"
+section = ["transmisiones_lucrativas_y_societarias_aplicacion", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_transmisiones_lucrativas_societarias_temporaria_ejercicio_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02922"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02923"
+number = "02923"
+label = "Transmisiones lucrativas y societarias: aplicación del valor de mercado (art. 17.4 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02923]"
+section = ["transmisiones_lucrativas_y_societarias_aplicacion", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_transmisiones_lucrativas_societarias_temporaria_anteriores_aumento"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02923"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02924"
+number = "02924"
+label = "Transmisiones lucrativas y societarias: aplicación del valor de mercado (art. 17.4 LIS) - Aumento - Saldo pendiente a principio de ejercicio [02924]"
+section = ["transmisiones_lucrativas_y_societarias_aplicacion", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_transmisiones_lucrativas_societarias_saldo_inicial"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02924"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+[[revisions."2024-y-siguientes".casillas]]
+id = "02925"
+number = "02925"
+label = "Transmisiones lucrativas y societarias: aplicación del valor de mercado (art. 17.4 LIS) - Aumento - Saldo pendiente a fin de ejercicio [02925]"
+section = ["transmisiones_lucrativas_y_societarias_aplicacion", "aumento"]
+data_type = "money"
+semantic_role = "is_correccion_transmisiones_lucrativas_societarias_saldo_final"
+required = false
+input_kind = "manual"
+export_refs = ["modelo-200-page-026d-casilla-02925"]
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
