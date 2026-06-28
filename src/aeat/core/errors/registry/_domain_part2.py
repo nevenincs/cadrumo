@@ -184,6 +184,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.calculations.registry._formula_runtime._UnresolvedFormulaDependencyError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_UNRESOLVED_FORMULA_DEPENDENCY",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_snapshot",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.calculations.registry._errors.NoRevisionForPeriodError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_NO_REVISION_FOR_PERIOD",
