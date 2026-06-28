@@ -27,6 +27,7 @@ _NOW = datetime(2026, 6, 3, 12, 0, tzinfo=UTC)
 
 def _tx(
     *,
+    direction: TransactionDirection = TransactionDirection.OUTGOING,
     currency: str = "EUR",
     iva_category: str | None = "domestic_general_21",
     taxable_base: Decimal | None = Decimal("100.00"),
@@ -55,7 +56,7 @@ def _tx(
     )
     payload: dict[str, object] = {
         "raw": raw,
-        "direction": TransactionDirection.OUTGOING,
+        "direction": direction,
         "business_classification": BusinessClassification.BUSINESS,
         "category_id": "material_oficina",
         "taxable_base": taxable_base,
@@ -73,7 +74,23 @@ def _tx(
 
 def test_recargo_surfaces_anomaly_not_missing_fact() -> None:
     issues = _issues_for_transaction(_tx(iva_category="recargo_equivalencia", iva_amount=None, iva_rate=None))
-    assert [i.reason for i in issues] == [R.ANOMALY_RECARGO_ON_NON_RETAILER]
+    assert [i.reason for i in issues] == [R.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA]
+    assert "non-deductible acquisition cost" in issues[0].detail
+
+
+def test_incoming_recargo_anomaly_points_to_recargo_amount_not_purchase() -> None:
+    issues = _issues_for_transaction(
+        _tx(
+            direction=TransactionDirection.INCOMING,
+            iva_category="recargo_equivalencia",
+            iva_amount=None,
+            iva_rate=None,
+        ),
+    )
+
+    assert [i.reason for i in issues] == [R.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA]
+    assert "recargo_amount" in issues[0].detail
+    assert "purchase" not in issues[0].detail
 
 
 def test_unknown_and_erroneous_categories_surface_anomaly() -> None:
