@@ -7,6 +7,7 @@ and asserts that deterministic modules carry no ``pytest.mark.skip``,
 
 Live modules may use ``pytest.skip()`` only after carrying the ``aeat_live``
 execution marker; deterministic unit tests have no skip / xfail exception set.
+No item may carry both ``unit`` and ``aeat_live`` markers.
 """
 
 from __future__ import annotations
@@ -17,18 +18,14 @@ from pathlib import Path
 
 import pytest
 
-from ..core.logging import get_logger
-from ._inventory import ast_for_path, discover_test_modules, qualified_name, repo_path, repo_relative
+from ._inventory import ast_for_path, discover_test_modules, qualified_name, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-_logger = get_logger(__name__)
-
-_DOCUMENTED_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset()
 
 _FORBIDDEN_MARKERS = frozenset({"skip", "skipif", "xfail"})
 _FORBIDDEN_CALLS = frozenset({"pytest.skip", "pytest.xfail"})
 _LIVE_EXECUTION_MARKER = "aeat_live"
+_UNIT_EXECUTION_MARKER = "unit"
 
 
 def _forbidden_marker_sites(tree: ast.AST) -> list[tuple[int, str]]:
@@ -82,6 +79,29 @@ def _module_execution_markers(tree: ast.AST) -> set[str]:
     return markers
 
 
+def _decorator_execution_markers(node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) -> set[str]:
+    """Return pytest execution marker names attached directly to a test item."""
+    markers: set[str] = set()
+    for decorator in node.decorator_list:
+        name = qualified_name(decorator)
+        if name.startswith("pytest.mark."):
+            markers.add(name.removeprefix("pytest.mark."))
+    return markers
+
+
+def _unit_live_marker_intersections(tree: ast.AST) -> list[tuple[int, str]]:
+    """Return ``(lineno, item_name)`` for tests marked as both unit and live."""
+    module_markers = _module_execution_markers(tree)
+    hits: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            continue
+        markers = module_markers | _decorator_execution_markers(node)
+        if {_UNIT_EXECUTION_MARKER, _LIVE_EXECUTION_MARKER} <= markers:
+            hits.append((node.lineno, node.name))
+    return hits
+
+
 def test_no_skip_or_xfail_shortcuts(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Deterministic production test modules must not use skip / xfail shortcuts."""
     modules = discover_test_modules()
@@ -94,35 +114,28 @@ def test_no_skip_or_xfail_shortcuts(source_tree_ast: Mapping[Path, ast.AST]) -> 
             continue
         sites = _forbidden_marker_sites(tree)
         for lineno, marker_or_call_name in sites:
-            key = (relative, marker_or_call_name)
-            if key in _DOCUMENTED_EXCEPTIONS:
-                _logger.debug(
-                    "skip/xfail exception allowed: path=%s, marker_or_call=%s, lineno=%d",
-                    relative,
-                    marker_or_call_name,
-                    lineno,
-                )
-                continue
             violations.append(f"{relative}:{lineno}: {marker_or_call_name}")
 
     assert not violations, (
         "Undocumented pytest skip / xfail shortcuts found "
-        "(add to _DOCUMENTED_EXCEPTIONS with a durable rationale, or remove):\n" + "\n".join(violations)
+        "(remove the shortcut or mark the module aeat_live when it is genuinely live-only):\n" + "\n".join(violations)
     )
 
 
-def test_documented_exceptions_all_exist() -> None:
-    """Every entry in _DOCUMENTED_EXCEPTIONS must still be present in source."""
-    for rel_path, marker_or_call_name in _DOCUMENTED_EXCEPTIONS:
-        path = repo_path(rel_path)
-        assert path.exists(), f"Documented exception references non-existent file: {rel_path}"
-        tree = ast_for_path(path)
-        sites = _forbidden_marker_sites(tree) if tree is not None else []
-        found_markers = {m for _, m in sites}
-        assert marker_or_call_name in found_markers, (
-            f"Documented exception ({rel_path}, {marker_or_call_name!r}) is stale — "
-            f"marker not found in file (found: {sorted(found_markers)})"
-        )
+def test_unit_tests_are_not_live_gated(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+    """Unit tests must not also carry the live opt-in marker."""
+    modules = discover_test_modules()
+    violations: list[str] = []
+
+    for module_path in modules:
+        relative = repo_relative(module_path)
+        tree = ast_for_path(module_path, source_tree_ast)
+        if tree is None:
+            continue
+        for lineno, item_name in _unit_live_marker_intersections(tree):
+            violations.append(f"{relative}:{lineno}: {item_name}")
+
+    assert not violations, "Tests cannot be marked both unit and aeat_live:\n" + "\n".join(violations)
 
 
 def test_discovery_found_modules() -> None:

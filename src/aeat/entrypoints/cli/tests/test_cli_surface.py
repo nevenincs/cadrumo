@@ -400,7 +400,23 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket() -> Non
     transaction-id and intermediate payloads threaded through.
     """
     init = _invoke(
-        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
+        [
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Operator",
+            "--surnames",
+            "Example",
+            "--activity",
+            "Test",
+        ],
     )
     assert init.exit_code == 0, init.output
     bucket_id = _active_bucket_id()
@@ -495,7 +511,23 @@ def test_app_modelo_filing_record_list_text_header_is_well_formed() -> None:
     through verbatim so automation can parse the columns.
     """
     init = _invoke(
-        ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
+        [
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Operator",
+            "--surnames",
+            "Example",
+            "--activity",
+            "Test",
+        ],
     )
     assert init.exit_code == 0, init.output
 
@@ -508,6 +540,39 @@ def test_app_modelo_filing_record_list_text_header_is_well_formed() -> None:
     # ``modelo`` column name; the well-formed header keeps every column name.
     assert "\tbucket_id\tmodelo\t" in listed.output
     assert f"bucket_id\t{CLI_BUCKET_ID_PLACEHOLDER}" not in listed.output
+
+
+def test_app_modelo_filing_record_list_accepts_modelo_filter() -> None:
+    init = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Operator",
+            "--surnames",
+            "Example",
+            "--activity",
+            "Test",
+        ],
+    )
+    assert init.exit_code == 0, init.output
+
+    text_result = _invoke(["app", "modelo", "filing-record", "list", "--modelo", "303"])
+    assert text_result.exit_code == 0, text_result.output
+    assert "modelo_filter\t303" in text_result.output
+
+    json_result = _invoke(["--format", "json", "app", "modelo", "filing-record", "list", "--modelo", "303"])
+    assert json_result.exit_code == 0, json_result.output
+    payload = _json(json_result)
+    assert payload["modelo_filter"] == "303"
+    assert payload["record_count"] == 0
 
 
 def _json_object(value: object) -> dict[str, object]:

@@ -53,6 +53,8 @@ _OPERATOR_ERROR_LOCALE_KEYS: frozenset[str] = frozenset(
         "application.modelo.errors.work_unit_already_discarded",
         "application.modelo.errors.amendment_verification_refused_no_snapshot",
         "application.modelo.errors.amendment_verification_refused_missing_casillas",
+        "application.modelo.errors.profile_readiness_missing",
+        "application.modelo.errors.profile_readiness_profile_missing",
         "application.modelo.errors.workflow_input_mismatch",
         # application.ledger
         "application.ledger.errors.evidence_attachment_requires_ids",

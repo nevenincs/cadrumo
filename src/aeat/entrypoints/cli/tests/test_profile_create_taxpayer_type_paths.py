@@ -202,6 +202,72 @@ def test_legal_entity_profile_create_and_edit_exposes_legal_name() -> None:
     assert rows["taxpayer_type.legal_entity_form"] == "sl"
 
 
+def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
+    """A branch-changing edit must not persist a legal entity without legal name."""
+
+    result = _create_profile(
+        "branch-to-legal",
+        "--entity-type",
+        "natural_person",
+        "--tax-id",
+        "12345678Z",
+        "--name",
+        "Branch",
+        "--surnames",
+        "Operator",
+        "--activity",
+        "consultoria",
+    )
+    assert result.exit_code == 0, result.output
+
+    edit = _edit_profile(
+        "branch-to-legal",
+        "--entity-type",
+        "legal_entity",
+    )
+
+    assert edit.exit_code != 0, edit.output
+    assert "--legal-name" in edit.output
+    rows = _profile_rows("branch-to-legal")
+    assert rows["taxpayer_type.entity_type"] == "natural_person"
+    assert rows["identity.name"] == "Branch"
+    assert rows["identity.surnames"] == "Operator"
+
+
+def test_edit_refuses_legal_entity_branch_change_without_surnames() -> None:
+    """A branch-changing edit must not persist a natural person without surnames."""
+
+    result = _create_profile(
+        "branch-to-natural",
+        "--entity-type",
+        "legal_entity",
+        "--legal-entity-form",
+        "sl",
+        "--tax-id",
+        "B66012345",
+        "--legal-name",
+        "Branch Legal SL",
+        "--activity",
+        "asesoria",
+    )
+    assert result.exit_code == 0, result.output
+
+    edit = _edit_profile(
+        "branch-to-natural",
+        "--entity-type",
+        "natural_person",
+        "--name",
+        "Branch",
+    )
+
+    assert edit.exit_code != 0, edit.output
+    assert "--surnames" in edit.output
+    rows = _profile_rows("branch-to-natural")
+    assert rows["taxpayer_type.entity_type"] == "legal_entity"
+    assert rows["identity.legal_name"] == "Branch Legal SL"
+    assert "identity.name" not in rows
+
+
 def test_pure_landlord_profile_creates_without_activity() -> None:
     """DEFECT P1: a natural person whose only income is immovable
     capital (a pure landlord) has no actividad económica. The profile

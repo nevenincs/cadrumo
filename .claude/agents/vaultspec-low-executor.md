@@ -9,6 +9,7 @@ tools:
 - Write
 - Edit
 - Bash
+model: claude-haiku-4-5
 ---
 
 # Persona: Lead Implementation Engineer (Low-Tier)

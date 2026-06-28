@@ -157,13 +157,14 @@ def test_financial_provider_init_subclass_rejects_missing_verification_source() 
         ParsedLedgerRow,
         ProviderValidation,
     )
+    from ..domain.transactions import SourceFormat
 
     with pytest.raises(FinancialProviderConfigError, match="verification_source"):
 
         class _BadProviderNoVS(FinancialProvider):
             name = "bad-no-vs"
             supported_extensions = frozenset({".csv"})
-            source_format = None  # type: ignore[assignment]
+            source_format = SourceFormat.CSV
             provisional_pending_specimen = False
 
             @override
@@ -185,13 +186,14 @@ def test_financial_provider_init_subclass_rejects_no_corpus_without_provisional(
         ParsedLedgerRow,
         ProviderValidation,
     )
+    from ..domain.transactions import SourceFormat
 
     with pytest.raises(FinancialProviderConfigError, match="no_corpus"):
 
         class _BadNoCorpusProvider(FinancialProvider):
             name = "bad-no-corpus"
             supported_extensions = frozenset({".csv"})
-            source_format = None  # type: ignore[assignment]
+            source_format = SourceFormat.CSV
             verification_source = "no_corpus"
             provisional_pending_specimen = False  # wrong: must be True
 

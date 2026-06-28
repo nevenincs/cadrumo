@@ -43,6 +43,18 @@ def discover_test_modules() -> tuple[Path, ...]:
     return tuple(sorted(collected))
 
 
+def discover_test_control_modules() -> tuple[Path, ...]:
+    """Return deterministic test modules plus support/conftest files."""
+    modules = set(discover_test_modules())
+    for path in package_python_files():
+        if path.name == "__init__.py" or _is_relative_to(path, FIXTURES_DIR):
+            continue
+        relative_parts = path.relative_to(SRC_AEAT).parts
+        if path.name == "conftest.py" or "tests" in relative_parts:
+            modules.add(path)
+    return tuple(sorted(modules))
+
+
 def package_python_files(*, include_data: bool = False) -> tuple[Path, ...]:
     """Return package ``.py`` files under ``src/aeat``.
 

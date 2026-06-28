@@ -46,13 +46,15 @@ def parse_ledger_list_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
     return LedgerReviewFilterSpec.from_strings(filters)
 
 
-def ledger_filter_parse_error_message(exc: FilterParseError) -> str:
+def ledger_filter_parse_error_message(exc: FilterParseError, *, year: int | None = None) -> str:
     """Render a CLI message for a parsed ledger filter error."""
     if exc.reason == "invalid-value-ledger-period":
         return tr("cli.common.errors.period_unrecognised", raw=_filter_period_value(exc))
     if exc.reason == "ledger-period-year-pairing":
+        example_year = year if year is not None else 2025
         return tr(
             "cli.ledger.errors.period_year_pairing",
+            year=example_year,
             default=(
                 "Ledger period filters require period and year together. "
                 "For a full year use --period 0A --year 2025, or "

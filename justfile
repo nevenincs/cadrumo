@@ -234,6 +234,10 @@ fix-rag:
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 
+# Run the fast test-framework ratchets for skip/xfail, mock/test-double, monkeypatch, broad raises, and tautology drift.
+test-ratchets:
+    @uv run --no-sync pytest -q -rs src/aeat/tests/test_no_skip_xfail.py src/aeat/tests/test_mock_inventory.py src/aeat/tests/test_monkeypatch_inventory.py src/aeat/tests/test_no_broad_exception_raises.py src/aeat/tests/test_no_tautology.py --tb=short
+
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.
 test-unit:
     @uv run --no-sync pytest -q -n auto -m unit --ignore=src/aeat/domain/calculations/registry/tests/workbook_parity

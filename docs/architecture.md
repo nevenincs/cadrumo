@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 # Architecture
 
 The architecture guide lives at [Architecture overview](architecture/index.md).

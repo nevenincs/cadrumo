@@ -12,6 +12,8 @@ No mocks, no skips, no xfail, no tautological assertions.
 
 from __future__ import annotations
 
+from typing import NoReturn, cast
+
 import pytest
 
 from .aeat_literal_fixtures import aeat_url
@@ -47,7 +49,7 @@ class TestSiteHealthValidatorUsesValueError:
                 url=_AnyHttpUrl(_SEDE_ROOT_URL),
                 http_status=200,
                 html_fragment="",
-                detected_markers=(42,),  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # negative test
+                detected_markers=cast(tuple[str, ...], (42,)),
             )
 
         errors = exc_info.value.errors(include_url=False)
@@ -68,7 +70,7 @@ class TestSiteHealthValidatorUsesValueError:
                 url=_AnyHttpUrl(_SEDE_ROOT_URL),
                 http_status=200,
                 html_fragment="",
-                detected_markers=(99,),  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # negative test
+                detected_markers=cast(tuple[str, ...], (99,)),
             )
         except ValidationError:
             pass  # expected — Pydantic wraps the ValueError
@@ -284,7 +286,6 @@ class TestAuthenticatorDescribeNarrowing:
         """An unexpected exception from the certificate health check raises AuthValidationError."""
         from datetime import datetime
         from pathlib import Path
-        from typing import cast
 
         from pydantic import SecretStr
 
@@ -314,7 +315,7 @@ class TestAuthenticatorDescribeNarrowing:
             backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
             friendly_name: str | None = None,
             now: datetime | None = None,
-        ) -> None:  # type: ignore[return]
+        ) -> NoReturn:
             raise _UnexpectedError("boom")
 
         auth = AeatAuthenticator(settings, certificate_health_check=cast(CertificateHealthCheck, _raise_unexpected))
@@ -332,7 +333,6 @@ class TestAuthenticatorDescribeNarrowing:
         """CertificateError (expected) returns available=False description, not re-raises."""
         from datetime import datetime
         from pathlib import Path
-        from typing import cast
 
         from pydantic import SecretStr
 
@@ -358,7 +358,7 @@ class TestAuthenticatorDescribeNarrowing:
             backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
             friendly_name: str | None = None,
             now: datetime | None = None,
-        ) -> None:  # type: ignore[return]
+        ) -> NoReturn:
             raise CertificateError("expired")
 
         auth = AeatAuthenticator(

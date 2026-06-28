@@ -10,7 +10,10 @@ Verifies:
 
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
+from sqlalchemy.engine import Dialect
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -71,7 +74,7 @@ def test_encrypted_string_raises_storage_validation_error() -> None:
     col = EncryptedString()
     with pytest.raises(StorageValidationError):
         # negative test: int rejected where str is required
-        col.process_bind_param(12345, None)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        col.process_bind_param(cast(str, 12345), cast(Dialect, None))
 
 
 def test_encrypted_bytes_raises_storage_validation_error() -> None:
@@ -87,7 +90,7 @@ def test_encrypted_bytes_raises_storage_validation_error() -> None:
     col = EncryptedBytes()
     with pytest.raises(StorageValidationError):
         # negative test: str rejected where bytes is required
-        col.process_bind_param("not-bytes", None)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        col.process_bind_param(cast(bytes, "not-bytes"), cast(Dialect, None))
 
 
 def test_hashed_lookup_compute_raises_storage_validation_error() -> None:
@@ -102,7 +105,7 @@ def test_hashed_lookup_compute_raises_storage_validation_error() -> None:
 
     with pytest.raises(StorageValidationError):
         # negative test: int rejected where str is required
-        HashedLookup.compute(12345)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        HashedLookup.compute(cast(str, 12345))
 
 
 def test_hashed_lookup_process_bind_raises_storage_validation_error() -> None:
@@ -119,7 +122,7 @@ def test_hashed_lookup_process_bind_raises_storage_validation_error() -> None:
     col = HashedLookup()
     with pytest.raises(StorageValidationError):
         # negative test: float rejected where str | bytes is required
-        col.process_bind_param(99.9, None)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        col.process_bind_param(cast(str | bytes, 99.9), cast(Dialect, None))
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +174,7 @@ def test_redact_raises_redaction_error_for_non_str() -> None:
 
     with pytest.raises(RedactionError):
         # negative test: int rejected where str is required
-        redact(12345, rules=())  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        redact(cast(str, 12345), rules=())
 
 
 def test_redact_for_cli_output_raises_redaction_error_for_non_str() -> None:
@@ -181,7 +184,7 @@ def test_redact_for_cli_output_raises_redaction_error_for_non_str() -> None:
 
     with pytest.raises(RedactionError):
         # negative test: dict rejected where str is required
-        redact_for_cli_output({"not": "a string"})  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        redact_for_cli_output(cast(str, {"not": "a string"}))
 
 
 def test_redaction_error_registered() -> None:
@@ -204,17 +207,18 @@ def test_overview_agenda_error_raised_for_non_positive_horizon() -> None:
 
     # Import _agenda lazily; OverviewAgendaError is raised before any
     # network or profile access so no fixture setup is needed.
-    from ..application.overview._agenda import build_overview_agenda
+    from ..application.overview._agenda import DeadlineEngine, build_overview_agenda
     from ..application.overview._errors import OverviewAgendaError
+    from ..domain.deadlines.taxpayer_model import TaxpayerProfile
 
     with pytest.raises(OverviewAgendaError):
         build_overview_agenda(
             # negative test: None rejected where TaxpayerProfile is required
-            profile=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+            profile=cast(TaxpayerProfile, None),
             as_of=date.today(),
             horizon_days=0,
             # negative test: None rejected where the engine is required
-            engine=None,  # pyright: ignore[reportArgumentType]
+            engine=cast(DeadlineEngine, None),
             raw_values={},
         )
 
@@ -235,8 +239,10 @@ def _load_censo_sync_error_class() -> type:
     )
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)  # type: ignore[union-attr]
-    return mod.CensoSyncError  # type: ignore[no-any-return]
+    spec.loader.exec_module(mod)
+    error_cls = vars(mod)["CensoSyncError"]
+    assert isinstance(error_cls, type)
+    return error_cls
 
 
 def test_censo_sync_error_is_aeat_error() -> None:
@@ -265,17 +271,18 @@ def test_censo_sync_error_no_longer_value_error() -> None:
 
 def test_portal_validation_error_both_url_and_path() -> None:
     """build_entry raises PortalValidationError when both url and path are given."""
+    from ..domain.portals import AuthMethod, Portal, PortalCategory, PortalHost, UrlStability
     from ..domain.portals._entries._common import build_entry
     from ..domain.portals._errors import PortalValidationError
 
     with pytest.raises(PortalValidationError):
         # negative test: None passed for enum/struct args; rejected before use
         build_entry(
-            portal=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
-            subdomain=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
-            category=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
-            auth_methods=[],
-            url_stability=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+            portal=cast(Portal, None),
+            subdomain=cast(PortalHost, None),
+            category=cast(PortalCategory, None),
+            auth_methods=cast(list[AuthMethod], []),
+            url_stability=cast(UrlStability, None),
             label="test",
             purpose="test",
             url="https://example.com",
@@ -285,17 +292,18 @@ def test_portal_validation_error_both_url_and_path() -> None:
 
 def test_portal_validation_error_path_not_starting_slash() -> None:
     """build_entry raises PortalValidationError when path does not start with /."""
+    from ..domain.portals import AuthMethod, Portal, PortalCategory, PortalHost, UrlStability
     from ..domain.portals._entries._common import build_entry
     from ..domain.portals._errors import PortalValidationError
 
     with pytest.raises(PortalValidationError):
         # negative test: None passed for enum/struct args; rejected before use
         build_entry(
-            portal=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
-            subdomain=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
-            category=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
-            auth_methods=[],
-            url_stability=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+            portal=cast(Portal, None),
+            subdomain=cast(PortalHost, None),
+            category=cast(PortalCategory, None),
+            auth_methods=cast(list[AuthMethod], []),
+            url_stability=cast(UrlStability, None),
             label="test",
             purpose="test",
             path="no-leading-slash",
@@ -343,6 +351,7 @@ def test_m232_binding_error_too_many_rows() -> None:
     """materialize_m232_related_party_rows raises RegistryValidationError for >5 rows."""
     from decimal import Decimal as _Decimal
 
+    from ..domain.calculations.registry import ModeloRevision
     from ..domain.calculations.registry._errors import RegistryValidationError
     from ..domain.modelos._m232_row_materialisation import (
         materialize_m232_related_party_rows,
@@ -359,7 +368,7 @@ def test_m232_binding_error_too_many_rows() -> None:
 
     with pytest.raises(RegistryValidationError):
         # negative test: None rejected where ModeloRevision is required
-        materialize_m232_related_party_rows(None, six_rows)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        materialize_m232_related_party_rows(cast(ModeloRevision, None), six_rows)
 
 
 # ---------------------------------------------------------------------------

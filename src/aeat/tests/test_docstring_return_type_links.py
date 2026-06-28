@@ -34,35 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _ROLE = re.compile(r":(?:class|obj|meth|func|data|attr|exc):`[^`]*?([A-Za-z_][A-Za-z0-9_]*)`")
 
-_RETURN_TYPE_LINK_BASELINE: frozenset[tuple[str, str]] = frozenset(
-    {
-        ("aeat.application.aggregation._oss_ioss::oss_ioss_candidates_from_repositories", "OssIossLedgerCandidate"),
-        ("aeat.application.calculations._ports::period", "Period"),
-        ("aeat.application.live._justificante::capture", "JustificanteCaptureSnapshot"),
-        ("aeat.application.live._justificante::reconcile_capture", "ModeloReconciliationReport"),
-        ("aeat.application.live._justificante::stamp_capture_evidence_if_filed", "ModeloRecord"),
-        ("aeat.application.live::capture_justificante_snapshot", "JustificanteCaptureSnapshot"),
-        ("aeat.core._period::from_registry_authoring_string", "Period"),
-        ("aeat.core._period::from_string", "Period"),
-        ("aeat.core.json_contract::derive_status", "EnvelopeStatus"),
-        ("aeat.domain.calculations.registry._queries::casillas_for_scope", "ModeloCasillasReport"),
-        ("aeat.domain.calculations.registry._queries::describe_modelo_for_scope", "ModeloDescribeReport"),
-        ("aeat.domain.calculations.registry._queries::formulas_for_scope", "ModeloFormulasReport"),
-        ("aeat.domain.calculations.registry._schema::filing_period_from_scope", "Period"),
-        ("aeat.domain.invoices._enums::iva_rate_kind", "IvaRateKind"),
-        ("aeat.domain.modelos._participation_index::secure_object_repository", "SecureObjectRepository"),
-        (
-            "aeat.domain.modelos._participation_index::upsert_transaction_participation",
-            "TransactionRevisionParticipationIndex",
-        ),
-        ("aeat.entrypoints.cli._overview_rendering::overview_next_step_notices", "Notice"),
-        ("aeat.locales._modelo_manager::coverage_record", "ModeloLocaleCoverageRecord"),
-        ("aeat.locales._modelo_manager::drift_records", "ModeloLocaleDriftRecord"),
-        ("aeat.locales._modelo_manager::inventory_keys", "ModeloLocaleInventoryKey"),
-        ("aeat.locales._modelo_manager::load_modelo", "ModeloDefinition"),
-        ("aeat.locales._modelo_manager::load_translation_file", "ModeloLocaleTranslationFile"),
-    },
-)
+_RETURN_TYPE_LINK_BASELINE: frozenset[tuple[str, str]] = frozenset()
 
 
 def _annotation_names(node: ast.AST) -> set[str]:

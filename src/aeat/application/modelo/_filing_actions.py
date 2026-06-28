@@ -23,6 +23,7 @@ from ...domain.calculations.registry import derive_modelo_202_modality
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._calculation_revision import CalculationRevisionState
+from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._filing_record import ModeloRecord, ModeloRecordStatus
 from ...domain.modelos._filing_repository import ModeloRecordCatalogueRepository
 from ...domain.modelos._protocols import (
@@ -257,10 +258,11 @@ def file_modelo_revision(
 def list_filing_records(
     *,
     bucket_id: str | None = None,
+    modelo: str | ModeloCode | None = None,
     include_superseded: bool = False,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
 ) -> tuple[ModeloRecord, ...]:
-    """List :class:`ModeloRecord` filing records, optionally filtered to a bucket.
+    """List :class:`ModeloRecord` filing records, optionally filtered to a bucket and modelo.
 
     Superseded records are excluded unless ``include_superseded``
     is true. Results are sorted by ``(bucket_id, filing_year,
@@ -268,10 +270,12 @@ def list_filing_records(
     """
     fr_repo = filing_repository or ModeloRecordCatalogueRepository()
     catalogue = fr_repo.load()
+    modelo_code = ModeloCode(str(modelo)) if modelo is not None else None
     records = tuple(
         record
         for record in catalogue.values()
         if (bucket_id is None or record.bucket_id == bucket_id)
+        and (modelo_code is None or record.modelo == modelo_code)
         and (include_superseded or record.status is ModeloRecordStatus.VIGENTE)
     )
     return tuple(

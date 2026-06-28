@@ -351,3 +351,7 @@ cache/
 # Claude Code machine-local (not team-shared)
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+
+# Runtime markers & nested provider locks (machine-local, never team-shared)
+.qdrant-initialized
+.agents/mcp_config.json.lock

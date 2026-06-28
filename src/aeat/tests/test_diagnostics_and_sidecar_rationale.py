@@ -153,14 +153,13 @@ def test_pdfword_alias_is_dict_str_any() -> None:
     """_PdfWord remains dict[str, Any] — adapter-internal, not moved to core._types."""
     src = _source(_PARSER_REL)
     tree = ast.parse(src)
-    assignments = {
-        node.targets[0].id: node  # type: ignore[attr-defined]
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Assign)
-        and len(node.targets) == 1
-        and isinstance(node.targets[0], ast.Name)
-        and node.targets[0].id == "_PdfWord"
-    }
+    assignments: dict[str, ast.Assign] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if isinstance(target, ast.Name) and target.id == "_PdfWord":
+            assignments[target.id] = node
     assert "_PdfWord" in assignments, "_PdfWord assignment not found in _parser.py"
 
 

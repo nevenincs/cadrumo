@@ -1,4 +1,10 @@
-"""Locale file management: loading, scaffolding, and structural health checks."""
+"""Locale file management: loading, scaffolding, and structural health checks.
+
+:class:`LocaleManager` owns codebase translation-key discovery and locale YAML
+updates. :class:`StrictUniqueKeyLoader` enforces parse-time duplicate-key
+rejection, while :data:`LocaleNode` documents the recursive locale-tree shape
+shared by the manager and parity tests.
+"""
 
 import re
 from collections.abc import Hashable, Iterator

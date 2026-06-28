@@ -115,6 +115,74 @@ def _create_minimal_profile_and_export(tmp_path: Path, bundle_path: Path) -> str
     return exported_id
 
 
+def _create_legal_entity_profile_and_export(bundle_path: Path) -> str:
+    r = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "legal-import-source",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "legal_entity",
+            "--legal-entity-form",
+            "sl",
+            "--tax-id",
+            "B66012345",
+            "--legal-name",
+            "Legal Import Source SL",
+            "--activity",
+            "asesoria",
+            "--output-language",
+            "en",
+        ],
+    )
+    assert r.exit_code == 0, r.output
+
+    r_export = _export_profile("legal-import-source", bundle_path)
+    assert r_export.exit_code == 0, r_export.output
+    assert bundle_path.is_file()
+
+    raw = json.loads(bundle_path.read_text(encoding="utf-8"))
+    exported_id = raw["profile"]["profile_id"]
+    assert_public_profile_id_redacted(r_export.output, exported_id)
+    return exported_id
+
+
+def _create_attribution_entity_profile_and_export(bundle_path: Path) -> str:
+    r = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "attribution-import-source",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "attribution_entity",
+            "--tax-id",
+            "E12345674",
+            "--name",
+            "Attribution Import Source",
+            "--activity",
+            "arrendamiento",
+            "--output-language",
+            "en",
+        ],
+    )
+    assert r.exit_code == 0, r.output
+
+    r_export = _export_profile("attribution-import-source", bundle_path)
+    assert r_export.exit_code == 0, r_export.output
+    assert bundle_path.is_file()
+
+    raw = json.loads(bundle_path.read_text(encoding="utf-8"))
+    exported_id = raw["profile"]["profile_id"]
+    assert_public_profile_id_redacted(r_export.output, exported_id)
+    return exported_id
+
+
 # ---------------------------------------------------------------------------
 # contract — import-twice produces one profile, not two
 # ---------------------------------------------------------------------------
@@ -352,6 +420,51 @@ def test_import_refuses_tampered_invalid_tax_id(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=clean_root):
         r_ok = _import_bundle(bundle_path, label="clean-import")
         assert r_ok.exit_code == 0, r_ok.output
+
+
+@pytest.mark.parametrize(
+    ("source_kind", "removed_path", "expected_flag"),
+    (
+        pytest.param("natural_person", "taxpayer_type.entity_type", "--entity-type", id="natural-missing-entity-type"),
+        pytest.param("natural_person", "identity.name", "--name", id="natural-missing-name"),
+        pytest.param("natural_person", "identity.surnames", "--surnames", id="natural-missing-surnames"),
+        pytest.param("legal_entity", "identity.legal_name", "--legal-name", id="legal-missing-legal-name"),
+        pytest.param("attribution_entity", "identity.name", "--name", id="attribution-missing-name"),
+    ),
+)
+def test_import_refuses_missing_filing_identity_baseline(
+    tmp_path: Path,
+    source_kind: str,
+    removed_path: str,
+    expected_flag: str,
+) -> None:
+    """A tampered bundle cannot register a filing-incomplete active profile."""
+
+    bundle_path = tmp_path / f"{source_kind}.json"
+    if source_kind == "legal_entity":
+        _create_legal_entity_profile_and_export(bundle_path)
+    elif source_kind == "attribution_entity":
+        _create_attribution_entity_profile_and_export(bundle_path)
+    else:
+        _create_minimal_profile_and_export(tmp_path, bundle_path)
+
+    raw = json.loads(bundle_path.read_text(encoding="utf-8"))
+    original_facts = raw["profile"]["facts"]
+    raw["profile"]["facts"] = [fact for fact in original_facts if fact.get("path") != removed_path]
+    assert len(raw["profile"]["facts"]) == len(original_facts) - 1, f"bundle did not contain {removed_path}"
+    tampered_path = tmp_path / f"tampered-{source_kind}.json"
+    tampered_path.write_text(json.dumps(raw), encoding="utf-8")
+
+    label = f"missing-baseline-{source_kind}"
+    with isolated_profile_storage_root(tmp_path=tmp_path / f"dest-{source_kind}"):
+        r = _import_bundle(tampered_path, label=label)
+        assert r.exit_code != 0, r.output
+        assert "Traceback" not in r.output
+        assert expected_flag in r.output
+
+        r_list = _invoke(["config", "profile", "list"])
+        assert r_list.exit_code == 0, r_list.output
+        assert label not in r_list.output
 
 
 @pytest.mark.parametrize("tamper_case", ["missing", "blank", "non_string", "duplicate"])

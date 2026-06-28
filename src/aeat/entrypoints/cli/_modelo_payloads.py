@@ -575,6 +575,7 @@ class ModeloRecordListResult(OutputSchema):
 
     operation: str = "modelo.filing_record.list"
     bucket_id_filter: str | None = None
+    modelo_filter: str | None = None
     include_superseded: bool
     record_count: int
     records: list[ModeloRecordPayload]
