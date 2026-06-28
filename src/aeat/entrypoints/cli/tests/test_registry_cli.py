@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 import typer
+from click.testing import Result
 from pydantic import AnyHttpUrl
 from typer.core import TyperGroup
 
@@ -79,6 +80,7 @@ _M100_SOURCE_0224_CASILLA: CasillaId = validated_casilla_id("0224", surface="_M1
 _M100_SOURCE_1479_CASILLA: CasillaId = validated_casilla_id("1479", surface="_M100_SOURCE_1479_CASILLA")
 _M100_SOURCE_1553_CASILLA: CasillaId = validated_casilla_id("1553", surface="_M100_SOURCE_1553_CASILLA")
 _M100_SOURCE_1577_CASILLA: CasillaId = validated_casilla_id("1577", surface="_M100_SOURCE_1577_CASILLA")
+_ENGLISH_CLI_ENV: Mapping[str, str] = {"AEAT_OUTPUT_LANGUAGE": "en"}
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -100,9 +102,9 @@ def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> 
     _CLI_ENV = {}
 
 
-def invoke_cached_cli(args, **kwargs):
-    env = {**_CLI_ENV, **dict(kwargs.pop("env", {}) or {})}
-    return _invoke_cached_cli(args, env=env, **kwargs)
+def invoke_cached_cli(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Result:
+    merged_env = {**_CLI_ENV, **dict(env or {})}
+    return _invoke_cached_cli(args, env=merged_env)
 
 
 def _child(group: object, name: str):
@@ -119,6 +121,14 @@ def _child(group: object, name: str):
     """
     assert isinstance(group, TyperGroup)
     return group.get_command(typer.Context(group), name)
+
+
+def _command_path(*path: str) -> object:
+    current: object = aeat_click_command()
+    for segment in path:
+        current = _child(current, segment)
+        assert current is not None, f"missing command path {' '.join(path)}"
+    return current
 
 
 def _command_tree_paths(group: TyperGroup, *, prefix: tuple[str, ...] = ()) -> set[tuple[str, ...]]:
@@ -161,7 +171,7 @@ def _first_registry_modelo() -> str:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_secure_backend(tmp_path: Path):  # type: ignore[no-untyped-def]
+def _isolated_secure_backend(tmp_path: Path) -> Iterator[None]:
     """Point encrypted SQL runtime at a per-test active bucket.
 
     The filed-state verification tests construct a
@@ -704,7 +714,7 @@ def test_verify_filed_state_reports_drift_from_encrypted_observation(tmp_path: P
 def test_verify_filed_state_cli_help_resolves_locale_keys() -> None:
     result = invoke_cached_cli(
         ["app", "registry", "verify-filed-state", "--help"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env=_ENGLISH_CLI_ENV,
     )
 
     assert result.exit_code == 0
@@ -718,7 +728,7 @@ def test_verify_filed_state_cli_help_resolves_locale_keys() -> None:
 def test_live_filed_capture_sources_cli_help_resolves_without_registry_alias() -> None:
     result = invoke_cached_cli(
         ["app", "live", "filed", "pull-sources", "--help"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env=_ENGLISH_CLI_ENV,
     )
 
     assert result.exit_code == 0
@@ -739,7 +749,7 @@ def test_live_filed_capture_sources_cli_help_resolves_without_registry_alias() -
 def test_live_filed_pull_cli_help_supports_bulk_options_without_pull_all() -> None:
     result = invoke_cached_cli(
         ["app", "live", "filed", "pull", "--help"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env=_ENGLISH_CLI_ENV,
     )
 
     assert result.exit_code == 0
@@ -748,13 +758,7 @@ def test_live_filed_pull_cli_help_supports_bulk_options_without_pull_all() -> No
     assert "--to-year" in result.output
     assert "--modelo" in result.output
 
-    root = aeat_click_command()
-    app_group = _child(root, "app")
-    assert app_group is not None
-    live_group = _child(app_group, "live")
-    assert live_group is not None
-    filed_group = _child(live_group, "filed")
-    assert filed_group is not None
+    filed_group = _command_path("app", "live", "filed")
     pull = _child(filed_group, "pull")
     assert pull is not None
     assert _child(filed_group, "pull-all") is None
@@ -776,7 +780,7 @@ def test_live_filed_bulk_pull_accepts_limit_without_pull_all() -> None:
             "--limit",
             "10",
         ],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env=_ENGLISH_CLI_ENV,
     )
 
     assert result.exit_code == 0, result.output
@@ -788,20 +792,13 @@ def test_live_filed_bulk_pull_accepts_limit_without_pull_all() -> None:
 def test_live_notifications_latest_cli_help_resolves() -> None:
     result = invoke_cached_cli(
         ["app", "live", "notifications", "latest", "--help"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env=_ENGLISH_CLI_ENV,
     )
 
     assert result.exit_code == 0
     assert "latest" in result.output.lower()
 
-    root = aeat_click_command()
-    app_group = _child(root, "app")
-    assert app_group is not None
-    live_group = _child(app_group, "live")
-    assert live_group is not None
-    notifications_group = _child(live_group, "notifications")
-    assert notifications_group is not None
-    latest = _child(notifications_group, "latest")
+    latest = _command_path("app", "live", "notifications", "latest")
     assert latest is not None
     assert hasattr(latest, "callback")
 
@@ -809,7 +806,7 @@ def test_live_notifications_latest_cli_help_resolves() -> None:
 def test_live_expedientes_pull_cli_help_supports_bulk_options_without_pull_all() -> None:
     result = invoke_cached_cli(
         ["app", "live", "expedientes", "pull", "--help"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env=_ENGLISH_CLI_ENV,
     )
 
     assert result.exit_code == 0
@@ -818,13 +815,7 @@ def test_live_expedientes_pull_cli_help_supports_bulk_options_without_pull_all()
     assert "--to-year" in result.output
     assert "--modelo" in result.output
 
-    root = aeat_click_command()
-    app_group = _child(root, "app")
-    assert app_group is not None
-    live_group = _child(app_group, "live")
-    assert live_group is not None
-    expedientes_group = _child(live_group, "expedientes")
-    assert expedientes_group is not None
+    expedientes_group = _command_path("app", "live", "expedientes")
     pull = _child(expedientes_group, "pull")
     assert pull is not None
     assert hasattr(pull, "callback")
@@ -832,10 +823,7 @@ def test_live_expedientes_pull_cli_help_supports_bulk_options_without_pull_all()
 
 
 def test_live_command_tree_rejects_pull_all_and_capture_all_aliases() -> None:
-    root = aeat_click_command()
-    app_group = _child(root, "app")
-    assert app_group is not None
-    live_group = _child(app_group, "live")
+    live_group = _command_path("app", "live")
     assert isinstance(live_group, TyperGroup)
 
     paths = _command_tree_paths(live_group)
@@ -863,23 +851,23 @@ def test_live_pull_help_locale_keys_do_not_use_capture_all_names() -> None:
 def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:
     group = invoke_cached_cli(
         ["app", "live", "iva-wallet", "--help"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env=_ENGLISH_CLI_ENV,
     )
     pull = invoke_cached_cli(
         ["app", "live", "iva-wallet", "pull", "--help"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env=_ENGLISH_CLI_ENV,
     )
     capture_history = invoke_cached_cli(
         ["app", "live", "iva-wallet", "pull-history", "--help"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env=_ENGLISH_CLI_ENV,
     )
     history = invoke_cached_cli(
         ["app", "live", "iva-wallet", "history", "--help"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env=_ENGLISH_CLI_ENV,
     )
     pull_evidence = invoke_cached_cli(
         ["app", "live", "iva-wallet", "pull-evidence", "--help"],
-        env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        env=_ENGLISH_CLI_ENV,
     )
 
     assert group.exit_code == 0
@@ -1088,57 +1076,33 @@ def test_live_filed_list_payload_and_text_use_registry_period_tokens() -> None:
     assert all("2026 1T" not in line and "2026 2T" not in line for line in lines)
 
 
-def test_list_filed_data_cli_requires_live_gate_before_remote_read(tmp_path: Path) -> None:
-    now = datetime.now(UTC)
-    _seed_session(
-        tmp_path,
-        AuthProviderKind.CLAVE_MOVIL,
-        authenticated_at=now - timedelta(hours=2),
-        idle_deadline=now - timedelta(minutes=1),
-    )
-
-    result = invoke_cached_cli(
-        [
+_LIVE_GATE_MODELO_ARG = "{modelo}"
+_LIVE_GATE_OUTPUT_ROOT_ARG = "{output_root}"
+_LIVE_GATE_CLI_CASES = (
+    pytest.param(
+        (
             "app",
             "live",
             "filed",
             "list",
             "--modelo",
-            _first_registry_modelo(),
+            _LIVE_GATE_MODELO_ARG,
             "--from-year",
             "2024",
             "--to-year",
             "2025",
-        ],
-        env={
-            "AEAT_TOKEN_DIR": str(tmp_path),
-            "AEAT_ACTIVE_PROFILE": "default",
-            "AEAT_OUTPUT_LANGUAGE": "en",
-        },
-    )
-
-    assert result.exit_code != 0
-    assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED" in result.output
-
-
-def test_capture_filed_data_cli_requires_live_gate_before_local_writes(tmp_path: Path) -> None:
-    now = datetime.now(UTC)
-    _seed_session(
-        tmp_path,
-        AuthProviderKind.CLAVE_MOVIL,
-        authenticated_at=now - timedelta(hours=2),
-        idle_deadline=now - timedelta(minutes=1),
-    )
-    output_root = tmp_path / "captured"
-
-    result = invoke_cached_cli(
-        [
+        ),
+        None,
+        id="filed-list",
+    ),
+    pytest.param(
+        (
             "app",
             "live",
             "filed",
             "pull",
             "--modelo",
-            _first_registry_modelo(),
+            _LIVE_GATE_MODELO_ARG,
             "--year",
             "2024",
             "--period",
@@ -1146,32 +1110,13 @@ def test_capture_filed_data_cli_requires_live_gate_before_local_writes(tmp_path:
             "--limit",
             "1",
             "--output-root",
-            str(output_root),
-        ],
-        env={
-            "AEAT_TOKEN_DIR": str(tmp_path),
-            "AEAT_ACTIVE_PROFILE": "default",
-            "AEAT_OUTPUT_LANGUAGE": "en",
-        },
-    )
-
-    assert result.exit_code != 0
-    assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED" in result.output
-    assert not output_root.exists()
-
-
-def test_capture_iva_history_cli_requires_live_gate_before_local_writes(tmp_path: Path) -> None:
-    now = datetime.now(UTC)
-    _seed_session(
-        tmp_path,
-        AuthProviderKind.CLAVE_MOVIL,
-        authenticated_at=now - timedelta(hours=2),
-        idle_deadline=now - timedelta(minutes=1),
-    )
-    output_root = tmp_path / "iva-history"
-
-    result = invoke_cached_cli(
-        [
+            _LIVE_GATE_OUTPUT_ROOT_ARG,
+        ),
+        "captured",
+        id="filed-pull",
+    ),
+    pytest.param(
+        (
             "app",
             "live",
             "iva-wallet",
@@ -1181,18 +1126,59 @@ def test_capture_iva_history_cli_requires_live_gate_before_local_writes(tmp_path
             "--to-year",
             "2025",
             "--output-root",
-            str(output_root),
-        ],
-        env={
-            "AEAT_TOKEN_DIR": str(tmp_path),
-            "AEAT_ACTIVE_PROFILE": "default",
-            "AEAT_OUTPUT_LANGUAGE": "en",
-        },
+            _LIVE_GATE_OUTPUT_ROOT_ARG,
+        ),
+        "iva-history",
+        id="iva-history-pull",
+    ),
+)
+
+
+def _expired_live_session_env(tmp_path: Path) -> dict[str, str]:
+    now = datetime.now(UTC)
+    _seed_session(
+        tmp_path,
+        AuthProviderKind.CLAVE_MOVIL,
+        authenticated_at=now - timedelta(hours=2),
+        idle_deadline=now - timedelta(minutes=1),
+    )
+    return {
+        "AEAT_TOKEN_DIR": str(tmp_path),
+        "AEAT_ACTIVE_PROFILE": "default",
+        "AEAT_OUTPUT_LANGUAGE": "en",
+    }
+
+
+def _live_gate_cli_args(template: tuple[str, ...], *, output_root: Path | None) -> list[str]:
+    args: list[str] = []
+    for token in template:
+        if token == _LIVE_GATE_MODELO_ARG:
+            args.append(_first_registry_modelo())
+        elif token == _LIVE_GATE_OUTPUT_ROOT_ARG:
+            assert output_root is not None
+            args.append(str(output_root))
+        else:
+            args.append(token)
+    return args
+
+
+@pytest.mark.parametrize(("args_template", "output_root_name"), _LIVE_GATE_CLI_CASES)
+def test_live_cli_requires_live_gate_before_remote_read_or_local_writes(
+    tmp_path: Path,
+    args_template: tuple[str, ...],
+    output_root_name: str | None,
+) -> None:
+    output_root = tmp_path / output_root_name if output_root_name is not None else None
+
+    result = invoke_cached_cli(
+        _live_gate_cli_args(args_template, output_root=output_root),
+        env=_expired_live_session_env(tmp_path),
     )
 
     assert result.exit_code != 0
     assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED" in result.output
-    assert not output_root.exists()
+    if output_root is not None:
+        assert not output_root.exists()
 
 
 def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_path: Path) -> None:

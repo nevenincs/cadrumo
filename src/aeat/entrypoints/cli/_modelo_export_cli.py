@@ -25,6 +25,8 @@ from ...application.modelo import (
     ModeloWorkPeriodTokenError,
     WorkUnitNotFoundError,
     export_modelo_revision,
+    get_work_unit,
+    require_profile_ready_for_work_unit,
     resolve_modelo_revision_for_operator_target,
 )
 from ...application.workflow import workflow_state_repository
@@ -175,6 +177,7 @@ def register_export_commands(
         ) as exc:
             raise selector_bad_parameter(exc) from exc
         target_revision_id = selected_revision.calculation_revision_id
+        require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
 
         try:
             result = export_modelo_revision(

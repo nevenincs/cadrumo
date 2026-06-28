@@ -36,10 +36,14 @@ from typing import Any
 
 import pytest
 
+from ....application.modelo import ModeloWorkPlazoSummary
 from ....core import Period
+from ....core.resources import bundled_path
+from ....domain.calculations.registry import load_registry_tree
 from ....domain.deadlines._plazo import resolve_filing_closes_on
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from .._modelo_rendering import _work_unit_deadline_output_from_summary
 from ._m130_source_support import seed_m130_income_transaction
 from .envelope_helpers import unwrap_envelope_notices
 from .envelope_helpers import unwrap_schema_envelope as _result
@@ -47,6 +51,7 @@ from .envelope_helpers import unwrap_schema_envelope as _result
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _RECARGO_NOTICE_CODE = "modelo.work.calculate.plazo_vencido_recargo"
+_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
 _M130_REVISION = "2019-y-siguientes"
 _M130_FILING_YEAR = 2026
 
@@ -75,6 +80,8 @@ def _create_natural_person_profile() -> None:
             "12345678Z",
             "--name",
             "Operator",
+            "--surnames",
+            "Readiness",
             "--activity",
             "design",
         ],
@@ -186,6 +193,26 @@ def _select_in_time_period() -> tuple[str, date]:
     return future[0]
 
 
+def test_recargo_notice_fallback_legal_ref_resolves_to_bundled_catalogue() -> None:
+    """The no-band overdue fallback still carries the canonical Art. 27.2 ref."""
+    deadline, notices = _work_unit_deadline_output_from_summary(
+        ModeloWorkPlazoSummary(closes_on=date(2026, 1, 30), days_overdue=1, recargo=None),
+    )
+
+    assert deadline is not None
+    assert deadline.days_overdue == 1
+    assert deadline.recargo is None
+    assert len(notices) == 1
+    context = notices[0].context
+    assert context is not None
+    assert context["legal_refs"] == _RECARGO_LEGAL_REF
+
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    legal_entry = catalogues.legal[_RECARGO_LEGAL_REF]
+    assert legal_entry.corpus_ref
+    assert legal_entry.required_text
+
+
 def test_calculate_overdue_period_surfaces_recargo_notice_with_legal_context() -> None:
     """An overdue M130 period carries the Art. 27 LGT recargo notice + deadline block.
 
@@ -221,7 +248,7 @@ def test_calculate_overdue_period_surfaces_recargo_notice_with_legal_context() -
     assert "Art. 27" in recargo["message"]
     context = recargo["context"]
     assert context is not None, "recargo notice must carry structured legal context"
-    assert context.get("legal_refs"), "recargo notice context must carry binding legal_refs"
+    assert context.get("legal_refs") == _RECARGO_LEGAL_REF, "recargo notice context must carry binding legal_refs"
     assert context.get("days_overdue"), "recargo notice context must carry the overdue posture"
 
     deadline = inner["deadline"]
@@ -233,7 +260,7 @@ def test_calculate_overdue_period_surfaces_recargo_notice_with_legal_context() -
     # surcharge + binding legal ref) so the JSON surface is self-explanatory.
     recargo_band = deadline["recargo"]
     assert recargo_band is not None, "an overdue posture must resolve a recargo band"
-    assert recargo_band["legal_ref"], "recargo band must carry its binding legal_ref"
+    assert recargo_band["legal_ref"] == _RECARGO_LEGAL_REF, "recargo band must carry its binding legal_ref"
 
     # Text mode still renders its existing plazo lines (no regression).
     text_result = invoke_cached_cli(

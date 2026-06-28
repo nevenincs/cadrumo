@@ -160,7 +160,6 @@ def test_empty_history_returns_zero_balance(
 
 def test_cli_balance_verb_emits_expected_keys(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The CLI surface emits operation, as_of_year, total_balance, lot_count, next_expiry_year."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="cli-wallet-test"):
@@ -602,12 +601,14 @@ def _seed_full_autónomo_profile_for_guidance(bucket_id: str) -> None:
             status=UserProfileStatus.ACTIVE,
             facts=(
                 UserProfileFact(path="identity.name", value="Guidance Test Autónomo"),
+                UserProfileFact(path="identity.surnames", value="Guidance Tester"),
                 UserProfileFact(path="identity.tax_id", value=_GUIDANCE_NIF),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(
                     path="taxpayer_type.irpf_income_categories",
                     value="actividad_economica",
                 ),
+                UserProfileFact(path="censo.activity_start_date", value="2024-01-01"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -621,11 +622,11 @@ def _seed_full_autónomo_profile_for_guidance(bucket_id: str) -> None:
 def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
     tmp_path: Path,
 ) -> None:
-    """Pedro round-18 regression: compensation binding override on fresh profile names seed verb.
+    """Pedro round-18 regression: in-scope compensation override names seed verb.
 
     A fresh profile with no persisted IVA wallet decision attempting
-    ``aeat app modelo work calculate`` with a binding override for
-    ``modelo-303-compensacion-pendiente-anteriores`` must:
+    ``aeat app modelo work calculate`` for a non-first IVA period with a
+    binding override for ``modelo-303-compensacion-pendiente-anteriores`` must:
     - exit with a non-zero exit code
     - name the iva-wallet seed verb in the error output
     - NOT reference the obsolete ``--mode modelo`` flag
@@ -651,7 +652,7 @@ def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
                 "--year",
                 "2024",
                 "--period",
-                "1T",
+                "2T",
                 "--revision",
                 "2023-y-siguientes",
             ],

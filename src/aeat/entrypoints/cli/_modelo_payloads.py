@@ -532,6 +532,8 @@ class WorkFileResult(OutputSchema):
     status: str
     superseded_at: str | None = None
     superseded_by_filing_record_id: FilingRecordId | None = None
+    external_evidence: ExternalEvidencePayload | None = None
+    amends_filing_record_id: FilingRecordId | None = None
     kind: str = "internal_filing"
     live_submission: bool = False
 
@@ -562,6 +564,7 @@ class WorkAmendResult(OutputSchema):
     status: str
     superseded_at: str | None = None
     superseded_by_filing_record_id: FilingRecordId | None = None
+    external_evidence: ExternalEvidencePayload | None = None
     kind: str = "internal_filing"
     live_submission: bool = False
 
@@ -596,6 +599,8 @@ class ModeloRecordShowResult(OutputSchema):
     status: str
     superseded_at: str | None = None
     superseded_by_filing_record_id: FilingRecordId | None = None
+    external_evidence: ExternalEvidencePayload | None = None
+    amends_filing_record_id: FilingRecordId | None = None
     kind: str = "internal_filing"
     live_submission: bool = False
 
@@ -774,6 +779,8 @@ class FilingRecordImportResult(OutputSchema):
     status: str
     superseded_at: str | None = None
     superseded_by_filing_record_id: str | None = None
+    external_evidence: ExternalEvidencePayload | None = None
+    amends_filing_record_id: FilingRecordId | None = None
     kind: str = "internal_filing"
     live_submission: bool = False
 
@@ -1081,6 +1088,14 @@ class ModeloReadinessMissingRequirementPayload(OutputSchema):
     selector: str
 
 
+class ModeloReadinessMissingBindingPayload(OutputSchema):
+    """One calculation binding readiness cannot satisfy."""
+
+    binding_id: str
+    source: str
+    input_channel: str
+
+
 class LedgerIssuePayload(OutputSchema):
     """One ledger issue in the readiness result."""
 
@@ -1101,7 +1116,11 @@ class ModeloReadinessResult(OutputSchema):
     period: Period
     ready: bool
     profile_ready: bool
+    registry_ready: bool
+    registry_refusal: str
+    binding_ready: bool
     missing: list[ModeloReadinessMissingRequirementPayload]
+    missing_bindings: list[ModeloReadinessMissingBindingPayload]
     ledger_preflight_required: bool
     ledger_ready: bool | None
     ledger_period: Period | None
@@ -1240,6 +1259,7 @@ __all__ = [
     "ModeloLifecycleEventPayload",
     "ModeloListResult",
     "ModeloProjectResult",
+    "ModeloReadinessMissingBindingPayload",
     "ModeloReadinessMissingRequirementPayload",
     "ModeloReadinessResult",
     "ModeloReconcileResult",

@@ -141,8 +141,10 @@ def test_vendored_context_stack_is_visible_to_json_probe() -> None:
     probe_app = typer.Typer()
 
     @probe_app.command()
-    def probe(json_out: bool = typer.Option(False, "--json")) -> None:  # pyright: ignore[reportUnusedFunction]  # reason: registered via decorator
+    def probe(json_out: bool = typer.Option(False, "--json")) -> None:
         observed.append(json_output_requested())
+
+    assert probe.__name__ == "probe"
 
     runner = CliRunner()
     result = runner.invoke(probe_app, ["--json"])

@@ -10,29 +10,29 @@ through ``ledger classify --from-csv`` and asserts every row is applied.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....adapters.inbound.financial.providers._csv import CsvProvider
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.transactions import derive_transaction_id
 from ....tests import FIXTURES_DIR
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _ACCOUNT = "bbva-business-eur.csv"
 _FIXTURE = _CORPUS / "classify" / "bbva-business-eur.classify.csv"
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
 
 
 def _rules() -> list[dict[str, object]]:
@@ -68,6 +68,10 @@ def test_classify_fixture_matches_oracle_derivation() -> None:
 
 @pytest.fixture
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    from ....application.user_profile._orchestration import profile_create_storage_span
+    from ....application.user_profile._testing import register_minimal_profile
+    from ....application.workflow._persistence import workflow_state_repository
+
     dispose_engine()
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
@@ -82,9 +86,9 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def test_classify_fixture_applies_through_bulk_classify(_isolated_backend: None) -> None:
-    imported = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / _ACCOUNT), "--provider", "csv"])
+    imported = _invoke(["app", "ledger", "import", str(_CORPUS / _ACCOUNT), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
-    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--from-csv", str(_FIXTURE)])
+    result = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(_FIXTURE)])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     expected_rows = len(_FIXTURE.read_text(encoding="utf-8").strip().splitlines()) - 1

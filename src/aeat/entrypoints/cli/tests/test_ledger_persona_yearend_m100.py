@@ -28,12 +28,12 @@ reference with the paid-year settlement.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
@@ -41,12 +41,11 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _FILES = (
     "bbva-business-eur.csv",
@@ -57,6 +56,10 @@ _FILES = (
 
 # Cross-year invoice: raised Dec 2025, settled Jan 2026 (README §Cross-period).
 _CROSS_YEAR_NEEDLE = "F-2025-024"
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
 
 
 @pytest.fixture(autouse=True)
@@ -89,12 +92,12 @@ def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object
 
 def _import_corpus() -> None:
     for name in _FILES:
-        result = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
+        result = _invoke(["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
 def _list_rows() -> list[dict[str, object]]:
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
@@ -123,7 +126,7 @@ def test_annual_review_filter_renders_full_year() -> None:
     output is a row dump, not a totalled picture.
     """
     _import_corpus()
-    annual = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2025"])
+    annual = _invoke(["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2025"])
     assert annual.exit_code == 0, annual.output
     # The annual filter must contain rows dated across the year, not just Q1.
     assert "2025-01" in annual.output, annual.output
@@ -134,7 +137,7 @@ def test_all_four_quarters_reviewable() -> None:
     """Each 2025 quarter is independently reviewable (per-period is the only roll-up)."""
     _import_corpus()
     for q in ("1T", "2T", "3T", "4T"):
-        result = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", f"period={q}", "--filter", "year=2025"])
+        result = _invoke(["app", "ledger", "review", "--filter", f"period={q}", "--filter", "year=2025"])
         assert result.exit_code == 0, f"{q}: {result.output}"
 
 
@@ -146,7 +149,7 @@ def test_check_surfaces_both_years_as_touched_periods() -> None:
     period inventory, not a reconciliation of cross-year transactions.
     """
     _import_corpus()
-    checked = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "check"])
+    checked = _invoke(["--format", "json", "app", "ledger", "check"])
     assert checked.exit_code == 0, checked.output
     result = json.loads(checked.output)["result"]
     assert "2025" in result["periods"], result["periods"]
@@ -154,7 +157,7 @@ def test_check_surfaces_both_years_as_touched_periods() -> None:
 
 
 # --- Annual income vs expense picture: assembled by hand from list JSON ------
-def test_annual_income_and_expense_picture_must_be_summed_by_hand() -> None:
+def test_annual_income_and_expense_picture_must_be_summed_by_hand(tmp_path: Path) -> None:
     """No annual-total verb exists; the operator sums ``list`` JSON himself.
 
     TESTIMONIAL CORE: the year-end Renta picture (full-year income vs
@@ -186,13 +189,10 @@ def test_annual_income_and_expense_picture_must_be_summed_by_hand() -> None:
         classified_ids.add(tx_id)
     assert classified_ids, "oracle must classify a non-trivial slice of the corpus"
 
-    import tempfile
+    classify_csv = tmp_path / "yearend-classifications.csv"
+    classify_csv.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, encoding="utf-8") as fh:
-        fh.write("\n".join(lines) + "\n")
-        classify_csv = fh.name
-
-    classified = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--from-csv", classify_csv])
+    classified = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(classify_csv)])
     assert classified.exit_code == 0, classified.output
     applied = json.loads(classified.output)["result"]["applied"]
     assert applied == len(classified_ids), (applied, len(classified_ids))
@@ -274,9 +274,9 @@ def test_cross_year_invoice_falls_outside_a_2025_period_filter() -> None:
     under-count 2025 income by this row unless they reconcile devengo by hand.
     """
     _import_corpus()
-    review_2025 = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2025"])
+    review_2025 = _invoke(["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2025"])
     assert review_2025.exit_code == 0, review_2025.output
-    review_2026 = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2026"])
+    review_2026 = _invoke(["app", "ledger", "review", "--filter", "period=0A", "--filter", "year=2026"])
     assert review_2026.exit_code == 0, review_2026.output
     # The cross-year invoice settles in 2026, so the 2026 period view carries it
     # and the 2025 period view does not — accrual placement is the operator's job.
@@ -294,7 +294,7 @@ def test_no_annual_money_rollup_surface_exists() -> None:
     picture is not a first-class CLI output.
     """
     _import_corpus()
-    status = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "status", "--period", "0A", "--year", "2025"])
+    status = _invoke(["--format", "json", "app", "ledger", "status", "--period", "0A", "--year", "2025"])
     assert status.exit_code == 0, status.output
     result = json.loads(status.output)["result"]
     # Counts and readiness exist ...

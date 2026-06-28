@@ -9,16 +9,10 @@ here, not in a shipped operator session.
 from __future__ import annotations
 
 import pytest
-from typer.testing import CliRunner
 
-from .._config import profile_app
+from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture
-def runner() -> CliRunner:
-    return CliRunner()
 
 
 _OPERATOR_VERBS = (
@@ -35,9 +29,9 @@ _OPERATOR_VERBS = (
 
 
 @pytest.mark.parametrize("verb", _OPERATOR_VERBS)
-def test_operator_verb_is_mounted(verb: str, runner: CliRunner) -> None:
+def test_operator_verb_is_mounted(verb: str) -> None:
     """Each operator-target verb resolves under `aeat config profile`."""
 
-    result = runner.invoke(profile_app, [verb, "--help"])
+    result = invoke_cached_cli(["config", "profile", verb, "--help"])
 
     assert result.exit_code == 0, result.output

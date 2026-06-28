@@ -1,6 +1,8 @@
 """Bulk CSV transport helper for ``aeat app ledger classify``.
 
-Use of :class:`TransactionCatalogueRepository` for compliance.
+Bulk classification writes through :class:`TransactionCatalogueRepository` when
+the caller supplies the concrete repository, preserving the active ledger
+catalogue path.
 """
 
 from __future__ import annotations
@@ -13,6 +15,7 @@ import typer
 from ...application.ledger import bulk_classify_from_csv as _bulk_classify
 from ...core import resolve_active_bucket_id
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions import BusinessClassification, TransactionCatalogueRepository
 from ._common import _bad, _emit_envelope
 
@@ -79,7 +82,27 @@ def ledger_classify_bulk_csv(
             "failures": [f.model_dump(mode="json") for f in result.failures],
         },
     )
-    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+    notices: list[Notice] = []
+    if result.total > 0 and result.applied == 0 and result.failures:
+        message = tr(
+            "cli.ledger.classify.bulk_all_failed",
+            default="bulk classify failed: every row failed; no ledger rows were updated",
+        )
+        lines.insert(1, message)
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.classify.bulk_all_failed",
+                message=message,
+                context={
+                    "total": str(result.total),
+                    "failed": str(len(result.failures)),
+                },
+            ),
+        )
+    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
+    if notices:
+        raise typer.Exit(code=1)
 
 
 __all__ = ["ledger_classify_bulk_csv"]

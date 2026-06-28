@@ -25,7 +25,8 @@ def _scrubbing_filter_is_attached(log: logging.Logger) -> bool:
             return True
         if not target.propagate:
             break
-        target = target.parent  # type: ignore[assignment]
+        parent = target.parent
+        target = parent if isinstance(parent, logging.Logger) else None
     root = logging.getLogger()
     return any(isinstance(f, SecretScrubbingFilter) for f in root.filters)
 

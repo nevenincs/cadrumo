@@ -24,6 +24,7 @@ def _report(
     drafts: int = 0,
     work_units: int = 0,
     discarded_work_units: int = 0,
+    unsupported_work_create_modelos: tuple[str, ...] = (),
 ) -> OverviewStatusReport:
     return OverviewStatusReport(
         active_profile="bucket-uuid",
@@ -35,6 +36,7 @@ def _report(
         discarded_work_units=discarded_work_units,
         calculation_revisions=0,
         unreadable_rows=0,
+        unsupported_work_create_modelos=unsupported_work_create_modelos,
     )
 
 
@@ -58,6 +60,20 @@ def test_next_step_not_import_once_ledger_has_transactions() -> None:
     # The operator is guided forward, not backward.
     assert "ledger review" in joined
     assert "modelo work create" in joined
+
+
+def test_next_step_does_not_suggest_unsupported_m210_work_create() -> None:
+    """IRNR profiles must not be steered toward unsupported Modelo 210 work units."""
+
+    lines = render_cli_overview_status_lines(
+        _report(transactions=6, unsupported_work_create_modelos=("210",)),
+    )
+    joined = "\n".join(lines)
+    assert "ledger import" not in joined
+    assert "ledger review" in joined
+    assert "modelo work create" not in joined
+    assert "modelo describe 210" in joined
+    assert "G320" in joined
 
 
 def test_next_step_resumes_modelo_work_when_work_units_exist() -> None:

@@ -1,6 +1,7 @@
 """Profile event-history command registration for ``aeat config profile history``.
 
-Use of :class:`BucketEventHistoryRepository` for compliance.
+The history command reads :class:`BucketEventHistoryRepository` and filters the
+active profile bucket's append-only events.
 """
 
 from __future__ import annotations
