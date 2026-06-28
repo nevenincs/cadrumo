@@ -7,13 +7,16 @@ bounded f-string pattern whose value space is fully known at import time
 so the scaffold can expand them into concrete placeholder entries.
 
 Every f-string ``tr()`` call site with a known enumeration source must be
-registered here. Open-ended patterns (e.g. ``profile.keys.{profile_key}``
-or ``sheets.detalle.headers.{row_field}``) remain namespace-marker only
-because their value spaces are not bounded at import time.
+registered here as a :class:`FStringKeyRegistration`. Open-ended patterns
+(e.g. ``profile.keys.{profile_key}`` or ``sheets.detalle.headers.{row_field}``)
+remain namespace-marker only because their value spaces are not bounded at
+import time.
 
 Adding a new enum value without updating the matching registration here
 will cause scaffold to omit the required locale entries, which the
-registration coverage test will surface immediately.
+registration coverage test will surface immediately. The expanded key set
+is exposed through :func:`get_registered_keys` for :class:`LocaleManager`
+scaffold and parity checks.
 """
 
 from __future__ import annotations

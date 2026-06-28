@@ -206,7 +206,7 @@ class ModeloLocaleManager:
         return revision_dir
 
     def load_modelo(self, modelo_id: str) -> ModeloDefinition:
-        """Load a directory-mode modelo without applying locale TOML files."""
+        """Load a directory-mode :class:`ModeloDefinition` without applying locale TOML files."""
         modelo_dir = self.resolve_modelo_dir(modelo_id)
         revisions = _load_modelo_revisions(modelo_dir)
         if not revisions:
@@ -224,7 +224,7 @@ class ModeloLocaleManager:
         modelo_id: str,
         revision_id: str | None = None,
     ) -> tuple[ModeloLocaleInventoryKey, ...]:
-        """Return registry-backed schema-local translation keys for a modelo.
+        """Return :class:`ModeloLocaleInventoryKey` rows for a modelo.
 
         Revision-local records are keyed by ``casilla_id``. Modelo-local
         records are keyed by ``continuidad_id`` and deduplicated across the
@@ -249,7 +249,7 @@ class ModeloLocaleManager:
         modelo_id: str,
         revision_id: str,
     ) -> tuple[ModeloLocaleDriftRecord, ...]:
-        """Return missing and stale schema-local translation leaves."""
+        """Return :class:`ModeloLocaleDriftRecord` rows for missing and stale schema-local leaves."""
         language = _coerce_output_language(locale)
         expected = self.inventory_keys(modelo_id, revision_id)
         expected_by_target = _expected_keys_by_target(expected, locale=language)
@@ -288,7 +288,7 @@ class ModeloLocaleManager:
         modelo_id: str,
         revision_id: str,
     ) -> ModeloLocaleCoverageRecord:
-        """Return schema-local translation coverage for one modelo revision."""
+        """Return a :class:`ModeloLocaleCoverageRecord` for one modelo revision."""
         language = _coerce_output_language(locale)
         expected = self.inventory_keys(modelo_id, revision_id)
         expected_by_target = _expected_keys_by_target(expected, locale=language)
@@ -433,7 +433,7 @@ class ModeloLocaleManager:
         *,
         require_exists: bool = False,
     ) -> ModeloLocaleTranslationFile:
-        """Load one schema-local locale TOML file, or return an empty file model."""
+        """Load a :class:`ModeloLocaleTranslationFile`, or return an empty file model."""
         paths = self._translation_paths(target)
         if len(paths) == 1 and not paths[0].exists():
             if require_exists:
