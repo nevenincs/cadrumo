@@ -10,7 +10,12 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
+from ...adapters.persistence.storage.errors import (
+    ClassificationError,
+    DecryptionError,
+    EnvelopeVersionError,
+    StorageValidationError,
+)
 from ...core import BindingSourceKind, Period
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry import (
@@ -30,7 +35,12 @@ from ..aggregation._source_mesh import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
-from ..ledger import BusinessOperationInvoiceDirection
+from ..ledger import (
+    BusinessOperationInvoice,
+    BusinessOperationInvoiceDirection,
+    BusinessOperationInvoiceRepository,
+    IntracomOperationType,
+)
 
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.COLLECTIBLE_INVOICE,
@@ -69,13 +79,19 @@ def invoice_direction_to_source_kind(kind: InvoiceKind) -> BusinessOperationInvo
 
 
 class InvoiceCatalogueSourceResolver:
-    """Resolve scalar invoice-source bindings from the encrypted invoice catalogue."""
+    """Resolve scalar invoice-source bindings from persisted invoice records."""
 
     resolver_id = "invoice_catalogue"
     owned_sources = _OWNED_SOURCES
 
-    def __init__(self, *, invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+        business_invoice_repository: BusinessOperationInvoiceRepository | None = None,
+    ) -> None:
         self._invoice_repository = invoice_repository
+        self._business_invoice_repository = business_invoice_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         active_sources = _invoice_sources_for_revision(context)
@@ -97,12 +113,33 @@ class InvoiceCatalogueSourceResolver:
             for invoice in catalogue.values()
             if _invoice_in_context(invoice, context) and _invoice_source_kind(invoice) in active_sources
         )
-        observed = tuple(
+        catalogue_observed = tuple(
             (invoice, observation)
             for invoice in source_invoices
             if (observation := _invoice_observation(invoice, context=context)) is not None
         )
-        observations = tuple(observation for _, observation in observed)
+        try:
+            business_invoices = _load_business_operation_invoices(
+                context,
+                repository=self._business_invoice_repository,
+                rich_invoice_repository=self._invoice_repository,
+            )
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=tuple(active_sources),
+                error=exc,
+            )
+        business_observed = tuple(
+            (invoice, observation)
+            for invoice in business_invoices
+            if _business_invoice_source_kind(invoice) in active_sources
+            if (observation := _business_invoice_observation(invoice, context=context)) is not None
+        )
+        observations = tuple(observation for _, observation in catalogue_observed) + tuple(
+            observation for _, observation in business_observed
+        )
         binding_values = resolve_invoice_binding_values(context.revision, observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
@@ -111,10 +148,15 @@ class InvoiceCatalogueSourceResolver:
             detail_rows=_m349_operador_rows_from_observations(context=context, observations=observations),
             source_transaction_ids=tuple(
                 sorted(
-                    {transaction_id for invoice, _ in observed for transaction_id in invoice.linked_transaction_ids},
+                    {
+                        transaction_id
+                        for invoice, _ in catalogue_observed
+                        for transaction_id in invoice.linked_transaction_ids
+                    },
                 ),
             ),
-            provenance=tuple(_invoice_provenance(invoice, observation) for invoice, observation in observed),
+            provenance=tuple(_invoice_provenance(invoice, observation) for invoice, observation in catalogue_observed)
+            + tuple(_business_invoice_provenance(invoice, observation) for invoice, observation in business_observed),
         )
 
 
@@ -134,6 +176,10 @@ def _date_in_period(value: date, *, period: Period) -> bool:
 
 def _invoice_source_kind(invoice: Invoice) -> str:
     return invoice_direction_to_source_kind(invoice.kind).value
+
+
+def _business_invoice_source_kind(invoice: BusinessOperationInvoice) -> str:
+    return invoice.source_kind.value
 
 
 def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:
@@ -238,9 +284,126 @@ def _m349_operador_rows_from_observations(
     return tuple(rows)
 
 
+def _load_business_operation_invoices(
+    context: CalculationSourceContext,
+    *,
+    repository: BusinessOperationInvoiceRepository | None,
+    rich_invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+) -> tuple[BusinessOperationInvoice, ...]:
+    try:
+        source = repository or BusinessOperationInvoiceRepository(bucket_id=context.bucket_id)
+        return tuple(
+            record
+            for document in source.iter_records()
+            if document.bucket_id == context.bucket_id
+            for record in document.records
+            if _business_invoice_in_context(record, context)
+        )
+    except StorageValidationError:
+        if repository is None and rich_invoice_repository is not None:
+            return ()
+        raise
+
+
+def _business_invoice_in_context(invoice: BusinessOperationInvoice, context: CalculationSourceContext) -> bool:
+    if invoice.bucket_id != context.bucket_id:
+        return False
+    return _date_in_period(_business_invoice_date(invoice), period=context.period)
+
+
+def _business_invoice_observation(
+    invoice: BusinessOperationInvoice,
+    *,
+    context: CalculationSourceContext,
+) -> InvoiceObservation | None:
+    clave = _business_invoice_clave(invoice)
+    if clave is None:
+        return None
+    country_code = _business_invoice_country_code(invoice)
+    party_tax_id = _business_invoice_party_tax_id(invoice)
+    if str(context.modelo) == "349":
+        validate_m349_country_prefix_context(
+            country_code=country_code,
+            clave_operacion=clave,
+            filing_year=context.filing_year,
+            period=context.period.registry_token,
+        )
+    return InvoiceObservation(
+        invoice_id=invoice.invoice_id,
+        source_kind=BindingSourceKind(invoice.source_kind.value),
+        party_tax_id=party_tax_id,
+        country_code=country_code,
+        transaction_date=_business_invoice_date(invoice),
+        base_amount=invoice.taxable_base,
+        intracommunity_clave=clave,
+        party_legal_name=invoice.counterparty_name or None,
+    )
+
+
+def _business_invoice_date(invoice: BusinessOperationInvoice) -> date:
+    try:
+        return date.fromisoformat(invoice.invoice_date)
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"business invoice {invoice.invoice_id!r} has invalid invoice_date {invoice.invoice_date!r}",
+        ) from exc
+
+
+def _business_invoice_clave(invoice: BusinessOperationInvoice) -> str | None:
+    operation_type = invoice.operation_type
+    if operation_type is None:
+        return None
+    if operation_type is IntracomOperationType.R:
+        raise RegistryValidationError(
+            f"business invoice {invoice.invoice_id!r} uses rectification operation type R "
+            "but the slim invoice record has no rectified period/base metadata",
+        )
+    clave = operation_type.value
+    if invoice.source_kind is BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE and clave in {"A", "I"}:
+        raise RegistryValidationError(
+            f"business invoice {invoice.invoice_id!r} is issued but uses acquisition operation type {clave!r}",
+        )
+    if invoice.source_kind is BusinessOperationInvoiceDirection.PAYABLE_INVOICE and clave in {"E", "S"}:
+        raise RegistryValidationError(
+            f"business invoice {invoice.invoice_id!r} is received but uses supply/service operation type {clave!r}",
+        )
+    return clave
+
+
+def _business_invoice_party_tax_id(invoice: BusinessOperationInvoice) -> str:
+    value = (invoice.eu_iva_id or invoice.counterparty_nif).strip().upper()
+    if not value:
+        raise RegistryValidationError(f"business invoice {invoice.invoice_id!r} has no counterparty tax id")
+    return value
+
+
+def _business_invoice_country_code(invoice: BusinessOperationInvoice) -> str:
+    if invoice.country_code is not None:
+        return invoice.country_code.strip().upper()
+    party_tax_id = _business_invoice_party_tax_id(invoice)
+    if len(party_tax_id) >= 2 and party_tax_id[:2].isalpha():
+        return "GR" if party_tax_id[:2] == "EL" else party_tax_id[:2]
+    raise RegistryValidationError(
+        f"business invoice {invoice.invoice_id!r} has operation_type but no country_code or EU IVA-ID prefix",
+    )
+
+
 def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> CalculationSourceProvenance:
     payload = observation.model_dump_json()
     source_kind = _invoice_source_kind(invoice)
+    return CalculationSourceProvenance(
+        source_kind=source_kind,
+        source_ref=f"{source_kind}:{observation.invoice_id}",
+        fingerprint=f"sha256:{sha256_hex(payload.encode('utf-8'))}",
+    )
+
+
+def _business_invoice_provenance(
+    invoice: BusinessOperationInvoice,
+    observation: InvoiceObservation,
+) -> CalculationSourceProvenance:
+    payload = observation.model_dump_json()
+    source_kind = _business_invoice_source_kind(invoice)
     return CalculationSourceProvenance(
         source_kind=source_kind,
         source_ref=f"{source_kind}:{observation.invoice_id}",

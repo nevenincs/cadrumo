@@ -1,4 +1,4 @@
-"""Modelo 349 export rows from catalogue invoices through the real CLI."""
+"""Modelo 349 export rows from operator invoices through the real CLI."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def _create_profile() -> None:
             "config",
             "profile",
             "create",
-            "m349-catalogue",
+            "m349-business-invoices",
             "--quiet",
             "--tax-id",
             "12345678Z",
@@ -39,7 +39,7 @@ def _create_profile() -> None:
             "--name",
             "Ana",
             "--surnames",
-            "Catalogo",
+            "Operadora",
             "--irpf-income-categories",
             "actividad_economica",
             "--activity",
@@ -49,7 +49,7 @@ def _create_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
-def _create_catalogue_invoice(
+def _add_business_invoice(
     *,
     kind: str,
     counterparty_nif: str,
@@ -63,8 +63,7 @@ def _create_catalogue_invoice(
             "app",
             "ledger",
             "invoice",
-            "catalogue",
-            "create",
+            "add",
             "--kind",
             kind,
             "--counterparty-nif",
@@ -95,9 +94,9 @@ def _exported_records(path: Path) -> list[str]:
     return [text[index : index + 500] for index in range(0, len(text), 500)]
 
 
-def test_m349_catalogue_invoices_persist_and_export_operador_rows(tmp_path: Path) -> None:
+def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path) -> None:
     _create_profile()
-    _create_catalogue_invoice(
+    _add_business_invoice(
         kind="issued",
         counterparty_nif="DE123456789",
         counterparty_name="Kunde GmbH",
@@ -105,7 +104,7 @@ def test_m349_catalogue_invoices_persist_and_export_operador_rows(tmp_path: Path
         taxable_base="1000.00",
         operation_type="E",
     )
-    _create_catalogue_invoice(
+    _add_business_invoice(
         kind="received",
         counterparty_nif="DE222222222",
         counterparty_name="Supplier GmbH",
