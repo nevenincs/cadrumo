@@ -27,7 +27,47 @@ def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Res
 
 
 def _create_profile(name: str, *options: str, env: Mapping[str, str] | None = None) -> Result:
-    return _invoke(("config", "profile", "create", name, "--quiet", *options), env=env)
+    return _invoke(
+        (
+            "config",
+            "profile",
+            "create",
+            name,
+            "--quiet",
+            *_filing_identity_defaults(name, options),
+            *options,
+        ),
+        env=env,
+    )
+
+
+def _filing_identity_defaults(name: str, options: tuple[str, ...]) -> tuple[str, ...]:
+    option_set = set(options)
+    defaults: list[str] = []
+    if "--entity-type" not in option_set:
+        defaults.extend(["--entity-type", "natural_person"])
+    entity_type = _option_value(options, "--entity-type") or "natural_person"
+    if entity_type == "legal_entity":
+        if "--legal-name" not in option_set:
+            defaults.extend(["--legal-name", f"{name} SL"])
+        return tuple(defaults)
+    if "--name" not in option_set:
+        defaults.extend(["--name", name])
+    if entity_type == "natural_person" and "--surnames" not in option_set:
+        defaults.extend(["--surnames", "Test"])
+    return tuple(defaults)
+
+
+def _option_value(options: tuple[str, ...], flag: str) -> str | None:
+    try:
+        index = options.index(flag)
+    except ValueError:
+        return None
+    value_index = index + 1
+    if value_index >= len(options):
+        return None
+    value = options[value_index]
+    return None if value.startswith("--") else value
 
 
 def _json_output(result: Result) -> str:
@@ -144,8 +184,14 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
 
     create_result = _create_profile(
         "default",
+        "--entity-type",
+        "natural_person",
         "--tax-id",
         "00000000T",
+        "--name",
+        "Output",
+        "--surnames",
+        "Language",
         "--activity",
         "Servicios",
         "--output-language",

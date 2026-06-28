@@ -145,6 +145,28 @@ def persist_answers(
     return set_active_fields(state, facts)
 
 
+def profile_values_from_patch(flow: WizardFlow, supplied: Mapping[str, str]) -> dict[str, str]:
+    """Project a non-interactive edit patch to schema-path keyed values."""
+    from ._widgets import validate_widget_answer
+
+    questions = _question_by_id(flow)
+    values: dict[str, str] = {}
+    for question_id, raw in supplied.items():
+        question = questions.get(question_id)
+        if question is None:
+            raise WorkflowInputMismatchError(
+                translated_message="application.wizard.errors.persist_patch_unknown_question_id",
+                context={"question_id": question_id},
+            )
+        if question.profile_key is None:
+            continue
+        validated = validate_widget_answer(question, raw)
+        if not validated:
+            continue
+        values[question.profile_key] = validated
+    return values
+
+
 def persist_patch(
     flow: WizardFlow,
     supplied: Mapping[str, str],
@@ -165,24 +187,12 @@ def persist_patch(
     skipped.
     """
     from ...domain.user_profile import UserProfileFact
-    from ._widgets import validate_widget_answer
 
-    questions = _question_by_id(flow)
-    facts: list[UserProfileFact] = []
-    for question_id, raw in supplied.items():
-        question = questions.get(question_id)
-        if question is None:
-            raise WorkflowInputMismatchError(
-                translated_message="application.wizard.errors.persist_patch_unknown_question_id",
-                context={"question_id": question_id},
-            )
-        if question.profile_key is None:
-            continue
-        validated = validate_widget_answer(question, raw)
-        if not validated:
-            continue
-        facts.append(UserProfileFact(path=question.profile_key, value=validated))
-    return set_active_fields(state, tuple(facts))
+    facts = tuple(
+        UserProfileFact(path=path, value=value)
+        for path, value in profile_values_from_patch(flow, supplied).items()
+    )
+    return set_active_fields(state, facts)
 
 
 def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:
@@ -242,6 +252,7 @@ __all__ = [
     "WizardPersistMode",
     "persist_answers",
     "persist_patch",
+    "profile_values_from_patch",
     "project_answers",
     "serialise_answers",
 ]

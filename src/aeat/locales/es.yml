@@ -1205,6 +1205,9 @@ application:
       create_missing_filing_baseline: 'A la creación del perfil le faltan datos
         de identidad para presentar modelos. Añade estos flags y vuelve a ejecutar
         el comando: %{missing_flags}.'
+      edit_missing_filing_baseline: 'Esta edición dejaría incompletos los datos
+        de identidad para presentar modelos. Añade estos flags al mismo comando
+        y vuelve a ejecutarlo: %{missing_flags}.'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -2458,6 +2461,9 @@ cli:
       import_invalid_tax_id: 'El identificador fiscal del paquete de perfil no es
         válido: %{error}. Corrige el identificador y vuelve a exportar, o importa
         un paquete válido.'
+      import_missing_filing_baseline: 'Al paquete de perfil le faltan datos de identidad
+        para presentar modelos. Corrige el paquete o vuelve a exportar un perfil
+        completo con estos campos: %{missing_flags}.'
       import_label_help: Nombre visible para el perfil importado; por defecto el nombre
         guardado en el paquete. Úsalo para importar una segunda copia con otro nombre.
       import_label_taken: Ya existe un perfil con el nombre %{name}. Vuelve a ejecutar

@@ -101,6 +101,7 @@ if TYPE_CHECKING:
         rekey_secret_store,
         verify_recovery_code,
     )
+    from ._filing_baseline import missing_filing_baseline_flags
     from ._lifecycle import ProfileLifecycleService
     from ._orchestration import (
         ProfileAlreadyRegisteredError,
@@ -259,6 +260,10 @@ def __getattr__(name: str):
         from . import _custody
 
         return getattr(_custody, name)
+    if name == "missing_filing_baseline_flags":
+        from ._filing_baseline import missing_filing_baseline_flags
+
+        return missing_filing_baseline_flags
     if name in (
         "ProfileAlreadyRegisteredError",
         "build_lifecycle_service",
@@ -368,6 +373,7 @@ __all__ = [
     "inspect_recovery_status",
     "logout_active_profile",
     "mint_recovery_code",
+    "missing_filing_baseline_flags",
     "profile_create_storage_span",
     "profile_storage_session",
     "projection_for_taxpayer",

@@ -1130,6 +1130,9 @@ application:
       create_missing_filing_baseline: 'A profil létrehozásához hiányoznak a bevallási
         azonosító adatok. Adja hozzá ezeket a kapcsolókat, és futtassa újra a
         parancsot: %{missing_flags}'
+      edit_missing_filing_baseline: 'Ez a profilszerkesztés hiányos bevallási
+        azonosító adatokkal hagyná a profilt. Adja hozzá ezeket a kapcsolókat
+        ugyanahhoz a parancshoz, és futtassa újra: %{missing_flags}'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -2373,6 +2376,9 @@ cli:
       import_invalid_bundle: 'Érvénytelen profilcsomag: a JSON nem felel meg a profilcsomag-sémának.'
       import_invalid_tax_id: 'A profilcsomag adóazonosítója érvénytelen: %{error}.
         Javítsd az azonosítót és exportáld újra, vagy érvényes csomagot importálj.'
+      import_missing_filing_baseline: 'A profilcsomagból hiányoznak a bevallási
+        azonosító adatok. Javítsa a csomagot, vagy exportáljon újra teljes profilt
+        ezekkel a mezőkkel: %{missing_flags}.'
       import_label_help: 'Az importált profil megjelenítési neve; alapértelmezés:
         a csomagban tárolt név. Használja második példány importálásához új felirat
         alatt.'
