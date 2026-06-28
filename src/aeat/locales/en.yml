@@ -2835,9 +2835,11 @@ cli:
         invoice_not_found: This id was not found in the reconciliation invoice catalogue,
           which is populated by the invoice import and reconciliation flows. Ids minted
           by 'aeat app ledger invoice add' are operator invoice records and cannot
-          be linked here. To attach purchase-invoice evidence, run 'aeat app ledger
-          link <tx> --evidence-id <id>' (or 'aeat app ledger attach') with an id from
-          'aeat app ledger evidence add'.
+          be linked here. To create a linkable catalogue invoice manually, run 'aeat
+          app ledger invoice catalogue create' and pass that invoice_id to --invoice-id.
+          To attach purchase-invoice evidence, run 'aeat app ledger link <tx> --evidence-id
+          <id>' (or 'aeat app ledger attach') with an id from 'aeat app ledger evidence
+          add'.
         missing_target: Supply at least one of --invoice-id or --evidence-id.
       evidence_id_help: Purchase-invoice evidence id minted by 'aeat app ledger evidence
         add', attached to the transaction.
@@ -2846,8 +2848,8 @@ cli:
         never contacts AEAT.
       id_help: Ledger transaction id (SHA-256 or unambiguous prefix).
       invoice_id_help: Rich invoice-catalogue id from an imported or reconciled invoice,
-        bound bidirectionally to the transaction. This is NOT an 'aeat app ledger
-        invoice add' id.
+        or from 'aeat app ledger invoice catalogue create', bound bidirectionally
+        to the transaction. This is NOT an 'aeat app ledger invoice add' id.
     list:
       by_group_help: Section the listing by group label.
       column_header: "id\tfull_id\tdate\tamount\tdescription\treview_status"

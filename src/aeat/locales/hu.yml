@@ -2950,10 +2950,12 @@ cli:
         invoice_not_found: Ez az azonosító nem szerepel a reconciliációs számlakatalógusban,
           amelyet a számlaimportálási és -reconciliációs folyamatok töltenek fel.
           Az 'aeat app ledger invoice add' által létrehozott azonosítók operatori
-          számlarekordok, és itt nem kapcsolhatók össze. Vásárlásiszámla-bizonyíték
-          csatolásához futtassa az 'aeat app ledger link <tx> --evidence-id <id>'
-          (vagy 'aeat app ledger attach') parancsot egy 'aeat app ledger evidence
-          add' azonosítóval.
+          számlarekordok, és itt nem kapcsolhatók össze. Kézzel linkelhető katalógusszámla
+          létrehozásához futtassa az 'aeat app ledger invoice catalogue create'
+          parancsot, majd adja át az invoice_id értéket a --invoice-id kapcsolónak.
+          Vásárlásiszámla-bizonyíték csatolásához futtassa az 'aeat app ledger link
+          <tx> --evidence-id <id>' (vagy 'aeat app ledger attach') parancsot egy
+          'aeat app ledger evidence add' azonosítóval.
         missing_target: 'Adjon meg legalább egyet: --invoice-id vagy --evidence-id.'
       evidence_id_help: Az 'aeat app ledger evidence add' által létrehozott vásárlásiszámla-bizonyíték
         azonosítója, amely a tranzakcióhoz kapcsolódik.
@@ -2962,7 +2964,8 @@ cli:
         soha nem lép kapcsolatba az AEAT-tal.
       id_help: Konyvelesi tranzakcio azonosito (SHA-256 vagy egyertelmu elotag).
       invoice_id_help: A bővített számlakatalógus azonosítója egy importált vagy reconciliált
-        számlából, amely kétirányúan kapcsolódik a tranzakcióhoz. Ez NEM 'aeat app
+        számlából, vagy az 'aeat app ledger invoice catalogue create' paranccsal
+        létrehozva, amely kétirányúan kapcsolódik a tranzakcióhoz. Ez NEM 'aeat app
         ledger invoice add' azonosító.
     list:
       by_group_help: A lista csoportositasa csoportcimke szerint.

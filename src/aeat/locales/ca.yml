@@ -2991,7 +2991,9 @@ cli:
         invoice_not_found: Aquest id no existeix al catàleg de factures de reconciliació,
           que s'omple amb els fluxos d'importació i reconciliació de factures. Els
           id generats per 'aeat app ledger invoice add' són registres de factura de
-          l'operador i no es poden vincular aquí. Per adjuntar evidència de factura
+          l'operador i no es poden vincular aquí. Per crear manualment una factura
+          de catàleg vinculable, executa 'aeat app ledger invoice catalogue create'
+          i passa aquest invoice_id a --invoice-id. Per adjuntar evidència de factura
           de compra, executa 'aeat app ledger link <tx> --evidence-id <id>' (o 'aeat
           app ledger attach') amb un id d''aeat app ledger evidence add'.
         missing_target: Indica almenys un de --invoice-id o --evidence-id.
@@ -3002,8 +3004,9 @@ cli:
         Local; mai contacta amb AEAT.
       id_help: Id de transaccio del llibre (SHA-256 o prefix inequivoc).
       invoice_id_help: Id del catàleg de factures enriquit, procedent d'una factura
-        importada o reconciliada, vinculat bidireccionalment amb el moviment. NO és
-        un id d''aeat app ledger invoice add'.
+        importada, reconciliada o creada amb 'aeat app ledger invoice catalogue create',
+        vinculat bidireccionalment amb el moviment. NO és un id d''aeat app ledger
+        invoice add'.
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
       column_header: "id\tid_complet\tdata\timport\tdescripció\testat_revisió"
