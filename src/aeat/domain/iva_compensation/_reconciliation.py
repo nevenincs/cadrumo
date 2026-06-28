@@ -61,6 +61,7 @@ type IvaCompensationDivergence = Literal[
     "wallet_stale",
     "override",
     "first_period_zero",
+    "filed_history_zero",
     "missing",
 ]
 
@@ -375,6 +376,23 @@ def _missing_wallet_decision(
             wallet_captured_at=None,
         )
     if _is_filed_history_source(local_recurrence_source):
+        if ctx.local_recurrence_amount == Decimal("0"):
+            return _decision(
+                ctx,
+                selected_authority="filed_history",
+                selected_amount=Decimal("0"),
+                wallet_amount=None,
+                local_recurrence_amount=Decimal("0"),
+                override_amount=None,
+                divergence="filed_history_zero",
+                blocked=False,
+                stale_wallet=False,
+                reason=(
+                    "Committed local Modelo 303 filed-history evidence proves zero carry-forward "
+                    "compensation; no AEAT wallet amount is required for a zero prior-compensation binding."
+                ),
+                wallet_captured_at=None,
+            )
         return _decision(
             ctx,
             selected_authority="filed_history",
