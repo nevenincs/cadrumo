@@ -77,6 +77,11 @@ def _choice(values: list[str], *, case_sensitive: bool = True) -> typer._click.t
     return typing.cast("typer._click.types.ParamType", click.Choice(values, case_sensitive=case_sensitive))
 
 
+def _choice_metavar(values: list[str]) -> str:
+    """Render accepted choice tokens for Typer's dynamic-signature help."""
+    return "|".join(values)
+
+
 def _ccaa_choice_values() -> list[str]:
     """Return the CCAA choice tokens accepted by ``--tax-residence-ccaa``.
 
@@ -201,6 +206,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "taxation-type": typer.Option(
         "--taxation-type",
         click_type=_choice(["1", "2"]),
+        metavar=_choice_metavar(["1", "2"]),
         help=tr("wizard.setup.flags.taxation-type.help"),
     ),
     "output-language": typer.Option(
@@ -210,11 +216,13 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "taxpayer-sex": typer.Option(
         "--taxpayer-sex",
         click_type=_choice(["H", "M"]),
+        metavar=_choice_metavar(["H", "M"]),
         help=tr("wizard.setup.flags.taxpayer-sex.help"),
     ),
     "taxpayer-marital-status": typer.Option(
         "--taxpayer-marital-status",
         click_type=_choice(["1", "2", "3", "4"]),
+        metavar=_choice_metavar(["1", "2", "3", "4"]),
         help=tr("wizard.setup.flags.taxpayer-marital-status.help"),
     ),
     "taxpayer-marriage-date": typer.Option(
@@ -228,6 +236,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "taxpayer-disability-grade": typer.Option(
         "--taxpayer-disability-grade",
         click_type=_choice(["1", "2", "3", "4"]),
+        metavar=_choice_metavar(["1", "2", "3", "4"]),
         help=tr("wizard.setup.flags.taxpayer-disability-grade.help"),
     ),
     "taxpayer-death-date": typer.Option(
@@ -244,11 +253,13 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "spouse-sex": typer.Option(
         "--spouse-sex",
         click_type=_choice(["H", "M"]),
+        metavar=_choice_metavar(["H", "M"]),
         help=tr("wizard.setup.flags.spouse-sex.help"),
     ),
     "spouse-disability-grade": typer.Option(
         "--spouse-disability-grade",
         click_type=_choice(["1", "2", "3", "4"]),
+        metavar=_choice_metavar(["1", "2", "3", "4"]),
         help=tr("wizard.setup.flags.spouse-disability-grade.help"),
     ),
     "spouse-non-resident-irpf": typer.Option(
@@ -274,6 +285,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "iva-regime": typer.Option(
         "--iva-regime",
         click_type=_choice(_IVA_REGIME_CHOICE_VALUES, case_sensitive=False),
+        metavar=_choice_metavar(_IVA_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.iva-regime.help"),
     ),
     "iva-roi-enrolled": typer.Option(
@@ -335,6 +347,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "fiscal-residency": typer.Option(
         "--fiscal-residency",
         click_type=_choice(_FISCAL_RESIDENCY_CHOICE_VALUES),
+        metavar=_choice_metavar(_FISCAL_RESIDENCY_CHOICE_VALUES),
         help=tr("wizard.setup.flags.fiscal-residency.help"),
     ),
     "country-of-fiscal-residence": typer.Option(
@@ -380,16 +393,19 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "entity-type": typer.Option(
         "--entity-type",
         click_type=_choice(_ENTITY_TYPE_CHOICE_VALUES),
+        metavar=_choice_metavar(_ENTITY_TYPE_CHOICE_VALUES),
         help=tr("wizard.setup.flags.entity-type.help"),
     ),
     "legal-entity-form": typer.Option(
         "--legal-entity-form",
         click_type=_choice(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
+        metavar=_choice_metavar(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
         help=tr("wizard.setup.flags.legal-entity-form.help"),
     ),
     "irpf-income-categories": typer.Option(
         "--irpf-income-categories",
         click_type=_choice(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
+        metavar=_choice_metavar(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-income-categories.help"),
     ),
     "incn-prior-12-months": typer.Option(
@@ -403,11 +419,13 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "irpf-estimation-regime": typer.Option(
         "--irpf-estimation-regime",
         click_type=_choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
+        metavar=_choice_metavar(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
     ),
     "irpf-special-regime": typer.Option(
         "--irpf-special-regime",
         click_type=_choice(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
+        metavar=_choice_metavar(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-special-regime.help"),
     ),
     "irpf-special-regime-start-date": typer.Option(
@@ -417,6 +435,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "situacion-familiar": typer.Option(
         "--situacion-familiar",
         click_type=_choice(_SITUACION_FAMILIAR_CHOICE_VALUES),
+        metavar=_choice_metavar(_SITUACION_FAMILIAR_CHOICE_VALUES),
         help=tr("wizard.setup.flags.situacion-familiar.help"),
     ),
     "iva-sii-enrolled": typer.Option(
