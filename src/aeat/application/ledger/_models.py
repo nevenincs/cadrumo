@@ -713,8 +713,9 @@ class BulkClassifyRow(BaseModel):
     """One row from a ``ledger classify --from-csv`` CSV input file.
 
     Required columns: ``transaction_id``, ``classification``.
-    Optional columns: ``category_id``, ``business_pct``, ``taxable_base``,
-    ``iva_rate``, ``iva_amount``, ``iva_category``, ``irpf_category``.
+    Optional columns: ``category_id``, ``business_pct``, ``usage_ratio_id``,
+    ``taxable_base``, ``iva_rate``, ``iva_amount``, ``iva_category``,
+    ``irpf_category``.
     Unknown column names are rejected pre-persistence to protect against
     silent field mis-mapping. The IVA facts (``taxable_base``, ``iva_rate``,
     ``iva_amount``) are typed ``Decimal`` exactly as the single-classify path
@@ -728,6 +729,7 @@ class BulkClassifyRow(BaseModel):
     classification: BusinessClassification
     category_id: str | None = None
     business_pct: Decimal | None = None
+    usage_ratio_id: str | None = None
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
     iva_amount: Decimal | None = None
@@ -768,6 +770,7 @@ BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset(
         "classification",
         "category_id",
         "business_pct",
+        "usage_ratio_id",
         "taxable_base",
         "iva_rate",
         "iva_amount",

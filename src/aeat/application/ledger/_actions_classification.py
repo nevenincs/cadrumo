@@ -65,7 +65,7 @@ def bulk_classify_from_csv(
     bucket_id: str,
     csv_text: str,
     actor: str,
-    source_command: str = "aeat app ledger classify",
+    source_command: str = "aeat app ledger classify --from-csv",
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -74,9 +74,9 @@ def bulk_classify_from_csv(
     """Apply batch classifications from a CSV string.
 
     The CSV must contain ``transaction_id`` and ``classification`` columns;
-    ``category_id``, ``business_pct``, ``taxable_base``, ``iva_rate``,
-    ``iva_amount``, ``iva_category``, and ``irpf_category`` are optional. The
-    tax facts ride the same
+    ``category_id``, ``business_pct``, ``usage_ratio_id``, ``taxable_base``,
+    ``iva_rate``, ``iva_amount``, ``iva_category``, and ``irpf_category`` are
+    optional. The tax facts ride the same
     :class:`ManualLedgerTransactionPatch` and
     :func:`update_manual_transaction_fields` write path the single-classify
     surface uses, so a bulk row persists the same typed
@@ -173,6 +173,7 @@ def bulk_classify_from_csv(
             business_classification=row.classification,
             category_id=row.category_id,
             business_pct=row.business_pct,
+            usage_ratio_id=row.usage_ratio_id,
             taxable_base=row.taxable_base,
             iva_rate=row.iva_rate,
             iva_amount=row.iva_amount,

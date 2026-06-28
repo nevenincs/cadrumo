@@ -2731,8 +2731,8 @@ cli:
       from_csv_exclusive: --from-csv nem kombinálható tranzakció-azonosítóval vagy
         --classification értékkel.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
-        irpf_category].
+        category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
+        iva_category, irpf_category].
       from_csv_not_found: 'CSV file not found: %{path}'
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
