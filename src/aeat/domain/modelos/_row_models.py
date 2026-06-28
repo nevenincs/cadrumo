@@ -254,7 +254,7 @@ _M349_SERVICE_CLAVES = frozenset({"S", "I"})
 _M349_2021_FIRST_PERIODS = frozenset({"01", "1M", "1T"})
 
 
-class Modelo349CountryPrefixContextError(AeatError, ValueError):
+class Modelo349CountryPrefixContextError(ValueError):
     """A Modelo 349 country prefix is invalid for the filing context."""
 
     def __init__(

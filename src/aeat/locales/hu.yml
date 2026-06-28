@@ -516,6 +516,7 @@ application:
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
+      import_missing_filing_baseline: 'A bucket-archivum profiljabol hianyoznak a benyujtasi azonossagi mezok: %{missing_flags}. Javitsa a forrasprofilt, majd exportalja ujra.'
   calculations:
     iva_compensation:
       errors:

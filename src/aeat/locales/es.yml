@@ -561,6 +561,7 @@ application:
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
       unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
+      import_missing_filing_baseline: 'El perfil del archivo de bucket no tiene campos de identidad para presentar: %{missing_flags}. Repara el perfil de origen y vuelve a exportarlo.'
   calculations:
     iva_compensation:
       errors:

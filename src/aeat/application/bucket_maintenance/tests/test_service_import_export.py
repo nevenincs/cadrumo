@@ -9,28 +9,47 @@ contract stays in the application layer.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage import encrypt_record
+from ....adapters.persistence.storage.bucket import ExportArchiveHeader, write_sealed_archive
+from ....adapters.persistence.storage.master_key import (
+    ARGON2_MEMORY_COST_KIB,
+    ARGON2_PARALLELISM,
+    ARGON2_TIME_COST,
+    derive_kek_with_params,
+)
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import resources
 from ....domain.buckets import BucketEventHistoryRepository, BucketEventType, BucketImportError
-from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
+from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
+from ....domain.user_profile._portable_export import UserProfilePortableExport
 from ....tests.secure_sql import TestRuntimeProfile, isolated_profile_storage_root, isolated_runtime_profile
 from ...user_profile import RegisterProfileCommand, profile_storage_session
 from ...workflow import read_profile_bucket_by_id
 from .. import BucketMaintenanceService, ExportBucketCommand, ImportBucketCommand
+from .._service import _archive_associated_data, _recovery_wrap_bytes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _BUCKET_ID = "bucket-maintenance-export-test"
+_INCOMPLETE_BUCKET_ID = "bucket-maintenance-incomplete-import"
 _LABEL = "Export target"
 _RECOVERY_WORDS = ("correct", "horse", "battery", "staple")
+_MANIFEST_DIGEST = "b" * 64
+_INSTANT = datetime(2026, 6, 28, 12, 0, 0, tzinfo=UTC)
 
 
 def _recovery_phrase() -> str:
     return " ".join(_RECOVERY_WORDS)
+
+
+def _incomplete_archive_recovery_phrase() -> str:
+    return " ".join(("incomplete", "archive", "recovery", "phrase"))
 
 
 @pytest.fixture
@@ -44,14 +63,70 @@ def runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, ...]:
-    facts: list[UserProfileFact] = []
+    facts_by_path: dict[str, UserProfileFact] = {}
     for section in schema.sections:
         if section.repeatable:
             continue
         for field in section.fields:
             if field.required:
-                facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value="placeholder"))
-    return tuple(facts)
+                path = f"{section.key}.{field.key}"
+                facts_by_path[path] = UserProfileFact(path=path, value="placeholder")
+    facts_by_path.update(
+        {
+            "taxpayer_type.entity_type": UserProfileFact(
+                path="taxpayer_type.entity_type",
+                value="natural_person",
+            ),
+            "identity.name": UserProfileFact(path="identity.name", value="Export"),
+            "identity.surnames": UserProfileFact(path="identity.surnames", value="Ready"),
+        },
+    )
+    return tuple(facts_by_path.values())
+
+
+def _write_incomplete_profile_archive(path: Path) -> None:
+    bundle = UserProfilePortableExport(
+        bundle_schema_version=2,
+        exported_at=_INSTANT,
+        profile=UserProfileRecord(
+            profile_id=_INCOMPLETE_BUCKET_ID,
+            display_name="Incomplete import",
+            facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+            created_at=_INSTANT,
+            updated_at=_INSTANT,
+        ),
+    )
+    payload = bundle.model_dump_json().encode(UTF_8_ENCODING)
+    recovery_wrap_bytes = _recovery_wrap_bytes(
+        b"c" * 16,
+        memory_cost=ARGON2_MEMORY_COST_KIB,
+        time_cost=ARGON2_TIME_COST,
+        parallelism=ARGON2_PARALLELISM,
+    )
+    sealing_key = derive_kek_with_params(
+        _incomplete_archive_recovery_phrase().encode(UTF_8_ENCODING),
+        b"c" * 16,
+        memory_cost=ARGON2_MEMORY_COST_KIB,
+        time_cost=ARGON2_TIME_COST,
+        parallelism=ARGON2_PARALLELISM,
+    )
+    encrypted = encrypt_record(
+        payload,
+        key=sealing_key,
+        associated_data=_archive_associated_data(_INCOMPLETE_BUCKET_ID, _MANIFEST_DIGEST),
+    )
+    write_sealed_archive(
+        path,
+        header=ExportArchiveHeader(
+            bucket_id=_INCOMPLETE_BUCKET_ID,
+            manifest_digest=_MANIFEST_DIGEST,
+            recovery_wrap_present=True,
+            archive_schema_version=1,
+            created_at=_INSTANT,
+        ),
+        payload_envelope_bytes=encrypted.to_wire(),
+        recovery_wrap_bytes=recovery_wrap_bytes,
+    )
 
 
 @pytest.fixture
@@ -147,6 +222,26 @@ def test_import_recovery_archive_provisions_profile_in_fresh_root(
             catalogue = BucketEventHistoryRepository().load()
         event_types = {event.event_type for event in catalogue.events.values()}
         assert BucketEventType.BUCKET_IMPORTED in event_types
+
+
+def test_import_refuses_profile_archive_missing_filing_baseline(tmp_path: Path) -> None:
+    archive_path = tmp_path / "incomplete-profile.aeat-bucket.tar.gz"
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _write_incomplete_profile_archive(archive_path)
+
+        with pytest.raises(BucketImportError) as excinfo:
+            BucketMaintenanceService().import_(
+                ImportBucketCommand(
+                    source_path=archive_path,
+                    recovery_wrap_passphrase=_incomplete_archive_recovery_phrase(),
+                ),
+            )
+
+        assert excinfo.value.translated_message == (
+            "application.bucket_maintenance.errors.import_missing_filing_baseline"
+        )
+        assert excinfo.value.context == {"missing_flags": "--entity-type --name --surnames"}
+        assert read_profile_bucket_by_id(_INCOMPLETE_BUCKET_ID) is None
 
 
 def test_recovery_wrap_member_records_argon2id_password_kdf(

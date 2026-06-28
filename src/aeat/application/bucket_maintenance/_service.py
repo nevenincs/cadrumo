@@ -32,8 +32,10 @@ from ...domain.buckets import (
 from ..user_profile import (
     delete_profile_with_lifecycle_span,
     deserialize_profile_bundle,
+    missing_filing_baseline_flags,
     profile_create_storage_span,
     profile_storage_session,
+    record_to_path_values,
     remove_profile_bucket_directory,
     rename_profile,
     serialize_profile_bundle,
@@ -447,6 +449,7 @@ class BucketMaintenanceService:
                 context={"bucket_id": header.bucket_id},
             ) from exc
 
+        self._validate_imported_profile_filing_baseline(bundle)
         if existing is None:
             self._provision_imported_bucket(bundle)
         with profile_storage_session(header.bucket_id):
@@ -505,6 +508,16 @@ class BucketMaintenanceService:
         repository.save(append_bucket_event(repository.load(), event))
 
     @staticmethod
+    def _validate_imported_profile_filing_baseline(bundle: UserProfilePortableExport) -> None:
+        missing_flags = missing_filing_baseline_flags(record_to_path_values(bundle.profile))
+        if not missing_flags:
+            return
+        raise BucketImportError(
+            translated_message="application.bucket_maintenance.errors.import_missing_filing_baseline",
+            context={"missing_flags": _format_missing_flags(missing_flags)},
+        )
+
+    @staticmethod
     def _provision_imported_bucket(bundle: UserProfilePortableExport) -> None:
         from ..user_profile import register_active_profile
         from ..workflow import workflow_state_repository
@@ -530,6 +543,10 @@ def recovery_wrap_passphrase_present(command: ExportBucketCommand) -> bool:
 
 def _archive_associated_data(bucket_id: str, manifest_digest: str) -> bytes:
     return f"aeat.bucket-maintenance.archive.v1:{bucket_id}:{manifest_digest}".encode()
+
+
+def _format_missing_flags(missing_flags: tuple[str, ...]) -> str:
+    return " ".join(f"--{flag}" for flag in missing_flags)
 
 
 class _RecoveryWrapKdf(NamedTuple):
