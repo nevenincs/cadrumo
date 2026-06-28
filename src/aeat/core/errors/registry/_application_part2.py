@@ -547,6 +547,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.calculations._multi_year.EnrollmentEvidenceError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_ENROLLMENT_EVIDENCE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.user_profile._bundle.UnsupportedBundleSchemaVersionError",
         ErrorCode(
             code="REFUSED_USER_PROFILE_BUNDLE_SCHEMA_VERSION",

@@ -70,7 +70,7 @@ M210_NOT_YET_AUTHORED_SENTINEL = _M210_NOT_YET_AUTHORED_SENTINEL
 M210_RATE_SENTINELS = _M210_RATE_SENTINELS
 
 
-class _UnresolvedFormulaDependencyError(Exception):
+class _UnresolvedFormulaDependencyError(RegistrySnapshotError):
     """Raised internally when a non-blocking source gap makes a formula unresolved."""
 
     def __init__(self, dependency_ids: tuple[str, ...]) -> None:
