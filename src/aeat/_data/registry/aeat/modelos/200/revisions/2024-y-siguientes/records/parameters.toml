@@ -276,63 +276,6 @@ fixed_addition = "0"
 marginal_rate = "0.20"
 valid_from = 2029-01-01
 
-[[revisions."2024-y-siguientes".parameters]]
-id = "is.modelo-200.cuota-integra-bracket-erd-art101"
-data_type = "bracket_table"
-unit = "EUR"
-bracket_axis = "filing_period"
-legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-101", "ley-27-2014:dt-44"]
-source_refs = ["aeat-modelo-200-manual-2024"]
-
-[[revisions."2024-y-siguientes".parameters.source_citations]]
-source_ref = "aeat-modelo-200-manual-2024"
-required_text = ["tipo de gravamen"]
-
-# Cuota íntegra for true ERD entities under LIS art. 101 (INCN < 10M and
-# not qualifying for the INCN < 1M micro-empresa scale). DT 44ª phases the
-# post-2025 art. 29 ERD rate from 24 % to 21 %; art. 29 supplies the final
-# 20 % rate from 2029. 2024 keeps the pre-DT44 general 25 % rate.
-[[revisions."2024-y-siguientes".parameters.brackets]]
-lower_bound = "0"
-fixed_addition = "0"
-marginal_rate = "0.25"
-valid_from = 2024-01-01
-valid_to = 2024-12-31
-
-[[revisions."2024-y-siguientes".parameters.brackets]]
-lower_bound = "0"
-fixed_addition = "0"
-marginal_rate = "0.24"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
-
-[[revisions."2024-y-siguientes".parameters.brackets]]
-lower_bound = "0"
-fixed_addition = "0"
-marginal_rate = "0.23"
-valid_from = 2026-01-01
-valid_to = 2026-12-31
-
-[[revisions."2024-y-siguientes".parameters.brackets]]
-lower_bound = "0"
-fixed_addition = "0"
-marginal_rate = "0.22"
-valid_from = 2027-01-01
-valid_to = 2027-12-31
-
-[[revisions."2024-y-siguientes".parameters.brackets]]
-lower_bound = "0"
-fixed_addition = "0"
-marginal_rate = "0.21"
-valid_from = 2028-01-01
-valid_to = 2028-12-31
-
-[[revisions."2024-y-siguientes".parameters.brackets]]
-lower_bound = "0"
-fixed_addition = "0"
-marginal_rate = "0.20"
-valid_from = 2029-01-01
-
 # LIS Art. 29 newly-created-entity 15 % rate (first two profit-making
 # periods). Layered on top of the sub-form by the cuota-integra formula
 # via an `if_then_else` predicate over the
