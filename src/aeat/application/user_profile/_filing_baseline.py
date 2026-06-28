@@ -12,6 +12,8 @@ def missing_filing_baseline_flags(values: Mapping[str, object]) -> tuple[str, ..
     if not entity_type:
         missing.append("entity-type")
     if entity_type == "legal_entity":
+        if not _profile_token(values, "taxpayer_type.legal_entity_form"):
+            missing.append("legal-entity-form")
         if not _profile_token(values, "identity.legal_name"):
             missing.append("legal-name")
         return tuple(dict.fromkeys(missing))

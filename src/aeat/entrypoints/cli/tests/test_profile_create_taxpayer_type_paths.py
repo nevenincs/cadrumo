@@ -53,6 +53,8 @@ def test_legal_entity_profile_creates_non_interactively_without_spouse_flags() -
         "webco",
         "--entity-type",
         "legal_entity",
+        "--legal-entity-form",
+        "sl",
         "--tax-id",
         "B66012345",
         "--activity",
@@ -63,6 +65,25 @@ def test_legal_entity_profile_creates_non_interactively_without_spouse_flags() -
     assert "Status\tcreated" in result.output
     rows = _profile_rows("webco")
     assert rows["taxpayer_type.entity_type"] == "legal_entity"
+    assert rows["taxpayer_type.legal_entity_form"] == "sl"
+
+
+def test_legal_entity_profile_create_refuses_missing_legal_form_before_registration() -> None:
+    """A legal entity without a recognised legal form is not filing-grade."""
+
+    result = _create_profile(
+        "missing-form-co",
+        "--entity-type",
+        "legal_entity",
+        "--tax-id",
+        "B66012345",
+        "--activity",
+        "consultoria informatica",
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "--legal-entity-form" in result.output
+    assert _registered_profile_exists("missing-form-co") is False
 
 
 def test_non_resident_irnr_quiet_create_requires_country_before_registration() -> None:
@@ -123,6 +144,8 @@ def test_legal_entity_profile_creates_with_explicit_no_spouse_flag() -> None:
         "webco-ltd",
         "--entity-type",
         "legal_entity",
+        "--legal-entity-form",
+        "sl",
         "--tax-id",
         "B12345674",
         "--no-spouse-non-resident-irpf",
@@ -133,6 +156,7 @@ def test_legal_entity_profile_creates_with_explicit_no_spouse_flag() -> None:
     assert result.exit_code == 0, result.output
     rows = _profile_rows("webco-ltd")
     assert rows["taxpayer_type.entity_type"] == "legal_entity"
+    assert rows["taxpayer_type.legal_entity_form"] == "sl"
 
 
 def test_legal_entity_form_flag_populates_the_legal_entity_form_field() -> None:

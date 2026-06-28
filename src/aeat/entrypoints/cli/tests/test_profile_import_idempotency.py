@@ -428,6 +428,12 @@ def test_import_refuses_tampered_invalid_tax_id(tmp_path: Path) -> None:
         pytest.param("natural_person", "taxpayer_type.entity_type", "--entity-type", id="natural-missing-entity-type"),
         pytest.param("natural_person", "identity.name", "--name", id="natural-missing-name"),
         pytest.param("natural_person", "identity.surnames", "--surnames", id="natural-missing-surnames"),
+        pytest.param(
+            "legal_entity",
+            "taxpayer_type.legal_entity_form",
+            "--legal-entity-form",
+            id="legal-missing-legal-entity-form",
+        ),
         pytest.param("legal_entity", "identity.legal_name", "--legal-name", id="legal-missing-legal-name"),
         pytest.param("attribution_entity", "identity.name", "--name", id="attribution-missing-name"),
     ),
