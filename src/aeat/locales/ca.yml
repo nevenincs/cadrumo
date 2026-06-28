@@ -1628,6 +1628,7 @@ cli:
         invalid_evidence_kind: --evidence-kind ha de ser un de {canonical}; s'ha rebut
           {kind}.
         list_help: Llistar els filing records registrats
+        modelo_help: Filtrar per codi de model (p. ex. 303, 130, 100)
         view_help: Mostrar un filing record per id
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
@@ -2850,6 +2851,9 @@ cli:
         llibre.
       filter_parse_error: 'Fallada en analitzar el filtre del llibre prop de %{token}:
         %{reason}.'
+      period_year_pairing: Els filtres de període del llibre requereixen període
+        i exercici junts. Per a un any complet useu --period 0A --year %{year},
+        o --filter period=0A --filter year=%{year}.
       id_prefix_collision: 'El prefix d''id de transacció %{prefix!r} coincideix amb
         més d''una transacció: %{candidates}. Allarga el prefix per desambiguar.'
       id_prefix_empty: El prefix d'id de transacció és buit; passa almenys un caràcter

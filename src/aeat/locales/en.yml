@@ -1532,6 +1532,7 @@ cli:
         include_superseded_help: Include superseded filing records (excluded by default)
         invalid_evidence_kind: --evidence-kind must be one of {canonical}; got {kind}.
         list_help: List registered filing records
+        modelo_help: Filter by modelo code (e.g. 303, 130, 100)
         view_help: Show one filing record by id
       formulas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
@@ -2696,6 +2697,9 @@ cli:
       command_input_invalid_fallback: one or more fields failed validation
       confirm_required: Pass --yes to confirm this destructive ledger operation.
       filter_parse_error: 'Failed to parse ledger filter near %{token}: %{reason}.'
+      period_year_pairing: Ledger period filters require period and year together.
+        For a full year use --period 0A --year %{year}, or --filter period=0A
+        --filter year=%{year}.
       id_prefix_collision: 'Transaction id prefix %{prefix!r} matches more than one
         transaction: %{candidates}. Lengthen the prefix to disambiguate.'
       id_prefix_empty: Transaction id prefix is empty; pass at least one hex character.
