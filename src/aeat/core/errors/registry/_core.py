@@ -96,6 +96,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core._optional_extras.MissingOptionalExtraError",
+        ErrorCode(
+            code="ERROR_OPTIONAL_EXTRA_MISSING",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_aeat_core",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core._period.PeriodError",
         ErrorCode(
             code="INTEGRITY_PERIOD",

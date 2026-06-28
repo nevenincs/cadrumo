@@ -21,6 +21,7 @@ import importlib.util
 from pydantic import BaseModel, Field
 
 from ._models import STRICT_FROZEN_CONFIG
+from .errors import CoreError
 
 __all__ = [
     "ANTHROPIC_EXTRA",
@@ -59,21 +60,26 @@ ANTHROPIC_EXTRA = OptionalExtra(extra="anthropic", import_name="anthropic", feat
 OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA)
 
 
-class MissingOptionalExtraError(ImportError):
+class MissingOptionalExtraError(CoreError, ImportError):
     """Raised when a feature is reached but its optional extra is not installed.
 
-    Subclasses :class:`ImportError` so an adapter that already catches import
-    failures keeps working, while carrying the structured :attr:`extra` and a
-    ready-to-print :attr:`install_hint` for the feature's own error handler.
+    Descends from :class:`~aeat.core.errors.CoreError` so the project-wide
+    :class:`~aeat.core.errors.AeatError` boundary sees the refusal, and from
+    :class:`ImportError` so adapters that already catch import failures keep
+    working.
     """
 
     def __init__(self, extra: OptionalExtra) -> None:
         self.extra = extra
         self.install_hint = extra.install_hint
+        message = f"{extra.feature} requires the optional '{extra.extra}' extra. Install it with: {extra.install_hint}"
         super().__init__(
-            f"{extra.feature} requires the optional '{extra.extra}' extra. Install it with: {extra.install_hint}",
-            name=extra.import_name,
+            message,
+            context={"extra": extra.extra, "import_name": extra.import_name, "feature": extra.feature},
+            suggestion=extra.install_hint,
         )
+        self.name = extra.import_name
+        self.path = None
 
 
 def optional_extra_available(extra: OptionalExtra) -> bool:
