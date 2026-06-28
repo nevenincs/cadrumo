@@ -64,11 +64,9 @@ def test_authority_snapshot_runs_real_modelo_calculation() -> None:
             _M130_PRIOR_RETURN_CASILLA: Decimal("100.00"),
         },
         # 1T cannot have a same-ejercicio prior-quarter saldo seed;
-        # the M130 carry-forward selector returns no anchor for 1T
-        # and the bound casilla materialises Decimal("0") with the
-        # absent_by_design provenance marker. binding_values omits
-        # the carry-forward binding to exercise the absent-by-design
-        # path through the runtime, NOT a fictional non-zero seed.
+        # the M130 carry-forward selector returns no anchor for 1T.
+        # C15 is computed from that zero carry-forward binding and the
+        # positive C14 cap, not supplied as a fictional non-zero seed.
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("9500.00"),
         },
@@ -79,7 +77,8 @@ def test_authority_snapshot_runs_real_modelo_calculation() -> None:
     assert {entry.target_casilla_id for entry in result.entries} >= {_M130_RESULTADO_CASILLA}
     casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
     assert casilla_15.value == Decimal("0")
-    assert casilla_15.absent_by_design is True
+    assert casilla_15.formula_id == "modelo-130-resultados-negativos-anteriores-cap"
+    assert casilla_15.absent_by_design is False
 
 
 def test_authority_snapshot_is_authority_owned_revision_projection() -> None:
