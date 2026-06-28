@@ -8,6 +8,7 @@ scalar invoice-source binding values for the calculation mesh.
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import BindingSourceKind, Period
@@ -30,6 +31,12 @@ _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.PAYABLE_INVOICE,
 )
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
+_M349_PAYABLE_SUMMARY_BINDING_MIRRORS: dict[str, str] = {
+    "iva-349-declarante-numero-operadores-adquisicion": "iva-349-declarante-numero-operadores",
+    "iva-349-declarante-importe-operaciones-adquisicion": "iva-349-declarante-importe-operaciones",
+    "iva-349-declarante-numero-rectificaciones-adquisicion": "iva-349-declarante-numero-rectificaciones",
+    "iva-349-declarante-importe-rectificaciones-adquisicion": "iva-349-declarante-importe-rectificaciones",
+}
 
 
 def invoice_direction_to_source_kind(kind: InvoiceKind) -> BusinessOperationInvoiceDirection:
@@ -83,10 +90,11 @@ class InvoiceCatalogueSourceResolver:
             if (observation := _invoice_observation(invoice, context=context)) is not None
         )
         observations = tuple(observation for _, observation in observed)
+        binding_values = resolve_invoice_binding_values(context.revision, observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            binding_values=resolve_invoice_binding_values(context.revision, observations),
+            binding_values=_m349_declarante_summary_union(context=context, binding_values=binding_values),
             source_transaction_ids=tuple(
                 sorted(
                     {transaction_id for invoice, _ in observed for transaction_id in invoice.linked_transaction_ids},
@@ -127,6 +135,7 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
         )
     return InvoiceObservation(
         invoice_id=invoice.invoice_id,
+        source_kind=_invoice_source_kind(invoice),
         party_tax_id=invoice.counterparty_tax_id,
         country_code=invoice.counterparty_country,
         transaction_date=invoice.issued_at,
@@ -147,6 +156,21 @@ def _intracommunity_clave(invoice: Invoice) -> str | None:
     ):
         return "A"
     return None
+
+
+def _m349_declarante_summary_union(
+    *,
+    context: CalculationSourceContext,
+    binding_values: dict[str, Decimal],
+) -> dict[str, Decimal]:
+    if str(context.modelo) != "349":
+        return binding_values
+    merged = dict(binding_values)
+    for payable_binding, public_binding in _M349_PAYABLE_SUMMARY_BINDING_MIRRORS.items():
+        if payable_binding not in binding_values:
+            continue
+        merged[public_binding] = merged.get(public_binding, Decimal("0")) + binding_values[payable_binding]
+    return merged
 
 
 def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> CalculationSourceProvenance:
