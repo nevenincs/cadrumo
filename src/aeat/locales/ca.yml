@@ -3229,6 +3229,10 @@ cli:
         heading: Configuracio i diagnostic del contribuent.
         paragraph_durable_state: L'estat durador (perfil, autenticacio, llibre) persisteix
           entre sessions.
+        paragraph_storage_isolation: Per a una execucio aillada des de zero, definiu
+          AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
+          i AEAT_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
+          d'emmagatzematge.
         profile_censo: Mostrar l'estat del cens del perfil actiu.
         profile_delete: Eliminar un perfil de contribuent.
         profile_duplicate: Duplicar un perfil de contribuent existent.
@@ -3271,6 +3275,10 @@ cli:
         modelo_bindings_list: Llistar les vinculacions del model fiscal actiu.
         modelo_list: Llistar els models fiscals disponibles.
         modelo_work: 'Treballar amb un model fiscal: introduir dades, calcular i exportar.'
+        paragraph_storage_isolation: Per a una execucio aillada des de zero, definiu
+          AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
+          i AEAT_SECRET_PASSPHRASE; els logs queden per defecte sota aquest directori
+          d'emmagatzematge.
         paragraph_two_roots: 'Dues superficies principals: ''app'' per a operacions
           de declaracio i ''config'' per a configuracio i diagnostic.'
         paragraph_type_help: Escriviu 'aeat <ordre> --help' per obtenir ajuda detallada.

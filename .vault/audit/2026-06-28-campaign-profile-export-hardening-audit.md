@@ -1391,6 +1391,26 @@ Verification:
 - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
 - `uv run --no-sync ruff check src/aeat/application/ledger/_actions_classification.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
 
+Marina and Taller Nube both then blocked before profile creation because the
+public CLI help did not expose the isolated encrypted-storage recipe. Their
+operators tried APPDATA/XDG/HOME/USERPROFILE/plausible `AEAT_STORAGE_*` names
+and fell back to the shared `var/storage` store, where a different passphrase
+correctly failed closed. The actual supported blank-state path was verified
+from the CLI with `AEAT_LOCAL_STORAGE_ROOT`, `AEAT_SECRET_STORE_BACKEND=file`,
+`AEAT_SECRET_STORE_DIR`, and `AEAT_SECRET_PASSPHRASE`; `config repair logs`
+then reported the log path under the isolated storage root, and `config profile
+create --quiet --accept-defaults ...` created a new profile. Root/config help
+now names those exact environment variables, and the installed-console
+regression pins profile creation plus log-root isolation. Verification:
+
+- `vaultspec-rag search "AEAT local storage root environment variable config profile create passphrase encrypted store logs storage isolation" --type code --json --timeout 30`
+- Manual isolated CLI smoke with `AEAT_LOCAL_STORAGE_ROOT=.campaign-runs/wave17-storage-smoke/storage`, `AEAT_SECRET_STORE_DIR=.campaign-runs/wave17-storage-smoke/secrets`, `AEAT_SECRET_STORE_BACKEND=file`, and `AEAT_SECRET_PASSPHRASE=...`
+- `uv run --no-sync pytest -q src/aeat/application/operator_surface/tests/test_contract.py::test_help_documents_are_backend_owned_and_current_surface_only src/aeat/entrypoints/cli/tests/test_root_help_shape.py::test_root_help_uses_curated_two_root_shape src/aeat/entrypoints/cli/tests/test_root_help_shape.py::test_config_and_app_help_use_curated_subtree_shape src/aeat/entrypoints/cli/tests/test_root_help_shape.py::test_installed_console_profile_create_honors_isolated_storage_env -m "unit or integration"`
+- `uv run --no-sync pytest -q src/aeat/entrypoints/cli/tests/test_root_help_shape.py src/aeat/application/operator_surface/tests/test_contract.py -m "unit or integration"`
+- `uv run --no-sync ruff check src/aeat/application/operator_surface/_help.py src/aeat/application/operator_surface/tests/test_contract.py src/aeat/entrypoints/cli/tests/test_root_help_shape.py`
+- `uv run --no-sync python -m aeat.locales scaffold --check`
+- `uv run --no-sync python -m aeat.locales audit`
+
 Full-suite verification was intentionally not claimed because this shared
 worktree carries extensive unrelated WIP.
 

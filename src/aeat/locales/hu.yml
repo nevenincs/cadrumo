@@ -3201,6 +3201,10 @@ cli:
         footer: 'Teljes áttekintésért futtassa: aeat --help.'
         heading: aeat config - profil, hitelesítés, diagnosztika
         paragraph_durable_state: A config-parancsok a helyi tartós állapotot kezelik.
+        paragraph_storage_isolation: Elszigetelt ures allapothoz allitsa be ezeket
+          az env valtozokat; AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file,
+          AEAT_SECRET_STORE_DIR es AEAT_SECRET_PASSPHRASE; a naplok alapertelmezes
+          szerint ezen tarhelygyoker alatt vannak.
         profile_censo: AEAT nyilvántartási adatok szinkronizálása az aktív profilhoz.
         profile_delete: Profil törlése explicit megerősítés után.
         profile_duplicate: Profil másolása új azonosítóra.
@@ -3240,6 +3244,10 @@ cli:
         modelo_bindings_list: Nyilvántartási kötésfedettség listázása.
         modelo_list: Támogatott nyomtatványok listázása.
         modelo_work: Nyomtatványhoz tartozó munkaegységek létrehozása és kezelése.
+        paragraph_storage_isolation: Elszigetelt ures allapothoz allitsa be ezeket
+          az env valtozokat; AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file,
+          AEAT_SECRET_STORE_DIR es AEAT_SECRET_PASSPHRASE; a naplok alapertelmezes
+          szerint ezen tarhelygyoker alatt vannak.
         paragraph_two_roots: 'A CLI-nek pontosan két gyökere van: config és app.'
         paragraph_type_help: A config parancsot helyi állapothoz, az app parancsot
           adóügyi munkához használja.
