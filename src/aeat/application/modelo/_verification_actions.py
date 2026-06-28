@@ -1242,6 +1242,16 @@ def _cross_period_clean_state_next_action(
         f"--year {requirement.filing_year} "
         f"--period {requirement_period}"
     )
+    source_justificante_capture = (
+        "aeat app live justificante pull "
+        f"--modelo {requirement.source_modelo} "
+        f"--year {requirement.filing_year} "
+        f"--period {requirement_period}"
+    )
+    import_official_record = (
+        "aeat app modelo filing-record import WORK_UNIT_ID "
+        "--evidence-kind aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE"
+    )
     if CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in blockers:
         # ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2: the prior
         # filing's stamped revision is no longer the law-determined revision for its
@@ -1289,9 +1299,9 @@ def _cross_period_clean_state_next_action(
         CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE,
     }:
         return (
-            f"Capture or import AEAT justificante evidence for {source_hint}. "
-            f"Run `{target_capture}` or `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`, "
-            "then rerun verification."
+            f"Capture/import AEAT evidence for {source_hint}. Run `{target_capture}`, "
+            f"`{source_justificante_capture}`, `{import_official_record}`, or "
+            "`aeat app modelo reconcile file WORK_UNIT_ID --file PATH`; rerun verification."
         )
     if blockers & {
         CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION,

@@ -835,9 +835,12 @@ application:
           origin=%{origin}. The within-year chain is admitted for local export, but
           the carried value is locally evidenced (app_filing), not AEAT-evidenced;
           file every period with AEAT externally.'
-        next_action: Export and file each period with AEAT externally, then import
-          the official justificante/CSV/live evidence to upgrade the local chain when
-          available.
+        next_action: Export and file each period with AEAT externally, then upgrade
+          the local chain with official evidence; use `aeat app live justificante
+          pull` when live access is available, or `aeat app modelo filing-record
+          import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
+          CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
+          --file PATH` for evidence you already hold.
       dt12a_reduccion_next_action: Supply --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE to aeat app modelo work calculate to auto-inject the DT 12a reduccion
