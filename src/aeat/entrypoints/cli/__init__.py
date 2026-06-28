@@ -372,11 +372,13 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
+    from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
     from ._errors import CliRefusedBoundaryError
 
     verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
     exempt = is_bootstrap_exempt(verb_path)
-    write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt)
+    argv_tokens = tuple(str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
+    write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt, argv_tokens=argv_tokens)
     if not write_policy.allowed:
         raise CliRefusedBoundaryError(write_policy.render_refusal_message())
     active_bucket_id = resolve_active_bucket_id()

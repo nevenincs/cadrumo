@@ -8,12 +8,13 @@ combines the matched :class:`StorageWritePolicyCode` with the
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from enum import StrEnum
 
 from pydantic import BaseModel
 
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import read_pointer
+from ..core import Modelo, read_pointer
 from ..core.config import (
     Settings,
     StorageRouteClassification,
@@ -30,6 +31,7 @@ class StorageWritePolicyCode(StrEnum):
 
     ALLOWED_ACTIVE_BUCKET = "allowed_active_bucket"
     BOOTSTRAP_EXEMPT = "bootstrap_exempt"
+    LEAF_REFUSAL_DELEGATED = "leaf_refusal_delegated"
     NON_PROFILE_BOUND_VERB = "non_profile_bound_verb"
     NO_VERB_PATH = "no_verb_path"
     REFUSED_ROOT_FALLBACK = "refused_root_fallback"
@@ -132,6 +134,7 @@ def inspect_storage_write_policy(
     *,
     bootstrap_exempt: bool,
     settings: Settings | None = None,
+    argv_tokens: Sequence[str] | None = None,
 ) -> StorageWritePolicyDecision:
     """Return whether ``verb_path`` may perform profile-bound writes.
 
@@ -157,6 +160,13 @@ def inspect_storage_write_policy(
             allowed=True,
             code=StorageWritePolicyCode.NON_PROFILE_BOUND_VERB,
             profile_bound_write=False,
+            bootstrap_exempt=False,
+        )
+    if _delegates_to_leaf_refusal(verb_path, argv_tokens, settings):
+        return StorageWritePolicyDecision(
+            allowed=True,
+            code=StorageWritePolicyCode.LEAF_REFUSAL_DELEGATED,
+            profile_bound_write=True,
             bootstrap_exempt=False,
         )
 
@@ -205,6 +215,37 @@ def _classify_effective_write_route(settings: Settings | None) -> StorageRouteCl
         if pointer is not None:
             return classify_storage_route(settings_for_active_profile_bucket(pointer.bucket_id, resolved))
     return route
+
+
+def _delegates_to_leaf_refusal(
+    verb_path: str,
+    argv_tokens: Sequence[str] | None,
+    settings: Settings | None,
+) -> bool:
+    if verb_path != "app modelo work create":
+        return False
+    modelo = _option_value(argv_tokens or (), "--modelo")
+    if modelo is None:
+        return False
+    from .modelo._work_create_policy import STUB_ONLY_MODELOS
+
+    modelo_code = modelo.strip()
+    if modelo_code not in STUB_ONLY_MODELOS:
+        return False
+    resolved = settings or load_settings()
+    return modelo_code != Modelo.M210 or not resolved.aeat_m210_engine_live
+
+
+def _option_value(argv_tokens: Sequence[str], option: str) -> str | None:
+    prefix = f"{option}="
+    for index, token in enumerate(argv_tokens):
+        if token.startswith(prefix):
+            value = token[len(prefix) :].strip()
+            return value or None
+        if token == option and index + 1 < len(argv_tokens):
+            value = argv_tokens[index + 1].strip()
+            return value or None
+    return None
 
 
 __all__ = [

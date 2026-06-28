@@ -1,0 +1,53 @@
+"""Modelo list local-work support surface tests."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from pathlib import Path
+
+import pytest
+
+from ....tests.cli_runner import invoke_cached_cli
+from ....tests.secure_sql import isolated_profile_storage_root
+from .envelope_helpers import unwrap_schema_envelope
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
+
+
+def _modelo_row(payload: dict[str, object], code: str) -> dict[str, object]:
+    rows = payload["modelos"]
+    assert isinstance(rows, list)
+    for row in rows:
+        assert isinstance(row, dict)
+        if row.get("code") == code:
+            return row
+    raise AssertionError(f"modelo {code!r} was not listed in payload: {payload!r}")
+
+
+def test_modelo_list_marks_m210_as_visible_but_not_local_work_supported() -> None:
+    text_result = invoke_cached_cli(["--language", "en", "app", "modelo", "list", "--year", "2025"])
+    assert text_result.exit_code == 0, text_result.output
+    assert "local_work" in text_result.output
+    assert "210\t" in text_result.output
+    assert "unsupported-local-work" in text_result.output
+    assert "G320" in text_result.output
+
+    json_result = invoke_cached_cli(["--format", "json", "app", "modelo", "list", "--year", "2025"])
+    assert json_result.exit_code == 0, json_result.output
+    payload = unwrap_schema_envelope(json_result.output)
+
+    m210 = _modelo_row(payload, "210")
+    assert m210["local_work_supported"] is False
+    assert m210["local_work_status"] == "unsupported-local-work"
+    assert "G320" in str(m210["local_work_guidance"])
+
+    m303 = _modelo_row(payload, "303")
+    assert m303["local_work_supported"] is True
+    assert m303["local_work_status"] == "supported"
+    assert m303["local_work_guidance"] is None
