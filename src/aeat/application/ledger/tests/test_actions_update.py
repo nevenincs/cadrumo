@@ -232,6 +232,48 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
     ]
 
 
+def test_update_manual_transaction_fields_preserves_imported_source_jurisdiction(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    created = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id="bucket-a",
+            booked_date=date(2026, 7, 15),
+            amount=Decimal("250.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="EU supplier statement row",
+            source_jurisdiction="FR",
+            idempotency_key="source-jurisdiction-classify",
+            source_command="aeat app ledger import",
+        ),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=datetime(2026, 7, 15, 8, 0, tzinfo=UTC),
+    )
+
+    updated = update_manual_transaction_fields(
+        bucket_id="bucket-a",
+        transaction_id=created.ref.transaction_id,
+        patch=ManualLedgerTransactionPatch(
+            business_classification=BusinessClassification.BUSINESS,
+            category_id="office-supplies",
+            taxable_base=Decimal("250.00"),
+            iva_rate=Decimal("0"),
+            iva_amount=Decimal("0"),
+        ),
+        actor="operator-C",
+        source_command="aeat app ledger classify",
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=datetime(2026, 7, 16, 10, 0, tzinfo=UTC),
+    )
+
+    assert created.transaction.source_jurisdiction == "FR"
+    assert updated.transaction.source_jurisdiction == "FR"
+    assert transaction_repository.load().transactions[updated.ref.transaction_id].source_jurisdiction == "FR"
+
+
 def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassification(
     secure_objects: SecureObjectRepository,
 ) -> None:
