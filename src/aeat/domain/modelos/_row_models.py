@@ -315,6 +315,23 @@ def validate_m349_nif_format(nif: str, pais: str) -> bool:
     return bool(pattern.match(normalized_nif))
 
 
+def m349_nif_number_for_export(nif: str, pais: str) -> str:
+    """Return the BOE NIF subfield without the separate country-code prefix.
+
+    Modelo 349 operator records split the VAT identifier into ``codigo_pais``
+    and ``nif_comunitario`` fields. The CLI accepts and validates the full
+    prefixed VAT identifier for operator ergonomics, but the fixed-width export
+    must write only the number part into positions 78-92.
+    """
+    normalized_pais = pais.upper()
+    normalized_nif = nif.upper()
+    if not validate_m349_nif_format(normalized_nif, normalized_pais):
+        raise ValueError(
+            f"nif_comunitario {nif} does not match the expected NIF-IVA format for country {pais}",
+        )
+    return normalized_nif[len(normalized_pais) :]
+
+
 # ---------------------------------------------------------------------------
 # Modelo 347 - contraparte declarada row
 #
@@ -465,6 +482,7 @@ __all__ = [
     "Modelo347ThresholdError",
     "Modelo349OperadorRow",
     "ModeloDetailRow",
+    "m349_nif_number_for_export",
     "validate_m184_member_share_sum",
     "validate_m347_threshold",
     "validate_m349_nif_format",

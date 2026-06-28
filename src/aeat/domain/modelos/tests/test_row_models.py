@@ -24,6 +24,7 @@ from .._row_models import (
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
     Modelo349OperadorRow,
+    m349_nif_number_for_export,
     validate_m349_nif_format,
 )
 
@@ -498,6 +499,18 @@ class TestValidateM349NifFormat:
         The DE pattern would reject a 13-character FR NIF.
         """
         assert validate_m349_nif_format("FR12345678901", "DE") is False
+
+
+class TestM349NifNumberForExport:
+    def test_strips_country_prefix_for_boe_nif_subfield(self) -> None:
+        """The fixed-width NIF slot excludes the separately-exported country code."""
+        assert m349_nif_number_for_export("DE123456789", "DE") == "123456789"
+        assert m349_nif_number_for_export("FR12345678901", "FR") == "12345678901"
+
+    def test_rejects_invalid_or_mismatched_prefixed_nif(self) -> None:
+        """Export normalization keeps the same validation as row input."""
+        with pytest.raises(ValueError, match="expected NIF-IVA format"):
+            m349_nif_number_for_export("FR12345678901", "DE")
 
 
 # ---------------------------------------------------------------------------
