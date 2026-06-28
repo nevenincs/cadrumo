@@ -2727,9 +2727,10 @@ cli:
       classification_help: A tranzakció üzleti besorolási állapota.
       classification_required: --classification is required when --from-csv is not
         provided.
-      counterparty_eu_member_state_help: A szerződő fél EU-tagállama (ISO 3166-1 alpha-2
-        kisbetűs, pl. de); kötelező --iva-category intra_community_supply esetén,
-        tiltott export_third_country_zero_rated esetén.
+      counterparty_eu_member_state_help: A szerződő fél EU-tagállama vagy észak-írországi
+        IVA-előtagja (ISO 3166-1 alpha-2 kisbetűs, pl. de vagy xi); kötelező
+        --iva-category intra_community_supply esetén, tiltott export_third_country_zero_rated
+        esetén.
       evidence_acknowledged_help: Erositse meg, hogy a bizonyitek felhoszolgaltatoval
         valo beolvasasa feltolti azt a geperol (a hozzajarulasi kapu megkoveteli).
       from_csv_exclusive: --from-csv nem kombinálható tranzakció-azonosítóval vagy

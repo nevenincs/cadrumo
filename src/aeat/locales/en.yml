@@ -2625,9 +2625,9 @@ cli:
       classification_help: Business classification state for the transaction
       classification_required: --classification is required when --from-csv is not
         provided.
-      counterparty_eu_member_state_help: EU member state of the counterparty (ISO
-        3166-1 alpha-2 lowercase, e.g. de); required with --iva-category intra_community_supply,
-        prohibited with export_third_country_zero_rated
+      counterparty_eu_member_state_help: EU member state or Northern Ireland IVA
+        prefix of the counterparty (ISO 3166-1 alpha-2 lowercase, e.g. de or xi);
+        required with --iva-category intra_community_supply, prohibited with export_third_country_zero_rated
       evidence_acknowledged_help: Acknowledge that reading evidence with a cloud provider
         uploads it off your machine (required by the consent gate).
       from_csv_exclusive: --from-csv cannot be combined with a transaction id or --classification.

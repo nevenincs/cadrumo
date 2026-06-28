@@ -21,6 +21,7 @@ from ...application.modelo import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
+    Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
@@ -33,6 +34,7 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     build_work_calculate_input_bundle,
     get_work_unit,
+    validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
 from ...core.errors import resolve_error_message
@@ -368,6 +370,7 @@ def work_calculate_input_bundle_from_cli(
         parse_meses_trabajo_hijo_spec(spec) for spec in (meses_trabajo_con_hijo_menor_3 or ())
     )
     try:
+        _validate_m349_detail_rows_for_work_unit(work_unit_id, detail_rows)
         return build_work_calculate_input_bundle(
             work_unit_id=work_unit_id,
             casilla_overrides=casilla_pairs,
@@ -419,6 +422,25 @@ def work_calculate_input_bundle_from_cli(
         )
     except (LookupError, ValueError, WorkUnitNotFoundError) as exc:
         raise typer.BadParameter(str(exc)) from exc
+
+
+def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[ModeloDetailRow, ...]) -> None:
+    operador_rows = tuple(row for row in rows if isinstance(row, Modelo349OperadorRow))
+    if not operador_rows:
+        return
+    unit = get_work_unit(work_unit_id)
+    if str(unit.modelo) != "349":
+        return
+    for row in operador_rows:
+        try:
+            validate_m349_country_prefix_context(
+                country_code=row.codigo_pais,
+                clave_operacion=row.clave_operacion,
+                filing_year=unit.filing_year,
+                period=unit.period.registry_token,
+            )
+        except Modelo349CountryPrefixContextError as exc:
+            raise typer.BadParameter(str(exc)) from exc
 
 
 def bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:

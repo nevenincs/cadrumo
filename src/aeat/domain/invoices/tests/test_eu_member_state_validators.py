@@ -23,20 +23,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_eu_member_state_codes_match_substrate_enum_27_states() -> None:
-    expected = {member.value.upper() for member in EUMemberState}
+    expected = {member.value.upper() for member in EUMemberState if member is not EUMemberState.XI}
     assert expected == EU_MEMBER_STATE_CODES
     assert len(EU_MEMBER_STATE_CODES) == 27
+    assert "XI" not in EU_MEMBER_STATE_CODES
 
 
 def test_is_eu_member_state_code_accepts_each_substrate_member() -> None:
-    for member in EUMemberState:
+    for member in (member for member in EUMemberState if member is not EUMemberState.XI):
         assert is_eu_member_state_code(member.value.upper()) is True
         assert is_eu_member_state_code(member.value.lower()) is True
         assert is_eu_member_state_code(f"  {member.value}  ") is True
 
 
 def test_is_eu_member_state_code_rejects_non_eu_codes() -> None:
-    for non_eu in ("GB", "CH", "NO", "IS", "US", "CA", "TR", "MX", "JP", "BR"):
+    for non_eu in ("GB", "XI", "CH", "NO", "IS", "US", "CA", "TR", "MX", "JP", "BR"):
         assert is_eu_member_state_code(non_eu) is False
 
 

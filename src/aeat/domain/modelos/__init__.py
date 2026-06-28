@@ -4,7 +4,7 @@ The public surface exposes ``ModeloCode`` (the closed set of AEAT modelo
 identifiers) together with the typed per-row records for the informational
 declarations: ``Modelo184MemberRow``, ``Modelo232VinculadaRow``,
 ``Modelo347ContraparteRow``, ``Modelo349OperadorRow``, and ``ModeloDetailRow``
-(plus ``validate_m349_nif_format``). The Modelo 347 declarability threshold is a
+(plus Modelo 349 NIF and country-prefix validators). The Modelo 347 declarability threshold is a
 regulatory constant owned by ``core.external_constants`` (``M347_THRESHOLD_EUR``),
 consumed directly from there.
 
@@ -61,8 +61,10 @@ from ._row_models import (
     Modelo184MemberRow,
     Modelo232VinculadaRow,
     Modelo347ContraparteRow,
+    Modelo349CountryPrefixContextError,
     Modelo349OperadorRow,
     ModeloDetailRow,
+    validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
 from ._verification_report import (
@@ -91,6 +93,7 @@ __all__ = (
     "Modelo184MemberRow",
     "Modelo232VinculadaRow",
     "Modelo347ContraparteRow",
+    "Modelo349CountryPrefixContextError",
     "Modelo349OperadorRow",
     "ModeloCode",
     "ModeloDetailRow",
@@ -126,5 +129,6 @@ __all__ = (
     "upsert_transaction_participation",
     "upsert_verification_report",
     "upsert_work_unit",
+    "validate_m349_country_prefix_context",
     "validate_m349_nif_format",
 )
