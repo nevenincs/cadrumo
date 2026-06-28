@@ -593,10 +593,12 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "residente es contribuyente del IRPF y presenta la "
             "autoliquidación anual de la Renta."
         ),
+        applicable_fiscal_residencies=frozenset({FiscalResidency.RESIDENT_IRPF}),
         not_applicable_reason=(
             "Modelo 100 no aplica: la declaración de la Renta corresponde "
             "únicamente a las personas físicas contribuyentes del IRPF. El "
-            "tipo de contribuyente declarado no es una persona física."
+            "tipo de contribuyente declarado no es una persona física, o "
+            "bien es un contribuyente NON_RESIDENT_IRNR en la ruta IRNR."
         ),
         # Modelo 100 is the IRPF cuota self-assessment: an attribution
         # entity asked about it gets the pass-through verdict.
@@ -605,7 +607,11 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         # que identifica al contribuyente del IRPF; art. 17 —
         # rendimientos del trabajo, la categoría de renta más común que
         # obliga a la persona física a presentar la Renta.
-        legal_refs=("ley-35-2006:art-99", "ley-35-2006:art-17"),
+        legal_refs=(
+            "ley-35-2006:art-99",
+            "ley-35-2006:art-17",
+            "trlirnr-rdleg-5-2004:art-2",
+        ),
     ),
     # Modelo 130 — pago fraccionado del IRPF, estimación DIRECTA. Triggered
     # by the rendimientos de actividades económicas income category (LIRPF
