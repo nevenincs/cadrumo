@@ -43,7 +43,13 @@ def _backend(tmp_path: Path) -> Iterator[Path]:
         yield storage_root
 
 
-_QUIET_CREATE_FLAGS = {"tax-id": "00000000T", "activity": "Servicios"}
+_QUIET_CREATE_FLAGS = {
+    "entity-type": "natural_person",
+    "tax-id": "00000000T",
+    "name": "Test",
+    "surnames": "Operator",
+    "activity": "Servicios",
+}
 
 
 def _quiet_create(profile_name: str) -> None:
