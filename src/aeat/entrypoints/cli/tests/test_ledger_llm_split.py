@@ -27,7 +27,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from typer.testing import CliRunner
 
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
@@ -43,12 +42,10 @@ from ....domain.transactions import (
     Transaction,
     register_classifier,
 )
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_RUNNER = CliRunner()
 
 
 @pytest.fixture(autouse=True)
@@ -128,9 +125,9 @@ def _import_one_transaction(tmp_path: Path) -> str:
     )
     csv_path = tmp_path / "import.csv"
     csv_path.write_text(csv_content, encoding="utf-8")
-    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    result = invoke_cached_cli(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
     assert result.exit_code == 0, result.output
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     rows = json.loads(listed.output)["result"]["rows"]
     assert rows, listed.output
@@ -138,7 +135,7 @@ def _import_one_transaction(tmp_path: Path) -> str:
 
 
 def _rows() -> list[dict[str, Any]]:
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     return json.loads(listed.output)["result"]["rows"]
 
@@ -149,7 +146,7 @@ def test_llm_split_suggest_returns_children_and_persists_nothing(
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
-    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "split", tx, "--llm", "claude"])
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "split", tx, "--llm", "claude"])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["llm"] is True
@@ -171,8 +168,7 @@ def test_llm_split_apply_persists_split_and_classified_children(
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "split", tx, "--llm", "claude", "--apply", "--yes"],
     )
     assert result.exit_code == 0, result.output
@@ -201,7 +197,7 @@ def test_llm_split_apply_without_yes_is_refused(
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
-    result = _RUNNER.invoke(app, ["app", "ledger", "split", tx, "--llm", "claude", "--apply"])
+    result = invoke_cached_cli(["app", "ledger", "split", tx, "--llm", "claude", "--apply"])
     assert result.exit_code != 0
     # Nothing was persisted: the single parent row is intact.
     assert len(_rows()) == 1
@@ -213,8 +209,7 @@ def test_llm_split_rejects_manual_child_flags(
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "ledger",

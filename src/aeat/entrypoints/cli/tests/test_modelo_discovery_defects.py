@@ -47,6 +47,7 @@ def _create_profile() -> None:
             "--quiet", "--accept-defaults",
             "--tax-id", "12345678Z",
             "--name", "Operator",
+            "--surnames", "Operator",
             "--activity", "design",
         ],
     )  # fmt: skip
@@ -320,6 +321,97 @@ def test_modelo_readiness_names_preflight_scope() -> None:
     )
     assert result.exit_code == 0, result.output
     assert "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness" in result.output
+
+
+def test_modelo_readiness_refuses_revision_mismatch() -> None:
+    """Readiness resolves the requested revision, not only the modelo/year."""
+
+    _create_profile()
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "readiness",
+            "--modelo",
+            "130",
+            "--revision-id",
+            "2023-y-siguientes",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    flat = result.output.replace("\n", " ")
+    assert "ready\tFalse" in result.output
+    assert "registry_ready\tFalse" in result.output
+    assert "registry_refusal\tregistry snapshot unresolved" in result.output
+    assert "2023-y-siguientes" in flat
+    assert "aeat app modelo describe 130" in flat
+
+
+def test_modelo_readiness_refuses_period_without_registry_coverage() -> None:
+    """M210 readiness must fail closed when the requested period is not covered."""
+
+    _create_profile()
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "readiness",
+            "--modelo",
+            "210",
+            "--revision-id",
+            "2025",
+            "--year",
+            "2025",
+            "--period",
+            "AD-HOC",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    flat = result.output.replace("\n", " ")
+    assert "ready\tFalse" in result.output
+    assert "registry_ready\tFalse" in result.output
+    assert "registry_refusal\tregistry snapshot unresolved" in result.output
+    assert "AD-HOC" in flat
+    assert "aeat app modelo describe 210" in flat
+
+
+def test_modelo_readiness_reports_missing_calculation_bindings() -> None:
+    """Blank company facts must keep M200 readiness false before calculate."""
+
+    _create_profile()
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "readiness",
+            "--modelo",
+            "200",
+            "--revision-id",
+            "2024-y-siguientes",
+            "--year",
+            "2026",
+            "--period",
+            "0A",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = _payload(result.output)
+    assert payload["ready"] is False
+    assert payload["registry_ready"] is True
+    assert payload["binding_ready"] is False
+    missing_binding_ids = {row["binding_id"] for row in payload["missing_bindings"]}
+    assert {
+        "modelo-200-2024-profile-legal-entity-form",
+        "modelo-200-2024-profile-new-entity-flag",
+        "modelo-200-2024-profile-incn-prior-12-months",
+    } <= missing_binding_ids
+    assert {row["source"] for row in payload["missing_bindings"]} == {"profile"}
 
 
 # ---------------------------------------------------------------------------

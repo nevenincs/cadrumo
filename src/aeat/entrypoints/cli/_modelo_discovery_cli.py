@@ -342,6 +342,7 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
 _BINDING_SOURCE_TO_READINESS: dict[str, str] = {
     "constant_value": "casilla",
     "previous_filing": "prior filed revision",
+    "relation_prefill": "relation input",
     "live_observation": "live observation",
     "ledger_iva_aggregation": "ledger source",
     "ledger_oss_aggregation": "ledger source",
@@ -356,6 +357,61 @@ _BINDING_SOURCE_TO_READINESS: dict[str, str] = {
 
 def _readiness_for_source(source: str) -> str:
     return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
+
+
+_M200_M202_PAGOS_RELATION_CHANNELS: tuple[tuple[str, str, str, str], ...] = (
+    (
+        "modelo-200-2024-rel-202-pagos-fraccionados",
+        "40.3",
+        "34",
+        "modelo-200-2024-pagos-fraccionados-anuales",
+    ),
+    (
+        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
+        "40.2",
+        "03",
+        "modelo-200-2024-pagos-fraccionados-anuales-40-2",
+    ),
+)
+
+
+def _m200_m202_relation_guidance_lines(report, rows) -> tuple[str, ...]:
+    if str(report.code) != "200" or report.period != "0A":
+        return ()
+    listed_binding_ids = {str(row.binding_id) for row in rows}
+    visible_channels = tuple(
+        channel for channel in _M200_M202_PAGOS_RELATION_CHANNELS if channel[3] in listed_binding_ids
+    )
+    if len(visible_channels) != len(_M200_M202_PAGOS_RELATION_CHANNELS):
+        return ()
+    lines = [
+        "relation_guidance\t"
+        + tr(
+            "cli.app.modelo.bindings.m200_m202_relation_guidance",
+            default=(
+                "Modelo 200 M202 pagos fraccionados feed DP200014B:00611 through --relation "
+                "values, not --binding target binding ids. The M202 40.3 casilla 34 and 40.2 "
+                "casilla 03 channels are mutually exclusive per filing; when entering manual "
+                "relation values, put the annual sum on the elected modality and 0 on the unused modality."
+            ),
+        ),
+    ]
+    for relation_id, modality, casilla, binding_id in visible_channels:
+        lines.append(
+            "relation_input\t"
+            + tr(
+                "cli.app.modelo.bindings.m200_m202_relation_channel",
+                default=(
+                    "{relation_id}\tM202 {modality} casilla {casilla}\t"
+                    "use --relation {relation_id}=VALUE\tpaired target binding {binding_id}"
+                ),
+                relation_id=relation_id,
+                modality=modality,
+                casilla=casilla,
+                binding_id=binding_id,
+            ),
+        )
+    return tuple(lines)
 
 
 def _active_bucket_id() -> str:
@@ -450,6 +506,8 @@ def _binding_list_rows_for_report(report, *, missing: bool) -> tuple[list[Bindin
             f"{row.binding_id}\t{row.source}\t{readiness}\t{row.typed_enum or '-'}\t"
             f"{row.input_channel}\t{row.borrador_capable}",
         )
+    if missing:
+        text_rows.extend(_m200_m202_relation_guidance_lines(report, rows))
     return merged_rows, text_rows
 
 

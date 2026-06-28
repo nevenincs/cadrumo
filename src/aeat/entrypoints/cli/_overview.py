@@ -32,7 +32,6 @@ from ._common import (
     _emit_envelope,
     _load_drafts,
     _no_active_profile_refusal,
-    _optional_canonical_period,
     _parse_iso_date,
     _profile_to_taxpayer,
     _state,
@@ -153,6 +152,21 @@ def _live_censo_verified_profile_keys(record) -> tuple[str, ...]:
             {fact.path for fact in record.facts if fact.path.strip() and fact.source in verified_sources},
         ),
     )
+
+
+def _overview_status_period(period: str, *, year: int | None):
+    """Resolve ``overview status --period`` through the registry-token union."""
+    from ...core import Period, PeriodError
+
+    token = period.strip()
+    if not token:
+        raise _bad(tr("cli.common.errors.period_empty"))
+    if year is None:
+        raise _bad(tr("cli.common.errors.period_missing_year", token=token))
+    try:
+        return Period.from_year_and_code(year, token)
+    except PeriodError as exc:
+        raise _bad(tr("cli.common.errors.period_unrecognised", raw=period)) from exc
 
 
 def _local_calendar_filing_evidence(
@@ -379,8 +393,7 @@ def overview_status(
             raise _no_active_profile_refusal()
 
         drafts = _load_drafts()
-        canonical = _optional_canonical_period(period, year=year)
-        assert canonical is not None  # period is not None, so --year was required and supplied
+        canonical = _overview_status_period(period, year=year)
         wanted = (canonical.year, canonical.registry_token)
 
         def _draft_matches(draft_period: object) -> bool:

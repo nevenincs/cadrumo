@@ -43,6 +43,7 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
         ModeloRecordStatus,
         derive_filing_record_id,
     )
+    from .._modelo_payloads import FilingRecordImportResult, ModeloRecordShowResult, WorkAmendResult
     from .._modelo_rendering import filing_record_payload as _filing_record_payload
 
     imported_at = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
@@ -89,6 +90,19 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
     assert evidence.kind == "aeat_justificante_pdf"
     assert evidence.reference_id == "JUST-2026-130-1T-XYZ789"
     assert evidence.imported_at == imported_at.isoformat()
+    payload_dict = payload.model_dump(mode="python")
+    show_result = ModeloRecordShowResult.model_validate(payload_dict)
+    import_result = FilingRecordImportResult.model_validate(
+        {
+            "evidence_kind": evidence.kind,
+            "evidence_reference_id": evidence.reference_id,
+            **payload_dict,
+        },
+    )
+    amend_result = WorkAmendResult.model_validate({"amendment_kind": "complementaria", **payload_dict})
+    assert show_result.external_evidence is not None
+    assert import_result.external_evidence is not None
+    assert amend_result.external_evidence is not None
 
 
 def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
@@ -104,6 +118,7 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
         ModeloRecordStatus,
         derive_filing_record_id,
     )
+    from .._modelo_payloads import ModeloRecordShowResult, WorkFileResult
     from .._modelo_rendering import filing_record_payload as _filing_record_payload
 
     work_unit_id = "a" * 64
@@ -133,6 +148,13 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
 
     assert payload.external_evidence is None
     assert payload.amends_filing_record_id is None
+    payload_dict = payload.model_dump(mode="python")
+    file_result = WorkFileResult.model_validate(payload_dict)
+    show_result = ModeloRecordShowResult.model_validate(payload_dict)
+    assert file_result.external_evidence is None
+    assert file_result.amends_filing_record_id is None
+    assert show_result.external_evidence is None
+    assert show_result.amends_filing_record_id is None
 
 
 def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode() -> None:
@@ -1047,7 +1069,7 @@ class TestDeclaredPeriodTokensAutocomplete:
 
         assert _declared_period_tokens("") == ()
         assert _declared_period_tokens("   ") == ()
-        assert _declared_period_tokens(None) == ()  # type: ignore[arg-type]
+        assert _declared_period_tokens(None) == ()
 
     def test_unknown_modelo_swallows_aeat_error_and_returns_empty(self) -> None:
         """An unregistered modelo triggers an AeatError from the registry.

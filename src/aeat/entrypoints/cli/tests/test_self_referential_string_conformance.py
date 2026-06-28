@@ -54,8 +54,9 @@ handler-refused advertised member.
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
+from typing import Protocol, TypeGuard
 
 import pytest
 
@@ -71,6 +72,26 @@ from .test_documented_command_conformance import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+class _CommandGroup(Protocol):
+    params: Sequence[object]
+
+    def get_command(self, ctx: object, cmd_name: str) -> object | None: ...
+
+    def list_commands(self, ctx: object) -> Sequence[str]: ...
+
+
+class _CommandWithParams(Protocol):
+    params: Sequence[object]
+
+
+def _is_command_group(value: object) -> TypeGuard[_CommandGroup]:
+    return callable(getattr(value, "get_command", None)) and callable(getattr(value, "list_commands", None))
+
+
+def _has_params(value: object) -> TypeGuard[_CommandWithParams]:
+    return hasattr(value, "params")
 
 
 # ---------------------------------------------------------------------------
@@ -274,15 +295,17 @@ def _advertised_option_choices(verb_path: tuple[str, ...], option_flag: str) -> 
     ctx = click_vendored.Context(root, info_name="aeat")
     cmd: object = root
     for tok in verb_path:
-        assert hasattr(cmd, "list_commands"), f"{tok}: parent in {verb_path} is not a group"
-        assert hasattr(cmd, "get_command"), f"{tok}: parent is not a group"
-        sub = cmd.get_command(ctx, tok)  # type: ignore[union-attr]  # ty: ignore[call-non-callable]
+        assert _is_command_group(cmd), f"{tok}: parent in {verb_path} is not a group"
+        sub = cmd.get_command(ctx, tok)
         assert sub is not None, f"{' '.join(verb_path)} does not resolve at {tok!r}"
+        assert isinstance(sub, (click_vendored.Command, TyperGroup)), f"{tok}: resolved command has unexpected type"
         ctx = click_vendored.Context(sub, info_name=tok, parent=ctx)
         cmd = sub
-    for param in cmd.params:  # type: ignore[union-attr]
-        if getattr(param, "param_type_name", None) == "option" and option_flag in param.opts:
-            choices = getattr(param.type, "choices", None)
+    assert _has_params(cmd), f"{' '.join(verb_path)} resolved command has no params"
+    for param in cmd.params:
+        opts = getattr(param, "opts", ())
+        if getattr(param, "param_type_name", None) == "option" and option_flag in opts:
+            choices = getattr(getattr(param, "type", None), "choices", None)
             assert choices is not None, f"{' '.join(verb_path)} {option_flag} is not a choice option"
             return frozenset(choices)
     raise AssertionError(f"{' '.join(verb_path)} has no {option_flag} option")

@@ -71,6 +71,8 @@ class TransactionPayload(OutputSchema):
     taxable_base: str | None = None
     iva_rate: str | None = None
     iva_amount: str | None = None
+    iva_category: str | None = None
+    counterparty_eu_member_state: str | None = None
     irpf_category: str | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
@@ -436,6 +438,8 @@ class LedgerListRowPayload(OutputSchema):
     taxable_base: str | None = None
     iva_rate: str | None = None
     iva_amount: str | None = None
+    iva_category: str | None = None
+    counterparty_eu_member_state: str | None = None
     irpf_category: str | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None

@@ -15,7 +15,9 @@ until the sede G313 driver lands - the verb is visible in ``--help``
 so operators see the canonical name now and get an explicit message
 about what is missing rather than a silent absence.
 
-Use of :class:`BucketEventHistoryRepository` for compliance.
+The repository connection is injected into
+:class:`aeat.application.user_profile.CensoSyncService` so censo apply and
+refresh events stay application-owned.
 """
 
 from __future__ import annotations

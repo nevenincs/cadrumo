@@ -426,6 +426,13 @@ _MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
     },
 )
 
+_M200_M202_PAGOS_RELATION_IDS: frozenset[str] = frozenset(
+    {
+        "modelo-200-2024-rel-202-pagos-fraccionados",
+        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
+    },
+)
+
 
 def _bindings_discovery_command(unit: WorkUnit | None) -> str:
     """Return the ``bindings list --missing`` discovery command for the refusal.
@@ -482,6 +489,39 @@ def _ledger_sourced_missing_binding(error: RegistryValidationError, unit: WorkUn
     return False
 
 
+def _missing_relation_guidance(
+    *,
+    base: str,
+    error: RegistryValidationError,
+    discover_command: str,
+) -> str:
+    relation_id = (error.context or {}).get("relation_id")
+    if isinstance(relation_id, str) and relation_id in _M200_M202_PAGOS_RELATION_IDS:
+        return tr(
+            "cli.app.modelo.work.missing_relation_guidance_m200_m202",
+            default=(
+                "{base} Supply Modelo 200 pagos fraccionados from Modelo 202 with --relation "
+                "RELATION_ID=VALUE, not --binding. DP200014B:00611 subtracts two mutually "
+                "exclusive M202 payment relation channels: modelo-200-2024-rel-202-pagos-fraccionados "
+                "for 40.3 casilla 34 and modelo-200-2024-rel-202-pagos-fraccionados-40-2 "
+                "for 40.2 casilla 03. When entering manual values, set the unused modality to 0. "
+                "Run `{discover}` to list the relation guidance and remaining bindings."
+            ),
+            base=base,
+            discover=discover_command,
+        )
+    return tr(
+        "cli.app.modelo.work.missing_relation_guidance",
+        default=(
+            "{base} Supply the value with --relation KEY=VALUE on this command; KEY is a "
+            "registry relation id, not a binding id. Run `{discover}` to list relation "
+            "guidance and the remaining bindings the calculation still needs."
+        ),
+        base=base,
+        discover=discover_command,
+    )
+
+
 def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str) -> str:
     """Return the missing-binding refusal enriched with operator guidance.
 
@@ -494,6 +534,10 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
       the bucket-scoped ledger and rejects a caller ``--binding``, so the
       operator is told to add / classify the relevant ledger rows and run
       ``ledger preflight`` — never to pass ``--binding`` (which the app refuses);
+    * relation operands are supplied with ``--relation RELATION_ID=VALUE``.
+      Modelo 200's M202 pagos-fraccionados fold-in gets extra wording because
+      its relation-prefill target bindings are visible in ``bindings list`` but
+      the manual override channel is the relation id, not the binding id;
     * every other ``--binding``-accepting source (``previous_filing`` carries,
       enum / profile bindings) keeps the ``--binding KEY=VALUE`` guidance.
 
@@ -517,6 +561,12 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
         _log.debug("missing-binding guidance work-unit lookup failed", exc_info=True)
         unit = None
     discover_command = _bindings_discovery_command(unit)
+    if error.translated_message == "errors.calc.relation_value_missing":
+        return _missing_relation_guidance(
+            base=base,
+            error=error,
+            discover_command=discover_command,
+        )
     if _ledger_sourced_missing_binding(error, unit):
         return tr(
             "cli.app.modelo.work.missing_binding_guidance_ledger",
