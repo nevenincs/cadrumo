@@ -57,6 +57,28 @@ required_text = [
     "gestión tributaria",
 ]
 
+[legal."rdleg-1175-1990:art-unico"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rdleg-1175-1990-art-unico.html#aunico"
+document_id = "BOE-A-1990-23930"
+article = "unico"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-23930#aunico"
+published_at = 1990-09-29
+effective_from = 1990-10-19
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (verified against official BOE-A-1990-23930 consolidated art. unico; corpus excerpt bundled)"
+notes = "RDLeg 1175/1990 art unico approves the IAE tariffs and the instruction for their application. Grounds profile storage of the IAE section/group/epigraph code carried from censo/live facts."
+required_text = [
+    "tarifas del Impuesto sobre Actividades Económicas",
+    "instrucción para la aplicación",
+    "ANEXO I",
+    "Tarifas",
+    "Epígrafe",
+]
+
 [legal."orden-hac-2572-2003:apartado-1"]
 evidence_tier = "legal_authority"
 authority = "boe"

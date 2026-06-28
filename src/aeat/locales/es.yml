@@ -2806,7 +2806,8 @@ cli:
       from_csv_exclusive: --from-csv no puede combinarse con un id de transacción
         ni --classification.
       from_csv_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category].
+        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
+        irpf_category].
       from_csv_not_found: 'Archivo CSV no encontrado: %{path}'
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
@@ -4053,7 +4054,7 @@ errors:
     error_renta_profile_completeness_warning: 'Aviso de declaración obligatoria RETMAR:
       este trabajador figura inscrito en RETMAR. Desde enero de 2023, todos los trabajadores
       inscritos en RETMAR deben presentar declaración del IRPF independientemente
-      del nivel de ingresos (Ley 47/2015 BOE-A-2015-11346).'
+      del nivel de ingresos (Ley 35/2006 Art. 96 BOE-A-2006-20764).'
     error_renta_validation: Un valor de la declaración de la Renta no es válido.
     error_rental_amortization_cap_exceeded: La amortización acumulada superaría el
       límite legal del activo arrendado.
@@ -4639,7 +4640,7 @@ errors:
       está inactiva: no se ha concedido la autorización de ayudas de Estado de la
       UE para 2024/2025. La AEAT confirma su no aplicabilidad. Active esta exención
       solo tras la concesión de la autorización europea (Ley 35/2006 DA 41 BOE-A-2006-20764,
-      Ley 6/2018 BOE-A-2018-9268).'
+      añadida por Ley 26/2014 BOE-A-2014-12327).'
     refused_review_edit_parse: No se pudo interpretar `--set CLAVE=VALOR`. Comprueba
       la sintaxis del valor indicado.
     refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba

@@ -51,6 +51,7 @@ from .. import (
     cross_period_dependency_inventory,
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
+    filing_external_evidence_blockers,
     partition_cross_period_requirements_by_activity_start,
 )
 
@@ -326,9 +327,7 @@ def _external_evidence_blockers(
     expected_tax_id: str | None = "X1234567L",
     source_metadata: dict[str, str] | None = None,
 ) -> list[CrossPeriodCleanStateBlocker]:
-    from .._cross_period_clean_state import _filing_external_evidence_blockers  # pyright: ignore[reportPrivateUsage]
-
-    return _filing_external_evidence_blockers(
+    return filing_external_evidence_blockers(
         filing,
         source_kind,
         JustificanteRepository(),

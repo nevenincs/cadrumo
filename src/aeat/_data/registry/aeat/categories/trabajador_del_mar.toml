@@ -15,7 +15,6 @@
 #   formula         - narrative formula description (Art. 7.p) only)
 #   selector        - profile predicate tuple that gates this binding
 #   legal_refs      - BOE-grounded legal authority references
-#   source_refs     - source identifiers for provenance tracing
 
 [[exemption_bindings]]
 id = "art-7p-foreign-work"
@@ -87,7 +86,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 notes = "DA 41 LIRPF: 50% exemption for tuna fleet crew on Spanish-flagged fishing vessels registered in the community fishing fleet register, fishing exclusively tuna or related species outside EU waters and at least 200 nautical miles from member state baselines, in companies in the Special Register of Spanish Fishing Vessel Companies. INACTIVE: requires prior EU state-aid clearance. Not granted as of 2024/2025. AEAT confirms non-applicability in official 2024 guidance. Must not be activated until EU clearance is granted."
 
 [[exemption_bindings.legal_refs]]
-reference = "Ley 6/2018 (enabling amendment)"
-document_id = "BOE-A-2018-9268"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2018-9268"
-notes = "Ley 6/2018 de Presupuestos Generales del Estado: introduced DA 41 into Ley 35/2006 LIRPF. The exemption is conditioned on prior EU state-aid clearance under TFEU state-aid rules, which has not been granted as of 2024."
+reference = "Ley 26/2014 Art. 1.98 (adding amendment)"
+document_id = "BOE-A-2014-12327"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-12327"
+notes = "Ley 26/2014 added DA 41 to Ley 35/2006 LIRPF. The exemption is conditioned on compatibility with EU law and must not be applied until state-aid clearance is granted."

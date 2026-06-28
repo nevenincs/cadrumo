@@ -17,9 +17,7 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
     ObservedCasillaValue,
-)
-from ....adapters.outbound.aeat.sede._declarations import (
-    _observed_casillas_from_submitted_file,  # pyright: ignore[reportPrivateUsage]
+    observed_casillas_from_submitted_file,
 )
 from ....core import Period
 from ....core.external_constants import load_external_constants
@@ -889,7 +887,7 @@ def _parsed_303_submitted_file_observation(
         archive_link_text="Ver",
         declaration_copy_link_text=None,
     )
-    observed = _observed_casillas_from_submitted_file(
+    observed = observed_casillas_from_submitted_file(
         snapshot=resources().modelos.authority.snapshot("303", filing_year=year, period=period),
         declaration=declaration,
         body=body,
@@ -1055,12 +1053,12 @@ def _prior_303_observation(
         ),
         casillas=(
             *(
-                    (
-                        ObservedCasillaValue(
-                            casilla_id=_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-                            value=str(prior_pending),
-                            source_artefact_kind="submitted_file",
-                            source_locator="submitted-file:110",
+                (
+                    ObservedCasillaValue(
+                        casilla_id=_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+                        value=str(prior_pending),
+                        source_artefact_kind="submitted_file",
+                        source_locator="submitted-file:110",
                         confidence=1.0,
                     ),
                 )

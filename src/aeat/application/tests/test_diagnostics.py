@@ -12,11 +12,9 @@ from pydantic import AnyHttpUrl, ValidationError
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
-    has_active_bucket_session,
-)
-from ...adapters.persistence.storage.master_key._active_session import (
-    _active_session,  # pyright: ignore[reportPrivateUsage]
     activate_session,
+    has_active_bucket_session,
+    suspend_active_session,
 )
 from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
@@ -32,8 +30,11 @@ from ..diagnostics import (
     RegistryVersionSummary,
     SecureObjectIntegrityReport,
     build_config_repair_report,
+    ensure_models_rebuilt,
     preview_quarantine_unreadable_secure_objects,
+    profile_check,
     quarantine_unreadable_secure_objects,
+    registry_cross_domain_integrity_check,
     render_config_repair_text,
     secure_object_unreadable_total,
 )
@@ -524,12 +525,9 @@ def test_quarantine_preview_opens_session_for_bootstrap_exempt_repair(tmp_path: 
             written_at=datetime.now(UTC),
             payload=b"repair-preview-sessionless",
         )
-        token = _active_session.set(None)
-        assert not has_active_bucket_session()
-        try:
+        with suspend_active_session():
+            assert not has_active_bucket_session()
             report = preview_quarantine_unreadable_secure_objects()
-        finally:
-            _active_session.reset(token)
 
     assert report.readable_total + report.unreadable_total >= 1
     assert any(item.namespace == namespace for item in report.namespaces)
@@ -546,12 +544,9 @@ def test_quarantine_opens_session_for_bootstrap_exempt_repair(tmp_path: Path) ->
             written_at=datetime.now(UTC),
             payload=b"repair-quarantine-sessionless",
         )
-        token = _active_session.set(None)
-        assert not has_active_bucket_session()
-        try:
+        with suspend_active_session():
+            assert not has_active_bucket_session()
             report = quarantine_unreadable_secure_objects()
-        finally:
-            _active_session.reset(token)
 
     assert report.readable_total + report.unreadable_total >= 1
     assert any(item.namespace == namespace for item in report.namespaces)
@@ -622,9 +617,7 @@ def _internal_registry_repair_report() -> ConfigRepairReport:
     backend or registry corruption.
     """
 
-    from ..diagnostics import _ensure_models_rebuilt  # pyright: ignore[reportPrivateUsage]
-
-    _ensure_models_rebuilt()
+    ensure_models_rebuilt()
     registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
     checks = (
         DiagnosticCheck(
@@ -688,7 +681,6 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     with the exact ``aeat config profile edit NAME`` command.
     """
 
-    from ..diagnostics import _profile_check  # pyright: ignore[reportPrivateUsage]
     from ..wizard._status import WizardStatusReport
 
     report = WizardStatusReport(
@@ -704,7 +696,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
         login_ready=False,
         next_action="aeat config profile edit NAME",
     )
-    check = _profile_check(report)
+    check = profile_check(report)
 
     assert check.status == "warn"
     finding_keys = {finding.summary.split(" — ", 1)[0] for finding in check.findings}
@@ -721,10 +713,9 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
 def test_render_config_repair_text_lists_specific_findings() -> None:
     """The renderer prints each finding line, not just the check summary."""
 
-    from ..diagnostics import _ensure_models_rebuilt, _profile_check  # pyright: ignore[reportPrivateUsage]
     from ..wizard._status import WizardStatusReport
 
-    _ensure_models_rebuilt()
+    ensure_models_rebuilt()
 
     report = WizardStatusReport(
         active_profile="demo",
@@ -739,7 +730,7 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
         login_ready=False,
         next_action="aeat config profile edit NAME",
     )
-    check = _profile_check(report)
+    check = profile_check(report)
     registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
     repair_report = ConfigRepairReport(
         overall="warn",
@@ -792,9 +783,8 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
     """
 
     from ...core.resources import bundled_path
-    from ..diagnostics import _registry_cross_domain_integrity_check  # pyright: ignore[reportPrivateUsage]
 
-    check = _registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
+    check = registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
     # Healthy registry → ok + operator audience. A failing registry would
     # carry audience='internal'; that branch is pinned by the renderer
     # test above against a constructed report.

@@ -117,9 +117,9 @@ def test_worker_class_carries_legal_refs_for_all_three_maritime_axes() -> None:
     assert any("BOE-A-1994-15794" in ref for ref in field.legal_refs)
     # DA 41 inactive binding and its enabling law
     assert any("DA 41" in ref for ref in field.legal_refs)
-    assert any("BOE-A-2018-9268" in ref for ref in field.legal_refs)
+    assert any("BOE-A-2014-12327" in ref for ref in field.legal_refs)
     # RETMAR mandatory filing
-    assert any("BOE-A-2015-11346" in ref for ref in field.legal_refs)
+    assert any("BOE-A-2006-20764" in ref and "Art. 96" in ref for ref in field.legal_refs)
 
 
 def test_vessel_flag_fact_is_enum_with_es_and_foreign() -> None:
@@ -168,7 +168,7 @@ def test_retmar_registered_fact_is_boolean_with_schedule_predicate() -> None:
     assert field.required is False
     assert field.effective_dated is True
     assert "maritime_worker.retmar_registered" in field.schedule_predicates
-    assert any("BOE-A-2015-11346" in ref for ref in field.legal_refs)
+    assert any("BOE-A-2006-20764" in ref and "Art. 96" in ref for ref in field.legal_refs)
 
 
 def test_no_da24_reference_in_maritime_worker_section() -> None:
@@ -241,7 +241,7 @@ def test_da41_binding_is_inactive_and_has_legal_refs() -> None:
     combined = " ".join(str(r.get("reference", "")) + " " + str(r.get("document_id", "")) for r in legal_refs)
     assert "DA 41" in combined, "DA 41 legal_refs must reference DA 41 LIRPF"
     assert "BOE-A-2006-20764" in combined, "DA 41 legal_refs must cite BOE-A-2006-20764"
-    assert "BOE-A-2018-9268" in combined, "DA 41 legal_refs must cite enabling Ley 6/2018 BOE-A-2018-9268"
+    assert "BOE-A-2014-12327" in combined, "DA 41 legal_refs must cite adding Ley 26/2014 BOE-A-2014-12327"
 
 
 def test_no_da24_reference_in_trabajador_del_mar_toml() -> None:

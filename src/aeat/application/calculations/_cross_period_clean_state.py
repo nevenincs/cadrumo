@@ -862,10 +862,7 @@ def evaluate_cross_period_clean_state(
         classification.source_modelo
         for classification in snapshot.revision.dependency_classifications
         if (not classification.taxpayer_files_source)
-        or (
-            classification.conditional_on_economic_activity
-            and taxpayer_files_economic_activity is False
-        )
+        or (classification.conditional_on_economic_activity and taxpayer_files_economic_activity is False)
         or (
             classification.conditional_on_economic_activity
             and not_applicable_source_modelos is not None
@@ -921,8 +918,7 @@ def evaluate_cross_period_clean_state(
             ),
         )
         for requirement in partition.in_scope
-        if requirement.key not in first_year_fractional_keys
-        and requirement.key not in zero_value_previous_filing_keys
+        if requirement.key not in first_year_fractional_keys and requirement.key not in zero_value_previous_filing_keys
     )
     in_scope_dependencies = tuple(
         _relax_same_year_local_chain(evidence, target_filing_year=snapshot.filing_year)
@@ -966,9 +962,8 @@ def _requirement_scoped_by_zero_value_previous_filing(
 ) -> bool:
     if not zero_value_previous_filing_binding_ids:
         return False
-    return (
-        requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
-        and all(origin_id in zero_value_previous_filing_binding_ids for origin_id in requirement.origin_ids)
+    return requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING and all(
+        origin_id in zero_value_previous_filing_binding_ids for origin_id in requirement.origin_ids
     )
 
 
@@ -1584,6 +1579,9 @@ def _combined_source_kind(source_kinds: Iterable[str]) -> str:
     return "mixed"
 
 
+filing_external_evidence_blockers = _filing_external_evidence_blockers
+
+
 __all__ = [
     "CrossPeriodCleanStateBlocker",
     "CrossPeriodCleanStateVerdict",
@@ -1598,5 +1596,6 @@ __all__ = [
     "cross_period_dependency_inventory",
     "cross_period_dependency_requirements",
     "evaluate_cross_period_clean_state",
+    "filing_external_evidence_blockers",
     "partition_cross_period_requirements_by_activity_start",
 ]

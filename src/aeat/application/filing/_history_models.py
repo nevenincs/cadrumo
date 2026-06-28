@@ -3,6 +3,21 @@
 :class:`ModeloHistory` groups :class:`ModeloHistoryEntry` rows by
 :class:`ModeloIdentifier` before :class:`ModeloHistoryRepository` stores the
 aggregate in encrypted AUDIT-class persistence.
+
+The payload is intentionally narrower than the modelo filing-record catalogue:
+it records local filing history rows by modelo and period, while
+:class:`aeat.domain.modelos.ModeloRecord` carries the richer current /
+superseded filing lifecycle for calculation revisions.
+
+See Also:
+    :class:`aeat.application.filing.ModeloHistoryRepository`
+        Encrypted AUDIT-class repository that stores these payloads.
+    :mod:`aeat.domain.modelos`
+        Work-unit filing records and supersession history for calculation
+        revisions.
+    :mod:`aeat.application.calculations`
+        Past-filing casilla observations used by cross-period calculation
+        resolvers.
 """
 
 from __future__ import annotations
@@ -17,7 +32,7 @@ from ...domain._identifiers import ModeloIdentifier
 
 
 class ModeloHistoryEntry(BaseModel):
-    """One recorded filing event for a :class:`ModeloIdentifier` and :class:`Period`."""
+    """One local filing-history row for a :class:`ModeloIdentifier` and :class:`Period`."""
 
     model_config = _STRICT_FROZEN
 
@@ -28,7 +43,7 @@ class ModeloHistoryEntry(BaseModel):
 
 
 class ModeloHistory(BaseModel):
-    """Per-modelo history of :class:`ModeloHistoryEntry` rows for one :class:`ModeloIdentifier`."""
+    """Per-modelo tuple of :class:`ModeloHistoryEntry` rows for one :class:`ModeloIdentifier`."""
 
     model_config = _STRICT_FROZEN
 

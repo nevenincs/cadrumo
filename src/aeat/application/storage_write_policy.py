@@ -13,7 +13,15 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core.config import Settings, StorageRouteKind, classify_storage_route
+from ..core import read_pointer
+from ..core.config import (
+    Settings,
+    StorageRouteClassification,
+    StorageRouteKind,
+    classify_storage_route,
+    load_settings,
+    settings_for_active_profile_bucket,
+)
 from ..core.i18n import tr
 
 
@@ -113,12 +121,8 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "config google sync push",
     "config google sync calc pull",
     "config google sync calc compute",
-    "config profile edit",
     "config profile censo pull",
     "config profile censo apply",
-    "config profile delete",
-    "config profile duplicate",
-    "config profile rename",
     "config reset",
 )
 
@@ -156,7 +160,7 @@ def inspect_storage_write_policy(
             bootstrap_exempt=False,
         )
 
-    route = classify_storage_route(settings)
+    route = _classify_effective_write_route(settings)
     if route.kind is StorageRouteKind.ROOT_FALLBACK_DATABASE:
         return StorageWritePolicyDecision(
             allowed=False,
@@ -191,6 +195,16 @@ def is_profile_bound_write_verb_path(verb_path: str) -> bool:
     return any(
         normalised == guarded or normalised.startswith(f"{guarded} ") for guarded in PROFILE_BOUND_WRITE_VERB_PATHS
     )
+
+
+def _classify_effective_write_route(settings: Settings | None) -> StorageRouteClassification:
+    resolved = settings or load_settings()
+    route = classify_storage_route(resolved)
+    if route.kind is StorageRouteKind.ROOT_FALLBACK_DATABASE and "aeat_database_url" not in resolved.model_fields_set:
+        pointer = read_pointer(resolved.aeat_local_storage_root)
+        if pointer is not None:
+            return classify_storage_route(settings_for_active_profile_bucket(pointer.bucket_id, resolved))
+    return route
 
 
 __all__ = [

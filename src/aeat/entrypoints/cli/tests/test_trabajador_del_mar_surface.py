@@ -9,8 +9,9 @@ at this layer is the canonical CLI-input contract for the fact.
 
 contract — when the maritime exemption application service resolves an
 Art. 7.p) or REBECA observation, the typed envelope that the CLI emit
-boundary serialises carries ``legal_refs`` traceable to BOE-A-2006-20764
-(Art. 7.p) / Ley 35/2006) and BOE-A-1994-15794 (REBECA / Ley 19/1994).
+boundary serialises carries canonical ``legal_refs`` ids traceable through
+the bundled legal catalogue to BOE-A-2006-20764 (Art. 7.p) / Ley 35/2006)
+and BOE-A-1994-15794 (REBECA / Ley 19/1994).
 The flat ``casilla_values`` view is a derived projection; the canonical
 contract is the typed observations.
 
@@ -19,7 +20,7 @@ contract — the RETMAR mandatory-filing warning surface is the
 registry. The CLI error boundary (``aeat.entrypoints.cli._errors``)
 renders any ``AeatError`` via its registered ``message_key``. This
 test verifies the registered code is correct and that the Spanish
-translation includes the RETMAR anchor and the Ley 47/2015 BOE
+translation includes the RETMAR anchor and the LIRPF art. 96 BOE
 reference, proving end-to-end that any CLI verb raising the error
 will emit the regulatorily grounded message.
 
@@ -68,7 +69,8 @@ class TestWorkerClassProfileFactAcceptance:
         # must be cited in the field definition that the CLI surfaces.
         assert "BOE-A-2006-20764" in combined  # Art. 7.p) / DA 41
         assert "BOE-A-1994-15794" in combined  # REBECA
-        assert "BOE-A-2015-11346" in combined  # RETMAR
+        assert "BOE-A-2014-12327" in combined  # DA 41 adding law
+        assert "Art. 96" in combined  # RETM/RETMAR filing obligation
 
 
 class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
@@ -86,9 +88,7 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
         )
         assert len(result.observations) == 1
         obs = result.observations[0]
-        combined = " ".join(obs.legal_refs)
-        assert "BOE-A-2006-20764" in combined
-        assert "Art. 7.p)" in combined
+        assert obs.legal_refs == ("ley-35-2006:art-7",)
 
     def test_rebeca_envelope_carries_boe_anchor(self) -> None:
         result = resolve_maritime_exemption(
@@ -100,8 +100,7 @@ class TestMaritimeExemptionEnvelopeCarriesLegalRefs:
         )
         assert len(result.observations) == 1
         obs = result.observations[0]
-        combined = " ".join(obs.legal_refs)
-        assert "BOE-A-1994-15794" in combined
+        assert obs.legal_refs == ("ley-19-1994:art-75",)
 
     def test_envelope_flat_view_matches_typed_observations(self) -> None:
         # The CLI emit layer often surfaces the flat casilla_values view
@@ -141,7 +140,7 @@ class TestRetmarMandatoryFilingWarningSurface:
             locale="es",
         )
         assert "RETMAR" in message
-        assert "BOE-A-2015-11346" in message
+        assert "BOE-A-2006-20764" in message
 
     def test_da41_translated_message_carries_da_41_and_boe_anchor(self) -> None:
         message = tr(
@@ -161,4 +160,4 @@ class TestRetmarMandatoryFilingWarningSurface:
                 facts=MaritimeWorkerFacts(retmar_registered=True),
             )
         assert "RETMAR" in str(exc_info.value)
-        assert "BOE-A-2015-11346" in str(exc_info.value)
+        assert "BOE-A-2006-20764" in str(exc_info.value)
