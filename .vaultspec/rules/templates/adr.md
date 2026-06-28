@@ -43,6 +43,14 @@ Describe why the ADR is being persisted. Is this a new feature? Result of an aud
 
 <!-- Key factors, constraints, requirements. Tech/libraries considered. -->
 
+## Considered options
+
+<!-- Name each alternative evaluated, compared at the same level of abstraction, with its
+key pros and cons and why it was kept or rejected. Naming the rejected options - not only
+the chosen one - is what lets a future reader reconstruct the decision. Keep each option
+to a terse claim-first line or two; the chosen option's full reasoning belongs under
+Rationale. -->
+
 ## Constraints
 
 <!-- Technical limitations, e.g.: depends on non-mature library, frontier feature, requires rigorous research. 'Frontier' risk, e.g. technology is new and falls outside the implementing model's training cutoff.
@@ -63,27 +71,3 @@ Do not add code; code references must be persisted in a separate `{reference}` d
 ## Consequences
 
 <!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->
-
-## Codification candidates
-
-<!-- If this decision introduces a durable cross-session constraint
-that should bind future agents (an obligation, a prohibition, a
-discipline that survives this feature's lifecycle), name it here as
-a candidate for promotion into a project rule under
-`.vaultspec/rules/rules/` via the codify pipeline phase.
-
-Each candidate names the proposed rule slug (kebab-case, naming the
-constraint's subject) and a one-sentence statement of the rule.
-
-Not every ADR produces a codification candidate. Decisions that are
-local to one feature, or that describe rather than constrain, leave
-this section empty. An empty Codification candidates section is a
-positive signal, not a failure. -->
-
-<!-- Example:
-
-- **Rule slug:** `destructive-verbs-need-dry-run`.
-  **Rule:** Every CLI verb that writes or removes state must
-  accept `--dry-run` and emit a usable preview before applying.
-
--->
