@@ -22,6 +22,7 @@ pin the modelo-work findings reported by the persona fleet:
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -38,6 +39,7 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 # CLI registers at startup; the in-process test must do the same).
 from ....application.wizard import _catalogue as _wizard_catalogue
 from ....application.wizard import _persistence as _wizard_persistence
+from ....core import Modelo
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -69,17 +71,47 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _create_profile() -> None:
+def _create_profile(*, activity_start_date: str | None = None) -> None:
+    args = [
+        "config", "profile", "create", "operator",
+        "--quiet", "--accept-defaults",
+        "--entity-type", "natural_person",
+        "--irpf-income-categories", "actividad_economica",
+        "--tax-id", "12345678Z",
+        "--name", "Operator",
+        "--surnames", "Readiness",
+        "--activity", "design",
+    ]
+    if activity_start_date is not None:
+        args.extend(["--activity-start-date", activity_start_date])
+    result = _invoke(args)  # fmt: skip
+    assert result.exit_code == 0, result.output
+
+
+def _set_gb_non_resident_axes() -> None:
     result = _invoke(
         [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--activity", "design",
+            "config", "profile", "edit", "operator",
+            "--quiet",
+            "--fiscal-residency", "non_resident_irnr",
+            "--country-of-fiscal-residence", "GB",
+            "--representante-fiscal-nif", "12345678Z",
+            "--representante-fiscal-nombre", "Test Representative",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
+
+
+def _attempt_incomplete_profile_create():
+    return _invoke(
+        [
+            "--format", "json",
+            "config", "profile", "create", _PROFILE_ID,
+            "--quiet", "--accept-defaults",
+            "--tax-id", "12345678Z",
+            "--activity", "design",
+        ],
+    )  # fmt: skip
 
 
 def _create_work_unit() -> str:
@@ -93,6 +125,84 @@ def _create_work_unit() -> str:
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     return _payload(result.output)["work_unit_id"]
+
+
+def test_profile_create_refuses_incomplete_profile_before_modelo_work() -> None:
+    """Incomplete profiles must fail before a modelo work unit can exist."""
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+
+    result = _attempt_incomplete_profile_create()
+
+    assert result.exit_code != 0
+    payload = json.loads(result.output)
+    assert payload["status"] == "error"
+    assert payload["error"]["code"] == "REFUSED_WIZARD_MISSING_FLAG"
+    assert payload["error"]["category"] == "REFUSED"
+    message = payload["error"]["message"]
+    assert "--entity-type" in message
+    assert "--name" in message
+    assert "--surnames" in message
+    assert read_profile_bucket(_PROFILE_ID) is None
+    assert "work_unit_id" not in result.output
+    assert "Traceback" not in result.output
+
+
+def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
+    _create_profile(activity_start_date="2026-05-01")
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "303",
+            "--year", "2026",
+            "--period", "1T",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    payload = json.loads(result.output)
+    assert payload["status"] == "error"
+    assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
+    message = payload["error"]["message"]
+    assert "pre-activity period" in message
+    assert "2026-05-01" in message
+    assert "2026-03-31" in message
+    assert "Traceback" not in result.output
+
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert _payload(listed.output)["work_unit_count"] == 0
+
+
+def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
+    _create_profile(activity_start_date="2026-07-15")
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", Modelo.M130.value,
+            "--year", "2026",
+            "--period", "2T",
+            "--revision", "2019-y-siguientes",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    payload = json.loads(result.output)
+    assert payload["status"] == "error"
+    assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
+    message = payload["error"]["message"]
+    assert f"Modelo {Modelo.M130.value} 2026 2T is before" in message
+    assert "pre-activity period" in message
+    assert "2026-07-15" in message
+    assert "2026-06-30" in message
+    assert "Traceback" not in result.output
+
+    listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert _payload(listed.output)["work_unit_count"] == 0
 
 
 def _create_calculable_work_unit() -> str:
@@ -622,6 +732,33 @@ def test_overview_next_step_not_import_after_manual_ledger_entry(_isolated_cli_b
     assert "ledger import" not in next_section
     assert "ledger review" in next_section
     assert "modelo work create" in next_section
+
+
+def test_overview_next_step_does_not_suggest_m210_work_create_for_non_resident(
+    _isolated_cli_backend: Path,
+) -> None:
+    """A non-resident M210 profile gets discovery/Sede guidance, not work-create."""
+
+    _create_profile()
+    _set_gb_non_resident_axes()
+    added = _invoke(
+        [
+            "app", "ledger", "add",
+            "--date", "2025-01-15", "--amount", "1000.00",
+            "--direction", "INCOMING", "--description", "Spanish-source rent",
+            "--source-jurisdiction", "ES",
+        ],
+    )  # fmt: skip
+    assert added.exit_code == 0, added.output
+
+    status = _invoke(["app", "overview", "status"])
+    assert status.exit_code == 0, status.output
+    next_section = status.output.split("\n\n")[-1]
+    assert "ledger import" not in next_section
+    assert "ledger review" in next_section
+    assert "modelo work create" not in next_section
+    assert "modelo describe 210" in next_section
+    assert "G320" in next_section
 
 
 def test_work_create_rejects_revision_that_does_not_cover_filing_year(

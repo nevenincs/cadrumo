@@ -789,6 +789,10 @@ application:
         a(z) %{revision_id} revízióban: a regiszter olyan kötési forrást deklarál,
         amelyet egyetlen számítási feloldó sem kezel. Regisztráljon egy feloldót,
         vagy jelölje halasztottként a számítás előtt.'
+      profile_readiness_missing: 'A profil hiányos a(z) %{modelo} %{filing_year} %{period}
+        modellhez; előbb töltse ki ezeket a profiladatokat: %{missing}.'
+      profile_readiness_profile_missing: Nincs perzisztált aktív profil ehhez a modelo
+        munkához; folytatás előtt hozza létre vagy javítsa a profilt.
       reconcile_declaration_unsupported: A bevallás-PDF egyeztetési forrás még nincs
         implementálva; egyeztessen egy letöltött justificantét az aeat app modelo
         reconcile file paranccsal, amíg a bevallás-elemző elérhetővé válik.
@@ -1123,6 +1127,9 @@ application:
         "default" tartalék).
       quiet_missing_flags: 'Ennek a --quiet futtatásnak hiányoznak a kötelező adatok.
         Adja hozzá ezeket a kapcsolókat, és futtassa újra a parancsot: %{missing_flags}'
+      create_missing_filing_baseline: 'A profil létrehozásához hiányoznak a bevallási
+        azonosító adatok. Adja hozzá ezeket a kapcsolókat, és futtassa újra a
+        parancsot: %{missing_flags}'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -1145,6 +1152,8 @@ application:
         adapter szükséges.
       adapter_missing_inputs_provider: A munkafolyamat-motorhoz tároló-alapú bejegyzési
         bemenetek szolgáltató szükséges.
+      adapter_missing_submission_engine: A munkafolyamat-motorhoz submission_engine
+        adapter szükséges.
       no_active_profile_bucket: Nincs aktív profil bucket.
       no_run_for_period: Nem található munkafolyamat-futás a(z) {modelo} modellhez
         {period} időszakra. Futtassa a munkafolyamatot legalább egyszer a folytatás
@@ -1484,6 +1493,8 @@ cli:
         unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések a(z)
           {code}@{revision} ({period}) számára: {suggestion}.'
         year_help: A nyomtatvány adóéve (pl. 2026).
+        m200_m202_relation_guidance: 'A Modelo 200 M202 pagos fraccionados a DP200014B:00611 mezot --relation ertekeken keresztul tolti, nem --binding target binding id-kkel. Az M202 40.3 casilla 34 es 40.2 casilla 03 csatornak bevallasonkent kolcsonosen kizarok; kezi relation ertek megadasakor az eves osszeget a valasztott modalitasra add, a nem hasznalt modalitast pedig allitsd 0-ra.'
+        m200_m202_relation_channel: "%{relation_id}\tM202 %{modality} casilla %{casilla}\tuse --relation %{relation_id}=VALUE\tkapcsolt target binding %{binding_id}"
       casillas:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
         explain_help: Lokalizált súgószöveg bevonása a szöveges kimenetbe.
@@ -1932,9 +1943,7 @@ cli:
           munkavegzes naptari napjai az adoeven belul. Az Art. 7.p) alkalmazasakor
           az --annual-salary mellett kotelezo.
         reason_help: Az eldobás opcionális szabad szöveges oka (max. 500 karakter).
-        relation_help: Korábbi időszaki kapcsolati érték KEY=VALUE formátumban. A
-          KEY egy nyilvántartási kapcsolat-azonosító; az VALUE egy decimális. Több
-          kapcsolat megadásához ismételje meg.
+        relation_help: 'Registry relation ertek KEY=VALUE formaban (ismetelheto). A KEY registry relation id, nem binding id; ezt hasznald idoszakok vagy modellek kozotti relation bemenetekhez. Futtasd: aeat app modelo bindings list --missing a scope-hoz tartozo relation utmutatoert. A Modelo 200 M202 pagos fraccionados eseteben a kolcsonosen kizaro 40.3 casilla 34 es 40.2 casilla 03 relation csatornakat hasznald, es kezi ertek megadasakor a nem hasznalt modalitast allitsd 0-ra.'
         rename_help: Egy munkaegység megjelenítési nevének frissítése.
         rescate_plan_pensiones_aportaciones_pre_2007_help: A nyugdíjtervbe 2006. dec.
           31-ig befizetett hozzájárulások (a LIRPF 12. átmeneti rendelkezés szerinti
@@ -2023,6 +2032,8 @@ cli:
         year_help: A munkaegység adóéve (pl. 2026).
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
+        missing_relation_guidance: '%{base} Add meg az erteket --relation KEY=VALUE formaban ezen a parancson; a KEY registry relation id, nem binding id. Futtasd: %{discover}, hogy lasd a relation utmutatot es a szamitas altal meg igenyelt bindingokat.'
+        missing_relation_guidance_m200_m202: '%{base} A Modelo 202 pagos fraccionados ertekeit a Modelo 200-hoz --relation RELATION_ID=VALUE formaban add meg, nem --bindinggal. A DP200014B:00611 ket, kolcsonosen kizaro M202 payment relation csatornat von le: modelo-200-2024-rel-202-pagos-fraccionados a 40.3 casilla 34-hez es modelo-200-2024-rel-202-pagos-fraccionados-40-2 a 40.2 casilla 03-hoz. Kezi ertek megadasakor a nem hasznalt modalitast allitsd 0-ra. Futtasd: %{discover}, hogy lasd a relation utmutatot es a fennmarado bindingokat.'
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
@@ -2199,9 +2210,15 @@ cli:
       sync:
         calc:
           compute:
-            refused_stale: 'Elutasítva: nem számít olyan munkafüzet ellen, amelynek metaadatbélyegei nem egyeznek a megadott pillanatképpel (metadata_match={metadata_match}); exportálja újra, majd töltse vissza újra.'
-            spreadsheet_id_help: 'Az üzemeltetői szerkesztéseket tartalmazó munkafüzet Drive fájlazonosítója (az alkalmazás tulajdonában kell lennie, és a megadott pillanatképhez kell kötődnie)'
-          compute_help: 'Visszatölti a calc-sheets munkafüzet üzemeltetői cellaszerkesztéseit, lefuttatja rajtuk a helyi Decimal futásidőt, és kiadja a számított mezőértékeket (nem ment semmit)'
+            refused_stale: 'Elutasítva: nem számít olyan munkafüzet ellen, amelynek
+              metaadatbélyegei nem egyeznek a megadott pillanatképpel (metadata_match={metadata_match});
+              exportálja újra, majd töltse vissza újra.'
+            spreadsheet_id_help: Az üzemeltetői szerkesztéseket tartalmazó munkafüzet
+              Drive fájlazonosítója (az alkalmazás tulajdonában kell lennie, és a
+              megadott pillanatképhez kell kötődnie)
+          compute_help: Visszatölti a calc-sheets munkafüzet üzemeltetői cellaszerkesztéseit,
+            lefuttatja rajtuk a helyi Decimal futásidőt, és kiadja a számított mezőértékeket
+            (nem ment semmit)
           export:
             capability_disabled: A Google-exportálás le van tiltva ehhez a profilhoz;
               engedélyezd az 'aeat config profile capabilities set google_export on'
@@ -2220,7 +2237,7 @@ cli:
             year_help: Benyújtási év (pl. 2025).
           export_help: A nyilvántartási számítási felület exportálása egy nyomtatvány+időszak
             kombinációhoz Google Sheets munkafüzetbe az üzemeltető `aeat-vault/` mappájában.
-          help: 'Séma-tábla számítási felület (exportálás, visszatöltés és számítás).'
+          help: Séma-tábla számítási felület (exportálás, visszatöltés és számítás).
           pull:
             assemble_observations_help: Visszatöltés után a Detalle-lap sorcsoportjait
               típusos megfigyelésekké állítja össze (kedvezményezettek, külföldi eszközök,
@@ -2686,6 +2703,8 @@ cli:
         helyben osztályozza'
       bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
         skipped, %{fail} failed'
+      bulk_all_failed: 'bulk classify sikertelen: minden sor hibás volt; egyetlen
+        főkönyvi sor sem frissült'
       business_pct_help: Üzleti célú arány 0 és 1 között; kötelező --classification
         MIXED esetén, és elutasított minden más besorolásnál.
       business_pct_requires_mixed: Elutasítva. A --business-pct csak MIXED besorolásra
@@ -2705,7 +2724,8 @@ cli:
       from_csv_exclusive: --from-csv nem kombinálható tranzakció-azonosítóval vagy
         --classification értékkel.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount].
+        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
+        irpf_category].
       from_csv_not_found: 'CSV file not found: %{path}'
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
@@ -2861,6 +2881,7 @@ cli:
       child_id: Gyermektranzakció-azonosító
       children: Gyermek elemek
       counterparty: Szerződő fél
+      counterparty_eu_member_state: EU-s szerződő fél
       created_event_id: Létrehozó bucket-esemény
       currency: Pénznem
       date: Dátum
@@ -3291,6 +3312,7 @@ cli:
       next_import_command: '  aeat app ledger import <bankikivonás.csv> --provider
         csv - banki tranzakciók importálása.'
       next_landing_command: '  aeat --help - visszatérés a parancs-útmutatóhoz.'
+      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - A Modelo 210 lathato IRNR-felderiteshez, de helyi munkegyseg-letrehozas meg nem tamogatott; nyujtsa be az AEAT Sede G320 feluleten.'
       next_modelo_work_command: '  aeat app modelo work create - nyomtatvány-bevallás
         indítása a főkönyvi adatokból.'
       next_review_command: '  aeat app ledger review - importált sorok ellenőrzése.'
@@ -3755,6 +3777,10 @@ errors:
     lookup_dispatch_arg_count: A(z) {op} képletoperátor {expected} argumentumot vár.
     lookup_dispatch_arg_kind: A(z) {op} képletoperátornál a(z) {position}. pozíciónak
       {expected_kind} levélnek kell lennie.
+    m210_imputation_coefficient_invalid: errors.calc.m210_imputation_coefficient_invalid
+    m210_imputation_days_invalid: errors.calc.m210_imputation_days_invalid
+    m210_imputation_no_catastral_value_missing: errors.calc.m210_imputation_no_catastral_value_missing
+    m210_imputation_no_filing_year: errors.calc.m210_imputation_no_filing_year
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} relációnak nincs megadott értéke.
     text_input_non_text_casillas: errors.calc.text_input_non_text_casillas
@@ -4003,6 +4029,8 @@ errors:
     fail_justificante_parse: A PDF-et nem sikerült bizonylatként elemezni.
     fail_llm_cache: Egy nyelvi modell gyorsítótár-bejegyzése nem olvasható, írható
       vagy elemezhető.
+    fail_llm_pdf_rasterisation: A PDF-et nem sikerült helyi gépi látási bemenetként
+      renderelni.
     fail_llm_provider: A nyelvi modell szolgáltatója nem visszaállítható hibát adott
       vissza.
     fail_llm_rate_limit: A nyelvi modell szolgáltatója sebességkorlátozás miatt elutasította
@@ -4956,6 +4984,8 @@ wizard:
         help: Az adózó be van-e jegyezve az SII-be
       legal-entity-form:
         help: Elismert jogi forma, ha az entitástípus jogi személy
+      legal-name:
+        help: Jogi személy cégneve az exportfejlécekhez
       llm-vision:
         help: Helyi LLM-látás engedélyezése a számlák beolvasásához.
       name:
@@ -5148,6 +5178,10 @@ wizard:
             label: Egyszerűsített adózási rend
       name:
         prompt: A helyi áttekintésekben megjelenő megjelenítési név
+      legal-name:
+        help: Jogi személyeknél ez az exportfejlécekben használt adózási név. Különbözik
+          a helyi megjelenítési névtől.
+        prompt: Jogi személy cégneve az exportfejlécekhez
       output-language:
         choices:
           ca:
