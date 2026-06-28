@@ -906,6 +906,37 @@ commit completed the localized bare-year ledger guidance introduced in
 matching annual `--period 0A --year ...` guidance instead of leaking internal
 parser tokens.
 
+### wave-fourteen-persona-campaign | high | Profile edit/import baseline closure and workflow blockers separated
+
+Wave fourteen re-seeded the campaign with three CLI-only personas from blank
+storage roots plus separate read-only source triage. Clara exercised an
+employed-plus-autonomous natural-person profile; Yara exercised EU/foreign
+operator invoices and M349/M309 edges; Nadia exercised a small-company legal
+entity setup path. Each persona used only the public CLI and scratch storage.
+The coordinator kept source inspection and implementation in the coder role.
+
+Clara reached profile creation, profile validation, ledger CSV import, and
+direction inspection. Bulk `ledger classify --from-csv` then timed out and left
+partial state: most rows were reviewed, several invoice rows stayed pending,
+and proportional-use phone expenses still lacked `usage_ratio_id` evidence.
+That blocked Modelo 303/130/390/100 calculation in this run. Nadia reached a
+valid legal-entity profile and overview status, but was interrupted before
+transaction/modelo work. Yara reached a valid profile, imported EU rows, and
+classified DE/FR intra-community rows plus a DE reverse-charge purchase. Her
+XI/Northern-Ireland edge was refused as a member state and had to be treated as
+third-country export evidence; that remains legal-grounding backlog rather than
+an implementation assumption.
+
+Read-only profile triage confirmed create and modelo-work readiness gates were
+already hard, then narrowed the remaining broken-profile confidence surface to
+profile mutation/import paths. Follow-up implementation commit `e33403257`
+promoted one filing-baseline helper and applies it to non-interactive edit,
+full-flow edit, and portable bundle import. A profile edit or import now refuses
+before persistence if it would leave the profile without a taxpayer-type axis,
+legal-entity `identity.legal_name`, attribution-entity `identity.name`, or
+natural-person `identity.name` plus `identity.surnames`. Bundle import still
+keeps the prior exactly-one-valid-tax-id gate.
+
 ## Recommendations
 
 Implemented and reviewed in this wave:
@@ -1083,6 +1114,16 @@ Implemented and reviewed in this wave:
   `src/aeat/entrypoints/cli/_ledger_read_cli.py`, and
   `src/aeat/locales/{ca,en,es,hu}.yml`, with `--year` and `--filter year=...`
   CLI coverage.
+- Profile filing-baseline hard-stop shared across create/edit/import in
+  `src/aeat/application/user_profile/_filing_baseline.py`,
+  `src/aeat/application/wizard/_commands.py`,
+  `src/aeat/application/wizard/_persistence.py`, and
+  `src/aeat/entrypoints/cli/_config/_profile_bundle.py`, with localized
+  operator refusals and real CLI/import tamper coverage in
+  `src/aeat/application/wizard/tests/test_create_pointer_atomicity.py`,
+  `src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py`,
+  `src/aeat/entrypoints/cli/tests/test_profile_output_language.py`, and
+  `src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py`.
 
 Verification passed:
 
@@ -1188,6 +1229,14 @@ Verification passed:
   the touched implementation, test, and locale files. A read-only code review
   found one medium issue in the `--filter year=...` guidance path; the helper now
   derives a digit-only filter year and the regression is covered.
+- Wave-fourteen profile filing-baseline hard stop:
+  `uv run --no-sync pytest src/aeat/application/wizard/tests/test_create_pointer_atomicity.py src/aeat/application/wizard/tests/test_persistence_canonical.py src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py src/aeat/entrypoints/cli/tests/test_profile_output_language.py src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py src/aeat/application/user_profile/tests/test_bundle_reexports.py -q --tb=short -m "not e2e"`.
+- Wave-fourteen focused profile regression slice:
+  `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py::test_edit_refuses_natural_person_branch_change_without_legal_name src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py::test_edit_refuses_legal_entity_branch_change_without_surnames src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py::test_import_refuses_missing_filing_identity_baseline -q --tb=short -m integration`.
+- Wave-fourteen profile-baseline ruff and locale checks:
+  `uv run --no-sync ruff check` on the touched profile/wizard/import/test files,
+  `uv run --no-sync python -m aeat.locales scaffold --check`, and
+  `uv run --no-sync python -m aeat.locales audit`.
 
 Independent read-only reviews reported no findings for the IVA wallet patch,
 the Modelo 202 modality gate, the stage-1 readiness hardening, the M390 export
@@ -1201,6 +1250,9 @@ work-calculate path captured as advisory and the helper-level relation error
 path tested separately, and the follow-up review reported no findings. The M210
 overview review found hygiene issues that were fixed before verification, and
 the M130 pre-activity review found no correctness issues.
+The wave-fourteen profile-baseline review found the full-flow edit bypass and
+baseline-incomplete test fixtures before commit; both were corrected and covered
+before `e33403257` landed.
 
 Full-suite verification was intentionally not claimed because this shared
 worktree carries extensive unrelated WIP.
@@ -1248,6 +1300,9 @@ Residual backlog:
 - Add earlier applicability/preflight refusal for pure recargo-equivalence
   retailer profiles on M303/M390, or otherwise make the unsupported-retailer
   boundary explicit before work creation.
+- Investigate `ledger classify --from-csv` timeout/non-atomic partial
+  application under medium-sized persona CSVs, and make proportional-use
+  `usage_ratio_id` readiness guidance discoverable before modelo calculation.
 - Fix M308 `AD-HOC` consistency so describe/create/calculate use the same
   period boundary or fail closed at the first CLI boundary.
 - Extend M309 `AD-HOC` fail-closed handling beyond the ledger-preflight
