@@ -18,6 +18,7 @@ from ._inventory import (
     bare_utf8_literal_violations,
     cast_call_linenos,
     cast_rationale_violations,
+    discover_test_control_modules,
     discover_test_modules,
     has_marker_on_line_or_adjacent_comment_block,
     module_name,
@@ -42,6 +43,16 @@ def test_discover_test_modules_returns_real_source_tests_and_excludes_fixtures()
 
     assert Path(__file__).resolve() in modules
     assert repo_path("src/aeat/tests/test_marker_integrity.py") in modules
+    assert all(not path.is_relative_to(FIXTURES_DIR) for path in modules)
+
+
+def test_discover_test_control_modules_includes_support_and_conftest_files() -> None:
+    """Test-control discovery covers tests, support modules, and conftests."""
+    modules = discover_test_control_modules()
+
+    assert Path(__file__).resolve() in modules
+    assert repo_path("src/aeat/tests/_inventory.py") in modules
+    assert repo_path("src/aeat/application/conftest.py") in modules
     assert all(not path.is_relative_to(FIXTURES_DIR) for path in modules)
 
 
@@ -168,12 +179,16 @@ def test_ast_for_path_returns_none_for_unparseable_source(tmp_path: Path) -> Non
 
 def test_qualified_name_renders_call_name_attribute_chains() -> None:
     """Qualified-name rendering handles the AST shapes guard tests scan."""
-    call_expr = ast.parse("pytest.mark.skipif(True)").body[0].value
+    call_stmt = ast.parse("pytest.mark.skipif(True)").body[0]
+    assert isinstance(call_stmt, ast.Expr)
+    call_expr = call_stmt.value
     assert isinstance(call_expr, ast.Call)
 
     assert qualified_name(call_expr) == "pytest.mark.skipif"
     assert qualified_name(call_expr.func) == "pytest.mark.skipif"
-    assert qualified_name(ast.parse("name").body[0].value) == "name"
+    name_stmt = ast.parse("name").body[0]
+    assert isinstance(name_stmt, ast.Expr)
+    assert qualified_name(name_stmt.value) == "name"
 
 
 def test_cast_call_linenos_detects_real_cast_shapes() -> None:
