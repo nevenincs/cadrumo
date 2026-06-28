@@ -944,6 +944,22 @@ autonomous natural person, a small S.L.U., and EU/XI operator evidence, plus
 read-only triage for ledger bulk classification and Northern Ireland M349
 scope. Personas again used only public CLI commands and scratch storage roots.
 
+Persona checkpoints were mixed but useful. Lucia's autonomous translator profile
+created, validated, imported 24 rows, configured `telefonia_movil` at 60% with
+`ledger ratios set`, allocated the mixed phone expenses, and locally filed
+Modelo 303 for all four 2025 quarters. Her manual IVA checks matched the CLI:
+annual devengado 4620.00, deducible 287.70, net 4332.30. She had not yet
+exported the 303 artifacts or completed 390/130/100 beyond work-unit creation
+when interrupted. Sergio's S.L.U. profile created, validated, imported and
+bulk-classified 16 rows, then calculated, verified, locally filed, and exported
+Modelo 303 for all four quarters. His manual IVA checks matched the CLI
+quarterly and annual totals, and Modelo 390 calculated/verified/local-filed but
+still refused BOE export because M390 has no complete export layout. Modelo 202
+1P calculated; verification was interrupted before completion. Marta's EU/XI
+operator run created a valid profile and locally filed Modelo 303 for 1T-4T,
+with 1T-3T exports confirmed and 4T export pending at interruption; M349 and
+M309 were inspected but not calculated.
+
 Ledger triage found Clara's reported `ledger classify --from-csv` partial-state
 timeout stale against current HEAD: `bulk_classify_from_csv` already loads once,
 mutates an in-memory catalogue, and saves once, with a 270-row scale regression
