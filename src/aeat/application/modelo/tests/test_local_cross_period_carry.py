@@ -231,6 +231,7 @@ def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
         display_name="Test runtime profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.legal_name", value="Test Company SL"),
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Company"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -253,6 +254,7 @@ def _seed_first_303_activity_profile(repos_: _Repos) -> None:
         display_name="Test first IVA profile",
         facts=(
             UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.legal_name", value="Test Company SL"),
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Company"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
