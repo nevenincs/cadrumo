@@ -766,6 +766,11 @@ _OBLIGATIONS_SECTION = WizardSection(
             "obligations.bienes_extranjero_above_threshold",
             suffix="obligations",
         ),
+        _confirm(
+            "monedas-virtuales-extranjero-above-threshold",
+            "obligations.monedas_virtuales_extranjero_above_threshold",
+            suffix="obligations",
+        ),
     ),
 )
 

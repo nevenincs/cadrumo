@@ -21,6 +21,7 @@ class PayerFact(StrEnum):
     TRADES_INTRACOMMUNITY = "trades_intracommunity"
     EXCEEDS_THIRD_PARTY_THRESHOLD = "exceeds_third_party_threshold"
     BIENES_EXTRANJERO_ABOVE_THRESHOLD = "bienes_extranjero_above_threshold"
+    MONEDAS_VIRTUALES_EXTRANJERO_ABOVE_THRESHOLD = "monedas_virtuales_extranjero_above_threshold"
 
 
 def payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
@@ -40,3 +41,5 @@ def payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
             return profile.third_party_transactions_above_347_threshold
         case PayerFact.BIENES_EXTRANJERO_ABOVE_THRESHOLD:
             return profile.bienes_extranjero_above_threshold
+        case PayerFact.MONEDAS_VIRTUALES_EXTRANJERO_ABOVE_THRESHOLD:
+            return profile.monedas_virtuales_extranjero_above_threshold

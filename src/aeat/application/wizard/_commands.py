@@ -344,6 +344,10 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--bienes-extranjero-above-threshold/--no-bienes-extranjero-above-threshold",
         help=tr("wizard.setup.flags.bienes-extranjero-above-threshold.help"),
     ),
+    "monedas-virtuales-extranjero-above-threshold": typer.Option(
+        "--monedas-virtuales-extranjero-above-threshold/--no-monedas-virtuales-extranjero-above-threshold",
+        help=tr("wizard.setup.flags.monedas-virtuales-extranjero-above-threshold.help"),
+    ),
     "fiscal-residency": typer.Option(
         "--fiscal-residency",
         click_type=_choice(_FISCAL_RESIDENCY_CHOICE_VALUES),

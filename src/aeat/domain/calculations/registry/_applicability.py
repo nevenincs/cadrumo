@@ -363,7 +363,7 @@ class ModeloApplicabilityRule(BaseModel):
         # no tri-state, so an absent fact yields INCOMPLETE rather than a
         # NOT_APPLICABLE the engine cannot positively justify.
         if self.required_payer_fact is not None and not payer_fact_holds(profile, self.required_payer_fact):
-            return _undetermined_applicability(self.modelo)
+            return _undetermined_applicability(self.modelo, legal_refs=self.legal_refs)
         return ModeloApplicability(
             modelo=self.modelo,
             verdict=ApplicabilityVerdict.APPLICABLE,
@@ -460,7 +460,7 @@ _INCOMPLETE_UNDETERMINED_REASON = (
 """``INCOMPLETE`` rationale for a *payer fact the profile cannot decide*.
 
 Used by :func:`_undetermined_applicability` when a modelo gates on a
-:class:`PayerFact` (Modelo 111 / 115 / 349 / 347) and the profile does
+:class:`PayerFact` (Modelo 111 / 115 / 349 / 347 / 720 / 721) and the profile does
 not positively declare it. The underlying boolean has no tri-state, so
 a ``False`` value is indistinguishable from "not declared" — the engine
 refuses to guess a ``NOT_APPLICABLE`` it cannot positively justify.
@@ -536,11 +536,15 @@ def _incomplete_applicability(
     )
 
 
-def _undetermined_applicability(modelo: str) -> ModeloApplicability:
+def _undetermined_applicability(
+    modelo: str,
+    *,
+    legal_refs: tuple[str, ...],
+) -> ModeloApplicability:
     """Return the ``INCOMPLETE`` applicability for an *undecidable* fact.
 
     Used when a modelo gates on a :class:`PayerFact` (Modelo
-    111 / 115 / 349 / 347) and the profile does not positively declare
+    111 / 115 / 349 / 347 / 720 / 721) and the profile does not positively declare
     the fact. The taxpayer model itself may be fully declared — the
     entity type and regime are known — but the payer fact has no
     tri-state, so the engine refuses to guess a ``NOT_APPLICABLE`` it
@@ -550,6 +554,8 @@ def _undetermined_applicability(modelo: str) -> ModeloApplicability:
 
     Args:
         modelo: The AEAT modelo identifier the verdict decides.
+        legal_refs: The concrete rule legal refs that ground the
+            undecidable payer-fact question.
 
     Returns:
         A :class:`ModeloApplicability` with ``INCOMPLETE`` verdict and the
@@ -559,7 +565,7 @@ def _undetermined_applicability(modelo: str) -> ModeloApplicability:
         modelo=modelo,
         verdict=ApplicabilityVerdict.INCOMPLETE,
         reason=_INCOMPLETE_UNDETERMINED_REASON,
-        legal_refs=_INCOMPLETE_LEGAL_REFS,
+        legal_refs=legal_refs,
     )
 
 
@@ -1017,27 +1023,24 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         ),
     ),
     # Modelo 721 — declaracion informativa sobre monedas virtuales situadas
-    # en el extranjero. Introduced by Ley 11/2021 DA 10a; form approved by
-    # Orden HFP/887/2023. Applies to any natural person or legal entity that
-    # holds virtual currencies abroad through a third-party custodian or in
-    # self-custody wallets with aggregate value exceeding EUR 50,000 at 31
-    # December (threshold per Orden HFP/887/2023 Art. 3). The three-axis
-    # profile cannot determine whether the threshold is met; applicability is
-    # reported APPLICABLE for natural persons and legal entities — the operator
-    # decides whether the EUR 50,000 threshold is crossed.
-    # Path-B stub: registry entry records legal authority; full casilla
-    # authoring is a follow-on step (full casilla inventory not yet authored).
+    # en el extranjero. The operative obligation lives in DA 18 LGT as
+    # amended by Ley 11/2021 DA 10a; the form is approved by Orden
+    # HFP/886/2023. It applies only when virtual currencies abroad exceed
+    # the declaration threshold. That is a crypto-specific threshold fact,
+    # distinct from Modelo 720's bienes/derechos extranjero fact.
     Modelo.M721: ModeloApplicabilityRule(
         modelo=Modelo.M721,
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_income_categories=frozenset(),
+        required_payer_fact=PayerFact.MONEDAS_VIRTUALES_EXTRANJERO_ABOVE_THRESHOLD,
         applicable_reason=(
             "Modelo 721 (declaracion informativa sobre monedas virtuales en "
             "el extranjero): el contribuyente que posee monedas virtuales "
             "situadas en el extranjero con valor agregado superior a 50.000 "
             "EUR el 31 de diciembre esta obligado a presentar esta declaracion "
-            "informativa anual. La obligacion nace con la Ley 11/2021 DA 10a "
-            "y el formulario esta aprobado por Orden HFP/887/2023. Nota: la "
+            "informativa anual. La obligacion operativa esta en la DA 18 de "
+            "la LGT, introducida por la Ley 11/2021 DA 10a, y el formulario "
+            "esta aprobado por Orden HFP/886/2023. Nota: la "
             "aplicacion no ha implementado aun el calculo completo del Modelo "
             "721; utilice la Sede Electronica de la AEAT para presentarlo."
         ),
@@ -1048,13 +1051,15 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "incluido en el ambito subjetivo de la Ley 11/2021 DA 10a."
         ),
         cuota_bearing=False,
-        # Ley 11/2021 DA 10a — obligacion de declarar monedas virtuales en el
-        # extranjero; RD 1065/2007 Art. 42 quater — reglamento base de
-        # declaraciones informativas de bienes y derechos en el extranjero
-        # incluyendo el umbral de 50.000 EUR para monedas virtuales.
+        # LGT DA 18 letra d — operative obligation; RD 1065/2007 Art. 42
+        # quater — threshold and reglamento base; Orden HFP/886/2023
+        # arts. 1-3 — approved form, obligados and content.
         legal_refs=(
-            "ley-11-2021:da-10",
+            "ley-58-2003:da-18",
             "rd-1065-2007:art-42-quater",
+            "orden-hfp-886-2023:art-1",
+            "orden-hfp-886-2023:art-2",
+            "orden-hfp-886-2023:art-3",
         ),
     ),
     # Modelo 720 — declaración informativa sobre bienes y derechos situados

@@ -4950,6 +4950,8 @@ wizard:
         help: Adóügyi lakcím irányítószáma
       bienes-extranjero-above-threshold:
         help: Külföldi vagyon meghaladja a jogszabályi küszöbértéket
+      monedas-virtuales-extranjero-above-threshold:
+        help: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
       cloud-evidence-upload:
         help: Érzékeny bizonylatok feltöltésének engedélyezése felhő LLM-szolgáltatókhoz
           (alapból kikapcsolva).
@@ -5139,6 +5141,8 @@ wizard:
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Külföldi vagyon meghaladja a jogszabályi küszöbértéket
+      monedas-virtuales-extranjero-above-threshold:
+        prompt: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
       does-intracomunitario:
         prompt: Végez intraközösségi ügyleteket
       has-employees:
