@@ -3549,26 +3549,6 @@ required_text = [
     "condicionada a su compatibilidad con el ordenamiento comunitario",
 ]
 
-[legal."ley-35-2006:da-41"]
-evidence_tier = "legal_authority"
-authority = "boe"
-kind = "ley"
-corpus_ref = "corpus/normatives/html/ley-35-2006.html#dacuadragesimaprimera"
-document_id = "BOE-A-2006-20764"
-article = "DA 41"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dacuadragesimaprimera"
-published_at = 2006-11-29
-effective_from = 2015-01-01
-review_status = "reviewed"
-reviewed_at = 2026-06-28
-reviewed_by = "codex (agent-authored from bundled ley-35-2006.html#dacuadragesimaprimera; operator to re-stamp)"
-notes = "LIRPF DA 41: tripulantes de determinados buques de pesca. Establishes a 50 por ciento exempt-income rule for qualifying tuna fleet crew, conditioned on compatibility with EU law. Added by Ley 26/2014 art. 1.98; currently guarded inactive by the maritime worker engine until state-aid clearance is granted."
-required_text = [
-    "Tripulantes de determinados buques de pesca",
-    "renta exenta el 50 por ciento",
-    "condicionada a su compatibilidad con el ordenamiento comunitario",
-]
-
 [legal."ley-35-2006:art-53"]
 evidence_tier = "legal_authority"
 authority = "boe"
