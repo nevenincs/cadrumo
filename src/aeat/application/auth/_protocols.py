@@ -4,6 +4,8 @@ These protocols declare the interface the application layer depends on for
 persisted auth session management.  Concrete implementations live in the
 adapter layer (adapters/outbound/aeat/auth/_session_store.py) and satisfy
 these protocols structurally.
+:class:`SessionStoreProtocol` returns :class:`PersistedSessionDataProtocol`
+records to the persisted-session service.
 """
 
 from __future__ import annotations

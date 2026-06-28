@@ -7,8 +7,9 @@ stubs, skips, or xfail.
 The carry vehicle is Modelo 130 (IRPF pago fraccionado, estimación directa). Casilla
 15 ("Resultados negativos de trimestres anteriores") is bound via
 ``source = "previous_filing"`` to the prior quarter's computed
-``saldo-negativo-fin-periodo`` (RD 439/2007 art. 110.5). When a quarter's Diferencia
-(casilla 17) is negative the absolute value seeds the next quarter's casilla 15.
+``saldo-negativo-fin-periodo`` (AEAT instructions under the RD 439/2007
+art. 110 pago-fraccionado framework). When a quarter's Diferencia (casilla
+17) is negative the absolute value seeds the next quarter's casilla 15.
 
 The four behaviours under test:
 
@@ -29,7 +30,7 @@ The four behaviours under test:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -40,17 +41,21 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     validated_casilla_id,
 )
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import CalculationObservationRepository
 from ...calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
 from ...calculations._cross_period_clean_state import _OFFICIAL_SOURCE_KINDS
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     APP_FILING_SOURCE_KIND,
+    ModeloIvaWalletReconciliationBlocked,
     calculate_modelo_revision,
     create_work_unit,
 )
 from .._calculation_actions import (
     _previous_filing_resolution_excluding_iva_compensation,
+    _resolve_bucket_source_mesh,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ._file_flow_support import (
@@ -83,6 +88,9 @@ def _casilla_id(value: object) -> CasillaId:
 
 
 _M303_COMPENSACION_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = _casilla_id(
+    "iva.compensacion-pendiente-periodos-anteriores",
+)
 
 # The M130 carry binding casilla 15 lifts. Casilla 15 (input_kind=bound) reads its
 # value from this previous_filing binding; the carried saldo-negativo flows through it.
@@ -199,6 +207,67 @@ def _file_1t_with_negative_result(repos_: _Repos) -> Decimal:
     return saldo
 
 
+def _seed_first_year_activity_profile(repos_: _Repos) -> None:
+    objects = repos_[4].secure_object_repository
+    profile = UserProfileRecord(
+        profile_id="default",
+        display_name="Test runtime profile",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Autonomo"),
+            UserProfileFact(path="censo.activity_start_date", value="2026-01-01"),
+        ),
+        created_at=_T1,
+        updated_at=_T1,
+    )
+    UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(profile)
+
+
+def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
+    objects = repos_[4].secure_object_repository
+    profile = UserProfileRecord(
+        profile_id="default",
+        display_name="Test runtime profile",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Company"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
+            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+        ),
+        created_at=_T1,
+        updated_at=_T1,
+    )
+    UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(profile)
+
+
+def _seed_first_303_activity_profile(repos_: _Repos) -> None:
+    objects = repos_[4].secure_object_repository
+    profile = UserProfileRecord(
+        profile_id="default",
+        display_name="Test first IVA profile",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Company"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
+            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
+        ),
+        created_at=_T1,
+        updated_at=_T1,
+    )
+    UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(profile)
+
+
 def test_local_file_then_next_period_calculate_carries_previous_filing_value(repos: _Repos) -> None:
     """E2E: filing 1T auto-carries its saldo-negativo into 2T's casilla 15 on calculate.
 
@@ -208,6 +277,7 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(rep
     from the formula — anti-tautology).
     """
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    _seed_first_year_activity_profile(repos)
     carried_seed = _file_1t_with_negative_result(repos)
 
     work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
@@ -225,6 +295,29 @@ def test_local_file_then_next_period_calculate_carries_previous_filing_value(rep
     assert carried_casilla_15 == carried_seed, (
         f"2T casilla 15 must auto-carry the filed 1T saldo-negativo {carried_seed}; got {carried_casilla_15}"
     )
+
+
+def test_first_year_activity_start_calculate_scopes_prior_year_m100_binding(repos: _Repos) -> None:
+    """2T calculation reaches same-year carry without a manual prior-year M100 binding."""
+    wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    _seed_first_year_activity_profile(repos)
+    carried_seed = _file_1t_with_negative_result(repos)
+
+    work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
+    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        work_unit_2t.work_unit_id,
+        casilla_inputs=_2T_INPUTS_WITHOUT_15,
+        binding_values={},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T4,
+    )
+
+    assert Decimal(result.revision.binding_overrides["irpf.previous_year_economic_activity_net_income"]) == Decimal(
+        "0",
+    )
+    assert Decimal(result.revision.casilla_values[_M130_CARRY_FORWARD_CASILLA]) == carried_seed
 
 
 def test_app_filing_source_kind_is_not_official_evidence() -> None:
@@ -256,6 +349,7 @@ def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) 
     from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    _seed_first_year_activity_profile(repos)
     _file_1t_with_negative_result(repos)
     # Confirm the carry observation was persisted under the non-official source_kind.
     stored = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
@@ -331,6 +425,7 @@ def test_caller_binding_override_beats_auto_carried_previous_filing(repos: _Repo
     actually differ.
     """
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    _seed_first_year_activity_profile(repos)
     carried_seed = _file_1t_with_negative_result(repos)
     assert carried_seed > Decimal("0")
 
@@ -366,6 +461,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
     from ...calculations import PreviousFilingSourceResolver
 
     wu_repo = repos[0]
+    _seed_existing_303_activity_profile(repos)
     work_unit_303 = create_work_unit(
         bucket_id="default",
         modelo="303",
@@ -405,6 +501,86 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         assert filtered.binding_values[binding_id] == value
 
 
+def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repos) -> None:
+    """D3: relation-prefill must not bypass the IVA-wallet owner for M303 casilla 110."""
+    from ....core.resources import resources
+
+    wu_repo = repos[0]
+    _seed_existing_303_activity_profile(repos)
+    work_unit_303 = create_work_unit(
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "2T"),
+        revision_id="2023-y-siguientes",
+        repository=wu_repo,
+        clock=_T4,
+    )
+    _persist_prior_303(CalculationObservationRepository())
+
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+    resolution = _resolve_bucket_source_mesh(
+        snapshot,
+        work_unit_303,
+        transaction_repository=None,
+        invoice_repository=None,
+    )
+
+    assert _MODELO_303_IVA_COMPENSATION_BINDING_ID not in resolution.binding_values
+    assert "modelo-303-rel-self-compensacion-anteriores" not in resolution.relation_values
+    assert all("modelo-303-rel-self-compensacion-anteriores" not in item.source_ref for item in resolution.provenance)
+
+
+def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(repos: _Repos) -> None:
+    """An existing activity with no local 4T filing cannot invent a first-period zero."""
+    wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    _seed_existing_303_activity_profile(repos)
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo="303",
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "1T"),
+        revision_id="2023-y-siguientes",
+        repository=wu_repo,
+        clock=_T1,
+    )
+
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked):
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T1,
+        )
+
+
+def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -> None:
+    """A true first IVA period proven by activity start may use a zero prior compensation."""
+    wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    _seed_first_303_activity_profile(repos)
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo="303",
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "1T"),
+        revision_id="2023-y-siguientes",
+        repository=wu_repo,
+        clock=_T1,
+    )
+
+    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        work_unit.work_unit_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    revision = result.revision
+    assert Decimal(revision.binding_overrides[_MODELO_303_IVA_COMPENSATION_BINDING_ID]) == Decimal("0")
+    assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
+
+
 def _persist_prior_303(repository: CalculationObservationRepository) -> None:
     """Persist a prior-period 303 observation carrying the compensation carry casilla.
 
@@ -442,13 +618,12 @@ def test_first_filer_same_year_chain_is_fully_reachable(repos: _Repos) -> None:
     verdict is clean => the quarter is reachable to verify/export. If suppression did NOT
     cover the previous_filing M100 dep, this verdict would be unclean (a real gap).
     """
-    from datetime import date
-
     from ....domain.modelos._filing_repository import ModeloRecordCatalogueRepository
     from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
     from .._verification_actions import _cross_period_clean_state_verdict_for_work_unit
 
     wu_repo, cr_repo, _fr_repo, _vr_repo, bv_repo = repos
+    _seed_first_year_activity_profile(repos)
     _file_1t_with_negative_result(repos)
     work_unit_2t = _seed_130(repos, period="2T", clock=_T4)
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

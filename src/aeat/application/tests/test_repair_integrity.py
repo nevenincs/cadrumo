@@ -14,15 +14,17 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import cast
 
 import pytest
 
 from ...adapters.persistence.storage import (
+    REPAIR_INTEGRITY_DECISION_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
     EphemeralMasterKeyProvider,
     has_active_bucket_session,
+    suspend_active_session,
 )
-from ...adapters.persistence.storage.master_key._active_session import _active_session
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -30,7 +32,6 @@ from ...core.classification import SensitivityClass
 from ...core.config import override_settings
 from ...tests.secure_sql import isolated_runtime_profile
 from ..repair_integrity import (
-    _REPAIR_DECISION_NAMESPACE,
     RepairDecisionNotFoundError,
     RepairIntegrityError,
     RepairRemediationDecision,
@@ -50,7 +51,7 @@ _KEY_B = b"\xb2" * 32
 
 
 @pytest.fixture(autouse=True)
-def _isolated_default_secure_sql(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[None]:
+def isolated_default_secure_sql(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[None]:
     """Bind each repair integrity test to one explicit database through settings."""
 
     if request.node.name == "test_list_opens_active_bucket_session_for_bootstrap_exempt_repair":
@@ -131,7 +132,7 @@ class TestBuildIntegrityReport:
 
     def test_namespace_enumeration_failure_is_not_reported_as_clean_integrity(self) -> None:
         with pytest.raises(AttributeError, match="list_namespaces"):
-            build_repair_integrity_report(repository=object())  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # negative test: bare object lacks list_namespaces
+            build_repair_integrity_report(repository=cast(SecureObjectRepository, object()))
 
 
 class TestBuildListReport:
@@ -196,12 +197,9 @@ class TestBuildListReport:
                 written_at=datetime.now(UTC),
                 payload=b"repair-list-sessionless",
             )
-            token = _active_session.set(None)
-            assert not has_active_bucket_session()
-            try:
+            with suspend_active_session():
+                assert not has_active_bucket_session()
                 report = build_repair_list_report(namespace="aeat.workflow")
-            finally:
-                _active_session.reset(token)
 
         assert report.rows_total == 1
         assert report.integrity.readable + report.integrity.unreadable == 1
@@ -234,7 +232,7 @@ class TestReportInvariants:
             _save_rows("aeat.workflow", 1, tag="a")
             report = build_repair_integrity_report(repository=SecureObjectRepository())
         with pytest.raises(ValidationError):
-            report.readable_total = 99  # type: ignore[misc]
+            report.__setattr__("readable_total", 99)
 
 
 class TestRepairRemediationDecisionRepository:
@@ -266,7 +264,7 @@ class TestRepairRemediationDecisionRepository:
         with EphemeralMasterKeyProvider(key=_KEY_A):
             secure_repository = SecureObjectRepository()
             secure_repository.save(
-                namespace=_REPAIR_DECISION_NAMESPACE,
+                namespace=REPAIR_INTEGRITY_DECISION_NAMESPACE.namespace,
                 object_key=original_id,
                 classification=SensitivityClass.AUDIT,
                 schema_version=1,

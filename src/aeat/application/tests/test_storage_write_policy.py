@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from ...core import BucketPointer, write_pointer
 from ...core.config import Settings, StorageRouteKind
 from ...core.external_constants import OutputLanguage
 from ..storage_write_policy import (
@@ -64,6 +65,22 @@ def test_profile_bound_write_allows_active_bucket_route(tmp_path: Path) -> None:
     assert decision.route_kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
 
 
+def test_profile_bound_write_allows_pointer_route_from_stale_settings(tmp_path: Path) -> None:
+    settings = Settings(aeat_local_storage_root=tmp_path, aeat_output_language=OutputLanguage.EN)
+    write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
+
+    decision = inspect_storage_write_policy(
+        "app ledger add",
+        bootstrap_exempt=False,
+        settings=settings,
+    )
+
+    assert decision.allowed is True
+    assert decision.code is StorageWritePolicyCode.ALLOWED_ACTIVE_BUCKET
+    assert decision.profile_bound_write is True
+    assert decision.route_kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
+
+
 def test_bootstrap_exemption_short_circuits_route_policy(tmp_path: Path) -> None:
     decision = inspect_storage_write_policy(
         "config profile create operator",
@@ -100,6 +117,10 @@ def test_read_only_and_recovery_verbs_do_not_trigger_write_policy(tmp_path: Path
         ("app ledger rule apply --dry-run", True),
         ("app modelo work file abc", True),
         ("config profile censo pull", True),
+        ("config profile edit operator", False),
+        ("config profile delete operator --yes", False),
+        ("config profile duplicate operator operator-copy", False),
+        ("config profile rename operator renamed", False),
         ("config switch operator", False),
         ("app ledger list", False),
         ("app registry legal view ley-37-1992:art-99", False),

@@ -278,6 +278,10 @@ def oss_ioss_candidates_from_repositories(
         period: Filing period whose date span filters issued invoices.
         invoice_repository: Optional :class:`InvoiceCatalogueRepository`
             used instead of the active bucket repository.
+
+    Returns:
+        A tuple of :class:`OssIossLedgerCandidate` rows projected from issued
+        invoices in the period.
     """
     if not period.has_date_span():
         return ()

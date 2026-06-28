@@ -1,6 +1,11 @@
 """External filing import actions for modelo baselines.
 
-Use of :class:`BucketEventHistoryRepository`, :class:`CalculationRevision`, :class:`ModeloRecord` for compliance.
+``import_external_filing_evidence`` turns AEAT-attested external evidence into a
+presented :class:`CalculationRevision` plus current :class:`ModeloRecord`.
+Evidence-bearing imports validate the referenced :class:`Justificante`, stamp an
+:class:`ExternalEvidence` payload on the filing record, supersede any prior
+current filing for the same target, and emit ``modelo.filing.imported`` through
+:class:`BucketEventHistoryRepository`.
 """
 
 from __future__ import annotations

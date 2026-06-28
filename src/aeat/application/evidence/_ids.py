@@ -1,10 +1,10 @@
-"""Typed-id aliases for the evidence application service.
+"""Typed id aliases for :class:`EvidenceBundle` records.
 
-`BundleId` and `EvidenceId` pin the hex-64 sha-256 shape minted by
-the evidence bundle pipeline. The aliases live in the evidence
-application package because the bundle and per-record evidence ids
-are minted in the application layer (no single domain owner) per
-ADR Rule 6 application-layer placement.
+:data:`BundleId` and :data:`EvidenceId` pin the hex-64 sha-256 shape
+minted by the evidence bundle pipeline. The aliases live in the
+evidence application package because the bundle and per-record evidence
+ids are minted in the application layer (no single domain owner) per ADR
+Rule 6 application-layer placement.
 """
 
 from __future__ import annotations

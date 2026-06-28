@@ -69,6 +69,10 @@ _CASILLA_ONLY_PROFILE = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime
 
 _STOCK_PREDICATE_ID = "modelo-100-2025-compensacion-base-neg-general-no-excede-stock"
 _LIMITE_PREDICATE_ID = "modelo-100-2025-compensacion-base-neg-general-no-excede-limite"
+_GENERAL_BASE_ART_48_REF = "ley-35-2006:art-48"
+_SAVINGS_BASE_ART_49_REF = "ley-35-2006:art-49"
+_APLICADA_MAXIMA_FORMULA_ID = "renta-2025-base-liquidable-negativa-general-2024-aplicada-maxima"
+_ANEXO_C_BASE_NEGATIVA_GENERAL_CONSTRUCT_ID = "renta-anexo-c-base-liquidable-negativa-general"
 
 _MODELO = "100"
 _BUCKET_ID = "operator"
@@ -193,6 +197,29 @@ def _snapshot():
 
 def _v(revision, casilla: CasillaId) -> Decimal:
     return Decimal(revision.casilla_values[casilla])
+
+
+def test_general_negative_base_compensation_surfaces_do_not_cite_savings_base_article() -> None:
+    revision = _snapshot().revision
+    formula = next(formula for formula in revision.formulas if formula.id == _APLICADA_MAXIMA_FORMULA_ID)
+    opening_pending = next(casilla for casilla in revision.casillas if casilla.id == _PENDIENTE_INICIO)
+    casilla = next(casilla for casilla in revision.casillas if casilla.id == _APLICADA_MAXIMA)
+    construct = next(
+        construct for construct in revision.constructs if construct.id == _ANEXO_C_BASE_NEGATIVA_GENERAL_CONSTRUCT_ID
+    )
+
+    for refs in (formula.legal_refs, opening_pending.legal_refs, casilla.legal_refs, construct.legal_refs):
+        assert _GENERAL_BASE_ART_48_REF in refs
+        assert _SAVINGS_BASE_ART_49_REF not in refs
+
+
+@pytest.mark.parametrize("filing_year", [2024, 2025])
+def test_opening_negative_general_base_casilla_cites_art48_not_art49(filing_year: int) -> None:
+    revision = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=_PERIOD).revision
+    opening_pending = next(casilla for casilla in revision.casillas if casilla.id == _PENDIENTE_INICIO)
+
+    assert _GENERAL_BASE_ART_48_REF in opening_pending.legal_refs
+    assert _SAVINGS_BASE_ART_49_REF not in opening_pending.legal_refs
 
 
 # --- Oracle: the carried negative base is consumed (live), reducing the base ----

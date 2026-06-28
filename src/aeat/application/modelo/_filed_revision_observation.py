@@ -5,7 +5,7 @@ This is the local-filing sibling of the live-AEAT-capture persistence path
 NOT introduce a parallel write path: it is an additional projection of the
 single-writer filing transition (:func:`persist_filed_revision`), co-emitted
 with ``MODELO_FILED``, that records the filed
-:class:`~aeat.domain.calculations.registry.CalculationRevision` outputs into the
+:class:`CalculationRevision` outputs into the
 cross-period observation store so a later period's ``calculate`` can carry them
 forward automatically via the ``previous_filing`` resolver.
 
@@ -26,9 +26,9 @@ aggregation enumerates; member-row persistence for the local filing flow is out
 of scope (ADR ``2026-06-09-modelo-iva-routing-carry`` ruling D4) and remains a
 live-capture concern.
 
-Uses :class:`CalculationRevision` for the source revision,
-:class:`CasillaObservation` for the carried values, and
-:class:`RegistryModeloObservation` as the persisted record.
+The projection reads :class:`CalculationRevision` observations, rewrites the
+affected :class:`CasillaObservation` rows for refunded Modelo 303 filings, and
+persists a :class:`RegistryModeloObservation` record.
 """
 
 from __future__ import annotations
@@ -46,7 +46,12 @@ from ...domain.calculations.registry import (
 )
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ...domain.modelos._work_unit import WorkUnit
-from ..calculations import CalculationObservationRepository, observation_key
+from ..calculations import (
+    CalculationObservationRepository,
+    IvaCompensationHistoryRepository,
+    iva_compensation_state_from_registry_observation,
+    observation_key,
+)
 
 APP_FILING_SOURCE_KIND: Final = "app_filing"
 
@@ -107,6 +112,10 @@ def _refunded_303_observations(
     return tuple(rewritten)
 
 
+def _local_iva_history_expediente_id(filing_ref: str) -> str:
+    return f"local-{filing_ref[:26]}"
+
+
 def persist_filed_revision_observation(
     *,
     revision: CalculationRevision,
@@ -114,6 +123,9 @@ def persist_filed_revision_observation(
     repository: CalculationObservationRepository,
     captured_at: datetime,
     refunded: bool = False,
+    taxpayer_nif: str | None = None,
+    filing_record_id: str | None = None,
+    iva_compensation_history_repository: IvaCompensationHistoryRepository | None = None,
 ) -> str:
     """Persist a filed revision's casilla observations as a cross-period record.
 
@@ -143,6 +155,13 @@ def persist_filed_revision_observation(
             before the carry row is written. The default ``False`` preserves the
             standard compensación carry. Legal basis: RD 1624/1992 art. 30 / Ley
             37/1992 art. 116.
+        taxpayer_nif: Taxpayer NIF from the active profile. When supplied for a
+            locally filed Modelo 303, the same observation is projected into the
+            profile-local IVA compensation history repository.
+        filing_record_id: Local filing record id used as non-AEAT provenance for
+            the IVA compensation history state.
+        iva_compensation_history_repository: Optional repository override for
+            the Modelo 303 history projection.
 
     Returns:
         The ``(modelo, filing_year, period)`` observation key string the record
@@ -157,13 +176,31 @@ def persist_filed_revision_observation(
         period=work_unit.period.registry_token,
         observations=observations,
     )
+    key = observation_key(work_unit.modelo, work_unit.period)
     repository.save_observation(
         observation,
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=captured_at,
         stamped_revision_id=work_unit.revision_id,
     )
-    return observation_key(work_unit.modelo, work_unit.period)
+    if work_unit.modelo == Modelo.M303.value and taxpayer_nif is not None and taxpayer_nif.strip():
+        filing_ref = filing_record_id or key
+        history_repo = (
+            iva_compensation_history_repository
+            if iva_compensation_history_repository is not None
+            else IvaCompensationHistoryRepository()
+        )
+        history_repo.save_period(
+            iva_compensation_state_from_registry_observation(
+                observation,
+                taxpayer_nif=taxpayer_nif.strip(),
+                expediente_id=_local_iva_history_expediente_id(filing_ref),
+                status=APP_FILING_SOURCE_KIND,
+                presented_at=captured_at,
+                source_observation_key=f"{key}:local:{filing_ref[:64]}",
+            ),
+        )
+    return key
 
 
 __all__ = [

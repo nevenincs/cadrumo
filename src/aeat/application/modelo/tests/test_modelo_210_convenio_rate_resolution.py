@@ -2,7 +2,7 @@
 
 Covers the testimonial personas required by the M210 IRNR engine contract:
 
-- Olivia (GB / general): the Convenio Art 7 row coincides with the
+- Olivia (GB / general): the Convenio Art 6 row coincides with the
   TRLIRNR Art 25.1.a baseline rate (24%); the override path resolves
   to the same Decimal as the baseline. Exercises the real registry
   snapshot end-to-end.
@@ -11,18 +11,14 @@ Covers the testimonial personas required by the M210 IRNR engine contract:
   helper returns the override. A mutation-pair anti-tautology test
   rewrites the same row to rate=0.15 and asserts the helper picks the
   mutated value.
-- Felipe (AR / pension): the real AR/pension Convenio row carries
-  ``NOT_YET_AUTHORED``; the helper emits the
-  ``m210-convenio-rate-not-yet-authored`` BLOCKING finding. The
-  ``pension`` baseline row stays absent (corpus-blocking); this case
-  exercises the helper's "baseline absent BUT Convenio override
-  exists" branch.
+- Felipe (AR / pension): the real AR/pension Convenio row is grounded
+  in Convenio Espana-Argentina Art 19 and carries ``DOMESTIC_TARIFF``;
+  the base-aware calculation runtime applies the TRLIRNR Art 25.1.b
+  progressive tariff.
 - Non-Convenio fall-through (ZW): a country with no Convenio row at
   all fires the ``m210-convenio-rate-missing`` BLOCKING finding.
-- Deferred-baseline / no-treaty (resident persona, ``pension``): a
-  profile with no ``country_of_fiscal_residence`` cannot fall back to
-  a Convenio override; the helper emits the
-  ``m210-baseline-tipo-deferred`` BLOCKING finding.
+- No-treaty pension: the scalar helper returns no rate and no finding
+  because the live tariff is non-flat and requires a base amount.
 """
 
 from __future__ import annotations
@@ -122,10 +118,38 @@ def m210_snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("210", filing_year=2025, period="evento")
 
 
+def test_committed_convenio_rows_resolve_corrected_legal_anchors(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """Committed concrete convenio rows cite the treaty article and, where needed, domestic rate law."""
+
+    convenio_param = next(p for p in m210_snapshot.revision.parameters if p.id == "m210-convenio-rates")
+    rows = {(row.country_code, row.tipo_renta): row for row in convenio_param.convenio_rates}
+
+    gb_general = rows[("GB", "general")]
+    assert gb_general.legal_ref_anchor == "convenio-es-gb-2013:art-6"
+    assert gb_general.legal_refs == (
+        "convenio-es-gb-2013:art-6",
+        "trlirnr-rdleg-5-2004:art-25.1.a",
+    )
+
+    ma_interest = rows[("MA", "interest")]
+    assert ma_interest.legal_ref_anchor == "convenio-es-ma-1978:art-11"
+    assert ma_interest.legal_refs == ("convenio-es-ma-1978:art-11",)
+
+    ar_pension = rows[("AR", "pension")]
+    assert ar_pension.rate == "DOMESTIC_TARIFF"
+    assert ar_pension.legal_ref_anchor == "convenio-es-ar-1992:art-19"
+    assert ar_pension.legal_refs == (
+        "convenio-es-ar-1992:art-19",
+        "trlirnr-rdleg-5-2004:art-25.1.b",
+    )
+
+
 def test_olivia_gb_general_resolves_convenio_override_matching_baseline(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """Olivia (GB / general): Convenio Art 7 row coincides with the TRLIRNR baseline.
+    """Olivia (GB / general): Convenio Art 6 row coincides with the TRLIRNR baseline.
 
     The GB/general Convenio row carries ``rate="0.24"``, identical to
     the TRLIRNR Art 25.1.a baseline. The override path is exercised
@@ -147,7 +171,7 @@ def test_khadija_ma_interest_convenio_override_replaces_baseline(
 
     The real MA/interest Convenio row carries ``rate="0.10"``. The
     helper resolves the (MA, interest) lookup against the real snapshot
-    and returns the override rate, not the 24% TRLIRNR Art 25.1.a
+    and returns the override rate, not the 19% TRLIRNR Art 25.1.f
     interest baseline. Replacement semantics are required, not stacking.
     """
 
@@ -183,29 +207,23 @@ def test_khadija_ma_interest_anti_tautology_mutation_pair(
     assert findings == []
 
 
-def test_felipe_ar_pension_not_yet_authored_emits_blocking_finding(
+def test_felipe_ar_pension_uses_domestic_tariff_without_blocking(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """Felipe (AR / pension): real ``NOT_YET_AUTHORED`` sentinel fires a BLOCKING finding.
+    """Felipe (AR / pension): treaty allocation delegates to the domestic tariff.
 
-    The real AR/pension Convenio row carries the ``NOT_YET_AUTHORED``
-    placeholder. The helper recognises the sentinel, returns
-    ``(None, [finding])`` and surfaces the
-    ``m210-convenio-rate-not-yet-authored`` predicate id. The
-    ``pension`` baseline row remains absent; this test exercises the
-    "baseline absent but Convenio override exists" branch.
+    The real AR/pension Convenio row is grounded in the Spain-Argentina
+    treaty allocation article and carries ``DOMESTIC_TARIFF`` because the
+    domestic TRLIRNR Art 25.1.b bracket table computes the amount. The scalar
+    helper has no base amount in scope, so it returns ``rate is None`` without
+    a blocking finding.
     """
 
     profile = _irnr_profile("AR")
     rate, findings = _resolve_m210_rate(profile, "pension", 2025, m210_snapshot)
 
     assert rate is None
-    assert len(findings) == 1
-    finding = findings[0]
-    assert "m210-convenio-rate-not-yet-authored" in finding.message
-    message_lower = finding.message.lower()
-    assert "ar" in message_lower
-    assert "pension" in message_lower
+    assert findings == []
 
 
 def test_non_convenio_country_zw_general_emits_missing_finding(
@@ -233,26 +251,22 @@ def test_non_convenio_country_zw_general_emits_missing_finding(
     assert "general" in message_lower
 
 
-def test_resident_pension_deferred_baseline_emits_blocking_finding(
+def test_resident_pension_uses_live_domestic_tariff_without_scalar_rate(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """Resident persona / pension: deferred-baseline + no treaty fires BLOCKING.
+    """Resident persona / pension: live tariff is non-flat, so no scalar rate is returned.
 
-    A profile with no ``country_of_fiscal_residence`` cannot claim a
-    Convenio override; when the requested ``tipo_renta`` (pension) has
-    no baseline row, the helper emits the ``m210-baseline-tipo-deferred``
-    BLOCKING finding. The rate slot is ``None``.
+    A profile with no ``country_of_fiscal_residence`` uses the domestic
+    TRLIRNR Art 25.1.b tariff. The scalar helper cannot compute an effective
+    rate without a base amount, but the presence of the live tariff means this
+    is no longer a deferred-baseline blocking case.
     """
 
     profile = _resident_profile()
     rate, findings = _resolve_m210_rate(profile, "pension", 2025, m210_snapshot)
 
     assert rate is None
-    assert len(findings) == 1
-    finding = findings[0]
-    assert "m210-baseline-tipo-deferred" in finding.message
-    message_lower = finding.message.lower()
-    assert "pension" in message_lower
+    assert findings == []
 
 
 def _observation(casilla_id: CasillaId, value: Decimal) -> CasillaObservation:
@@ -293,12 +307,16 @@ def test_rewrite_m210_sentinels_replaces_not_yet_authored_with_zero_and_emits_fi
 ) -> None:
     """A NOT_YET_AUTHORED sentinel observation gets rewritten and emits a finding.
 
-    Felipe (AR / pension) is the canonical case where the Convenio row
-    carries the NOT_YET_AUTHORED placeholder. The helper rewrites the
-    sentinel value to ``Decimal(0)`` (the operator-facing safe default
-    when no authoritative rate exists) and emits the
-    ``m210-convenio-rate-not-yet-authored`` BLOCKING finding.
+    The committed AR/pension row is now authored as DOMESTIC_TARIFF, so this
+    uses a mutated snapshot to preserve the safety contract for any future
+    NOT_YET_AUTHORED convenio row.
     """
+    snapshot = _snapshot_with_mutated_convenio_row(
+        m210_snapshot,
+        country_code="AR",
+        tipo_renta="pension",
+        new_rate="NOT_YET_AUTHORED",
+    )
 
     observations = (
         _observation("base_imponible", Decimal("15000")),
@@ -308,7 +326,7 @@ def test_rewrite_m210_sentinels_replaces_not_yet_authored_with_zero_and_emits_fi
     rewritten, findings = _rewrite_m210_sentinels(
         observations,
         profile=_irnr_profile("AR"),
-        snapshot=m210_snapshot,
+        snapshot=snapshot,
         year=2025,
         tipo_renta="pension",
     )
@@ -341,10 +359,10 @@ def test_rewrite_m210_sentinels_replaces_convenio_missing_sentinel(
     assert "m210-convenio-rate-missing" in findings[0].message
 
 
-def test_rewrite_m210_sentinels_replaces_deferred_tipo_sentinel(
+def test_rewrite_m210_sentinels_replaces_unknown_tipo_sentinel(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """A DEFERRED_TIPO sentinel + resident profile rewrites to zero and emits a finding."""
+    """A DEFERRED_TIPO sentinel + unknown no-treaty type rewrites to zero and emits a finding."""
 
     observations = (_observation("tipo_gravamen", M210_DEFERRED_TIPO_SENTINEL),)
     rewritten, findings = _rewrite_m210_sentinels(
@@ -352,7 +370,7 @@ def test_rewrite_m210_sentinels_replaces_deferred_tipo_sentinel(
         profile=_resident_profile(),
         snapshot=m210_snapshot,
         year=2025,
-        tipo_renta="pension",
+        tipo_renta="royalty",
     )
 
     assert rewritten[0].value == Decimal("0")

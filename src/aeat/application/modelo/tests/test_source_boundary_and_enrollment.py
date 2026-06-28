@@ -21,7 +21,7 @@ so a TOML source that would resolve to blank fails fast instead of compiling sil
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
@@ -34,8 +34,10 @@ from ....domain.invoices import InvoiceCatalogueRepository
 from ....domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ....domain.modelos._repository import WorkUnitCatalogueRepository
 from ....domain.transactions import TransactionCatalogueRepository
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import DEFERRED_SOURCE_KINDS
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     BucketAggregationCalculationResult,
     ModeloAggregationBindingError,
@@ -50,15 +52,48 @@ _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 
 _BUCKET_ID = "bucket-a"
+_READY_PROFILE_FACTS = (
+    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+    UserProfileFact(path="identity.name", value="Ready"),
+    UserProfileFact(path="identity.surnames", value="Operator"),
+    UserProfileFact(path="activities.description", value="source-boundary"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+    UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+)
+
+
+def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str = _BUCKET_ID) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Source boundary ready profile",
+            facts=_READY_PROFILE_FACTS,
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
 
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_ready_profile(profile.repository)
         yield profile.repository
 
 
-def _repos(objects: SecureObjectRepository):
+def _repos(
+    objects: SecureObjectRepository,
+) -> tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    TransactionCatalogueRepository,
+    InvoiceCatalogueRepository,
+]:
     return (
         WorkUnitCatalogueRepository(objects=objects),
         CalculationRevisionCatalogueRepository(objects=objects),
@@ -251,10 +286,6 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         revision=revision,
         calculated_at=_T1,
     )
-    # Run the same mesh that calculate_modelo_revision_from_bucket_aggregation_with_diagnostics uses.
-    from ....domain.transactions import TransactionCatalogueRepository as TxRepo
-
-    tx_repo_real: TxRepo = tx_repo  # type: ignore[assignment]
     from ...aggregation import (
         LedgerIvaAggregationSourceResolver,
         LedgerRentaExpenseAggregationSourceResolver,
@@ -263,9 +294,9 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
 
     source_resolution = merge_source_resolutions(
         [
-            LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo_real).resolve(context),
-            LedgerRentaExpenseAggregationSourceResolver(transaction_repository=tx_repo_real).resolve(context),
-            LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo_real).resolve(context),
+            LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(context),
+            LedgerRentaExpenseAggregationSourceResolver(transaction_repository=tx_repo).resolve(context),
+            LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context),
             OssIossLedgerSourceResolver(candidates=()).resolve(context),
             InvoiceCatalogueSourceResolver(invoice_repository=invoice_repo).resolve(context),
             PreviousFilingSourceResolver().resolve(context),
@@ -413,6 +444,7 @@ def test_s10_deferred_kinds_advisory_fires_not_silent_blank(
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
+        _seed_ready_profile(objects)
         wu_repo, cr_repo, tx_repo, invoice_repo = (
             WorkUnitCatalogueRepository(objects=objects),
             CalculationRevisionCatalogueRepository(objects=objects),
@@ -475,8 +507,7 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
         d for d in unhandled if d.source_kind == "withholding" and d.reason == "unhandled_binding_source"
     ]
     assert not withholding_advisories, (
-        "S27: withholding is enrolled and must not appear as unhandled; "
-        f"unhandled={unhandled}"
+        f"S27: withholding is enrolled and must not appear as unhandled; unhandled={unhandled}"
     )
     assert BindingSourceKind.WITHHOLDING not in DEFERRED_SOURCE_KINDS
 

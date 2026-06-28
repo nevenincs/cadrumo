@@ -15,7 +15,7 @@ from ....domain.calculations.registry import (
 )
 from ....domain.modelos import ExternalEvidence, ExternalEvidenceKind
 from ....tests.registry_observations import registry_grounded_observations
-from ...calculations._observations_repository import _ObservationEnvelopePayload
+from ...calculations import CalculationObservationRepository
 from ...live._expedientes import PersistedExpedientesSnapshot
 from .. import (
     OverviewAeatSubmissionState,
@@ -24,19 +24,32 @@ from .. import (
     calendar_events_from_expedientes_snapshots,
     calendar_filing_evidence_from_sources,
 )
-from .test_calendar import (
-    _FILED_JUSTIFICANTE_STORAGE_REF,
-    _PERIOD_2025_1T,
-    _SOURCE_URL,
-    _filed_declaration_artefact,
-    _filed_declaration_observation,
-    _justificante_metadata,
-    _modelo_record,
-    _profile,
+from .calendar_test_support import (
+    FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
+)
+from .calendar_test_support import (
+    PERIOD_2025_1T as _PERIOD_2025_1T,
+)
+from .calendar_test_support import (
+    SOURCE_URL as _SOURCE_URL,
+)
+from .calendar_test_support import (
+    filed_declaration_artefact as _filed_declaration_artefact,
+)
+from .calendar_test_support import (
+    filed_declaration_observation as _filed_declaration_observation,
+)
+from .calendar_test_support import (
+    justificante_metadata as _justificante_metadata,
+)
+from .calendar_test_support import (
+    modelo_record as _modelo_record,
+)
+from .calendar_test_support import (
+    profile as _profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -178,7 +191,7 @@ def test_calendar_does_not_conflict_matching_verified_csv_across_reference_names
     """CSV-backed local evidence and expediente-backed filed-history evidence can describe the same receipt."""
     csv = "JUST-303-2025-1T"
     expediente_id = "12345678901234567890"
-    payload = _ObservationEnvelopePayload(
+    payload = CalculationObservationRepository.payload_type(
         observation=RegistryModeloObservation(
             modelo="303",
             filing_year=2025,

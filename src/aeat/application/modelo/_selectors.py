@@ -1,6 +1,12 @@
-"""Application selectors for operator-facing modelo work targets.
+"""Selector policy for operator-facing modelo work targets.
 
-Use of :class:`CalculationRevision` for compliance.
+Visible modelo/year/period input is normalized into a
+:class:`ModeloWorkSelectorRequest` and resolved to a
+:class:`ModeloWorkResolution` over active
+:class:`~aeat.domain.modelos._work_unit.WorkUnit` records. Revision selectors
+then load persisted :class:`CalculationRevision` rows and return a
+:class:`ModeloCalculationRevisionSelection` for current, latest draft, latest
+verified, filed, or explicit-id picks.
 """
 
 from __future__ import annotations

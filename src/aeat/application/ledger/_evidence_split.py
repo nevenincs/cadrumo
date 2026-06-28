@@ -1,10 +1,12 @@
 """Deterministic child-amount derivation for evidence-driven splits.
 
 The model proposes per-child *proportions* (fractions); the system derives the
-per-child euro amounts here so that they sum EXACTLY to the parent gross to the
-cent (the remainder lands on the last child). The model never emits a euro amount
-(``llm-selects-system-derives-tax-numbers``). This mirrors ``split_transaction``'s
-own invariant: children must sum to the parent magnitude exactly.
+per-child euro amounts in :func:`derive_child_amounts` so they sum EXACTLY to the
+parent gross to the cent (the remainder lands on the last child). The model never
+emits a euro amount (``llm-selects-system-derives-tax-numbers``). This bridges
+:func:`~aeat.application.ledger._llm_classification.suggest_evidence_split` to
+:func:`~aeat.application.ledger._actions_split_merge.split_transaction`, whose
+children must sum to the parent magnitude exactly.
 """
 
 from __future__ import annotations
@@ -20,19 +22,22 @@ __all__ = ["derive_child_amounts"]
 def derive_child_amounts(gross: Decimal, proportions: Sequence[Decimal]) -> tuple[Decimal, ...]:
     """Split ``gross`` into per-child amounts matching ``proportions``.
 
-    Each amount is ``round_to_cents(gross * proportion)``; the final child absorbs
-    the rounding remainder so the amounts sum to ``gross`` exactly. Flow direction
-    is inherited from the parent transaction outside this helper, never encoded in
-    the amount sign.
+    Each amount is :func:`~aeat.core.money.round_to_cents` applied to
+    ``gross * proportion``; the final child absorbs the rounding remainder so the
+    amounts sum to ``gross`` exactly. Flow direction is inherited from the parent
+    transaction outside this helper, never encoded in the amount sign.
 
     Args:
         gross: The parent transaction gross as a non-negative magnitude.
         proportions: Per-child fractions (each in ``(0, 1]``, summing to ~1.0).
 
     A single proportion (``1.0``) is the "no split warranted" verdict and yields
-    ``(gross,)`` — the whole amount on one child. The caller (``suggest_evidence_split``)
+    ``(gross,)`` — the whole amount on one child. The caller
+    (:func:`~aeat.application.ledger._llm_classification.suggest_evidence_split`)
     surfaces that verdict for review and never drives a one-way split through
-    ``split_transaction``; ``apply_evidence_split`` refuses a single-child suggestion.
+    :func:`~aeat.application.ledger._actions_split_merge.split_transaction`;
+    :func:`~aeat.application.ledger._llm_classification.apply_evidence_split`
+    refuses a single-child suggestion.
 
     Returns:
         Per-child amounts, in child order, summing exactly to ``gross``.

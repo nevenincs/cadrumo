@@ -1,4 +1,9 @@
-"""Application services for manual review annotations."""
+"""Application services for manual review annotations.
+
+:func:`update_ledger_review` and :func:`update_invoice_review` return updated
+:class:`WorkflowState` instances by appending :class:`WorkflowEvent` history to
+the relevant :class:`LedgerReviewRecord` or :class:`InvoiceReviewRecord`.
+"""
 
 from __future__ import annotations
 

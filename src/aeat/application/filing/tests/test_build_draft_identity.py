@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import cast
 
 import pytest
 
@@ -125,7 +126,7 @@ def test_build_draft_rejects_whitespace_padded_casilla_input_key() -> None:
             period=period,
             profile=_profile(),
             inputs={
-                " 01": Decimal("10000"),  # pyright: ignore[reportArgumentType]  # negative boundary test
+                cast(CasillaId, " 01"): Decimal("10000"),
             },
             schema_provider=build_runtime_schema_provider(modelos=("130",), filing_year=2026, period=period),
         )

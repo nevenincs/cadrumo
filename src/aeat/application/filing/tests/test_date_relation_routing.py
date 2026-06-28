@@ -30,7 +30,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import enum_consumed_binding_ids
+from ....domain.calculations.registry import RegistrySnapshot, enum_consumed_binding_ids
 from .. import (
     _bound_casilla_binding_ids,
     _date_binding_ids,
@@ -48,7 +48,7 @@ _M100_RELATIONS = (
 )
 
 
-def _m100_snapshot():  # type: ignore[return]
+def _m100_snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=2024, period="0A", on=None)
 
 

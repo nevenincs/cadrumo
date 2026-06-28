@@ -8,6 +8,7 @@ import pytest
 
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...tests.secure_sql import isolated_profile_storage_root
+from .. import wizard as _wizard  # noqa: F401 - registers compiled profile keys
 from ..auth import clear_operator_auth, configure_operator_auth
 from ..operator_surface import require_accepted_root
 from ..user_profile._orchestration import profile_create_storage_span
@@ -18,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_workflow_backend(tmp_path: Path):  # pyright: ignore[reportUnusedFunction]
+def isolated_workflow_backend(tmp_path: Path):
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("operator"),

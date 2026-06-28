@@ -162,7 +162,7 @@ def test_assemble_atribucion_caps_share_percentage_at_validation() -> None:
         _Cell("modelo-184-member-row-base-assigned", 1, Decimal("1000")),
     )
 
-    with pytest.raises(Exception, match=r"share_percentage must be within \[0, 100\]"):
+    with pytest.raises(RegistryValidationError, match=r"share_percentage must be within \[0, 100\]"):
         assemble_atribucion_observations(cells, revision, filing_year=2025)
 
 

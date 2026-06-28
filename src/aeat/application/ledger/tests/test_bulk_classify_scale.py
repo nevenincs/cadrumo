@@ -33,7 +33,7 @@ from ....domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import bulk_classify_from_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -90,20 +90,14 @@ def _unclassified(idx: int) -> Transaction:
 
 
 @pytest.fixture
-def _profile(tmp_path: Path) -> Iterator[object]:
+def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
         yield profile
 
 
-def test_bulk_classify_270_rows_persists_catalogue_once(_profile: object) -> None:
-    assert hasattr(_profile, "repository") and hasattr(_profile, "bucket_id")
-    objects_raw = _profile.repository  # type: ignore[union-attr]
-    bucket_id_raw = _profile.bucket_id  # type: ignore[union-attr]
-
-    assert isinstance(bucket_id_raw, str)
-    assert isinstance(objects_raw, (SecureObjectRepository, type(None)))
-    objects = objects_raw
-    bucket_id = bucket_id_raw
+def test_bulk_classify_270_rows_persists_catalogue_once(profile: TestRuntimeProfile) -> None:
+    objects = profile.repository
+    bucket_id = profile.bucket_id
 
     seed_repo = TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
     transactions = tuple(_unclassified(i) for i in range(_ROW_COUNT))

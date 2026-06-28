@@ -3,6 +3,8 @@
 The lock protects live auth flows that can create external state,
 especially Cl@ve Movil push petitions. It is intentionally
 filesystem-backed so separate CLI processes share the same guard.
+The lock file stores an :class:`AuthAcquisitionLockRecord` and reports
+operator-safe state through :class:`AuthAcquisitionLockStatus`.
 """
 
 from __future__ import annotations

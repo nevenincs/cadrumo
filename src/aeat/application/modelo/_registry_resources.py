@@ -1,6 +1,10 @@
 """Registry resource helpers shared by modelo application actions.
 
-Use of :class:`ValidatedRegistryAuthority` for compliance.
+All modelo application services access the packaged registry through the
+central :class:`ValidatedRegistryAuthority` exposed by
+``resources().modelos.authority``. The create-work-unit guards below use that
+authority to reject unknown revisions or periods before a work unit records a
+law-determined registry identity.
 """
 
 from __future__ import annotations

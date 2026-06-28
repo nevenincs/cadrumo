@@ -20,7 +20,7 @@ from ....domain.calculations.registry import (
 from ....domain.deadlines import ObligationStatus
 from ....domain.modelos import ExternalEvidence, ExternalEvidenceKind, ModeloRecord
 from ....tests.registry_observations import registry_grounded_observations
-from ...calculations._observations_repository import _ObservationEnvelopePayload
+from ...calculations import CalculationObservationRepository
 from ...live._expedientes import PersistedExpedientesSnapshot
 from ...live._justificante import JustificanteCaptureSnapshot
 from ...live._snapshot_base import SnapshotLifecycleState
@@ -40,19 +40,32 @@ from .. import (
     calendar_events_from_modelo_records,
     calendar_filing_evidence_from_sources,
 )
-from .test_calendar import (
-    _FILED_JUSTIFICANTE_STORAGE_REF,
-    _PERIOD_2025_1T,
-    _SOURCE_URL,
-    _filed_declaration_artefact,
-    _filed_declaration_observation,
-    _justificante_metadata,
-    _modelo_record,
-    _profile,
+from .calendar_test_support import (
+    FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
+)
+from .calendar_test_support import (
+    PERIOD_2025_1T as _PERIOD_2025_1T,
+)
+from .calendar_test_support import (
+    SOURCE_URL as _SOURCE_URL,
+)
+from .calendar_test_support import (
+    filed_declaration_artefact as _filed_declaration_artefact,
+)
+from .calendar_test_support import (
+    filed_declaration_observation as _filed_declaration_observation,
+)
+from .calendar_test_support import (
+    justificante_metadata as _justificante_metadata,
+)
+from .calendar_test_support import (
+    modelo_record as _modelo_record,
+)
+from .calendar_test_support import (
+    profile as _profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -71,6 +84,32 @@ def _observed_casilla_observations(value: Decimal):
         filing_year=2025,
         period="1T",
         casilla_values={_OBSERVED_CASILLA: value},
+    )
+
+
+def _calculation_observation_payload(
+    *,
+    source_kind: str,
+    source_metadata: dict[str, str] | None = None,
+    value: Decimal = Decimal("123.45"),
+) -> object:
+    observation = RegistryModeloObservation(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        observations=_observed_casilla_observations(value),
+    )
+    if source_metadata is None:
+        return CalculationObservationRepository.payload_type(
+            observation=observation,
+            captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+            source_kind=source_kind,
+        )
+    return CalculationObservationRepository.payload_type(
+        observation=observation,
+        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        source_kind=source_kind,
+        source_metadata=source_metadata,
     )
 
 
@@ -260,17 +299,21 @@ def test_calendar_event_refuses_contradictory_justificante_state() -> None:
     }
 
     with pytest.raises(ValidationError):
-        OverviewCalendarEvent(
-            **base,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: heterogeneous **dict splat
-            aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
-            justificante_verified=False,
+        OverviewCalendarEvent.model_validate(
+            {
+                **base,
+                "aeat_submission_state": OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+                "justificante_verified": False,
+            },
         )
 
     with pytest.raises(ValidationError):
-        OverviewCalendarEvent(
-            **base,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: heterogeneous **dict splat
-            aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
-            justificante_verified=True,
+        OverviewCalendarEvent.model_validate(
+            {
+                **base,
+                "aeat_submission_state": OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
+                "justificante_verified": True,
+            },
         )
 
 
@@ -654,14 +697,7 @@ def test_non_alta_calendar_event_is_not_enriched_by_matching_verified_evidence()
 
 
 def test_sede_calculation_observation_is_not_justificante_verification() -> None:
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+    payload = _calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -685,14 +721,7 @@ def test_sede_calculation_observation_is_not_justificante_verification() -> None
 
 @pytest.mark.parametrize("source_kind", ("aeat_sede_live_capture", "aeat_csv_register"))
 def test_official_calculation_observation_sources_are_calendar_submission_evidence(source_kind: str) -> None:
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+    payload = _calculation_observation_payload(
         source_kind=source_kind,
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -717,14 +746,7 @@ def test_official_calculation_observation_sources_are_calendar_submission_eviden
 
 def test_official_calculation_observation_source_with_matching_justificante_is_verified() -> None:
     csv = "JUST-303-2025-1T"
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+    payload = _calculation_observation_payload(
         source_kind="aeat_csv_register",
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -751,14 +773,7 @@ def test_official_calculation_observation_source_with_matching_justificante_is_v
 
 def test_verified_modelo_record_receipt_time_survives_calculation_observation_merge() -> None:
     csv = "JUST-303-2025-1T"
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+    payload = _calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -792,22 +807,25 @@ def test_verified_modelo_record_receipt_time_survives_calculation_observation_me
     assert row.justificante_verified is True
 
 
-def test_sede_calculation_observation_with_matching_justificante_metadata_is_verified() -> None:
+@pytest.mark.parametrize(
+    "justificante_metadata",
+    (
+        pytest.param({"aeat_justificante_csv": "JUST-303-2025-1T"}, id="single-csv"),
+        pytest.param({"aeat_justificante_csvs": "OTHER,JUST-303-2025-1T"}, id="plural-csvs"),
+        pytest.param({"aeat_justificante_csv": "just-303-2025-1t"}, id="case-insensitive-csv"),
+    ),
+)
+def test_sede_calculation_observation_with_matching_justificante_metadata_is_verified(
+    justificante_metadata: dict[str, str],
+) -> None:
     csv = "JUST-303-2025-1T"
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+    payload = _calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "12345678901234567890",
-            "aeat_justificante_csv": csv,
             "authenticated_identity": "X1234567L",
+            **justificante_metadata,
         },
     )
 
@@ -826,74 +844,9 @@ def test_sede_calculation_observation_with_matching_justificante_metadata_is_ver
     assert row.justificante_verified is True
 
 
-def test_sede_calculation_observation_with_plural_justificante_metadata_is_verified() -> None:
-    csv = "JUST-303-2025-1T"
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-        source_kind="aeat_sede_justificante",
-        source_metadata={
-            "aeat_register_status": "ALTA",
-            "aeat_expediente_id": "12345678901234567890",
-            "aeat_justificante_csvs": f"OTHER,{csv}",
-            "authenticated_identity": "X1234567L",
-        },
-    )
-
-    evidence = calendar_filing_evidence_from_sources(
-        calculation_observations=(payload,),
-        justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
-    )
-
-    assert evidence[0].aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert evidence[0].verified_justificante_csv == csv
-
-
-def test_sede_calculation_observation_justificante_csv_match_is_case_insensitive() -> None:
-    csv = "JUST-303-2025-1T"
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-        source_kind="aeat_sede_justificante",
-        source_metadata={
-            "aeat_register_status": "ALTA",
-            "aeat_expediente_id": "12345678901234567890",
-            "aeat_justificante_csv": csv.lower(),
-            "authenticated_identity": "X1234567L",
-        },
-    )
-
-    evidence = calendar_filing_evidence_from_sources(
-        calculation_observations=(payload,),
-        justificantes=(_justificante_metadata(csv=csv),),
-        expected_tax_id="X1234567L",
-    )
-
-    assert evidence[0].aeat_submission_state is OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
-    assert evidence[0].verified_justificante_csv == csv
-
-
 def test_sede_calculation_observation_conflicting_case_equivalent_justificantes_do_not_verify() -> None:
     csv = "JUST-303-2025-1T"
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+    payload = _calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -918,14 +871,7 @@ def test_sede_calculation_observation_conflicting_case_equivalent_justificantes_
 
 
 def test_sede_calculation_observation_with_wrong_justificante_metadata_is_not_verified() -> None:
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+    payload = _calculation_observation_payload(
         source_kind="aeat_sede_justificante",
         source_metadata={
             "aeat_register_status": "ALTA",
@@ -946,117 +892,64 @@ def test_sede_calculation_observation_with_wrong_justificante_metadata_is_not_ve
     assert evidence[0].justificante_verified is False
 
 
-def test_sede_calculation_observation_without_metadata_is_not_submission_evidence() -> None:
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
+@pytest.mark.parametrize(
+    ("source_metadata", "expected_tax_id", "justificante_csv"),
+    (
+        pytest.param(None, "X1234567L", None, id="missing-metadata"),
+        pytest.param(
+            {
+                "aeat_register_status": "BAJA",
+                "aeat_expediente_id": "12345678901234567890",
+            },
+            None,
+            None,
+            id="non-alta",
         ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        pytest.param(
+            {
+                "aeat_register_status": "ALTA",
+                "authenticated_identity": "X1234567L",
+                "aeat_justificante_csv": "JUST-303-2025-1T",
+            },
+            "X1234567L",
+            "JUST-303-2025-1T",
+            id="missing-register-reference",
+        ),
+        pytest.param(
+            {
+                "aeat_register_status": "ALTA",
+                "aeat_expediente_id": "12345678901234567890",
+            },
+            "X1234567L",
+            None,
+            id="missing-authenticated-identity",
+        ),
+        pytest.param(
+            {
+                "aeat_register_status": "ALTA",
+                "aeat_expediente_id": "12345678901234567890",
+                "authenticated_identity": "Y7654321Z",
+            },
+            "X1234567L",
+            None,
+            id="wrong-authenticated-identity",
+        ),
+    ),
+)
+def test_sede_calculation_observation_requires_valid_register_metadata(
+    source_metadata: dict[str, str] | None,
+    expected_tax_id: str | None,
+    justificante_csv: str | None,
+) -> None:
+    payload = _calculation_observation_payload(
         source_kind="aeat_sede_justificante",
+        source_metadata=source_metadata,
     )
 
     evidence = calendar_filing_evidence_from_sources(
         calculation_observations=(payload,),
-        expected_tax_id="X1234567L",
-    )
-
-    assert evidence == ()
-
-
-def test_sede_calculation_observation_with_non_alta_metadata_is_not_submission_evidence() -> None:
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-        source_kind="aeat_sede_justificante",
-        source_metadata={
-            "aeat_register_status": "BAJA",
-            "aeat_expediente_id": "12345678901234567890",
-        },
-    )
-
-    evidence = calendar_filing_evidence_from_sources(calculation_observations=(payload,))
-
-    assert evidence == ()
-
-
-def test_sede_calculation_observation_without_register_reference_is_not_submission_evidence() -> None:
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-        source_kind="aeat_sede_justificante",
-        source_metadata={
-            "aeat_register_status": "ALTA",
-            "authenticated_identity": "X1234567L",
-            "aeat_justificante_csv": "JUST-303-2025-1T",
-        },
-    )
-
-    evidence = calendar_filing_evidence_from_sources(
-        calculation_observations=(payload,),
-        justificantes=(_justificante_metadata(csv="JUST-303-2025-1T"),),
-        expected_tax_id="X1234567L",
-    )
-
-    assert evidence == ()
-
-
-def test_sede_calculation_observation_without_authenticated_identity_is_ignored_when_taxpayer_expected() -> None:
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-        source_kind="aeat_sede_justificante",
-        source_metadata={
-            "aeat_register_status": "ALTA",
-            "aeat_expediente_id": "12345678901234567890",
-        },
-    )
-
-    evidence = calendar_filing_evidence_from_sources(
-        calculation_observations=(payload,),
-        expected_tax_id="X1234567L",
-    )
-
-    assert evidence == ()
-
-
-def test_sede_calculation_observation_for_wrong_authenticated_identity_is_ignored() -> None:
-    payload = _ObservationEnvelopePayload(
-        observation=RegistryModeloObservation(
-            modelo="303",
-            filing_year=2025,
-            period="1T",
-            observations=_observed_casilla_observations(Decimal("123.45")),
-        ),
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-        source_kind="aeat_sede_justificante",
-        source_metadata={
-            "aeat_register_status": "ALTA",
-            "aeat_expediente_id": "12345678901234567890",
-            "authenticated_identity": "Y7654321Z",
-        },
-    )
-
-    evidence = calendar_filing_evidence_from_sources(
-        calculation_observations=(payload,),
-        expected_tax_id="X1234567L",
+        justificantes=(_justificante_metadata(csv=justificante_csv),) if justificante_csv is not None else (),
+        expected_tax_id=expected_tax_id,
     )
 
     assert evidence == ()
@@ -1213,15 +1106,17 @@ def test_imported_justificante_record_for_wrong_taxpayer_is_not_verified() -> No
 
 
 @pytest.mark.parametrize(
-    "metadata_updates",
+    ("modelo", "filing_year", "period"),
     [
-        pytest.param({"modelo": "130"}, id="wrong-modelo"),
-        pytest.param({"filing_year": 2024}, id="wrong-ejercicio"),
-        pytest.param({"period": Period.from_year_and_code(2025, "2T")}, id="wrong-period"),
+        pytest.param("130", 2025, _PERIOD_2025_1T, id="wrong-modelo"),
+        pytest.param("303", 2024, _PERIOD_2025_1T, id="wrong-ejercicio"),
+        pytest.param("303", 2025, Period.from_year_and_code(2025, "2T"), id="wrong-period"),
     ],
 )
 def test_imported_justificante_record_for_wrong_obligation_is_not_verified(
-    metadata_updates: dict[str, object],
+    modelo: str,
+    filing_year: int,
+    period: Period,
 ) -> None:
     csv = "JUST-303-2025-1T"
     evidence = calendar_filing_evidence_from_sources(
@@ -1236,7 +1131,7 @@ def test_imported_justificante_record_for_wrong_obligation_is_not_verified(
                 filed_by="aeat-import",
             ),
         ),
-        justificantes=(_justificante_metadata(csv=csv, **metadata_updates),),  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: parametrized **dict splat
+        justificantes=(_justificante_metadata(csv=csv, modelo=modelo, filing_year=filing_year, period=period),),
         expected_tax_id="X1234567L",
     )
 

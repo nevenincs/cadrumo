@@ -10,7 +10,7 @@ from typing import cast
 import pytest
 from openpyxl import load_workbook
 
-from ....core.errors import build_error_envelope
+from ....core.errors import build_error_envelope, declared_error_codes
 from ....core.external_constants import CSV_MIME_TYPE, JSONL_MIME_TYPE, UTF_8_ENCODING, XLSX_MIME_TYPE
 from .. import ExportSerializationFormat, serialize_tabular_rows
 from .._errors import ExportFieldError, ExportFormatError
@@ -100,24 +100,22 @@ def test_export_format_error_is_in_error_registry() -> None:
     assert "REFUSED_EXPORT_FORMAT" in ERROR_REGISTRY
 
 
-def test_export_format_error_registry_has_no_name_collision() -> None:
-    """The error registry must contain exactly one class named ExportFormatError.
+def test_export_format_error_registry_uses_distinct_application_and_adapter_classes() -> None:
+    """The export format error classes must keep distinct registry identities.
 
     After the adapter rename, only the application-layer ExportFormatError
-    (code REFUSED_EXPORT_FORMAT) should appear under that simple name.  The
+    (code REFUSED_EXPORT_FORMAT) should use that simple name. The
     adapter class is now AeatExportFormatError (code FAIL_EXPORT_FORMAT).
     """
-    from ....core.errors.registry import (
-        _ALL_DECLARED_ERROR_CODES,  # pyright: ignore[reportPrivateUsage]  # test introspection
-    )
-
-    qualnames_named_export_format_error = [
-        qualname for qualname, _ in _ALL_DECLARED_ERROR_CODES if qualname.split(".")[-1] == "ExportFormatError"
+    export_format_rows = [
+        (qualname, code.code)
+        for qualname, code in declared_error_codes()
+        if qualname.split(".")[-1].endswith("ExportFormatError")
     ]
-    assert qualnames_named_export_format_error == ["aeat.application.export._errors.ExportFormatError"], (
-        f"Expected exactly one ExportFormatError in the registry "
-        f"(application canonical), got: {qualnames_named_export_format_error}"
-    )
+    assert export_format_rows == [
+        ("aeat.adapters.outbound.aeat.export._errors.AeatExportFormatError", "FAIL_EXPORT_FORMAT"),
+        ("aeat.application.export._errors.ExportFormatError", "REFUSED_EXPORT_FORMAT"),
+    ]
 
 
 def test_export_field_error_is_in_error_registry() -> None:
@@ -192,9 +190,7 @@ def test_export_format_error_locale_key_present_in_catalogue() -> None:
 
     import yaml
 
-    locale_dir = pathlib.Path(
-        importlib.resources.files("aeat.locales").__str__(),  # type: ignore[arg-type]
-    )
+    locale_dir = pathlib.Path(str(importlib.resources.files("aeat.locales")))
     for locale_code in ("en", "es", "ca", "hu"):
         text = (locale_dir / f"{locale_code}.yml").read_text(encoding=UTF_8_ENCODING)
         data = yaml.safe_load(text)
@@ -212,9 +208,7 @@ def test_export_field_error_locale_key_present_in_catalogue() -> None:
 
     import yaml
 
-    locale_dir = pathlib.Path(
-        importlib.resources.files("aeat.locales").__str__(),  # type: ignore[arg-type]
-    )
+    locale_dir = pathlib.Path(str(importlib.resources.files("aeat.locales")))
     for locale_code in ("en", "es", "ca", "hu"):
         text = (locale_dir / f"{locale_code}.yml").read_text(encoding=UTF_8_ENCODING)
         data = yaml.safe_load(text)

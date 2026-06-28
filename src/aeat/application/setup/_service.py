@@ -1,4 +1,9 @@
-"""Backend service for workspace initialization."""
+"""Backend service for workspace initialization.
+
+:func:`initialize_workspace` transforms an :class:`InitializeWorkspaceCommand`
+into persisted :class:`UserProfileFact` records and returns an
+:class:`InitializeWorkspaceResult` for the newly created profile/bucket pair.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +23,9 @@ _log = get_logger(__name__)
 def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorkspaceResult:
     """Initialize a new active workspace profile and bucket.
 
-    Returns an :class:`InitializeWorkspaceResult`.
+    The service records :class:`UserProfileFact` values, registers the active
+    profile, provisions the corresponding storage bucket, and returns an
+    :class:`InitializeWorkspaceResult`.
     """
     facts: list[UserProfileFact] = [
         UserProfileFact(path="identity.tax_id", value=command.tax_id),

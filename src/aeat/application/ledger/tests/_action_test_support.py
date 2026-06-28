@@ -95,6 +95,11 @@ def _casilla_id(value: object) -> CasillaId:
 _REVISION_CASILLA: CasillaId = _casilla_id("01")
 
 __all__ = [
+    "POST_UPDATE_EVENT_PAYLOADS",
+    "PRESERVED_CREATE_AUDIT_FIELDS",
+    "PROVENANCE_RAW_FIELD_EXPECTATIONS",
+    "TAXABLE_IVA_EXPECTATIONS",
+    "UPDATED_FIELD_EXPECTATIONS",
     "UTC",
     "Attachment",
     "AttachmentKind",
@@ -105,6 +110,7 @@ __all__ = [
     "BucketEventObjectType",
     "BucketEventType",
     "BusinessClassification",
+    "CreateManualOutcome",
     "Decimal",
     "ExportSerializationFormat",
     "LedgerExportCommand",
@@ -137,6 +143,9 @@ __all__ = [
     "hashlib",
     "import_ledger_source",
     "import_ledger_transactions",
+    "parsed_import_transaction",
+    "persist_verified_revision_citing_transaction",
+    "purchase_invoice",
     "remove_manual_transaction",
     "reset_ledger_catalogue",
     "restore_manual_transaction",
@@ -229,6 +238,21 @@ def _parsed_import_transaction(
     )
 
 
+def parsed_import_transaction(
+    *,
+    transaction_id: str = "provider-row-1",
+    amount: Decimal = Decimal("80.00"),
+    description: str = "provider import row",
+    direction: TransactionDirection = TransactionDirection.OUTGOING,
+) -> ParsedLedgerRow:
+    return _parsed_import_transaction(
+        transaction_id=transaction_id,
+        amount=amount,
+        description=description,
+        direction=direction,
+    )
+
+
 def _persist_verified_revision_citing_transaction(
     objects: SecureObjectRepository,
     *,
@@ -287,6 +311,19 @@ def _persist_verified_revision_citing_transaction(
     )
 
 
+def purchase_invoice() -> Invoice:
+    return _purchase_invoice()
+
+
+def persist_verified_revision_citing_transaction(
+    objects: SecureObjectRepository,
+    *,
+    transaction_id: str,
+    bucket_id: str = "bucket-a",
+) -> None:
+    _persist_verified_revision_citing_transaction(objects, transaction_id=transaction_id, bucket_id=bucket_id)
+
+
 @dataclass(frozen=True, slots=True)
 class _CreateManualOutcome:
     """Bundle returned by _drive_create_manual_transaction so the focused tests share setup.
@@ -301,6 +338,9 @@ class _CreateManualOutcome:
     persisted: Transaction
     events: tuple[BucketEvent, ...]
     purchase_invoice_evidence_id: str
+
+
+CreateManualOutcome = _CreateManualOutcome
 
 
 def _drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> _CreateManualOutcome:
@@ -356,6 +396,10 @@ def _drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> 
     )
 
 
+def drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> CreateManualOutcome:
+    return _drive_create_manual_transaction(secure_objects)
+
+
 _PROVENANCE_RAW_FIELD_EXPECTATIONS = (
     ("source_kind", BindingSourceKind.LEDGER_TRANSACTION.value),
     ("taxable_base", "100.00"),
@@ -380,3 +424,9 @@ _POST_UPDATE_EVENT_PAYLOADS = (
     (2, "mutation_kind", "classification"),
     (3, "mutation_kind", "allocation"),
 )
+
+POST_UPDATE_EVENT_PAYLOADS = _POST_UPDATE_EVENT_PAYLOADS
+PRESERVED_CREATE_AUDIT_FIELDS = _PRESERVED_CREATE_AUDIT_FIELDS
+PROVENANCE_RAW_FIELD_EXPECTATIONS = _PROVENANCE_RAW_FIELD_EXPECTATIONS
+TAXABLE_IVA_EXPECTATIONS = _TAXABLE_IVA_EXPECTATIONS
+UPDATED_FIELD_EXPECTATIONS = _UPDATED_FIELD_EXPECTATIONS

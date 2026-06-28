@@ -21,6 +21,7 @@ import pytest
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
+    RegistrySnapshot,
     calculate_registry_snapshot,
     enum_consumed_binding_ids,
     validated_casilla_id,
@@ -51,7 +52,7 @@ _M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-def _m200_snapshot():  # type: ignore[return]
+def _m200_snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("200", filing_year=2024, period="0A", on=None)
 
 

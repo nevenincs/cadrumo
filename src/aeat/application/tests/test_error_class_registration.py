@@ -61,17 +61,17 @@ def test_profile_registration_error_raised_on_double_register() -> None:
 
     original = list(_PROJECT_ANSWERS_SLOT)
 
-    def _dummy_fn_a(flow: Any, values: Mapping[str, str]) -> BaseModel:  # pragma: no cover
+    def _answers_factory_a(flow: Any, values: Mapping[str, str]) -> BaseModel:  # pragma: no cover
         return BaseModel()
 
-    def _dummy_fn_b(flow: Any, values: Mapping[str, str]) -> BaseModel:  # pragma: no cover
+    def _answers_factory_b(flow: Any, values: Mapping[str, str]) -> BaseModel:  # pragma: no cover
         return BaseModel()
 
     try:
         _PROJECT_ANSWERS_SLOT.clear()
-        _PROJECT_ANSWERS_SLOT.append(_dummy_fn_a)
+        _PROJECT_ANSWERS_SLOT.append(_answers_factory_a)
         with pytest.raises(ProfileRegistrationError):
-            register_project_answers(_dummy_fn_b)
+            register_project_answers(_answers_factory_b)
     finally:
         _PROJECT_ANSWERS_SLOT.clear()
         _PROJECT_ANSWERS_SLOT.extend(original)

@@ -1,4 +1,9 @@
-"""Operator-facing projections for the read-only review queue."""
+"""Operator-facing projections for the read-only review queue.
+
+Projects :class:`ReviewQueue` items into :class:`ReviewQueueRow` records grouped
+in a :class:`ReviewQueueReport`, carrying the active :class:`BucketId` and the
+public :class:`BindingSourceKind` selector vocabulary for CLI rendering.
+"""
 
 from __future__ import annotations
 
