@@ -31,6 +31,9 @@ from __future__ import annotations
 import io
 import logging
 import os
+import shutil
+import subprocess
+from pathlib import Path
 from typing import override
 
 import pytest
@@ -188,6 +191,47 @@ def test_help_invocation_below_floor_widens_columns() -> None:
         _ensure_help_render_width(),
     ):
         assert int(os.environ["COLUMNS"]) == _MIN_HELP_RENDER_COLUMNS
+
+
+def test_console_help_invocation_widens_before_rich_renders_long_flags(tmp_path: Path) -> None:
+    """The real console entry point must apply the width guard before Typer help.
+
+    Persona runs invoke ``aeat ... --help`` through the console script, not by
+    manually entering ``_ensure_help_render_width``. A narrow terminal must still
+    show the long profile-create flags in full so operators do not guess option
+    names from Rich ellipses.
+    """
+
+    aeat_exe = shutil.which("aeat")
+    assert aeat_exe is not None, "the aeat console script must be installed for this test"
+    env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
+    env.update(
+        {
+            "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
+            "AEAT_SECRET_PASSPHRASE": "help-width-test-passphrase",
+            "COLUMNS": "80",
+        },
+    )
+
+    result = subprocess.run(  # noqa: S603 - test intentionally invokes the resolved aeat console script.
+        [aeat_exe, "--language", "en", "config", "profile", "create", "--help"],
+        cwd=Path.cwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=120,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr + result.stdout
+    assert "--does-intracomunitario" in result.stdout
+    assert "--third-party-transactions-above-347-threshold" in result.stdout
+    assert "--iva-intracommunity-operations-exceed-50000-eur" in result.stdout
+    assert "--uses-objective-estimation-irpf" in result.stdout
+    assert "--does-intracomu…" not in result.stdout
+    assert "--third-party-tr…" not in result.stdout
+    assert "--iva-intracommu…" not in result.stdout
 
 
 def test_help_invocation_keeps_wider_columns() -> None:

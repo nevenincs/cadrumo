@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     import click
 from typer._types import TyperChoice as _TyperChoice
 
+from ._stdio import _ensure_help_render_width as _ensure_help_render_width
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 
 # Force UTF-8 on stdout / stderr before any echo, log, or Rich console
@@ -715,7 +716,8 @@ def main() -> None:
     import sys
 
     _apply_language_argv_to_environment(sys.argv[1:])
-    app(prog_name="aeat")
+    with _ensure_help_render_width():
+        app(prog_name="aeat")
 
 
 __all__ = ["AppRootResult", "RootStatusResult", "app", "main"]
