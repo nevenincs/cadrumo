@@ -71,6 +71,13 @@ def _list_rows(*filters: str) -> list[dict[str, Any]]:
     return payload.get("result", payload).get("rows", [])
 
 
+def _list_rows_with_options(*args: str) -> list[dict[str, Any]]:
+    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list", *args])
+    assert listed.exit_code == 0, listed.output
+    payload = json.loads(listed.output)
+    return payload.get("result", payload).get("rows", [])
+
+
 def test_list_without_filter_returns_full_ledger() -> None:
     """The unfiltered baseline lists the whole operating-scale corpus."""
     _import_corpus()
@@ -94,6 +101,31 @@ def test_period_filter_narrows_to_one_year() -> None:
     assert filtered, f"period=0A + year={target} must match the rows dated in {target}"
     assert len(filtered) < len(full), "a single-year filter must be a strict subset of the cross-year ledger"
     assert all(str(r["date"]).startswith(target) for r in filtered)
+
+
+def test_period_year_options_match_filter_clauses() -> None:
+    """Convenience ``--period/--year`` flags route through the same typed filter as ``--filter``."""
+    _import_corpus()
+    full = _list_rows()
+    target = sorted({str(r["date"])[:4] for r in full})[0]
+
+    option_rows = _list_rows_with_options("--period", "0A", "--year", target)
+    filter_rows = _list_rows("period=0A", f"year={target}")
+
+    assert {row["full_id"] for row in option_rows} == {row["full_id"] for row in filter_rows}
+    assert option_rows, "period/year options must match the same non-empty annual subset as --filter"
+
+
+def test_year_option_without_period_refuses_with_annual_guidance() -> None:
+    """Bare ``--year`` refuses with annual-period guidance, not an internal parser token."""
+    result = _RUNNER.invoke(app, ["app", "ledger", "list", "--year", "2025"])
+
+    assert result.exit_code != 0
+    assert "ledger-period-year-pairing" not in result.output
+    assert "--period 0A --year 2025" in result.output
+    assert "--filter" in result.output
+    assert "period=0A" in result.output
+    assert "year=2025" in result.output
 
 
 def test_classification_filter_narrows_to_one_class() -> None:

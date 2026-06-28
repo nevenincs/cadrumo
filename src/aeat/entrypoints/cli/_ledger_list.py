@@ -50,6 +50,15 @@ def ledger_filter_parse_error_message(exc: FilterParseError) -> str:
     """Render a CLI message for a parsed ledger filter error."""
     if exc.reason == "invalid-value-ledger-period":
         return tr("cli.common.errors.period_unrecognised", raw=_filter_period_value(exc))
+    if exc.reason == "ledger-period-year-pairing":
+        return tr(
+            "cli.ledger.errors.period_year_pairing",
+            default=(
+                "Ledger period filters require period and year together. "
+                "For a full year use --period 0A --year 2025, or "
+                "--filter period=0A --filter year=2025."
+            ),
+        )
     return tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.safe_token)
 
 
