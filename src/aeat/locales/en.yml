@@ -2629,8 +2629,8 @@ cli:
         uploads it off your machine (required by the consent gate).
       from_csv_exclusive: --from-csv cannot be combined with a transaction id or --classification.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
-        irpf_category].
+        category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
+        iva_category, irpf_category].
       from_csv_not_found: 'CSV file not found: %{path}'
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
