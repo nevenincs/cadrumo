@@ -222,6 +222,11 @@ class TestParseRowSpecM349:
             # DE requires 9 digits; this has only 8
             _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE12345678 clave_operacion=E importe=1000")
 
+    def test_parse_operador_unsupported_country_rejected(self) -> None:
+        """operador rejects country prefixes absent from the Modelo 349 table."""
+        with pytest.raises(typer.BadParameter, match="NIF-IVA"):
+            _parse_row_spec("operador codigo_pais=ZZ nif_comunitario=BADVAT clave_operacion=E importe=1000")
+
     def test_parse_operador_invalid_clave_raises(self) -> None:
         """Invalid clave_operacion raises BadParameter."""
         with pytest.raises(typer.BadParameter):
@@ -456,3 +461,93 @@ class TestRevisionViewSurfacesDetailRows:
         assert len(detail_lines) == 2, f"expected 2 detail rows, got: {calc.stdout}"
         assert "porcentaje=60" in calc.stdout and "importe=10000" in calc.stdout, calc.stdout
         assert "porcentaje=40" in calc.stdout and "importe=5000" in calc.stdout, calc.stdout
+
+    def test_m349_operador_rows_feed_summary_and_verify(self, tmp_path: Path) -> None:
+        """Cold M349 operador rows produce Tipo-1 summary casillas and verify.
+
+        The two Tipo-2 operador rows are the operator-facing source of truth in
+        this manual-entry path. The persisted draft must hash those rows, expose
+        them in the revision output, and populate the declarant summary totals
+        that the M349 fixed-width record defines over the operator records.
+        """
+        setup = self._run_cli(
+            tmp_path,
+            [
+                "config",
+                "profile",
+                "create",
+                "m349",
+                "--tax-id",
+                "E12345674",
+                "--legal-entity-form",
+                "sociedad_civil_mercantil",
+                "--quiet",
+            ],
+        )
+        assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
+        created = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--revision",
+                "2020-y-siguientes",
+            ],
+        )
+        assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
+
+        calc = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--row",
+                (
+                    "operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=EntidadDE "
+                    "clave_operacion=E importe=1500.00"
+                ),
+                "--row",
+                (
+                    "operador codigo_pais=FR nif_comunitario=FR12345678901 razon_social=EntidadFR "
+                    "clave_operacion=E importe=900.00"
+                ),
+            ],
+        )
+        assert calc.returncode == 0, f"calculate failed: {calc.stdout}\n{calc.stderr}"
+        assert "casilla\tdecl.numero-operadores\t2" in calc.stdout, calc.stdout
+        assert "casilla\tdecl.importe-operaciones\t2400.00" in calc.stdout, calc.stdout
+        assert len([line for line in calc.stdout.splitlines() if line.startswith("detail_row\t")]) == 2, calc.stdout
+
+        verified = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "work",
+                "verify",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+            ],
+        )
+        assert verified.returncode == 0, f"verify failed: {verified.stdout}\n{verified.stderr}"
+        assert "content-address mismatch" not in verified.stdout + verified.stderr
