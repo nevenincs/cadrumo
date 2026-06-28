@@ -44,6 +44,8 @@ from ._errors import TransactionValidationError
 from ._ids import TransactionId
 from ._raw_transaction import RawTransaction
 
+_IRPF_CATEGORY_TRABAJO = "trabajo"
+
 
 def derive_transaction_id(raw: RawTransaction) -> str:
     """Return the stable transaction hash for one raw transaction.
@@ -999,6 +1001,13 @@ class Transaction(BaseModel):
         the paid cash gross matches the taxable base; the IVA amount is
         self-assessed but not paid in the transaction itself.
 
+        For professional income paid net of IRPF withholding, the bank receipt
+        can be lower than the invoice gross while the declared base and IVA
+        still need to preserve the invoice substrate. That relaxation is
+        accepted only for INCOMING rows with an explicit non-work
+        ``irpf_category`` and only when ``taxable_base + iva_amount`` is above
+        the cash receipt; under-declared invoice gross remains refused.
+
         The check fires **only when both** :attr:`taxable_base` and
         :attr:`iva_amount` are present. A row with either field unset (the
         common case — most transactions never carry the tax substrate)
@@ -1022,10 +1031,24 @@ class Transaction(BaseModel):
             return self
         expected = round_to_cents(abs(self.raw.amount))
         reconstituted = round_to_cents(self.taxable_base + self.iva_amount)
+        if reconstituted == expected:
+            return self
+        if (
+            self.direction == TransactionDirection.INCOMING
+            and self.irpf_category not in {None, "", _IRPF_CATEGORY_TRABAJO}
+            and reconstituted > expected
+        ):
+            return self
+        detail = ""
+        if reconstituted > expected and self.direction == TransactionDirection.INCOMING:
+            detail = (
+                " If this is an income receipt paid net of IRPF withholding, "
+                "set irpf_category so the invoice base and IVA can be kept."
+            )
         if reconstituted != expected:
             raise TransactionValidationError(
                 "taxable_base + iva_amount must equal the gross to the cent: "
-                f"{self.taxable_base} + {self.iva_amount} = {reconstituted} != {expected}",
+                f"{self.taxable_base} + {self.iva_amount} = {reconstituted} != {expected}.{detail}",
             )
         return self
 
