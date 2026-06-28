@@ -826,6 +826,8 @@ class LedgerExportRow(BaseModel):
     taxable_base: str = ""
     iva_rate: str = ""
     iva_amount: str = ""
+    iva_category: str = ""
+    counterparty_eu_member_state: str = ""
     irpf_category: str = ""
     usage_ratio_id: str = ""
     prorrata_reference: str = ""

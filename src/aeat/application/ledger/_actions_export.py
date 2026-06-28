@@ -64,6 +64,8 @@ _LEDGER_EXPORT_FIELDNAMES = (
     "taxable_base",
     "iva_rate",
     "iva_amount",
+    "iva_category",
+    "counterparty_eu_member_state",
     "irpf_category",
     "usage_ratio_id",
     "prorrata_reference",
@@ -201,6 +203,12 @@ def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExp
         taxable_base=_optional_decimal(transaction.taxable_base),
         iva_rate=_optional_decimal(transaction.iva_rate),
         iva_amount=_optional_decimal(transaction.iva_amount),
+        iva_category=transaction.iva_category.value if transaction.iva_category is not None else "",
+        counterparty_eu_member_state=(
+            transaction.counterparty_eu_member_state.value
+            if transaction.counterparty_eu_member_state is not None
+            else ""
+        ),
         irpf_category=transaction.irpf_category or "",
         usage_ratio_id=transaction.usage_ratio_id or "",
         prorrata_reference=transaction.prorrata_reference or "",
