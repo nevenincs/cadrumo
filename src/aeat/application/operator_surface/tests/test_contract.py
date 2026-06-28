@@ -216,6 +216,9 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
 
     assert "The CLI has exactly two roots: config and app." in root.paragraphs
     assert "aeat config profile create NAME" in root_text
+    assert "AEAT_LOCAL_STORAGE_ROOT" in root_text
+    assert "AEAT_SECRET_STORE_DIR" in root_text
+    assert "AEAT_SECRET_PASSPHRASE" in config_text
     assert ("aeat config " + "init") not in root_text
     assert "aeat app ledger import" in root_text
     assert "aeat app live filed list" in root_text

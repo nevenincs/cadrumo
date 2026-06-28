@@ -3069,6 +3069,9 @@ cli:
         footer: Run aeat --help for the full overview.
         heading: aeat config - profile, auth, diagnostics
         paragraph_durable_state: Config commands manage local durable state.
+        paragraph_storage_isolation: For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT,
+          AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and AEAT_SECRET_PASSPHRASE;
+          logs default under that storage root.
         profile_censo: Sync AEAT censo facts for the active profile.
         profile_delete: Delete a profile after explicit confirmation.
         profile_duplicate: Copy a profile to a new id.
@@ -3108,6 +3111,9 @@ cli:
         modelo_bindings_list: List registry binding coverage.
         modelo_list: List supported modelos.
         modelo_work: Create and operate modelo work units.
+        paragraph_storage_isolation: For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT,
+          AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and AEAT_SECRET_PASSPHRASE;
+          logs default under that storage root.
         paragraph_two_roots: 'The CLI has exactly two roots: config and app.'
         paragraph_type_help: Use config for local state and app for tax work.
         section_daily_ledger: Daily ledger work

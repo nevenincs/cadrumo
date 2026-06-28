@@ -3268,6 +3268,10 @@ cli:
         heading: Configuracion y diagnostico del contribuyente.
         paragraph_durable_state: El estado duradero (perfil, autenticacion, libro)
           persiste entre sesiones.
+        paragraph_storage_isolation: Para una ejecucion aislada desde cero, defina
+          AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
+          y AEAT_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
+          de almacenamiento.
         profile_censo: Mostrar el estado del censo del perfil activo.
         profile_delete: Eliminar un perfil de contribuyente.
         profile_duplicate: Duplicar un perfil de contribuyente existente.
@@ -3311,6 +3315,10 @@ cli:
         modelo_list: Listar los modelos fiscales disponibles.
         modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y
           exportar.'
+        paragraph_storage_isolation: Para una ejecucion aislada desde cero, defina
+          AEAT_LOCAL_STORAGE_ROOT, AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR
+          y AEAT_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
+          de almacenamiento.
         paragraph_two_roots: 'Dos superficies principales: ''app'' para operaciones
           de declaracion y ''config'' para configuracion y diagnostico.'
         paragraph_type_help: Escriba 'aeat <comando> --help' para obtener ayuda detallada.

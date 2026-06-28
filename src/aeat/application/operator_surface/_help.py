@@ -72,6 +72,14 @@ def _root_help() -> HelpDocument:
                 "cli.operator_surface.help.root.paragraph_type_help",
                 default="Use config for local state and app for tax work.",
             ),
+            tr(
+                "cli.operator_surface.help.root.paragraph_storage_isolation",
+                default=(
+                    "For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT, "
+                    "AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and "
+                    "AEAT_SECRET_PASSPHRASE; logs default under that storage root."
+                ),
+            ),
         ),
         sections=(
             HelpSection(
@@ -213,6 +221,14 @@ def _config_help() -> HelpDocument:
             tr(
                 "cli.operator_surface.help.config.paragraph_durable_state",
                 default="Config commands manage local durable state.",
+            ),
+            tr(
+                "cli.operator_surface.help.config.paragraph_storage_isolation",
+                default=(
+                    "For an isolated blank state, set AEAT_LOCAL_STORAGE_ROOT, "
+                    "AEAT_SECRET_STORE_BACKEND=file, AEAT_SECRET_STORE_DIR, and "
+                    "AEAT_SECRET_PASSPHRASE; logs default under that storage root."
+                ),
             ),
         ),
         sections=(
