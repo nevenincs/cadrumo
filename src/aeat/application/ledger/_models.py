@@ -314,6 +314,8 @@ class LedgerTransactionPayload(BaseModel):
     taxable_base: str | None = None
     iva_rate: str | None = None
     iva_amount: str | None = None
+    iva_category: str | None = None
+    counterparty_eu_member_state: str | None = None
     irpf_category: str | None = None
     usage_ratio_id: str | None = None
     prorrata_reference: str | None = None
@@ -712,7 +714,7 @@ class BulkClassifyRow(BaseModel):
 
     Required columns: ``transaction_id``, ``classification``.
     Optional columns: ``category_id``, ``business_pct``, ``taxable_base``,
-    ``iva_rate``, ``iva_amount``.
+    ``iva_rate``, ``iva_amount``, ``iva_category``.
     Unknown column names are rejected pre-persistence to protect against
     silent field mis-mapping. The IVA facts (``taxable_base``, ``iva_rate``,
     ``iva_amount``) are typed ``Decimal`` exactly as the single-classify path
@@ -729,6 +731,7 @@ class BulkClassifyRow(BaseModel):
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
     iva_amount: Decimal | None = None
+    iva_category: IvaCategory | None = None
 
 
 class BulkClassifyFailure(BaseModel):
@@ -767,6 +770,7 @@ BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset(
         "taxable_base",
         "iva_rate",
         "iva_amount",
+        "iva_category",
     },
 )
 

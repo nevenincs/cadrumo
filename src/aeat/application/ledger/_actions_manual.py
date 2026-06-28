@@ -284,6 +284,12 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         taxable_base=_display_decimal(transaction.taxable_base) if transaction.taxable_base is not None else None,
         iva_rate=_display_decimal(transaction.iva_rate) if transaction.iva_rate is not None else None,
         iva_amount=_display_decimal(transaction.iva_amount) if transaction.iva_amount is not None else None,
+        iva_category=transaction.iva_category.value if transaction.iva_category is not None else None,
+        counterparty_eu_member_state=(
+            transaction.counterparty_eu_member_state.value
+            if transaction.counterparty_eu_member_state is not None
+            else None
+        ),
         irpf_category=transaction.irpf_category,
         usage_ratio_id=transaction.usage_ratio_id,
         prorrata_reference=transaction.prorrata_reference,

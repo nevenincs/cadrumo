@@ -2766,7 +2766,7 @@ cli:
       from_csv_exclusive: --from-csv no pot combinar-se amb un id de transacció ni
         --classification.
       from_csv_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount].
+        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category].
       from_csv_not_found: 'Fitxer CSV no trobat: %{path}'
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
@@ -2921,6 +2921,7 @@ cli:
       child_id: Id de transacció filla
       children: filles
       counterparty: Contrapart
+      counterparty_eu_member_state: Contrapart UE
       created_event_id: Esdeveniment bucket de creació
       currency: Moneda
       date: Data

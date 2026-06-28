@@ -595,6 +595,56 @@ physical form/subform number, not the casilla number displayed in the full list,
 so M100 `0003` discoverability needs clearer command naming or a separate
 casilla-number filter.
 
+### wave-eight-reframed-persona-campaign | high | CLI-only personas exposed profile and ledger trust blockers
+
+This continuation reframed the campaign execution: the coordinator remained a
+coding/fixing agent, while CLI-only persona subagents performed taxpayer
+journeys from blank isolated storage roots. Personas were explicitly barred from
+reading code and used only `uv run --no-sync aeat ...`, command help, scratch
+CSV/export files, and public AEAT pages for high-level external sanity. The
+wave covered a resident S.L., a UK non-resident company, and an employed-plus-
+autonomous natural person, with read-only code triage agents briefed separately
+for suspected defects.
+
+Marta's S.L. and Sofia's UK company both reproduced a high-confidence profile
+creation blocker: `config profile preflight` could report ready for M200/M202,
+while `modelo work create` refused `identity.legal_name`, and
+`config profile edit --legal-name` did not exist. A coordinator replay confirmed
+the mismatch. The fix exposes `--legal-name` through profile create/edit, stores
+it as `identity.legal_name`, and passes the resolved registry revision into
+`config profile preflight` so export-header legal-name requirements are visible
+before modelo work. A fresh direct replay with `--legal-name` created an M202
+2026 1P work unit successfully.
+
+Marta also reproduced two bulk-ledger parity defects: CSV bulk classification
+rejected `iva_category`, even though single `ledger classify` accepts
+`--iva-category`, and bulk rows required full transaction ids while single
+classification accepted unambiguous display ids. The fix adds `iva_category` to
+the typed bulk CSV row and allowed-column set, carries it through the same
+`ManualLedgerTransactionPatch` write path, resolves unambiguous id prefixes via
+the shared live-id resolver, and preserves row-level failures for ambiguous
+prefixes.
+
+Ines's employed-plus-autonomous run then found a related IVA correction blocker:
+a row classified as `iva_category=erroneous_invoice` blocked ledger preflight,
+but `ledger view` hid the category and reclassifying it as
+`domestic_general_21` was treated as a no-op. RAG and source triage showed the
+mutation signature ignored `iva_category` and `counterparty_eu_member_state`.
+The fix adds both fields to mutation/no-op detection, exposes them on the
+canonical ledger transaction payload and `ledger view`, and pins the correction
+flow through the real CLI. A fresh direct replay now shows `erroneous_invoice`,
+accepts the `--reaffirm` correction, and then shows `domestic_general_21`.
+
+The same personas left several residual model-boundary issues out of scope for
+this scoped hardening pass: M210 still advertises `evento` while other surfaces
+reject it; M130 Q2 can require an observed Q1 filing even when Q1 local filing
+is refused as `NO_PENDING_OBLIGATION`; M390/M100 verification can block on
+missing observed individual filings even when local calculations exist; M303
+IVA wallet zero seed still does not replace explicit taxpayer override; M100
+activity-mode binding accepts decimal `1` while rejecting `normal`; and at
+least one calculation-preflight path can leak a raw `%{detail}` placeholder.
+Those were retained as backlog rather than collapsed into this pass.
+
 ## Recommendations
 
 Implemented and reviewed in this wave:
@@ -699,6 +749,24 @@ Implemented and reviewed in this wave:
   `src/aeat/application/state_projection.py`, with a fresh-process CLI
   regression in
   `src/aeat/entrypoints/cli/tests/test_cold_start_wizard_registration.py`.
+- Legal-entity `identity.legal_name` profile entry and preflight alignment in
+  `src/aeat/core/setup_answers.py`,
+  `src/aeat/application/wizard/_catalogue.py`,
+  `src/aeat/application/wizard/_commands.py`, and
+  `src/aeat/entrypoints/cli/_config/__init__.py`, with CLI coverage in
+  `src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py`
+  and `src/aeat/entrypoints/cli/tests/test_config_preflight_revision_default.py`.
+- Bulk `ledger classify --from-csv` parity for `iva_category` and unambiguous
+  display-id prefixes in `src/aeat/application/ledger/_models.py` and
+  `src/aeat/application/ledger/_actions_classification.py`, with real CLI
+  coverage in `src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`.
+- Ledger IVA-category correction visibility and mutation detection in
+  `src/aeat/application/ledger/_actions_common.py`,
+  `src/aeat/application/ledger/_actions_manual.py`,
+  `src/aeat/application/ledger/_models.py`,
+  `src/aeat/entrypoints/cli/_ledger_payloads.py`, and
+  `src/aeat/entrypoints/cli/_ledger_read_cli.py`, with CLI coverage in
+  `src/aeat/entrypoints/cli/tests/test_ledger_ux_defect_cluster.py`.
 
 Verification passed:
 
@@ -762,6 +830,19 @@ Verification passed:
 - `git diff --check --` on the M202 export, M200 guidance, locale, and audit files; only Git CRLF normalization warnings were reported.
 - `uv run --no-sync ruff check` on the wave-six touched implementation and test files.
 - `git diff --check --` on the wave-six touched implementation and test files; only Git CRLF normalization warnings were reported.
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py::test_legal_entity_profile_create_and_edit_exposes_legal_name src/aeat/entrypoints/cli/tests/test_config_preflight_revision_default.py::test_preflight_reports_legal_entity_export_legal_name_requirement`
+- Direct blank-root legal-entity smoke: with `--legal-name`, `config profile
+  preflight --modelo 202 --filing-year 2026 --period 1P` returned
+  `readiness ready missing=0`, and `app modelo work create --modelo 202 --year
+  2026 --period 1P` created a work unit.
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_ux_defect_cluster.py::test_classify_can_correct_and_view_iva_category src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_accepts_iva_category_column src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_accepts_display_id_prefix src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_ambiguous_prefix_is_row_failure`
+- Direct blank-root IVA-category correction smoke: `ledger view` showed
+  `erroneous_invoice`, the `--reaffirm --iva-category domestic_general_21`
+  correction succeeded, and `ledger view` then showed `domestic_general_21`.
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py src/aeat/entrypoints/cli/tests/test_config_preflight_revision_default.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py src/aeat/entrypoints/cli/tests/test_ledger_ux_defect_cluster.py`
+- `uv run --no-sync ruff check src/aeat/core/setup_answers.py src/aeat/application/wizard/_catalogue.py src/aeat/application/wizard/_commands.py src/aeat/entrypoints/cli/_config/__init__.py src/aeat/application/ledger/_actions_common.py src/aeat/application/ledger/_models.py src/aeat/application/ledger/_actions_manual.py src/aeat/application/ledger/_actions_classification.py src/aeat/entrypoints/cli/_ledger.py src/aeat/entrypoints/cli/_ledger_payloads.py src/aeat/entrypoints/cli/_ledger_read_cli.py src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py src/aeat/entrypoints/cli/tests/test_config_preflight_revision_default.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py src/aeat/entrypoints/cli/tests/test_ledger_ux_defect_cluster.py`
+- `uv run --no-sync python -m aeat.locales scaffold --check`
+- `uv run --no-sync python -m aeat.locales audit`
 
 Independent read-only reviews reported no findings for the IVA wallet patch,
 the Modelo 202 modality gate, the stage-1 readiness hardening, the M390 export
@@ -808,9 +889,6 @@ Residual backlog:
 - Align M349 readiness with the work-create applicability gate, or explicitly
   label readiness as stage-1 so attribution-entity targets do not look
   filing-ready when applicability will refuse them.
-- Make bulk `ledger classify --from-csv` accept the same unambiguous short
-  transaction id prefixes that single `ledger classify <id>` accepts, or emit a
-  clear error that explains full ids are required for batch mode.
 - Improve M349 row-entry help and validation wording so `razon_social` is
   discoverable and raw Pydantic documentation URLs do not leak into
   taxpayer-facing refusal text.
@@ -833,3 +911,10 @@ Residual backlog:
   migration becomes relevant.
 - Reconcile filed work-unit `state=borrador` wording with visible filed revision
   records so local lifecycle state does not confuse non-technical operators.
+- Clarify and/or harden the M130 cross-period observed-filing dependency: a
+  persona could calculate/export Q1 locally, but Q2 then required an observed Q1
+  filing while Q1 local filing was refused as `NO_PENDING_OBLIGATION`.
+- Improve M100 activity-mode binding UX so the operator can select direct
+  estimation mode with a named value rather than discovering that decimal `1`
+  works while `normal` is rejected.
+- Fix raw `%{detail}` placeholder leakage in calculation-preflight refusals.

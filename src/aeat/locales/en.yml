@@ -2620,7 +2620,7 @@ cli:
         uploads it off your machine (required by the consent gate).
       from_csv_exclusive: --from-csv cannot be combined with a transaction id or --classification.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount].
+        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category].
       from_csv_not_found: 'CSV file not found: %{path}'
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
@@ -2764,6 +2764,7 @@ cli:
       child_id: Child transaction id
       children: Children
       counterparty: Counterparty
+      counterparty_eu_member_state: EU counterparty
       created_event_id: Created bucket event
       currency: Currency
       date: Date

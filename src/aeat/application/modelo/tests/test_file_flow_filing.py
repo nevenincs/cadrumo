@@ -6,15 +6,16 @@ import pytest
 
 from ....core import Period
 from ._file_flow_support import (
-    _DEFAULT_130_BASELINE_INPUTS,
-    _DEFAULT_130_BINDING_VALUES,
-    _M130_EXPENSE_CASILLA,
-    _M130_INCOME_CASILLA,
-    _T1,
-    _T2,
-    _T3,
-    _T4,
-    _T5,
+    DEFAULT_130_BASELINE_INPUTS,
+    DEFAULT_130_BINDING_VALUES,
+    M130_EXPENSE_CASILLA,
+    M130_INCOME_CASILLA,
+    T1,
+    T2,
+    T3,
+    T4,
+    T5,
+    AuthProvider,
     BucketEventType,
     CalculationRevisionState,
     CalculationRevisionStateError,
@@ -22,55 +23,54 @@ from ._file_flow_support import (
     ModeloRecordNotFoundError,
     ModeloRecordStatus,
     ModeloWorkflowGateError,
+    Repos,
     WorkflowAbortReason,
     WorkflowStage,
-    _AuthProvider,
-    _file_revision,
-    _Repos,
-    _seed_work_unit,
-    _target_filing_records,
-    _verify_revision,
-    _workflow_profile,
     calculate_modelo_revision,
     file_modelo_revision,
+    file_revision,
     get_calculation_revision,
     get_filing_record,
     get_work_unit,
     list_filing_records,
+    seed_work_unit,
+    target_filing_records,
+    verify_revision,
+    workflow_profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_file_requires_verificado_completo_state(repos: _Repos) -> None:
+def test_file_requires_verificado_completo_state(repos: Repos) -> None:
     """A borrador revision cannot be filed; only verificado-completo
     revisions are eligible."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={_M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
     with pytest.raises(CalculationRevisionStateError, match=r"state|verified|VERIFIED"):
         file_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-A",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             filing_repository=fr_repo,
             bucket_event_repository=bv_repo,
-            clock=_T2,
+            clock=T2,
         )
 
 
-def test_file_creates_filing_record_and_advances_pointers(repos: _Repos) -> None:
+def test_file_creates_filing_record_and_advances_pointers(repos: Repos) -> None:
     """The happy-path file flow: calculate → verify
     → file. After file: a ModeloRecord exists, the revision is in
     FILED state, the work unit's filed_calculation_revision_id and
@@ -78,18 +78,18 @@ def test_file_creates_filing_record_and_advances_pointers(repos: _Repos) -> None
     filing-record current_for(...) resolves to the new record."""
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = seed_work_unit(wu_repo)
 
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, _M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
-    _verify_revision(
+    verify_revision(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -99,9 +99,9 @@ def test_file_creates_filing_record_and_advances_pointers(repos: _Repos) -> None
         verification_repository=vr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T2,
+        clock=T2,
     )
-    filing = _file_revision(
+    filing = file_revision(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -111,7 +111,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos: _Repos) -> None
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T3,
+        clock=T3,
     )
 
     assert filing.status is ModeloRecordStatus.VIGENTE
@@ -125,7 +125,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos: _Repos) -> None
         calculation_repository=cr_repo,
     )
     assert refreshed_revision.state is CalculationRevisionState.PRESENTADO
-    assert refreshed_revision.filed_at == _T3
+    assert refreshed_revision.filed_at == T3
     assert refreshed_revision.filed_by == "operator-A"
 
     refreshed_wu = get_work_unit(
@@ -151,7 +151,7 @@ def test_file_creates_filing_record_and_advances_pointers(repos: _Repos) -> None
     assert current.filing_record_id == filing.filing_record_id
 
 
-def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_blocks(repos: _Repos) -> None:
+def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_blocks(repos: Repos) -> None:
     """The file transition is gated by WorkflowEngine.run_for_period.
 
     When submission preflight refuses, the calculation revision remains
@@ -160,17 +160,17 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
     """
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, _M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
-    _verify_revision(
+    verify_revision(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -180,12 +180,12 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
         verification_repository=vr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T2,
+        clock=T2,
     )
 
-    unavailable_provider = _AuthProvider(available=False)
+    unavailable_provider = AuthProvider(available=False)
     with pytest.raises(ModeloWorkflowGateError) as gate_error:
-        _file_revision(
+        file_revision(
             revision.calculation_revision_id,
             revision=revision,
             work_unit=work_unit,
@@ -194,7 +194,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
             calculation_repository=cr_repo,
             filing_repository=fr_repo,
             bucket_event_repository=bv_repo,
-            clock=_T3,
+            clock=T3,
             auth_provider=unavailable_provider,
         )
     assert gate_error.value.result.final_stage is WorkflowStage.ABORTED
@@ -207,7 +207,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
         calculation_repository=cr_repo,
     )
     assert refreshed_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
-    assert _target_filing_records(list_filing_records(filing_repository=fr_repo), work_unit) == ()
+    assert target_filing_records(list_filing_records(filing_repository=fr_repo), work_unit) == ()
     filed_events = bv_repo.load().for_bucket(
         work_unit.bucket_id,
         event_types=(BucketEventType.MODELO_FILED,),
@@ -215,7 +215,7 @@ def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_
     assert filed_events == ()
 
 
-def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos: _Repos) -> None:
+def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos: Repos) -> None:
     """The ``NO_PENDING_OBLIGATION`` guard stays on the filing path.
 
     Deadline-independence applies to ``verify`` only. Filing a modelo
@@ -225,17 +225,17 @@ def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos: _R
     """
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo, filing_year=2024)
+    work_unit = seed_work_unit(wu_repo, filing_year=2024)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
-    _verify_revision(
+    verify_revision(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -244,11 +244,11 @@ def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos: _R
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T2,
+        clock=T2,
     )
 
     with pytest.raises(ModeloWorkflowGateError) as gate_error:
-        _file_revision(
+        file_revision(
             revision.calculation_revision_id,
             revision=revision,
             work_unit=work_unit,
@@ -257,7 +257,7 @@ def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos: _R
             calculation_repository=cr_repo,
             filing_repository=fr_repo,
             bucket_event_repository=bv_repo,
-            clock=_T3,
+            clock=T3,
         )
 
     assert gate_error.value.result.aborted_reason is WorkflowAbortReason.NO_PENDING_OBLIGATION
@@ -285,7 +285,7 @@ def test_file_still_refuses_a_closed_past_period_no_pending_obligation(repos: _R
     assert "filing-obligation window is not open" in gate_error.value.result.summary
 
 
-def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> None:
+def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> None:
     """Re-filing a later verified revision supersedes the prior
     filing. The prior filing record moves to SUPERSEDED with the
     supersession metadata captured; the prior calculation revision
@@ -294,19 +294,19 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
     filed_at order."""
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = seed_work_unit(wu_repo)
 
     # First filing: revision-1, filed at T3.
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, _M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
-    _verify_revision(
+    verify_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
         work_unit=work_unit,
@@ -316,9 +316,9 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
         verification_repository=vr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T2,
+        clock=T2,
     )
-    filing_one = _file_revision(
+    filing_one = file_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
         work_unit=work_unit,
@@ -327,24 +327,24 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T3,
+        clock=T3,
     )
 
     # Second filing: revision-2 with corrected inputs, filed at T5.
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs={
-            **_DEFAULT_130_BASELINE_INPUTS,
-            _M130_INCOME_CASILLA: Decimal("1200"),
-            _M130_EXPENSE_CASILLA: Decimal("100"),
+            **DEFAULT_130_BASELINE_INPUTS,
+            M130_INCOME_CASILLA: Decimal("1200"),
+            M130_EXPENSE_CASILLA: Decimal("100"),
         },
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T4,
+        clock=T4,
     )
-    _verify_revision(
+    verify_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,
         work_unit=work_unit,
@@ -354,9 +354,9 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
         verification_repository=vr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T4,
+        clock=T4,
     )
-    filing_two = _file_revision(
+    filing_two = file_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,
         work_unit=work_unit,
@@ -366,7 +366,7 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T5,
+        clock=T5,
     )
 
     # New filing is current.
@@ -383,7 +383,7 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
         filing_repository=fr_repo,
     )
     assert refreshed_filing_one.status is ModeloRecordStatus.SUPERSEDIDO
-    assert refreshed_filing_one.superseded_at == _T5
+    assert refreshed_filing_one.superseded_at == T5
     assert refreshed_filing_one.superseded_by_filing_record_id == filing_two.filing_record_id
 
     refreshed_revision_one = get_calculation_revision(
@@ -391,7 +391,7 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
         calculation_repository=cr_repo,
     )
     assert refreshed_revision_one.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
-    assert refreshed_revision_one.superseded_at == _T5
+    assert refreshed_revision_one.superseded_at == T5
 
     # current_for resolves to the new filing only.
     catalogue = fr_repo.load()
@@ -425,23 +425,23 @@ def test_filing_record_supersession_preserves_audit_history(repos: _Repos) -> No
     assert refreshed_wu.current_filing_record_id == filing_two.filing_record_id
 
 
-def test_list_filing_records_excludes_superseded_by_default(repos: _Repos) -> None:
+def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> None:
     """The default listing surfaces operator-visible state (current
     filings). Pass include_superseded=True to walk audit history."""
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = seed_work_unit(wu_repo)
 
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, _M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
-    _verify_revision(
+    verify_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
         work_unit=work_unit,
@@ -451,9 +451,9 @@ def test_list_filing_records_excludes_superseded_by_default(repos: _Repos) -> No
         verification_repository=vr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T2,
+        clock=T2,
     )
-    _file_revision(
+    file_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
         work_unit=work_unit,
@@ -462,19 +462,19 @@ def test_list_filing_records_excludes_superseded_by_default(repos: _Repos) -> No
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T3,
+        clock=T3,
     )
 
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={**_DEFAULT_130_BASELINE_INPUTS, _M130_INCOME_CASILLA: Decimal("1200")},
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1200")},
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T4,
+        clock=T4,
     )
-    _verify_revision(
+    verify_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,
         work_unit=work_unit,
@@ -484,9 +484,9 @@ def test_list_filing_records_excludes_superseded_by_default(repos: _Repos) -> No
         verification_repository=vr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T4,
+        clock=T4,
     )
-    _file_revision(
+    file_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,
         work_unit=work_unit,
@@ -495,13 +495,13 @@ def test_list_filing_records_excludes_superseded_by_default(repos: _Repos) -> No
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T5,
+        clock=T5,
     )
 
     default_listing = list_filing_records(
         filing_repository=fr_repo,
     )
-    target_default_listing = _target_filing_records(default_listing, work_unit)
+    target_default_listing = target_filing_records(default_listing, work_unit)
     assert len(target_default_listing) == 1
     assert target_default_listing[0].status is ModeloRecordStatus.VIGENTE
 
@@ -509,11 +509,11 @@ def test_list_filing_records_excludes_superseded_by_default(repos: _Repos) -> No
         include_superseded=True,
         filing_repository=fr_repo,
     )
-    assert len(_target_filing_records(with_history, work_unit)) == 2
+    assert len(target_filing_records(with_history, work_unit)) == 2
 
 
-def test_list_filing_records_orders_multiple_periods_without_period_comparison(repos: _Repos) -> None:
-    from ....domain.modelos import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
+def test_list_filing_records_orders_multiple_periods_without_period_comparison(repos: Repos) -> None:
+    from ....domain.modelos import ModeloCode, ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
 
     _, _, fr_repo, _, _ = repos
     q1 = Period.from_year_and_code(2025, "1T")
@@ -522,32 +522,32 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
         filing_record_id=derive_filing_record_id(
             work_unit_id="1" * 64,
             calculation_revision_id="2" * 64,
-            filed_at=_T1,
+            filed_at=T1,
             filed_by="operator-A",
         ),
         work_unit_id="1" * 64,
         calculation_revision_id="2" * 64,
         bucket_id="bucket-a",
-        modelo="130",
+        modelo=ModeloCode("130"),
         filing_year=2025,
         period=q1,
-        filed_at=_T1,
+        filed_at=T1,
         filed_by="operator-A",
     )
     record_2 = ModeloRecord(
         filing_record_id=derive_filing_record_id(
             work_unit_id="3" * 64,
             calculation_revision_id="4" * 64,
-            filed_at=_T2,
+            filed_at=T2,
             filed_by="operator-A",
         ),
         work_unit_id="3" * 64,
         calculation_revision_id="4" * 64,
         bucket_id="bucket-a",
-        modelo="130",
+        modelo=ModeloCode("130"),
         filing_year=2025,
         period=q2,
-        filed_at=_T2,
+        filed_at=T2,
         filed_by="operator-A",
     )
     fr_repo.save(
@@ -564,7 +564,7 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
     assert tuple(record.period.registry_token for record in listed) == ("1T", "2T")
 
 
-def test_get_filing_record_raises_on_missing_id(repos: _Repos) -> None:
+def test_get_filing_record_raises_on_missing_id(repos: Repos) -> None:
     _, _, fr_repo, _, _ = repos
     with pytest.raises(ModeloRecordNotFoundError) as excinfo:
         get_filing_record(

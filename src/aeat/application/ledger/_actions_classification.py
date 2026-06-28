@@ -48,6 +48,7 @@ from ._actions_common import (
     _transaction_repository,
 )
 from ._actions_manual import _command_from_patch, _prepare_manual_transaction_update, update_manual_transaction_fields
+from ._id_resolution import resolve_transaction_id
 from ._models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
     ApplyRulesAppliedRow,
@@ -173,15 +174,17 @@ def bulk_classify_from_csv(
             taxable_base=row.taxable_base,
             iva_rate=row.iva_rate,
             iva_amount=row.iva_amount,
+            iva_category=row.iva_category,
         )
         try:
-            current = _require_transaction(working, row.transaction_id)
+            resolved_transaction_id = resolve_transaction_id(row.transaction_id, working.transactions.keys())
+            current = _require_transaction(working, resolved_transaction_id)
             if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
                 raise TransactionValidationError(
                     "only active ledger transactions can be edited; archived, stashed, "
                     "and split-parent rows are immutable",
                     context={
-                        "transaction_id": row.transaction_id,
+                        "transaction_id": resolved_transaction_id,
                         "lifecycle_state": current.lifecycle_state.value,
                     },
                 )
@@ -203,7 +206,7 @@ def bulk_classify_from_csv(
             prepared = _prepare_manual_transaction_update(
                 current=current,
                 command=command,
-                previous_transaction_id=row.transaction_id,
+                previous_transaction_id=resolved_transaction_id,
                 now=now,
             )
             if prepared is None:
@@ -211,11 +214,11 @@ def bulk_classify_from_csv(
                 skipped += 1
                 continue
             replacement, events = prepared
-            working = _replace_transaction(working, old_transaction_id=row.transaction_id, replacement=replacement)
+            working = _replace_transaction(working, old_transaction_id=resolved_transaction_id, replacement=replacement)
             all_events.extend(events)
             all_event_ids.extend(event.event_id for event in events)
             applied += 1
-        except (AeatError, ValidationError) as exc:
+        except (AeatError, ValidationError, ValueError) as exc:
             apply_failures.append(
                 BulkClassifyFailure(
                     row_index=idx,

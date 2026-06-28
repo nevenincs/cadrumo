@@ -7,28 +7,29 @@ import pytest
 from ....core import Period
 from ....domain.calculations.registry import CasillaId
 from ._file_flow_support import (
-    _DEFAULT_130_BASELINE_INPUTS,
-    _DEFAULT_130_BINDING_VALUES,
-    _DEFAULT_180_BINDING_VALUES,
-    _DEFAULT_180_RELATION_VALUES,
-    _M111_ACTIVITY_AMOUNT_CASILLA,
-    _M111_ACTIVITY_COUNT_CASILLA,
-    _M111_ACTIVITY_WITHHELD_CASILLA,
-    _M111_EMPLOYMENT_WITHHELD_CASILLA,
-    _M111_FORESTRY_WITHHELD_CASILLA,
-    _M111_IMAGE_RIGHTS_WITHHELD_CASILLA,
-    _M111_IMPUTED_INCOME_WITHHELD_CASILLA,
-    _M111_PRIZE_WITHHELD_CASILLA,
-    _M111_PROFESSIONAL_WITHHELD_CASILLA,
-    _M111_TOTAL_WITHHELD_CASILLA,
-    _M180_PERCEPTOR_BASE_CASILLA,
-    _T0,
-    _T1,
-    _T2,
-    _T3,
-    _VERIFY_MODELO,
-    _VERIFY_PERIOD,
-    _VERIFY_REVISION,
+    DEFAULT_130_BASELINE_INPUTS,
+    DEFAULT_130_BINDING_VALUES,
+    DEFAULT_180_BINDING_VALUES,
+    DEFAULT_180_RELATION_VALUES,
+    M111_ACTIVITY_AMOUNT_CASILLA,
+    M111_ACTIVITY_COUNT_CASILLA,
+    M111_ACTIVITY_WITHHELD_CASILLA,
+    M111_EMPLOYMENT_WITHHELD_CASILLA,
+    M111_FORESTRY_WITHHELD_CASILLA,
+    M111_IMAGE_RIGHTS_WITHHELD_CASILLA,
+    M111_IMPUTED_INCOME_WITHHELD_CASILLA,
+    M111_PRIZE_WITHHELD_CASILLA,
+    M111_PROFESSIONAL_WITHHELD_CASILLA,
+    M111_TOTAL_WITHHELD_CASILLA,
+    M180_PERCEPTOR_BASE_CASILLA,
+    T0,
+    T1,
+    T2,
+    T3,
+    VERIFY_MODELO,
+    VERIFY_PERIOD,
+    VERIFY_REVISION,
+    AuthProvider,
     BucketEventType,
     CalculationRevisionNotFoundError,
     CalculationRevisionState,
@@ -37,40 +38,39 @@ from ._file_flow_support import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     ModeloWorkflowGateError,
+    Repos,
     VerificationCompletenessStatus,
     VerificationReportNotFoundError,
     WorkflowPurpose,
     WorkflowStage,
-    _AuthProvider,
-    _canonical_work_unit_period,
-    _registry_required_manual_casillas,
-    _registry_required_manual_casillas_for,
-    _Repos,
-    _seed_clean_cross_period_sources,
-    _seed_modelo_180_work_unit,
-    _seed_work_unit,
-    _verify_revision,
-    _workflow_gate,
-    _workflow_profile,
     asyncio,
     calculate_modelo_revision,
+    canonical_work_unit_period,
     create_work_unit,
     get_calculation_revision,
     get_verification_report,
     list_verification_reports,
     mark_revision_verificado_completo,
+    registry_required_manual_casillas,
+    registry_required_manual_casillas_for,
+    seed_clean_cross_period_sources,
+    seed_modelo_180_work_unit,
+    seed_work_unit,
     verify_modelo_revision,
+    verify_revision,
+    workflow_gate,
+    workflow_profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_mark_verificado_completo_requires_borrador_state(repos: _Repos) -> None:
+def test_mark_verificado_completo_requires_borrador_state(repos: Repos) -> None:
     """A revision in any state other than BORRADOR cannot be marked
     verificado-completo."""
 
     wu_repo, cr_repo, _, _, bv_repo = repos
-    work_unit = _seed_work_unit(
+    work_unit = seed_work_unit(
         wu_repo,
         modelo="111",
         filing_year=2026,
@@ -80,27 +80,27 @@ def test_mark_verificado_completo_requires_borrador_state(repos: _Repos) -> None
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs={
-            _M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
-            _M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
-            _M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
-            _M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
-            _M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
-            _M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
-            _M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
-            _M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
-            _M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
-            _M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
+            M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
+            M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
+            M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
+            M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
+            M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
+            M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
+            M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
+            M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
+            M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
+            M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
         },
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
     verified = mark_revision_verificado_completo(
         revision.calculation_revision_id,
         actor="operator-A",
         calculation_repository=cr_repo,
-        clock=_T2,
+        clock=T2,
     )
     assert verified.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
@@ -110,11 +110,11 @@ def test_mark_verificado_completo_requires_borrador_state(repos: _Repos) -> None
             revision.calculation_revision_id,
             actor="operator-A",
             calculation_repository=cr_repo,
-            clock=_T3,
+            clock=T3,
         )
 
 
-def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos: _Repos) -> None:
+def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos: Repos) -> None:
     """A granted verification must still pass the WorkflowEngine gate.
 
     Auth/preflight blockers abort before the verified-complete state,
@@ -122,20 +122,20 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
     """
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
 
-    unavailable_provider = _AuthProvider(available=False)
+    unavailable_provider = AuthProvider(available=False)
     with pytest.raises(ModeloWorkflowGateError) as gate_error:
-        _verify_revision(
+        verify_revision(
             revision.calculation_revision_id,
             revision=revision,
             work_unit=work_unit,
@@ -144,7 +144,7 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
             calculation_repository=cr_repo,
             verification_repository=vr_repo,
             bucket_event_repository=bv_repo,
-            clock=_T2,
+            clock=T2,
             auth_provider=unavailable_provider,
         )
     assert gate_error.value.result.final_stage is WorkflowStage.ABORTED
@@ -174,7 +174,7 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
     assert verification_events == ()
 
 
-def test_verify_grants_for_a_closed_past_period_real_registry(repos: _Repos) -> None:
+def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos) -> None:
     """``work verify`` is independent of the AEAT filing calendar.
 
     A modelo 130 calculation for 2024 Q1 — whose filing window closed
@@ -187,19 +187,19 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: _Repos) -> 
     """
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo, filing_year=2024)
+    work_unit = seed_work_unit(wu_repo, filing_year=2024)
 
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
 
-    report = _verify_revision(
+    report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -208,7 +208,7 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: _Repos) -> 
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T2,
+        clock=T2,
     )
 
     assert report.granted_verificado_completo is True
@@ -221,7 +221,7 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: _Repos) -> 
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
 
 
-def test_verify_records_deadline_state_as_informational_not_abort(repos: _Repos) -> None:
+def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) -> None:
     """The verify run's ``COMPUTING_DEADLINES`` step never aborts.
 
     For a closed past period it records the filing-window state as an
@@ -230,24 +230,24 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: _Repos)
     """
 
     wu_repo, cr_repo, _, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo, filing_year=2024)
+    work_unit = seed_work_unit(wu_repo, filing_year=2024)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
 
-    gate = _workflow_gate(revision=revision, work_unit=work_unit, clock=_T2)
+    gate = workflow_gate(revision=revision, work_unit=work_unit, clock=T2)
     result = asyncio.run(
         gate.engine.run_for_period(
             gate.profile,
             work_unit.modelo,
-            _canonical_work_unit_period(work_unit),
-            today=_T2.date(),
+            canonical_work_unit_period(work_unit),
+            today=T2.date(),
             purpose=WorkflowPurpose.VERIFY,
         ),
     )
@@ -262,7 +262,7 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: _Repos)
     assert deadline_step.details["deadline_role"] == "informational"
 
 
-def test_get_calculation_revision_raises_on_missing_id(repos: _Repos) -> None:
+def test_get_calculation_revision_raises_on_missing_id(repos: Repos) -> None:
     _, cr_repo, _, _, _ = repos
     with pytest.raises(CalculationRevisionNotFoundError):
         get_calculation_revision(
@@ -272,7 +272,7 @@ def test_get_calculation_revision_raises_on_missing_id(repos: _Repos) -> None:
 
 
 def test_verify_grants_when_all_required_casillas_present_real_registry(
-    repos: _Repos,
+    repos: Repos,
 ) -> None:
     """Real e2e: registry resolves modelo 180 (2024, 0A); every required
     manual casilla is supplied; the verifier persists a granted report
@@ -281,8 +281,8 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     SQL repository encrypts on save and decrypts on load."""
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
-    required = _registry_required_manual_casillas_for(
+    work_unit = seed_work_unit(wu_repo)
+    required = registry_required_manual_casillas_for(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
@@ -290,15 +290,15 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
 
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
 
-    report = _verify_revision(
+    report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -307,7 +307,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T2,
+        clock=T2,
     )
 
     assert report.granted_verificado_completo is True
@@ -326,7 +326,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
         calculation_repository=cr_repo,
     )
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
-    assert refreshed.verified_at == _T2
+    assert refreshed.verified_at == T2
     assert refreshed.verified_by == "operator-A"
 
     # Round-trip through encrypted storage.
@@ -339,7 +339,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
 
 
 def test_verify_refuses_when_required_casilla_missing_real_registry(
-    repos: _Repos,
+    repos: Repos,
 ) -> None:
     """Real e2e: omit one required casilla; the verifier emits a
     BLOCKING ``MISSING_REQUIRED_CASILLA`` finding for it; the
@@ -347,24 +347,24 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     the audit trail records the refusal."""
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    required = _registry_required_manual_casillas()
+    required = registry_required_manual_casillas()
     assert len(required) >= 2
 
     omitted = required[0]
     supplied = {cid: Decimal("1") for cid in required[1:]}
 
-    work_unit = _seed_modelo_180_work_unit(wu_repo)
+    work_unit = seed_modelo_180_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_inputs=supplied,
-        binding_values=_DEFAULT_180_BINDING_VALUES,
-        relation_values=_DEFAULT_180_RELATION_VALUES,
+        binding_values=DEFAULT_180_BINDING_VALUES,
+        relation_values=DEFAULT_180_RELATION_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
-    _seed_clean_cross_period_sources(
+    seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -375,12 +375,12 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-A",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T2,
+        clock=T2,
     )
 
     assert report.granted_verificado_completo is False
@@ -407,7 +407,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
 
 
 def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
-    repos: _Repos,
+    repos: Repos,
 ) -> None:
     """Real e2e: a work unit anchored to a year that predates modelo
     180's earliest revision (``valid_from=2019``) cannot resolve a
@@ -418,12 +418,12 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
 
     work_unit = create_work_unit(
         bucket_id="default",
-        modelo=_VERIFY_MODELO,
+        modelo=VERIFY_MODELO,
         filing_year=2010,
-        period=Period.from_year_and_code(2010, _VERIFY_PERIOD),
-        revision_id=_VERIFY_REVISION,
+        period=Period.from_year_and_code(2010, VERIFY_PERIOD),
+        revision_id=VERIFY_REVISION,
         repository=wu_repo,
-        clock=_T0,
+        clock=T0,
     )
     # Direct-seed a DRAFT revision because ``calculate_modelo_revision``
     # now runs the formula engine and would refuse the unresolvable
@@ -432,17 +432,15 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     # year that predates the modelo's earliest revision, so verify's
     # registry-snapshot resolution still fails.
     from ....domain.calculations.registry import CasillaObservation
-    from ....domain.modelos._calculation_repository import (
-        upsert_calculation_revision,
-    )
-    from ....domain.modelos._calculation_revision import (
+    from ....domain.modelos import (
         CalculationRevision,
         derive_calculation_revision_id,
+        upsert_calculation_revision,
     )
 
-    inputs: dict[CasillaId, str] = {_M180_PERCEPTOR_BASE_CASILLA: "1"}
+    inputs: dict[CasillaId, str] = {M180_PERCEPTOR_BASE_CASILLA: "1"}
     overrides_map: dict[str, str] = {}
-    casillas: dict[CasillaId, Decimal] = {_M180_PERCEPTOR_BASE_CASILLA: Decimal("1")}
+    casillas: dict[CasillaId, Decimal] = {M180_PERCEPTOR_BASE_CASILLA: Decimal("1")}
     rid = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id=inputs,
@@ -458,26 +456,26 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         casilla_values=casillas,
         observations=(
             CasillaObservation(
-                casilla_id=_M180_PERCEPTOR_BASE_CASILLA,
+                casilla_id=M180_PERCEPTOR_BASE_CASILLA,
                 value=Decimal("1"),
                 legal_refs=("ley-58-2003:art-93",),
                 source_refs=("verify-unresolved-registry-test",),
             ),
         ),
-        created_at=_T1,
-        updated_at=_T1,
+        created_at=T1,
+        updated_at=T1,
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
 
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-A",
-        workflow_profile=_workflow_profile(),
+        workflow_profile=workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T2,
+        clock=T2,
     )
 
     assert report.granted_verificado_completo is False
@@ -491,23 +489,23 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     assert refreshed.state is CalculationRevisionState.BORRADOR
 
 
-def test_verify_rejects_non_borrador_revision_real_registry(repos: _Repos) -> None:
+def test_verify_rejects_non_borrador_revision_real_registry(repos: Repos) -> None:
     """Real e2e: a verificado-completo revision cannot be re-verified.
     The operator must produce a fresh draft (which lands as BORRADOR)
     to verify again."""
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
-    _verify_revision(
+    verify_revision(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -516,38 +514,38 @@ def test_verify_rejects_non_borrador_revision_real_registry(repos: _Repos) -> No
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T2,
+        clock=T2,
     )
 
     with pytest.raises(CalculationRevisionStateError, match=r"state|verify|verified|already"):
         verify_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-A",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=workflow_profile(),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             verification_repository=vr_repo,
             bucket_event_repository=bv_repo,
-            clock=_T3,
+            clock=T3,
         )
 
 
-def test_list_and_get_verification_reports_real_registry(repos: _Repos) -> None:
+def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
     """Real e2e: reports persist through the encrypted catalogue and
     are indexable by id and by calculation_revision_id."""
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
-        binding_values=_DEFAULT_130_BINDING_VALUES,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values=DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T1,
+        clock=T1,
     )
-    report = _verify_revision(
+    report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
         work_unit=work_unit,
@@ -556,7 +554,7 @@ def test_list_and_get_verification_reports_real_registry(repos: _Repos) -> None:
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         bucket_event_repository=bv_repo,
-        clock=_T2,
+        clock=T2,
     )
 
     listed = list_verification_reports(

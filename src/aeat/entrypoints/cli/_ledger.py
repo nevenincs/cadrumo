@@ -419,7 +419,7 @@ _FromCsvOpt = Annotated[
             "cli.ledger.classify.from_csv_help",
             default=(
                 "Path to a CSV file with columns transaction_id, classification"
-                "[, category_id, business_pct, taxable_base, iva_rate, iva_amount]."
+                "[, category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category]."
             ),
         ),
     ),
