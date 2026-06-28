@@ -2811,9 +2811,10 @@ cli:
         los ingresos no necesitan categoría)
       classification_help: Estado de clasificación profesional del movimiento
       classification_required: --classification es obligatorio cuando no se usa --from-csv.
-      counterparty_eu_member_state_help: Estado miembro de la UE de la contraparte
-        (ISO 3166-1 alfa-2 minúsculas, p. ej. de); obligatorio con --iva-category
-        intra_community_supply, prohibido con export_third_country_zero_rated
+      counterparty_eu_member_state_help: Estado miembro de la UE o prefijo IVA
+        de Irlanda del Norte de la contraparte (ISO 3166-1 alfa-2 minúsculas, p.
+        ej. de o xi); obligatorio con --iva-category intra_community_supply,
+        prohibido con export_third_country_zero_rated
       evidence_acknowledged_help: Confirma que leer la evidencia con un proveedor
         en la nube la sube fuera de tu equipo (lo exige la verificacion de consentimiento).
       from_csv_exclusive: --from-csv no puede combinarse con un id de transacción

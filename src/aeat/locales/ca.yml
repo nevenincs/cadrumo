@@ -2771,9 +2771,9 @@ cli:
         els ingressos no necessiten categoria)
       classification_help: Estat de classificació professional del moviment
       classification_required: --classification és obligatori quan no s'usa --from-csv.
-      counterparty_eu_member_state_help: Estat membre de la UE de la contrapart (ISO
-        3166-1 alfa-2 minúscules, p. ex. de); obligatori amb --iva-category intra_community_supply,
-        prohibit amb export_third_country_zero_rated
+      counterparty_eu_member_state_help: Estat membre de la UE o prefix IVA d'Irlanda
+        del Nord de la contrapart (ISO 3166-1 alfa-2 minúscules, p. ex. de o xi);
+        obligatori amb --iva-category intra_community_supply, prohibit amb export_third_country_zero_rated
       evidence_acknowledged_help: Confirma que llegir l'evidencia amb un proveidor
         al nuvol la puja fora del teu equip (ho exigeix la verificacio de consentiment).
       from_csv_exclusive: --from-csv no pot combinar-se amb un id de transacció ni

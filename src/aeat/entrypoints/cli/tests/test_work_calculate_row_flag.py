@@ -375,17 +375,19 @@ class TestRevisionViewSurfacesDetailRows:
             os.environ["AEAT_SECRET_STORE_BACKEND"] = "file"
             os.environ["AEAT_SECRET_STORE_DIR"] = {str(storage_root / "secrets")!r}
             os.environ["AEAT_SECRET_PASSPHRASE"] = "row-flag-revision-view-passphrase"
-            from click.testing import CliRunner
-            from typer.main import get_command
-            from aeat.entrypoints.cli import app
+            sys.argv = ["aeat", *{argv!r}]
+            from aeat.entrypoints.cli import main
 
-            result = CliRunner().invoke(get_command(app), {argv!r})
-            sys.stdout.write(result.output)
-            sys.exit(result.exit_code)
+            try:
+                main()
+            except SystemExit as exit_:
+                raise SystemExit(exit_.code)
             """
         return subprocess.run(
             [sys.executable, "-c", textwrap.dedent(code)],
             capture_output=True,
+            encoding="utf-8",
+            errors="replace",
             text=True,
             timeout=300,
             check=False,
@@ -587,12 +589,81 @@ class TestRevisionViewSurfacesDetailRows:
         assert len(text) % 500 == 0, f"unexpected M349 fixed-width length: {len(text)}"
         records = [text[index : index + 500] for index in range(0, len(text), 500)]
         operator_records = {
-            record[75:77]: record
-            for record in records
-            if record.startswith("2349") and not record[146:178].strip()
+            record[75:77]: record for record in records if record.startswith("2349") and not record[146:178].strip()
         }
 
         assert operator_records["DE"][77:92].rstrip() == "123456789"
         assert operator_records["FR"][77:92].rstrip() == "12345678901"
         assert "DEDE123456789" not in text
         assert "FRFR12345678901" not in text
+
+    def test_m349_post_transition_gb_operador_row_fails_before_calculation(self, tmp_path: Path) -> None:
+        """Ordinary post-transition GB rows are refused at the CLI calculation boundary."""
+        setup = self._run_cli(
+            tmp_path,
+            [
+                "config",
+                "profile",
+                "create",
+                "m349-gb",
+                "--tax-id",
+                "12345678Z",
+                "--entity-type",
+                "natural_person",
+                "--name",
+                "Ana",
+                "--surnames",
+                "M349",
+                "--irpf-income-categories",
+                "actividad_economica",
+                "--activity",
+                "consultoria intracomunitaria",
+                "--quiet",
+            ],
+        )
+        assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
+        created = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--revision",
+                "2020-y-siguientes",
+            ],
+        )
+        assert created.returncode == 0, f"work create failed: {created.stdout}\n{created.stderr}"
+
+        calc = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--row",
+                (
+                    "operador codigo_pais=GB nif_comunitario=GB123456789 razon_social=EntidadGB "
+                    "clave_operacion=E importe=1500.00"
+                ),
+            ],
+        )
+
+        output = calc.stdout + calc.stderr
+        assert calc.returncode != 0, output
+        assert "post-transition" in output
+        assert "GB" in output
+        assert "casilla\tdecl.numero-operadores" not in output

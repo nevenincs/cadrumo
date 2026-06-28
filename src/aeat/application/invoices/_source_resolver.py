@@ -16,6 +16,7 @@ from ...domain.calculations.registry import InvoiceObservation, resolve_invoice_
 from ...domain.invoices import Invoice, InvoiceCatalogueRepository
 from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind, IvaCategory
+from ...domain.modelos import validate_m349_country_prefix_context
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
@@ -79,7 +80,7 @@ class InvoiceCatalogueSourceResolver:
         observed = tuple(
             (invoice, observation)
             for invoice in source_invoices
-            if (observation := _invoice_observation(invoice)) is not None
+            if (observation := _invoice_observation(invoice, context=context)) is not None
         )
         observations = tuple(observation for _, observation in observed)
         return CalculationSourceResolution(
@@ -113,10 +114,17 @@ def _invoice_source_kind(invoice: Invoice) -> str:
     return invoice_direction_to_source_kind(invoice.kind).value
 
 
-def _invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
+def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:
     clave = _intracommunity_clave(invoice)
     if clave is None:
         return None
+    if str(context.modelo) == "349":
+        validate_m349_country_prefix_context(
+            country_code=invoice.counterparty_country,
+            clave_operacion=clave,
+            filing_year=context.filing_year,
+            period=context.period.registry_token,
+        )
     return InvoiceObservation(
         invoice_id=invoice.invoice_id,
         party_tax_id=invoice.counterparty_tax_id,

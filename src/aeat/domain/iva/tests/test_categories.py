@@ -50,9 +50,10 @@ def test_iva_category_values_roundtrip_through_strenum() -> None:
         assert IvaCategory(member.value) is member
 
 
-def test_eu_member_state_has_27_members() -> None:
-    """EUMemberState must cover the 27 current EU member states."""
-    assert len(list(EUMemberState)) == 27
+def test_eu_member_state_has_27_strict_member_states_plus_xi_prefix() -> None:
+    """EUMemberState covers the 27 EU states plus the post-Brexit XI IVA prefix."""
+    assert len([member for member in EUMemberState if member is not EUMemberState.XI]) == 27
+    assert EUMemberState.XI.value == "xi"
 
 
 def test_iva_rate_kind_has_five_tiers() -> None:
