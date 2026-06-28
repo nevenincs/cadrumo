@@ -1119,6 +1119,9 @@ application:
         from an interactive terminal to use the guided setup.'
       create_missing_filing_baseline: 'Profile creation is missing filing identity
         details. Add these flags and run the command again: %{missing_flags}.'
+      edit_missing_filing_baseline: 'This profile edit would leave filing identity
+        details incomplete. Add these flags to the same command and run it again:
+        %{missing_flags}.'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -2290,6 +2293,9 @@ cli:
         the profile bundle schema.'
       import_invalid_tax_id: 'The profile bundle''s tax identifier is invalid: %{error}.
         Fix the identifier and re-export, or import a valid bundle.'
+      import_missing_filing_baseline: 'The profile bundle is missing filing identity
+        details. Fix the bundle or re-export a complete profile with these fields:
+        %{missing_flags}.'
       import_label_help: Display name for the imported profile; defaults to the name
         stored in the bundle. Use it to import a second copy under a fresh label.
       import_label_taken: A profile named %{name} already exists. Re-run with `--label
