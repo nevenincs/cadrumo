@@ -63,6 +63,16 @@ def test_link_help_advertises_local_only() -> None:
     )
 
 
+def test_link_help_names_catalogue_create_for_invoice_id() -> None:
+    """``--invoice-id`` help must name the command that mints linkable ids."""
+
+    result = invoke_cached_cli(["app", "ledger", "link", "--help"], env={"COLUMNS": "240"})
+
+    assert result.exit_code == 0, result.output
+    assert "aeat app ledger invoice catalogue create" in result.output
+    assert "aeat app ledger invoice add" in result.output
+
+
 def test_check_empty_catalogue_is_ready() -> None:
     """An active bucket with no transactions reports ready=true via the
     no-period audit branch and emits zero issues."""
@@ -155,5 +165,6 @@ def test_link_refuses_operator_invoice_add_id_instructively() -> None:
     # The shipped message is localized, so match the language-stable command
     # token plus the shared evidence/`evidencia` stem rather than English prose.
     assert "invoice add" in lowered, linked.output
+    assert "invoice catalogue create" in lowered, linked.output
     assert "evidenc" in lowered, linked.output
     assert "traceback" not in lowered, linked.output

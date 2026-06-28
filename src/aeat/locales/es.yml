@@ -3031,7 +3031,9 @@ cli:
         invoice_not_found: Este id no existe en el catálogo de facturas de reconciliación,
           que se rellena con los flujos de importación y reconciliación de facturas.
           Los id generados por 'aeat app ledger invoice add' son registros de factura
-          del operador y no se pueden vincular aquí. Para adjuntar evidencia de factura
+          del operador y no se pueden vincular aquí. Para crear una factura de catálogo
+          vinculable manualmente, ejecuta 'aeat app ledger invoice catalogue create'
+          y pasa ese invoice_id a --invoice-id. Para adjuntar evidencia de factura
           de compra, ejecuta 'aeat app ledger link <tx> --evidence-id <id>' (o 'aeat
           app ledger attach') con un id de 'aeat app ledger evidence add'.
         missing_target: Indica al menos uno de --invoice-id o --evidence-id.
@@ -3042,8 +3044,9 @@ cli:
         entre buckets. Local; nunca contacta con AEAT.
       id_help: Id de transaccion del libro (SHA-256 o prefijo inequivoco).
       invoice_id_help: Id del catálogo de facturas enriquecido, procedente de una
-        factura importada o reconciliada, vinculado bidireccionalmente con el movimiento.
-        NO es un id de 'aeat app ledger invoice add'.
+        factura importada, reconciliada o creada con 'aeat app ledger invoice catalogue
+        create', vinculado bidireccionalmente con el movimiento. NO es un id de 'aeat
+        app ledger invoice add'.
     list:
       by_group_help: Agrupar el listado por etiqueta de grupo.
       column_header: "id\tid_completo\tfecha\timporte\tdescripción\testado_revisión"
