@@ -29,13 +29,12 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -50,32 +49,32 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def test_ledger_archive_refuses_without_yes(cli_runner: CliRunner) -> None:
+def test_ledger_archive_refuses_without_yes() -> None:
     """``aeat app ledger archive <any>`` without ``--yes`` is refused
     with a non-zero exit code; the confirm_required guard fires before
     any backend read."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", "archive", "any-transaction-id"])
+    result = invoke_cached_cli(["app", "ledger", "archive", "any-transaction-id"])
     assert result.exit_code != 0, result.output
 
 
-def test_ledger_remove_refuses_without_yes(cli_runner: CliRunner) -> None:
+def test_ledger_remove_refuses_without_yes() -> None:
     """``aeat app ledger remove <any>`` without ``--yes`` (and
     without ``--dry-run``) is refused with a non-zero exit code."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", "remove", "any-transaction-id"])
+    result = invoke_cached_cli(["app", "ledger", "remove", "any-transaction-id"])
     assert result.exit_code != 0, result.output
 
 
-def test_ledger_reset_refuses_without_yes(cli_runner: CliRunner) -> None:
+def test_ledger_reset_refuses_without_yes() -> None:
     """``aeat app ledger reset`` without ``--yes`` (and without
     ``--dry-run``) is refused with a non-zero exit code."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", "reset"])
+    result = invoke_cached_cli(["app", "ledger", "reset"])
     assert result.exit_code != 0, result.output
 
 
-def test_ledger_remove_with_dry_run_does_not_require_yes(cli_runner: CliRunner) -> None:
+def test_ledger_remove_with_dry_run_does_not_require_yes() -> None:
     """``aeat app ledger remove --dry-run <missing>`` proceeds past
     the confirm_required guard without ``--yes`` (the dry-run path is
     explicitly allowed to skip the safeguard since it has no side
@@ -83,8 +82,7 @@ def test_ledger_remove_with_dry_run_does_not_require_yes(cli_runner: CliRunner) 
     that failure is downstream of the safeguard; it never surfaces the
     ``confirm_required`` refusal."""
 
-    result = cli_runner.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "ledger", "remove", "missing-transaction-id", "--dry-run"],
     )
     # The dry-run path bypasses the confirm guard; the missing-id error
@@ -96,7 +94,7 @@ def test_ledger_remove_with_dry_run_does_not_require_yes(cli_runner: CliRunner) 
     assert "confirm" not in haystack or "dry" in haystack, result.output
 
 
-def test_config_reset_refuses_without_explicit_scope(cli_runner: CliRunner) -> None:
+def test_config_reset_refuses_without_explicit_scope() -> None:
     """``aeat config reset --yes`` with no ``--scope`` is refused.
 
     The most destructive scope (``all``, a full wipe) must never be an
@@ -104,27 +102,27 @@ def test_config_reset_refuses_without_explicit_scope(cli_runner: CliRunner) -> N
     profile, session, and stored row. The refusal must name the accepted
     scope set, never a bare "missing option".
     """
-    result = cli_runner.invoke(app, ["config", "reset", "--yes"])
+    result = invoke_cached_cli(["config", "reset", "--yes"])
     assert result.exit_code != 0, result.output
     combined = (result.output or "") + (result.stderr or "")
     for scope_token in ("profile", "auth", "data", "all"):
         assert scope_token in combined, combined
 
 
-def test_config_reset_scope_refusal_fires_before_yes_guard(cli_runner: CliRunner) -> None:
+def test_config_reset_scope_refusal_fires_before_yes_guard() -> None:
     """Bare ``aeat config reset`` names the scope contract first."""
-    result = cli_runner.invoke(app, ["config", "reset"])
+    result = invoke_cached_cli(["config", "reset"])
     assert result.exit_code != 0, result.output
     combined = (result.output or "") + (result.stderr or "")
     assert "--scope" in combined, combined
 
 
-def test_config_reset_with_explicit_scope_and_yes_executes(cli_runner: CliRunner) -> None:
+def test_config_reset_with_explicit_scope_and_yes_executes() -> None:
     """Anti-tautology: an explicit ``--scope auth --yes`` still executes.
 
     If this fails, the scope-required guard has started refusing the
     explicit form and the refusal tests above are meaningless.
     """
-    result = cli_runner.invoke(app, ["config", "reset", "--scope", "auth", "--yes"])
+    result = invoke_cached_cli(["config", "reset", "--scope", "auth", "--yes"])
     assert result.exit_code == 0, result.output
     assert "scope\tAUTH" in result.output, result.output

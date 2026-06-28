@@ -96,8 +96,8 @@ required_text = [
 #      period state flag `new_entity_first_two_profit_periods` is set,
 #      casilla 00558 = 15 % regardless of sub-form.
 #   2. Micro-empresa lane: if prior-period INCN is below 1.000.000 EUR,
-#      general-rate forms resolve through the existing reduced-rate echo
-#      surface (P04 will replace the scalar echo with a bracket-aware echo).
+#      general-rate forms resolve through the dated first-tranche display
+#      scalar that mirrors the bracket schedule used by cuota íntegra.
 #      Cooperativas and entidades sin fines lucrativos retain their special
 #      rates (20 % and 10 %) even when the INCN threshold is met.
 #   3. ERD art.101 lane: if prior-period INCN is below 10.000.000 EUR,
@@ -138,12 +138,12 @@ expression = { op = "if_then_else", args = [
             { literal = "0" },
             { binding = "modelo-200-2024-profile-legal-entity-form" },
             { dispatch_table_entries = [
-                { key = "sl", parameter = "is.modelo-200.tipo-gravamen-erd" },
-                { key = "sa", parameter = "is.modelo-200.tipo-gravamen-erd" },
-                { key = "sal", parameter = "is.modelo-200.tipo-gravamen-erd" },
-                { key = "sll", parameter = "is.modelo-200.tipo-gravamen-erd" },
-                { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-erd" },
-                { key = "other", parameter = "is.modelo-200.tipo-gravamen-erd" },
+                { key = "sl", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
+                { key = "sa", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
+                { key = "sal", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
+                { key = "sll", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
+                { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
+                { key = "other", parameter = "is.modelo-200.tipo-gravamen-pyme-display" },
                 { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" },
                 { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" },
             ] },
@@ -203,20 +203,15 @@ required_text = [
 #      layers ON TOP of the sub-form dispatch via the outer
 #      `if_then_else` predicate over
 #      `modelo-200-2024-profile-new-entity-flag`.
-#   2. Micro-empresa lane (Ley 31/2022 Art. 39, LIS Art. 29.1): if the prior-12-
-#      months INCN is below 1.000.000 EUR, general-rate forms
-#      (sl / sa / sal / sll / sociedad_civil_mercantil / other) resolve
-#      against the ERD bracket `is.modelo-200.cuota-integra-bracket-erd`
-#      (flat 23 % from 2023, matching Ley 31/2022 Art. 39 rate).
+#   2. Micro-empresa lane: if prior-period INCN is below 1.000.000 EUR,
+#      general-rate forms (sl / sa / sal / sll /
+#      sociedad_civil_mercantil / other) resolve against the
+#      micro-empresa bracket table `is.modelo-200.tipo-gravamen-pyme`.
+#      The same parameter carries the 2024 flat 23 % row and the LIS
+#      DT 44ª two-tranche transition (21/22 in 2025, 19/21 in 2026).
 #      Cooperativas fiscalmente protegidas and entidades sin fines
 #      lucrativos retain their own special-rate brackets even when INCN
-#      < 1M. The two-tranche micro-empresa scale
-#      `is.modelo-200.tipo-gravamen-pyme` (21/22 in 2025, 19/21 in 2026,
-#      per LIS DT 44ª transitional schedule, Ley 7/2024)
-#      applies to the micro-empresa threshold (INCN < 1M AND 2025+
-#      periods); for 2024 the pyme bracket holds a single flat 23 %
-#      row which is identical in value to the ERD bracket — the ERD
-#      bracket is preferred here for semantic accuracy and provenance.
+#      < 1M.
 #   3. ERD art.101 lane: if INCN is below 10.000.000 EUR, general-rate
 #      forms resolve through `is.modelo-200.cuota-integra-bracket-erd-art101`
 #      for the DT 44ª 2025-2028 transition and the final art.29 rate from 2029.
@@ -260,12 +255,12 @@ expression = { op = "if_then_else", args = [
             { casilla_id = "DP200014:01330" },
             { binding = "modelo-200-2024-profile-legal-entity-form" },
             { dispatch_table_entries = [
-                { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
-                { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
-                { key = "sal", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
-                { key = "sll", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
-                { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
-                { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-erd" },
+                { key = "sl", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sa", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sal", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sll", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "other", parameter = "is.modelo-200.tipo-gravamen-pyme" },
                 { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-cooperative-protected" },
                 { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime" },
             ] },

@@ -564,6 +564,57 @@ def test_list_filing_records_orders_multiple_periods_without_period_comparison(r
     assert tuple(record.period.registry_token for record in listed) == ("1T", "2T")
 
 
+def test_list_filing_records_filters_by_modelo(repos: Repos) -> None:
+    from ....domain.modelos import ModeloCode, ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
+
+    _, _, fr_repo, _, _ = repos
+    period = Period.from_year_and_code(2025, "0A")
+    record_100 = ModeloRecord(
+        filing_record_id=derive_filing_record_id(
+            work_unit_id="1" * 64,
+            calculation_revision_id="2" * 64,
+            filed_at=T1,
+            filed_by="operator-A",
+        ),
+        work_unit_id="1" * 64,
+        calculation_revision_id="2" * 64,
+        bucket_id="bucket-a",
+        modelo=ModeloCode("100"),
+        filing_year=2025,
+        period=period,
+        filed_at=T1,
+        filed_by="operator-A",
+    )
+    record_130 = ModeloRecord(
+        filing_record_id=derive_filing_record_id(
+            work_unit_id="3" * 64,
+            calculation_revision_id="4" * 64,
+            filed_at=T2,
+            filed_by="operator-A",
+        ),
+        work_unit_id="3" * 64,
+        calculation_revision_id="4" * 64,
+        bucket_id="bucket-a",
+        modelo=ModeloCode("130"),
+        filing_year=2025,
+        period=period,
+        filed_at=T2,
+        filed_by="operator-A",
+    )
+    fr_repo.save(
+        ModeloRecordCatalogue(
+            records={
+                record_100.filing_record_id: record_100,
+                record_130.filing_record_id: record_130,
+            },
+        ),
+    )
+
+    listed = list_filing_records(modelo="100", filing_repository=fr_repo)
+
+    assert tuple(record.modelo for record in listed) == (ModeloCode("100"),)
+
+
 def test_get_filing_record_raises_on_missing_id(repos: Repos) -> None:
     _, _, fr_repo, _, _ = repos
     with pytest.raises(ModeloRecordNotFoundError) as excinfo:

@@ -3522,9 +3522,31 @@ effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a7; operator to re-stamp)"
-notes = "LIRPF art 7: rentas exentas. Base legal de las casillas informativas de rentas exentas (importes que no se integran en la base imponible) del Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a7; operator to confirm and re-stamp."
+notes = "LIRPF art 7: rentas exentas, including art 7.p foreign-work exemption and its 60.100 EUR annual cap. Base legal de las casillas informativas de rentas exentas (importes que no se integran en la base imponible) del Modelo 100 and the maritime worker Art. 7.p exemption. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a7; operator to confirm and re-stamp."
 required_text = [
     "Rentas exentas",
+    "trabajos efectivamente realizados en el extranjero",
+    "límite máximo de 60.100 euros anuales",
+]
+
+[legal."ley-35-2006:da-41"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dacuadragesimaprimera"
+document_id = "BOE-A-2006-20764"
+article = "DA 41"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dacuadragesimaprimera"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (agent-authored from bundled ley-35-2006.html#dacuadragesimaprimera; operator to re-stamp)"
+notes = "LIRPF DA 41: tripulantes de determinados buques de pesca. Establishes a 50 por ciento exempt-income rule for qualifying tuna fleet crew, conditioned on compatibility with EU law. Added by Ley 26/2014 art. 1.98; currently guarded inactive by the maritime worker engine until state-aid clearance is granted."
+required_text = [
+    "Tripulantes de determinados buques de pesca",
+    "renta exenta el 50 por ciento",
+    "condicionada a su compatibilidad con el ordenamiento comunitario",
 ]
 
 [legal."ley-35-2006:da-41"]

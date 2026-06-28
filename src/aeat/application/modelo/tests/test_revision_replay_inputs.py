@@ -15,6 +15,7 @@ from ....domain.modelos._calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos._codes import ModeloCode
+from ....domain.modelos._row_models import Modelo349OperadorRow, ModeloDetailRow
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....tests.registry_observations import registry_grounded_observations
 from .._revision_replay_inputs import revision_filing_replay_inputs
@@ -62,6 +63,7 @@ def _revision(
     binding_overrides: dict[str, str] | None = None,
     relation_overrides: dict[str, str] | None = None,
     casilla_values: dict[CasillaId, Decimal] | None = None,
+    detail_rows: tuple[ModeloDetailRow, ...] = (),
 ) -> CalculationRevision:
     inputs = input_values_by_casilla_id or {}
     bindings = binding_overrides or {}
@@ -74,12 +76,14 @@ def _revision(
             binding_overrides=bindings,
             relation_overrides=relations,
             casilla_values=values,
+            detail_rows=detail_rows,
         ),
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=inputs,
         binding_overrides=bindings,
         relation_overrides=relations,
+        detail_rows=detail_rows,
         casilla_values=values,
         observations=registry_grounded_observations(
             modelo=work_unit.modelo,
@@ -168,3 +172,24 @@ def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved()
 
     assert "renta-2025-rel-130-pagos-fraccionados" not in replay_inputs
     assert replay_inputs["renta-2025-rel-131-pagos-fraccionados"] == "0"
+
+
+def test_revision_replay_inputs_strip_m349_country_prefix_from_export_nif_subfield() -> None:
+    work_unit = _work_unit(modelo="349", filing_year=2026, period_code="1T")
+    revision = _revision(
+        work_unit,
+        detail_rows=(
+            Modelo349OperadorRow(
+                codigo_pais="DE",
+                nif_comunitario="DE123456789",
+                razon_social="ALEMAN GMBH",
+                clave_operacion="E",
+                importe=Decimal("1500.00"),
+            ),
+        ),
+    )
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    assert replay_inputs["iva-349-operador-row-codigo-pais"] == {"1": "DE"}
+    assert replay_inputs["iva-349-operador-row-nif"] == {"1": "123456789"}

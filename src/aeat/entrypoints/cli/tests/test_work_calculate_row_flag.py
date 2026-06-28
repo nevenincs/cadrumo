@@ -222,6 +222,11 @@ class TestParseRowSpecM349:
             # DE requires 9 digits; this has only 8
             _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE12345678 clave_operacion=E importe=1000")
 
+    def test_parse_operador_unsupported_country_rejected(self) -> None:
+        """operador rejects country prefixes absent from the Modelo 349 table."""
+        with pytest.raises(typer.BadParameter, match="NIF-IVA"):
+            _parse_row_spec("operador codigo_pais=ZZ nif_comunitario=BADVAT clave_operacion=E importe=1000")
+
     def test_parse_operador_invalid_clave_raises(self) -> None:
         """Invalid clave_operacion raises BadParameter."""
         with pytest.raises(typer.BadParameter):
@@ -408,8 +413,12 @@ class TestRevisionViewSurfacesDetailRows:
                 "cb",
                 "--tax-id",
                 "E12345674",
-                "--legal-entity-form",
-                "sociedad_civil_mercantil",
+                "--entity-type",
+                "attribution_entity",
+                "--name",
+                "M184 Row Test CB",
+                "--activity",
+                "arrendamiento conjunto",
                 "--quiet",
             ],
         )
@@ -473,9 +482,17 @@ class TestRevisionViewSurfacesDetailRows:
                 "create",
                 "m349",
                 "--tax-id",
-                "E12345674",
-                "--legal-entity-form",
-                "sociedad_civil_mercantil",
+                "12345678Z",
+                "--entity-type",
+                "natural_person",
+                "--name",
+                "Ana",
+                "--surnames",
+                "M349",
+                "--irpf-income-categories",
+                "actividad_economica",
+                "--activity",
+                "consultoria intracomunitaria",
                 "--quiet",
             ],
         )
@@ -546,3 +563,36 @@ class TestRevisionViewSurfacesDetailRows:
         )
         assert verified.returncode == 0, f"verify failed: {verified.stdout}\n{verified.stderr}"
         assert "content-address mismatch" not in verified.stdout + verified.stderr
+
+        output_path = tmp_path / "modelo-349.txt"
+        exported = self._run_cli(
+            tmp_path,
+            [
+                "app",
+                "modelo",
+                "export",
+                "--modelo",
+                "349",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--output",
+                str(output_path),
+            ],
+        )
+        assert exported.returncode == 0, f"export failed: {exported.stdout}\n{exported.stderr}"
+
+        text = output_path.read_bytes().decode("latin-1")
+        assert len(text) % 500 == 0, f"unexpected M349 fixed-width length: {len(text)}"
+        records = [text[index : index + 500] for index in range(0, len(text), 500)]
+        operator_records = {
+            record[75:77]: record
+            for record in records
+            if record.startswith("2349") and not record[146:178].strip()
+        }
+
+        assert operator_records["DE"][77:92].rstrip() == "123456789"
+        assert operator_records["FR"][77:92].rstrip() == "12345678901"
+        assert "DEDE123456789" not in text
+        assert "FRFR12345678901" not in text

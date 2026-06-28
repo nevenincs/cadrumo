@@ -1127,6 +1127,12 @@ application:
         "default" tartalék).
       quiet_missing_flags: 'Ennek a --quiet futtatásnak hiányoznak a kötelező adatok.
         Adja hozzá ezeket a kapcsolókat, és futtassa újra a parancsot: %{missing_flags}'
+      create_missing_filing_baseline: 'A profil létrehozásához hiányoznak a bevallási
+        azonosító adatok. Adja hozzá ezeket a kapcsolókat, és futtassa újra a
+        parancsot: %{missing_flags}'
+      edit_missing_filing_baseline: 'Ez a profilszerkesztés hiányos bevallási
+        azonosító adatokkal hagyná a profilt. Adja hozzá ezeket a kapcsolókat
+        ugyanahhoz a parancshoz, és futtassa újra: %{missing_flags}'
     next_hint:
       modelo_work_create: aeat app modelo work create
     output_labels:
@@ -1573,6 +1579,7 @@ cli:
         invalid_evidence_kind: 'A --evidence-kind értéke csak {canonical} egyike lehet;
           kapott: {kind}.'
         list_help: Regisztrált benyújtási rekordok listázása.
+        modelo_help: Szűrés nyomtatványkód szerint (pl. 303, 130, 100).
         view_help: Egy benyújtási rekord megjelenítése azonosító alapján.
       formulas:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
@@ -2369,6 +2376,9 @@ cli:
       import_invalid_bundle: 'Érvénytelen profilcsomag: a JSON nem felel meg a profilcsomag-sémának.'
       import_invalid_tax_id: 'A profilcsomag adóazonosítója érvénytelen: %{error}.
         Javítsd az azonosítót és exportáld újra, vagy érvényes csomagot importálj.'
+      import_missing_filing_baseline: 'A profilcsomagból hiányoznak a bevallási
+        azonosító adatok. Javítsa a csomagot, vagy exportáljon újra teljes profilt
+        ezekkel a mezőkkel: %{missing_flags}.'
       import_label_help: 'Az importált profil megjelenítési neve; alapértelmezés:
         a csomagban tárolt név. Használja második példány importálásához új felirat
         alatt.'
@@ -2721,8 +2731,8 @@ cli:
       from_csv_exclusive: --from-csv nem kombinálható tranzakció-azonosítóval vagy
         --classification értékkel.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category,
-        irpf_category].
+        category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
+        iva_category, irpf_category].
       from_csv_not_found: 'CSV file not found: %{path}'
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
@@ -2802,6 +2812,9 @@ cli:
       confirm_required: Adja meg a --yes kapcsolót e romboló főkönyvi művelet megerősítéséhez.
       filter_parse_error: 'A főkönyvi szűrő elemzése sikertelen %{token} közelében:
         %{reason}.'
+      period_year_pairing: A főkönyvi időszakszűrőkhöz időszak és év együtt szükséges.
+        Teljes évhez használja a --period 0A --year %{year} kapcsolókat, vagy
+        a --filter period=0A --filter year=%{year} párost.
       id_prefix_collision: 'A(z) %{prefix!r} tranzakcióazonosító-előtag több tranzakcióra
         illeszkedik: %{candidates}. Hosszabbítsa meg az előtagot az egyértelműsítéshez.'
       id_prefix_empty: A tranzakcióazonosító-előtag üres; adjon meg legalább egy hexadecimális

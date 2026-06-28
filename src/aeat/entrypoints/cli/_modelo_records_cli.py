@@ -23,6 +23,8 @@ from ...application.modelo import (
 )
 from ...core.i18n import tr
 from ...domain.calculations.registry import CasillaId
+from ...domain.modelos import ModeloCode
+from ...domain.modelos._errors import ModeloValidationError
 from ._common import _emit_envelope, _profile_to_taxpayer
 from ._modelo_payloads import (
     FilingRecordImportResult,
@@ -90,6 +92,15 @@ def _bad_from_error(exc: Exception) -> typer.BadParameter:
     return _bad_parameter_from_error(exc)
 
 
+def _modelo_filter(raw: str | None) -> ModeloCode | None:
+    if raw is None:
+        return None
+    try:
+        return ModeloCode(raw)
+    except ModeloValidationError as exc:
+        raise _bad_from_error(exc) from exc
+
+
 filing_record_app = typer.Typer(
     name="filing-record",
     help=tr("cli.app.modelo.filing_record.app_help"),
@@ -112,6 +123,10 @@ def filing_record_list(
         str | None,
         typer.Option("--bucket-id", help=tr("cli.app.modelo.filing_record.bucket_id_help")),
     ] = None,
+    modelo: Annotated[
+        str | None,
+        typer.Option("--modelo", help=tr("cli.app.modelo.filing_record.modelo_help")),
+    ] = None,
     include_superseded: Annotated[
         bool,
         typer.Option(
@@ -121,9 +136,11 @@ def filing_record_list(
     ] = False,
 ) -> None:
     """List filing records."""
-    records = list_filing_records(bucket_id=bucket_id, include_superseded=include_superseded)
+    modelo_code = _modelo_filter(modelo)
+    records = list_filing_records(bucket_id=bucket_id, modelo=modelo_code, include_superseded=include_superseded)
     result = ModeloRecordListResult(
         bucket_id_filter=bucket_id,
+        modelo_filter=str(modelo_code) if modelo_code is not None else None,
         include_superseded=include_superseded,
         record_count=len(records),
         records=[filing_record_payload(record) for record in records],
@@ -131,6 +148,7 @@ def filing_record_list(
     lines = [
         "operation\tmodelo.filing_record.list",
         f"bucket_id_filter\t{bucket_id or ''}",
+        f"modelo_filter\t{modelo_code or ''}",
         f"include_superseded\t{include_superseded}",
         f"record_count\t{len(records)}",
         "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by",

@@ -781,6 +781,50 @@ required_text = [
     "la Administración tributaria procederá a devolver, de oficio, el exceso",
 ]
 
+[legal."ley-12-2002:art-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-12-2002-art-15.html#a15"
+document_id = "BOE-A-2002-9969"
+article = "15"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-9969#a15"
+published_at = 2002-05-24
+effective_from = 2002-05-25
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (verified against official BOE-A-2002-9969 consolidated art. 15; corpus excerpt bundled)"
+notes = "Concierto Economico Pais Vasco art 15: Impuesto sobre Sociedades taxpayers that tribute jointly to the Diputaciones Forales and the Administracion del Estado allocate the tax in proportion to the volume of operations in each territory, expressed as a percentage. Grounds the Modelo 200 Estado/foral percentage profile fact."
+required_text = [
+    "Impuesto sobre Sociedades",
+    "Diputaciones Forales",
+    "Administración del Estado",
+    "en proporción al volumen de operaciones",
+    "porcentaje redondeado con dos decimales",
+]
+
+[legal."ley-28-1990:art-19"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-28-1990-art-19.html#a1-22"
+document_id = "BOE-A-1990-31117"
+article = "19"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-31117#a1-22"
+published_at = 1990-12-27
+effective_from = 2003-07-17
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (verified against official BOE-A-1990-31117 consolidated art. 19; corpus excerpt bundled)"
+notes = "Convenio Economico Navarra art 19: Impuesto sobre Sociedades taxpayers operating in common and Navarra territories tribute jointly to both Administrations in proportion to operation volume, expressed as a percentage. Grounds the Modelo 200 Estado/Navarra percentage profile fact."
+required_text = [
+    "Comunidad Foral de Navarra",
+    "Impuesto sobre Sociedades",
+    "tributarán conjuntamente a ambas Administraciones",
+    "en proporción al volumen de operaciones",
+    "porcentaje redondeado con dos decimales",
+]
+
 [legal."ley-27-2014:art-124"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -10,10 +10,12 @@ mandate.
 
 from __future__ import annotations
 
-import pytest
-from typer.testing import CliRunner
+from collections.abc import Sequence
 
-from .. import app
+import pytest
+from click.testing import Result
+
+from ....tests.cli_runner import invoke_cached_cli
 from .._ledger import app as ledger_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -53,6 +55,10 @@ EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
 )
 
 LINK_CHECK_PREFLIGHT: frozenset[str] = frozenset({"link", "check", "preflight"})
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
 
 
 def test_ledger_verb_roster_matches_canonical_spine() -> None:
@@ -118,7 +124,6 @@ def test_ledger_verb_count_matches_canonical_spine() -> None:
 
 @pytest.mark.parametrize("verb", ["link", "check", "preflight"])
 def test_ledger_orthogonal_verb_help_states_local_only(
-    cli_runner: CliRunner,
     verb: str,
 ) -> None:
     """Every orthogonal-axis verb's help text must signal `local-only`
@@ -127,7 +132,7 @@ def test_ledger_orthogonal_verb_help_states_local_only(
     Spanish/Catalan/Hungarian translations must convey the same
     invariant. Tokens cover all four locales."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", verb, "--help"])
+    result = _invoke(["app", "ledger", verb, "--help"])
     assert result.exit_code == 0, result.output
     haystack = result.output.lower()
     assert any(token in haystack for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")), (
@@ -141,23 +146,23 @@ def test_ledger_orthogonal_verb_help_states_local_only(
 # omitted from help (e.g. by a missing tr() entry), the operator cannot
 # discover it. This gate fails when help text omits any registered verb,
 # catching that drift without depending on locale-string content.
-def test_ledger_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> None:
+def test_ledger_help_enumerates_every_registered_verb() -> None:
     """`aeat app ledger --help` lists every mounted verb so the operator
     can discover the noun-group's full surface from the help output alone."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", "--help"])
+    result = _invoke(["app", "ledger", "--help"])
     assert result.exit_code == 0, result.output
     missing = sorted(cmd.name for cmd in ledger_app.registered_commands if cmd.name and cmd.name not in result.output)
     assert not missing, f"`aeat app ledger --help` omits registered verbs {missing!r}; help output: {result.output!r}"
 
 
-def test_modelo_help_enumerates_every_registered_verb(cli_runner: CliRunner) -> None:
+def test_modelo_help_enumerates_every_registered_verb() -> None:
     """`aeat app modelo --help` lists every mounted verb so the operator
     can discover the noun-group's full surface from the help output alone."""
 
     from .._modelo import app as modelo_app
 
-    result = cli_runner.invoke(app, ["app", "modelo", "--help"])
+    result = _invoke(["app", "modelo", "--help"])
     assert result.exit_code == 0, result.output
     missing = sorted(cmd.name for cmd in modelo_app.registered_commands if cmd.name and cmd.name not in result.output)
     assert not missing, f"`aeat app modelo --help` omits registered verbs {missing!r}; help output: {result.output!r}"
@@ -228,12 +233,10 @@ def test_profile_history_verb_is_mounted_on_profile_app() -> None:
     )
 
 
-def test_profile_history_help_exposes_profile_argument_not_bucket_id(cli_runner: CliRunner) -> None:
+def test_profile_history_help_exposes_profile_argument_not_bucket_id() -> None:
     """The event-history surface accepts an operator profile token, not a storage noun."""
 
-    from .._config import profile_app
-
-    result = cli_runner.invoke(profile_app, ["history", "--help"])
+    result = _invoke(["config", "profile", "history", "--help"])
 
     assert result.exit_code == 0, result.output
     assert "BUCKET_ID" not in result.output

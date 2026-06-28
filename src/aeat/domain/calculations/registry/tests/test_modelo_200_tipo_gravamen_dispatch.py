@@ -201,6 +201,26 @@ def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:
         assert Decimal("23") not in window_rates.values()
 
 
+def test_micro_empresa_display_rate_echoes_first_tranche_by_year() -> None:
+    """Casilla 00558 echoes the first-tranche micro rate for the filing year.
+
+    The cuota path is bracket-aware, but the official display casilla is scalar.
+    It must therefore not keep showing the legacy flat 23 % once the 2025/2026
+    transitional micro-company scale applies.
+    """
+    parameter = _parameters()["is.modelo-200.tipo-gravamen-pyme-display"]
+    assert parameter.data_type == "ratio"
+    assert parameter.unit == "percent"
+    assert "ley-27-2014:dt-44" in parameter.legal_refs
+
+    rates_by_year = {value.valid_from.year: value.value for value in parameter.values}
+    assert rates_by_year == {
+        2024: Decimal("23"),
+        2025: Decimal("21"),
+        2026: Decimal("19"),
+    }
+
+
 def test_micro_empresa_first_tranche_fixed_addition_carries_into_the_rest_tranche() -> None:
     """The rest-tranche fixed_addition equals the cuota accumulated at 50.000.
 
@@ -437,6 +457,57 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
     assert result_sal.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("230000.00"), (
         "SAL cuota integra at ERD 23 % on 1M base = 230.000"
     )
+
+
+def test_tipo_gravamen_dispatch_routes_2025_micro_display_rate_to_first_tranche() -> None:
+    """Persona repro: a 2025 micro-company prints 21 while cuota is 10.500.
+
+    Dario's CLI run used an SL with INCN below 1M and a 50.000 base. The
+    cuota already followed LIS DT 44ª at 21 %, but 00558 incorrectly echoed
+    the legacy 23 %. The display scalar must follow the same filing-year
+    threshold as the bracket calculation.
+    """
+    result = calculate_registry_snapshot(
+        _snapshot(),
+        inputs=_base_inputs(Decimal("50000")),
+        enum_binding_values={_DISPATCH_BINDING: "sl"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("450000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+        },
+        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
+        date_context={"filing_period": date(2025, 12, 31)},
+    )
+
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("10500.00")
+
+
+def test_tipo_gravamen_dispatch_routes_2025_micro_cuota_to_rest_tranche() -> None:
+    """A 2025 micro-company above 50.000 EUR uses the second tranche."""
+    result = calculate_registry_snapshot(
+        _snapshot(),
+        inputs=_base_inputs(Decimal("100000")),
+        enum_binding_values={_DISPATCH_BINDING: "sl"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("450000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+        },
+        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
+        date_context={"filing_period": date(2025, 12, 31)},
+    )
+
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("21500.00")
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] != Decimal("23000.00")
 
 
 def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> None:

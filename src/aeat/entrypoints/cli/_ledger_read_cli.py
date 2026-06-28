@@ -86,6 +86,19 @@ def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveT
     register_participation_commands(app, resolve_transaction_id=resolve_transaction_id)
 
 
+def _ledger_list_pairing_error_year(filters: list[str], option_year: int | None) -> int | None:
+    """Return a safe year to include in period/year pairing guidance."""
+    if option_year is not None:
+        return option_year
+    for raw_filter in filters:
+        key, separator, value = raw_filter.partition("=")
+        if separator and key.strip().lower() == "year":
+            stripped = value.strip()
+            if stripped.isdecimal():
+                return int(stripped)
+    return None
+
+
 def _register_ledger_providers_command(app: typer.Typer) -> None:
     @app.command("providers", help=tr("cli.ledger.providers.help"))
     def ledger_providers(ctx: typer.Context) -> None:
@@ -472,7 +485,12 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
         try:
             spec = parse_ledger_list_filter_spec(resolved_filters)
         except FilterParseError as exc:
-            raise _bad(ledger_filter_parse_error_message(exc)) from exc
+            raise _bad(
+                ledger_filter_parse_error_message(
+                    exc,
+                    year=_ledger_list_pairing_error_year(resolved_filters, year),
+                ),
+            ) from exc
         projection = project_ledger_list(
             transaction_repository=transaction_repository,
             spec=spec,

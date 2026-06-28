@@ -9,9 +9,41 @@ validates, and caches registry material), and :class:`CasillaObservation`
 (one typed casilla value carrying full legal and source provenance).
 """
 
+# ruff: noqa: I001
+# Registry identifiers must be re-exported before imports that can re-enter this
+# package during validation bootstrap.
 from __future__ import annotations
 
 from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle, AeatNifIvaObservation
+from ._ids import (
+    ApplicationLinkId,
+    BindingId,
+    CasillaId,
+    ConstructId,
+    CrossReferenceId,
+    DeadlineWindowId,
+    DependencyClassificationId,
+    ExportFieldId,
+    ExportLayoutId,
+    ExtractionProfileId,
+    FormulaId,
+    LegalRefId,
+    ModeloId,
+    OracleId,
+    ParameterId,
+    RecordId,
+    RelationId,
+    RevisionId,
+    SourceRefId,
+    SupportRemovalDecisionId,
+    VerificationExpectationId,
+    WorkbookFixtureId,
+    WorkbookOutputId,
+    WorkbookParityRefId,
+    is_registry_id,
+    validated_casilla_id,
+    validated_casilla_id_map,
+)
 
 # Applicability is imported after _schema so its transitive import of
 # aeat.domain.deadlines (which depends on DeadlineWindowDefinition
@@ -163,35 +195,6 @@ from ._groi_oracle import (
     GroiObservation,
     GroiOracle,
     GroiReplayDriver,
-)
-from ._ids import (
-    ApplicationLinkId,
-    BindingId,
-    CasillaId,
-    ConstructId,
-    CrossReferenceId,
-    DeadlineWindowId,
-    DependencyClassificationId,
-    ExportFieldId,
-    ExportLayoutId,
-    ExtractionProfileId,
-    FormulaId,
-    LegalRefId,
-    ModeloId,
-    OracleId,
-    ParameterId,
-    RecordId,
-    RelationId,
-    RevisionId,
-    SourceRefId,
-    SupportRemovalDecisionId,
-    VerificationExpectationId,
-    WorkbookFixtureId,
-    WorkbookOutputId,
-    WorkbookParityRefId,
-    is_registry_id,
-    validated_casilla_id,
-    validated_casilla_id_map,
 )
 from ._legal import verify_legal_catalogue, verify_legal_reference
 from ._live_parity import (

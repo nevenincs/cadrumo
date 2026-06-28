@@ -92,6 +92,38 @@ valid_from = 2026-01-01
 valid_to = 2026-12-31
 
 [[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.tipo-gravamen-pyme-display"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:dt-44", "ley-31-2022:art-39"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+# Scalar echo for casilla 00558 when the cuota path uses the micro-empresa
+# bracket. It reports the first-tranche rate for the filing period; casilla
+# 00562 remains the authority for tranche arithmetic.
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "23"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "21"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2024-y-siguientes".parameters.values]]
+value = "19"
+date_axis = "filing_period"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
+
+[[revisions."2024-y-siguientes".parameters]]
 id = "is.modelo-200.tipo-gravamen-new-entity-first-2-years"
 data_type = "ratio"
 unit = "percent"
@@ -187,66 +219,62 @@ fixed_addition = "0"
 marginal_rate = "0.10"
 valid_from = 2024-01-01
 
-# ERD (Entidad de Reducida Dimensión) 23 % bracket for cuota íntegra.
-# Introduced by Ley 31/2022 Art. 39 (periods from 2023). Single-row
-# bracket: flat 23 % on the full post-nivelación base. Used by the
-# cuota-integra formula in the INCN < 1.000.000 lane for general-rate
-# forms (sl / sa / sal / sll / sociedad_civil_mercantil / other).
 [[revisions."2024-y-siguientes".parameters]]
-id = "is.modelo-200.cuota-integra-bracket-erd"
+id = "is.modelo-200.cuota-integra-bracket-erd-art101"
 data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"
-legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-31-2022:art-39", "ley-27-2014:dt-44"]
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-101", "ley-27-2014:dt-44"]
 source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024-y-siguientes".parameters.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = ["tipo de gravamen"]
 
-# Cuota íntegra for INCN < 1.000.000 EUR (sl/sa/sal/sll/scm/other). The
-# regime is year-dependent and the bracket_axis date filter selects the
-# window per filing period:
-#   2024: flat 23 % (Ley 31/2022 Art. 39 reduced rate for INCN < 1M).
-#   2025: 21 % on 0-50.000 EUR, 22 % on the rest (LIS DT 44ª, Ley 7/2024).
-#   2026: 19 % on 0-50.000 EUR, 21 % on the rest (LIS DT 44ª, Ley 7/2024).
-# Windows mirror is.modelo-200.tipo-gravamen-pyme.
+# Cuota íntegra for true ERD entities under LIS art. 101 (INCN < 10M and
+# not qualifying for the INCN < 1M micro-empresa scale). DT 44ª phases the
+# post-2025 art. 29 ERD rate from 24 % to 21 %; art. 29 supplies the final
+# 20 % rate from 2029. 2024 keeps the pre-DT44 general 25 % rate.
 [[revisions."2024-y-siguientes".parameters.brackets]]
 lower_bound = "0"
 fixed_addition = "0"
-marginal_rate = "0.23"
+marginal_rate = "0.25"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
 
 [[revisions."2024-y-siguientes".parameters.brackets]]
 lower_bound = "0"
-upper_bound = "50000"
 fixed_addition = "0"
-marginal_rate = "0.21"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
-
-[[revisions."2024-y-siguientes".parameters.brackets]]
-lower_bound = "50000"
-fixed_addition = "10500"
-marginal_rate = "0.22"
+marginal_rate = "0.24"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
 
 [[revisions."2024-y-siguientes".parameters.brackets]]
 lower_bound = "0"
-upper_bound = "50000"
 fixed_addition = "0"
-marginal_rate = "0.19"
+marginal_rate = "0.23"
 valid_from = 2026-01-01
 valid_to = 2026-12-31
 
 [[revisions."2024-y-siguientes".parameters.brackets]]
-lower_bound = "50000"
-fixed_addition = "9500"
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.22"
+valid_from = 2027-01-01
+valid_to = 2027-12-31
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
 marginal_rate = "0.21"
-valid_from = 2026-01-01
-valid_to = 2026-12-31
+valid_from = 2028-01-01
+valid_to = 2028-12-31
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.20"
+valid_from = 2029-01-01
 
 [[revisions."2024-y-siguientes".parameters]]
 id = "is.modelo-200.cuota-integra-bracket-erd-art101"

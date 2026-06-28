@@ -277,9 +277,11 @@ The implemented bulk path is CSV-based manual classification:
 aeat app ledger classify --from-csv ./classifications.csv
 ```
 
-That CSV accepts `transaction_id`, `classification`, and optional
-`category_id`. Use [Classify transactions](classify-transactions.md) for the
-bounded export, CSV preparation, apply, and review workflow.
+That CSV accepts `transaction_id`, `classification`, and optional columns such
+as `category_id`, `business_pct`, `usage_ratio_id`, taxable-base and IVA
+fields, `iva_category`, and `irpf_category`. Use
+[Classify transactions](classify-transactions.md) for the bounded export, CSV
+preparation, apply, and review workflow.
 
 For deterministic automatic classification of repeated descriptions, use
 stored ledger rules:
