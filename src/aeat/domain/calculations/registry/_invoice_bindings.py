@@ -9,7 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
@@ -77,6 +77,7 @@ class InvoiceObservation(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: str = Field(min_length=1, max_length=128)
+    source_kind: BindingSourceKind = BindingSourceKind.COLLECTIBLE_INVOICE
     party_tax_id: str = Field(min_length=1, max_length=64)
     country_code: str = Field(min_length=2, max_length=2)
     transaction_date: date
@@ -91,6 +92,23 @@ class InvoiceObservation(BaseModel):
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
     _clave_uppercase = field_validator("intracommunity_clave")(intracommunity_clave_validator())
+
+    @field_validator("source_kind", mode="before")
+    @classmethod
+    def _coerce_source_kind(cls, value: object) -> object:
+        if isinstance(value, str) and not isinstance(value, BindingSourceKind):
+            try:
+                return BindingSourceKind(value)
+            except ValueError as exc:
+                raise RegistryValidationError(f"invoice source_kind {value!r} is not a BindingSourceKind") from exc
+        return value
+
+    @field_validator("source_kind")
+    @classmethod
+    def _source_kind_is_invoice_family(cls, value: BindingSourceKind) -> BindingSourceKind:
+        if value not in INVOICE_BINDING_SOURCE_KINDS:
+            raise RegistryValidationError(f"invoice source_kind {value!r} is not an invoice binding source")
+        return value
 
     @field_validator("base_amount", "rectified_base_previous", mode="before")
     @classmethod
@@ -442,7 +460,7 @@ def resolve_invoice_binding_values(
         revision,
         source_kinds=INVOICE_BINDING_SOURCE_KINDS,
         validate_selector=_validated_invoice_selector,
-        observations_for_binding=lambda _binding: available,
+        observations_for_binding=lambda binding: _observations_for_binding_source(available, binding),
     )
 
 
@@ -470,16 +488,61 @@ def resolve_invoice_binding_row_values(
         revision,
         source_kinds=INVOICE_BINDING_SOURCE_KINDS,
         validate_selector=_validated_invoice_selector,
-        observations_for_binding=lambda _binding: available,
-        cohort_by_source=False,
+        observations_for_binding=lambda binding: _observations_for_binding_source(available, binding),
+        cohort_by_source=True,
     )
-    return _normalise_m349_nif_export_rows(rows)
+    return _m349_public_row_union(_normalise_m349_nif_export_rows(rows))
+
+
+def _observations_for_binding_source(
+    observations: tuple[InvoiceObservation, ...],
+    binding: DataBindingDefinition,
+) -> tuple[InvoiceObservation, ...]:
+    return tuple(observation for observation in observations if observation.source_kind == binding.source)
 
 
 _M349_EXPORT_NIF_COUNTRY_BINDINGS: dict[BindingId, BindingId] = {
     "iva-349-operador-row-nif": "iva-349-operador-row-codigo-pais",
     "iva-349-rectificacion-row-nif": "iva-349-rectificacion-row-codigo-pais",
+    "iva-349-operador-row-nif-adquisicion": "iva-349-operador-row-codigo-pais-adquisicion",
+    "iva-349-rectificacion-row-nif-adquisicion": "iva-349-rectificacion-row-codigo-pais-adquisicion",
 }
+_M349_PAYABLE_ROW_BINDING_MIRRORS: dict[BindingId, BindingId] = {
+    "iva-349-operador-row-codigo-pais-adquisicion": "iva-349-operador-row-codigo-pais",
+    "iva-349-operador-row-nif-adquisicion": "iva-349-operador-row-nif",
+    "iva-349-operador-row-apellidos-adquisicion": "iva-349-operador-row-apellidos",
+    "iva-349-operador-row-clave-adquisicion": "iva-349-operador-row-clave",
+    "iva-349-operador-row-base-adquisicion": "iva-349-operador-row-base",
+    "iva-349-rectificacion-row-codigo-pais-adquisicion": "iva-349-rectificacion-row-codigo-pais",
+    "iva-349-rectificacion-row-nif-adquisicion": "iva-349-rectificacion-row-nif",
+    "iva-349-rectificacion-row-apellidos-adquisicion": "iva-349-rectificacion-row-apellidos",
+    "iva-349-rectificacion-row-clave-adquisicion": "iva-349-rectificacion-row-clave",
+    "iva-349-rectificacion-row-ejercicio-adquisicion": "iva-349-rectificacion-row-ejercicio",
+    "iva-349-rectificacion-row-periodo-adquisicion": "iva-349-rectificacion-row-periodo",
+    "iva-349-rectificacion-row-base-rectificada-adquisicion": "iva-349-rectificacion-row-base-rectificada",
+    "iva-349-rectificacion-row-base-anterior-adquisicion": "iva-349-rectificacion-row-base-anterior",
+}
+_M349_OPERADOR_PUBLIC_ROW_BINDINGS: frozenset[BindingId] = frozenset(
+    {
+        "iva-349-operador-row-codigo-pais",
+        "iva-349-operador-row-nif",
+        "iva-349-operador-row-apellidos",
+        "iva-349-operador-row-clave",
+        "iva-349-operador-row-base",
+    },
+)
+_M349_RECTIFICACION_PUBLIC_ROW_BINDINGS: frozenset[BindingId] = frozenset(
+    {
+        "iva-349-rectificacion-row-codigo-pais",
+        "iva-349-rectificacion-row-nif",
+        "iva-349-rectificacion-row-apellidos",
+        "iva-349-rectificacion-row-clave",
+        "iva-349-rectificacion-row-ejercicio",
+        "iva-349-rectificacion-row-periodo",
+        "iva-349-rectificacion-row-base-rectificada",
+        "iva-349-rectificacion-row-base-anterior",
+    },
+)
 
 
 def _normalise_m349_nif_export_rows(
@@ -495,6 +558,26 @@ def _normalise_m349_nif_export_rows(
             continue
         normalised[(binding_id, row_index)] = _m349_export_nif_number(value, country_value)
     return normalised
+
+
+def _m349_public_row_union(
+    rows: dict[tuple[BindingId, int], Decimal | str],
+) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Append payable acquisition rows onto the public Modelo 349 row ids."""
+    merged = dict(rows)
+    operador_offset = _max_row_index(rows, _M349_OPERADOR_PUBLIC_ROW_BINDINGS)
+    rectificacion_offset = _max_row_index(rows, _M349_RECTIFICACION_PUBLIC_ROW_BINDINGS)
+    for (binding_id, row_index), value in sorted(rows.items()):
+        public_binding = _M349_PAYABLE_ROW_BINDING_MIRRORS.get(binding_id)
+        if public_binding is None:
+            continue
+        offset = rectificacion_offset if public_binding in _M349_RECTIFICACION_PUBLIC_ROW_BINDINGS else operador_offset
+        merged[(public_binding, row_index + offset)] = value
+    return merged
+
+
+def _max_row_index(rows: Mapping[tuple[BindingId, int], object], bindings: frozenset[BindingId]) -> int:
+    return max((row_index for (binding_id, row_index) in rows if binding_id in bindings), default=0)
 
 
 def _build_invoice_rows(

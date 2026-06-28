@@ -12,6 +12,7 @@ import pytest
 from ....adapters.persistence.storage import StorageValidationError
 from ....application.ledger import BusinessOperationInvoiceDirection
 from ....core import Period
+from ....core.errors import AeatError, get_registered_error_code, resolve_error_message
 from ....core.resources import resources
 from ....domain.invoices import (
     Invoice,
@@ -68,17 +69,20 @@ def secure_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 def _invoice(
     *,
     bucket_id: str,
+    kind: InvoiceKind = InvoiceKind.ISSUED,
     invoice_number: str,
     issued_at: date,
     counterparty_tax_id: str,
     base_total: Decimal,
     iva_category: IvaCategory,
+    counterparty_name: str = "EU Customer GmbH",
     counterparty_country: str = "DE",
+    linked_transaction_ids: tuple[str, ...] = ("1" * 64,),
 ) -> Invoice:
     from ....domain.invoices import derive_invoice_id
 
     invoice_id = derive_invoice_id(
-        kind=InvoiceKind.ISSUED,
+        kind=kind,
         invoice_number=invoice_number,
         issued_at=issued_at,
         counterparty_tax_id=counterparty_tax_id,
@@ -88,10 +92,10 @@ def _invoice(
     return Invoice(
         invoice_id=invoice_id,
         bucket_id=bucket_id,
-        kind=InvoiceKind.ISSUED,
+        kind=kind,
         invoice_number=invoice_number,
         issued_at=issued_at,
-        counterparty_name="EU Customer GmbH",
+        counterparty_name=counterparty_name,
         counterparty_tax_id=counterparty_tax_id,
         counterparty_country=counterparty_country,
         base_total=base_total,
@@ -110,7 +114,7 @@ def _invoice(
         ),
         payment_status=PaymentStatus.PENDING,
         iva_category=iva_category,
-        linked_transaction_ids=("1" * 64,),
+        linked_transaction_ids=linked_transaction_ids,
     )
 
 
@@ -164,6 +168,43 @@ def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
     assert all(item.fingerprint and item.fingerprint.startswith("sha256:") for item in resolution.provenance)
 
 
+def test_invoice_catalogue_source_resolver_folds_received_acquisition_for_m349(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    acquisition = _invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="R-2026-001",
+        issued_at=date(2026, 1, 20),
+        counterparty_name="EU Supplier GmbH",
+        counterparty_tax_id="DE222222222",
+        base_total=Decimal("1200.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        linked_transaction_ids=("2" * 64,),
+    )
+    repository.save(InvoiceCatalogue.from_invoices((acquisition,)))
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.binding_values["iva-349-declarante-numero-operadores-adquisicion"] == Decimal("1")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones-adquisicion"] == Decimal("1200.00")
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1200.00")
+    assert resolution.source_transaction_ids == ("2" * 64,)
+    assert {item.source_kind for item in resolution.provenance} == {"payable_invoice"}
+    assert {item.source_ref for item in resolution.provenance} == {f"payable_invoice:{acquisition.invoice_id}"}
+
+
 def test_invoice_catalogue_source_resolver_accepts_xi_goods_for_m349(
     secure_profile: TestRuntimeProfile,
 ) -> None:
@@ -211,7 +252,7 @@ def test_invoice_catalogue_source_resolver_rejects_gb_ordinary_goods_for_m349(
     repository.save(InvoiceCatalogue.from_invoices((declarable,)))
     snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
 
-    with pytest.raises(Modelo349CountryPrefixContextError, match="post-transition"):
+    with pytest.raises(Modelo349CountryPrefixContextError) as exc:
         InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
@@ -221,6 +262,11 @@ def test_invoice_catalogue_source_resolver_rejects_gb_ordinary_goods_for_m349(
                 revision=snapshot.revision,
             ),
         )
+    assert isinstance(exc.value, AeatError)
+    assert get_registered_error_code(exc.value).code == "REFUSED_MODELO_349_COUNTRY_PREFIX_CONTEXT"
+    message = resolve_error_message(exc.value)
+    assert "post-transition" in message
+    assert "AEAT Brexit IVA NIF-IVA" in message
 
 
 def test_invoice_catalogue_source_resolver_fails_closed_when_context_bucket_is_not_active(
