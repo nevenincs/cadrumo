@@ -2,14 +2,16 @@
 
 The Modelo 200 cuota-integra formula (``DP200014:00562``) now applies
 the LIS Art. 29 tipo de gravamen as a tranche / sub-form table through
-``lookup_bracket_by_entity_type``. Three lanes coexist:
+``lookup_bracket_by_entity_type``. Four lanes coexist:
 
 1. **General sub-form**: post-nivelación base x 25% (LIS Art. 29.1, default rate).
-2. **Micro-empresa**: bracket scale 17/20 (2025) or 19/21 (2026) on the
+2. **Micro-empresa**: transitional bracket scale 21/22 (2025) or 19/21 (2026) on the
    first 50.000 € tranche and rest, when INCN of the prior 12 months
    is below 1.000.000 € (LIS Art. 29.1 par. 1; AEAT Manual de Sociedades
    "Tipos de gravamen vigentes" / AEAT folleto actividades económicas 4.3).
-3. **New-entity override**: 15% rate for the first two profit-making
+3. **Art.101 ERD**: scalar DT 44ª transition 24/23/22/21 for entities
+   below 10.000.000 € INCN and outside the micro-empresa lane.
+4. **New-entity override**: 15% rate for the first two profit-making
    periods (LIS Art. 29 par. 4), regardless of sub-form.
 
 These tests pin the lane behaviour and the Modelo 202 modality gate.
@@ -225,8 +227,8 @@ def test_non_profit_takes_the_ley_49_2002_special_regime_rate() -> None:
 def test_micro_empresa_cuota_is_less_than_general_cuota_at_same_base() -> None:
     """A micro-empresa base resolves through the lower-rate pyme tranche scale.
 
-    LIS Art. 29.1 par. 1 sets the micro-empresa tranche rates below
-    the general 25% — 17%/20% for periods initiated in 2025 (AEAT
+    LIS DT 44ª sets the 2025 transitional micro-empresa tranche rates
+    below the general 25% — 21%/22% for periods initiated in 2025 (AEAT
     Manual de Sociedades "Tipos de gravamen vigentes"; AEAT folleto
     actividades económicas 4.3). A profile whose prior-12-months INCN
     is below the 1.000.000 € threshold must therefore produce a cuota
@@ -254,7 +256,7 @@ def test_micro_empresa_cuota_is_less_than_general_cuota_at_same_base() -> None:
     )
     assert pyme < general, (
         "micro-empresa cuota must be strictly less than the general 25% "
-        "cuota — LIS Art. 29.1 par. 1 micro-empresa rates (17/20 %) sit "
+        "cuota — LIS DT 44ª micro-empresa rates (21/22 %) sit "
         "below the LIS Art. 29 general 25% rate"
     )
 
@@ -306,6 +308,40 @@ def test_micro_empresa_lane_anchor_at_50000_eur_first_tranche_boundary() -> None
         "(21 % on 0-50.000 → 10.500), not the final-régimen 17 % (8.500) "
         "nor the flat 23 % (11.500)"
     )
+
+
+# ---------------------------------------------------------------------
+# Lane 2b — art.101 ERD (LIS DT 44ª)
+# ---------------------------------------------------------------------
+
+
+def test_art101_erd_lane_applies_dt44_2025_rate_below_10m() -> None:
+    """An art.101 ERD profile reaches the 2025 DT 44ª 24% rate.
+
+    LIS art. 101 covers entities whose prior-period INCN is below
+    10.000.000 EUR. LIS DT 44ª fixes those entities at 24% for periods
+    initiated in 2025 unless a different special rate applies. A base
+    of 1.000.000 with prior-period INCN 7.000.000 therefore yields
+    240.000, while the 10.000.000 boundary remains outside art.101 and
+    stays on the general 25% lane.
+    """
+    erd = _cuota_for(
+        base=Decimal("1000000"),
+        form="sl",
+        new_entity=Decimal("0"),
+        incn=Decimal("7000000"),
+        filing_period=date(2025, 12, 31),
+    )
+    boundary_general = _cuota_for(
+        base=Decimal("1000000"),
+        form="sl",
+        new_entity=Decimal("0"),
+        incn=Decimal("10000000"),
+        filing_period=date(2025, 12, 31),
+    )
+
+    assert erd == Decimal("240000.00")
+    assert boundary_general == Decimal("250000.00")
 
 
 # ---------------------------------------------------------------------

@@ -13,7 +13,7 @@ Two surfaces are covered:
 * The registry-encoded rate schedule against its grounding authority.
   The flat scalar rates (general 25, cooperative-protected 20,
   non-profit 10, new-entity 15) and the micro-empresa two-bracket scale
-  (17/20 for periods initiated in 2025, 19/21 for 2026) are asserted
+  (21/22 for periods initiated in 2025, 19/21 for 2026) are asserted
   against the LIS Art. 29 text (BOE-A-2014-12328) and the AEAT Manual de
   Sociedades "Tipos de gravamen vigentes" / AEAT folleto actividades
   económicas 4.3 — the external authority the corporate-entity design §5
@@ -152,13 +152,15 @@ def test_scalar_tipo_gravamen_parameters_carry_the_lis_art_29_rates() -> None:
 def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:
     """The micro-empresa rate is the LIS Art. 29.1 two-bracket scale.
 
-    LIS Art. 29.1 charges 17 % on the 0-50.000 EUR base tranche and 20 %
-    on the rest for periods initiated in 2025, and 19 % / 21 % for 2026
-    (AEAT Manual de Sociedades "Tipos de gravamen vigentes"; AEAT folleto
-    actividades económicas 4.3, the authority recorded in the
-    corporate-entity design §5). The previous registry encoding — a single
-    flat ``23`` — matched no LIS Art. 29 micro-empresa tranche; the
-    parameter must instead be a ``bracket_table`` carrying both windows.
+    LIS DT 44ª sets the transitional micro-empresa scale at 21 % on the
+    0-50.000 EUR base tranche and 22 % on the rest for periods initiated
+    in 2025, then 19 % / 21 % for 2026 (AEAT Manual de Sociedades
+    "Tipos de gravamen vigentes"; AEAT folleto actividades económicas
+    4.3, the authority recorded in the corporate-entity design §5). The
+    final LIS Art. 29.1 17 % / 20 % scale is not the 2025 window. The
+    previous registry encoding — a single flat ``23`` — matched no
+    2025+ micro-empresa tranche; the parameter must instead be a
+    ``bracket_table`` carrying the dated windows.
     """
     parameters = _parameters()
     assert "is.modelo-200.tipo-gravamen-pyme" in parameters
@@ -199,6 +201,26 @@ def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:
         assert Decimal("23") not in window_rates.values()
 
 
+def test_micro_empresa_display_rate_echoes_first_tranche_by_year() -> None:
+    """Casilla 00558 echoes the first-tranche micro rate for the filing year.
+
+    The cuota path is bracket-aware, but the official display casilla is scalar.
+    It must therefore not keep showing the legacy flat 23 % once the 2025/2026
+    transitional micro-company scale applies.
+    """
+    parameter = _parameters()["is.modelo-200.tipo-gravamen-pyme-display"]
+    assert parameter.data_type == "ratio"
+    assert parameter.unit == "percent"
+    assert "ley-27-2014:dt-44" in parameter.legal_refs
+
+    rates_by_year = {value.valid_from.year: value.value for value in parameter.values}
+    assert rates_by_year == {
+        2024: Decimal("23"),
+        2025: Decimal("21"),
+        2026: Decimal("19"),
+    }
+
+
 def test_micro_empresa_first_tranche_fixed_addition_carries_into_the_rest_tranche() -> None:
     """The rest-tranche fixed_addition equals the cuota accumulated at 50.000.
 
@@ -225,13 +247,13 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
     """Changing the legal_entity_form binding changes the dispatched 00558 rate.
 
     The ``modelo-200-tipo-gravamen-por-forma-juridica`` formula selects
-    casilla 00558 by the taxpayer's legal form: sociedades de capital
-    (sl / sa) and sociedades civiles mercantiles take the general 25 %
-    rate, cooperativas fiscalmente protegidas the 20 % rate, and
-    entidades sin fines lucrativos the 10 % rate. This asserts the
-    dispatch mechanics: flipping the enum binding selects a different
-    scalar parameter, so 00558 — and the cuota íntegra 00562 derived
-    from it — changes accordingly.
+    the scalar display casilla 00558 by the taxpayer's legal form:
+    sociedades de capital (sl / sa) and sociedades civiles mercantiles
+    take the general 25 % rate, cooperativas fiscalmente protegidas the
+    20 % rate, and entidades sin fines lucrativos the 10 % rate. This
+    asserts dispatch mechanics on both paths: flipping the enum binding
+    selects a different scalar echo for 00558 and a different bracket
+    path for cuota íntegra 00562.
     """
     base_inputs = _base_inputs(Decimal("1000000"))
 
@@ -361,6 +383,35 @@ def test_erd_parameter_encodes_the_ley_31_2022_rate() -> None:
     assert "ley-31-2022:art-39" in erd.legal_refs, "ERD parameter must cite Ley 31/2022 Art. 39 as modification source"
 
 
+def test_art101_erd_parameter_encodes_the_dt44_transition_schedule() -> None:
+    """The art.101 ERD parameter encodes the DT 44ª 2025-2028 schedule.
+
+    LIS art. 101 defines entidades de reducida dimensión by prior-period
+    INCN below 10.000.000 EUR. LIS DT 44ª then phases their general-rate
+    transition at 24/23/22/21 for periods initiated in 2025-2028, before
+    the current art. 29 20% rate applies from 2029. The 2024 value stays
+    25% so the dated parameter can be used safely by the shared
+    2024-y-siguientes revision before DT 44ª takes effect.
+    """
+    parameters = _parameters()
+    assert "is.modelo-200.tipo-gravamen-erd-art101" in parameters
+    erd = parameters["is.modelo-200.tipo-gravamen-erd-art101"]
+    assert erd.data_type == "ratio"
+    assert erd.unit == "percent"
+    assert "ley-27-2014:art-101" in erd.legal_refs
+    assert "ley-27-2014:dt-44" in erd.legal_refs
+
+    rates_by_year = {value.valid_from.year: value.value for value in erd.values}
+    assert rates_by_year == {
+        2024: Decimal("25"),
+        2025: Decimal("24"),
+        2026: Decimal("23"),
+        2027: Decimal("22"),
+        2028: Decimal("21"),
+        2029: Decimal("20"),
+    }
+
+
 def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
     """INCN < 1.000.000 EUR routes general-form entities to the ERD 23 % rate.
 
@@ -408,6 +459,57 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
     )
 
 
+def test_tipo_gravamen_dispatch_routes_2025_micro_display_rate_to_first_tranche() -> None:
+    """Persona repro: a 2025 micro-company prints 21 while cuota is 10.500.
+
+    Dario's CLI run used an SL with INCN below 1M and a 50.000 base. The
+    cuota already followed LIS DT 44ª at 21 %, but 00558 incorrectly echoed
+    the legacy 23 %. The display scalar must follow the same filing-year
+    threshold as the bracket calculation.
+    """
+    result = calculate_registry_snapshot(
+        _snapshot(),
+        inputs=_base_inputs(Decimal("50000")),
+        enum_binding_values={_DISPATCH_BINDING: "sl"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("450000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+        },
+        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
+        date_context={"filing_period": date(2025, 12, 31)},
+    )
+
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("10500.00")
+
+
+def test_tipo_gravamen_dispatch_routes_2025_micro_cuota_to_rest_tranche() -> None:
+    """A 2025 micro-company above 50.000 EUR uses the second tranche."""
+    result = calculate_registry_snapshot(
+        _snapshot(),
+        inputs=_base_inputs(Decimal("100000")),
+        enum_binding_values={_DISPATCH_BINDING: "sl"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("450000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+        },
+        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
+        date_context={"filing_period": date(2025, 12, 31)},
+    )
+
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("21500.00")
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] != Decimal("23000.00")
+
+
 def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> None:
     """INCN >= 1.000.000 EUR keeps general-form entities at the 25 % rate.
 
@@ -436,6 +538,56 @@ def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25"), (
         "SA with INCN 1.5M must display tipo 25 % (above ERD threshold)"
     )
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00")
+
+
+def test_tipo_gravamen_dispatch_routes_art101_erd_below_10m_from_2025() -> None:
+    """INCN below 10M and at least 1M routes to the art.101 ERD schedule.
+
+    For a 2025 filing period, LIS DT 44ª fixes the art.101 ERD rate at
+    24%. A sociedad anónima with prior-period INCN 7.000.000 EUR is not
+    a micro-empresa, but is below the art.101 10M threshold, so both the
+    displayed rate and cuota path must use the ERD schedule.
+    """
+    result = calculate_registry_snapshot(
+        _snapshot(),
+        inputs=_base_inputs(Decimal("1000000")),
+        enum_binding_values={_DISPATCH_BINDING: "sa"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("7000000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+        },
+        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
+        date_context={"filing_period": date(2025, 12, 31)},
+    )
+
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("24")
+    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("240000.00")
+
+
+def test_tipo_gravamen_dispatch_keeps_general_rate_at_art101_boundary_from_2025() -> None:
+    """INCN at 10M is outside art.101 ERD and stays on the general rate."""
+    result = calculate_registry_snapshot(
+        _snapshot(),
+        inputs=_base_inputs(Decimal("1000000")),
+        enum_binding_values={_DISPATCH_BINDING: "sa"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+        },
+        relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
+        date_context={"filing_period": date(2025, 12, 31)},
+    )
+
+    assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25")
     assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00")
 
 
