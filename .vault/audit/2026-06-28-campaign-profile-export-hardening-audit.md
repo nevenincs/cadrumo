@@ -806,6 +806,49 @@ in this wave adds a typed `unsupported_period` ledger-preflight issue for any
 non-calendar-span period, including empty catalogues, so M309 readiness now
 fails closed instead of pretending an AD-HOC ledger preflight is ready.
 
+### wave-twelve-persona-campaign | high | Profile creation now fails incomplete profiles and M200 micro display rate is aligned
+
+Wave twelve reran the campaign shape with three fresh CLI-only personas and
+separate source triage agents. Ines exercised a blank-state M349 foreign-client
+persona; Dario exercised a small S.L. across Modelo 202 instalments and annual
+Modelo 200; Sofia exercised an employed-plus-autonomous annual Modelo 100 path.
+The personas used only the CLI, fake financial data, scratch local storage, and
+external AEAT/BOE sanity checks; they did not read source, vault notes, or git
+state. Their findings were routed through read-only source triage before coding.
+
+Ines confirmed that valid M349 DE/FR operator rows still calculate, verify,
+locally file, and export with the expected row totals, but a malformed
+intra-community VAT row (`ZZ` / `BADVAT`) was accepted before this pass. The
+bounded fix now validates M349 row VAT prefixes against the AEAT-supported
+country-code set and rejects unsupported prefixes before row persistence. This
+is deliberately local validation: it is not VIES verification and does not
+assert that a syntactically valid VAT identifier is legally active.
+
+Dario reproduced the M200 trust defect from a 2025 micro-company S.L. with
+50,000.00 of taxable base and INCN below 1,000,000. The cuota íntegra already
+followed the LIS DT 44ª 2025 first tranche at 21 percent (`00562=10500.00`),
+but the display/export scalar `DP200014:00558` still echoed the legacy 23
+percent. The fix adds a dated, display-only micro-company scalar that mirrors
+the first tranche used by the bracketed cuota path: 23 percent for 2024, 21
+percent for 2025, and 19 percent for 2026. The bracketed cuota formula remains
+the authority for `00562`.
+
+The profile hardening from this wave moves the critical failure earlier than
+Modelo work. `config profile create` now refuses schema-valid but
+filing-incomplete create flows before persisting a profile: natural persons
+must carry entity type, name, and surnames; legal entities must carry entity
+type and legal name; attribution entities must carry entity type and name. Patch
+and edit flows remain allowed to repair existing records. This closes the
+highest-confidence-loss path where users could create a profile that looked
+valid and only discover missing filing identity facts inside modelo work.
+
+Sofia's M100 path remains mostly backlog rather than a quick calculation patch.
+The annual calculation engine can receive M130 and withholding relations, but a
+bank-ledger-only payroll deposit cannot infer gross employment income or
+withholding. The current CLI also makes M100 employment withholding casillas and
+activity-mode/category selection hard to discover. Those are retained as UX and
+workflow design debt, not recoded as hidden assumptions.
+
 ## Recommendations
 
 Implemented and reviewed in this wave:
@@ -941,6 +984,24 @@ Implemented and reviewed in this wave:
   in `src/aeat/application/ledger/_preflight.py`, with service coverage in
   `src/aeat/application/ledger/tests/test_preflight.py` and projection coverage
   in `src/aeat/application/tests/test_state_projection.py`.
+- M349 unsupported intra-community VAT prefix refusal in
+  `src/aeat/domain/modelos/_row_models.py`, with row-model and CLI row-entry
+  coverage in `src/aeat/domain/modelos/tests/test_row_models.py` and
+  `src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py`.
+- Profile-create filing-baseline refusal in
+  `src/aeat/application/wizard/_commands.py` and
+  `src/aeat/locales/{ca,en,es,hu}.yml`, with wizard and CLI coverage in
+  `src/aeat/application/wizard/tests/test_create_pointer_atomicity.py`,
+  `src/aeat/application/wizard/tests/test_commands_helpers.py`,
+  `src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py`, and
+  `src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py`.
+- M200 micro-company display-rate alignment in the 2024-y-siguientes registry
+  records for Modelo 200, with grounding and dispatch coverage in
+  `src/aeat/domain/calculations/registry/tests/test_modelo_200_tipo_gravamen_dispatch.py`,
+  adjacent cuota-lane coverage in
+  `src/aeat/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py`,
+  and CLI calculation fixture hardening in
+  `src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py`.
 
 Verification passed:
 
@@ -1026,6 +1087,15 @@ Verification passed:
 - Wave-ten bulk-classify regression suite: `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
 - Wave-eleven AD-HOC ledger-preflight regression: `uv run --no-sync pytest src/aeat/application/ledger/tests/test_preflight.py src/aeat/application/ledger/tests/test_preflight_anomaly.py src/aeat/application/tests/test_state_projection.py::test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period -q`
 - Wave-eleven AD-HOC/recargo preflight ruff: `uv run --no-sync ruff check src/aeat/application/ledger/_preflight.py src/aeat/application/ledger/tests/test_preflight.py src/aeat/application/ledger/tests/test_preflight_anomaly.py src/aeat/application/tests/test_state_projection.py`
+- Wave-twelve M349 row validation: `uv run --no-sync pytest src/aeat/domain/modelos/tests/test_row_models.py src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py -q`
+- Wave-twelve M349 row validation ruff: `uv run --no-sync ruff check src/aeat/domain/modelos/_row_models.py src/aeat/domain/modelos/tests/test_row_models.py src/aeat/entrypoints/cli/tests/test_work_calculate_row_flag.py`
+- Wave-twelve profile-create hard stop: `uv run --no-sync pytest src/aeat/application/wizard/tests/test_create_pointer_atomicity.py src/aeat/application/wizard/tests/test_commands_helpers.py -q`
+- Wave-twelve profile-create CLI regression: `uv run --no-sync pytest -m "integration or unit" src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py::test_profile_create_refuses_incomplete_profile_before_modelo_work src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py::test_work_create_refuses_pre_activity_m303_and_creates_no_unit src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py::test_work_create_refuses_pre_activity_m130_and_creates_no_unit src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py -q`
+- Wave-twelve profile-create ruff/YAML: `uv run --no-sync ruff check src/aeat/application/wizard/_commands.py src/aeat/application/wizard/tests/test_create_pointer_atomicity.py src/aeat/entrypoints/cli/tests/_profile_cli_support.py src/aeat/entrypoints/cli/tests/test_modelo_work_ux.py src/aeat/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py`, plus a PyYAML parse over `src/aeat/locales/{ca,en,es,hu}.yml`.
+- Wave-twelve profile-create direct smokes: an incomplete blank-root profile create refused with `REFUSED_WIZARD_MISSING_FLAG`, and a matching create with `--entity-type natural_person --name ... --surnames ...` succeeded.
+- Wave-twelve M200 display-rate grounding: `uv run --no-sync pytest src/aeat/domain/calculations/registry/tests/test_modelo_200_tipo_gravamen_dispatch.py src/aeat/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py -q`
+- Wave-twelve M200 CLI calculation regression: `uv run --no-sync pytest -m "integration or unit" src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py -q --tb=short`
+- Wave-twelve M200 ruff/diff check: `uv run --no-sync ruff check src/aeat/entrypoints/cli/tests/test_modelo_calculation_through_real_cli.py src/aeat/domain/calculations/registry/tests/test_modelo_200_tipo_gravamen_dispatch.py src/aeat/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py`; `git diff --check` on the scoped M200 registry/test files and the CLI calculation test reported only Git CRLF normalization warnings before staging, and cached diff check was clean before commit.
 
 Independent read-only reviews reported no findings for the IVA wallet patch,
 the Modelo 202 modality gate, the stage-1 readiness hardening, the M390 export
@@ -1060,8 +1130,6 @@ Residual backlog:
   populate `iva-wallet balance`, but calculation must continue to require AEAT
   wallet/cartera evidence or explicit taxpayer override before using
   `filed_history_only` values in casilla 110.
-- Resolve the M200 `00558` scalar-rate echo gap for 2025/2026 micro-empresa
-  cases without regressing the already-correct bracketed cuota calculation.
 - Add a legally grounded "Spanish permanent establishment / Spanish presence"
   profile axis before suppressing M200/M202 for foreign legal entities that
   assert no Spanish PE; the current profile schema cannot encode the distinction
@@ -1091,10 +1159,9 @@ Residual backlog:
   boundary into calculate/guidance, so operators never receive impossible
   ledger CLI commands; true M309 support needs grounded event-date or
   transaction-selection semantics.
-- Decide whether profile creation/import/edit should reject schema-valid but
-  modelo-incomplete profiles at save time, or keep the current model-work gate
-  and change post-create guidance so it does not send operators toward filing
-  work before profile preflight is ready.
+- Decide whether profile import should refuse schema-valid but filing-incomplete
+  profiles at import time; profile create now fails hard before persistence, and
+  edit/patch remains available for repairing existing profiles.
 - Rename or split `config profile validate` output so schema validity cannot
   read as filing readiness, and prefer profile display names over bucket ids in
   readiness repair suggestions.
