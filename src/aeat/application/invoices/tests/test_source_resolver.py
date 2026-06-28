@@ -10,10 +10,16 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import StorageValidationError
-from ....application.ledger import BusinessOperationInvoiceDirection
+from ....application.ledger import (
+    BusinessOperationInvoiceDirection,
+    BusinessOperationInvoiceRepository,
+    IntracomOperationType,
+    PayableInvoiceService,
+)
 from ....core import Period
 from ....core.errors import AeatError, get_registered_error_code, resolve_error_message
 from ....core.resources import resources
+from ....domain.calculations.registry import RegistryValidationError
 from ....domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -203,6 +209,79 @@ def test_invoice_catalogue_source_resolver_folds_received_acquisition_for_m349(
     assert resolution.source_transaction_ids == ("2" * 64,)
     assert {item.source_kind for item in resolution.provenance} == {"payable_invoice"}
     assert {item.source_ref for item in resolution.provenance} == {f"payable_invoice:{acquisition.invoice_id}"}
+
+
+def test_invoice_catalogue_source_resolver_folds_slim_received_service_acquisition_for_m349(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    added = PayableInvoiceService(settings=secure_profile.settings).add(
+        bucket_id=secure_profile.bucket_id,
+        counterparty_nif="IT12345678901",
+        counterparty_name="Servizi SRL",
+        invoice_number="IT-SERV-2026-001",
+        invoice_date="2026-03-10",
+        taxable_base=Decimal("3000.00"),
+        iva_rate=Decimal("0"),
+        country_code="IT",
+        operation_type=IntracomOperationType.ADQUISICION_SERVICIOS,
+    )
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+    resolution = InvoiceCatalogueSourceResolver(
+        invoice_repository=InvoiceCatalogueRepository(objects=secure_profile.repository),
+        business_invoice_repository=BusinessOperationInvoiceRepository(objects=secure_profile.repository),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=secure_profile.bucket_id,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.binding_values["iva-349-declarante-numero-operadores-adquisicion"] == Decimal("1")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones-adquisicion"] == Decimal("3000.00")
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("3000.00")
+    assert len(resolution.detail_rows) == 1
+    row = resolution.detail_rows[0]
+    assert row.codigo_pais == "IT"
+    assert row.nif_comunitario == "IT12345678901"
+    assert row.clave_operacion == "I"
+    assert row.importe == Decimal("3000.00")
+    assert {item.source_ref for item in resolution.provenance} == {f"payable_invoice:{added.record.invoice_id}"}
+
+
+def test_invoice_catalogue_source_resolver_refuses_slim_rectification_without_metadata_for_m349(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    PayableInvoiceService(settings=secure_profile.settings).add(
+        bucket_id=secure_profile.bucket_id,
+        counterparty_nif="DE222222222",
+        counterparty_name="Supplier GmbH",
+        invoice_number="DE-RECT-2026-001",
+        invoice_date="2026-03-10",
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0"),
+        country_code="DE",
+        operation_type=IntracomOperationType.R,
+    )
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+    with pytest.raises(RegistryValidationError, match="rectification operation type R"):
+        InvoiceCatalogueSourceResolver(
+            invoice_repository=InvoiceCatalogueRepository(objects=secure_profile.repository),
+            business_invoice_repository=BusinessOperationInvoiceRepository(objects=secure_profile.repository),
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=secure_profile.bucket_id,
+                modelo="349",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                revision=snapshot.revision,
+            ),
+        )
 
 
 def test_invoice_catalogue_source_resolver_accepts_xi_goods_for_m349(

@@ -54,11 +54,20 @@ source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "country_code", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-349-form-2010"
 required_text = ["Código país"]
+
+[[revisions."2020-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-349-instructions"
+required_text = [
+    "exclusivamente para los bienes (no para servicios)",
+    "NIVA que comenzará por XI",
+    "Para los períodos 1M y 1T de 2021, el modelo 349 admitirá los prefijos GB y XI",
+    "Para los periodos 2M a 12M y 2T a 4T de 2021 sólo se admitirá el prefijo XI",
+]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-operador-row-nif"
@@ -116,11 +125,19 @@ source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "country_code", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-349-form-2010"
 required_text = ["RECTIFICACIONES"]
+
+[[revisions."2020-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-349-instructions"
+required_text = [
+    "Para las rectificaciones de operaciones anteriores a 2021, sólo se admitirá el prefijo GB",
+    "Para las rectificaciones de operaciones del 1M o 1T de 2021",
+    "Para las rectificaciones de operaciones de 2M a 12M y 2T a 4T de 2021, sólo se admitirá el prefijo XI",
+]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-rectificacion-row-nif"

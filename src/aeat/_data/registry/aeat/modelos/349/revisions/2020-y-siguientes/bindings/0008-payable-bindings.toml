@@ -6,7 +6,7 @@
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-declarante-numero-operadores-adquisicion"
 source = "payable_invoice"
-selector = { fact = "operator_count", claves = ["A", "T"], rectification_scope = "exclude_rectifications" }
+selector = { fact = "operator_count", claves = ["A", "I", "T"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "count_distinct" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure", "boe-modelo-349-form-2010"]
@@ -18,7 +18,7 @@ required_text = ["NÚMERO TOTAL DE OPERADORES INTRACOMUNITARIOS"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-declarante-importe-operaciones-adquisicion"
 source = "payable_invoice"
-selector = { fact = "base_sum", claves = ["A", "T"], rectification_scope = "exclude_rectifications" }
+selector = { fact = "base_sum", claves = ["A", "I", "T"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "sum" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure", "boe-modelo-349-form-2010"]
@@ -30,7 +30,7 @@ required_text = ["IMPORTE DE LAS OPERACIONES INTRACOMUNITARIAS"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-declarante-numero-rectificaciones-adquisicion"
 source = "payable_invoice"
-selector = { fact = "operator_count", claves = ["A", "T"], rectification_scope = "only_rectifications" }
+selector = { fact = "operator_count", claves = ["A", "I", "T"], rectification_scope = "only_rectifications" }
 aggregation = { op = "count_distinct" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure", "boe-modelo-349-form-2010"]
@@ -42,7 +42,7 @@ required_text = ["NÚMERO TOTAL DE OPERADORES INTRACOMUNITARIOS CON RECTIFICACIO
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-declarante-importe-rectificaciones-adquisicion"
 source = "payable_invoice"
-selector = { fact = "rectified_base_delta_sum", claves = ["A", "T"], rectification_scope = "only_rectifications" }
+selector = { fact = "rectified_base_delta_sum", claves = ["A", "I", "T"], rectification_scope = "only_rectifications" }
 aggregation = { op = "sum" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure", "boe-modelo-349-form-2010"]
@@ -54,19 +54,28 @@ required_text = ["IMPORTE DE LAS RECTIFICACIONES"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-operador-row-codigo-pais-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "country_code", grouping = "operator_clave", claves = ["A", "T"], rectification_scope = "exclude_rectifications" }
+selector = { fact = "row_field", row_field = "country_code", grouping = "operator_clave", claves = ["A", "I", "T"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-349-form-2010"
 required_text = ["Código país"]
 
+[[revisions."2020-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-349-instructions"
+required_text = [
+    "exclusivamente para los bienes (no para servicios)",
+    "NIVA que comenzará por XI",
+    "Para los períodos 1M y 1T de 2021, el modelo 349 admitirá los prefijos GB y XI",
+    "Para los periodos 2M a 12M y 2T a 4T de 2021 sólo se admitirá el prefijo XI",
+]
+
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-operador-row-nif-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "party_tax_id", grouping = "operator_clave", claves = ["A", "T"], rectification_scope = "exclude_rectifications" }
+selector = { fact = "row_field", row_field = "party_tax_id", grouping = "operator_clave", claves = ["A", "I", "T"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
@@ -78,7 +87,7 @@ required_text = ["NIF OPERADOR COMUNITARIO"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-operador-row-apellidos-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "party_legal_name", grouping = "operator_clave", claves = ["A", "T"], rectification_scope = "exclude_rectifications" }
+selector = { fact = "row_field", row_field = "party_legal_name", grouping = "operator_clave", claves = ["A", "I", "T"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
@@ -90,7 +99,7 @@ required_text = ["APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL OPERADOR"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-operador-row-clave-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "clave", grouping = "operator_clave", claves = ["A", "T"], rectification_scope = "exclude_rectifications" }
+selector = { fact = "row_field", row_field = "clave", grouping = "operator_clave", claves = ["A", "I", "T"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
@@ -102,7 +111,7 @@ required_text = ["CLAVE DE OPERACIÓN"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-operador-row-base-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "base_imponible", grouping = "operator_clave", claves = ["A", "T"], rectification_scope = "exclude_rectifications" }
+selector = { fact = "row_field", row_field = "base_imponible", grouping = "operator_clave", claves = ["A", "I", "T"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
@@ -114,19 +123,27 @@ required_text = ["BASE IMPONIBLE O IMPORTE"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-rectificacion-row-codigo-pais-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "country_code", grouping = "operator_clave_period", claves = ["A", "T"], rectification_scope = "only_rectifications" }
+selector = { fact = "row_field", row_field = "country_code", grouping = "operator_clave_period", claves = ["A", "I", "T"], rectification_scope = "only_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
-source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-349-form-2010"
 required_text = ["RECTIFICACIONES"]
 
+[[revisions."2020-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-349-instructions"
+required_text = [
+    "Para las rectificaciones de operaciones anteriores a 2021, sólo se admitirá el prefijo GB",
+    "Para las rectificaciones de operaciones del 1M o 1T de 2021",
+    "Para las rectificaciones de operaciones de 2M a 12M y 2T a 4T de 2021, sólo se admitirá el prefijo XI",
+]
+
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-rectificacion-row-nif-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "party_tax_id", grouping = "operator_clave_period", claves = ["A", "T"], rectification_scope = "only_rectifications" }
+selector = { fact = "row_field", row_field = "party_tax_id", grouping = "operator_clave_period", claves = ["A", "I", "T"], rectification_scope = "only_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
@@ -138,7 +155,7 @@ required_text = ["NIF OPERADOR COMUNITARIO"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-rectificacion-row-apellidos-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "party_legal_name", grouping = "operator_clave_period", claves = ["A", "T"], rectification_scope = "only_rectifications" }
+selector = { fact = "row_field", row_field = "party_legal_name", grouping = "operator_clave_period", claves = ["A", "I", "T"], rectification_scope = "only_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
@@ -150,7 +167,7 @@ required_text = ["APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL OPERADOR"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-rectificacion-row-clave-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "clave", grouping = "operator_clave_period", claves = ["A", "T"], rectification_scope = "only_rectifications" }
+selector = { fact = "row_field", row_field = "clave", grouping = "operator_clave_period", claves = ["A", "I", "T"], rectification_scope = "only_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
@@ -162,7 +179,7 @@ required_text = ["CLAVE DE OPERACIÓN"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-rectificacion-row-ejercicio-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "rectified_year", grouping = "operator_clave_period", claves = ["A", "T"], rectification_scope = "only_rectifications" }
+selector = { fact = "row_field", row_field = "rectified_year", grouping = "operator_clave_period", claves = ["A", "I", "T"], rectification_scope = "only_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
@@ -174,7 +191,7 @@ required_text = ["Ejercicio"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-rectificacion-row-periodo-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "rectified_period", grouping = "operator_clave_period", claves = ["A", "T"], rectification_scope = "only_rectifications" }
+selector = { fact = "row_field", row_field = "rectified_period", grouping = "operator_clave_period", claves = ["A", "I", "T"], rectification_scope = "only_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
@@ -186,7 +203,7 @@ required_text = ["Periodo"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-rectificacion-row-base-rectificada-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "base_imponible", grouping = "operator_clave_period", claves = ["A", "T"], rectification_scope = "only_rectifications" }
+selector = { fact = "row_field", row_field = "base_imponible", grouping = "operator_clave_period", claves = ["A", "I", "T"], rectification_scope = "only_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
@@ -198,7 +215,7 @@ required_text = ["BASE IMPONIBLE O IMPORTES RECTIFICADOS"]
 [[revisions."2020-y-siguientes".bindings]]
 id = "iva-349-rectificacion-row-base-anterior-adquisicion"
 source = "payable_invoice"
-selector = { fact = "row_field", row_field = "rectified_base_previous", grouping = "operator_clave_period", claves = ["A", "T"], rectification_scope = "only_rectifications" }
+selector = { fact = "row_field", row_field = "rectified_base_previous", grouping = "operator_clave_period", claves = ["A", "I", "T"], rectification_scope = "only_rectifications" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93", "rd-1624-1992:art-79", "rd-1624-1992:art-80", "ley-37-1992:art-9-bis", "ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-27", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-80", "ley-37-1992:art-84", "ley-37-1992:art-86"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
