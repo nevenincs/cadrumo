@@ -1,4 +1,10 @@
-"""Operator-facing auth result contracts."""
+"""Operator-facing auth result contracts.
+
+These records project provider catalogue entries, readiness checks, live-login
+results, and preflight state through :class:`AuthProvidersReport`,
+:class:`AuthStatusResult`, :class:`AuthTestResult`, and
+:class:`LiveAuthPreflightReport`.
+"""
 
 from __future__ import annotations
 

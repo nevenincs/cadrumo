@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Literal
 
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
@@ -300,9 +301,31 @@ def test_modelo_390_annual_summary_cross_check_flags_303_390_divergence() -> Non
     assert cross_check.matches is False
 
 
-def test_modelo_390_cross_check_keeps_active_prior_year_lots_out_of_annual_fields() -> None:
+_PRIOR_YEAR_390_CROSS_CHECK_CASES: tuple[
+    tuple[int, IvaCompensationExpiryReviewState, tuple[str, ...]],
+    ...,
+] = (
+    (2025, IvaCompensationExpiryReviewState.ACTIVE, ("active", "active")),
+    (
+        2021,
+        IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED,
+        ("expired_review_required", "active"),
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    ("prior_year", "prior_year_expiry_state", "expiry_review_states"),
+    _PRIOR_YEAR_390_CROSS_CHECK_CASES,
+    ids=("active-prior-year", "expired-prior-year"),
+)
+def test_modelo_390_cross_check_keeps_prior_year_lots_out_of_annual_fields(
+    prior_year: int,
+    prior_year_expiry_state: IvaCompensationExpiryReviewState,
+    expiry_review_states: tuple[str, ...],
+) -> None:
     states = (
-        _state(filing_year=2025, period="4T", generated=Decimal("25.00")),
+        _state(filing_year=prior_year, period="4T", generated=Decimal("25.00")),
         _state(filing_year=2026, period="4T", generated=Decimal("100.00")),
     )
     report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
@@ -315,37 +338,14 @@ def test_modelo_390_cross_check_keeps_active_prior_year_lots_out_of_annual_field
 
     cross_check = cross_check_iva_compensation_annual_summary(report, summary, period_states=states)
 
-    assert report.lots[0].expiry_review_state is IvaCompensationExpiryReviewState.ACTIVE
-    assert cross_check.carry_forward_remaining_amount == Decimal("100.00")
-    assert cross_check.expected_last_period_compensation_amount == Decimal("100.00")
-    assert cross_check.expected_generated_not_in_last_period_amount == Decimal("0.00")
-    assert cross_check.mismatched_casilla_ids == ()
-    assert cross_check.matches is True
-
-
-def test_modelo_390_cross_check_keeps_expired_prior_year_lots_out_of_annual_fields() -> None:
-    states = (
-        _state(filing_year=2021, period="4T", generated=Decimal("25.00")),
-        _state(filing_year=2026, period="4T", generated=Decimal("100.00")),
-    )
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
-    summary = iva_compensation_annual_summary_from_filed_observation(
-        _filed_390_observation(
-            last_period_compensation=Decimal("100.00"),
-            generated_not_in_last_period=Decimal("0.00"),
-        ),
-    )
-
-    cross_check = cross_check_iva_compensation_annual_summary(report, summary, period_states=states)
-
-    assert report.lots[0].expiry_review_state is IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED
+    assert report.lots[0].expiry_review_state is prior_year_expiry_state
     assert cross_check.carry_forward_remaining_amount == Decimal("100.00")
     assert cross_check.modelo_390_total_pending_amount == Decimal("100.00")
     assert cross_check.expected_last_period_compensation_amount == Decimal("100.00")
     assert cross_check.expected_generated_not_in_last_period_amount == Decimal("0.00")
     assert cross_check.mismatched_casilla_ids == ()
     assert cross_check.matches is True
-    assert "expired_review_required" in cross_check.expiry_review_states
+    assert cross_check.expiry_review_states == expiry_review_states
 
 
 #: Modelo 390 year-end carry box binding ids (the FIFO-projected slots).
@@ -638,26 +638,6 @@ def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path
     assert report.unallocated_applied_amount == Decimal("0")
 
 
-def _filed_303_annual_reconciliation_observation(
-    *,
-    filing_year: int,
-    period: str,
-    devengada: Decimal,
-    deducible: Decimal,
-    regimen_general: Decimal,
-) -> RegistryModeloObservation:
-    return registry_grounded_modelo_observation(
-        modelo="303",
-        filing_year=filing_year,
-        period=period,
-        casilla_values={
-            _M303_CUOTA_DEVENGADA_TOTAL_CASILLA: devengada,
-            _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: deducible,
-            _M303_RESULTADO_REGIMEN_GENERAL_CASILLA: regimen_general,
-        },
-    )
-
-
 def test_iva_compensation_carry_forward_lot_rejects_unbalanced_amounts() -> None:
     with pytest.raises(ValidationError, match="must equal generated_amount"):
         IvaCompensationCarryForwardLot(
@@ -870,41 +850,31 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
         assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_status": "seeded"}
 
 
-def test_iva_compensation_state_from_filed_observation_refuses_printed_number_references() -> None:
+_M303PrintedNumberSourceKind = Literal["submitted_file", "justificante_pdf"]
+
+_M303_PRINTED_NUMBER_REFERENCE_CASES: tuple[tuple[_M303PrintedNumberSourceKind, str], ...] = (
+    ("submitted_file", "submitted-file:casilla-69"),
+    ("justificante_pdf", "justificante-pdf:casilla-69"),
+)
+
+
+@pytest.mark.parametrize(
+    ("source_artefact_kind", "source_locator"),
+    _M303_PRINTED_NUMBER_REFERENCE_CASES,
+    ids=("submitted-file", "justificante-pdf"),
+)
+def test_iva_compensation_state_from_filed_observation_refuses_printed_number_references(
+    source_artefact_kind: _M303PrintedNumberSourceKind,
+    source_locator: str,
+) -> None:
     observation = _filed_observation(modelo="303").model_copy(
         update={
             "casillas": (
                 ObservedCasillaValue(
                     casilla_id=_M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,
                     value="-25.00",
-                    source_artefact_kind="submitted_file",
-                    source_locator="submitted-file:casilla-69",
-                    confidence=1.0,
-                ),
-            ),
-        },
-    )
-
-    with pytest.raises(IvaCompensationCasillaReferenceError) as excinfo:
-        iva_compensation_state_from_filed_observation(observation)
-
-    assert excinfo.value.context == {
-        "modelo": "303",
-        "revision": "2023-y-siguientes",
-        "period": "4T",
-        "casilla_ids": (_M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,),
-    }
-
-
-def test_iva_compensation_state_validates_ignored_justificante_casilla_ids() -> None:
-    observation = _filed_observation(modelo="303").model_copy(
-        update={
-            "casillas": (
-                ObservedCasillaValue(
-                    casilla_id=_M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,
-                    value="-25.00",
-                    source_artefact_kind="justificante_pdf",
-                    source_locator="justificante-pdf:casilla-69",
+                    source_artefact_kind=source_artefact_kind,
+                    source_locator=source_locator,
                     confidence=1.0,
                 ),
             ),

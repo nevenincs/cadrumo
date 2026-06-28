@@ -40,7 +40,7 @@ from ...core import BindingSourceKind
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
-from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
     BindingId,
     DataBindingDefinition,
@@ -65,6 +65,13 @@ from ..aggregation._source_mesh import (
 
 _PROFILE_RESOLVER_ID = "profile"
 _PROFILE_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)
+_MARRIED_STATUS_TOKENS = frozenset({"2", "casado"})
+_UNMARRIED_STATUS_TOKENS = frozenset({"1", "3", "4", "soltero", "viudo", "separado_divorciado"})
+_MARRIAGE_DERIVED_FACT_PATHS = (
+    "renta_taxpayer.marriage_full_year",
+    "renta_taxpayer.marriage_month_start",
+    "renta_taxpayer.marriage_month_end",
+)
 
 
 class ProfileBindingResolutionError(ModeloError):
@@ -120,9 +127,12 @@ def _inject_derived_marriage_facts(
     When ``renta_taxpayer.marriage_date`` is present as a ``date``-typed fact,
     the three derived binding keys (``marriage_full_year``,
     ``marriage_month_start``, ``marriage_month_end``) are computed from the raw
-    date and the snapshot's ``filing_year``.  They are injected as ``Decimal``
-    values so the Decimal-channel binding resolver picks them up without a
-    special case in the main loop.
+    date and the snapshot's ``filing_year``.  For an explicitly unmarried
+    taxpayer the same casillas are neutral zeros: Art. 82 marriage-month facts
+    are not applicable, and the CLI must not force a single filer to invent a
+    marriage date.  Married taxpayers without a marriage date remain unresolved.
+    Values are injected as ``Decimal`` so the Decimal-channel binding resolver
+    picks them up without a special case in the main loop.
 
     This function is idempotent: if the keys are already present (e.g. written
     as explicit profile facts by an older tooling version) they are not
@@ -130,6 +140,10 @@ def _inject_derived_marriage_facts(
     """
     raw_date = fact_index.get("renta_taxpayer.marriage_date")
     if not isinstance(raw_date, date):
+        marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
+        if marital_status in _UNMARRIED_STATUS_TOKENS:
+            for fact_path in _MARRIAGE_DERIVED_FACT_PATHS:
+                fact_index.setdefault(fact_path, Decimal("0"))
         return
 
     month_start = marriage_month_start(raw_date, filing_year)
@@ -179,7 +193,7 @@ def _inject_derived_family_facts(
         convive = str(convivencia_raw).lower() not in ("false", "0")
         if convive:
             try:
-                birth = _parse_iso8601_date(str(birth_raw))
+                birth = parse_iso8601_date(str(birth_raw))
                 if birth is None:
                     raise ValueError("birth date parsed as None")
                 age_at_year_end = filing_year - birth.year
@@ -459,7 +473,15 @@ def _resolve_one(
     return None
 
 
+inject_derived_marriage_facts = _inject_derived_marriage_facts
+profile_fact_index = _profile_fact_index
+resolve_profile_binding_value = _resolve_one
+
+
 __all__ = [
     "ProfileBindingResolutionError",
+    "inject_derived_marriage_facts",
+    "profile_fact_index",
+    "resolve_profile_binding_value",
     "resolve_profile_sourced_bindings",
 ]

@@ -1,6 +1,12 @@
-"""Work-unit lifecycle actions for modelo filings.
+"""Lifecycle mutations for modelo work units.
 
-Use of :class:`BucketEventHistoryRepository` for compliance.
+This module creates, lists, renames, and discards
+:class:`~aeat.domain.modelos._work_unit.WorkUnit` records in the
+:class:`~aeat.domain.modelos._repository.WorkUnitCatalogueRepository`.
+Each mutating action emits a typed event through
+:class:`BucketEventHistoryRepository`, giving
+:func:`~aeat.application.modelo._history.assemble_work_unit_history` a complete
+timeline from creation through discard.
 """
 
 from __future__ import annotations
@@ -45,6 +51,15 @@ def create_work_unit(
     if period.filing_year != filing_year:
         raise ValueError(f"filing_year {filing_year!r} does not match period year {period.filing_year!r}")
     reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
+    from ._profile_readiness_gate import require_profile_ready_for_modelo_work
+
+    require_profile_ready_for_modelo_work(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        revision_id=revision_id,
+        filing_year=filing_year,
+        period=period,
+    )
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue = repo.load()

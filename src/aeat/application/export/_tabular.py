@@ -1,4 +1,9 @@
-"""Strict tabular export serialization for application services."""
+"""Serialize tabular rows into :class:`TabularExportResult` payloads.
+
+Rows are rendered through the closed :class:`ExportSerializationFormat`
+surface, with :class:`ExportFieldError` and :class:`ExportFormatError`
+preserving validation failures as structured application errors.
+"""
 
 from __future__ import annotations
 
@@ -37,7 +42,7 @@ _SHA256_INVALID_REASON = "sha256_invalid"
 
 
 class TabularExportResult(BaseModel):
-    """Serialized tabular export payload and integrity metadata."""
+    """Serialized tabular payload produced by :func:`serialize_tabular_rows`."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -75,7 +80,7 @@ def serialize_tabular_rows(
     fieldnames: Sequence[str],
     export_format: ExportSerializationFormat,
 ) -> TabularExportResult:
-    """Serialize string-keyed rows as a deterministic CSV or JSON Lines payload.
+    """Serialize string-keyed rows as deterministic CSV, JSON Lines, or XLSX.
 
     Returns a :class:`TabularExportResult` with the encoded bytes, media
     type, and file extension for the requested format.

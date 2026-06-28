@@ -9,6 +9,7 @@ import pytest
 
 from ....core import Period
 from ....domain.buckets import BucketEventHistoryRepository
+from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevisionCatalogueRepository,
     CalculationRevisionState,
@@ -27,23 +28,55 @@ from .. import (
     evaluate_cross_period_clean_state,
 )
 from .test_cross_period_clean_state import (
-    _BUCKET_ID,
-    _CLOCK,
-    _GROUP_MEMBER_A,
-    _GROUP_MEMBER_B,
-    _M353_PERIOD,
-    _M353_YEAR,
-    _M390_PERIOD,
-    _M390_REVISION,
-    _M390_YEAR,
-    _m390_first_quarter_evidence,
-    _member_fan_in_requirement,
-    _persist_justificante_metadata,
-    _seed_member_322_filing,
-    _seed_official_303_source_filings,
-    _snapshot_353,
-    _snapshot_390,
-    _workflow_profile,
+    BUCKET_ID as _BUCKET_ID,
+)
+from .test_cross_period_clean_state import (
+    CLOCK as _CLOCK,
+)
+from .test_cross_period_clean_state import (
+    GROUP_MEMBER_A as _GROUP_MEMBER_A,
+)
+from .test_cross_period_clean_state import (
+    GROUP_MEMBER_B as _GROUP_MEMBER_B,
+)
+from .test_cross_period_clean_state import (
+    M353_PERIOD as _M353_PERIOD,
+)
+from .test_cross_period_clean_state import (
+    M353_YEAR as _M353_YEAR,
+)
+from .test_cross_period_clean_state import (
+    M390_PERIOD as _M390_PERIOD,
+)
+from .test_cross_period_clean_state import (
+    M390_REVISION as _M390_REVISION,
+)
+from .test_cross_period_clean_state import (
+    M390_YEAR as _M390_YEAR,
+)
+from .test_cross_period_clean_state import (
+    m390_first_quarter_evidence as _m390_first_quarter_evidence,
+)
+from .test_cross_period_clean_state import (
+    member_fan_in_requirement as _member_fan_in_requirement,
+)
+from .test_cross_period_clean_state import (
+    persist_justificante_metadata as _persist_justificante_metadata,
+)
+from .test_cross_period_clean_state import (
+    seed_member_322_filing as _seed_member_322_filing,
+)
+from .test_cross_period_clean_state import (
+    seed_official_303_source_filings as _seed_official_303_source_filings,
+)
+from .test_cross_period_clean_state import (
+    snapshot_353 as _snapshot_353,
+)
+from .test_cross_period_clean_state import (
+    snapshot_390 as _snapshot_390,
+)
+from .test_cross_period_clean_state import (
+    store_ready_profile as _store_ready_profile,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -381,6 +414,7 @@ def test_cross_period_clean_state_blocks_mismatched_justificante_metadata(tmp_pa
 
 def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        _store_ready_profile()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="390",
@@ -403,7 +437,14 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tm
         report = verify_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-test",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=TaxpayerProfile(
+                tax_id="X1234567L",
+                iva_regime=IVARegime.GENERAL,
+                has_employees=False,
+                pays_rent_with_retencion=False,
+                does_intracomunitario=False,
+                bienes_extranjero_above_threshold=False,
+            ),
             calculation_repository=CalculationRevisionCatalogueRepository(),
             verification_repository=VerificationReportCatalogueRepository(),
             bucket_event_repository=BucketEventHistoryRepository(),

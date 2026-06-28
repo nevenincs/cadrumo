@@ -142,6 +142,33 @@ def _provider_without_export_layout(provider: RegistrySchemaAccessor, modelo: st
     )
 
 
+def _provider_with_export_layouts(
+    provider: RegistrySchemaAccessor,
+    modelo: str,
+    layouts: tuple[ExportLayoutDefinition, ...],
+) -> RegistrySchemaAccessor:
+    subview = provider.get_subview(modelo)
+    return RegistrySchemaAccessor(
+        collections=provider.collections,
+        subviews={
+            **provider.subviews,
+            modelo: replace(
+                subview,
+                export_layout_ids=tuple(layout.id for layout in layouts),
+                export_layouts=layouts,
+            ),
+        },
+    )
+
+
+def _assert_missing_export_layout_refusal(message: str, modelo: str) -> None:
+    assert f"modelo {modelo!r} fichero-BOE export is unsupported" in message
+    assert "registry snapshot has no complete export_layouts definition" in message
+    assert "calculation, verification, and local filing surfaces may exist" in message.lower()
+    assert "cannot produce a BOE export file" in message
+    assert "does not certify legal correctness" in message
+
+
 def _approved_registry_draft():
     draft = build_draft(
         modelo="130",
@@ -646,14 +673,14 @@ def test_export_refuses_modelo_without_registry_layout(tmp_path: Path) -> None:
     provider = _provider_without_export_layout(_schema_provider(), draft.modelo)
     output = tmp_path / "modelo-130.txt"
 
-    with pytest.raises(FilingExportError, match="declares no export layout"):
+    with pytest.raises(FilingExportError) as exc_info:
         export_draft(
             draft,
             output_path=output,
             headers=_modelo_130_export_headers(),
             schema_provider=provider,
         )
-
+    _assert_missing_export_layout_refusal(str(exc_info.value), draft.modelo)
     assert not output.exists()
 
 
@@ -941,6 +968,39 @@ def test_export_requires_declared_header_values(tmp_path: Path) -> None:
         )
 
 
+@pytest.mark.parametrize(
+    ("headers", "missing_header"),
+    (
+        (
+            {"declaration_type": "", "surnames": "EXPORT TEST", "name": "ANA"},
+            "declaration_type",
+        ),
+        (
+            {"declaration_type": "I", "surnames": "", "name": "ANA"},
+            "surnames",
+        ),
+        (
+            {"declaration_type": "I", "surnames": "EXPORT TEST", "name": " "},
+            "name",
+        ),
+    ),
+    ids=("declaration-type", "surnames", "name"),
+)
+def test_export_rejects_blank_required_header_values(
+    tmp_path: Path,
+    headers: dict[str, str],
+    missing_header: str,
+) -> None:
+    draft = _approved_registry_draft()
+    with pytest.raises(ValueError, match=missing_header):
+        export_draft(
+            draft,
+            output_path=tmp_path / "modelo-130.txt",
+            headers=headers,
+            schema_provider=_schema_provider(),
+        )
+
+
 def test_verify_matches_exported_modelo_130_layout(tmp_path: Path) -> None:
     draft = _approved_registry_draft()
     exported = tmp_path / "modelo-130.txt"
@@ -1150,13 +1210,7 @@ def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) 
 
 
 def _approved_modelo_303_registry_draft():
-    """An approved modelo-303 draft built from the live registry snapshot.
-
-    Modelo 303 (IVA quarterly self-assessment) is filed through the AEAT
-    web form; its registry revision declares no fichero-BOE "importar
-    datos" export layout. This makes it the real fixture for the
-    no-layout export paths.
-    """
+    """An approved modelo-303 draft built from the live registry snapshot."""
 
     provider = _schema_provider(modelos=("303",))
     draft = build_draft(
@@ -1187,12 +1241,50 @@ def test_export_rejects_modelo_without_registry_export_layout(tmp_path: Path) ->
 
     draft = _approved_modelo_303_registry_draft()
     provider = _provider_without_export_layout(_schema_provider(modelos=("303",)), "303")
-    with pytest.raises(FilingExportError, match="no export layout"):
+    with pytest.raises(FilingExportError) as exc_info:
         export_draft(
             draft,
             output_path=tmp_path / "modelo-303.txt",
             headers={"declaration_type": "I"},
             schema_provider=provider,
+        )
+    _assert_missing_export_layout_refusal(str(exc_info.value), draft.modelo)
+
+
+def test_export_refuses_unsupported_xml_dictionary_layout(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+    provider = _schema_provider()
+    layout = provider.get_subview(draft.modelo).export_layouts[0]
+    xml_layout = layout.model_copy(
+        update={
+            "format": "xml_dictionary",
+            "dictionary_source_ref": layout.source_refs[0],
+            "records": (),
+        },
+    )
+    xml_provider = _provider_with_export_layouts(provider, draft.modelo, (xml_layout,))
+
+    with pytest.raises(FilingExportError, match="unsupported format 'xml_dictionary'"):
+        export_draft(
+            draft,
+            output_path=tmp_path / "modelo-130.txt",
+            headers=_modelo_130_export_headers(),
+            schema_provider=xml_provider,
+        )
+
+
+def test_export_refuses_layout_without_records(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+    provider = _schema_provider()
+    layout = provider.get_subview(draft.modelo).export_layouts[0].model_copy(update={"records": ()})
+    empty_provider = _provider_with_export_layouts(provider, draft.modelo, (layout,))
+
+    with pytest.raises(FilingExportError, match="declares no export records"):
+        export_draft(
+            draft,
+            output_path=tmp_path / "modelo-130.txt",
+            headers=_modelo_130_export_headers(),
+            schema_provider=empty_provider,
         )
 
 

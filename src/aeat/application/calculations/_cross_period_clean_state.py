@@ -1,11 +1,14 @@
 """Clean-state proof for filing-grade cross-period modelo dependencies.
 
-Used by: :mod:`~aeat.application.calculations._calculate` to verify cross-period requirements before filing.
+:func:`evaluate_cross_period_clean_state` derives dependency requirements from a
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot`, then joins filed
+:class:`ModeloRecord` rows, calculation revisions, verification reports, and
+justificante evidence into a :class:`CrossPeriodCleanStateVerdict`.
 
-Use of :class:`~aeat.domain.calculations.registry.RegistrySnapshot` and
-:class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` for
-compliance. Reads filed :class:`ModeloRecord` rows from the record catalogue
-to prove a dependent period's upstream filings carry official evidence.
+The same verdict feeds modelo verification, filing, and export gates. See also
+:class:`CrossPeriodDependencyEvidence` for per-dependency blocker/advisory rows
+and :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority` for
+the authority surface that produces the snapshots evaluated here.
 """
 
 from __future__ import annotations
@@ -368,6 +371,15 @@ class CrossPeriodDependencyEvidence(BaseModel):
     """Non-blocking advisory: a same-year ``app_filing`` chain admitted, lacking only official AEAT evidence."""
     modelo_not_applicable_advisory: bool = False
     """Non-blocking advisory: a dependency on a modelo the taxpayer suffers but does not file (not-applicable)."""
+    zero_value_previous_filing_advisory: bool = False
+    """Non-blocking advisory: an explicit zero previous-filing carry needed no source-filing proof.
+
+    This is deliberately narrower than no-prior-obligation suppression: it applies
+    only when the verification caller has proven that the target revision carries
+    an operator-supplied zero for a whitelisted previous-filing binding whose
+    positive value would be a taxpayer benefit. A nonzero carry still requires the
+    prior filing evidence.
+    """
 
     @property
     def clean(self) -> bool:
@@ -468,6 +480,11 @@ class CrossPeriodCleanStateVerdict(BaseModel):
     def has_modelo_not_applicable_advisory(self) -> bool:
         """True when any dependency was scoped out as not-applicable (taxpayer suffers, does not file)."""
         return any(item.modelo_not_applicable_advisory for item in self.dependencies)
+
+    @property
+    def has_zero_value_previous_filing_advisory(self) -> bool:
+        """True when an explicit zero previous-filing carry was scoped out."""
+        return any(item.zero_value_previous_filing_advisory for item in self.dependencies)
 
     @property
     def suppressed_pre_activity_dependencies(self) -> tuple[CrossPeriodDependencyEvidence, ...]:
@@ -591,7 +608,10 @@ def cross_period_dependency_inventory(
     modelos and periods are in scope for the clean-state guard before they wire
     model-specific workflow tests or operator diagnostics.
 
-    Uses :class:`ValidatedRegistryAuthority` for snapshot resolution.
+    The :class:`~aeat.domain.calculations.registry.ValidatedRegistryAuthority`
+    supplies candidate modelos and resolves each target
+    :class:`~aeat.domain.calculations.registry.RegistrySnapshot` evaluated for
+    dependency coverage.
     """
     selected_modelos = authority.modelos if modelos is None else tuple(authority.modelo(modelo) for modelo in modelos)
     items: list[CrossPeriodDependencyInventoryItem] = []
@@ -699,6 +719,16 @@ def _suppressed_modelo_not_applicable_evidence(
     )
 
 
+def _suppressed_zero_value_previous_filing_evidence(
+    requirement: CrossPeriodDependencyRequirement,
+) -> CrossPeriodDependencyEvidence:
+    """Clean, advisory-stamped row for an explicit zero previous-filing carry."""
+    return CrossPeriodDependencyEvidence(
+        requirement=requirement,
+        zero_value_previous_filing_advisory=True,
+    )
+
+
 def _suppressed_first_year_fractional_evidence(
     requirement: CrossPeriodDependencyRequirement,
     *,
@@ -777,10 +807,14 @@ def evaluate_cross_period_clean_state(
     activity_start_date: date | None = None,
     modelo_202_modality: Modelo202Modality | None = None,
     taxpayer_files_economic_activity: bool | None = None,
+    not_applicable_source_modelos: frozenset[str] | None = None,
+    zero_value_previous_filing_binding_ids: frozenset[str] | None = None,
 ) -> CrossPeriodCleanStateVerdict:
     """Evaluate cross-period dependencies and return a :class:`CrossPeriodCleanStateVerdict`.
 
-    Uses :class:`RegistrySnapshot` to derive the dependency requirements.
+    The supplied :class:`~aeat.domain.calculations.registry.RegistrySnapshot` is
+    the authority for target revision, filing period, and dependency
+    requirements.
 
     ``activity_start_date`` is the operator-declared activity-start date carried on
     the profile (the same field the deadline engine consumes for pre-start
@@ -804,6 +838,20 @@ def evaluate_cross_period_clean_state(
     activity-start date is recorded, or when the year is not the first IS year, the
     Modelo 202 dependency stays in scope and keeps blocking. The default ``None``
     preserves the prior behaviour (no Modelo 202 suppression).
+
+    ``not_applicable_source_modelos`` carries source modelos that the caller has
+    positively resolved as not applicable for the taxpayer. It is only applied to
+    dependency classifications already marked conditional on economic activity,
+    so the payee/payer classification remains the primary retenciones boundary
+    while the mutually-exclusive M130/M131 regime split can still be enforced
+    without blocking on the modelo the taxpayer does not file. ``None`` means the
+    caller could not decide, so no suppression occurs.
+
+    ``zero_value_previous_filing_binding_ids`` carries whitelisted previous-filing
+    binding ids whose target revision value is explicitly zero. Those requirements
+    are retained as clean advisory rows rather than demanding evidence of a prior
+    filing for a carry the taxpayer is not claiming. Nonzero carries and every
+    binding not named here stay fully in scope.
     """
     filing_catalogue = filing_repository.load()
     calculation_catalogue = calculation_repository.load()
@@ -814,9 +862,11 @@ def evaluate_cross_period_clean_state(
         classification.source_modelo
         for classification in snapshot.revision.dependency_classifications
         if (not classification.taxpayer_files_source)
+        or (classification.conditional_on_economic_activity and taxpayer_files_economic_activity is False)
         or (
             classification.conditional_on_economic_activity
-            and taxpayer_files_economic_activity is False
+            and not_applicable_source_modelos is not None
+            and classification.source_modelo in not_applicable_source_modelos
         )
     )
     all_requirements = cross_period_dependency_requirements(snapshot)
@@ -844,6 +894,15 @@ def evaluate_cross_period_clean_state(
         )
     )
     first_year_fractional_keys = {requirement.key for requirement in first_year_fractional_requirements}
+    zero_value_previous_filing_requirements = tuple(
+        requirement
+        for requirement in partition.in_scope
+        if _requirement_scoped_by_zero_value_previous_filing(
+            requirement,
+            zero_value_previous_filing_binding_ids,
+        )
+    )
+    zero_value_previous_filing_keys = {requirement.key for requirement in zero_value_previous_filing_requirements}
     in_scope_dependencies = tuple(
         _evaluate_requirement(
             requirement,
@@ -859,7 +918,7 @@ def evaluate_cross_period_clean_state(
             ),
         )
         for requirement in partition.in_scope
-        if requirement.key not in first_year_fractional_keys
+        if requirement.key not in first_year_fractional_keys and requirement.key not in zero_value_previous_filing_keys
     )
     in_scope_dependencies = tuple(
         _relax_same_year_local_chain(evidence, target_filing_year=snapshot.filing_year)
@@ -878,6 +937,10 @@ def evaluate_cross_period_clean_state(
         for requirement in first_year_fractional_requirements
         if activity_start_date is not None
     )
+    zero_value_previous_filing_dependencies = tuple(
+        _suppressed_zero_value_previous_filing_evidence(requirement)
+        for requirement in zero_value_previous_filing_requirements
+    )
     return CrossPeriodCleanStateVerdict(
         bucket_id=bucket_id,
         target_modelo=str(snapshot.modelo.id),
@@ -888,7 +951,19 @@ def evaluate_cross_period_clean_state(
             *suppressed_dependencies,
             *not_applicable_dependencies,
             *first_year_fractional_dependencies,
+            *zero_value_previous_filing_dependencies,
         ),
+    )
+
+
+def _requirement_scoped_by_zero_value_previous_filing(
+    requirement: CrossPeriodDependencyRequirement,
+    zero_value_previous_filing_binding_ids: frozenset[str] | None,
+) -> bool:
+    if not zero_value_previous_filing_binding_ids:
+        return False
+    return requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING and all(
+        origin_id in zero_value_previous_filing_binding_ids for origin_id in requirement.origin_ids
     )
 
 
@@ -1504,6 +1579,9 @@ def _combined_source_kind(source_kinds: Iterable[str]) -> str:
     return "mixed"
 
 
+filing_external_evidence_blockers = _filing_external_evidence_blockers
+
+
 __all__ = [
     "CrossPeriodCleanStateBlocker",
     "CrossPeriodCleanStateVerdict",
@@ -1518,5 +1596,6 @@ __all__ = [
     "cross_period_dependency_inventory",
     "cross_period_dependency_requirements",
     "evaluate_cross_period_clean_state",
+    "filing_external_evidence_blockers",
     "partition_cross_period_requirements_by_activity_start",
 ]

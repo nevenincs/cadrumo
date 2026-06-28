@@ -29,15 +29,14 @@ distinct renta years (2025, 2026), recording each through the
 :class:`EnrollmentRecorder` and cross-checking via
 :func:`assert_enrollment_matches_manifest`.
 
-Grounding (non-tautological): the expected tipo_gravamen (0.19) is declared in
-the TRLIRNR Art 25.1.f (UE/EEE residents: "el 19 por ciento"). The expected
-cuota_integra is base × 0.19, where 0.19 comes from the registry parameter
-table (not the test author). The assertion is that the engine reads the
-parameter and applies it; a hardcoded 19% in the engine would still satisfy
-the assertion but a parameter-table regression (e.g. the rate silently changed
-to 0.00) would fail it. The M210 convenio-rate mutation test proves the
-engine reads the registry parameter; this test's job is cross-renta grounding
-across two annual groupings.
+Grounding (non-tautological): the expected tipo_gravamen (0.24) is declared in
+the GB/general convenio row, whose allocation authority is UK treaty art. 6 and
+whose rate authority is TRLIRNR art. 25.1.a. The expected cuota_integra is
+base × 0.24, where 0.24 comes from the registry parameter table (not the test
+author). The assertion is that the engine reads the parameter and applies it; a
+parameter-table regression (e.g. the rate silently changed to 0.00) would fail
+it. The M210 convenio-rate mutation test proves the engine reads the registry
+parameter; this test's job is cross-renta grounding across two annual groupings.
 
 Registry extension note: the M210 2025 revision was extended to open-ended
 (valid_to removed, period_selector year_from=2025) because the TRLIRNR
@@ -59,6 +58,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import (
     BindingId,
     CasillaId,
+    RegistryValidationError,
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
     validated_casilla_id,
@@ -105,19 +105,36 @@ _RETENCION_PRACTICADA_CASILLA: CasillaId = validated_casilla_id(
 _BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id("base_imponible", surface="_BASE_IMPONIBLE_CASILLA")
 _TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("tipo_gravamen", surface="_TIPO_GRAVAMEN_CASILLA")
 _CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("cuota_integra", surface="_CUOTA_INTEGRA_CASILLA")
+_VALOR_CATASTRAL_CASILLA: CasillaId = validated_casilla_id("valor_catastral", surface="_VALOR_CATASTRAL_CASILLA")
+_COEFICIENTE_IMPUTACION_CASILLA: CasillaId = validated_casilla_id(
+    "coeficiente_imputacion_inmobiliaria",
+    surface="_COEFICIENTE_IMPUTACION_CASILLA",
+)
+_DIAS_IMPUTACION_CASILLA: CasillaId = validated_casilla_id("dias_imputacion", surface="_DIAS_IMPUTACION_CASILLA")
+_VALOR_ADQUISICION_CASILLA: CasillaId = validated_casilla_id(
+    "valor_adquisicion",
+    surface="_VALOR_ADQUISICION_CASILLA",
+)
+_VALOR_COMPROBADO_ADMINISTRACION_CASILLA: CasillaId = validated_casilla_id(
+    "valor_comprobado_administracion",
+    surface="_VALOR_COMPROBADO_ADMINISTRACION_CASILLA",
+)
 
 
 def _calculate_210(
     *,
     filing_year: int,
     base: Decimal,
+    tipo_renta: str = _TIPO_RENTA,
+    country_code: str = _COUNTRY_GB,
+    extra_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
 ) -> tuple[Mapping[CasillaId, object], int]:
-    """Run the REAL M210 primary engine for a FR EU-resident landlord.
+    """Run the REAL M210 primary engine for a GB non-resident landlord.
 
     Supplies:
     - rendimientos_integros (manual money casilla) = base
-    - tipo_renta (manual text casilla) = "ue_residente"
-    - m210-2025-profile-country-of-fiscal-residence (enum binding) = "FR"
+    - tipo_renta (manual text casilla) defaults to "general"
+    - m210-2025-profile-country-of-fiscal-residence (enum binding) defaults to "GB"
     - gastos_deducibles / retencion_practicada = 0 (primary deductions deferred)
 
     Returns the casilla_values dict and the produced-value count.
@@ -127,13 +144,15 @@ def _calculate_210(
     # are supplied through text_inputs and enum_binding_values respectively.
     # Numeric manual casillas go through casilla_inputs.
     binding_values: dict[BindingId, Decimal] = {}
-    enum_binding_values: dict[BindingId, str] = {_COUNTRY_BINDING: _COUNTRY_GB}
-    text_inputs = {_TIPO_RENTA_CASILLA: _TIPO_RENTA}
+    enum_binding_values: dict[BindingId, str] = {_COUNTRY_BINDING: country_code} if country_code else {}
+    text_inputs = {_TIPO_RENTA_CASILLA: tipo_renta}
     casilla_inputs = {
         _RENDIMIENTOS_INTEGROS_CASILLA: base,
         _GASTOS_DEDUCIBLES_CASILLA: Decimal("0"),
         _RETENCION_PRACTICADA_CASILLA: Decimal("0"),
     }
+    if extra_casilla_inputs is not None:
+        casilla_inputs.update(extra_casilla_inputs)
     # resolve_bound_inputs_by_casilla_id handles bound casillas that the engine requires;
     # M210 primary has no previous_filing bindings, so this is a no-op here.
     bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
@@ -147,6 +166,111 @@ def _calculate_210(
         date_context={"filing_period": date(filing_year, 12, 31)},
     )
     return result.values, len(result.values)
+
+
+def test_inmobiliaria_cadastral_recent_revision_computes_art_85_base(tmp_path: Path) -> None:
+    """M210 inmobiliaria uses the LIRPF Art. 85 1.1% cadastral-value imputation branch."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        values, _ = _calculate_210(
+            filing_year=_YEAR_N,
+            base=Decimal("0"),
+            tipo_renta="inmobiliaria",
+            country_code="",
+            extra_casilla_inputs={
+                _VALOR_CATASTRAL_CASILLA: Decimal("100000.00"),
+                _COEFICIENTE_IMPUTACION_CASILLA: Decimal("0.011"),
+                _DIAS_IMPUTACION_CASILLA: Decimal("365"),
+            },
+        )
+
+    assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("1100.00")
+    assert values[_TIPO_GRAVAMEN_CASILLA] == Decimal("0.24")
+    assert values[_CUOTA_INTEGRA_CASILLA] == Decimal("264.00")
+
+
+def test_inmobiliaria_without_cadastral_value_uses_half_of_greater_value(tmp_path: Path) -> None:
+    """M210 inmobiliaria uses the Art. 85 no-cadastral 50% × 1.1% substitute base."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        values, _ = _calculate_210(
+            filing_year=_YEAR_N,
+            base=Decimal("0"),
+            tipo_renta="inmobiliaria",
+            country_code="",
+            extra_casilla_inputs={
+                _VALOR_CATASTRAL_CASILLA: Decimal("0"),
+                _DIAS_IMPUTACION_CASILLA: Decimal("365"),
+                _VALOR_ADQUISICION_CASILLA: Decimal("150000.00"),
+                _VALOR_COMPROBADO_ADMINISTRACION_CASILLA: Decimal("180000.00"),
+            },
+        )
+
+    assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("990.00")
+    assert values[_TIPO_GRAVAMEN_CASILLA] == Decimal("0.24")
+    assert values[_CUOTA_INTEGRA_CASILLA] == Decimal("237.60")
+
+
+def test_inmobiliaria_cadastral_branch_rejects_unregistered_coefficient(tmp_path: Path) -> None:
+    """The imputation coefficient must match a registry-authored Art. 85 rate."""
+    with isolated_runtime_profile(tmp_path=tmp_path), pytest.raises(
+        RegistryValidationError,
+        match="coefficient must be one of",
+    ):
+        _calculate_210(
+            filing_year=_YEAR_N,
+            base=Decimal("0"),
+            tipo_renta="inmobiliaria",
+            country_code="",
+            extra_casilla_inputs={
+                _VALOR_CATASTRAL_CASILLA: Decimal("100000.00"),
+                _COEFICIENTE_IMPUTACION_CASILLA: Decimal("0.005"),
+                _DIAS_IMPUTACION_CASILLA: Decimal("365"),
+            },
+        )
+
+
+def test_pension_first_band_computes_art_25_1_b_tariff(tmp_path: Path) -> None:
+    """M210 pension applies the TRLIRNR Art. 25.1.b 8% first bracket."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        values, _ = _calculate_210(
+            filing_year=_YEAR_N,
+            base=Decimal("10000.00"),
+            tipo_renta="pension",
+            country_code="",
+        )
+
+    assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("10000.00")
+    assert values[_TIPO_GRAVAMEN_CASILLA] == Decimal("0.08")
+    assert values[_CUOTA_INTEGRA_CASILLA] == Decimal("800.00")
+
+
+def test_ar_pension_second_band_uses_domestic_tariff_allocation(tmp_path: Path) -> None:
+    """AR/pension treaty allocation delegates the amount to the domestic pension tariff."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        values, _ = _calculate_210(
+            filing_year=_YEAR_N,
+            base=Decimal("15000.00"),
+            tipo_renta="pension",
+            country_code="AR",
+        )
+
+    assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("15000.00")
+    assert values[_TIPO_GRAVAMEN_CASILLA] == Decimal("0.124")
+    assert values[_CUOTA_INTEGRA_CASILLA] == Decimal("1860.00")
+
+
+def test_pension_top_band_carries_fixed_addition_and_marginal_slice(tmp_path: Path) -> None:
+    """The top pension band carries 2,970 fixed plus 40% above 18,700."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        values, _ = _calculate_210(
+            filing_year=_YEAR_N,
+            base=Decimal("20000.00"),
+            tipo_renta="pension",
+            country_code="",
+        )
+
+    assert values[_BASE_IMPONIBLE_CASILLA] == Decimal("20000.00")
+    assert values[_TIPO_GRAVAMEN_CASILLA] == Decimal("0.1745")
+    assert values[_CUOTA_INTEGRA_CASILLA] == Decimal("3490.00")
 
 
 def test_year_n_gb_general_tipo_gravamen_is_24pct(tmp_path: Path) -> None:
@@ -204,7 +328,7 @@ def test_cuota_integra_differs_between_years_due_to_distinct_bases(tmp_path: Pat
 
 
 def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> None:
-    """End-to-end enrollment: FR ue_residente landlord across two renta years (2025, 2026).
+    """End-to-end enrollment: GB general-rate landlord across two renta years (2025, 2026).
 
     Drives the REAL M210 primary engine for both annual groupings (real
     registry authority, real formula evaluation — no mocks). Records each
@@ -213,8 +337,8 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
     :func:`assert_enrollment_matches_manifest`.
 
     Load-bearing assertions:
-    - tipo_gravamen = 0.19 in both years (treaty-rate determinism).
-    - cuota_integra = base × 0.19 in both years (engine applies the rate).
+    - tipo_gravamen = 0.24 in both years (treaty-rate determinism).
+    - cuota_integra = base × 0.24 in both years (engine applies the rate).
     - Cuotas are distinct because bases are distinct (no cross-year bleed).
 
     Grounded in TRLIRNR Art 25.1.a (general non-resident IRNR rate 24%) and

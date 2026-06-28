@@ -42,7 +42,7 @@ coincidental sum cannot satisfy the assertion. The test does not recompute any
 registry IRPF formula — it proves the enrolled relation resolver wires the four
 prior periodic filings through to each annual credit casilla.
 
-Legal grounding: LIRPF art. 99 + RIRPF art. 109 (withholding credit) +
+Legal grounding: LIRPF art. 99 + RIRPF art. 108 (withholding source filings) +
 Orden HAC/277/2026 art. 3 (M100/2025 form approval, BOE-A-2026-7041).
 """
 
@@ -323,7 +323,7 @@ def test_m100_2025_retenciones_credits_fold_in_periodic_filings_on_live_calculat
     quarters. The M130/M131 pagos legs are seeded only so the 0604 formula resolves
     and the calculate reaches the retenciones casillas.
 
-    Legal grounding: LIRPF art. 99 + RIRPF art. 109 + Orden HAC/277/2026 art. 3.
+    Legal grounding: LIRPF art. 99 + RIRPF art. 108 + Orden HAC/277/2026 art. 3.
     """
     obs_repo = CalculationObservationRepository()
     expected_trabajo = _assert_distinct_positive(_M111_C28_BY_PERIOD)

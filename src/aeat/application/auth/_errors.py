@@ -1,4 +1,9 @@
-"""Application-level domain errors for the auth surface."""
+"""Application-level domain errors for the auth surface.
+
+:class:`AuthDiagnosticPhoneStateError` and :class:`AuthDiagnosticPayloadError`
+specialise :class:`~aeat.core.errors.CoreValidationError` for auth diagnostic
+validation failures.
+"""
 
 from __future__ import annotations
 

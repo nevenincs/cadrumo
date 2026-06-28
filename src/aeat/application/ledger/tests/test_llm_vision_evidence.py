@@ -49,6 +49,20 @@ from .._vision_classifier import LocalVisionLLMClassifier
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _json_object(value: object) -> dict[str, object]:
+    assert isinstance(value, dict)
+    result: dict[str, object] = {}
+    for key, item in value.items():
+        assert isinstance(key, str)
+        result[key] = item
+    return result
+
+
+def _json_array(value: object) -> list[object]:
+    assert isinstance(value, list)
+    return list(value)
+
+
 @pytest.fixture
 def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as runtime:
@@ -260,13 +274,10 @@ def test_vision_classifier_classifies_from_images(profile: TestRuntimeProfile) -
     assert response.category is SpendingCategory.HARDWARE_AMORTIZABLE
     assert response.iva_category is IvaCategory.DOMESTIC_GENERAL_21
 
-    body = observed["body"]
-    assert isinstance(body, dict)
-    messages = body["messages"]  # ty: ignore[invalid-argument-type]  # narrowed by isinstance above
-    assert isinstance(messages, list)
-    user_message = messages[-1]
-    assert isinstance(user_message, dict)
-    assert user_message["images"] == list(images)  # ty: ignore[invalid-argument-type]  # narrowed above
+    body = _json_object(observed["body"])
+    messages = _json_array(body["messages"])
+    user_message = _json_object(messages[-1])
+    assert user_message["images"] == list(images)
 
 
 def test_image_evidence_classifies_with_no_provider(profile: TestRuntimeProfile) -> None:
@@ -318,24 +329,25 @@ def test_text_or_no_evidence_without_provider_refuses_instructively() -> None:
         )
 
 
-def test_vision_connection_error_becomes_a_typed_refusal_with_fix() -> None:
+def test_vision_connection_error_becomes_a_typed_refusal_with_fix(profile: TestRuntimeProfile) -> None:
     """A down/unreachable Ollama is converted to LLMClassifierError, not a raw traceback."""
-    import httpx
-
     from ....domain.transactions import LLMClassifierError
 
-    class _UnreachableVision:
-        @property
-        def decided_by(self) -> str:
-            return "llm:local-vision:qwen2.5vl:3b"
-
-        def classify(self, transaction: Transaction, *, evidence_images: tuple[str, ...]) -> LLMClassificationResponse:
-            raise httpx.ConnectError("connection refused")
-
+    _ = profile  # active bucket session backs the LLM cache before the connection attempt
     evidence = _ResolvedEvidence(
         reference="ev-1",
         text=None,
         images=(base64.b64encode(_png_image()).decode("ascii"),),
+    )
+    unreachable_settings = load_settings().model_copy(
+        update={
+            "aeat_llm_ollama_chat_url": "http://127.0.0.1:1/api/chat",
+            "aeat_llm_vision_read_timeout_s": 1,
+        },
+    )
+    classifier = LocalVisionLLMClassifier(
+        spec=prompt_spec_with_saturation_fields(),
+        settings=unreachable_settings,
     )
     with pytest.raises(LLMClassifierError, match=r"vision reading failed.*Fix:"):
         _classify_with_evidence(
@@ -343,9 +355,9 @@ def test_vision_connection_error_becomes_a_typed_refusal_with_fix() -> None:
             evidence,
             text_classifier=None,
             spec=prompt_spec_with_saturation_fields(),
-            vision_classifier=_UnreachableVision(),  # ty: ignore[invalid-argument-type]  # pyright: ignore[reportArgumentType]
+            vision_classifier=classifier,
             vision_model=None,
-            settings=load_settings(),
+            settings=unreachable_settings,
         )
 
 
@@ -380,6 +392,5 @@ def test_vision_model_override_selects_the_named_model(profile: TestRuntimeProfi
 
     observed, (_response, provenance) = _run_against_loopback_ollama(classification_json, _call)
     assert provenance == "llm:local-vision:qwen2.5vl:7b"
-    body = observed["body"]
-    assert isinstance(body, dict)
-    assert body["model"] == "qwen2.5vl:7b"  # ty: ignore[invalid-argument-type]  # narrowed by isinstance above
+    body = _json_object(observed["body"])
+    assert body["model"] == "qwen2.5vl:7b"

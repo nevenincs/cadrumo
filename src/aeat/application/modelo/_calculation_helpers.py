@@ -1,6 +1,10 @@
 """Shared calculation helpers for modelo application actions.
 
-Use of :class:`CalculationRevision`, :class:`CasillaObservation`, :class:`RegistrySnapshot` for compliance.
+The helpers load mutable :class:`~aeat.domain.modelos._work_unit.WorkUnit`
+records, resolve their law-determined :class:`RegistrySnapshot`, and project
+engine or imported values into :class:`CasillaObservation` provenance rows.
+Amendment helpers reuse the baseline :class:`CalculationRevision` where a
+corrected casilla was not overridden.
 """
 
 from __future__ import annotations
@@ -111,7 +115,8 @@ def build_typed_observations(
 ) -> tuple[CasillaObservation, ...]:
     """Build a :class:`CasillaObservation` tuple for every engine-result casilla.
 
-    Uses :class:`RegistrySnapshot` for provenance fields.
+    The :class:`RegistrySnapshot` supplies each casilla's legal/source references
+    when the engine result did not come from a formula entry.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)
     entries_by_target = {entry.target_casilla_id: entry for entry in engine_result.entries}
@@ -133,7 +138,8 @@ def external_filing_observations(
 ) -> tuple[CasillaObservation, ...]:
     """Build :class:`CasillaObservation` records for externally imported casilla values.
 
-    Uses :class:`RegistrySnapshot` for provenance fields.
+    The :class:`RegistrySnapshot` supplies the provenance for imported values that
+    have no formula entry in the current process.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)
     return tuple(
@@ -194,7 +200,9 @@ def amendment_observations(
 ) -> tuple[CasillaObservation, ...]:
     """Build :class:`CasillaObservation` records for an amendment revision.
 
-    Uses :class:`CalculationRevision` and :class:`RegistrySnapshot` for provenance.
+    The baseline :class:`CalculationRevision` contributes unchanged observations;
+    the :class:`RegistrySnapshot` supplies provenance for newly overridden
+    casillas.
     """
     revision_casillas_by_id = casillas_by_id(snapshot.revision)
     baseline_by_id = {obs.casilla_id: obs for obs in baseline_revision.observations}

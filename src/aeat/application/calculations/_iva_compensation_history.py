@@ -26,7 +26,12 @@ from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...core import Modelo, Period
 from ...core.resources import resources
 from ...core.time import now
-from ...domain.calculations.registry import CasillaId, undeclared_casilla_ids, validated_casilla_id
+from ...domain.calculations.registry import (
+    CasillaId,
+    RegistryModeloObservation,
+    undeclared_casilla_ids,
+    validated_casilla_id,
+)
 from ...domain.iva_compensation._carry_forward import (
     IvaCompensationCarryForwardReport,
     IvaCompensationPeriodState,
@@ -53,6 +58,7 @@ def _casilla_id(value: object) -> CasillaId:
 
 
 _M303_RESULTADO_CASILLA: Final[CasillaId] = _casilla_id("iva.resultado")
+_M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
 _M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
 _M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = (
@@ -272,35 +278,53 @@ def iva_compensation_state_from_filed_observation(
             context={"modelo": observation.modelo},
         )
     values = _decimal_casilla_values(observation)
-    result = _resolve_casilla_value(values, _M303_RESULTADO_CASILLA)
-    posterior = _resolve_casilla_value(values, _M303_POSTERIOR_CASILLA)
-    generated = max(Decimal("0"), -result) if result is not None else Decimal("0")
-    # Semantic-only casilla (no numeric AEAT box), so it was never an inline-number
-    # routing literal — looked up directly by its registry id, behaviour-preserving.
-    available = _casilla_value(values, _M303_DISPONIBLE_CASILLA)
-    if available is None:
-        available = (posterior or Decimal("0")) + generated
     source_artefact_sha256 = next(
         (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
         None,
     )
-    return IvaCompensationPeriodState(
+    return _iva_compensation_state_from_values(
+        values,
         taxpayer_nif=observation.authenticated_identity,
         filing_year=observation.ejercicio,
         period=observation.period,
         expediente_id=observation.expediente_id,
         status=observation.status,
         presented_at=observation.presented_at,
-        prior_pending_amount=_resolve_casilla_value(values, _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA),
-        applied_amount=_resolve_casilla_value(values, _M303_COMPENSACION_APLICADA_CASILLA),
-        pending_for_later_amount=posterior,
-        period_result_amount=result,
-        final_result_amount=_resolve_casilla_value(values, _M303_RESULTADO_FINAL_CASILLA),
-        generated_amount=generated,
-        available_end_amount=available,
         source_observation_key=(
             f"303:{observation.ejercicio}:{observation.period.registry_token}:{observation.expediente_id}"
         ),
+        source_artefact_sha256=source_artefact_sha256,
+    )
+
+
+def iva_compensation_state_from_registry_observation(
+    observation: RegistryModeloObservation,
+    *,
+    taxpayer_nif: str,
+    expediente_id: str,
+    status: str,
+    presented_at: datetime,
+    source_observation_key: str | None = None,
+    source_artefact_sha256: str | None = None,
+) -> IvaCompensationPeriodState:
+    """Build and return an :class:`IvaCompensationPeriodState` from a registry-grounded Modelo 303 observation."""
+    if observation.modelo != Modelo.M303.value:
+        raise IvaCompensationModeloError(
+            translated_message="application.calculations.iva_compensation.errors.modelo_303_only",
+            context={"modelo": observation.modelo},
+        )
+    _validate_registry_observation_casilla_ids(observation)
+    period = observation.filing_period or Period.from_year_and_code(observation.filing_year, observation.period)
+    key = source_observation_key or f"303:{observation.filing_year}:{period.registry_token}:{expediente_id}"
+    return _iva_compensation_state_from_values(
+        dict(observation.casilla_values),
+        taxpayer_nif=taxpayer_nif,
+        filing_year=observation.filing_year,
+        period=period,
+        expediente_id=expediente_id,
+        status=status,
+        presented_at=presented_at,
+        source_observation_key=key,
         source_artefact_sha256=source_artefact_sha256,
     )
 
@@ -398,6 +422,47 @@ def cross_check_iva_compensation_annual_summary(
     )
 
 
+def _iva_compensation_state_from_values(
+    values: dict[CasillaId, Decimal],
+    *,
+    taxpayer_nif: str,
+    filing_year: int,
+    period: Period,
+    expediente_id: str,
+    status: str,
+    presented_at: datetime,
+    source_observation_key: str,
+    source_artefact_sha256: str | None,
+) -> IvaCompensationPeriodState:
+    result = _resolve_casilla_value(values, _M303_RESULTADO_CASILLA)
+    posterior = _resolve_casilla_value(values, _M303_POSTERIOR_CASILLA)
+    generated = _resolve_casilla_value(values, _M303_GENERADA_CASILLA)
+    if generated is None:
+        generated = max(_ZERO, -result) if result is not None else _ZERO
+    # Semantic-only casilla (no numeric AEAT box), so it was never an inline-number
+    # routing literal — looked up directly by its registry id, behaviour-preserving.
+    available = _casilla_value(values, _M303_DISPONIBLE_CASILLA)
+    if available is None:
+        available = (posterior or _ZERO) + generated
+    return IvaCompensationPeriodState(
+        taxpayer_nif=taxpayer_nif,
+        filing_year=filing_year,
+        period=period,
+        expediente_id=expediente_id,
+        status=status,
+        presented_at=presented_at,
+        prior_pending_amount=_resolve_casilla_value(values, _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA),
+        applied_amount=_resolve_casilla_value(values, _M303_COMPENSACION_APLICADA_CASILLA),
+        pending_for_later_amount=posterior,
+        period_result_amount=result,
+        final_result_amount=_resolve_casilla_value(values, _M303_RESULTADO_FINAL_CASILLA),
+        generated_amount=generated,
+        available_end_amount=available,
+        source_observation_key=source_observation_key,
+        source_artefact_sha256=source_artefact_sha256,
+    )
+
+
 def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) -> dict[CasillaId, Decimal]:
     _validate_observed_casilla_ids(observation)
     values: dict[CasillaId, Decimal] = {}
@@ -435,6 +500,27 @@ def _validate_observed_casilla_ids(observation: FiledDeclaracionObservationProto
     )
 
 
+def _validate_registry_observation_casilla_ids(observation: RegistryModeloObservation) -> None:
+    snapshot = resources().modelos.authority.snapshot(
+        observation.modelo,
+        filing_year=observation.filing_year,
+        period=observation.period,
+    )
+    invalid = undeclared_casilla_ids(snapshot.revision, observation.casilla_values)
+    if not invalid:
+        return
+    raise IvaCompensationCasillaReferenceError(
+        "IVA compensation registry observations must be keyed by canonical casilla.id values declared by the registry",
+        context={
+            "modelo": observation.modelo,
+            "revision": snapshot.revision.id,
+            "period": observation.period,
+            "casilla_ids": invalid,
+        },
+        translated_message="errors.refused.refused_calculations_casilla_constraint",
+    )
+
+
 def _casilla_value(values: dict[CasillaId, Decimal], *casilla_ids: CasillaId) -> Decimal | None:
     for casilla_id in casilla_ids:
         value = values.get(casilla_id)
@@ -457,5 +543,6 @@ __all__ = [
     "iva_compensation_annual_summary_from_filed_observation",
     "iva_compensation_period_key",
     "iva_compensation_state_from_filed_observation",
+    "iva_compensation_state_from_registry_observation",
     "seed_iva_compensation_period",
 ]

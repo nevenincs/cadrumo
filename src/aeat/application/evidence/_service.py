@@ -1,4 +1,9 @@
-"""Evidence bundle service: build, verify, export, replay."""
+"""Build, verify, export, and replay :class:`EvidenceBundle` manifests.
+
+:class:`EvidenceBundleService` persists bundles through
+:class:`EvidenceBundleRepository` and reports integrity checks as an
+:class:`EvidenceBundleVerificationReport`.
+"""
 
 from __future__ import annotations
 
@@ -50,7 +55,7 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle]):
 
 
 class EvidenceBundleVerificationReport(BaseModel):
-    """Outcome of a verification pass over a bundle."""
+    """Outcome of a verification pass over an :class:`EvidenceBundle`."""
 
     model_config = STRICT_FROZEN_CONFIG
 

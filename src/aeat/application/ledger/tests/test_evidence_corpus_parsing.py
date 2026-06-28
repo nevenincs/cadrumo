@@ -20,7 +20,7 @@ import pytest
 from PIL import Image
 
 from ....adapters.inbound.pdf._pdfplumber import extract_pages_text_from_bytes
-from ....adapters.outbound.llm import rasterise_pdf_pages_to_base64_png
+from ....adapters.outbound.llm import LLMPdfRasterisationError, rasterise_pdf_pages_to_base64_png
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -91,9 +91,9 @@ def test_prompt_injection_invoice_extracts_text_without_executing_it() -> None:
 def test_malformed_pdf_raises_not_crashes() -> None:
     """A PDF header followed by garbage fails loudly on both parsers, never silently."""
     data = _read("adversarial_malformed.pdf")
-    with pytest.raises(Exception):  # noqa: B017 — any parser error is acceptable; the contract is "raise, not crash"
+    with pytest.raises(ValueError, match="pdfplumber could not open"):
         extract_pages_text_from_bytes(data, error_class=ValueError, pdf_label="the invoice")
-    with pytest.raises(Exception):  # noqa: B017
+    with pytest.raises(LLMPdfRasterisationError, match="Data format error"):
         rasterise_pdf_pages_to_base64_png(data)
 
 
@@ -101,7 +101,7 @@ def test_empty_pdf_raises_not_crashes() -> None:
     """A zero-byte .pdf fails loudly rather than producing a bogus result."""
     data = _read("adversarial_empty.pdf")
     assert data == b""
-    with pytest.raises(Exception):  # noqa: B017
+    with pytest.raises(LLMPdfRasterisationError, match="Data format error"):
         rasterise_pdf_pages_to_base64_png(data)
 
 

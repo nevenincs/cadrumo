@@ -50,10 +50,12 @@ from ....domain.modelos._verification_report import (
 )
 from ....domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from ....domain.modelos._work_unit import WorkUnit
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, cross_period_dependency_requirements
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     StoredCalculationDriftError,
     calculate_modelo_revision,
@@ -110,6 +112,26 @@ def _workflow_profile() -> TaxpayerProfile:
     )
 
 
+def _seed_runtime_profile_record(bucket_id: str) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="M130 verification test",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                UserProfileFact(path="identity.name", value="Marta"),
+                UserProfileFact(path="identity.surnames", value="Verifier"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+            ),
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
+
+
 def _persist_justificante_metadata(csv: str, *, modelo: str, filing_year: int, period: Period) -> None:
     pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
     JustificanteRepository().save(
@@ -135,6 +157,7 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, filing_year: int, p
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     """Real encrypted SQLite repos over a fresh isolated profile."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+        _seed_runtime_profile_record("default")
         objects = profile.repository
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)

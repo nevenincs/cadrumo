@@ -1,4 +1,8 @@
-"""Application services for AEAT auth readiness."""
+"""Application services for AEAT auth readiness.
+
+:func:`update_auth` rewrites the workflow state's :class:`AuthState` snapshot
+after provider configuration, authentication, or subject updates.
+"""
 
 from __future__ import annotations
 

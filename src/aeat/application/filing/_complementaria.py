@@ -1,9 +1,29 @@
 """Filing-amendment boundaries for :mod:`aeat.application.filing`.
 
-The persisted amendment records live in :mod:`aeat.domain.filing`. This
-application module builds complementaria records from a :class:`ModeloDraft`
-loaded through the governed draft repository, then constructs and persists an
-amended draft through the governed amendment repository.
+This module builds local complementaria records from a submitted-filing
+shape such as :class:`aeat.domain.submission.ModeloPresentado`. It loads
+the original :class:`aeat.domain.filing.ModeloDraft` through the governed
+draft repository, verifies that the draft still matches the active registry
+snapshot, rebuilds an amended draft with
+:func:`aeat.application.filing.build_draft`, computes the
+:class:`aeat.domain.filing.CasillaChange` delta, and persists the resulting
+:class:`aeat.domain.filing.ModeloComplementaria`.
+
+The read helpers expose the same governed amendment repository and may
+return either :class:`aeat.domain.filing.ModeloComplementaria` or
+:class:`aeat.domain.filing.ModeloSustitutiva` because the encrypted
+repository stores both amendment variants.
+
+See Also:
+    :mod:`aeat.domain.filing`
+        Canonical amendment records, draft records, and governed
+        repositories used by this application boundary.
+    :class:`aeat.domain.filing.ModeloAmendmentRepository`
+        AUDIT-classified encrypted persistence for complementaria and
+        sustitutiva records.
+    :mod:`aeat.application.modelo._amendment_actions`
+        Separate work-unit amendment flow for externally evidenced modelo
+        filing records.
 """
 
 from __future__ import annotations

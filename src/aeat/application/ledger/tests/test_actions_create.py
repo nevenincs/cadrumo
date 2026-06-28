@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from ._action_test_support import (
-    _PROVENANCE_RAW_FIELD_EXPECTATIONS,
-    _TAXABLE_IVA_EXPECTATIONS,
+    PROVENANCE_RAW_FIELD_EXPECTATIONS,
+    TAXABLE_IVA_EXPECTATIONS,
     UTC,
     Attachment,
     AttachmentKind,
@@ -27,13 +27,13 @@ from ._action_test_support import (
     TransactionDirection,
     TransactionValidationError,
     UsageRatioProfile,
-    _drive_create_manual_transaction,
-    _purchase_invoice,
     _repositories,
     create_manual_transaction,
     date,
     datetime,
+    drive_create_manual_transaction,
     hashlib,
+    purchase_invoice,
     secure_objects,
 )
 
@@ -43,57 +43,57 @@ __all__ = ["secure_objects"]
 
 
 def test_create_manual_transaction_returns_bucket_ref(secure_objects: SecureObjectRepository) -> None:
-    outcome = _drive_create_manual_transaction(secure_objects)
+    outcome = drive_create_manual_transaction(secure_objects)
     assert outcome.result.ref.bucket_id == "bucket-a"
 
 
 def test_create_manual_transaction_persists_source_provenance(secure_objects: SecureObjectRepository) -> None:
-    outcome = _drive_create_manual_transaction(secure_objects)
+    outcome = drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.raw.provenance.source_format is SourceFormat.MANUAL
     assert outcome.persisted.raw.provenance.provider_name == "manual-ledger"
 
 
-@pytest.mark.parametrize(("field", "expected"), _PROVENANCE_RAW_FIELD_EXPECTATIONS)
+@pytest.mark.parametrize(("field", "expected"), PROVENANCE_RAW_FIELD_EXPECTATIONS)
 def test_create_manual_transaction_persists_raw_field(
     secure_objects: SecureObjectRepository,
     field: str,
     expected: str,
 ) -> None:
-    outcome = _drive_create_manual_transaction(secure_objects)
+    outcome = drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.raw.raw_fields[field] == expected
 
 
 def test_create_manual_transaction_persists_purchase_invoice_evidence_in_raw_fields(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    outcome = _drive_create_manual_transaction(secure_objects)
+    outcome = drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.raw.raw_fields["purchase_invoice_evidence_id"] == outcome.purchase_invoice_evidence_id
 
 
-@pytest.mark.parametrize(("attribute", "expected"), _TAXABLE_IVA_EXPECTATIONS)
+@pytest.mark.parametrize(("attribute", "expected"), TAXABLE_IVA_EXPECTATIONS)
 def test_create_manual_transaction_persists_taxable_iva(
     secure_objects: SecureObjectRepository,
     attribute: str,
     expected: Decimal,
 ) -> None:
-    outcome = _drive_create_manual_transaction(secure_objects)
+    outcome = drive_create_manual_transaction(secure_objects)
     assert getattr(outcome.persisted, attribute) == expected
 
 
 def test_create_manual_transaction_links_purchase_invoice_evidence(secure_objects: SecureObjectRepository) -> None:
-    outcome = _drive_create_manual_transaction(secure_objects)
+    outcome = drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.purchase_invoice_evidence_id == outcome.purchase_invoice_evidence_id
 
 
 def test_create_manual_transaction_records_audit_actor_and_command(secure_objects: SecureObjectRepository) -> None:
-    outcome = _drive_create_manual_transaction(secure_objects)
+    outcome = drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.created_by == "operator-A"
     assert outcome.persisted.source_command == "aeat app ledger add"
     assert outcome.persisted.created_event_id == outcome.result.bucket_event_ids[0]
 
 
 def test_create_manual_transaction_persists_evidence_provenance(secure_objects: SecureObjectRepository) -> None:
-    outcome = _drive_create_manual_transaction(secure_objects)
+    outcome = drive_create_manual_transaction(secure_objects)
     provenance = outcome.persisted.evidence_provenance[0]
     assert provenance.evidence_id == outcome.purchase_invoice_evidence_id
     assert provenance.evidence_kind == "purchase_invoice_evidence"
@@ -102,13 +102,13 @@ def test_create_manual_transaction_persists_evidence_provenance(secure_objects: 
 
 
 def test_create_manual_transaction_classifies_as_business(secure_objects: SecureObjectRepository) -> None:
-    outcome = _drive_create_manual_transaction(secure_objects)
+    outcome = drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.business_classification is BusinessClassification.BUSINESS
     assert outcome.persisted.classified_by == "manual"
 
 
 def test_create_manual_transaction_emits_bucket_event_chain(secure_objects: SecureObjectRepository) -> None:
-    outcome = _drive_create_manual_transaction(secure_objects)
+    outcome = drive_create_manual_transaction(secure_objects)
     assert [event.event_id for event in outcome.events] == list(outcome.result.bucket_event_ids)
     first = outcome.events[0]
     assert first.event_type is BucketEventType.LEDGER_TRANSACTION_CREATED
@@ -315,7 +315,7 @@ def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
-    other_bucket_invoice = _purchase_invoice().model_copy(update={"bucket_id": "bucket-b"})
+    other_bucket_invoice = purchase_invoice().model_copy(update={"bucket_id": "bucket-b"})
     invoice_repository.save(InvoiceCatalogue.from_invoices((other_bucket_invoice,)))
 
     with pytest.raises(TransactionValidationError, match="command bucket"):

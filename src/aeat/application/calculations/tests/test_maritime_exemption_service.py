@@ -33,8 +33,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ART_7P_LEGAL_REFS = ("ley-35-2006:art-7",)
 _REBECA_LEGAL_REFS = ("ley-19-1994:art-75",)
-_ART_7P_SOURCE_REFS = ("art-7p-foreign-work",)
-_REBECA_SOURCE_REFS = ("rebeca-50pct",)
+_ART_7P_SOURCE_REFS = ("boe-lirpf-art-7-authority",)
+_REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-authority",)
 
 
 class TestResolveMaritimeExemptionArt7p:
@@ -193,7 +193,7 @@ class TestResolveMaritimeExemptionRetmarGate:
         with pytest.raises(ProfileCompletenessError) as exc_info:
             resolve_maritime_exemption(facts=facts)
         assert "RETMAR" in str(exc_info.value)
-        assert "BOE-A-2015-11346" in str(exc_info.value)
+        assert "BOE-A-2006-20764" in str(exc_info.value)
 
     def test_retmar_flag_propagated_to_result(self) -> None:
         # When retmar_registered but not RETMAR-gate-triggering (should not happen

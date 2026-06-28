@@ -53,11 +53,12 @@ def test_initialize_workspace_command_output_language_defaults_to_none() -> None
 
 def test_initialize_workspace_command_output_language_rejects_invalid_string() -> None:
     """InitializeWorkspaceCommand.output_language rejects bare strings not in OutputLanguage."""
+    payload: dict[str, object] = {
+        "tax_id": "12345678Z",
+        "activity": "design",
+        "iva_regime": IVARegime.GENERAL,
+        "output_language": "invalid_language",
+    }
     with pytest.raises(ValidationError) as exc_info:
-        InitializeWorkspaceCommand(
-            tax_id="12345678Z",
-            activity="design",
-            iva_regime=IVARegime.GENERAL,
-            output_language="invalid_language",  # type: ignore
-        )
+        InitializeWorkspaceCommand.model_validate(payload)
     assert "output_language" in str(exc_info.value)

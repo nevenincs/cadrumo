@@ -1,4 +1,10 @@
-"""Domain exceptions for the export application layer."""
+"""Errors raised by :func:`serialize_tabular_rows` and tabular export models.
+
+:class:`ExportFormatError` rejects unsupported
+:class:`ExportSerializationFormat` values, while :class:`ExportFieldError`
+carries :class:`TabularExportResult` field and payload invariant failures
+through the typed error registry.
+"""
 
 from __future__ import annotations
 

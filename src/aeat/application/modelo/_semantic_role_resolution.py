@@ -2,6 +2,19 @@
 
 Snapshot-backed callers pass a :class:`RegistrySnapshot` so semantic roles
 resolve only to declared canonical ``casilla.id`` values for that revision.
+Advisory helpers that already hold a revision object use the structural
+revision resolver and get the same ambiguity guard.
+
+See Also:
+    :mod:`aeat.application.modelo._calculate_input`
+        Work-unit input shortcuts that resolve operator-facing semantic-role
+        tokens through a registry snapshot.
+    :mod:`aeat.application.modelo._binding_resolution`
+        Declaration-period metadata binding path that only accepts
+        informational semantic-role casillas.
+    :mod:`aeat.application.modelo._taxation_comparison`
+        Snapshot-backed comparison surface that uses semantic roles for the
+        Modelo 100 result and quota casillas.
 """
 
 from __future__ import annotations
@@ -15,7 +28,12 @@ from ...domain.modelos._errors import ModeloError
 
 @dataclass(frozen=True, slots=True)
 class SemanticRoleCasillaAmbiguity:
-    """Structured detail for a semantic role that resolves to multiple casillas."""
+    """Structured detail for a semantic role that resolves to multiple casillas.
+
+    Attached to :class:`AmbiguousSemanticRoleCasillaError` so callers can relay
+    the ambiguous role, modelo, revision, and candidate casillas without parsing
+    the error message.
+    """
 
     semantic_role: str
     modelo_id: str | None
@@ -33,7 +51,11 @@ class SemanticRoleCasillaAmbiguity:
 
 
 class AmbiguousSemanticRoleCasillaError(ModeloError, ValueError):
-    """Raised when a semantic-role resolver would emit an arbitrary casilla id."""
+    """Raised when a semantic-role resolver would emit an arbitrary casilla id.
+
+    The exception carries a :class:`SemanticRoleCasillaAmbiguity` payload instead
+    of selecting one candidate, preserving the canonical ``casilla.id`` contract.
+    """
 
     def __init__(self, ambiguity: SemanticRoleCasillaAmbiguity) -> None:
         self.ambiguity = ambiguity
@@ -79,7 +101,8 @@ def casilla_id_for_unique_revision_semantic_role(
 
     This accepts a structural revision object so advisory helpers that only
     receive a revision can share the same ambiguity guard as snapshot-backed
-    services.
+    services. The object must expose ``id`` and ``casillas`` attributes
+    compatible with the registry :class:`ModeloRevision` shape.
     """
     revision_id = _optional_str(getattr(revision, "id", None))
     casilla_ids = _casilla_ids_for_semantic_role(getattr(revision, "casillas", ()), semantic_role)

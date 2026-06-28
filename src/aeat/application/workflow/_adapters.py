@@ -179,7 +179,7 @@ async def _live_notifications_source(session: object) -> WorkflowNotificationsSn
 
 def default_engine(
     *,
-    submission_engine: SubmissionEngineProtocol,
+    submission_engine: SubmissionEngineProtocol | None = None,
     deadline_engine: DeadlineEngineProtocol | None = None,
     filing_draft_builder: ModeloDraftBuilderProtocol | None = None,
     session: AeatSession | None = None,
@@ -190,20 +190,21 @@ def default_engine(
     """Build a :class:`WorkflowEngine` wired to the production components.
 
     Args:
-        submission_engine: Required submission Protocol. The caller
+        submission_engine: Required :class:`SubmissionEngineProtocol`. ``None`` triggers
+            a :class:`WorkflowError`. The caller
             must build the real :class:`SubmissionEngine` themselves
             (the composition is complex and owned by the CLI root
             command wiring) and pass it wrapped or pre-adapted.
-        deadline_engine: Optional deadline Protocol. ``None`` triggers
+        deadline_engine: Required :class:`DeadlineEngineProtocol`. ``None`` triggers
             a :class:`WorkflowError`; deadlines are mandatory for the
             workflow to have any obligation to work on.
-        filing_draft_builder: Optional draft-builder Protocol.
+        filing_draft_builder: Required :class:`ModeloDraftBuilderProtocol`.
             ``None`` triggers a :class:`WorkflowError`.
         session: Optional authenticated :class:`aeat.adapters.outbound.aeat.auth.AeatSession`.
             ``None`` skips both the inbox probe and the already-filed
             probe (both stages record a "not wired" diagnostic).
-        certificate_bundle: Optional certificate Protocol.
-        inputs_provider: Required inputs Protocol. Sensitive draft
+        certificate_bundle: Optional :class:`CertificateBundleProtocol`.
+        inputs_provider: Required :class:`ModeloInputsProviderProtocol`. Sensitive draft
             inputs come from bucket-backed application services, not
             JSON files.
         settings: Optional :class:`Settings` override.
@@ -216,6 +217,10 @@ def default_engine(
             cannot be constructed.
     """
     cfg = settings or load_settings()
+    if submission_engine is None:
+        raise WorkflowError(
+            translated_message="application.workflow.errors.adapter_missing_submission_engine",
+        )
     if deadline_engine is None:
         raise WorkflowError(
             translated_message="application.workflow.errors.adapter_missing_deadline_engine",

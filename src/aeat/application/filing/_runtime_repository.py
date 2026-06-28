@@ -1,8 +1,21 @@
 """Runtime-backed repository helpers for filing application persistence.
 
-Constructs a :class:`SecureObjectRepository` scoped to the active filing
-bucket on demand; the import is deferred to avoid pulling the adapters
-layer into the application module graph at import time.
+Constructs a
+:class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository` scoped to
+the active filing bucket on demand. The concrete adapter import is deferred so
+the application filing module graph does not acquire an adapters-layer edge at
+import time; only callers that actually need runtime storage cross that
+boundary.
+
+See Also:
+    :class:`aeat.application.filing.ModeloHistoryRepository`
+        Application repository that consumes these helpers to persist
+        filing-history payloads.
+    :func:`aeat.adapters.persistence.storage.runtime_repository.secure_object_repository_for_bucket`
+        Storage-runtime factory used after the filing bucket id is resolved.
+    :mod:`aeat.domain.filing._runtime_repository`
+        Parallel domain helper used by governed draft and amendment
+        repositories.
 """
 
 from __future__ import annotations
@@ -17,7 +30,19 @@ if TYPE_CHECKING:
 
 
 def resolve_application_filing_bucket_id(bucket_id: str | None) -> str:
-    """Return an explicit or active profile bucket id for filing application repositories."""
+    """Return the explicit or active profile bucket id for application repositories.
+
+    Args:
+        bucket_id: Optional bucket id supplied by the caller. Blank values are
+            rejected; ``None`` falls back to the active profile bucket.
+
+    Returns:
+        Normalized bucket id used to scope application filing storage.
+
+    Raises:
+        ModeloApplicationError: When no explicit or active profile bucket is
+            available.
+    """
     return resolve_repository_bucket_id(bucket_id, error_type=ModeloApplicationError)
 
 
@@ -29,7 +54,9 @@ def secure_objects_for_application_filing_bucket(bucket_id: str) -> SecureObject
     import from the adapters layer. The import-time edge is eliminated;
     the runtime dependency remains transparent.
 
-    Returns a :class:`SecureObjectRepository` scoped to ``bucket_id``.
+    Returns:
+        A :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+        scoped to ``bucket_id``.
     """
     from ...adapters.persistence.storage.runtime_repository import (
         secure_object_repository_for_bucket,

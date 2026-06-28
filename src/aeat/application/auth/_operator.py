@@ -727,9 +727,9 @@ def _optional_clear_events(
 def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKind) -> None:
     """Refuse login when a provider's local readiness is unmet.
 
-    Uses :class:`AuthLoginPreconditionError` carrying a localised
-    summary so the operator never sees raw env-var or class names
-    (round-5 B2). Reads the workflow-state certificate path when
+    Raises :class:`AuthLoginPreconditionError` with localised refusal keys so
+    the operator never sees raw env-var or class names. Reads the workflow-state
+    certificate path when
     Settings has none, mirroring how :func:`inspect_operator_auth` and
     the state projection cross the env-var / workflow-state seam.
     """

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import inspect
 from collections.abc import Iterator
 from pathlib import Path
@@ -33,8 +34,12 @@ from .._models import LifecycleContract, RootSurface
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _module_source(module_name: str) -> str:
+    return inspect.getsource(importlib.import_module(module_name))
+
+
 @pytest.fixture(autouse=True)
-def _pin_english_locale() -> Iterator[None]:  # pyright: ignore[reportUnusedFunction] - autouse fixture
+def pin_english_locale() -> Iterator[None]:
     """Pin the operator-surface contract tests to the English locale.
 
     The contract surface (help paragraphs, error messages) is rendered
@@ -136,9 +141,9 @@ def test_contract_models_are_strict_and_immutable() -> None:
 def test_operator_surface_application_package_has_no_typer_dependency() -> None:
     module_sources = [
         inspect.getsource(operator_surface),
-        inspect.getsource(operator_surface._contract),  # pyright: ignore[reportPrivateUsage] - boundary test
-        inspect.getsource(operator_surface._help),  # pyright: ignore[reportPrivateUsage] - boundary test
-        inspect.getsource(operator_surface._models),  # pyright: ignore[reportPrivateUsage] - boundary test
+        _module_source("aeat.application.operator_surface._contract"),
+        _module_source("aeat.application.operator_surface._help"),
+        _module_source("aeat.application.operator_surface._models"),
     ]
     joined = "\n".join(module_sources)
 
@@ -270,7 +275,7 @@ def test_filing_status_filed_is_sole_source_for_filed_token() -> None:
     # outside of the FilingStatus import/usage lines.  We inspect the source and
     # verify every occurrence of the token '"filed"' is the FilingStatus import or
     # usage, not a stand-alone bare literal in a tuple or keyword argument.
-    contract_source = inspect.getsource(operator_surface._contract)  # pyright: ignore[reportPrivateUsage] - boundary test
+    contract_source = _module_source("aeat.application.operator_surface._contract")
     # All occurrences of the raw token must be attributable to FilingStatus references.
     bare_literal_count = contract_source.count('"filed"')
     # Each FilingStatus reference in the source accounts for one use of the token

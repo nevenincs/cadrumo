@@ -13,6 +13,8 @@ The producer loads the profile aggregate, the workspace catalogues
 calculation revisions), the auth state, the active-profile health, and the
 deadline obligations computed from :class:`Schedule`, and computes each
 readiness value exactly once.
+Modelo readiness resolves a :class:`RegistrySnapshot` only to evaluate
+registry-declared preflight requirements for the requested work surface.
 
 The projection is pure read: building it mutates no store.
 
@@ -28,8 +30,10 @@ so neither is silently zero.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
@@ -53,12 +57,16 @@ from ..domain.modelos._calculation_repository import CalculationRevisionCatalogu
 from ..domain.modelos._repository import WorkUnitCatalogueRepository
 from ..domain.modelos._work_unit import WorkUnitState
 from ..domain.transactions import TransactionCatalogueRepository
+from ..domain.user_profile import load_user_profile_schema
 from .auth import AuthProviderKind, select_provider
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
 from .user_profile import ProfilePreflightRequirement
 from .workflow._models import WorkflowState
 from .workflow._persistence import workflow_state_repository
 from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
+
+if TYPE_CHECKING:
+    from ..domain.calculations.registry import RegistrySnapshot
 
 _log = get_logger(__name__)
 _AUTH_PROVIDER_VALUES = frozenset(kind.value for kind in AuthProviderKind)
@@ -473,7 +481,7 @@ def _taxpayer_profile_from_state(state: WorkflowState) -> TaxpayerProfile:
     return taxpayer_profile_from_mapping(raw, tax_id_default="00000000T")
 
 
-def _build_pending_obligations(
+def build_pending_obligations(
     profile: TaxpayerProfile,
     *,
     today: date,
@@ -486,6 +494,14 @@ def _build_pending_obligations(
     the projection cannot draw a divergent obligation set. A failure to
     compute the schedule is logged and degrades to an empty tuple
     rather than failing the whole projection.
+
+    Args:
+        profile: The :class:`TaxpayerProfile` whose deadline obligations are
+            projected.
+        today: Reference date for fiscal-year selection and obligation status.
+
+    Returns:
+        The projected :class:`ProjectionObligation` records.
     """
     try:
         schedule: Schedule = compute_obligation_schedule(DeadlineEngine(), profile, today=today)
@@ -530,6 +546,16 @@ class ModeloReadinessRequest(BaseModel):
     period: Period | None = None
 
 
+class ProjectionModeloBindingRequirement(BaseModel):
+    """One calculation binding that readiness cannot currently satisfy."""
+
+    model_config = _STRICT_FROZEN
+
+    binding_id: str = Field(min_length=1, max_length=128)
+    source: str = Field(min_length=1, max_length=64)
+    input_channel: str = Field(min_length=1, max_length=16)
+
+
 class ProjectionModeloReadiness(BaseModel):
     """Readiness for one modelo target across profile and ledger facts.
 
@@ -549,12 +575,26 @@ class ProjectionModeloReadiness(BaseModel):
     period: Period
     missing: tuple[ProfilePreflightRequirement, ...] = ()
     profile_ready: bool
+    registry_ready: bool = True
+    registry_refusal: str = ""
+    binding_ready: bool = True
+    missing_bindings: tuple[ProjectionModeloBindingRequirement, ...] = ()
     ledger_preflight_required: bool = False
     ledger_ready: bool | None = None
     ledger_period: Period | None = None
     ledger_checked_transaction_count: int = 0
     ledger_issues: tuple[LedgerPreflightIssue, ...] = ()
     ready: bool
+
+
+@dataclass(frozen=True, slots=True)
+class _ModeloReadinessRegistryResolution:
+    snapshot: RegistrySnapshot | None
+    refusal: str = ""
+
+    @property
+    def ready(self) -> bool:
+        return self.snapshot is not None and not self.refusal
 
 
 def _build_modelo_readiness(
@@ -571,7 +611,7 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
-    from .user_profile._orchestration import _shared_schema, build_lifecycle_service
+    from .user_profile._orchestration import build_lifecycle_service
     from .user_profile._preflight import ProfilePreflightService
     from .workflow import read_profile_bucket_by_id
 
@@ -579,18 +619,32 @@ def _build_modelo_readiness(
     if pointer is None:
         return ()
     record = build_lifecycle_service(bucket_id=pointer.bucket_id).read(active_profile_id)
-    service = ProfilePreflightService(schema=_shared_schema())
+    service = ProfilePreflightService(schema=load_user_profile_schema())
     reports: list[ProjectionModeloReadiness] = []
     for request in requests:
         readiness_period = _ledger_period_for_modelo_readiness(request)
+        registry_resolution = _resolve_modelo_readiness_registry(request, period=readiness_period)
+        revision = registry_resolution.snapshot.revision if registry_resolution.snapshot is not None else None
         profile_report = service.report(
             record=record,
             modelo=request.modelo,
             revision_id=request.revision_id,
             period=readiness_period,
+            revision=revision,
+        )
+        missing_bindings = (
+            _missing_calculation_bindings_for_readiness(
+                registry_resolution.snapshot,
+                bucket_id=pointer.bucket_id,
+                profile_record=record,
+            )
+            if registry_resolution.snapshot is not None
+            else ()
         )
         ledger_report = None
-        if _modelo_requires_ledger_preflight(request):
+        if registry_resolution.snapshot is not None and _snapshot_requires_ledger_preflight(
+            registry_resolution.snapshot
+        ):
             ledger_report = preflight_ledger_tax_readiness(
                 bucket_id=pointer.bucket_id,
                 period=readiness_period,
@@ -604,6 +658,10 @@ def _build_modelo_readiness(
                 period=profile_report.period,
                 missing=profile_report.missing,
                 profile_ready=profile_report.ready,
+                registry_ready=registry_resolution.ready,
+                registry_refusal=registry_resolution.refusal,
+                binding_ready=not missing_bindings,
+                missing_bindings=missing_bindings,
                 ledger_preflight_required=ledger_report is not None,
                 ledger_ready=ledger_report.ready if ledger_report is not None else None,
                 ledger_period=(ledger_report.period if ledger_report is not None else None),
@@ -611,7 +669,12 @@ def _build_modelo_readiness(
                     ledger_report.checked_transaction_count if ledger_report is not None else 0
                 ),
                 ledger_issues=tuple(ledger_report.issues) if ledger_report is not None else (),
-                ready=profile_report.ready and (ledger_report is None or ledger_report.ready),
+                ready=(
+                    registry_resolution.ready
+                    and profile_report.ready
+                    and not missing_bindings
+                    and (ledger_report is None or ledger_report.ready)
+                ),
             ),
         )
     return tuple(reports)
@@ -622,25 +685,175 @@ def _build_modelo_readiness(
 # import is at the top of the module (no more frozenset literal here).
 
 
-def _modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
-    from ..core.resources import resources
-    from ..domain.calculations.registry import RegistrySnapshotError
+def modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
+    """Return whether a modelo readiness target requires ledger preflight."""
+    readiness_period = _ledger_period_for_modelo_readiness(request)
+    resolution = _resolve_modelo_readiness_registry(request, period=readiness_period)
+    if resolution.snapshot is None:
+        _log.debug(
+            "state projection: registry snapshot unavailable for modelo readiness; ledger preflight skipped",
+            extra={
+                "modelo": request.modelo,
+                "filing_year": request.filing_year,
+                "period": readiness_period.registry_token,
+                "refusal": resolution.refusal,
+            },
+        )
+        return False
+    return _snapshot_requires_ledger_preflight(resolution.snapshot)
 
-    period_token = _ledger_period_for_modelo_readiness(request).registry_token
+
+def _snapshot_requires_ledger_preflight(snapshot: RegistrySnapshot) -> bool:
+    return any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in snapshot.revision.bindings)
+
+
+def _resolve_modelo_readiness_registry(
+    request: ModeloReadinessRequest,
+    *,
+    period: Period,
+) -> _ModeloReadinessRegistryResolution:
+    from ..core.resources import resources
+    from ..domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
+
+    period_token = period.registry_token
     try:
         snapshot = resources().modelos.authority.snapshot(
             request.modelo,
             filing_year=request.filing_year,
             period=period_token,
+            revision_id=request.revision_id,
         )
-    except (FileNotFoundError, RegistrySnapshotError):
+    except (FileNotFoundError, RegistrySnapshotError, RegistryValidationError) as exc:
+        refusal = _registry_readiness_refusal(request, period_token=period_token, exc=exc)
         _log.debug(
-            "state projection: registry snapshot unavailable for modelo readiness; ledger preflight skipped",
-            extra={"modelo": request.modelo, "filing_year": request.filing_year, "period": period_token},
+            "state projection: registry snapshot unavailable for modelo readiness",
+            extra={
+                "modelo": request.modelo,
+                "revision_id": request.revision_id,
+                "filing_year": request.filing_year,
+                "period": period_token,
+                "refusal": refusal,
+            },
             exc_info=True,
         )
-        return False
-    return any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in snapshot.revision.bindings)
+        return _ModeloReadinessRegistryResolution(snapshot=None, refusal=refusal)
+    if snapshot.revision.id != request.revision_id:
+        refusal = (
+            "registry revision mismatch for modelo "
+            f"{request.modelo!r}: requested {request.revision_id!r}, resolved {snapshot.revision.id!r}. "
+            f"Run 'aeat app modelo describe {request.modelo}' to inspect declared revision_ids and periods."
+        )
+        return _ModeloReadinessRegistryResolution(snapshot=None, refusal=refusal)
+    return _ModeloReadinessRegistryResolution(snapshot=snapshot)
+
+
+def _registry_readiness_refusal(
+    request: ModeloReadinessRequest,
+    *,
+    period_token: str,
+    exc: Exception,
+) -> str:
+    detail = _one_line_error_message(exc)
+    return (
+        "registry snapshot unresolved for modelo "
+        f"{request.modelo!r}, year {request.filing_year}, period {period_token!r}, "
+        f"revision {request.revision_id!r}: {detail}. "
+        f"Run 'aeat app modelo describe {request.modelo}' to inspect declared revision_ids and periods."
+    )
+
+
+def _one_line_error_message(exc: Exception) -> str:
+    for line in str(exc).splitlines():
+        stripped = line.strip()
+        if stripped:
+            return stripped
+    return exc.__class__.__name__
+
+
+def _missing_calculation_bindings_for_readiness(
+    snapshot: RegistrySnapshot,
+    *,
+    bucket_id: str,
+    profile_record: object,
+) -> tuple[ProjectionModeloBindingRequirement, ...]:
+    """Return formula-consumed profile/manual bindings not available to calculation readiness."""
+    from ..domain.calculations.registry import (
+        enum_consumed_binding_ids,
+        expression_binding_refs,
+        revision_date_binding_ids,
+    )
+    from .modelo import ProfileBindingResolutionError, resolve_profile_sourced_bindings
+
+    revision = snapshot.revision
+    decimal_consumed: set[str] = set()
+    for formula in revision.formulas:
+        decimal_consumed.update(str(binding_id) for binding_id in expression_binding_refs(formula.expression))
+    enum_consumed = {str(binding_id) for binding_id in enum_consumed_binding_ids(revision)}
+    date_consumed = {str(binding_id) for binding_id in revision_date_binding_ids(revision)}
+    consumed = decimal_consumed | enum_consumed | date_consumed
+    if not consumed:
+        return ()
+
+    bindings_by_id = {str(binding.id): binding for binding in revision.bindings if str(binding.id) in consumed}
+    try:
+        profile_resolution = resolve_profile_sourced_bindings(
+            snapshot,
+            bucket_id=bucket_id,
+            profile_record=profile_record,
+        )
+    except ProfileBindingResolutionError:
+        _log.debug(
+            "state projection: profile binding resolution failed for modelo readiness",
+            extra={"modelo": revision.id, "bucket_id": bucket_id},
+            exc_info=True,
+        )
+        profile_resolved: set[str] = set()
+    else:
+        profile_resolved = {
+            *(str(binding_id) for binding_id in profile_resolution.binding_values),
+            *(str(binding_id) for binding_id in profile_resolution.enum_binding_values),
+            *(str(binding_id) for binding_id in profile_resolution.date_binding_values),
+        }
+
+    missing: list[ProjectionModeloBindingRequirement] = []
+    for binding_id in sorted(consumed):
+        binding = bindings_by_id.get(binding_id)
+        source = _binding_source_value(binding.source) if binding is not None else "registry_missing"
+        if source == "profile":
+            if binding_id in profile_resolved:
+                continue
+        elif source != "manual_input":
+            continue
+        missing.append(
+            ProjectionModeloBindingRequirement(
+                binding_id=binding_id,
+                source=source,
+                input_channel=_readiness_binding_input_channel(
+                    binding_id,
+                    enum_consumed=enum_consumed,
+                    date_consumed=date_consumed,
+                ),
+            ),
+        )
+    return tuple(missing)
+
+
+def _binding_source_value(source: object) -> str:
+    value = getattr(source, "value", source)
+    return str(value)
+
+
+def _readiness_binding_input_channel(
+    binding_id: str,
+    *,
+    enum_consumed: set[str],
+    date_consumed: set[str],
+) -> str:
+    if binding_id in date_consumed:
+        return "date"
+    if binding_id in enum_consumed:
+        return "enum"
+    return "decimal"
 
 
 def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> Period:
@@ -700,6 +913,7 @@ def build_operator_state_projection(
         The fully-populated :class:`OperatorStateProjection`. Building
         it mutates no store.
     """
+    _ensure_profile_key_registry_registered()
     reference_today = today or date.today()
     active_bucket_id = resolve_active_bucket_id()
     has_active_profile = active_bucket_id is not None
@@ -726,7 +940,7 @@ def build_operator_state_projection(
     active_profile = _build_active_profile(profile_health)
 
     if has_active_profile and include_pending_obligations:
-        pending_obligations = _build_pending_obligations(
+        pending_obligations = build_pending_obligations(
             _taxpayer_profile_from_state(resolved_state),
             today=reference_today,
         )
@@ -747,13 +961,23 @@ def build_operator_state_projection(
     )
 
 
+def _ensure_profile_key_registry_registered() -> None:
+    """Import the wizard package before projection code reads profile-key metadata."""
+    from . import wizard as _wizard
+
+    _ = _wizard
+
+
 __all__ = [
     "ModeloReadinessRequest",
     "OperatorStateProjection",
     "ProjectionActiveProfile",
     "ProjectionAuthReadiness",
+    "ProjectionModeloBindingRequirement",
     "ProjectionModeloReadiness",
     "ProjectionObligation",
     "ProjectionWorkspaceSummary",
     "build_operator_state_projection",
+    "build_pending_obligations",
+    "modelo_requires_ledger_preflight",
 ]

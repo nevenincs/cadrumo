@@ -1,6 +1,7 @@
 """Filed-declaration capture services for live AEAT workflows.
 
-Use of :class:`ValidatedRegistryAuthority` for compliance.
+Source capture resolves a :class:`ValidatedRegistryAuthority` snapshot before
+asking the Sede adapter which prior declarations a target filing needs.
 """
 
 from __future__ import annotations

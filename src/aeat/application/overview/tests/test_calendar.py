@@ -2,38 +2,23 @@
 
 from __future__ import annotations
 
-import hashlib
 import logging
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
-from typing import Literal
 
 import pytest
-from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
+from pydantic import AnyHttpUrl, ValidationError
 
 from ....adapters.outbound.aeat.sede import Declaracion
 from ....adapters.outbound.aeat.sede._notifications import RemoteNotification
-from ....adapters.outbound.aeat.sede._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 from ....core import Period
 from ....domain.deadlines import (
     EntityType,
-    IrpfEstimationRegime,
-    IrpfIncomeCategory,
     IVARegime,
     LegalEntityForm,
     ObligationStatus,
     TaxpayerProfile,
 )
-from ....domain.justificante import Justificante
-from ....domain.modelos import (
-    ExternalEvidence,
-    ModeloCode,
-    ModeloRecord,
-    ModeloRecordStatus,
-    derive_filing_record_id,
-)
-from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ...live._expedientes import PersistedExpedientesSnapshot
 from ...live._notifications import PersistedNotificationsSnapshot
 from .. import (
@@ -52,15 +37,17 @@ from .. import (
     calendar_events_from_notification_snapshots,
     user_state_for,
 )
+from .calendar_test_support import (
+    PERIOD_2025_1T as _PERIOD_2025_1T,
+)
+from .calendar_test_support import (
+    SOURCE_URL as _SOURCE_URL,
+)
+from .calendar_test_support import (
+    profile as _profile,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_SOURCE_URL = aeat_url("sede", "/")
-_WORK_UNIT_ID = "a" * 64
-_CALCULATION_REVISION_ID = "b" * 64
-_BUCKET_ID = "c" * 32
-_PERIOD_2025_1T = Period.from_year_and_code(2025, "1T")
-_FILED_JUSTIFICANTE_STORAGE_REF = "secure-object:financial:" + "d" * 64
 
 
 def test_calendar_censo_enrolment_profile_keys_are_centralised() -> None:
@@ -189,172 +176,51 @@ def test_calendar_censo_warning_clears_for_complete_corporate_modelo_202_provena
     assert not any("202" in warning.affected_modelos for warning in censo_warnings)
 
 
-def _modelo_record(
-    *,
-    modelo: str = "303",
-    filing_year: int = 2025,
-    period: Period = _PERIOD_2025_1T,
-    aeat_accepted: bool = False,
-    external_evidence: ExternalEvidence | None = None,
-    filed_by: str = "operator",
-) -> ModeloRecord:
-    filed_at = datetime(2025, 4, 14, 12, 0, tzinfo=UTC)
-    filing_record_id = derive_filing_record_id(
-        work_unit_id=_WORK_UNIT_ID,
-        calculation_revision_id=_CALCULATION_REVISION_ID,
-        filed_at=filed_at,
-        filed_by=filed_by,
-    )
-    return ModeloRecord(
-        filing_record_id=filing_record_id,
-        work_unit_id=_WORK_UNIT_ID,
-        calculation_revision_id=_CALCULATION_REVISION_ID,
-        bucket_id=_BUCKET_ID,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=period,
-        filed_at=filed_at,
-        filed_by=filed_by,
-        aeat_accepted=aeat_accepted,
-        status=ModeloRecordStatus.VIGENTE,
-        external_evidence=external_evidence,
-    )
+_INVALID_PAGADORES_ADVISORY_CASES: tuple[tuple[str, dict[str, str], str, str, str], ...] = (
+    (
+        "not-a-count-secret",
+        {
+            "irpf.pagadores_count": "not-a-count-secret",
+            "irpf.pagadores_secondary_income": "2000",
+        },
+        "overview filing obligation advisory ignored invalid integer profile value",
+        "irpf.pagadores_count",
+        "ValueError",
+    ),
+    (
+        "not-income-secret",
+        {
+            "irpf.pagadores_count": "2",
+            "irpf.pagadores_secondary_income": "not-income-secret",
+        },
+        "overview filing obligation advisory ignored invalid decimal profile value",
+        "irpf.pagadores_secondary_income",
+        "InvalidOperation",
+    ),
+)
 
 
-def _filed_declaration_observation(
-    *,
-    artefacts: tuple[FiledDeclaracionArtefact, ...],
-    expediente_id: str = "12345678901234567890",
-) -> FiledDeclaracionObservation:
-    return FiledDeclaracionObservation(
-        modelo="303",
-        ejercicio=2025,
-        period=_PERIOD_2025_1T,
-        expediente_id=expediente_id,
-        status="ALTA",
-        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-        authenticated_identity="X1234567L",
-        artefacts=artefacts,
-    )
-
-
-def _filed_declaration_artefact(
-    *,
-    kind: Literal["register_row", "submitted_file", "declaration_pdf", "justificante_pdf"] = "justificante_pdf",
-    storage_ref: str | None = _FILED_JUSTIFICANTE_STORAGE_REF,
-    byte_count: int = 128,
-) -> FiledDeclaracionArtefact:
-    return FiledDeclaracionArtefact(
-        kind=kind,
-        source_url=AnyHttpUrl(_SOURCE_URL),
-        content_type="application/pdf",
-        byte_count=byte_count,
-        sha256="d" * 64,
-        captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-        storage_ref=storage_ref,
-    )
-
-
-def _justificante_metadata(
-    *,
-    csv: str = "JUST-303-2025-1T",
-    modelo: str = "303",
-    filing_year: int = 2025,
-    period: Period = _PERIOD_2025_1T,
-    tax_id: str = "X1234567L",
-) -> Justificante:
-    pdf_bytes = f"{csv}-pdf".encode()
-    return Justificante(
-        csv=csv,
-        modelo=modelo,
-        period=period,
-        ejercicio=str(filing_year),
-        presentation_id=None,
-        presented_at=datetime(filing_year, 4, 15, 9, 30, tzinfo=UTC),
-        tax_id=tax_id,
-        total_a_ingresar=None,
-        total_a_devolver=None,
-        verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
-        source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
-        source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
-        parsed_at=datetime(filing_year, 4, 16, 12, 0, tzinfo=UTC),
-    )
-
-
-def _profile() -> TaxpayerProfile:
-    """A declared autónomo en estimación directa.
-
-    The structural calendar tests need a profile whose taxpayer model
-    produces obligations. An autónomo with rendimientos de actividades
-    económicas under estimación directa is the unchanged-by-design
-    persona — Modelo 130 / 303 stay applicable, exactly as before the
-    taxpayer-type derivation landed.
-    """
-
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
-        iva_regime=IVARegime.GENERAL,
-        has_employees=False,
-        pays_professionals_with_retencion=False,
-        professional_income_withholding_ge_70pct=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        third_party_transactions_above_347_threshold=False,
-        bienes_extranjero_above_threshold=False,
-        notes="overview-calendar test profile",
-    )
-
-
-def test_invalid_pagadores_count_is_debug_logged_without_raw_value(
+@pytest.mark.parametrize(
+    ("raw_value", "profile_values", "expected_message", "expected_field", "expected_error_type"),
+    _INVALID_PAGADORES_ADVISORY_CASES,
+    ids=("invalid-count", "invalid-secondary-income"),
+)
+def test_invalid_pagadores_values_are_debug_logged_without_raw_value(
     caplog: pytest.LogCaptureFixture,
+    raw_value: str,
+    profile_values: dict[str, str],
+    expected_message: str,
+    expected_field: str,
+    expected_error_type: str,
 ) -> None:
-    raw_value = "not-a-count-secret"
-
     with caplog.at_level(logging.DEBUG, logger="aeat.application.overview"):
-        advisories = build_filing_obligation_advisories(
-            {
-                "irpf.pagadores_count": raw_value,
-                "irpf.pagadores_secondary_income": "2000",
-            },
-        )
+        advisories = build_filing_obligation_advisories(profile_values)
 
     assert advisories == ()
-    relevant = [
-        record
-        for record in caplog.records
-        if record.getMessage() == "overview filing obligation advisory ignored invalid integer profile value"
-    ]
+    relevant = [record for record in caplog.records if record.getMessage() == expected_message]
     assert len(relevant) == 1
-    assert relevant[0].__dict__["profile_field"] == "irpf.pagadores_count"
-    assert relevant[0].__dict__["error_type"] == "ValueError"
-    assert raw_value not in relevant[0].getMessage()
-
-
-def test_invalid_pagadores_secondary_income_is_debug_logged_without_raw_value(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    raw_value = "not-income-secret"
-
-    with caplog.at_level(logging.DEBUG, logger="aeat.application.overview"):
-        advisories = build_filing_obligation_advisories(
-            {
-                "irpf.pagadores_count": "2",
-                "irpf.pagadores_secondary_income": raw_value,
-            },
-        )
-
-    assert advisories == ()
-    relevant = [
-        record
-        for record in caplog.records
-        if record.getMessage() == "overview filing obligation advisory ignored invalid decimal profile value"
-    ]
-    assert len(relevant) == 1
-    assert relevant[0].__dict__["profile_field"] == "irpf.pagadores_secondary_income"
-    assert relevant[0].__dict__["error_type"] == "InvalidOperation"
+    assert relevant[0].__dict__["profile_field"] == expected_field
+    assert relevant[0].__dict__["error_type"] == expected_error_type
     assert all(raw_value not in record.getMessage() for record in caplog.records)
 
 
@@ -372,22 +238,26 @@ def test_period_state_enum_carries_cli_values() -> None:
     }
 
 
-def test_user_state_maps_open_window_to_due() -> None:
-    assert user_state_for(ObligationStatus.UPCOMING) is OverviewPeriodState.DUE
-    assert user_state_for(ObligationStatus.DUE_SOON) is OverviewPeriodState.DUE
-    assert user_state_for(ObligationStatus.DUE_TODAY) is OverviewPeriodState.DUE
+_USER_STATE_CASES: tuple[tuple[ObligationStatus, OverviewPeriodState], ...] = (
+    (ObligationStatus.UPCOMING, OverviewPeriodState.DUE),
+    (ObligationStatus.DUE_SOON, OverviewPeriodState.DUE),
+    (ObligationStatus.DUE_TODAY, OverviewPeriodState.DUE),
+    (ObligationStatus.OVERDUE, OverviewPeriodState.LATE),
+    (ObligationStatus.FILED, OverviewPeriodState.FILED),
+    (ObligationStatus.NOT_APPLICABLE, OverviewPeriodState.UNKNOWN),
+)
 
 
-def test_user_state_maps_overdue_to_late() -> None:
-    assert user_state_for(ObligationStatus.OVERDUE) is OverviewPeriodState.LATE
-
-
-def test_user_state_maps_filed_to_filed() -> None:
-    assert user_state_for(ObligationStatus.FILED) is OverviewPeriodState.FILED
-
-
-def test_user_state_maps_not_applicable_to_unknown() -> None:
-    assert user_state_for(ObligationStatus.NOT_APPLICABLE) is OverviewPeriodState.UNKNOWN
+@pytest.mark.parametrize(
+    ("engine_status", "expected_user_state"),
+    _USER_STATE_CASES,
+    ids=("upcoming", "due-soon", "due-today", "overdue", "filed", "not-applicable"),
+)
+def test_user_state_maps_engine_status_to_cli_state(
+    engine_status: ObligationStatus,
+    expected_user_state: OverviewPeriodState,
+) -> None:
+    assert user_state_for(engine_status) is expected_user_state
 
 
 def test_user_state_covers_every_engine_status() -> None:
@@ -425,21 +295,26 @@ def test_range_covered_years_spans_year_boundary() -> None:
     assert rng.covered_years() == (2024, 2025, 2026)
 
 
-def test_range_covers_returns_true_for_inclusive_bounds() -> None:
-    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
-    assert rng.covers(date(2026, 1, 1)) is True
-    assert rng.covers(date(2026, 4, 20)) is True
-    assert rng.covers(date(2026, 3, 15)) is True
+_RANGE_COVERAGE_CASES: tuple[tuple[date, bool], ...] = (
+    (date(2026, 1, 1), True),
+    (date(2026, 4, 20), True),
+    (date(2026, 3, 15), True),
+    (date(2025, 12, 31), False),
+    (date(2026, 4, 21), False),
+)
 
 
-def test_range_covers_returns_false_outside_bounds() -> None:
+@pytest.mark.parametrize(
+    ("probe", "expected"),
+    _RANGE_COVERAGE_CASES,
+    ids=("from-bound", "to-bound", "inside", "before", "after"),
+)
+def test_range_covers_returns_expected_inclusive_boundary_result(probe: date, expected: bool) -> None:
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
-    assert rng.covers(date(2025, 12, 31)) is False
-    assert rng.covers(date(2026, 4, 21)) is False
+    assert rng.covers(probe) is expected
 
 
 def test_range_is_frozen() -> None:
-
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         rng.from_date = date(2025, 12, 31)
@@ -492,7 +367,6 @@ def test_entry_rejects_user_state_inconsistent_with_engine_status() -> None:
 
 
 def test_entry_is_frozen() -> None:
-
     entry = _entry()
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         entry.modelo = "303"

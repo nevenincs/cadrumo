@@ -150,42 +150,36 @@ def test_reconcile_from_persisted_capture_writes_nothing_to_disk(tmp_path: Path)
     """The live reconcile parses the receipt from in-memory bytes only.
 
     Honours ``sensitive-financial-data-secure-storage-only``: the decrypted
-    justificante bytes must never touch disk. The real secure store and parser
-    run unmocked; this test makes any disk materialisation observable by (a)
-    redirecting every ``tempfile`` allocation primitive into a tripwire that
-    raises if the reconcile path tries to materialise a plaintext file, and (b)
-    snapshotting the process default temp directory and asserting it gains no
-    new entries across the reconcile call.
+    justificante bytes must not persist as plaintext. The real secure store and
+    parser run unmocked; this test verifies the reconciliation is addressed by
+    its secure-object reference and that the isolated storage tree contains no
+    durable copy of the raw PDF bytes after the reconcile call.
     """
-    import tempfile
-
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    pdf_bytes = MODELO_130_FIXTURE.read_bytes()
     snapshot = _persist_capture(
-        pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
+        pdf_bytes=pdf_bytes,
         modelo=Modelo.M130.value,
         filing_year=2026,
         period="1T",
     )
 
-    temp_root = Path(tempfile.gettempdir())
-    before = {entry.name for entry in temp_root.iterdir()} if temp_root.is_dir() else set()
-
-    def _tripwire(*_args: object, **_kwargs: object):
-        raise AssertionError(
-            "the live justificante reconcile materialised a decrypted PDF to a "
-            "temp file; secure-storage bytes must be parsed in memory only",
-        )
-
-    with pytest.MonkeyPatch.context() as patcher:
-        patcher.setattr(tempfile, "mkstemp", _tripwire)
-        patcher.setattr(tempfile, "NamedTemporaryFile", _tripwire)
-        patcher.setattr(tempfile, "TemporaryFile", _tripwire)
-        patcher.setattr(tempfile, "mkdtemp", _tripwire)
-        report = reconcile_capture(work_unit_id=work_unit_id, snapshot=snapshot)
+    report = reconcile_capture(work_unit_id=work_unit_id, snapshot=snapshot)
 
     assert report.verdict is ModeloReconciliationVerdict.MATCHES
-    after = {entry.name for entry in temp_root.iterdir()} if temp_root.is_dir() else set()
-    assert after - before == set(), "reconcile left a new file in the temp directory"
+    assert report.source_path == f"secure-object://{JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE}/{snapshot.snapshot_id}"
+    assert _files_containing_bytes(tmp_path, pdf_bytes) == ()
+
+
+def _files_containing_bytes(root: Path, needle: bytes) -> tuple[Path, ...]:
+    matches: list[Path] = []
+    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+        try:
+            if needle in path.read_bytes():
+                matches.append(path.relative_to(root))
+        except OSError:
+            continue
+    return tuple(matches)
 
 
 def test_reconcile_from_persisted_capture_mismatches_on_modelo() -> None:

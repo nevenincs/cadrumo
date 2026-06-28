@@ -118,6 +118,69 @@ def test_preflight_returns_ready_when_no_modelo_selectors_match(schema: ProfileS
     assert report.missing == ()
 
 
+def test_preflight_accepts_legal_entity_legal_name_for_export_headers(schema: ProfileSchemaDefinition) -> None:
+    period = Period.from_year_and_code(2026, "1P")
+    snapshot = resources().modelos.authority.snapshot("202", filing_year=2026, period=period.registry_token)
+    record = UserProfileRecord(
+        profile_id="operator",
+        display_name="Rocio Ferrer Administracion Sociedad Limitada",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            UserProfileFact(path="identity.legal_name", value="Rocio Ferrer Administracion Sociedad Limitada"),
+            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
+            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+        ),
+    )
+
+    report = ProfilePreflightService(schema=schema).report(
+        record=record,
+        modelo="202",
+        revision_id=snapshot.revision.id,
+        period=period,
+        revision=snapshot.revision,
+    )
+
+    assert report.ready is True
+    assert report.missing == ()
+
+
+@pytest.mark.parametrize(
+    "identity_fact",
+    (
+        UserProfileFact(path="identity.surnames", value="Ferrer"),
+        UserProfileFact(path="identity.name", value="Rocio"),
+    ),
+    ids=("surnames-only", "short-name-only"),
+)
+def test_preflight_rejects_legal_entity_export_identity_fragments(
+    schema: ProfileSchemaDefinition,
+    identity_fact: UserProfileFact,
+) -> None:
+    period = Period.from_year_and_code(2026, "1P")
+    snapshot = resources().modelos.authority.snapshot("202", filing_year=2026, period=period.registry_token)
+    record = UserProfileRecord(
+        profile_id="operator",
+        display_name="Incomplete legal entity",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
+            identity_fact,
+            UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
+            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+        ),
+    )
+
+    report = ProfilePreflightService(schema=schema).report(
+        record=record,
+        modelo="202",
+        revision_id=snapshot.revision.id,
+        period=period,
+        revision=snapshot.revision,
+    )
+
+    assert report.ready is False
+    assert any(item.section_key == "identity" and item.field_key == "legal_name" for item in report.missing)
+
+
 def test_preflight_carries_request_fields_through(schema: ProfileSchemaDefinition) -> None:
     svc = ProfileValidationService(schema=schema)  # warm domain
     pre = ProfilePreflightService(schema=schema)

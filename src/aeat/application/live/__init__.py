@@ -366,6 +366,9 @@ async def capture_justificante_snapshot(
     The four ``*_provider`` seams default to the live sede implementations;
     tests inject canned typed records to exercise the wiring offline without
     a network round-trip. The persistence path always uses the real service.
+
+    Returns:
+        The persisted :class:`JustificanteCaptureSnapshot`.
     """
     outcome = await capture_justificante_snapshot_outcome(
         bucket_id=bucket_id,

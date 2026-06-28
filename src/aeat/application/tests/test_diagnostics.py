@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -12,9 +12,10 @@ from pydantic import AnyHttpUrl, ValidationError
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
+    activate_session,
     has_active_bucket_session,
+    suspend_active_session,
 )
-from ...adapters.persistence.storage.master_key._active_session import _active_session, activate_session
 from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import dispose_engine
@@ -29,8 +30,11 @@ from ..diagnostics import (
     RegistryVersionSummary,
     SecureObjectIntegrityReport,
     build_config_repair_report,
+    ensure_models_rebuilt,
     preview_quarantine_unreadable_secure_objects,
+    profile_check,
     quarantine_unreadable_secure_objects,
+    registry_cross_domain_integrity_check,
     render_config_repair_text,
     secure_object_unreadable_total,
 )
@@ -39,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_default_secure_sql(tmp_path: Path) -> Iterator[None]:
+def isolated_default_secure_sql(tmp_path: Path) -> Iterator[None]:
     """Bind diagnostics tests to an isolated storage root by default."""
 
     storage_root = tmp_path / "diagnostics-storage"
@@ -52,7 +56,7 @@ def _isolated_default_secure_sql(tmp_path: Path) -> Iterator[None]:
 
 
 @contextmanager
-def _explicit_database(db_path: Path) -> Iterator[None]:
+def _explicit_database(db_path: Path) -> Generator[None]:
     with override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
         dispose_engine(settings)
         try:
@@ -82,31 +86,51 @@ def _bucket_session(bucket_id: str) -> BucketSession:
     )
 
 
-def test_diagnostic_check_fail_without_recovery_field_raises_validation_error() -> None:
-    """A ``fail`` row with neither ``next_action`` nor ``dead_end`` is forbidden."""
+_DIAGNOSTIC_CHECK_INVALID_CASES: tuple[tuple[str, dict[str, object], str], ...] = (
+    (
+        "fail-missing-recovery",
+        {"name": "x", "status": "fail", "summary": "y"},
+        "must populate one of",
+    ),
+    (
+        "warn-missing-recovery",
+        {"name": "x", "status": "warn", "summary": "y"},
+        "must populate one of",
+    ),
+    (
+        "both-recovery-fields",
+        {
+            "name": "x",
+            "status": "fail",
+            "summary": "y",
+            "next_action": "aeat config repair",
+            "dead_end": "terminal",
+        },
+        "at most one of",
+    ),
+    (
+        "ok-with-next-action",
+        {"name": "x", "status": "ok", "summary": "y", "next_action": "aeat config repair"},
+        "must not carry",
+    ),
+    (
+        "ok-with-dead-end",
+        {"name": "x", "status": "ok", "summary": "y", "dead_end": "no route"},
+        "must not carry",
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [fields for _, fields, _ in _DIAGNOSTIC_CHECK_INVALID_CASES],
+    ids=[case_id for case_id, _, _ in _DIAGNOSTIC_CHECK_INVALID_CASES],
+)
+def test_diagnostic_check_invalid_recovery_fields_raise_validation_error(fields: dict[str, object]) -> None:
+    """Invalid recovery-field combinations are rejected by the real Pydantic model."""
 
     with pytest.raises(ValidationError):
-        DiagnosticCheck(name="x", status="fail", summary="y")
-
-
-def test_diagnostic_check_warn_without_recovery_field_raises_validation_error() -> None:
-    """A ``warn`` row with neither ``next_action`` nor ``dead_end`` is forbidden."""
-
-    with pytest.raises(ValidationError):
-        DiagnosticCheck(name="x", status="warn", summary="y")
-
-
-def test_diagnostic_check_rejects_both_next_action_and_dead_end_simultaneously() -> None:
-    """A row may pick at most one of the two recovery roads."""
-
-    with pytest.raises(ValidationError):
-        DiagnosticCheck(
-            name="x",
-            status="fail",
-            summary="y",
-            next_action="aeat config repair",
-            dead_end="terminal",
-        )
+        DiagnosticCheck.model_validate(fields)
 
 
 def test_diagnostic_check_ok_row_with_both_recovery_fields_none_constructs() -> None:
@@ -115,13 +139,6 @@ def test_diagnostic_check_ok_row_with_both_recovery_fields_none_constructs() -> 
     check = DiagnosticCheck(name="x", status="ok", summary="y")
     assert check.next_action is None
     assert check.dead_end is None
-
-
-def test_diagnostic_check_ok_row_with_next_action_raises_validation_error() -> None:
-    """``ok`` rows must not advertise recovery; that surface is reserved for fail/warn."""
-
-    with pytest.raises(ValidationError):
-        DiagnosticCheck(name="x", status="ok", summary="y", next_action="aeat config repair")
 
 
 def test_diagnostic_check_fail_row_with_dead_end_only_constructs() -> None:
@@ -508,12 +525,9 @@ def test_quarantine_preview_opens_session_for_bootstrap_exempt_repair(tmp_path: 
             written_at=datetime.now(UTC),
             payload=b"repair-preview-sessionless",
         )
-        token = _active_session.set(None)
-        assert not has_active_bucket_session()
-        try:
+        with suspend_active_session():
+            assert not has_active_bucket_session()
             report = preview_quarantine_unreadable_secure_objects()
-        finally:
-            _active_session.reset(token)
 
     assert report.readable_total + report.unreadable_total >= 1
     assert any(item.namespace == namespace for item in report.namespaces)
@@ -530,12 +544,9 @@ def test_quarantine_opens_session_for_bootstrap_exempt_repair(tmp_path: Path) ->
             written_at=datetime.now(UTC),
             payload=b"repair-quarantine-sessionless",
         )
-        token = _active_session.set(None)
-        assert not has_active_bucket_session()
-        try:
+        with suspend_active_session():
+            assert not has_active_bucket_session()
             report = quarantine_unreadable_secure_objects()
-        finally:
-            _active_session.reset(token)
 
     assert report.readable_total + report.unreadable_total >= 1
     assert any(item.namespace == namespace for item in report.namespaces)
@@ -606,9 +617,7 @@ def _internal_registry_repair_report() -> ConfigRepairReport:
     backend or registry corruption.
     """
 
-    from ..diagnostics import _ensure_models_rebuilt
-
-    _ensure_models_rebuilt()
+    ensure_models_rebuilt()
     registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
     checks = (
         DiagnosticCheck(
@@ -672,7 +681,6 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     with the exact ``aeat config profile edit NAME`` command.
     """
 
-    from ..diagnostics import _profile_check
     from ..wizard._status import WizardStatusReport
 
     report = WizardStatusReport(
@@ -688,7 +696,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
         login_ready=False,
         next_action="aeat config profile edit NAME",
     )
-    check = _profile_check(report)
+    check = profile_check(report)
 
     assert check.status == "warn"
     finding_keys = {finding.summary.split(" — ", 1)[0] for finding in check.findings}
@@ -705,10 +713,9 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
 def test_render_config_repair_text_lists_specific_findings() -> None:
     """The renderer prints each finding line, not just the check summary."""
 
-    from ..diagnostics import _ensure_models_rebuilt, _profile_check
     from ..wizard._status import WizardStatusReport
 
-    _ensure_models_rebuilt()
+    ensure_models_rebuilt()
 
     report = WizardStatusReport(
         active_profile="demo",
@@ -723,7 +730,7 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
         login_ready=False,
         next_action="aeat config profile edit NAME",
     )
-    check = _profile_check(report)
+    check = profile_check(report)
     registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
     repair_report = ConfigRepairReport(
         overall="warn",
@@ -776,9 +783,8 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
     """
 
     from ...core.resources import bundled_path
-    from ..diagnostics import _registry_cross_domain_integrity_check
 
-    check = _registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
+    check = registry_cross_domain_integrity_check(bundled_path("registry", "aeat"))
     # Healthy registry → ok + operator audience. A failing registry would
     # carry audience='internal'; that branch is pinned by the renderer
     # test above against a constructed report.
@@ -833,50 +839,20 @@ def _assert_validation_error_caused_by_diagnostic_model_error(
     assert matching, f"Expected a DiagnosticModelError cause matching {match!r}; got causes: {causes!r}"
 
 
-def test_diagnostic_check_both_recovery_fields_raises_diagnostic_model_error() -> None:
-    """Setting both next_action and dead_end raises a ValidationError whose cause is DiagnosticModelError."""
+@pytest.mark.parametrize(
+    ("fields", "message_fragment"),
+    [(fields, message_fragment) for _, fields, message_fragment in _DIAGNOSTIC_CHECK_INVALID_CASES],
+    ids=[case_id for case_id, _, _ in _DIAGNOSTIC_CHECK_INVALID_CASES],
+)
+def test_diagnostic_check_invariant_errors_raise_diagnostic_model_error(
+    fields: dict[str, object],
+    message_fragment: str,
+) -> None:
+    """Invalid recovery fields raise ValidationError caused by DiagnosticModelError."""
 
     with pytest.raises(ValidationError) as exc_info:
-        DiagnosticCheck(
-            name="x",
-            status="fail",
-            summary="y",
-            next_action="aeat config repair",
-            dead_end="terminal",
-        )
-    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, "at most one of")
-
-
-def test_diagnostic_check_fail_without_recovery_raises_diagnostic_model_error() -> None:
-    """A fail row with no recovery field raises a ValidationError whose cause is DiagnosticModelError."""
-
-    with pytest.raises(ValidationError) as exc_info:
-        DiagnosticCheck(name="x", status="fail", summary="y")
-    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, "must populate one of")
-
-
-def test_diagnostic_check_warn_without_recovery_raises_diagnostic_model_error() -> None:
-    """A warn row with no recovery field raises a ValidationError whose cause is DiagnosticModelError."""
-
-    with pytest.raises(ValidationError) as exc_info:
-        DiagnosticCheck(name="x", status="warn", summary="y")
-    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, "must populate one of")
-
-
-def test_diagnostic_check_ok_with_next_action_raises_diagnostic_model_error() -> None:
-    """An ok row carrying next_action raises a ValidationError whose cause is DiagnosticModelError."""
-
-    with pytest.raises(ValidationError) as exc_info:
-        DiagnosticCheck(name="x", status="ok", summary="y", next_action="aeat config repair")
-    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, "must not carry")
-
-
-def test_diagnostic_check_ok_with_dead_end_raises_diagnostic_model_error() -> None:
-    """An ok row carrying dead_end raises a ValidationError whose cause is DiagnosticModelError."""
-
-    with pytest.raises(ValidationError) as exc_info:
-        DiagnosticCheck(name="x", status="ok", summary="y", dead_end="no route")
-    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, "must not carry")
+        DiagnosticCheck.model_validate(fields)
+    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, message_fragment)
 
 
 def test_diagnostic_model_error_is_subclass_of_value_error() -> None:

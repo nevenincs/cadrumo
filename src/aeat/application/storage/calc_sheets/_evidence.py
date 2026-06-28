@@ -1,4 +1,10 @@
-"""Evidence adapters for calc-sheets workbook export plans."""
+"""Evidence adapters for calc-sheets workbook export plans.
+
+:func:`sheet_evidence_from_ledger_filing` projects
+:class:`LedgerFilingEvidence` into a :class:`SheetEvidenceFacet` made of
+:class:`SheetEvidenceContributorRow` and :class:`SheetEvidenceManualEntry`
+records for the workbook evidence surface.
+"""
 
 from __future__ import annotations
 
@@ -17,11 +23,12 @@ def sheet_evidence_from_ledger_filing(
 ) -> SheetEvidenceFacet:
     """Project bundled filing evidence into the per-casilla workbook facet.
 
-    ``LedgerFilingEvidence`` is contributor-oriented; the workbook evidence
+    :class:`LedgerFilingEvidence` is contributor-oriented; the workbook evidence
     surface is casilla-oriented. The caller must therefore provide the
     generic attribution map from each contributor transaction id to the
-    canonical ``casilla.id`` values it supports. Missing attribution is
-    refused instead of being guessed from modelo-specific tax facts.
+    canonical :class:`CasillaId` values it supports. Missing attribution raises
+    :class:`CalcSheetsEngineError` instead of being guessed from modelo-specific
+    tax facts.
 
     Returns:
         :class:`SheetEvidenceFacet`: The projected evidence facet.

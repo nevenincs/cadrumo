@@ -8,6 +8,7 @@ import pytest
 
 from ....core import Period
 from .._retenciones import (
+    RETENCIONES_MODELO_SCHEME_CATALOGUE,
     RetencionesAggregation,
     RetencionObservation,
     RetencionScheme,
@@ -174,13 +175,12 @@ class TestAggregate111:
     def test_unregistered_modelo_raises_domain_error(self) -> None:
         from .._errors import AggregationUnsupportedModeloError
         from .._grouping import filter_observations_for_modelo
-        from .._retenciones import _MODELO_SCHEME_CATALOGUE
 
         with pytest.raises(AggregationUnsupportedModeloError):
             filter_observations_for_modelo(
                 (),
                 modelo="347",
-                catalogue=_MODELO_SCHEME_CATALOGUE,
+                catalogue=RETENCIONES_MODELO_SCHEME_CATALOGUE,
                 attribute_fn=lambda obs: obs.scheme,
                 aggregator_label="retenciones aggregator",
             )
@@ -293,26 +293,30 @@ class TestAggregationInvariants:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError, match="Period"):
-            RetencionesAggregation(
-                modelo="111",
-                period="2025Q1",  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
-                rollups=(),
-                total_perceptors=0,
-                total_taxable_base=Decimal("0"),
-                total_retencion=Decimal("0"),
+            RetencionesAggregation.model_validate(
+                {
+                    "modelo": "111",
+                    "period": "2025Q1",
+                    "rollups": (),
+                    "total_perceptors": 0,
+                    "total_taxable_base": Decimal("0"),
+                    "total_retencion": Decimal("0"),
+                },
             )
 
     def test_period_dict_is_not_coerced(self) -> None:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError, match="Period"):
-            RetencionesAggregation(
-                modelo="111",
-                period={"filing_year": 2025, "code": "1T"},  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
-                rollups=(),
-                total_perceptors=0,
-                total_taxable_base=Decimal("0"),
-                total_retencion=Decimal("0"),
+            RetencionesAggregation.model_validate(
+                {
+                    "modelo": "111",
+                    "period": {"filing_year": 2025, "code": "1T"},
+                    "rollups": (),
+                    "total_perceptors": 0,
+                    "total_taxable_base": Decimal("0"),
+                    "total_retencion": Decimal("0"),
+                },
             )
 
     def test_perceptor_count_must_match_distinct_nifs(self) -> None:

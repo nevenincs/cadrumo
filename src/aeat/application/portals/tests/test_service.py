@@ -61,8 +61,8 @@ class TestShow:
         assert isinstance(row, PortalRow)
         assert row.portal is portal
 
-    def test_show_refuses_unknown_portal_via_stubbed_registry(self) -> None:
-        # Use an empty registry stub so any portal lookup misses.
+    def test_show_refuses_unknown_portal_via_empty_registry(self) -> None:
+        # Use an empty registry so any portal lookup misses.
         svc = PortalsService(registry={})
         portal = next(iter(PORTAL_REGISTRY.keys()))
         with pytest.raises(PortalNotFoundError, match="not registered"):

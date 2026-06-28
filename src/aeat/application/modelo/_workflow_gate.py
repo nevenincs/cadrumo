@@ -4,7 +4,12 @@ This module owns the adapter objects that let immutable calculation revisions
 participate in the filing workflow engine. The public application facade
 continues to export the operator-facing services from `aeat.application.modelo`.
 
-Use of :class:`CalculationRevision`, :class:`TaxpayerProfile`, :class:`TransactionCatalogue` for compliance.
+The gate adapts one persisted :class:`CalculationRevision` and its
+:class:`~aeat.domain.modelos._work_unit.WorkUnit` into
+:class:`~aeat.application.workflow.WorkflowEngine` inputs. It scopes deadline and
+filing-window checks with :class:`TaxpayerProfile`, and locally approves filing
+drafts through the transient :class:`TransactionCatalogue` used by the filing
+surface.
 """
 
 from __future__ import annotations
@@ -41,6 +46,7 @@ from ..workflow import (
     WorkflowStage,
 )
 from ._action_errors import ModeloWorkflowGateError
+from ._revision_replay_inputs import revision_filing_replay_inputs
 
 
 @lru_cache(maxsize=512)
@@ -52,8 +58,9 @@ def _deadline_window_period_for_registry_period(
 ) -> Period | None:
     """Return the typed :class:`~aeat.core.Period` declared by the registry deadline window.
 
-    Uses :class:`~aeat.domain.calculations.registry.RegistrySnapshotError` for
-    snapshot lookup; :class:`~aeat.core.Period` for the returned value.
+    A :class:`~aeat.domain.calculations.registry.RegistrySnapshotError` means
+    the registry cannot supply a deadline window for that filing tuple, so the
+    helper returns ``None`` instead of a :class:`~aeat.core.Period`.
     """
     from ...core.resources import resources
 
@@ -89,10 +96,11 @@ def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:
 
 
 class _RevisionInputsProvider:
-    """Loads immutable calculation-revision inputs for the workflow gate."""
+    """Load immutable :class:`CalculationRevision` inputs for the workflow gate."""
 
     def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit) -> None:
         self._revision = revision
+        self._work_unit = work_unit
         self._modelo = work_unit.modelo
         self._period = workflow_period_for_work_unit(work_unit)
 
@@ -105,9 +113,11 @@ class _RevisionInputsProvider:
     ) -> ModeloInputs:
         """Return the revision inputs when the workflow request matches it.
 
-        Use of :class:`TaxpayerProfile` for compliance.
+        The :class:`TaxpayerProfile` parameter comes from the workflow Protocol and
+        is passed to :func:`revision_filing_replay_inputs` so applicability-driven
+        relation zeroes can be derived after ``modelo`` and
+        :class:`~aeat.core.Period` have matched the stored revision.
         """
-        del profile
         if modelo != self._modelo or period != self._period:
             raise WorkflowInputMismatchError(
                 "workflow input request does not match calculation revision",
@@ -119,15 +129,15 @@ class _RevisionInputsProvider:
                     "requested_period": str(period),
                 },
             )
-        return {
-            **dict(self._revision.input_values_by_casilla_id),
-            **dict(self._revision.binding_overrides),
-            **dict(self._revision.relation_overrides),
-        }
+        return revision_filing_replay_inputs(
+            revision=self._revision,
+            work_unit=self._work_unit,
+            workflow_profile=profile,
+        )
 
 
 class _RevisionDraftBuilder:
-    """Builds and locally approves the draft backed by the target revision."""
+    """Build and locally approve the draft backed by the target :class:`~aeat.domain.modelos._work_unit.WorkUnit`."""
 
     def __init__(self, *, work_unit: WorkUnit, actor: str, clock: datetime) -> None:
         self._work_unit = work_unit
@@ -150,7 +160,9 @@ class _RevisionDraftBuilder:
     ) -> RegistryModeloDraftProtocol:
         """Build a :class:`RegistryModeloDraftProtocol` and approve it when it is filing-ready.
 
-        Uses :class:`TaxpayerProfile` for deadline and filing-period scoping.
+        The :class:`TaxpayerProfile` is converted to the filing profile Protocol;
+        approval uses a transient :class:`TransactionCatalogue` because persisted
+        transaction evidence remains owned by the calculation revision.
         """
         draft = build_draft(
             modelo=modelo,
@@ -201,7 +213,9 @@ def build_revision_workflow_engine(
 ) -> WorkflowEngine:
     """Build and return a :class:`WorkflowEngine` configured for one calculation revision.
 
-    Uses :class:`CalculationRevision` for revision inputs and :class:`TaxpayerProfile` for deadline scoping.
+    See also :class:`CalculationRevision` for the immutable source inputs,
+    :class:`~aeat.domain.modelos._work_unit.WorkUnit` for the modelo/period
+    identity, and :class:`TaxpayerProfile` for deadline scoping.
     """
     cfg = settings or load_settings()
     deadline_engine = DeadlineEngine()
@@ -242,7 +256,9 @@ def run_revision_workflow_gate(
 ) -> WorkflowResult:
     """Run and persist the workflow gate for one modelo work unit and return a :class:`WorkflowResult`.
 
-    Uses :class:`TaxpayerProfile` for deadline and filing-period scoping.
+    The supplied :class:`WorkflowEngine` runs with the caller's
+    :class:`TaxpayerProfile`; an aborted :class:`WorkflowResult` is persisted before
+    being surfaced as :class:`ModeloWorkflowGateError`.
     """
     result = asyncio.run(
         engine.run_for_period(

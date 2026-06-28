@@ -130,8 +130,7 @@ def test_reset_workflow_state_emit_failure_leaves_row_intact() -> None:
     must not execute -- the row stays, the next reset attempt picks
     up where this one left off, and no plaintext is leaked. The
     failure path is exercised by injecting a real failing emitter
-    through the repository's ``emit_reset`` constructor seam -- no
-    module monkeypatching, no test double or Mock.
+    through the repository's ``emit_reset`` constructor argument.
     """
 
     from ....adapters.persistence.storage import WORKFLOW_STATE_NAMESPACE

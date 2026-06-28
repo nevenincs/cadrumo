@@ -33,6 +33,7 @@ from .._binding_prefill import (
     _selector_periods,
     _selector_year_delta,
     extract_modelo_303_local_iva_compensation_recurrence,
+    resolve_bindings_from_local_store,
 )
 from .._errors import BindingPrefillTypeError
 from .._iva_compensation_history import IvaCompensationHistoryRepository
@@ -70,6 +71,31 @@ _M303_COMPENSACION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-a
 _M303_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
 _M303_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
 _M303_DISPONIBLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-disponible-fin-periodo")
+
+
+def test_m130_first_year_activity_start_prefills_prior_year_m100_as_no_prior_obligation(
+    tmp_path: Path,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+        empty_report = resolve_bindings_from_local_store(
+            snapshot,
+            repository=CalculationObservationRepository(),
+        )
+        scoped_report = resolve_bindings_from_local_store(
+            snapshot,
+            repository=CalculationObservationRepository(),
+            activity_start_date=date(2026, 1, 1),
+        )
+
+    binding_id = "irpf.previous_year_economic_activity_net_income"
+    assert binding_id not in empty_report.binding_values
+    assert scoped_report.binding_values[binding_id] == Decimal("0")
+    prefilled = {item.binding_id: item for item in scoped_report.prefilled}
+    assert prefilled[binding_id].source_kind == "pre_activity_no_prior_obligation"
+    assert prefilled[binding_id].source_modelo == "100"
+    assert prefilled[binding_id].source_filing_year == 2025
+    assert prefilled[binding_id].source_periods == ("0A",)
 
 
 def _observation(

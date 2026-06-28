@@ -28,19 +28,16 @@ of :func:`derive_modelo_applicability` over a constructed profile.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import pytest
 
 from ....domain.calculations.registry.applicability import (
-    _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
-    _INCOMPLETE_LEGAL_REFS,
-    _INCOMPLETE_UNDECLARED_REASON,
-    _INCOMPLETE_UNDETERMINED_REASON,
-    _INCOMPLETE_UNRULED_REASON,
-    _MODELO_APPLICABILITY_RULES,
     ApplicabilityVerdict,
     TaxRoute,
     derive_modelo_applicability,
     derive_tax_route,
+    iter_modelo_applicability_rules,
     taxpayer_model_is_declared,
 )
 from ....domain.deadlines import TaxpayerProfile
@@ -53,6 +50,8 @@ from ....domain.deadlines._models import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_ProfileFactory = Callable[[], TaxpayerProfile]
 
 
 # ---------------------------------------------------------------------
@@ -330,7 +329,7 @@ def test_modelo_without_seed_rule_is_incomplete() -> None:
 
     result = derive_modelo_applicability(_autonomo(), "232")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
-    assert result.reason == _INCOMPLETE_UNRULED_REASON
+    assert "todavía no se ha derivado una regla de aplicabilidad" in result.reason
 
 
 # ---------------------------------------------------------------------
@@ -349,7 +348,7 @@ def test_unruled_modelo_on_declared_profile_uses_unruled_reason() -> None:
 
     result = derive_modelo_applicability(profile, "232")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
-    assert result.reason == _INCOMPLETE_UNRULED_REASON
+    assert "todavía no se ha derivado una regla de aplicabilidad" in result.reason
     # The un-ruled rationale must NOT tell a declared operator to
     # declare their taxpayer type.
     assert "no está declarado" not in result.reason
@@ -360,7 +359,6 @@ def test_unruled_modelo_on_declared_profile_uses_unruled_reason() -> None:
 def test_unruled_modelo_reason_differs_from_undeclared_reason() -> None:
     """The two INCOMPLETE causes carry structurally distinct prose."""
 
-    assert _INCOMPLETE_UNRULED_REASON != _INCOMPLETE_UNDECLARED_REASON
     unruled = derive_modelo_applicability(_autonomo(), "232")
     undeclared = derive_modelo_applicability(_undeclared(), "100")
     assert unruled.reason != undeclared.reason
@@ -373,7 +371,6 @@ def test_undeclared_profile_still_uses_undeclared_reason() -> None:
 
     result = derive_modelo_applicability(_undeclared(), "100")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
-    assert result.reason == _INCOMPLETE_UNDECLARED_REASON
     assert "tipo de contribuyente" in result.reason
     assert "config profile edit" in result.reason
 
@@ -390,7 +387,7 @@ def test_natural_person_no_income_categories_uses_undeclared_reason() -> None:
     )
     result = derive_modelo_applicability(profile, "130")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
-    assert result.reason == _INCOMPLETE_UNDECLARED_REASON
+    assert result.reason == derive_modelo_applicability(_undeclared(), "100").reason
 
 
 # ---------------------------------------------------------------------
@@ -424,7 +421,7 @@ def test_attribution_entity_pass_through_reason_is_honest() -> None:
     assert "cada miembro" in result.reason
     # The pass-through verdict is grounded in the LIRPF attribution
     # articles, not the modelo-specific IS / IRPF refs.
-    assert result.legal_refs == _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS
+    assert result.legal_refs == ("ley-35-2006:art-86", "ley-35-2006:art-87")
 
 
 def test_attribution_entity_owes_modelo_184() -> None:
@@ -438,21 +435,17 @@ def test_attribution_entity_owes_modelo_184() -> None:
     assert result.legal_refs
 
 
-def test_natural_person_does_not_owe_modelo_184() -> None:
-    """Modelo 184 is informational, not cuota-bearing: a natural person
-    asked about it gets a plain NOT_APPLICABLE, never a pass-through."""
+@pytest.mark.parametrize(
+    "profile_factory",
+    (_landlord, _sociedad_limitada),
+    ids=("natural-person", "legal-entity"),
+)
+def test_non_attribution_entities_do_not_owe_modelo_184(profile_factory: _ProfileFactory) -> None:
+    """Modelo 184 is the attribution entity's own obligation only."""
 
-    result = derive_modelo_applicability(_landlord(), "184")
+    result = derive_modelo_applicability(profile_factory(), "184")
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     assert result.applicable is False
-
-
-def test_legal_entity_does_not_owe_modelo_184() -> None:
-    """A sociedad limitada is not an attribution entity: Modelo 184
-    does not apply, and the verdict is a plain NOT_APPLICABLE."""
-
-    result = derive_modelo_applicability(_sociedad_limitada(), "184")
-    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
 
 
 def test_attribution_entity_modelo_100_reason_not_persona_fisica() -> None:
@@ -470,32 +463,27 @@ def test_attribution_entity_modelo_100_reason_not_persona_fisica() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_natural_person_routes_to_irpf() -> None:
-    """A natural-person profile routes to the IRPF tax branch."""
-
-    assert derive_tax_route(_landlord()) is TaxRoute.IRPF
-    assert derive_tax_route(_autonomo()) is TaxRoute.IRPF
-
-
-def test_legal_entity_routes_to_impuesto_sociedades() -> None:
-    """A legal-entity profile routes to the Impuesto sobre Sociedades
-    branch — never the IRPF tarifa (corporate-entity contract §4)."""
-
-    assert derive_tax_route(_sociedad_limitada()) is TaxRoute.IMPUESTO_SOCIEDADES
+_TAX_ROUTE_CASES: tuple[tuple[_ProfileFactory, TaxRoute], ...] = (
+    (_landlord, TaxRoute.IRPF),
+    (_autonomo, TaxRoute.IRPF),
+    (_sociedad_limitada, TaxRoute.IMPUESTO_SOCIEDADES),
+    (_attribution_entity, TaxRoute.ATTRIBUTION_PASS_THROUGH),
+    (_undeclared, TaxRoute.INCOMPLETE),
+)
 
 
-def test_attribution_entity_routes_to_pass_through() -> None:
-    """An attribution-entity profile routes to the member pass-through —
-    no IS and no IRPF cuota of its own."""
+@pytest.mark.parametrize(
+    ("profile_factory", "expected_route"),
+    _TAX_ROUTE_CASES,
+    ids=("landlord-irpf", "autonomo-irpf", "legal-entity-is", "attribution-pass-through", "undeclared"),
+)
+def test_entity_type_routes_to_expected_tax_branch(
+    profile_factory: _ProfileFactory,
+    expected_route: TaxRoute,
+) -> None:
+    """The entity-type axis selects the tax route and never defaults a tax."""
 
-    assert derive_tax_route(_attribution_entity()) is TaxRoute.ATTRIBUTION_PASS_THROUGH
-
-
-def test_undeclared_entity_type_routes_incomplete() -> None:
-    """An undeclared entity_type yields an INCOMPLETE route — the engine
-    never defaults a tax (corporate-entity contract §4 safe default)."""
-
-    assert derive_tax_route(_undeclared()) is TaxRoute.INCOMPLETE
+    assert derive_tax_route(profile_factory()) is expected_route
 
 
 def test_no_seed_not_applicable_reason_asserts_excluded_taxpayer_type() -> None:
@@ -507,7 +495,7 @@ def test_no_seed_not_applicable_reason_asserts_excluded_taxpayer_type() -> None:
         "Una persona física tributa",
         "Una entidad jurídica tributa",
     )
-    for rule in _MODELO_APPLICABILITY_RULES.values():
+    for rule in iter_modelo_applicability_rules():
         for phrase in forbidden:
             assert phrase not in rule.not_applicable_reason, rule.modelo
 
@@ -659,28 +647,28 @@ def test_attribution_entity_pago_fraccionado_is_pass_through() -> None:
 # ---------------------------------------------------------------------
 
 
-def test_autonomo_owes_modelo_390() -> None:
-    """An autónomo with an IVA-subject actividad económica files the
-    annual IVA summary, Modelo 390 — the companion to Modelo 303."""
-
-    result = derive_modelo_applicability(_autonomo(), "390")
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-    assert result.applicable is True
+_MODELO_390_CASES: tuple[tuple[_ProfileFactory, ApplicabilityVerdict, bool], ...] = (
+    (_autonomo, ApplicabilityVerdict.APPLICABLE, True),
+    (_sociedad_limitada, ApplicabilityVerdict.APPLICABLE, True),
+    (_landlord, ApplicabilityVerdict.NOT_APPLICABLE, False),
+)
 
 
-def test_legal_entity_owes_modelo_390() -> None:
-    """A sociedad limitada with an IVA-subject activity files Modelo 390."""
+@pytest.mark.parametrize(
+    ("profile_factory", "expected_verdict", "expected_applicable"),
+    _MODELO_390_CASES,
+    ids=("autonomo", "legal-entity", "landlord"),
+)
+def test_modelo_390_follows_iva_subject_activity_gate(
+    profile_factory: _ProfileFactory,
+    expected_verdict: ApplicabilityVerdict,
+    expected_applicable: bool,
+) -> None:
+    """Modelo 390 follows the annual IVA-summary gate for each core persona."""
 
-    result = derive_modelo_applicability(_sociedad_limitada(), "390")
-    assert result.verdict is ApplicabilityVerdict.APPLICABLE
-
-
-def test_landlord_does_not_owe_modelo_390() -> None:
-    """A pure landlord carries on no IVA-subject activity: no Modelo 390,
-    matching the Modelo 303 verdict."""
-
-    result = derive_modelo_applicability(_landlord(), "390")
-    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    result = derive_modelo_applicability(profile_factory(), "390")
+    assert result.verdict is expected_verdict
+    assert result.applicable is expected_applicable
 
 
 def test_modelo_390_tracks_modelo_303_verdict() -> None:
@@ -737,7 +725,7 @@ def test_modelo_111_incomplete_when_payer_fact_not_declared() -> None:
 
     result = derive_modelo_applicability(_autonomo(), "111")
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
-    assert result.reason == _INCOMPLETE_UNDETERMINED_REASON
+    assert "depende de un hecho que el perfil no expresa con certeza" in result.reason
     # The undetermined rationale must not tell a declared operator to
     # declare their taxpayer type — the taxpayer model IS declared.
     assert "config profile edit" not in result.reason
@@ -775,11 +763,11 @@ def test_modelo_115_applicable_when_taxpayer_pays_rent() -> None:
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
 
 
-def test_modelo_115_incomplete_when_payer_fact_not_declared() -> None:
-    """A taxpayer that does not declare paying rent with retención gets
-    an INCOMPLETE Modelo 115 verdict, not a guessed NOT_APPLICABLE."""
+@pytest.mark.parametrize("modelo", ("115", "349", "347"), ids=("rent-retention", "intracommunity", "third-party"))
+def test_payer_fact_modelos_are_incomplete_when_required_fact_not_declared(modelo: str) -> None:
+    """Payer-fact modelos stay INCOMPLETE when their specific fact is not declared."""
 
-    result = derive_modelo_applicability(_autonomo(), "115")
+    result = derive_modelo_applicability(_autonomo(), modelo)
     assert result.verdict is ApplicabilityVerdict.INCOMPLETE
 
 
@@ -813,15 +801,6 @@ def test_modelo_349_applicable_when_taxpayer_trades_intracommunity() -> None:
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
 
 
-def test_modelo_349_incomplete_when_trade_fact_not_declared() -> None:
-    """A taxpayer that does not declare intracommunity operations gets
-    an INCOMPLETE Modelo 349 verdict — the fact is not decidable from
-    the three-axis model alone."""
-
-    result = derive_modelo_applicability(_autonomo(), "349")
-    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
-
-
 def test_modelo_347_applicable_when_third_party_threshold_exceeded() -> None:
     """Modelo 347 applies when the taxpayer declares exceeding the
     third-party transaction threshold."""
@@ -836,14 +815,6 @@ def test_modelo_347_applicable_when_third_party_threshold_exceeded() -> None:
     )
     result = derive_modelo_applicability(profile, "347")
     assert result.verdict is ApplicabilityVerdict.APPLICABLE
-
-
-def test_modelo_347_incomplete_when_threshold_fact_not_declared() -> None:
-    """A taxpayer that does not declare exceeding the threshold gets an
-    INCOMPLETE Modelo 347 verdict, not a guessed NOT_APPLICABLE."""
-
-    result = derive_modelo_applicability(_autonomo(), "347")
-    assert result.verdict is ApplicabilityVerdict.INCOMPLETE
 
 
 def test_payer_fact_modelos_not_applicable_for_wrong_entity_type() -> None:
@@ -861,8 +832,12 @@ def test_undetermined_reason_distinct_from_undeclared_and_unruled() -> None:
     """The payer-fact INCOMPLETE rationale is structurally distinct from
     both the undeclared-taxpayer and the un-ruled-modelo rationales."""
 
-    assert _INCOMPLETE_UNDETERMINED_REASON != _INCOMPLETE_UNDECLARED_REASON
-    assert _INCOMPLETE_UNDETERMINED_REASON != _INCOMPLETE_UNRULED_REASON
+    undetermined = derive_modelo_applicability(_autonomo(), "111")
+    undeclared = derive_modelo_applicability(_undeclared(), "100")
+    unruled = derive_modelo_applicability(_autonomo(), "232")
+
+    assert undetermined.reason != undeclared.reason
+    assert undetermined.reason != unruled.reason
 
 
 # ---------------------------------------------------------------------
@@ -889,9 +864,15 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     registered_legal_ids = set(authority.catalogues.legal)
     assert registered_legal_ids, "registry legal catalogue is empty"
 
-    seed_refs: set[str] = set(_INCOMPLETE_LEGAL_REFS)
-    seed_refs.update(_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS)
-    for rule in _MODELO_APPLICABILITY_RULES.values():
+    seed_refs: set[str] = set()
+    for profile, modelo in (
+        (_undeclared(), "100"),
+        (_autonomo(), "111"),
+        (_autonomo(), "232"),
+        (_attribution_entity(), "200"),
+    ):
+        seed_refs.update(derive_modelo_applicability(profile, modelo).legal_refs)
+    for rule in iter_modelo_applicability_rules():
         seed_refs.update(rule.legal_refs)
     assert seed_refs, "seed table carries no legal_refs"
 

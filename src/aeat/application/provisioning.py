@@ -6,7 +6,9 @@ not. Probes NEVER raise on absence — a missing dependency is data, not an
 exception (``dependency-provisioning`` ADR). The vision read consults
 :func:`probe_ollama_vision` before the expensive inference so a down server or an
 unpulled model becomes an instructive refusal instead of a raw stack trace; the
-``aeat config check`` surface renders every probe in one report.
+``aeat config check`` surface renders every probe in one report. Optional-extra
+probes walk the core :data:`~aeat.core.OPTIONAL_EXTRAS` catalogue of
+:class:`~aeat.core.OptionalExtra` records.
 """
 
 from __future__ import annotations
@@ -57,7 +59,8 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
 
     A fast ``GET /api/tags`` (short timeout). Returns unavailable — never raises —
     when the server is unreachable (``ollama serve``) or the configured vision
-    model is not pulled (``ollama pull <model>``).
+    model from :class:`~aeat.core.config.Settings` is not pulled
+    (``ollama pull <model>``).
     """
     resolved = settings if settings is not None else load_settings()
     model = resolved.aeat_llm_ollama_vision_model
@@ -113,13 +116,16 @@ def probe_subprocess_providers() -> tuple[DependencyStatus, ...]:
     return tuple(statuses)
 
 
-def _playwright_browsers_root() -> Path:
+def _playwright_browsers_root(cache_root: Path | None = None) -> Path:
     """Return the directory Playwright installs browser binaries into.
 
-    Honours ``PLAYWRIGHT_BROWSERS_PATH`` then falls back to the per-OS default
-    cache. A filesystem read only — it never launches the Playwright driver (which
-    can hang inside the CLI process), so the probe stays fast and non-blocking.
+    Uses an explicit ``cache_root`` when supplied, otherwise honours
+    ``PLAYWRIGHT_BROWSERS_PATH`` then falls back to the per-OS default cache. A
+    filesystem read only — it never launches the Playwright driver (which can
+    hang inside the CLI process), so the probe stays fast and non-blocking.
     """
+    if cache_root is not None:
+        return cache_root
     override = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
     if override:
         return Path(override)
@@ -131,15 +137,16 @@ def _playwright_browsers_root() -> Path:
     return Path.home() / ".cache" / "ms-playwright"
 
 
-def probe_playwright_browser() -> DependencyStatus:
+def probe_playwright_browser(cache_root: Path | None = None) -> DependencyStatus:
     """Probe the Playwright Chromium browser binary, returning a :class:`DependencyStatus`.
 
     Scans the Playwright browsers cache for an installed ``chromium*`` build (a fast
     filesystem check; the Playwright sync driver can hang inside the CLI process, so
     it is deliberately not launched). Returns unavailable — never raises — when no
-    Chromium build is present (``playwright install chromium``).
+    Chromium build is present (``playwright install chromium``). ``cache_root`` is a
+    testable override for the Playwright browser cache directory.
     """
-    root = _playwright_browsers_root()
+    root = _playwright_browsers_root(cache_root)
     try:
         installed = root.is_dir() and any(child.name.startswith("chromium") for child in root.iterdir())
     except OSError:
@@ -161,10 +168,11 @@ def probe_playwright_browser() -> DependencyStatus:
 def probe_optional_extra(extra: OptionalExtra) -> DependencyStatus:
     """Probe whether an optional package extra is importable, never raising.
 
-    Wraps the core :func:`optional_extra_available` spec-only check (no import, no
-    side effects) in the doctor's :class:`DependencyStatus`, naming the
-    ``pip install aeat[<extra>]`` remediation when absent. The feature-boundary
-    guard is the sibling core :func:`~aeat.core.require_optional_extra`.
+    Wraps the core :func:`optional_extra_available` spec-only check for one
+    :class:`~aeat.core.OptionalExtra` (no import, no side effects) in the doctor's
+    :class:`DependencyStatus`, naming the ``pip install aeat[<extra>]``
+    remediation when absent. The feature-boundary guard is the sibling core
+    :func:`~aeat.core.require_optional_extra`.
     """
     if not optional_extra_available(extra):
         return DependencyStatus(

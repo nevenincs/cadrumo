@@ -347,6 +347,7 @@ class OverviewStatusReport(BaseModel):
     calculation_revisions: int = Field(default=0, ge=0)
     unreadable_rows: int = Field(ge=0)
     filing_obligation_advisories: tuple[str, ...] = Field(default=())
+    unsupported_work_create_modelos: tuple[str, ...] = Field(default=())
 
 
 __all__ = [
