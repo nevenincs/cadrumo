@@ -18,6 +18,7 @@ Submodules
    aeat.domain.calculations.registry._applicability
    aeat.domain.calculations.registry._applicability_modelo202
    aeat.domain.calculations.registry._applicability_payer_facts
+   aeat.domain.calculations.registry._applicability_routes
    aeat.domain.calculations.registry._authority
    aeat.domain.calculations.registry._binding_aggregation
    aeat.domain.calculations.registry._binding_selector_utils
@@ -39,6 +40,7 @@ Submodules
    aeat.domain.calculations.registry._filed_state
    aeat.domain.calculations.registry._formula_initial_values
    aeat.domain.calculations.registry._formula_runtime
+   aeat.domain.calculations.registry._formula_text_inputs
    aeat.domain.calculations.registry._groi_oracle
    aeat.domain.calculations.registry._ids
    aeat.domain.calculations.registry._invoice_bindings
@@ -66,6 +68,7 @@ Submodules
    aeat.domain.calculations.registry._schema_base
    aeat.domain.calculations.registry._schema_formula
    aeat.domain.calculations.registry._schema_input_kind
+   aeat.domain.calculations.registry._schema_references
    aeat.domain.calculations.registry._schema_rounding
    aeat.domain.calculations.registry._schema_scalars
    aeat.domain.calculations.registry._schema_surfaces
