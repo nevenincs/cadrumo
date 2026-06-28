@@ -721,6 +721,9 @@ def _command_from_patch(
         notes=notes,
         iva_category=iva_category,
         counterparty_eu_member_state=counterparty_eu_member_state,
+        source_jurisdiction=(
+            patch.source_jurisdiction if "source_jurisdiction" in patch_fields else current.source_jurisdiction
+        ),
         group_label=group_label,
         actor=actor,
         source_command=source_command,
