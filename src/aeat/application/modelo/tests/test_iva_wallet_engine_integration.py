@@ -398,7 +398,7 @@ def test_no_seed_no_override_303_calculate_blocks_missing_in_scope_prior_history
             repository=work_repo,
             clock=_DECIDED_AT,
         )
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked):
+        with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -411,6 +411,10 @@ def test_no_seed_no_override_303_calculate_blocks_missing_in_scope_prior_history
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
             )
+        assert exc_info.value.suggestion is not None
+        assert "iva-wallet override" in exc_info.value.suggestion
+        assert "--amount 0" in exc_info.value.suggestion
+        assert "iva-wallet seed" not in exc_info.value.suggestion
 
 
 def test_in_scope_period_rejects_supplied_first_period_zero_decision(tmp_path: Path) -> None:
@@ -746,7 +750,7 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
             repository=work_repo,
             clock=_DECIDED_AT,
         )
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_only"):
+        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_only") as exc_info:
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -760,6 +764,10 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
             )
+        assert exc_info.value.suggestion is not None
+        assert "iva-wallet override" in exc_info.value.suggestion
+        assert "--amount AMOUNT" in exc_info.value.suggestion
+        assert "iva-wallet seed" not in exc_info.value.suggestion
         assert len(calc_repo.load()) == 0
 
 

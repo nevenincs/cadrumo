@@ -37,7 +37,7 @@ from ...application.modelo import (
     validate_m349_country_prefix_context,
     validate_m349_nif_format,
 )
-from ...core.errors import resolve_error_message
+from ...core.errors import build_error_envelope, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
@@ -445,7 +445,11 @@ def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[Mode
 
 def bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:
     """Render registered domain errors before crossing the Typer boundary."""
-    return typer.BadParameter(resolve_error_message(exc))
+    message = resolve_error_message(exc)
+    suggestion = build_error_envelope(exc).suggestion
+    if suggestion:
+        message = f"{message}\nRun `{suggestion}`"
+    return typer.BadParameter(message)
 
 
 def bad_parameter_from_localized_context(exc: BaseException) -> typer.BadParameter:
