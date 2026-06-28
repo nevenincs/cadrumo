@@ -48,6 +48,7 @@ from ....domain.modelos._verification_repository import (
 from ....domain.modelos._work_unit import WorkUnit
 from ....domain.submission import SubmissionEngine
 from ....domain.transactions import TransactionCatalogue
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...auth import AuthProviderDescription, AuthProviderKind
@@ -58,6 +59,7 @@ from ...filing import (
     build_runtime_schema_provider,
     filing_profile_from_taxpayer,
 )
+from ...user_profile import UserProfileLifecycleRepository
 from ...workflow import (
     DeadlineEngineAdapter,
     ModeloInputs,
@@ -93,23 +95,66 @@ from .justificante_metadata import persist_justificante_metadata
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 __all__ = [
+    "DEFAULT_130_BASELINE_INPUTS",
+    "DEFAULT_130_BINDING_VALUES",
+    "DEFAULT_180_BINDING_VALUES",
+    "DEFAULT_180_RELATION_VALUES",
+    "M111_ACTIVITY_AMOUNT_CASILLA",
+    "M111_ACTIVITY_COUNT_CASILLA",
+    "M111_ACTIVITY_WITHHELD_CASILLA",
+    "M111_EMPLOYMENT_WITHHELD_CASILLA",
+    "M111_FORESTRY_WITHHELD_CASILLA",
+    "M111_IMAGE_RIGHTS_WITHHELD_CASILLA",
+    "M111_IMPUTED_INCOME_WITHHELD_CASILLA",
+    "M111_PRIZE_WITHHELD_CASILLA",
+    "M111_PROFESSIONAL_WITHHELD_CASILLA",
+    "M111_TOTAL_WITHHELD_CASILLA",
+    "M130_AGRARIAN_VOLUME_CASILLA",
+    "M130_AGRARIAN_WITHHELD_CASILLA",
+    "M130_CARRY_FORWARD_CASILLA",
+    "M130_EXPENSE_CASILLA",
+    "M130_HOME_DEDUCTION_CASILLA",
+    "M130_INCOME_CASILLA",
+    "M130_NET_RESULT_CASILLA",
+    "M130_PRIOR_RETURN_RESULT_CASILLA",
+    "M130_SALDO_NEGATIVO_CASILLA",
+    "M130_WITHHELD_CASILLA",
+    "M180_PERCEPTOR_BASE_CASILLA",
+    "T0",
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "VERIFY_MODELO",
+    "VERIFY_PERIOD",
+    "VERIFY_REVISION",
+    "VERIFY_YEAR",
+    "AuthProvider",
     "BucketEventObjectType",
     "BucketEventType",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionState",
     "CalculationRevisionStateError",
+    "Decimal",
     "ModeloRecordNotFoundError",
     "ModeloRecordStatus",
     "ModeloVerificationFindingKind",
     "ModeloVerificationFindingSeverity",
     "ModeloWorkflowGateError",
+    "Repos",
     "VerificationCompletenessStatus",
     "VerificationReportNotFoundError",
     "WorkflowAbortReason",
+    "WorkflowGate",
     "WorkflowPurpose",
     "WorkflowStage",
     "asyncio",
     "calculate_modelo_revision",
+    "canonical_work_unit_period",
+    "create_work_unit",
+    "file_modelo_revision",
+    "file_revision",
     "get_calculation_revision",
     "get_filing_record",
     "get_verification_report",
@@ -118,8 +163,17 @@ __all__ = [
     "list_filing_records",
     "list_verification_reports",
     "mark_revision_verificado_completo",
+    "registry_required_manual_casillas",
+    "registry_required_manual_casillas_for",
     "seed_clean_cross_period_sources",
+    "seed_modelo_180_work_unit",
+    "seed_work_unit",
+    "target_filing_records",
     "upsert_work_unit",
+    "verify_modelo_revision",
+    "verify_revision",
+    "workflow_gate",
+    "workflow_profile",
 ]
 
 
@@ -134,6 +188,19 @@ _VERIFY_MODELO = "180"
 _VERIFY_REVISION = "2023-y-siguientes"
 _VERIFY_PERIOD = "0A"
 _VERIFY_YEAR = 2024
+_READY_PROFILE_FACTS = (
+    UserProfileFact(path="identity.tax_id", value="X1234567L"),
+    UserProfileFact(path="identity.name", value="Ready"),
+    UserProfileFact(path="identity.surnames", value="Operator"),
+    UserProfileFact(path="activities.description", value="file-flow"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+    UserProfileFact(path="censo.activity_start_date", value=date(2000, 1, 1)),
+)
 
 
 def _registry_required_manual_casillas() -> tuple[CasillaId, ...]:
@@ -185,6 +252,15 @@ def _repos(tmp_path: Path) -> Iterator[_Repos]:
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
         objects = profile.repository
+        UserProfileLifecycleRepository(bucket_id="default", objects=objects).save(
+            UserProfileRecord(
+                profile_id="default",
+                display_name="File-flow ready profile",
+                facts=_READY_PROFILE_FACTS,
+                created_at=_T0,
+                updated_at=_T0,
+            ),
+        )
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         fr = ModeloRecordCatalogueRepository(objects=objects)
@@ -657,3 +733,53 @@ def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository):
         repository=wu_repo,
         clock=_T0,
     )
+
+
+AuthProvider = _AuthProvider
+DEFAULT_130_BASELINE_INPUTS = _DEFAULT_130_BASELINE_INPUTS
+DEFAULT_130_BINDING_VALUES = _DEFAULT_130_BINDING_VALUES
+DEFAULT_180_BINDING_VALUES = _DEFAULT_180_BINDING_VALUES
+DEFAULT_180_RELATION_VALUES = _DEFAULT_180_RELATION_VALUES
+M111_ACTIVITY_AMOUNT_CASILLA = _M111_ACTIVITY_AMOUNT_CASILLA
+M111_ACTIVITY_COUNT_CASILLA = _M111_ACTIVITY_COUNT_CASILLA
+M111_ACTIVITY_WITHHELD_CASILLA = _M111_ACTIVITY_WITHHELD_CASILLA
+M111_EMPLOYMENT_WITHHELD_CASILLA = _M111_EMPLOYMENT_WITHHELD_CASILLA
+M111_FORESTRY_WITHHELD_CASILLA = _M111_FORESTRY_WITHHELD_CASILLA
+M111_IMAGE_RIGHTS_WITHHELD_CASILLA = _M111_IMAGE_RIGHTS_WITHHELD_CASILLA
+M111_IMPUTED_INCOME_WITHHELD_CASILLA = _M111_IMPUTED_INCOME_WITHHELD_CASILLA
+M111_PRIZE_WITHHELD_CASILLA = _M111_PRIZE_WITHHELD_CASILLA
+M111_PROFESSIONAL_WITHHELD_CASILLA = _M111_PROFESSIONAL_WITHHELD_CASILLA
+M111_TOTAL_WITHHELD_CASILLA = _M111_TOTAL_WITHHELD_CASILLA
+M130_AGRARIAN_VOLUME_CASILLA = _M130_AGRARIAN_VOLUME_CASILLA
+M130_AGRARIAN_WITHHELD_CASILLA = _M130_AGRARIAN_WITHHELD_CASILLA
+M130_CARRY_FORWARD_CASILLA = _M130_CARRY_FORWARD_CASILLA
+M130_EXPENSE_CASILLA = _M130_EXPENSE_CASILLA
+M130_HOME_DEDUCTION_CASILLA = _M130_HOME_DEDUCTION_CASILLA
+M130_INCOME_CASILLA = _M130_INCOME_CASILLA
+M130_NET_RESULT_CASILLA = _M130_NET_RESULT_CASILLA
+M130_PRIOR_RETURN_RESULT_CASILLA = _M130_PRIOR_RETURN_RESULT_CASILLA
+M130_SALDO_NEGATIVO_CASILLA = _M130_SALDO_NEGATIVO_CASILLA
+M130_WITHHELD_CASILLA = _M130_WITHHELD_CASILLA
+M180_PERCEPTOR_BASE_CASILLA = _M180_PERCEPTOR_BASE_CASILLA
+Repos = _Repos
+T0 = _T0
+T1 = _T1
+T2 = _T2
+T3 = _T3
+T4 = _T4
+T5 = _T5
+VERIFY_MODELO = _VERIFY_MODELO
+VERIFY_PERIOD = _VERIFY_PERIOD
+VERIFY_REVISION = _VERIFY_REVISION
+VERIFY_YEAR = _VERIFY_YEAR
+WorkflowGate = _WorkflowGate
+canonical_work_unit_period = _canonical_work_unit_period
+file_revision = _file_revision
+registry_required_manual_casillas = _registry_required_manual_casillas
+registry_required_manual_casillas_for = _registry_required_manual_casillas_for
+seed_modelo_180_work_unit = _seed_modelo_180_work_unit
+seed_work_unit = _seed_work_unit
+target_filing_records = _target_filing_records
+verify_revision = _verify_revision
+workflow_gate = _workflow_gate
+workflow_profile = _workflow_profile

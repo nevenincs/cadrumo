@@ -2440,6 +2440,26 @@ required_text = [
     "Deducción por inversión en vivienda habitual",
 ]
 
+[legal."ley-35-2006:dt-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dtduodecima"
+document_id = "BOE-A-2006-20764"
+article = "DT-12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtduodecima"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex"
+notes = "LIRPF disposición transitoria 12ª: régimen transitorio aplicable a prestaciones de planes de pensiones, mutualidades de previsión social y planes de previsión asegurados, including the reduction regime for pre-2007 contributions. Grounds the Modelo 100 DT12 reducción advisory."
+required_text = [
+    "Régimen transitorio aplicable a los planes de pensiones",
+    "aportaciones realizadas hasta 31 de diciembre de 2006",
+    "beneficiarios podrán aplicar el régimen financiero",
+]
+
 [legal."ley-35-2006:dt-15"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -2721,7 +2721,7 @@ cli:
       from_csv_exclusive: --from-csv nem kombinálható tranzakció-azonosítóval vagy
         --classification értékkel.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount].
+        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category].
       from_csv_not_found: 'CSV file not found: %{path}'
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
@@ -2877,6 +2877,7 @@ cli:
       child_id: Gyermektranzakció-azonosító
       children: Gyermek elemek
       counterparty: Szerződő fél
+      counterparty_eu_member_state: EU-s szerződő fél
       created_event_id: Létrehozó bucket-esemény
       currency: Pénznem
       date: Dátum

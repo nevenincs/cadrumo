@@ -2806,7 +2806,7 @@ cli:
       from_csv_exclusive: --from-csv no puede combinarse con un id de transacción
         ni --classification.
       from_csv_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
-        category_id, business_pct, taxable_base, iva_rate, iva_amount].
+        category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category].
       from_csv_not_found: 'Archivo CSV no encontrado: %{path}'
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
@@ -2959,6 +2959,7 @@ cli:
       child_id: Id de transacción hija
       children: hijas
       counterparty: Contraparte
+      counterparty_eu_member_state: Contraparte UE
       created_event_id: Evento bucket de creación
       currency: Moneda
       date: Fecha

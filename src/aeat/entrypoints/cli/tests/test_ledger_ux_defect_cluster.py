@@ -507,6 +507,71 @@ def test_ledger_view_json_carries_the_full_transaction(tmp_path: Path) -> None:
     assert transaction["iva_amount"] == "42"
 
 
+def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
+    """IVA category corrections are observable mutations, not no-ops.
+
+    A persona run marked a row ``erroneous_invoice`` while investigating a
+    corrective invoice, then could not change it back to ``domestic_general_21``:
+    the mutation signature ignored ``iva_category`` and ``ledger view`` hid the
+    stored value. This reproduces that flow through the real CLI.
+    """
+    txn = _imported_transaction_id(tmp_path)
+    first = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "classify",
+            txn,
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "100.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "21.00",
+            "--iva-category",
+            "erroneous_invoice",
+        ],
+    )
+    assert first.exit_code == 0, first.output
+    viewed_first = _RUNNER.invoke(app, ["app", "ledger", "view", txn[:8]])
+    assert viewed_first.exit_code == 0, viewed_first.output
+    assert "IVA category\terroneous_invoice" in viewed_first.output
+
+    corrected = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "classify",
+            txn[:8],
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "100.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "21.00",
+            "--iva-category",
+            "domestic_general_21",
+            "--reaffirm",
+        ],
+    )
+    assert corrected.exit_code == 0, corrected.output
+    assert "manual ledger update must change at least one ledger field" not in corrected.output
+
+    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", txn])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+    assert transaction["iva_category"] == "domestic_general_21"
+    text_view = _RUNNER.invoke(app, ["app", "ledger", "view", txn[:8]])
+    assert text_view.exit_code == 0, text_view.output
+    assert "IVA category\tdomestic_general_21" in text_view.output
+
+
 # ---------------------------------------------------------------------------
 # B1-B3: import dry-run preview + edit-stable / cross-format deduplication
 # ---------------------------------------------------------------------------

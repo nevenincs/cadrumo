@@ -11,6 +11,10 @@ quarterly IVA filing. This locks the grounding onto each finding the
 
 from __future__ import annotations
 
+import ast
+import re
+from pathlib import Path
+
 import pytest
 
 from ....core import Period
@@ -39,6 +43,8 @@ from .._verification_actions import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_APPLICATION_ROOT = Path(__file__).resolve().parents[2]
+_LEGAL_REF_CONSTANT_RE = re.compile(r"LEGAL_REFS?$")
 _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
 
 
@@ -66,33 +72,61 @@ def _verdict(evidence: CrossPeriodDependencyEvidence) -> CrossPeriodCleanStateVe
     )
 
 
+def _literal_strings(node: ast.AST | None) -> tuple[str, ...]:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return (node.value,)
+    if isinstance(node, (ast.List, ast.Set, ast.Tuple)):
+        return tuple(item for element in node.elts for item in _literal_strings(element))
+    if isinstance(node, ast.Starred):
+        return _literal_strings(node.value)
+    return ()
+
+
+def _names_legal_ref_constant(targets: object) -> bool:
+    if isinstance(targets, ast.Name):
+        return bool(_LEGAL_REF_CONSTANT_RE.search(targets.id))
+    if isinstance(targets, (list, tuple)):
+        return any(_names_legal_ref_constant(target) for target in targets)
+    return False
+
+
+def _legal_ref_literal_value(node: ast.AST) -> ast.AST | None:
+    if isinstance(node, ast.keyword):
+        return node.value if node.arg == "legal_refs" else None
+    if isinstance(node, ast.AnnAssign):
+        return node.value if _names_legal_ref_constant(node.target) else None
+    if isinstance(node, ast.Assign):
+        return node.value if _names_legal_ref_constant(node.targets) else None
+    return None
+
+
+def _application_literal_legal_refs() -> frozenset[str]:
+    refs: set[str] = set()
+    for path in sorted(_APPLICATION_ROOT.rglob("*.py")):
+        if "tests" in path.relative_to(_APPLICATION_ROOT).parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            refs.update(ref for ref in _literal_strings(_legal_ref_literal_value(node)) if ":" in ref)
+    return frozenset(refs)
+
+
 def test_application_legal_refs_resolve_to_bundled_corpus() -> None:
-    """Application-level legal-ref constants must stay registry and corpus backed."""
+    """Application-level literal legal refs must stay registry and corpus backed."""
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    ref_ids = {
-        *_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS,
-        *_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
-        _IVA_COMPENSATION_CARRY_LEGAL_REF,
-        *WORKFLOW_GATE_LEGAL_REFS,
-    }
+    ref_ids = _application_literal_legal_refs()
 
     missing = sorted(ref_ids - set(catalogues.legal))
-    assert missing == []
+    assert missing == [], f"application legal_refs absent from the registry: {missing}"
     references = {ref_id: catalogues.legal[ref_id] for ref_id in sorted(ref_ids)}
     verify_legal_catalogue(references, source_root=bundled_path())
 
-    assert {ref_id: ref.article for ref_id, ref in references.items()} == {
-        "ley-37-1992:art-99": "99",
-        "ley-58-2003:art-119": "119",
-        "ley-58-2003:art-120": "120",
-        "ley-58-2003:art-122": "122",
-        "rd-1065-2007:art-9": "9",
-    }
-    assert references["ley-58-2003:art-119"].document_id == "BOE-A-2003-23186"
-    assert references["ley-58-2003:art-120"].document_id == "BOE-A-2003-23186"
-    assert references["ley-58-2003:art-122"].document_id == "BOE-A-2003-23186"
-    assert references["ley-37-1992:art-99"].document_id == "BOE-A-1992-28740"
-    assert references["rd-1065-2007:art-9"].document_id == "BOE-A-2007-15984"
+    assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= ref_ids
+    assert set(_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS) <= ref_ids
+    assert _IVA_COMPENSATION_CARRY_LEGAL_REF in ref_ids
+    assert set(WORKFLOW_GATE_LEGAL_REFS) <= ref_ids
+    assert all(ref.article for ref in references.values())
+    assert all(ref.corpus_ref for ref in references.values())
     assert all(ref.required_text for ref in references.values())
 
 

@@ -15,6 +15,13 @@ Major declarations:
   bot-detection evasion seam.
 * :class:`BrowserError`, :class:`BrowserValidationError`, and
   :class:`BrowserFailureMode` — the failure taxonomy.
+
+See Also:
+    :class:`aeat.adapters.outbound.aeat.auth.BrowserContextProvisioner`
+        Auth-provider hook consumed by :meth:`BrowserSession.create_context`.
+    :class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner`
+        Certificate-auth provisioner that adds Playwright client-certificate
+        kwargs and the context thumbprint marker.
 """
 
 from __future__ import annotations
