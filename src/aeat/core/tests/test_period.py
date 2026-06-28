@@ -337,7 +337,7 @@ class TestPeriodValueSemantics:
     def test_frozen(self) -> None:
         period = Period.from_year_and_code(2026, "1T")
         with pytest.raises(ValidationError):
-            period.filing_year = 2025  # type: ignore[misc]
+            period.__setattr__("filing_year", 2025)
 
     def test_str_is_the_separated_form_not_combined(self) -> None:
         assert str(Period.from_year_and_code(2026, "1T")) == "2026 1T"

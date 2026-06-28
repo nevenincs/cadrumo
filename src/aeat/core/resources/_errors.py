@@ -1,10 +1,11 @@
 """Typed error hierarchy for the resource-management API.
 
 Three top-level error classes give consumers a uniform catch
-surface across all twelve Repositories without breaking the
-existing per-domain error classes. Each per-domain error
-(``RegistryLoadError``, ``ManualParseError``, etc.) subclasses
-the appropriate top-level error.
+surface across all twelve :class:`ResourceRepository`
+implementations without breaking the existing per-domain error
+classes. Each per-domain error (``RegistryLoadError``,
+``ManualParseError``, etc.) subclasses the appropriate top-level
+error.
 """
 
 from __future__ import annotations

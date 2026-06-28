@@ -1,9 +1,9 @@
-"""Typed key models for the resource-management API.
+"""Typed key base models for the resource-management API.
 
-Each Repository declares its own ``Key`` model (or uses a
-trivial type for singletons / year-keyed resources). The
-top-level ``ResourceKey`` discriminated union enumerates the
-typed key variants for every Repository implementation.
+Each :class:`ResourceCacheRepository` declares its own key model
+or uses a trivial type for singleton and year-keyed resources.
+Concrete keys such as :class:`ManualKey` inherit from
+:class:`TypedResourceKey` when the lookup needs multiple fields.
 
 Cache keys are Pydantic v2 models with ``frozen=True`` so they
 are hashable for dict-backed Identity Maps. Singletons use
@@ -21,10 +21,10 @@ _FROZEN_STRICT = ConfigDict(strict=True, frozen=True, extra="forbid")
 class TypedResourceKey(BaseModel):
     """Common base for typed Repository keys.
 
-    Each Repository that needs more than ``None`` or ``int`` as
-    its key inherits from this base and adds its own fields.
-    The ``frozen=True`` config makes the model hashable for
-    Identity Map dict use.
+    Each :class:`ResourceCacheRepository` that needs more than
+    ``None`` or ``int`` as its key inherits from this base and
+    adds its own fields. The ``frozen=True`` config makes the
+    model hashable for Identity Map dict use.
     """
 
     model_config = _FROZEN_STRICT

@@ -1,8 +1,9 @@
 """Repository implementations for every read-only bundled resource.
 
-Each module under this package defines one Repository class
-plus its typed key model. The :class:`ResourceRegistry`
-aggregates them in :mod:`aeat.core.resources._registry`.
+Each module under this package defines one
+:class:`ResourceCacheRepository` subclass plus its typed key model
+where needed. The :class:`ResourceRegistry` aggregates them in
+:mod:`aeat.core.resources._registry`.
 """
 
 from __future__ import annotations

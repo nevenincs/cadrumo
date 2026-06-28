@@ -167,6 +167,11 @@ _DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = MappingProxyType(
 ERROR_REGISTRY: Mapping[str, ErrorCode] = MappingProxyType(_ERROR_REGISTRY_MUTABLE)
 
 
+def declared_error_codes() -> tuple[tuple[str, ErrorCode], ...]:
+    """Return declared ``(qualified class name, ErrorCode)`` registry rows."""
+    return tuple(_DECLARED_CODE_BY_QUALNAME.items())
+
+
 def _flush_deferred_binds() -> None:
     """Attempt to bind any classes whose registration was deferred.
 
@@ -531,6 +536,7 @@ __all__ = [
     "ErrorEnvelope",
     "bind_error_code",
     "build_error_envelope",
+    "declared_error_codes",
     "get_error_exit_code",
     "get_registered_error_code",
     "register",

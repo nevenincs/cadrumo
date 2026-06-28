@@ -15,6 +15,7 @@ import io
 import logging
 import sys
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -305,7 +306,7 @@ def test_secret_scrubbing_uses_context_hints_for_list_args_too() -> None:
         args=(),
         exc_info=None,
     )
-    record.args = ["safe-item", "token-secret"]  # ty: ignore[invalid-assignment]
+    record.__setattr__("args", ["safe-item", "token-secret"])
 
     filter_.filter(record)
     # The scrubber redacts list args and normalises the container to a
@@ -503,8 +504,11 @@ def test_scrub_value_nested_mapping_scrubs_recursively() -> None:
     payload = {"outer": {"token": "s3cr3t", "count": 3}}
     result = _scrub_value(payload)
     assert isinstance(result, dict)
-    assert result["outer"]["token"] == "<redacted>"
-    assert result["outer"]["count"] == 3
+    outer_raw = result["outer"]
+    assert isinstance(outer_raw, dict)
+    outer = cast(dict[str, object], outer_raw)
+    assert outer["token"] == "<redacted>"
+    assert outer["count"] == 3
 
 
 # ---------------------------------------------------------------------------

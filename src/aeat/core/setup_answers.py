@@ -208,6 +208,7 @@ class SetupAnswers(BaseModel):
     tax_id: str = Field(min_length=1)
     name: str = ""
     surnames: str = ""
+    legal_name: str = ""
     activity: str = ""
     """Free-text actividad económica / epígrafe IAE description."""
     address_postcode: str = ""
@@ -335,7 +336,7 @@ class SetupAnswers(BaseModel):
         if value is None:
             return iva_regime_cls.GENERAL
         if isinstance(value, str):
-            return iva_regime_cls(value) if value else iva_regime_cls.GENERAL
+            return iva_regime_cls(value.upper()) if value else iva_regime_cls.GENERAL
         raise ProfileAnswerTypeError("iva_regime must be an IVARegime member or string token")
 
     @field_validator("tax_residence_ccaa", mode="before")

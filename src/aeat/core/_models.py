@@ -1,14 +1,15 @@
 """Shared pydantic model configuration constants.
 
-Provides the canonical ``STRICT_FROZEN_CONFIG`` used across domain,
-application, and adapter pydantic models that require strict-mode,
-frozen, no-extra-fields configuration.
+Provides the canonical :data:`STRICT_FROZEN_CONFIG` used across domain,
+application, and adapter pydantic models that require strict-mode, frozen,
+no-extra-fields configuration. It is a :class:`pydantic.ConfigDict` value shared
+by records that need immutable boundary contracts.
 
 Modules with intentionally divergent ``ConfigDict`` values (e.g.
 ``arbitrary_types_allowed=True`` in storage adapter models, or
-``validate_assignment=True`` in JSON contract models) must keep their
-own module-local config constant and must NOT import
-``STRICT_FROZEN_CONFIG`` from here.
+``validate_assignment=True`` in JSON contract models) must keep their own
+module-local config constant and must NOT import :data:`STRICT_FROZEN_CONFIG`
+from here.
 """
 
 from __future__ import annotations

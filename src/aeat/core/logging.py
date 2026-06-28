@@ -1,17 +1,20 @@
 """Logging configuration entry point.
 
-Provides a consistent logger factory to avoid scattered bare logging instances.
-The root logger carries the run-trace context filter from
-:mod:`aeat.core.observability._sink` so every record automatically picks up
-the active ``run_id`` / ``step_id`` while a run context is bound.
+Provides :func:`get_logger` as the consistent logger factory to avoid scattered
+bare logging instances, with :func:`configure_logging` installing the project
+defaults. The installed log-record factory reads
+:func:`aeat.core.observability.current_run_context` state indirectly through
+contextvars, so every record automatically picks up the active ``run_id`` /
+``step_id`` while a run context is bound.
 
 This module attaches the log-record secret scrubber. Every handler
 attached through :func:`configure_logging` receives a
 :class:`SecretScrubbingFilter` so sensitive fields are redacted before
 formatting. Shape-based NIF, URL, and bearer-token matching is delegated
-to :mod:`aeat.core.redaction`; this module keeps only logging-specific
-key-paired placeholders such as cookies, passphrases, and certificate
-serial suffixes.
+to :func:`~aeat.core.redaction.redact_for_log`; this module keeps only
+logging-specific key-paired placeholders such as cookies, passphrases, and
+certificate serial suffixes. Per-run JSONL handlers are attached with
+:func:`attach_run_sink` so the same filter protects observability output.
 """
 
 from __future__ import annotations
@@ -126,19 +129,19 @@ def _scrub_value(value: str, *, key: str | None = ...) -> str: ...
 
 
 @overload
-def _scrub_value(value: Mapping[str, Any], *, key: str | None = ...) -> dict[str, Any]: ...
+def _scrub_value(value: Mapping[str, object], *, key: str | None = ...) -> dict[str, object]: ...
 
 
 @overload
-def _scrub_value(value: tuple[Any, ...], *, key: str | None = ...) -> tuple[Any, ...]: ...
+def _scrub_value(value: tuple[object, ...], *, key: str | None = ...) -> tuple[object, ...]: ...
 
 
 @overload
-def _scrub_value(value: list[Any], *, key: str | None = ...) -> list[Any]: ...
+def _scrub_value(value: list[object], *, key: str | None = ...) -> list[object]: ...
 
 
 @overload
-def _scrub_value(value: set[Any], *, key: str | None = ...) -> set[Any]: ...
+def _scrub_value(value: set[object], *, key: str | None = ...) -> set[object]: ...
 
 
 @overload
@@ -273,10 +276,11 @@ class _DropRunEventFilter(logging.Filter):
 
     Records carrying a ``run_event`` extra are the per-run JSONL sink's
     diet — they're already persisted to ``events.jsonl`` via
-    :class:`aeat.core.observability.JsonlRunSink`. Echoing them on stderr as
-    well would spam the console with one ``run.event NAVIGATION`` line
-    per step; suppressing them here removes the noise while leaving
-    the record intact for any other handler (including the JSONL sink).
+    :class:`~aeat.core.observability._sink.JsonlRunSink`. Echoing them
+    on stderr as well would spam the console with one
+    ``run.event NAVIGATION`` line per step; suppressing them here
+    removes the noise while leaving the record intact for any other
+    handler (including the JSONL sink).
     """
 
     @override

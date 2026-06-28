@@ -4,7 +4,7 @@ The bucket is the per-profile persistence container that sits above any
 single record domain. Every record-owning domain (transactions,
 invoices, attachments, modelo records) and every persistence adapter
 that materialises those records consumes a bucket identity at its
-boundary; promoting the alias to :mod:`aeat.core.identity` lets each
+boundary; promoting the :data:`BucketId` alias to :mod:`aeat.core.identity` lets each
 consumer import it without crossing a sibling-domain boundary.
 
 The constraint shape — ``min_length=1``, ``max_length=128``, surrounding

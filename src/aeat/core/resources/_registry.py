@@ -1,12 +1,12 @@
 """Central resource registry and process-wide factory.
 
-The :class:`ResourceRegistry` aggregates every Repository the
-project exposes. The :func:`resources` factory builds the
-registry once per process; subsequent calls return the cached
-instance. Tests that override :class:`aeat.core.config.Settings`
-to change the bundled-data location must call
-``resources.cache_clear()`` to force a rebuild on the next
-access.
+The :class:`ResourceRegistry` aggregates every
+:class:`ResourceRepository` the project exposes. The
+:func:`resources` factory builds the registry once per process;
+subsequent calls return the cached instance. Tests that override
+:class:`aeat.core.config.Settings` to change the bundled-data
+location must call ``resources.cache_clear()`` to force a rebuild
+on the next access.
 """
 
 from __future__ import annotations
@@ -34,11 +34,11 @@ from ._repos.modelos import StaticModeloRepository
 class ResourceRegistry:
     """Aggregate of every Repository the project exposes.
 
-    Each field holds one Repository instance owning its own
-    Identity Map. The :meth:`clear` method empties every
-    Repository's cache uniformly; tests that override Settings
-    between cases call it via the module-level ``resources``
-    factory's ``cache_clear``.
+    Each field holds one :class:`ResourceRepository` instance
+    owning its own Identity Map. The :meth:`clear` method empties
+    every Repository's cache uniformly; tests that override
+    Settings between cases call it via the module-level
+    :func:`resources` factory's ``cache_clear``.
     """
 
     apoderamientos: ApoderamientosRepository = field(default_factory=ApoderamientosRepository)

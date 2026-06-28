@@ -1,10 +1,13 @@
-"""Shared severity primitive for diagnostics, findings, and validation issues.
+"""Shared :class:`BaseSeverity` primitive for diagnostics and validation issues.
 
-A single ``BaseSeverity`` enum carries the INFO < WARNING < ERROR
+A single :class:`BaseSeverity` enum carries the INFO < WARNING < ERROR
 contract for every diagnostic, finding, and validation issue in the
 project. Call sites import this type directly; semantic context lives
 in the field name (``diagnostic_severity``, ``finding_severity``,
 ``validation_severity``), not in duplicate type names.
+
+Diagnostic records pair this severity with :class:`Translatable` message
+keys, keeping importance and localization concerns separate.
 
 The string values are lowercase (``"info"``, ``"warning"``,
 ``"error"``) to match the on-disk JSON convention used by the

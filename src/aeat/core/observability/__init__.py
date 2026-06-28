@@ -12,7 +12,7 @@ Key surface area:
 * :class:`RunEvent`, :class:`RunEventPayload`, :class:`RunTrace` —
   strict pydantic v2 record types written to JSONL.
 * :func:`replay_run` — deterministic re-entry into a recorded run with
-  a corpus-drift refusal gate.
+  an :class:`AeatCorpusDriftError` refusal gate.
 * :func:`iter_runs` / :func:`iter_events` / :func:`load_trace` /
   :func:`load_events` — read-only accessors over persisted traces.
 """

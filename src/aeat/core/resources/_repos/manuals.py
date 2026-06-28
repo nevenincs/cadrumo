@@ -1,10 +1,11 @@
-"""ManualRepository: composite-keyed Manual catalogue.
+"""ManualRepository: composite-keyed :class:`Manual` catalogue.
 
 The composite key is ``(manual_id, year, part)`` modelled as a
-frozen Pydantic record. The Repository wraps the existing
-loader chain in :mod:`aeat.domain.manuals`; the Settings env-
-override for ``AEAT_MANUALS_ROOT`` is preserved verbatim by
-passing the operator-resolved root through the constructor.
+frozen :class:`ManualKey` record. The :class:`ManualRepository`
+wraps the existing loader chain in :mod:`aeat.domain.manuals`;
+the Settings env-override for ``AEAT_MANUALS_ROOT`` is preserved
+verbatim by passing the operator-resolved root through the
+constructor.
 """
 
 from __future__ import annotations
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
 
 
 class ManualKey(TypedResourceKey):
-    """Composite key (manual_id, year, part) for a Manual record."""
+    """Composite key (manual_id, year, part) for a :class:`Manual` record."""
 
     manual_id: str
     year: int
@@ -48,7 +49,8 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
 
     Wraps :func:`aeat.domain.manuals.load_manual` and stays in
     lockstep with the env-override seam on
-    ``Settings.aeat_manuals_root``.
+    ``Settings.aeat_manuals_root``. The repository returns
+    :class:`Manual` records keyed by :class:`ManualKey`.
     """
 
     def __init__(self, root: Path | None = None) -> None:

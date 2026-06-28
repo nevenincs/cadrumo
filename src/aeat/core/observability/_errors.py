@@ -3,7 +3,8 @@
 The base class :class:`aeat.core.errors.AeatObservabilityError` lives in
 :mod:`aeat.core.errors` so other subpackages can catch it without
 importing observability internals. This module re-exports the base and
-declares the leaf error types raised inside the observability layer.
+declares the leaf error types raised by :func:`record_event`,
+:func:`run_context`, :func:`load_trace`, and :func:`replay_run`.
 """
 
 from __future__ import annotations
@@ -27,7 +28,8 @@ class RunTraceValidationError(AeatObservabilityError):
     """Raised when persisted ``trace.json`` or ``events.jsonl`` fails strict validation.
 
     Surfaces both shape-level rejections (bad ``run_id``, malformed
-    JSON line) and pydantic strict-mode validation failures.
+    JSON line) and strict validation failures for :class:`RunTrace` or
+    :class:`RunEvent` records.
     """
 
 

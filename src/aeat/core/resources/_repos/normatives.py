@@ -1,4 +1,4 @@
-"""NormativeRepository: singleton catalogue + typed lookup."""
+"""NormativeRepository: singleton :class:`NormativeCatalogue` lookup."""
 
 from __future__ import annotations
 
@@ -18,7 +18,9 @@ class NormativeRepository(ResourceCacheRepository["NormativeCatalogue", None]):
 
     Wraps :func:`aeat.domain.normatives.load_catalogue`. The
     Settings env-override seam for ``AEAT_NORMATIVES_ROOT`` is
-    threaded through the constructor.
+    threaded through the constructor. Lookup helpers return
+    :class:`NormativeReference` and :class:`Articulo` records from
+    the singleton catalogue.
     """
 
     def __init__(self, root: Path | None = None) -> None:

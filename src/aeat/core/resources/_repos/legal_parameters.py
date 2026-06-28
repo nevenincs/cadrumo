@@ -1,4 +1,8 @@
-"""LegalParameterRepository: singleton legal-parameter catalogue."""
+"""Singleton legal-parameter repository.
+
+:class:`LegalParameterRepository` loads registry-wide :class:`LegalParameter`
+records through the shared :class:`ResourceCacheRepository` cache.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +19,8 @@ class LegalParameterRepository(ResourceCacheRepository[Mapping[str, "LegalParame
     """Singleton-keyed repository for the registry-wide legal parameters.
 
     Wraps :func:`aeat.domain.calculations.registry.load_legal_parameters_only`
-    rooted at the bundled registry tree.
+    rooted at the bundled registry tree and returns
+    :class:`LegalParameter` records.
     """
 
     @override
