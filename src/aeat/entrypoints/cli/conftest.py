@@ -1,5 +1,6 @@
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Any, cast, override
+from typing import IO, Any, cast, override
 
 import pytest
 import typer
@@ -8,6 +9,7 @@ from click.core import Command
 from click.testing import CliRunner, Result
 
 from ...core.i18n import OUTPUT_LANGUAGE_ENV_VAR
+from ...tests._env import temporary_env
 
 
 class _TyperAwareCliRunner(CliRunner):
@@ -22,33 +24,48 @@ class _TyperAwareCliRunner(CliRunner):
     explicit ``get_command`` call at every invoke site.
     """
 
-    # CliRunner.invoke accepts varargs/kwargs that shift across click minor versions;
-    # concrete typing would couple it to one click release. KWARGS-ANY-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE
     @override
-    def invoke(self, cli: Any, *args: Any, **kwargs: Any) -> Result:  # type: ignore[override]  # TYPE-IGNORE-RATIONALE-CLIRUNNER-INVOKE-OVERRIDE
+    def invoke(
+        self,
+        cli: Command | typer.Typer,
+        args: str | Sequence[str] | None = None,
+        input: str | bytes | IO[Any] | None = None,
+        env: Mapping[str, str | None] | None = None,
+        catch_exceptions: bool | None = None,
+        color: bool = False,
+        **extra: Any,
+    ) -> Result:
         if isinstance(cli, typer.Typer):
-            cli = typer.main.get_command(cli)
-        # After isinstance narrowing, cli is either a Command or Any.
-        # CAST-RATIONALE-CLIRUNNER-TYPER-UNWRAP: click's invoke() needs a Command;
-        # the isinstance check narrows Typer → Command but the union still includes Any
-        # from the broader input accept-all signature. Cast explicitly post-narrowing.
-        return super().invoke(cast(Command, cli), *args, **kwargs)
+            # Typer's get_command returns a runtime Click command, but its vendored
+            # type alias does not line up with click.core.Command's stub.
+            cli = cast(Command, typer.main.get_command(cli))
+        return super().invoke(
+            cli,
+            args=args,
+            input=input,
+            env=env,
+            catch_exceptions=catch_exceptions,
+            color=color,
+            **extra,
+        )
 
 
 @pytest.fixture(autouse=True)
-def _force_english_output(monkeypatch: pytest.MonkeyPatch) -> None:
+def _force_english_output() -> Iterator[None]:
     """Pin CLI output to English so test assertions stay readable.
 
     The production default is ``es``; this fixture only affects test
     output, not runtime behaviour.
     """
-    monkeypatch.setenv(OUTPUT_LANGUAGE_ENV_VAR, "en")
+    with temporary_env(**{OUTPUT_LANGUAGE_ENV_VAR: "en"}):
+        yield
 
 
 @pytest.fixture(autouse=True)
-def _isolated_aeat_root(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def _isolated_aeat_root(tmp_path: Path) -> Iterator[None]:
     """Point `Settings.aeat_local_storage_root` at the test's `tmp_path`."""
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
+    with temporary_env(AEAT_LOCAL_STORAGE_ROOT=str(tmp_path)):
+        yield
 
 
 @pytest.fixture

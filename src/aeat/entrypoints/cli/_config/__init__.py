@@ -489,13 +489,16 @@ def config_profile_preflight(
         period=filing_period,
         revision_id=revision_id,
     )
+    from ....core.resources import resources
     from .._config_payloads import ConfigProfilePreflightResult, ProfilePreflightMissingPayload
 
+    revision = resources().modelos.authority.validate_modelo(modelo).revisions[resolved_revision_id]
     report = ProfilePreflightService(schema=load_user_profile_schema()).report(
         record=record,
         modelo=modelo,
         revision_id=resolved_revision_id,
         period=filing_period,
+        revision=revision,
     )
     result = ConfigProfilePreflightResult(
         profile_id=report.profile_id,
@@ -995,6 +998,25 @@ def config_status(
     state = workflow_state_repository().load()
     record = state.active_profile_record()
     values = record_to_path_values(record)
+    if profile_health.status == "incomplete":
+        result = ConfigStatusResult(
+            active_profile=active_profile,
+            profile_id=active_uuid,
+            tax_id_present=bool(values.get("identity.tax_id")),
+            activity_present=bool(values.get("activities.description")),
+            configured=False,
+            next_action=profile_health.next_action,
+        )
+        lines = [
+            f"profile\t{active_profile}",
+            "readiness\tblocked",
+            f"identity.tax_id\t{'present' if values.get('identity.tax_id') else 'missing'}",
+            f"activities.description\t{'present' if values.get('activities.description') else 'missing'}",
+        ]
+        lines.extend(f"{path}\tmissing" for path in profile_health.missing_required)
+        lines.append(f"next_action\t{profile_health.next_action}")
+        _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
+        return
     # ``status`` reports *filing readiness*: a profile is only ``ready`` here
     # once it carries the facts needed to start filing work (a tax id and an
     # activity description). This is a stricter, forward-looking gate than the

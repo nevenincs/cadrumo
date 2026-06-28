@@ -15,7 +15,7 @@ count from the withholding detalle source:
 - ``decl.percepciones-total`` = sum of nine importe relations
 - ``decl.retenciones-total`` = copy of the retenciones relation
 
-(RD 439/2007 art. 109, Orden EHA/3127/2009 art. 1, Orden HAC/1431/2025 art. 2,
+(RD 439/2007 art. 108, Orden EHA/3127/2009 art. 1, Orden HAC/1431/2025 art. 2,
 Ley 35/2006 arts. 99, 101.)
 
 The source casillas for the remaining 190 relations are 02, 05, 08, 11, 14, 17,
@@ -420,7 +420,7 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
       (casilla 28 aggregated over 1T-4T).
     - Year N+1's 190 relations are drawn from Year N+1 observations only.
 
-    These are wiring invariants grounded in RD 439/2007 art. 109, Orden
+    These are wiring invariants grounded in RD 439/2007 art. 108, Orden
     EHA/3127/2009 art. 1, and the AEAT M190 form (BOE-modelo-190-2025-form).
     """
     recorder_190 = EnrollmentRecorder(_MODELO_190)

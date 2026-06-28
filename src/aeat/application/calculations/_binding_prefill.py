@@ -23,7 +23,7 @@ merged with casilla-level provenance before the binding is resolved.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Final
 
@@ -39,6 +39,7 @@ from ...domain.calculations.registry import (
     CasillaId,
     CasillaObservation,
     FormulaDefinition,
+    RegistryFoldRequirement,
     RegistryModeloObservation,
     RegistrySnapshot,
     binding_source_casilla_ids,
@@ -81,6 +82,7 @@ def _selector_periods(value: object) -> tuple[str, ...]:
 
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
+_PRE_ACTIVITY_NO_PRIOR_OBLIGATION_SOURCE_KIND: Final = "pre_activity_no_prior_obligation"
 _IVA_COMPENSATION_HISTORY_SOURCE_KIND: Final = "aeat_sede_iva_compensation_history"
 _MIXED_OBSERVATION_SOURCE_KIND: Final = "mixed_observation_sources"
 _MODELO_303_IVA_COMPENSATION_BINDING_ID: Final = "modelo-303-compensacion-pendiente-anteriores"
@@ -338,6 +340,7 @@ def _gather_observations(
     *,
     repository: CalculationObservationRepository,
     iva_history_repository: IvaCompensationHistoryRepository | None = None,
+    excluded_binding_ids: frozenset[BindingId] | None = None,
 ) -> tuple[_GatheredObservation, ...]:
     """Walk every previous_filing binding in the revision and pull matching observations from the local store.
 
@@ -350,6 +353,7 @@ def _gather_observations(
     can sum across members.
     """
     grouped_keys = _per_grupo_member_requirement_keys(snapshot.revision, snapshot)
+    excluded = excluded_binding_ids or frozenset()
     needed: dict[tuple[str, int, str, int], _GatheredObservation] = {}
     seen_member: dict[tuple[str, int, str], int] = {}
     for requirement in previous_filing_observation_requirements(
@@ -357,6 +361,8 @@ def _gather_observations(
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     ):
+        if requirement.binding_ids and all(binding_id in excluded for binding_id in requirement.binding_ids):
+            continue
         req_key = (requirement.source_modelo, requirement.filing_year, requirement.periods[0])
         if req_key in grouped_keys:
             _gather_grouped_member_observations(
@@ -562,6 +568,45 @@ def _requirements_by_binding(
     }
 
 
+def _requirement_strictly_before_activity_start(
+    requirement: RegistryFoldRequirement,
+    activity_start_date: date,
+) -> bool:
+    """Return whether every source period in a previous-filing requirement is pre-activity."""
+    filing_periods = requirement.filing_periods or tuple(
+        Period.from_year_and_code(requirement.filing_year, token) for token in requirement.periods
+    )
+    if not filing_periods:
+        return False
+    return all(period.has_date_span() and period.end_date < activity_start_date for period in filing_periods)
+
+
+def _pre_activity_scoped_binding_ids(
+    snapshot: RegistrySnapshot,
+    activity_start_date: date | None,
+) -> frozenset[BindingId]:
+    """Binding ids whose every required previous-filing source period is pre-activity."""
+    if activity_start_date is None:
+        return frozenset()
+    requirements_by_binding: dict[BindingId, list[RegistryFoldRequirement]] = {}
+    for requirement in previous_filing_observation_requirements(
+        snapshot.revision,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    ):
+        for binding_id in requirement.binding_ids:
+            requirements_by_binding.setdefault(binding_id, []).append(requirement)
+    return frozenset(
+        binding_id
+        for binding_id, requirements in requirements_by_binding.items()
+        if requirements
+        and all(
+            _requirement_strictly_before_activity_start(requirement, activity_start_date)
+            for requirement in requirements
+        )
+    )
+
+
 def _selector_value(selector: object, key: str, default: object) -> object:
     if isinstance(selector, dict):
         # items() yields (Unknown, object) pairs; filter by key to preserve None-valued entries.
@@ -632,6 +677,8 @@ def resolve_bindings_from_local_store(
     repository: CalculationObservationRepository | None = None,
     iva_history_repository: IvaCompensationHistoryRepository | None = None,
     captured_at: datetime | None = None,
+    activity_start_date: date | None = None,
+    excluded_binding_ids: frozenset[BindingId] | None = None,
 ) -> BindingPrefillReport:
     """Resolve every ``previous_filing`` binding the revision declares against observations in the local store.
 
@@ -646,6 +693,11 @@ def resolve_bindings_from_local_store(
             active-bucket repository when ``None``.
         captured_at: Optional capture timestamp recorded on the produced
             prefill records; defaults to the canonical clock when ``None``.
+        activity_start_date: Optional operator-declared activity start. Source
+            periods strictly before this date are no-prior-obligation periods
+            and resolve to a neutral zero instead of requiring observed filings.
+        excluded_binding_ids: Optional previous-filing binding ids to leave
+            unresolved because another authority owns them.
 
     Returns a :class:`BindingPrefillReport` carrying the resolved
     ``binding_values`` mapping (suitable for passing through
@@ -665,9 +717,14 @@ def resolve_bindings_from_local_store(
     # (extract_modelo_303_local_iva_compensation_recurrence) passes the history
     # repository to reconstruct the local recurrence the reconciliation consumes.
     when = captured_at if captured_at is not None else now()
-    observations = _gather_observations(snapshot, repository=repo, iva_history_repository=iva_history_repository)
+    observations = _gather_observations(
+        snapshot,
+        repository=repo,
+        iva_history_repository=iva_history_repository,
+        excluded_binding_ids=excluded_binding_ids,
+    )
 
-    if not observations:
+    if not observations and activity_start_date is None:
         return BindingPrefillReport(prefilled=(), binding_values={})
 
     resolved_map = resolve_previous_filing_binding_values(
@@ -675,11 +732,14 @@ def resolve_bindings_from_local_store(
         tuple(item.observation for item in observations),
         filing_year=snapshot.filing_year,
         period=snapshot.period,
+        activity_start_date=activity_start_date,
+        excluded_binding_ids=excluded_binding_ids,
     )
 
     prefilled: list[PrefilledBinding] = []
     binding_index = {binding.id: binding for binding in snapshot.revision.bindings}
     requirement_index = _requirements_by_binding(snapshot)
+    pre_activity_zero_binding_ids = _pre_activity_scoped_binding_ids(snapshot, activity_start_date)
     for binding_id, value in resolved_map.items():
         binding = binding_index.get(binding_id)
         if binding is None:
@@ -703,17 +763,22 @@ def resolve_bindings_from_local_store(
             source_filing_year=source_filing_year,
             source_periods=source_periods,
         )
+        source_kind = (
+            _PRE_ACTIVITY_NO_PRIOR_OBLIGATION_SOURCE_KIND
+            if binding_id in pre_activity_zero_binding_ids
+            else _source_kind_for_binding(
+                observations,
+                source_modelo=source_modelo,
+                source_filing_year=source_filing_year,
+                source_periods=source_periods,
+                source_casilla_ids=source_casilla_ids,
+            )
+        )
         prefilled.append(
             PrefilledBinding(
                 binding_id=binding_id,
                 value=Decimal(value),
-                source_kind=_source_kind_for_binding(
-                    observations,
-                    source_modelo=source_modelo,
-                    source_filing_year=source_filing_year,
-                    source_periods=source_periods,
-                    source_casilla_ids=source_casilla_ids,
-                ),
+                source_kind=source_kind,
                 source_modelo=source_modelo,
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,

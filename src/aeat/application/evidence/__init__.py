@@ -1,10 +1,11 @@
-"""Evidence bundle service for audit shape.
+"""Public facade for :class:`EvidenceBundle` audit services.
 
-The evidence bundle is a bucket-scoped, work-unit-bound manifest plus
-referenced records used to package the provenance of a modelo
-calculation, verification, or filing for offline replay and audit
-handoff. Bundles are durable artifacts stored inside the active bucket;
-they are not the source of relational truth.
+The evidence bundle is a bucket-scoped, work-unit-bound
+:class:`EvidenceBundle` manifest plus :class:`EvidenceRecordRef` records
+used to package the provenance of a modelo calculation, verification, or
+filing for offline replay and audit handoff. Bundles are durable
+artifacts stored inside the active bucket; they are not the source of
+relational truth.
 
 Verbs supported by the operator surface (`aeat app modelo audit ...`):
     show     - render the bundle's manifest and referenced records
@@ -20,6 +21,11 @@ Bucket events emitted by mutating operations:
 Replay never contacts AEAT and never performs live submission. Export
 refuses on failed verification unless ``--force-incomplete`` is
 explicitly passed at the operator boundary.
+
+See Also:
+    :class:`EvidenceBundleService`,
+    :class:`EvidenceBundleVerificationReport`, and
+    :class:`BundleVerificationState`.
 """
 
 from __future__ import annotations

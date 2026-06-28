@@ -18,6 +18,7 @@ Closes two overview verb coverage gaps in one file:
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -30,7 +31,13 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.filing import ModeloDraftRepository
+from ....domain.filing import (
+    ModeloDraft,
+    ModeloDraftRepository,
+    ModeloValue,
+    ModeloValueKind,
+    compute_modelo_draft_id,
+)
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_profile_storage_root
 from .. import app
@@ -44,6 +51,7 @@ _M130_AGRARIAN_VOLUME_CASILLA: CasillaId = validated_casilla_id("08", surface="_
 _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface="_M130_AGRARIAN_WITHHELD_CASILLA")
 _M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
 _M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
+_M202_CUOTA_CASILLA: CasillaId = validated_casilla_id("03", surface="_M202_CUOTA_CASILLA")
 
 
 @pytest.fixture(autouse=True)
@@ -107,6 +115,31 @@ def test_overview_status_period_filter_matches_typed_draft_period(cli_runner: Cl
     assert q2_draft.draft_id not in result.output
 
 
+def test_overview_status_period_filter_accepts_instalment_period(cli_runner: CliRunner) -> None:
+    p1_draft = _minimal_stored_draft(
+        modelo="202",
+        period=Period.from_year_and_code(2026, "1P"),
+        casilla_id=_M202_CUOTA_CASILLA,
+        amount=Decimal("1800.00"),
+    )
+    q1_draft = _minimal_stored_draft(
+        modelo="303",
+        period=Period.from_year_and_code(2026, "1T"),
+        casilla_id=_M202_CUOTA_CASILLA,
+        amount=Decimal("168.00"),
+    )
+    repository = ModeloDraftRepository()
+    repository.save(p1_draft)
+    repository.save(q1_draft)
+
+    result = cli_runner.invoke(app, ["app", "overview", "status", "--period", "1P", "--year", "2026"])
+
+    assert result.exit_code == 0, result.output
+    assert "1P 2026" in result.output
+    assert p1_draft.draft_id in result.output
+    assert q1_draft.draft_id not in result.output
+
+
 # ---------------------------------------------------------------------------
 # contract — retired-noun-group negatives
 # ---------------------------------------------------------------------------
@@ -165,3 +198,40 @@ def _valid_modelo_130_bindings() -> dict[str, Decimal]:
         # binding (the source-of-truth channel) rather than as a raw casilla input.
         "modelo-130-pagos-fraccionados-anteriores": Decimal("250"),
     }
+
+
+def _minimal_stored_draft(
+    *,
+    modelo: str,
+    period: Period,
+    casilla_id: CasillaId,
+    amount: Decimal,
+) -> ModeloDraft:
+    now = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
+    values = (
+        ModeloValue(
+            casilla_id=casilla_id,
+            value=amount,
+            kind=ModeloValueKind.LITERAL,
+            source="overview period filter regression",
+        ),
+    )
+    schema_version = "overview-period-filter-test"
+    draft_id = compute_modelo_draft_id(
+        modelo=modelo,
+        period=period,
+        profile_tax_id="00000000T",
+        schema_version=schema_version,
+        values=values,
+    )
+    return ModeloDraft(
+        draft_id=draft_id,
+        modelo=modelo,
+        period=period,
+        profile_tax_id="00000000T",
+        status=ModeloDraftStatus.BORRADOR,
+        values=values,
+        created_at=now,
+        updated_at=now,
+        schema_version=schema_version,
+    )

@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import pytest
 
+from ....core.resources import bundled_path
+from ...calculations.registry import load_registry_tree
 from .. import ProfileSchemaDefinition, load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -37,6 +39,11 @@ def _field(schema: ProfileSchemaDefinition, path: tuple[str, str]):
     return schema.field(".".join(path))
 
 
+def _legal_ids() -> set[str]:
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    return set(catalogues.legal)
+
+
 def test_every_censo_derived_field_declares_legal_refs(
     schema: ProfileSchemaDefinition,
 ) -> None:
@@ -60,10 +67,32 @@ def test_vivienda_office_section_carries_raw_m2_inputs(
     section = schema.section("vivienda_office")
     field_keys = {field.key for field in section.fields}
     assert {"total_m2", "office_m2"}.issubset(field_keys)
+    legal_ids = _legal_ids()
+    expected_refs = {"ley-35-2006:art-30"}
     for field_key in ("total_m2", "office_m2"):
         field = _field(schema, ("vivienda_office", field_key))
         assert field.type.value == "decimal"
-        assert "Art. 30.2 rule 5" in " ".join(field.legal_refs)
+        refs = set(field.legal_refs)
+        assert refs == expected_refs
+        assert refs <= legal_ids
+
+
+def test_selected_censo_profile_refs_resolve_against_catalogue(
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """Selected censo-derived profile fields carry canonical LegalReference ids."""
+    legal_ids = _legal_ids()
+    expected = {
+        "contact.fiscal_address_cadastral_reference": {"rdleg-1-2004:art-6.3"},
+        "contact.fiscal_address_is_habitual_vivienda": {"ley-35-2006:da-23", "ley-35-2006:art-30"},
+        "censo.activity_start_date": {"rd-1065-2007:art-9"},
+        "censo.activity_end_date": {"rd-1065-2007:art-11"},
+    }
+
+    for field_path, expected_refs in expected.items():
+        refs = set(schema.field(field_path).legal_refs)
+        assert refs == expected_refs
+        assert refs <= legal_ids
 
 
 def test_censo_elected_withholding_enum_covers_15_7_1_pct(
@@ -75,9 +104,9 @@ def test_censo_elected_withholding_enum_covers_15_7_1_pct(
 
     field = _field(schema, ("censo", "elected_withholding_pct"))
     assert set(field.enum_values) == {"15", "7", "1"}
-    refs = " ".join(field.legal_refs)
-    assert "Art. 101.5" in refs
-    assert "Art. 95" in refs
+    expected_refs = {"ley-35-2006:art-101", "rd-439-2007:art-95", "orden-hac-1425-2025:art-4"}
+    assert set(field.legal_refs) == expected_refs
+    assert expected_refs <= _legal_ids()
 
 
 def test_censo_establecimiento_type_enum_covers_propio_arrendado_cedido(
@@ -88,6 +117,9 @@ def test_censo_establecimiento_type_enum_covers_propio_arrendado_cedido(
 
     field = _field(schema, ("censo", "establecimiento_type"))
     assert set(field.enum_values) == {"propio", "arrendado", "cedido_gratuitamente"}
+    expected_refs = {"ley-35-2006:art-28", "ley-35-2006:art-29", "ley-35-2006:art-30"}
+    assert set(field.legal_refs) == expected_refs
+    assert expected_refs <= _legal_ids()
 
 
 def test_iae_epigraph_is_wired_to_model_selectors(
@@ -100,3 +132,6 @@ def test_iae_epigraph_is_wired_to_model_selectors(
     field = _field(schema, ("activities", "iae_epigraph"))
     assert field.model_selectors
     assert any("iae_epigraph" in sel for sel in field.model_selectors)
+    expected_refs = {"rdleg-1175-1990:art-unico"}
+    assert set(field.legal_refs) == expected_refs
+    assert expected_refs <= _legal_ids()

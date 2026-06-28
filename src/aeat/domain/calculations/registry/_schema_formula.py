@@ -11,7 +11,7 @@ from typing import Literal, cast
 from pydantic import Field, model_validator
 
 from ._errors import RegistryValidationError
-from ._ids import BindingId, CasillaId, ParameterId, RelationId
+from ._ids import BindingId, CasillaId, LegalRefId, ParameterId, RelationId
 from ._schema_base import DateAxis, FormulaOperator, LegalRefs, RegistryModel, SourceCitation, SourceRefs
 from ._schema_scalars import DecimalValue
 
@@ -189,8 +189,10 @@ class ConvenioRateRow(RegistryModel):
     semantics (not stacking) is enforced at lookup time by the runtime
     helper authored in S389b.
 
-    The ``rate`` field is a string carrying either a parseable Decimal
-    (e.g. ``"0.10"``) or the literal ``"NOT_YET_AUTHORED"`` sentinel
+    The ``rate`` field is a string carrying a parseable Decimal (e.g.
+    ``"0.10"``), the literal ``"DOMESTIC_TARIFF"`` for treaties that
+    allocate taxation to Spain while leaving the TRLIRNR tariff to
+    compute the amount, or the literal ``"NOT_YET_AUTHORED"`` sentinel
     that triggers a BLOCKING finding at lookup time. The sentinel
     allows the parameter to carry a placeholder row for a country +
     tipo_renta combination whose Convenio article number is known
@@ -204,7 +206,8 @@ class ConvenioRateRow(RegistryModel):
     country_code: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
     tipo_renta: str = Field(min_length=1, max_length=64)
     rate: str = Field(min_length=1, max_length=32)
-    legal_ref_anchor: str = Field(min_length=1, max_length=128)
+    legal_ref_anchor: LegalRefId
+    legal_refs: tuple[LegalRefId, ...] = ()
     notes: str | None = Field(default=None, max_length=512)
     valid_from: date
     valid_to: date | None = None
@@ -213,17 +216,32 @@ class ConvenioRateRow(RegistryModel):
     def _validate_convenio_rate_row(self) -> ConvenioRateRow:
         if self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("convenio_rate_row valid_to must be on or after valid_from")
-        # The rate field is either the NOT_YET_AUTHORED sentinel or a
-        # parseable Decimal string. Parsing here surfaces malformed
-        # values at construction time rather than at lookup time.
+        # The rate field is either a symbolic M210 value or a parseable
+        # Decimal string. Parsing here surfaces malformed values at
+        # construction time rather than at lookup time.
         if self.rate != "NOT_YET_AUTHORED":
+            if self.rate == "DOMESTIC_TARIFF":
+                if not self.legal_refs:
+                    raise RegistryValidationError("convenio_rate_row DOMESTIC_TARIFF rows must declare legal_refs")
+                self._validate_authored_legal_anchor()
+                return self
             try:
                 Decimal(self.rate)
             except (ArithmeticError, ValueError) as exc:
                 raise RegistryValidationError(
-                    f"convenio_rate_row rate must be a parseable Decimal or 'NOT_YET_AUTHORED'; got {self.rate!r}",
+                    "convenio_rate_row rate must be a parseable Decimal, "
+                    f"'DOMESTIC_TARIFF', or 'NOT_YET_AUTHORED'; got {self.rate!r}",
                 ) from exc
+            if not self.legal_refs:
+                raise RegistryValidationError("convenio_rate_row concrete rates must declare legal_refs")
+            self._validate_authored_legal_anchor()
         return self
+
+    def _validate_authored_legal_anchor(self) -> None:
+        if self.legal_ref_anchor not in self.legal_refs:
+            raise RegistryValidationError(
+                "convenio_rate_row legal_ref_anchor must be included in legal_refs for authored rates",
+            )
 
 
 def _brackets_overlap_in_same_window(prev: BracketEntry, current: BracketEntry) -> bool:

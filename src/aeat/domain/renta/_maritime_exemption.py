@@ -19,14 +19,14 @@ Active exemption axes (2024/2025):
 
 Inactive axis (future variant):
 
-  DA 41 LIRPF (Ley 35/2006 DA 41, added by Ley 6/2018 BOE-A-2018-9268)
+  DA 41 LIRPF (Ley 35/2006 DA 41, added by Ley 26/2014 BOE-A-2014-12327)
     50% exemption for tuna fleet crew. Requires EU state-aid clearance
     not granted as of 2024/2025. Engine raises MaritimeExemptionInactiveError
     when the selector resolves True so it is never silently applied.
 
 Profile completeness gate (not a calculation axis):
 
-  RETMAR mandatory filing (Ley 47/2015, BOE-A-2015-11346)
+  RETM mandatory filing (Ley 35/2006 Art. 96, BOE-A-2006-20764)
     Since January 2023 all RETMAR-registered workers must file IRPF
     regardless of income level. Raises ProfileCompletenessError; it
     does not alter casilla values.
@@ -62,12 +62,11 @@ RENTA_EXENTA_CASILLA: CasillaId = validated_casilla_id("0525", surface="RENTA_EX
 # trabajador_del_mar.toml binding entries.
 _ART_7P_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:art-7",)
 _REBECA_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-19-1994:art-75",)
-_DA41_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:da-41", "ley-6-2018")
-_RETMAR_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-47-2015",)
+_DA41_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:da-41",)
+_RETMAR_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:art-96",)
 
-_ART_7P_SOURCE_REFS: tuple[SourceRefId, ...] = ("art-7p-foreign-work",)
-_REBECA_SOURCE_REFS: tuple[SourceRefId, ...] = ("rebeca-50pct",)
-_DA41_SOURCE_REFS: tuple[SourceRefId, ...] = ("da41-tuna-fleet-inactive",)
+_ART_7P_SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-lirpf-art-7-authority",)
+_REBECA_SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-ley-19-1994-art-75-authority",)
 
 
 class MaritimeExemptionInactiveError(RentaError):
@@ -83,15 +82,16 @@ class MaritimeExemptionInactiveError(RentaError):
     code change in this module is required.
 
     Legal authority: Ley 35/2006 DA 41 BOE-A-2006-20764 (as amended by
-    Ley 6/2018 BOE-A-2018-9268).
+    Ley 26/2014 BOE-A-2014-12327).
     """
 
 
 class ProfileCompletenessError(RentaError):
     """Raised when a RETMAR-registered worker's profile is presented for filing.
 
-    Since January 2023, all RETMAR-registered workers must file an IRPF
-    declaration regardless of income level (Ley 47/2015, BOE-A-2015-11346).
+    Since 2023, all workers registered in the maritime special Social
+    Security regime must file an IRPF declaration regardless of income
+    level (Ley 35/2006 art. 96, BOE-A-2006-20764).
     This is a profile completeness gate — it does not alter casilla values
     or formula execution paths.
 
@@ -194,7 +194,7 @@ def da41_eligible(facts: MaritimeWorkerFacts) -> bool:
     path so it can be tested independently.
 
     Legal authority: Ley 35/2006 DA 41 BOE-A-2006-20764 (as amended by
-    Ley 6/2018 BOE-A-2018-9268).
+    Ley 26/2014 BOE-A-2014-12327).
     """
     if facts.worker_class != "trabajador_del_mar":
         return False
@@ -331,11 +331,10 @@ def guard_da41_inactive(facts: MaritimeWorkerFacts) -> None:
             "DA 41 LIRPF exemption is inactive: EU state-aid clearance has not been granted "
             "as of 2024/2025. AEAT confirms non-applicability in official 2024 guidance. "
             "Activate only after EU clearance is granted (Ley 35/2006 DA 41 BOE-A-2006-20764, "
-            "Ley 6/2018 BOE-A-2018-9268).",
+            "added by Ley 26/2014 BOE-A-2014-12327).",
             context={
                 "binding_id": "da41-tuna-fleet-inactive",
                 "legal_ref": _DA41_LEGAL_REFS[0],
-                "enabling_law": _DA41_LEGAL_REFS[1],
             },
         )
 
@@ -343,8 +342,9 @@ def guard_da41_inactive(facts: MaritimeWorkerFacts) -> None:
 def check_retmar_mandatory_filing(facts: MaritimeWorkerFacts) -> None:
     """Raise ProfileCompletenessError when retmar_registered is True.
 
-    Since January 2023, all RETMAR-registered workers must file an IRPF
-    declaration regardless of income level (Ley 47/2015, BOE-A-2015-11346).
+    Since 2023, all workers registered in the maritime special Social
+    Security regime must file an IRPF declaration regardless of income
+    level (Ley 35/2006 art. 96, BOE-A-2006-20764).
     This is a completeness gate only — it must not suppress further
     processing or alter casilla values.
 
@@ -360,9 +360,10 @@ def check_retmar_mandatory_filing(facts: MaritimeWorkerFacts) -> None:
     if facts.retmar_registered:
         raise ProfileCompletenessError(
             "RETMAR mandatory filing: this worker is registered in RETMAR. "
-            "Since January 2023, all RETMAR-registered workers must file an IRPF "
+            "Since 2023, workers registered in the maritime special Social Security "
+            "regime must file an IRPF "
             "declaration regardless of income level "
-            "(Ley 47/2015 BOE-A-2015-11346).",
+            "(Ley 35/2006 Art. 96 BOE-A-2006-20764).",
             context={
                 "legal_ref": _RETMAR_LEGAL_REFS[0],
             },

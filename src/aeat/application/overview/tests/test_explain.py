@@ -163,7 +163,7 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
 
 
 def test_scheduling_rationale_propagates_genuine_registry_fault() -> None:
-    """``_scheduling_rationale`` lets a genuine registry-integrity fault
+    """The public explain builder lets a genuine registry-integrity fault
     propagate after its catch was narrowed to ``NoDeadlineWindowsError``.
 
     Before the narrowing, the broad ``ScheduleComputationError`` catch
@@ -176,7 +176,6 @@ def test_scheduling_rationale_propagates_genuine_registry_fault() -> None:
         NoDeadlineWindowsError,
         ScheduleComputationError,
     )
-    from .._explain import _scheduling_rationale
 
     class _CorruptRegistryEngine:
         """Raises the genuine registry-integrity fault on explain."""
@@ -192,26 +191,23 @@ def test_scheduling_rationale_propagates_genuine_registry_fault() -> None:
                 "deadline registry validation failed",
             )
 
-    # reason: deliberate fault-injection stub exercising the explain
-    # catch contract — not a DeadlineEngine subclass.
+    # Deliberate fault-injection engine exercising the explain catch contract.
     with pytest.raises(ScheduleComputationError) as excinfo:
-        _scheduling_rationale(
+        build_overview_explain(
             _autonomo_profile(),
             modelo="303",
             year=2026,
-            engine=_CorruptRegistryEngine(),  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+            engine=_CorruptRegistryEngine(),
         )
     # The genuine fault is the bare base class, not the benign subtype.
     assert not isinstance(excinfo.value, NoDeadlineWindowsError)
 
 
 def test_scheduling_rationale_degrades_on_benign_no_windows() -> None:
-    """The benign no-windows fault still degrades to ``None`` after the
-    catch narrowing — a year with no registered windows is a normal
-    data gap, not an error."""
+    """The benign no-windows fault still degrades to ``None`` through
+    the public explain builder after the catch narrowing."""
 
     from ....domain.deadlines._errors import NoDeadlineWindowsError
-    from .._explain import _scheduling_rationale
 
     class _NoWindowsEngine:
         """Raises the benign no-windows fault on explain."""
@@ -227,12 +223,11 @@ def test_scheduling_rationale_degrades_on_benign_no_windows() -> None:
                 f"No registry deadline windows registered for modelo {modelo!r}",
             )
 
-    # reason: deliberate fault-injection stub exercising the explain
-    # catch contract — not a DeadlineEngine subclass.
-    rationale = _scheduling_rationale(
+    # Deliberate fault-injection engine exercising the explain catch contract.
+    result = build_overview_explain(
         _autonomo_profile(),
         modelo="303",
         year=2026,
-        engine=_NoWindowsEngine(),  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        engine=_NoWindowsEngine(),
     )
-    assert rationale is None
+    assert result.scheduling_rationale is None

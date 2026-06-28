@@ -91,8 +91,12 @@ _RelationOpt = Annotated[
         help=tr(
             "cli.app.modelo.work.relation_help",
             default=(
-                "Prior-period relation value as KEY=VALUE. The KEY is a registry relation id; "
-                "the VALUE is a decimal. Repeat to supply multiple relations."
+                "Registry relation value as KEY=VALUE (repeatable). KEY is a registry relation id, "
+                "not a binding id; use this for cross-period or cross-modelo relation inputs. "
+                "Run `aeat app modelo bindings list --missing` for scoped relation guidance. "
+                "For Modelo 200 M202 pagos fraccionados, use the mutually exclusive 40.3 casilla 34 "
+                "and 40.2 casilla 03 relation channels, setting the unused modality to 0 when "
+                "entering manual values."
             ),
         ),
     ),

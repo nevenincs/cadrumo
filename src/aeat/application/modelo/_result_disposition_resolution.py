@@ -18,12 +18,23 @@ eligibility gate (:func:`~aeat.domain.iva.refund_disposition_available`); it doe
 not duplicate either.
 
 Before resolving the result, the persisted :class:`CalculationRevision` value map
-is checked against the law-determined registry :class:`ModeloRevision`, so
-printed numbers, export refs, and ambiguous metadata tokens fail before they can
-influence the disposition.
+is checked through the parent :class:`WorkUnit` against the law-determined
+registry :class:`ModeloRevision`, so printed numbers, export refs, and ambiguous
+metadata tokens fail before they can influence the disposition.
 
 Legal basis (Modelo 303 refund election): RD 1624/1992 (RIVA) art. 30 (Registro
 de devolución mensual); Ley 37/1992 (LIVA) art. 116 (the monthly-refund right).
+
+See Also:
+    :func:`aeat.core.derive_result_disposition`
+        Diseño-grounded result-to-code derivation used before Modelo 303 refund
+        election handling.
+    :func:`aeat.domain.iva.refund_disposition_available`
+        Law-determined REDEME/last-period eligibility gate layered on a carried
+        Modelo 303 credit.
+    :func:`aeat.application.modelo.file_modelo_revision`
+        Filing transition that reads the same refund fact before persisting
+        cross-period carry-forward observations.
 """
 
 from __future__ import annotations
@@ -75,9 +86,11 @@ def resolve_modelo_result_disposition(
 ) -> ResultDisposition:
     """Resolve the single fichero "Tipo de declaración" result disposition.
 
-    The boundary resolves a persisted :class:`CalculationRevision` for a
-    :class:`TaxpayerProfile`, using the supplied :class:`~aeat.core.Period` to
-    decide whether a Modelo 303 refund election is lawful.
+    The boundary resolves a persisted :class:`CalculationRevision` through its
+    parent :class:`WorkUnit` for a :class:`TaxpayerProfile`, using the supplied
+    :class:`~aeat.core.Period` to decide whether a Modelo 303 refund election is
+    lawful. The work unit fixes the modelo, filing year, and registry revision
+    against which the revision's ``casilla_values`` are validated.
 
     Computes the modelo's base disposition from its final-result casilla via the
     codified :func:`~aeat.core.derive_result_disposition`, then — for a Modelo 303
@@ -127,7 +140,11 @@ def _result_disposition_values_for_revision(
     revision: CalculationRevision,
     period: Period,
 ) -> Mapping[CasillaId, Decimal]:
-    """Validate a full revision value map and return only result casilla ids."""
+    """Validate a full :class:`CalculationRevision` value map and return result casillas.
+
+    The :class:`WorkUnit` selects the registry snapshot whose
+    :class:`ModeloRevision` declares the canonical casilla ids accepted here.
+    """
     snapshot = resources().modelos.authority.snapshot(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,

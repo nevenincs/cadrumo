@@ -1,12 +1,18 @@
-"""Typed summary surface for modelo calculation.
+"""Typed summary surface for filing draft calculation results.
 
-The CLI contract requires modelo calculation to
-print a compact summary table, blocker counts, warnings, and the next
-action — and shows repair hints instead of succeeding silently when the
-inputs are unresolved. The CLI cannot compute that summary by inspecting
-:class:`aeat.domain.filing.ModeloDraft` ad-hoc: the next-action heuristic
-is shared logic the application layer owns, and the typed record gives
-the renderers and tests a stable schema to target.
+This module does not run the registry formula graph. It summarises an
+already-built :class:`aeat.domain.filing.ModeloDraft` into a frozen
+:class:`DeclaracionCalculateSummary` so CLI renderers can display the
+draft status, finding counts, repair hints, and
+:class:`DeclaracionCalculateNextAction` without re-implementing lifecycle
+policy.
+
+The CLI contract requires modelo calculation to print a compact summary
+table, blocker counts, warnings, and the next action. When inputs are
+unresolved, repair hints must be present instead of allowing a silent
+success. The CLI cannot compute that summary by inspecting a draft
+ad hoc: the next-action heuristic is shared logic the application layer
+owns, and this typed record gives renderers and tests a stable schema.
 
 The :func:`summarise_calculation` helper turns a draft into the typed
 summary consumed by renderers::
@@ -14,6 +20,16 @@ summary consumed by renderers::
     draft = build_draft(...)
     summary = summarise_calculation(draft)
     render(summary)
+
+See Also:
+    :func:`aeat.application.filing.build_draft`
+        Registry-backed draft construction that produces the
+        :class:`aeat.domain.filing.ModeloDraft` summarised here.
+    :class:`aeat.domain.submission.ModeloDraftStatus`
+        Lifecycle states that drive the next-action mapping.
+    :func:`aeat.application.modelo.calculation_result_summary`
+        Separate persisted-revision summary for headline casillas chosen
+        from registry verification expectations.
 """
 
 from __future__ import annotations

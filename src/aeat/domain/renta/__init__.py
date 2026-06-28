@@ -3,6 +3,12 @@
 Re-exports the closed-membership classification enums that downstream
 consumers (formula bindings, CCAA-conditional deductions, application-
 layer extractors) use to tag a Renta domain value.
+
+The first-slice ledger-expense surface exports
+:class:`RentaDeductibleExpenseFact`, :class:`RentaDeductibilityResult`, and
+:class:`RentaDeductibleExpenseObservation` together with
+:func:`evaluate_renta_deductibility` and
+:func:`build_renta_deductible_expense_observation` for Modelo 100 bindings.
 """
 
 from __future__ import annotations

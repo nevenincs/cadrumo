@@ -1,4 +1,10 @@
-"""Shared validating identifiers and identifier-derivation primitives for domain boundary records."""
+"""Shared validating identifiers and identifier-derivation primitives.
+
+Provides :class:`ModeloIdentifier` for official modelo codes and
+:func:`canonical_decimal_string` for hash-stable decimal payloads. Invalid
+modelo codes raise :class:`DomainValidationError`, matching the domain
+validation contract used by Pydantic-backed records.
+"""
 
 from __future__ import annotations
 
@@ -37,7 +43,7 @@ class ModeloIdentifier(str):
 
 
 def canonical_decimal_string(value: Decimal) -> str:
-    """Render a :class:`Decimal` into a stable fixed-point string for hashing.
+    """Render a :class:`~decimal.Decimal` into a stable fixed-point string for hashing.
 
     Used by domain ``derive_*_id`` helpers to canonicalise monetary fields
     before they enter a SHA-256 hash payload, so two semantically equal

@@ -1,4 +1,15 @@
-"""Persisted Cl@ve Móvil session metadata records."""
+"""Cl@ve Móvil persisted-session metadata records.
+
+:class:`aeat.adapters.outbound.aeat.auth.ClaveMovilAuthProvider` stores
+:class:`ClaveMovilSessionMetadata` inside the encrypted
+:class:`aeat.adapters.outbound.aeat.auth._session_store.PersistedBrowserSession`
+metadata mapping. The record binds the Playwright storage state to the
+operator identity, post-auth landing URL, verification code, and resume
+deadline observed during the human-in-the-loop login flow.
+
+Application callers later narrow this provider-owned shape to the common
+:class:`aeat.application.auth.PersistedAuthSession` reuse contract.
+"""
 
 from __future__ import annotations
 
@@ -10,11 +21,20 @@ from pydantic import BaseModel, ConfigDict, Field
 from ._providers import AuthProviderKind
 
 AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
-"""Distinct from certificate metadata v1 so stale certificate objects are rejected."""
+"""Schema version for Cl@ve Móvil :class:`ClaveMovilSessionMetadata` records."""
 
 
 class ClaveMovilSessionMetadata(BaseModel):
-    """Encrypted metadata stored with the Cl@ve Móvil storage state."""
+    """Provider-owned metadata stored with encrypted Cl@ve Móvil storage state.
+
+    ``provider_kind`` keeps the encrypted object distinguishable from
+    certificate-auth metadata. ``storage_state_sha256`` lets resume paths reject
+    stale or mismatched browser state, while ``landing_url`` lets live probes
+    verify an already-authenticated page without re-entering AEAT's Cl@ve
+    selector. The same operational fields are projected into
+    :class:`aeat.adapters.outbound.aeat.auth.ClaveMovilSessionDetail` when a
+    session is rebuilt.
+    """
 
     model_config = ConfigDict(frozen=True, extra="forbid", strict=True)
 
@@ -32,7 +52,7 @@ class ClaveMovilSessionMetadata(BaseModel):
             "Concrete URL Playwright observed after AEAT dispatched the "
             "successful login. "
             "Used as the probe target by auth-session readiness checks because AEAT's "
-            "the Cl@ve selector page is a static dispatch page that always "
-            "returns 200 regardless of auth state."
+            "Cl@ve selector page is a static dispatch page that always returns 200 "
+            "regardless of auth state."
         ),
     )

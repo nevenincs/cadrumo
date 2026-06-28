@@ -43,6 +43,10 @@ def validate_cross_reference_section(
                 cross_reference.evidence_tier,
             ),
         )
+        for predicate in cross_reference.applicability_predicates:
+            predicate_owner = f"{owner} applicability predicate {predicate.field!r}"
+            failures.extend(_missing_refs(prefix, predicate_owner, predicate.legal_refs, legal_refs, "legal"))
+            failures.extend(_missing_refs(prefix, predicate_owner, predicate.source_refs, source_refs, "source"))
         if cross_reference.oracle_id is not None:
             prior = oracle_bindings.get(cross_reference.oracle_id)
             if prior is not None:
@@ -100,27 +104,57 @@ def _predicate_operator_name(expression: str) -> str | None:
     return stripped[:paren_idx]
 
 
-# equals(["lhs", "rhs"]) — the consistency operator must name EXACTLY two casilla
-# ids. The shape mirrors the runtime regex in
-# aeat.application.modelo._verification_actions._PREDICATE_EQUALS; this validator
-# is the authoring-time gate so a malformed arity fails registry load rather than
-# silently holding at evaluation time.
-_EQUALS_PREDICATE = _re.compile(r"^equals\(\[(?P<ids>[^\]]*)\]\)$")
+_CASILLA_LIST_PREDICATE = _re.compile(r"^(?P<operator>[a-z_]+)\(\[(?P<ids>[^\]]*)\]\)$")
+_EXACT_CASILLA_LIST_ARITY: Mapping[str, int] = {
+    "cap_le_when_positive": 2,
+    "equals": 2,
+    "implies_nonzero": 2,
+    "roll_forward_balances": 4,
+}
+_MIN_CASILLA_LIST_ARITY: Mapping[str, int] = {
+    "all_nonzero": 1,
+    "any_nonzero": 1,
+    "implies_any_nonzero": 2,
+}
+_CASILLA_LIST_OPERATORS = frozenset(_EXACT_CASILLA_LIST_ARITY) | frozenset(_MIN_CASILLA_LIST_ARITY)
 
 
-def _equals_predicate_arity_failures(prefix: str, owner: str, expression: str) -> list[str]:
-    """Return failures for a malformed ``equals`` predicate (not exactly two ids)."""
-    match = _EQUALS_PREDICATE.match(expression.strip())
-    if match is None:
+def _parse_predicate_casilla_id_tokens(ids_fragment: str) -> list[str]:
+    return [token.strip().strip('"').strip("'") for token in ids_fragment.split(",") if token.strip()]
+
+
+def _casilla_list_predicate_failures(
+    prefix: str,
+    owner: str,
+    expression: str,
+    *,
+    operator_name: str,
+    casillas: set[CasillaId],
+) -> list[str]:
+    match = _CASILLA_LIST_PREDICATE.match(expression.strip())
+    if match is None or match.group("operator") != operator_name:
         return [
-            f'{prefix}: {owner} equals expression {expression!r} is malformed; expected equals(["lhs_id", "rhs_id"])',
+            f"{prefix}: {owner} {operator_name} expression {expression!r} is malformed; expected "
+            f'{operator_name}(["casilla_id", ...])',
         ]
-    ids = [token.strip().strip('"').strip("'") for token in match.group("ids").split(",") if token.strip()]
-    if len(ids) != 2:
-        return [
-            f"{prefix}: {owner} equals expression must name exactly two casilla ids, got {len(ids)}: {ids!r}",
-        ]
-    return []
+    ids = _parse_predicate_casilla_id_tokens(match.group("ids"))
+    failures: list[str] = []
+    expected_arity = _EXACT_CASILLA_LIST_ARITY.get(operator_name)
+    if expected_arity is not None and len(ids) != expected_arity:
+        failures.append(
+            f"{prefix}: {owner} {operator_name} expression must name exactly {expected_arity} "
+            f"casilla ids, got {len(ids)}: {ids!r}",
+        )
+    min_arity = _MIN_CASILLA_LIST_ARITY.get(operator_name)
+    if min_arity is not None and len(ids) < min_arity:
+        failures.append(
+            f"{prefix}: {owner} {operator_name} expression must name at least {min_arity} "
+            f"casilla ids, got {len(ids)}: {ids!r}",
+        )
+    for casilla_id in ids:
+        if casilla_id not in casillas:
+            failures.append(f"{prefix}: {owner} {operator_name} references unknown casilla {casilla_id!r}")
+    return failures
 
 
 # roll_forward_balances(["closing", "opening", "applied", "base"]) — the
@@ -146,7 +180,7 @@ def _roll_forward_balances_predicate_arity_failures(
             f"{prefix}: {owner} roll_forward_balances expression {expression!r} is malformed; expected "
             'roll_forward_balances(["closing_id", "opening_id", "applied_id", "base_id"])',
         ]
-    ids = [token.strip().strip('"').strip("'") for token in match.group("ids").split(",") if token.strip()]
+    ids = _parse_predicate_casilla_id_tokens(match.group("ids"))
     failures: list[str] = []
     if len(ids) != 4:
         failures.append(
@@ -203,7 +237,15 @@ def validate_verification_expectation_section(
             # equals(["lhs_id", "rhs_id"]) is a binary consistency check; reject a
             # malformed arity at authoring time rather than letting the runtime
             # evaluator silently hold (its <2-id defensive branch returns True).
-            failures.extend(_equals_predicate_arity_failures(prefix, owner, predicate.expression))
+            failures.extend(
+                _casilla_list_predicate_failures(
+                    prefix,
+                    owner,
+                    predicate.expression,
+                    operator_name=op_name,
+                    casillas=casillas,
+                ),
+            )
         elif op_name == "roll_forward_balances":
             # roll_forward_balances(["closing", "opening", "applied", "base"]) is a
             # four-casilla continuity check; reject a malformed arity or unknown
@@ -211,6 +253,16 @@ def validate_verification_expectation_section(
             # evaluator's bad-arity branch silently hold / never fire.
             failures.extend(
                 _roll_forward_balances_predicate_arity_failures(prefix, owner, predicate.expression, casillas),
+            )
+        elif op_name in _CASILLA_LIST_OPERATORS:
+            failures.extend(
+                _casilla_list_predicate_failures(
+                    prefix,
+                    owner,
+                    predicate.expression,
+                    operator_name=op_name,
+                    casillas=casillas,
+                ),
             )
 
 

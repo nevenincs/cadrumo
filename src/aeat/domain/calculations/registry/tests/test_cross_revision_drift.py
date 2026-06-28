@@ -2,7 +2,7 @@
 
 Per the AEAT registry design contract, every casilla id has
 identical legal responsibilities across overlapping revisions of a
-modelo. The `_validate_cross_revision_casilla_consistency` gate
+modelo. The public `validate_cross_revision_casilla_consistency` gate
 reports drift when two overlapping revisions disagree on any
 legally-bound field (label, section, data_type, semantic_role,
 legal_refs). Non-overlapping revision windows are separate legal
@@ -20,12 +20,18 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import load_modelo_directory, load_registry_tree
-from .._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
+from .._errors import RegistryValidationError
+from .._schema import (
+    CasillaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    PeriodSelector,
+    RegistryCatalogues,
+)
 from .._validate import (
     RegistryValidator,
 )
 from .._validate_cross_revision import (
-    _validate_cross_revision_casilla_consistency,
     summarize_non_overlapping_cross_revision_casilla_drift,
     validate_cross_revision_casilla_consistency,
 )
@@ -99,6 +105,81 @@ def _modelo(
             "revisions": revision_payloads,
         },
     )
+
+
+def _annual_revision_selectors() -> dict[str, PeriodSelector]:
+    return {
+        "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+        "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+    }
+
+
+def _annual_modelo(
+    left: CasillaDefinition,
+    right: CasillaDefinition,
+    *,
+    evolutions: dict[str, tuple[dict[str, object], ...]] | None = None,
+    continuidad_validation: dict[str, str] | None = None,
+) -> ModeloDefinition:
+    return _modelo(
+        "100",
+        {"2024": [left], "2025": [right]},
+        selectors=_annual_revision_selectors(),
+        evolutions=evolutions,
+        continuidad_validation=continuidad_validation,
+    )
+
+
+def _continuity_evolution(
+    *,
+    evolution_kind: str = "label_evolved",
+    continuidad_id: str = "base",
+    evolution_id: str | None = None,
+) -> dict[str, object]:
+    return {
+        "id": evolution_id or f"{continuidad_id}-{evolution_kind}-2025",
+        "continuidad_id": continuidad_id,
+        "from_revision": "2024",
+        "to_revision": "2025",
+        "evolution_kind": evolution_kind,
+        "legal_refs": ("ley-58-2003:art-29",),
+        "source_refs": ("aeat-manual",),
+    }
+
+
+def _evolutions(*payloads: dict[str, object]) -> dict[str, tuple[dict[str, object], ...]]:
+    return {"2025": payloads}
+
+
+@pytest.fixture(scope="module")
+def committed_registry() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
+    return load_registry_tree(bundled_path("registry", "aeat"))
+
+
+@pytest.fixture(scope="module")
+def committed_m100(committed_registry: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]) -> ModeloDefinition:
+    modelos, _catalogues = committed_registry
+    return next(modelo for modelo in modelos if modelo.id == "100")
+
+
+def _evolution_pairs(modelo: ModeloDefinition, continuidad_id: str) -> dict[tuple[str, str], str]:
+    return {
+        (evolution.from_revision, evolution.to_revision): evolution.evolution_kind
+        for revision in modelo.revisions.values()
+        for evolution in revision.casilla_continuidad_evolutions
+        if evolution.continuidad_id == continuidad_id
+    }
+
+
+def _cross_revision_casilla_consistency_failures(modelos: list[ModeloDefinition]) -> tuple[str, ...]:
+    try:
+        validate_cross_revision_casilla_consistency(modelos)
+    except RegistryValidationError as exc:
+        message = str(exc)
+        prefix = "cross-revision casilla drift detected:\n"
+        assert message.startswith(prefix), message
+        return tuple(line.removeprefix(" - ") for line in message.removeprefix(prefix).splitlines())
+    return ()
 
 
 def _write_continuity_modelo_directory(
@@ -189,13 +270,13 @@ class TestCrossRevisionConsistency:
         a = _casilla(cid="0700", label="Test", data_type="money")
         b = _casilla(cid="0700", label="Test", data_type="money")
         m = _modelo("100", {"2024": [a], "2025": [b]})
-        assert _validate_cross_revision_casilla_consistency([m]) == ()
+        assert _cross_revision_casilla_consistency_failures([m]) == ()
 
     def test_label_drift_caught(self) -> None:
         a = _casilla(cid="0700", label="Original")
         b = _casilla(cid="0700", label="Different")
         m = _modelo("100", {"2024": [a], "2025": [b]})
-        failures = _validate_cross_revision_casilla_consistency([m])
+        failures = _cross_revision_casilla_consistency_failures([m])
         assert len(failures) == 1
         assert "label" in failures[0]
         assert "0700" in failures[0]
@@ -204,54 +285,54 @@ class TestCrossRevisionConsistency:
         a = _casilla(cid="0700", data_type="money")
         b = _casilla(cid="0700", data_type="decimal")
         m = _modelo("100", {"2024": [a], "2025": [b]})
-        failures = _validate_cross_revision_casilla_consistency([m])
+        failures = _cross_revision_casilla_consistency_failures([m])
         assert any("data_type" in f for f in failures)
 
     def test_section_drift_caught(self) -> None:
         a = _casilla(cid="0700", section=("a", "b"))
         b = _casilla(cid="0700", section=("a", "c"))
         m = _modelo("100", {"2024": [a], "2025": [b]})
-        failures = _validate_cross_revision_casilla_consistency([m])
+        failures = _cross_revision_casilla_consistency_failures([m])
         assert any("section" in f for f in failures)
 
     def test_semantic_role_drift_caught(self) -> None:
         a = _casilla(cid="0700", semantic_role="taxpayer_nif")
         b = _casilla(cid="0700", semantic_role="payee_nif")
         m = _modelo("100", {"2024": [a], "2025": [b]})
-        failures = _validate_cross_revision_casilla_consistency([m])
+        failures = _cross_revision_casilla_consistency_failures([m])
         assert any("semantic_role" in f for f in failures)
 
     def test_legal_refs_drift_caught(self) -> None:
         a = _casilla(cid="0700", legal_refs=("ley-58-2003:art-29",))
         b = _casilla(cid="0700", legal_refs=("ley-58-2003:art-30",))
         m = _modelo("100", {"2024": [a], "2025": [b]})
-        failures = _validate_cross_revision_casilla_consistency([m])
+        failures = _cross_revision_casilla_consistency_failures([m])
         assert any("legal_refs" in f for f in failures)
 
     def test_single_revision_casilla_passes(self) -> None:
         a = _casilla(cid="0700")
         m = _modelo("100", {"2025": [a]})
-        assert _validate_cross_revision_casilla_consistency([m]) == ()
+        assert _cross_revision_casilla_consistency_failures([m]) == ()
 
     def test_three_revisions_one_diverges(self) -> None:
         a = _casilla(cid="0700", label="Same")
         b = _casilla(cid="0700", label="Same")
         c = _casilla(cid="0700", label="Different")
         m = _modelo("100", {"2023": [a], "2024": [b], "2025": [c]})
-        failures = _validate_cross_revision_casilla_consistency([m])
+        failures = _cross_revision_casilla_consistency_failures([m])
         assert len(failures) == 2
         assert all("2025" in failure for failure in failures)
 
     def test_two_modelos_independent(self) -> None:
         m100 = _modelo("100", {"2024": [_casilla(cid="0700", label="A")], "2025": [_casilla(cid="0700", label="A")]})
         m180 = _modelo("180", {"2020": [_casilla(cid="0700", label="X")], "2025": [_casilla(cid="0700", label="X")]})
-        assert _validate_cross_revision_casilla_consistency([m100, m180]) == ()
+        assert _cross_revision_casilla_consistency_failures([m100, m180]) == ()
 
     def test_canonical_revision_appears_in_failure_message(self) -> None:
         a = _casilla(cid="0700", label="Old")
         b = _casilla(cid="0700", label="New")
         m = _modelo("100", {"2024": [a], "2025": [b]})
-        failures = _validate_cross_revision_casilla_consistency([m])
+        failures = _cross_revision_casilla_consistency_failures([m])
         assert len(failures) == 1
         assert "2024" in failures[0]
         assert "2025" in failures[0]
@@ -266,7 +347,7 @@ class TestCrossRevisionConsistency:
             selectors={"2024-a": selector, "2024-b": selector},
         )
 
-        failures = _validate_cross_revision_casilla_consistency([m])
+        failures = _cross_revision_casilla_consistency_failures([m])
 
         assert len(failures) == 1
         assert "label" in failures[0]
@@ -274,28 +355,14 @@ class TestCrossRevisionConsistency:
     def test_non_overlapping_period_selectors_are_not_cross_revision_drift(self) -> None:
         a = _casilla(cid="0700", label="Old")
         b = _casilla(cid="0700", label="New")
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-        )
+        m = _annual_modelo(a, b)
 
-        assert _validate_cross_revision_casilla_consistency([m]) == ()
+        assert _cross_revision_casilla_consistency_failures([m]) == ()
 
     def test_non_overlapping_period_selectors_are_reported_as_advisory_inventory(self) -> None:
         a = _casilla(cid="0700", label="Old", legal_refs=("ley-58-2003:art-29",))
         b = _casilla(cid="0700", label="New", legal_refs=("ley-58-2003:art-30",))
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-        )
+        m = _annual_modelo(a, b)
 
         summaries = summarize_non_overlapping_cross_revision_casilla_drift([m])
 
@@ -312,27 +379,7 @@ class TestCrossRevisionConsistency:
     def test_non_overlapping_inventory_reports_covering_continuity_evolution(self) -> None:
         a = _casilla(cid="0700", label="Old", continuidad_id="base")
         b = _casilla(cid="0700", label="New", continuidad_id="base")
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-            evolutions={
-                "2025": (
-                    {
-                        "id": "base-label-2025",
-                        "continuidad_id": "base",
-                        "from_revision": "2024",
-                        "to_revision": "2025",
-                        "evolution_kind": "label_evolved",
-                        "legal_refs": ("ley-58-2003:art-29",),
-                        "source_refs": ("aeat-manual",),
-                    },
-                ),
-            },
-        )
+        m = _annual_modelo(a, b, evolutions=_evolutions(_continuity_evolution(evolution_id="base-label-2025")))
 
         summaries = summarize_non_overlapping_cross_revision_casilla_drift([m])
 
@@ -347,27 +394,7 @@ class TestCrossRevisionConsistency:
     def test_non_overlapping_inventory_reports_uncovered_continuity_drift(self) -> None:
         a = _casilla(cid="0700", legal_refs=("ley-58-2003:art-29",), continuidad_id="base")
         b = _casilla(cid="0700", legal_refs=("ley-58-2003:art-30",), continuidad_id="base")
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-            evolutions={
-                "2025": (
-                    {
-                        "id": "base-label-2025",
-                        "continuidad_id": "base",
-                        "from_revision": "2024",
-                        "to_revision": "2025",
-                        "evolution_kind": "label_evolved",
-                        "legal_refs": ("ley-58-2003:art-29",),
-                        "source_refs": ("aeat-manual",),
-                    },
-                ),
-            },
-        )
+        m = _annual_modelo(a, b, evolutions=_evolutions(_continuity_evolution(evolution_id="base-label-2025")))
 
         summaries = summarize_non_overlapping_cross_revision_casilla_drift([m])
 
@@ -396,29 +423,14 @@ class TestCrossRevisionConsistency:
     def test_advisory_continuity_validation_does_not_fail_non_overlapping_drift(self) -> None:
         a = _casilla(cid="0700", label="Old")
         b = _casilla(cid="0700", label="New")
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-        )
+        m = _annual_modelo(a, b)
 
         assert validate_registry_scope([m]) == ()
 
     def test_strict_continuity_validation_fails_uncovered_non_overlapping_drift(self) -> None:
         a = _casilla(cid="0700", label="Old", continuidad_id="base")
         b = _casilla(cid="0700", label="New", continuidad_id="base")
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-            continuidad_validation={"2025": "strict"},
-        )
+        m = _annual_modelo(a, b, continuidad_validation={"2025": "strict"})
 
         failures = validate_registry_scope([m])
 
@@ -430,41 +442,17 @@ class TestCrossRevisionConsistency:
     def test_strict_continuity_validation_ignores_unannotated_advisory_surface(self) -> None:
         a = _casilla(cid="0700", label="Old")
         b = _casilla(cid="0700", label="New")
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-            continuidad_validation={"2025": "strict"},
-        )
+        m = _annual_modelo(a, b, continuidad_validation={"2025": "strict"})
 
         assert validate_registry_scope([m]) == ()
 
     def test_strict_continuity_validation_accepts_covered_non_overlapping_drift(self) -> None:
         a = _casilla(cid="0700", label="Old", continuidad_id="base")
         b = _casilla(cid="0700", label="New", continuidad_id="base")
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-            evolutions={
-                "2025": (
-                    {
-                        "id": "base-label-2025",
-                        "continuidad_id": "base",
-                        "from_revision": "2024",
-                        "to_revision": "2025",
-                        "evolution_kind": "label_evolved",
-                        "legal_refs": ("ley-58-2003:art-29",),
-                        "source_refs": ("aeat-manual",),
-                    },
-                ),
-            },
+        m = _annual_modelo(
+            a,
+            b,
+            evolutions=_evolutions(_continuity_evolution(evolution_id="base-label-2025")),
             continuidad_validation={"2025": "strict"},
         )
 
@@ -489,26 +477,12 @@ class TestCrossRevisionConsistency:
             legal_refs=("ley-58-2003:art-30",),
             continuidad_id="base",
         )
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-            evolutions={
-                "2025": (
-                    {
-                        "id": "base-repurposed-2025",
-                        "continuidad_id": "base",
-                        "from_revision": "2024",
-                        "to_revision": "2025",
-                        "evolution_kind": "repurposed",
-                        "legal_refs": ("ley-58-2003:art-29",),
-                        "source_refs": ("aeat-manual",),
-                    },
-                ),
-            },
+        m = _annual_modelo(
+            a,
+            b,
+            evolutions=_evolutions(
+                _continuity_evolution(evolution_kind="repurposed", evolution_id="base-repurposed-2025"),
+            ),
             continuidad_validation={"2025": "strict"},
         )
 
@@ -517,15 +491,7 @@ class TestCrossRevisionConsistency:
     def test_strict_continuity_validation_requires_retired_decision_for_missing_surface(self) -> None:
         a = _casilla(cid="0700", label="Old base", continuidad_id="base")
         b = _casilla(cid="0900", label="Unrelated")
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-            continuidad_validation={"2025": "strict"},
-        )
+        m = _annual_modelo(a, b, continuidad_validation={"2025": "strict"})
 
         failures = validate_registry_scope([m])
 
@@ -538,26 +504,10 @@ class TestCrossRevisionConsistency:
     def test_strict_continuity_validation_accepts_retired_decision_for_missing_surface(self) -> None:
         a = _casilla(cid="0700", label="Old base", continuidad_id="base")
         b = _casilla(cid="0900", label="Unrelated")
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-            evolutions={
-                "2025": (
-                    {
-                        "id": "base-retired-2025",
-                        "continuidad_id": "base",
-                        "from_revision": "2024",
-                        "to_revision": "2025",
-                        "evolution_kind": "retired",
-                        "legal_refs": ("ley-58-2003:art-29",),
-                        "source_refs": ("aeat-manual",),
-                    },
-                ),
-            },
+        m = _annual_modelo(
+            a,
+            b,
+            evolutions=_evolutions(_continuity_evolution(evolution_kind="retired", evolution_id="base-retired-2025")),
             continuidad_validation={"2025": "strict"},
         )
 
@@ -566,26 +516,12 @@ class TestCrossRevisionConsistency:
     def test_strict_continuity_validation_rejects_unmatched_evolution_continuity_id(self) -> None:
         a = _casilla(cid="0700", label="Base", continuidad_id="base")
         b = _casilla(cid="0700", label="Base", continuidad_id="base")
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-            evolutions={
-                "2025": (
-                    {
-                        "id": "missing-label-2025",
-                        "continuidad_id": "missing",
-                        "from_revision": "2024",
-                        "to_revision": "2025",
-                        "evolution_kind": "label_evolved",
-                        "legal_refs": ("ley-58-2003:art-29",),
-                        "source_refs": ("aeat-manual",),
-                    },
-                ),
-            },
+        m = _annual_modelo(
+            a,
+            b,
+            evolutions=_evolutions(
+                _continuity_evolution(continuidad_id="missing", evolution_id="missing-label-2025"),
+            ),
             continuidad_validation={"2025": "strict"},
         )
 
@@ -601,26 +537,10 @@ class TestCrossRevisionConsistency:
     ) -> None:
         a = _casilla(cid="0700", label="Base", continuidad_id="base")
         b = _casilla(cid="0700", label="Base", continuidad_id="base")
-        m = _modelo(
-            "100",
-            {"2024": [a], "2025": [b]},
-            selectors={
-                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
-                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
-            },
-            evolutions={
-                "2025": (
-                    {
-                        "id": "base-retired-2025",
-                        "continuidad_id": "base",
-                        "from_revision": "2024",
-                        "to_revision": "2025",
-                        "evolution_kind": "retired",
-                        "legal_refs": ("ley-58-2003:art-29",),
-                        "source_refs": ("aeat-manual",),
-                    },
-                ),
-            },
+        m = _annual_modelo(
+            a,
+            b,
+            evolutions=_evolutions(_continuity_evolution(evolution_kind="retired", evolution_id="base-retired-2025")),
             continuidad_validation={"2025": "strict"},
         )
 
@@ -658,15 +578,17 @@ class TestCrossRevisionConsistency:
         assert "label" in failures[0]
 
 
-def test_cross_revision_validator_accepts_committed_corpus() -> None:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-
+def test_cross_revision_validator_accepts_committed_corpus(
+    committed_registry: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    modelos, _catalogues = committed_registry
     validate_cross_revision_casilla_consistency(modelos)
 
 
-def test_committed_corpus_non_overlapping_inventory_keeps_annual_m100_drift_visible() -> None:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-
+def test_committed_corpus_non_overlapping_inventory_keeps_annual_m100_drift_visible(
+    committed_registry: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    modelos, _catalogues = committed_registry
     summaries = summarize_non_overlapping_cross_revision_casilla_drift(modelos)
 
     m100_summaries = [summary for summary in summaries if summary.modelo_id == "100"]
@@ -675,12 +597,9 @@ def test_committed_corpus_non_overlapping_inventory_keeps_annual_m100_drift_visi
     assert all(summary.example_casilla_ids for summary in m100_summaries)
 
 
-def test_committed_m100_continuity_surface_for_0582_is_loaded() -> None:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    m100 = next(modelo for modelo in modelos if modelo.id == "100")
-
+def test_committed_m100_continuity_surface_for_0582_is_loaded(committed_m100: ModeloDefinition) -> None:
     for revision_id in ("2022", "2023", "2024", "2025"):
-        revision = m100.revisions[revision_id]
+        revision = committed_m100.revisions[revision_id]
         casilla = next(item for item in revision.casillas if item.id == "0582")
         assert revision.continuidad_validation == "strict"
         assert casilla.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
@@ -688,7 +607,7 @@ def test_committed_m100_continuity_surface_for_0582_is_loaded() -> None:
     assert (
         tuple(
             evolution
-            for evolution in m100.revisions["2022"].casilla_continuidad_evolutions
+            for evolution in committed_m100.revisions["2022"].casilla_continuidad_evolutions
             if evolution.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
         )
         == ()
@@ -696,50 +615,37 @@ def test_committed_m100_continuity_surface_for_0582_is_loaded() -> None:
     assert tuple(
         evolution.evolution_kind
         for revision_id in ("2023", "2024", "2025")
-        for evolution in m100.revisions[revision_id].casilla_continuidad_evolutions
+        for evolution in committed_m100.revisions[revision_id].casilla_continuidad_evolutions
         if evolution.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
     ) == ("unchanged", "unchanged", "unchanged")
 
 
-def test_committed_m100_continuity_surface_for_1038_retirement_is_loaded() -> None:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    m100 = next(modelo for modelo in modelos if modelo.id == "100")
-
+def test_committed_m100_continuity_surface_for_1038_retirement_is_loaded(committed_m100: ModeloDefinition) -> None:
     continuidad_id = "irpf.deduccion-autonomica.galicia.otras"
     for revision_id in ("2023", "2024"):
-        revision = m100.revisions[revision_id]
+        revision = committed_m100.revisions[revision_id]
         casilla = next(item for item in revision.casillas if item.id == "1038")
         assert revision.continuidad_validation == "strict"
         assert casilla.label == "Otras deducciones"
         assert casilla.continuidad_id == continuidad_id
 
-    assert not any(item.id == "1038" for item in m100.revisions["2025"].casillas)
+    assert not any(item.id == "1038" for item in committed_m100.revisions["2025"].casillas)
 
-    evolution_pairs = {
-        (evolution.from_revision, evolution.to_revision): evolution.evolution_kind
-        for revision in m100.revisions.values()
-        for evolution in revision.casilla_continuidad_evolutions
-        if evolution.continuidad_id == continuidad_id
-    }
-
-    assert evolution_pairs == {
+    assert _evolution_pairs(committed_m100, continuidad_id) == {
         ("2023", "2024"): "unchanged",
         ("2024", "2025"): "retired",
     }
 
 
-def test_committed_m100_continuity_surface_for_0063_legal_refs_is_loaded() -> None:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    m100 = next(modelo for modelo in modelos if modelo.id == "100")
-
+def test_committed_m100_continuity_surface_for_0063_legal_refs_is_loaded(committed_m100: ModeloDefinition) -> None:
     continuidad_id = "irpf.inmueble.porcentaje-propiedad"
     for revision_id in ("2020", "2021", "2022", "2023", "2024", "2025"):
-        revision = m100.revisions[revision_id]
+        revision = committed_m100.revisions[revision_id]
         casilla = next(item for item in revision.casillas if item.id == "0063")
         assert casilla.continuidad_id == continuidad_id
 
     assert {
-        revision_id: m100.revisions[revision_id].continuidad_validation
+        revision_id: committed_m100.revisions[revision_id].continuidad_validation
         for revision_id in ("2020", "2021", "2022", "2023", "2024", "2025")
     } == {
         "2020": "advisory",
@@ -750,14 +656,7 @@ def test_committed_m100_continuity_surface_for_0063_legal_refs_is_loaded() -> No
         "2025": "strict",
     }
 
-    evolution_pairs = {
-        (evolution.from_revision, evolution.to_revision): evolution.evolution_kind
-        for revision in m100.revisions.values()
-        for evolution in revision.casilla_continuidad_evolutions
-        if evolution.continuidad_id == continuidad_id
-    }
-
-    assert evolution_pairs == {
+    assert _evolution_pairs(committed_m100, continuidad_id) == {
         ("2020", "2021"): "legal_refs_evolved",
         ("2020", "2022"): "legal_refs_evolved",
         ("2020", "2023"): "legal_refs_evolved",
@@ -773,18 +672,17 @@ def test_committed_m100_continuity_surface_for_0063_legal_refs_is_loaded() -> No
     }
 
 
-def test_committed_m100_continuity_surface_for_0070_label_and_legal_refs_is_loaded() -> None:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    m100 = next(modelo for modelo in modelos if modelo.id == "100")
-
+def test_committed_m100_continuity_surface_for_0070_label_and_legal_refs_is_loaded(
+    committed_m100: ModeloDefinition,
+) -> None:
     continuidad_id = "irpf.inmueble.vivienda-habitual-flag"
     for revision_id in ("2020", "2021", "2022", "2023", "2024", "2025"):
-        revision = m100.revisions[revision_id]
+        revision = committed_m100.revisions[revision_id]
         casilla = next(item for item in revision.casillas if item.id == "0070")
         assert casilla.continuidad_id == continuidad_id
 
     assert {
-        revision_id: m100.revisions[revision_id].continuidad_validation
+        revision_id: committed_m100.revisions[revision_id].continuidad_validation
         for revision_id in ("2020", "2021", "2022", "2023", "2024", "2025")
     } == {
         "2020": "advisory",
@@ -795,14 +693,7 @@ def test_committed_m100_continuity_surface_for_0070_label_and_legal_refs_is_load
         "2025": "strict",
     }
 
-    evolution_pairs = {
-        (evolution.from_revision, evolution.to_revision): evolution.evolution_kind
-        for revision in m100.revisions.values()
-        for evolution in revision.casilla_continuidad_evolutions
-        if evolution.continuidad_id == continuidad_id
-    }
-
-    assert evolution_pairs == {
+    assert _evolution_pairs(committed_m100, continuidad_id) == {
         ("2020", "2021"): "label_and_legal_refs_evolved",
         ("2020", "2022"): "label_and_legal_refs_evolved",
         ("2020", "2023"): "label_and_legal_refs_evolved",
@@ -821,18 +712,20 @@ def test_committed_m100_continuity_surface_for_0070_label_and_legal_refs_is_load
     }
 
 
-def test_committed_m100_strict_continuity_surface_rejects_covered_label_drift() -> None:
-    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
-    m100 = next(modelo for modelo in modelos if modelo.id == "100")
-    revision_2025 = m100.revisions["2025"]
+def test_committed_m100_strict_continuity_surface_rejects_covered_label_drift(
+    committed_registry: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+    committed_m100: ModeloDefinition,
+) -> None:
+    modelos, _catalogues = committed_registry
+    revision_2025 = committed_m100.revisions["2025"]
     mutated_casillas = tuple(
         casilla.model_copy(update={"label": f"{casilla.label} drift"}) if casilla.id == "0582" else casilla
         for casilla in revision_2025.casillas
     )
     mutated_revision = revision_2025.model_copy(update={"casillas": mutated_casillas})
-    mutated_revisions = dict(m100.revisions)
+    mutated_revisions = dict(committed_m100.revisions)
     mutated_revisions["2025"] = mutated_revision
-    mutated_m100 = m100.model_copy(update={"revisions": mutated_revisions})
+    mutated_m100 = committed_m100.model_copy(update={"revisions": mutated_revisions})
     mutated_modelos = tuple(mutated_m100 if modelo.id == "100" else modelo for modelo in modelos)
 
     failures = validate_registry_scope(mutated_modelos)
@@ -851,15 +744,17 @@ def test_committed_m100_strict_continuity_surface_rejects_covered_label_drift() 
     }
 
 
-def test_backend_registry_validation_accepts_committed_corpus_drift_gate() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-
+def test_backend_registry_validation_accepts_committed_corpus_drift_gate(
+    committed_registry: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    modelos, catalogues = committed_registry
     RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
 
 
-def test_singleton_semantic_role_warning_count_does_not_regress() -> None:
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-
+def test_singleton_semantic_role_warning_count_does_not_regress(
+    committed_registry: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    modelos, catalogues = committed_registry
     with warnings.catch_warnings(record=True) as captured:
         warnings.simplefilter("always")
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)

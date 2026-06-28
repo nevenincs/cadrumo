@@ -1,19 +1,24 @@
-"""Encrypted :class:`SecureObjectRepository` persistence for Google OAuth records.
+"""Encrypted :class:`SecureObjectRepository` persistence for Google records.
 
-Three per-profile records back each Google session, each tagged with the
-appropriate :class:`SensitivityClass`:
+Four per-profile record families back Google configuration and session state,
+each under the namespace and :class:`SensitivityClass` declared by the storage
+registry:
 
-- `oauth-client` — operator-imported Cloud Console Desktop client JSON.
-  Stored at SECRET class because `client_secret` is a long-lived credential.
-- `oauth-token` — refresh token issued by the consent screen. SECRET class.
-  Rotates after every successful refresh.
-- `oauth-metadata` — audit fields (account email, granted scopes,
-  issued/last-refreshed timestamps, reauth-required flag). FINANCIAL class
-  because none of these fields are secrets but the presence of a Google
-  session is operator-private state.
+- :data:`GOOGLE_OAUTH_CLIENT_NAMESPACE` stores the operator-imported
+  :class:`OAuthClient` at ``SensitivityClass.SECRET`` because
+  ``client_secret`` is a long-lived credential.
+- :data:`GOOGLE_OAUTH_TOKEN_NAMESPACE` stores the refresh :class:`OAuthToken`
+  returned by :func:`aeat.adapters.outbound.google._oauth_flow.run_login_flow`
+  at ``SensitivityClass.SECRET``.
+- :data:`GOOGLE_OAUTH_METADATA_NAMESPACE` stores the non-secret
+  :class:`OAuthMetadata` account, scope, issuance, refresh, and reauth audit
+  fields at ``SensitivityClass.FINANCIAL``.
+- :data:`GOOGLE_DRIVE_CONFIG_NAMESPACE` stores the :class:`DriveConfig` root
+  folder selection used by :func:`aeat.adapters.outbound.storage.get_storage_provider`.
 
-Each function is keyed on the resolved AEAT profile name (per
-`_active_profile.resolve_active_profile`).
+The public helpers use the profile identifier resolved by
+:func:`aeat.adapters.outbound.google._active_profile.resolve_active_profile` as
+the storage object key.
 """
 
 from __future__ import annotations
@@ -39,7 +44,12 @@ _RECORD_VERSION = 1
 
 
 def save_client(profile: str, client: OAuthClient) -> None:
-    """Persist the Cloud Console Desktop OAuth client for ``profile``."""
+    """Persist an :class:`OAuthClient` for ``profile``.
+
+    The record is written under :data:`GOOGLE_OAUTH_CLIENT_NAMESPACE` with
+    ``SensitivityClass.SECRET`` so ``aeat config google login`` and Drive
+    credential hydration can reload the operator-imported Desktop OAuth client.
+    """
     _repository().save(
         namespace=_NAMESPACE_CLIENT,
         object_key=profile,
@@ -51,7 +61,12 @@ def save_client(profile: str, client: OAuthClient) -> None:
 
 
 def load_client(profile: str) -> OAuthClient | None:
-    """Load the :class:`OAuthClient` for ``profile``, or return ``None`` when absent."""
+    """Load the :class:`OAuthClient` for ``profile``.
+
+    Returns:
+        The stored :class:`OAuthClient`, or ``None`` when the profile has not
+        registered a Desktop OAuth client.
+    """
     record = _repository().load(
         _NAMESPACE_CLIENT,
         profile,
@@ -64,7 +79,13 @@ def load_client(profile: str) -> OAuthClient | None:
 
 
 def save_token(profile: str, token: OAuthToken) -> None:
-    """Persist the OAuth refresh token for ``profile``."""
+    """Persist an :class:`OAuthToken` refresh credential for ``profile``.
+
+    The token is written under :data:`GOOGLE_OAUTH_TOKEN_NAMESPACE` with
+    ``SensitivityClass.SECRET``. The CLI saves this after
+    :func:`aeat.adapters.outbound.google._oauth_flow.run_login_flow`, and
+    refresh code may overwrite it when Google rotates the refresh token.
+    """
     _repository().save(
         namespace=_NAMESPACE_TOKEN,
         object_key=profile,
@@ -76,7 +97,12 @@ def save_token(profile: str, token: OAuthToken) -> None:
 
 
 def load_token(profile: str) -> OAuthToken | None:
-    """Load the :class:`OAuthToken` refresh token for ``profile`` or return ``None``."""
+    """Load the :class:`OAuthToken` refresh credential for ``profile``.
+
+    Returns:
+        The stored :class:`OAuthToken`, or ``None`` when the profile has no
+        active Google login session.
+    """
     record = _repository().load(
         _NAMESPACE_TOKEN,
         profile,
@@ -89,7 +115,13 @@ def load_token(profile: str) -> OAuthToken | None:
 
 
 def save_metadata(profile: str, metadata: OAuthMetadata) -> None:
-    """Persist the OAuth audit metadata for ``profile``."""
+    """Persist :class:`OAuthMetadata` audit fields for ``profile``.
+
+    Metadata is non-secret companion state for :class:`OAuthToken`: account
+    email, granted scopes, issue/refresh timestamps, and reauth status. It is
+    written under :data:`GOOGLE_OAUTH_METADATA_NAMESPACE` with
+    ``SensitivityClass.FINANCIAL``.
+    """
     _repository().save(
         namespace=_NAMESPACE_METADATA,
         object_key=profile,
@@ -101,7 +133,12 @@ def save_metadata(profile: str, metadata: OAuthMetadata) -> None:
 
 
 def load_metadata(profile: str) -> OAuthMetadata | None:
-    """Load the :class:`OAuthMetadata` audit record for ``profile``, or return ``None``."""
+    """Load the :class:`OAuthMetadata` audit record for ``profile``.
+
+    Returns:
+        The stored :class:`OAuthMetadata`, or ``None`` when no metadata record
+        exists for the profile.
+    """
     record = _repository().load(
         _NAMESPACE_METADATA,
         profile,
@@ -114,7 +151,13 @@ def load_metadata(profile: str) -> OAuthMetadata | None:
 
 
 def save_drive_config(profile: str, config: DriveConfig) -> None:
-    """Persist the per-profile Drive backend configuration."""
+    """Persist the per-profile :class:`DriveConfig` backend selection.
+
+    The config is written under :data:`GOOGLE_DRIVE_CONFIG_NAMESPACE` with
+    ``SensitivityClass.FINANCIAL`` so
+    :func:`aeat.adapters.outbound.storage.get_storage_provider` can resolve the
+    Drive root folder without re-reading environment-only configuration.
+    """
     _repository().save(
         namespace=_NAMESPACE_DRIVE_CONFIG,
         object_key=profile,
@@ -126,7 +169,12 @@ def save_drive_config(profile: str, config: DriveConfig) -> None:
 
 
 def load_drive_config(profile: str) -> DriveConfig | None:
-    """Load the per-profile :class:`DriveConfig` backend configuration or return ``None``."""
+    """Load the per-profile :class:`DriveConfig` backend configuration.
+
+    Returns:
+        The stored :class:`DriveConfig`, or ``None`` when the profile has no
+        persisted Drive root folder selection.
+    """
     record = _repository().load(
         _NAMESPACE_DRIVE_CONFIG,
         profile,
@@ -139,10 +187,16 @@ def load_drive_config(profile: str) -> DriveConfig | None:
 
 
 def delete_session(profile: str) -> tuple[bool, bool]:
-    """Delete the refresh token and audit metadata; preserve the client and drive config.
+    """Delete the login session while preserving registration and Drive config.
+
+    Removes only :class:`OAuthToken` and :class:`OAuthMetadata`, matching
+    ``aeat config google logout``. The registered :class:`OAuthClient` and
+    :class:`DriveConfig` remain available so a later login can reuse the Cloud
+    Console JSON and the same Drive root folder.
 
     Args:
-        profile: The profile identifier whose token and metadata records to delete.
+        profile: The profile identifier whose token and metadata records to
+            delete.
 
     Returns:
         A pair ``(token_removed, metadata_removed)``.

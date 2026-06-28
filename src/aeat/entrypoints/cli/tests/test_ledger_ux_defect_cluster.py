@@ -65,10 +65,6 @@ def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
             dispose_engine()
 
 
-def _create_profile() -> None:
-    """Keep legacy test arrangement readable; the autouse fixture registers it."""
-
-
 def _imported_transaction_id(tmp_path: Path) -> str:
     statement = tmp_path / "statement.csv"
     statement.write_text(
@@ -92,7 +88,6 @@ def test_categories_command_lists_the_canonical_spending_taxonomy(
     tmp_path: Path,
 ) -> None:
     """`ledger categories` enumerates every SpendingCategory id."""
-    _create_profile()
     result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "categories"])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
@@ -106,7 +101,6 @@ def test_categories_command_lists_the_canonical_spending_taxonomy(
 
 def test_classify_rejects_an_invented_category_id(tmp_path: Path) -> None:
     """An id outside the closed taxonomy is refused, not silently kept."""
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
@@ -128,7 +122,6 @@ def test_classify_rejects_an_invented_category_id(tmp_path: Path) -> None:
 
 def test_classify_accepts_a_canonical_category_id(tmp_path: Path) -> None:
     """A real SpendingCategory id still classifies successfully."""
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
@@ -152,7 +145,6 @@ def test_classify_accepts_a_canonical_category_id(tmp_path: Path) -> None:
 
 def test_classify_reaffirm_json_output_is_a_single_envelope(tmp_path: Path) -> None:
     """`--reaffirm` must not print a plain-text notice before JSON output."""
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
     first = _RUNNER.invoke(
         app,
@@ -206,7 +198,6 @@ def test_import_help_lists_recognised_providers() -> None:
 
 def test_unknown_provider_error_enumerates_known_providers(tmp_path: Path) -> None:
     """An unknown --provider is refused with the recognised set inline."""
-    _create_profile()
     statement = tmp_path / "statement.csv"
     statement.write_text(
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
@@ -230,7 +221,6 @@ def test_import_of_a_headers_only_csv_explains_zero_rows(tmp_path: Path) -> None
     rather than a bare "imported 0" success line — the silent-success
     path is the defect.
     """
-    _create_profile()
     statement = tmp_path / "empty.csv"
     statement.write_text(_N26_HEADER, encoding="utf-8")
     result = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
@@ -246,7 +236,6 @@ def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path) -> None:
     reported a bare "imported 0" with exit 0 — indistinguishable from
     success. The notice line is the fix.
     """
-    _create_profile()
     statement = tmp_path / "blank.csv"
     statement.write_text(_N26_HEADER + " , , , , , \n", encoding="utf-8")
     result = _RUNNER.invoke(
@@ -262,7 +251,6 @@ def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path) -> None:
 
 def test_reimport_of_existing_rows_explains_the_zero_import(tmp_path: Path) -> None:
     """Re-importing only-duplicate rows reports why nothing was added."""
-    _create_profile()
     statement = tmp_path / "statement.csv"
     statement.write_text(
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
@@ -293,7 +281,6 @@ def test_add_with_business_pct_on_a_business_row_surfaces_the_real_cause(
     A non-MIXED classification forbids --business-pct. The refusal must
     name that exact rule rather than the misleading "run config repair".
     """
-    _create_profile()
     result = _RUNNER.invoke(
         app,
         [
@@ -328,7 +315,6 @@ def test_add_with_business_pct_on_a_business_row_surfaces_the_real_cause(
 
 def test_add_business_row_without_business_pct_succeeds(tmp_path: Path) -> None:
     """The same row minus --business-pct is legal and still works."""
-    _create_profile()
     result = _RUNNER.invoke(
         app,
         [
@@ -367,7 +353,6 @@ def test_review_by_short_id_prefix_resolves_the_transaction(
     tmp_path: Path,
 ) -> None:
     """`review <prefix>` resolves the prefix instead of refusing."""
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", txn[:8]])
     assert result.exit_code == 0, result.output
@@ -380,7 +365,6 @@ def test_review_by_full_id_still_resolves_the_transaction(
     tmp_path: Path,
 ) -> None:
     """`review <full>` keeps working after the prefix-resolution fix."""
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "review", txn])
     assert result.exit_code == 0, result.output
@@ -400,7 +384,6 @@ def test_ledger_view_shows_iva_counterparty_and_notes_detail(
     way to verify those persisted: the old view rendered five fields and
     dropped the rest. The full stored field set is now shown.
     """
-    _create_profile()
     added = _RUNNER.invoke(
         app,
         [
@@ -460,7 +443,6 @@ def test_ledger_view_shows_the_linked_purchase_invoice_evidence_id(tmp_path: Pat
     This drives the documented ``evidence add`` -> ``attach`` -> ``view`` flow
     end to end (the gap no in-tree test exercised) and pins the rendered id.
     """
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
 
     pdf = tmp_path / "factura.pdf"
@@ -486,7 +468,6 @@ def test_ledger_view_shows_the_linked_purchase_invoice_evidence_id(tmp_path: Pat
 def test_ledger_view_json_carries_the_full_transaction(tmp_path: Path) -> None:
     """The JSON payload exposes the typed transaction with every field,
     so the text view and the JSON contract agree."""
-    _create_profile()
     added = _RUNNER.invoke(
         app,
         [
@@ -524,6 +505,71 @@ def test_ledger_view_json_carries_the_full_transaction(tmp_path: Path) -> None:
     assert transaction["taxable_base"] == "200"
     assert transaction["iva_rate"] == "0.21"
     assert transaction["iva_amount"] == "42"
+
+
+def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
+    """IVA category corrections are observable mutations, not no-ops.
+
+    A persona run marked a row ``erroneous_invoice`` while investigating a
+    corrective invoice, then could not change it back to ``domestic_general_21``:
+    the mutation signature ignored ``iva_category`` and ``ledger view`` hid the
+    stored value. This reproduces that flow through the real CLI.
+    """
+    txn = _imported_transaction_id(tmp_path)
+    first = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "classify",
+            txn,
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "100.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "21.00",
+            "--iva-category",
+            "erroneous_invoice",
+        ],
+    )
+    assert first.exit_code == 0, first.output
+    viewed_first = _RUNNER.invoke(app, ["app", "ledger", "view", txn[:8]])
+    assert viewed_first.exit_code == 0, viewed_first.output
+    assert "IVA category\terroneous_invoice" in viewed_first.output
+
+    corrected = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "classify",
+            txn[:8],
+            "--classification",
+            "BUSINESS",
+            "--taxable-base",
+            "100.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "21.00",
+            "--iva-category",
+            "domestic_general_21",
+            "--reaffirm",
+        ],
+    )
+    assert corrected.exit_code == 0, corrected.output
+    assert "manual ledger update must change at least one ledger field" not in corrected.output
+
+    viewed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", txn])
+    assert viewed.exit_code == 0, viewed.output
+    transaction = json.loads(viewed.output)["result"]["transaction"]
+    assert transaction["iva_category"] == "domestic_general_21"
+    text_view = _RUNNER.invoke(app, ["app", "ledger", "view", txn[:8]])
+    assert text_view.exit_code == 0, text_view.output
+    assert "IVA category\tdomestic_general_21" in text_view.output
 
 
 # ---------------------------------------------------------------------------
@@ -571,7 +617,6 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
     of the same file added four rows. The preview must report what a
     real import would add.
     """
-    _create_profile()
     statement = tmp_path / "statement.csv"
     statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
 
@@ -597,7 +642,6 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
 
 def test_import_dry_run_counts_existing_rows_as_would_skip(tmp_path: Path) -> None:
     """After a real import the dry run previews every row as a would-skip."""
-    _create_profile()
     statement = tmp_path / "statement.csv"
     statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
 
@@ -623,7 +667,6 @@ def test_reimport_after_editing_a_transaction_still_deduplicates(
     re-import of the source statement re-added the edited row. The
     stamped import fingerprint is stable across the edit.
     """
-    _create_profile()
     statement = tmp_path / "statement.csv"
     statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
 
@@ -664,7 +707,6 @@ def test_cross_format_import_of_the_same_movements_deduplicates(
     from a CSV duplicated every row, because the dedup key folded in
     the provider id and file format.
     """
-    _create_profile()
     csv_statement = tmp_path / "statement.csv"
     csv_statement.write_text(_FOUR_ROW_CSV, encoding="utf-8")
     ofx_statement = tmp_path / "statement.ofx"
@@ -693,7 +735,6 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
     operator is warned about a likely duplicate rather than silently
     double-counting it.
     """
-    _create_profile()
     first = tmp_path / "first.csv"
     first.write_text(
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
@@ -732,7 +773,6 @@ def test_classify_with_negative_taxable_base_names_the_real_cause(
     refusal is replaced with the specific reason; `config repair`
     cannot fix a bad CLI argument and must not be suggested.
     """
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
@@ -745,7 +785,6 @@ def test_classify_with_negative_taxable_base_names_the_real_cause(
 
 def test_classify_with_valid_taxable_base_still_succeeds(tmp_path: Path) -> None:
     """A non-negative `--taxable-base` classifies the row normally."""
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
@@ -773,7 +812,6 @@ def test_classify_with_valid_taxable_base_still_succeeds(tmp_path: Path) -> None
 
 def test_categories_output_names_the_category_id_column(tmp_path: Path) -> None:
     """The catalogue makes the exact `--category-id` value unmistakable."""
-    _create_profile()
     result = _RUNNER.invoke(app, ["app", "ledger", "categories"])
     assert result.exit_code == 0, result.output
     output = result.output
@@ -788,7 +826,6 @@ def test_invalid_category_error_shows_a_concrete_valid_example(
     tmp_path: Path,
 ) -> None:
     """A rejected `--category-id` names one concrete valid id."""
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
@@ -817,7 +854,6 @@ def test_invalid_category_error_shows_a_concrete_valid_example(
 
 def test_classify_accepts_business_pct_for_a_mixed_row(tmp_path: Path) -> None:
     """`classify --classification MIXED --business-pct` works in one step."""
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
@@ -842,7 +878,6 @@ def test_classify_accepts_business_pct_for_a_mixed_row(tmp_path: Path) -> None:
 
 def test_classify_mixed_without_business_pct_names_the_flag(tmp_path: Path) -> None:
     """`classify --classification MIXED` without the share names `--business-pct`."""
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
@@ -855,7 +890,6 @@ def test_classify_mixed_without_business_pct_names_the_flag(tmp_path: Path) -> N
 
 def test_classify_business_pct_on_non_mixed_row_is_refused(tmp_path: Path) -> None:
     """`--business-pct` with a non-MIXED classification is refused, not dropped."""
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(
         app,
@@ -868,7 +902,6 @@ def test_classify_business_pct_on_non_mixed_row_is_refused(tmp_path: Path) -> No
 
 def test_history_accepts_the_id_positionally_like_view(tmp_path: Path) -> None:
     """`ledger history <id>` takes the id positionally, matching `ledger view`."""
-    _create_profile()
     txn = _imported_transaction_id(tmp_path)
     result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", txn])
     assert result.exit_code == 0, result.output
@@ -892,7 +925,6 @@ def test_list_and_view_render_accented_descriptions_identically(
     corrupt accents the other shows correctly. The accented text is
     asserted present, intact, in both surfaces.
     """
-    _create_profile()
     accented = "Reunió de negòcis amb Òscar à Lleida"
     statement = tmp_path / "accents.csv"
     statement.write_text(

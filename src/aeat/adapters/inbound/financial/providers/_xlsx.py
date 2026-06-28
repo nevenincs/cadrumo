@@ -160,7 +160,7 @@ class XlsxProvider(FinancialProvider):
                     raise InvalidFinancialSourceError(
                         f"worksheet row {source_row_index} could not be parsed: {exc}",
                     ) from exc
-                yield build_raw_transaction(
+                built = build_raw_transaction(
                     provider=self,
                     path=path,
                     source_sha256=source_sha256,
@@ -174,6 +174,10 @@ class XlsxProvider(FinancialProvider):
                     description=parsed.description,
                     raw_fields=raw_fields,
                 )
+                if parsed.direction is not None:
+                    yield ParsedLedgerRow(raw=built.raw, direction=parsed.direction)
+                else:
+                    yield built
         finally:
             workbook.close()
 

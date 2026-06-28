@@ -32,6 +32,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.errors import BaseSeverity
 from ....domain.transactions import (
@@ -355,7 +356,7 @@ def test_import_returns_strict_frozen_result() -> None:
     )
 
     attr = "imported_count"
-    with pytest.raises(Exception, match="frozen"):
+    with pytest.raises(ValidationError, match="frozen"):
         setattr(result, attr, 99)
 
 

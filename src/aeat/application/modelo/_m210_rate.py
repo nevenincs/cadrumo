@@ -1,6 +1,10 @@
-"""Modelo 210 rate resolution helpers.
+"""Modelo 210 treaty-rate resolution helpers.
 
-Use of :class:`RegistrySnapshot`, :class:`TaxpayerProfile` for compliance.
+The resolver reads baseline and Convenio rate parameters from the
+:class:`RegistrySnapshot`, selects the treaty country from the
+:class:`TaxpayerProfile`, and returns either the resolved IRNR rate or
+blocking :class:`ModeloVerificationFinding` records for deferred baseline
+coverage, missing treaty rows, or ``NOT_YET_AUTHORED`` convenio entries.
 """
 
 from __future__ import annotations
@@ -19,6 +23,8 @@ from ...domain.modelos import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry._schema_formula import ParameterDefinition
+
+_M210_DOMESTIC_TARIFF_RATE = "DOMESTIC_TARIFF"
 
 
 def _m210_blocking_finding(
@@ -124,7 +130,21 @@ def _resolve_convenio_rate(
         )
         return None, [finding]
 
+    if matched_row.rate == _M210_DOMESTIC_TARIFF_RATE:
+        return None, []
+
     return Decimal(matched_row.rate), []
+
+
+def _has_live_pension_tariff(snapshot: RegistrySnapshot, year: int) -> bool:
+    for parameter in snapshot.revision.parameters:
+        if parameter.id != "m210-pension-tarifa-2025" or parameter.data_type != "bracket_table":
+            continue
+        return any(
+            bracket.valid_from.year <= year and (bracket.valid_to is None or bracket.valid_to.year >= year)
+            for bracket in parameter.brackets
+        )
+    return False
 
 
 def resolve_m210_rate(
@@ -135,9 +155,12 @@ def resolve_m210_rate(
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the M210 rate for (profile, tipo_renta, year).
 
-    Returns a two-tuple of ``(rate, findings)`` where findings is a list of
-    :class:`ModeloVerificationFinding` records. Uses :class:`RegistrySnapshot`
-    and :class:`TaxpayerProfile` for rate lookup.
+    The :class:`RegistrySnapshot` supplies the ``m210-tipo-gravamen-2025`` and
+    ``m210-convenio-rates`` parameter rows; the :class:`TaxpayerProfile`
+    supplies ``country_of_fiscal_residence`` for treaty lookup. Returns
+    ``(rate, findings)`` where ``findings`` contains blocking
+    :class:`ModeloVerificationFinding` records when a required rate is deferred
+    or unavailable.
     """
     baseline_param = None
     convenio_param = None
@@ -157,6 +180,8 @@ def resolve_m210_rate(
     treaty_country = profile.country_of_fiscal_residence
     if treaty_country is None:
         if baseline_rate is None:
+            if tipo_renta == "pension" and _has_live_pension_tariff(snapshot, year):
+                return None, []
             finding = _m210_blocking_finding(
                 message=(
                     f"M210 baseline tipo_renta={tipo_renta!r} year={year} is "

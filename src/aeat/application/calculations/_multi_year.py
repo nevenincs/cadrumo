@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
-from ...domain.calculations.registry import RegistrySnapshot
+from ...domain.calculations.registry import BindingId, RegistrySnapshot
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
@@ -379,9 +379,11 @@ class PreviousFilingSourceResolver:
         *,
         repository: CalculationObservationRepository | None = None,
         registry_snapshot: RegistrySnapshot | None = None,
+        excluded_binding_ids: frozenset[BindingId] | None = None,
     ) -> None:
         self._repository = repository
         self._registry_snapshot = registry_snapshot
+        self._excluded_binding_ids = excluded_binding_ids or frozenset()
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         snapshot = self._registry_snapshot
@@ -394,9 +396,15 @@ class PreviousFilingSourceResolver:
                 period=context.period.registry_token,
             )
         from ._binding_prefill import resolve_bindings_from_local_store
+        from ._relation_prefill import _activity_start_date_for_bucket
 
         try:
-            report = resolve_bindings_from_local_store(snapshot, repository=self._repository)
+            report = resolve_bindings_from_local_store(
+                snapshot,
+                repository=self._repository,
+                activity_start_date=_activity_start_date_for_bucket(str(context.bucket_id)),
+                excluded_binding_ids=self._excluded_binding_ids,
+            )
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,

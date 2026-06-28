@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 
 import pytest
@@ -21,7 +22,6 @@ from ._action_test_support import (
     StringIO,
     TransactionDirection,
     TransactionValidationError,
-    _parsed_import_transaction,
     _repositories,
     create_manual_transaction,
     csv,
@@ -30,6 +30,7 @@ from ._action_test_support import (
     export_ledger_transactions,
     import_ledger_source,
     import_ledger_transactions,
+    parsed_import_transaction,
     stash_manual_transaction,
 )
 
@@ -40,11 +41,11 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    first_parsed = _parsed_import_transaction()
+    first_parsed = parsed_import_transaction()
     # A genuinely distinct movement: import dedup keys on the movement
     # identity (date + amount + normalised narrative), so the second
     # row must differ in one of those — not merely in the provider id.
-    second_parsed = _parsed_import_transaction(
+    second_parsed = parsed_import_transaction(
         transaction_id="provider-row-2",
         amount=Decimal("48.40"),
         description="second provider import row",
@@ -100,12 +101,12 @@ def test_import_keeps_genuine_intrabatch_twins_with_distinct_ids(
     and under-declares the return. Re-importing the same rows still dedups against
     the persisted catalogue. Regression for the intra-batch fingerprint skip."""
     transaction_repository, event_repository = _repositories(secure_objects)
-    twin_a = _parsed_import_transaction(
+    twin_a = parsed_import_transaction(
         transaction_id="provider-row-1",
         amount=Decimal("605.00"),
         description="Cobro factura recurrente",
     )
-    twin_b = _parsed_import_transaction(
+    twin_b = parsed_import_transaction(
         transaction_id="provider-row-2",
         amount=Decimal("605.00"),
         description="Cobro factura recurrente",
@@ -144,7 +145,7 @@ def test_import_skips_true_transaction_id_collision_within_batch(
     that id and the later would overwrite the earlier — so the later is skipped to
     keep the imported and stored counts consistent."""
     transaction_repository, event_repository = _repositories(secure_objects)
-    row = _parsed_import_transaction(
+    row = parsed_import_transaction(
         transaction_id="same-provider-id",
         amount=Decimal("605.00"),
         description="Cobro factura recurrente",
@@ -209,6 +210,47 @@ def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
     assert stored[1].direction is TransactionDirection.INCOMING
 
 
+@pytest.mark.parametrize("export_format", [ExportSerializationFormat.CSV, ExportSerializationFormat.JSONL])
+def test_import_ledger_source_honors_explicit_direction_column_on_positive_amount_in_exports(
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+    export_format: ExportSerializationFormat,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    statement = tmp_path / "explicit-direction.csv"
+    statement.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID,direction,source_jurisdiction\n"
+        "2026-04-17,French Vendor,FR expense,48.40,EUR,n26-fr-expense,OUTGOING,FR\n",
+        encoding="utf-8",
+    )
+
+    imported = import_ledger_source(
+        LedgerSourceImportCommand(bucket_id="bucket-a", path=statement, provider="csv", actor="operator-A"),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    )
+    exported = export_ledger_transactions(
+        LedgerExportCommand(bucket_id="bucket-a", export_format=export_format),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    )
+
+    assert imported.imported == 1
+    (stored,) = transaction_repository.load().values()
+    assert stored.raw.amount == Decimal("48.40")
+    assert stored.direction is TransactionDirection.OUTGOING
+    assert stored.source_jurisdiction == "FR"
+    if export_format == ExportSerializationFormat.CSV:
+        rows = tuple(csv.DictReader(StringIO(exported.payload.decode("utf-8"))))
+    else:
+        rows = tuple(json.loads(line) for line in exported.payload.decode("utf-8").splitlines() if line.strip())
+    assert len(rows) == 1
+    (row,) = rows
+    assert row["amount"] == "48.40"
+    assert row["direction"] == "OUTGOING"
+    assert row["source_jurisdiction"] == "FR"
+
+
 def test_import_rejects_zero_amount_row_at_parse_boundary(tmp_path: Path) -> None:
     """A zero-amount source row is refused at the parse boundary, like the manual path."""
     statement = tmp_path / "bank-zero.csv"
@@ -230,7 +272,7 @@ def test_import_outgoing_magnitude_row_stores_positive_with_outgoing_direction(
 ) -> None:
     """An OUTGOING parsed row stores a positive magnitude with direction=OUTGOING."""
     transaction_repository, event_repository = _repositories(secure_objects)
-    parsed = _parsed_import_transaction(
+    parsed = parsed_import_transaction(
         transaction_id="out-row-1",
         amount=Decimal("48.40"),
         description="SaaS subscription",
@@ -259,7 +301,7 @@ def test_import_internal_transfer_row_stores_magnitude_with_transfer_direction(
     ``direction=INTERNAL_TRANSFER``.
     """
     transaction_repository, event_repository = _repositories(secure_objects)
-    parsed = _parsed_import_transaction(
+    parsed = parsed_import_transaction(
         transaction_id="transfer-row-1",
         amount=Decimal("5000.00"),
         description="Traspaso a cuenta de ahorro",

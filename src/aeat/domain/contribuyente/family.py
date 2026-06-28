@@ -3,6 +3,11 @@
 The records in this module describe factual people and family-unit flags.
 They do not decide Modelo 100 legal treatment, minimum amounts, deduction
 eligibility, or casilla formulas; those remain registry-owned.
+
+:class:`DescendantInfo`, :class:`RentaDescendantProfile`, and
+:class:`RentaAscendantProfile` feed :class:`RentaFamilyProfile`, whose helper
+methods derive Art. 58 minimum counts and Art. 81 maternity/guardería amounts
+from the factual profile records.
 """
 
 from __future__ import annotations

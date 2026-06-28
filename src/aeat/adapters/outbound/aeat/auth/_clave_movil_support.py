@@ -1,4 +1,10 @@
-"""Support records and pure helpers for the Cl@ve Movil provider."""
+"""Shared support surface for the :class:`ClaveMovilAuthProvider`.
+
+The helpers here keep the live Cl@ve Movil page driver small: they build the
+:class:`RemoteStateGuardPolicy` used for allowed browser actions, classify the
+configured DNI/NIE identity, redact diagnostic URL fields, and attach the
+closed :class:`ClaveMovilFailureMode` taxonomy to provider errors.
+"""
 
 from __future__ import annotations
 
@@ -25,6 +31,11 @@ DIAGNOSTIC_NAMESPACE: Final[str] = CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 
 
 def auth_browser_action_policy(settings: Settings) -> RemoteStateGuardPolicy:
+    """Build the remote-state guard policy for Cl@ve Movil browser actions.
+
+    The page-flow mixin uses the returned :class:`RemoteStateGuardPolicy`
+    before continuing through AEAT's own-name representation gate.
+    """
     external = settings.external_constants()
     return RemoteStateGuardPolicy(
         id="aeat-clave-movil-auth-browser-actions",
@@ -43,11 +54,25 @@ def auth_browser_action_policy(settings: Settings) -> RemoteStateGuardPolicy:
 
 
 class ClaveMovilConfigurationError(AuthConfigurationError):
-    """Raised when required Cl@ve Movil settings are missing or malformed."""
+    """Configuration fault for the :class:`ClaveMovilAuthProvider`.
+
+    Raised before or during form driving when required local Cl@ve Movil
+    settings, such as DNI/NIE identity or non-QR contrast fields, are missing
+    or malformed. It subclasses :class:`AuthConfigurationError` so callers can
+    treat it as a local configuration error rather than a live AEAT timeout.
+    """
 
 
 class ClaveMovilApprovalTimeoutError(AuthError):
-    """Raised when AEAT browser-side Cl@ve authentication does not complete."""
+    """Live Cl@ve Movil timeout carrying provider failure diagnostics.
+
+    :class:`ClaveMovilAuthProvider` and its page-flow mixin raise this
+    :class:`AuthError` when AEAT browser state never reaches the expected
+    selector, wait state, or post-auth landing page. ``failure_mode`` is stored
+    both on the exception and in ``context`` as a :class:`ClaveMovilFailureMode`
+    value; timeout contexts may also include a diagnostic id and operator phone
+    state reporting options.
+    """
 
     def __init__(
         self,
@@ -76,7 +101,7 @@ class ClaveMovilApprovalTimeoutError(AuthError):
 
 
 class ClaveMovilFailureMode(StrEnum):
-    """Closed Cl@ve Movil live-auth failure modes."""
+    """Closed failure taxonomy for :class:`ClaveMovilApprovalTimeoutError`."""
 
     INITIAL_NAVIGATION_TIMEOUT = "initial_navigation_timeout"
     PENDING_PETITION_BLOCKED = "pending_petition_blocked"
@@ -95,6 +120,12 @@ _VERIFICATION_CODE_TEXT_RE: Final[re.Pattern[str]] = re.compile(
 
 
 def classify_identity(raw: str) -> str:
+    """Return the configured Cl@ve identity kind as ``DNI`` or ``NIE``.
+
+    Values outside the provider-supported DNI/NIE formats raise
+    :class:`ClaveMovilConfigurationError`; CIF-style organization identifiers
+    are intentionally rejected by the Cl@ve Movil flow.
+    """
     value = (raw or "").strip().upper()
     if _DNI_RE.match(value):
         return "DNI"
@@ -108,6 +139,7 @@ def classify_identity(raw: str) -> str:
 
 
 def extract_verification_code_from_html(html: str) -> str | None:
+    """Extract the AEAT Cl@ve Movil verification code from rendered HTML."""
     text = _HTML_TAG_RE.sub(" ", html.replace("\xa0", " "))
     normalized = " ".join(text.split())
     match = _VERIFICATION_CODE_TEXT_RE.search(normalized)
@@ -117,6 +149,12 @@ def extract_verification_code_from_html(html: str) -> str | None:
 
 
 def url_diagnostic(value: str) -> dict[str, object]:
+    """Return redacted URL components for auth diagnostic contexts.
+
+    The returned mapping keeps host, path, and query-key names only, so
+    :class:`ClaveMovilApprovalTimeoutError` contexts can explain where the
+    browser was without persisting query values.
+    """
     try:
         parsed = urlsplit(value)
     except ValueError:
@@ -130,6 +168,7 @@ def url_diagnostic(value: str) -> dict[str, object]:
 
 
 def diagnostic_fingerprint(value: object) -> str:
+    """Return a short stable fingerprint for values stored in diagnostics."""
     if isinstance(value, SecretStr):
         value = value.get_secret_value()
     text = str(value or "").strip().upper()
@@ -145,6 +184,7 @@ def render_progress_banner(
     timeout_seconds: int,
     used_non_qr_fallback: bool,
 ) -> None:
+    """Log the operator-facing progress banner for a fresh Cl@ve attempt."""
     lines = [
         "",
         "-------------------------------------------------------------",

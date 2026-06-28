@@ -19,6 +19,7 @@ from .. import RegistryCatalogues, RegistryValidationError
 from .._loader import load_registry_tree
 from .._schema import ExtractionProfileDefinition, ModeloDefinition
 from .._validate import RegistryValidator
+from ._gate_support import catalogues_for_m130_gate_tests
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -29,7 +30,7 @@ _DATA_ROOT = bundled_path()
 @cache
 def _committed_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-    return next(m for m in modelos if m.id == "130"), catalogues
+    return next(m for m in modelos if m.id == "130"), catalogues_for_m130_gate_tests(catalogues)
 
 
 def _committed_profile(provisional: bool = False) -> ExtractionProfileDefinition:
@@ -38,6 +39,29 @@ def _committed_profile(provisional: bool = False) -> ExtractionProfileDefinition
     revision = modelo.revisions["2019-y-siguientes"]
     profile = next(p for p in revision.extraction_profiles if p.surface == "declaracion_pdf")
     return profile.model_copy(update={"provisional_pending_specimen": provisional})
+
+
+def _validator(
+    catalogues: RegistryCatalogues,
+    *,
+    justificante_corpus_root: Path | None = None,
+) -> RegistryValidator:
+    return RegistryValidator(
+        catalogues,
+        source_root=_DATA_ROOT,
+        justificante_corpus_root=justificante_corpus_root,
+        catalogue_corpus_strict=False,
+    )
+
+
+def _assert_justificante_corpus_root(
+    validator: RegistryValidator,
+    *,
+    missing_message: str,
+) -> Path:
+    corpus_root = validator.justificante_corpus_root
+    assert corpus_root is not None, missing_message
+    return corpus_root
 
 
 def test_provisional_field_defaults_false() -> None:
@@ -65,11 +89,7 @@ def test_no_fixture_no_flag_fails_validation(tmp_path: Path) -> None:
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
 
-    validator = RegistryValidator(
-        catalogues,
-        source_root=bundled_path(),
-        justificante_corpus_root=empty_corpus_root,
-    )
+    validator = _validator(catalogues, justificante_corpus_root=empty_corpus_root)
     with pytest.raises(RegistryValidationError, match="provisional_pending_specimen"):
         validator.validate_modelo(mutated_modelo)
 
@@ -88,11 +108,7 @@ def test_no_fixture_with_flag_validates(tmp_path: Path) -> None:
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
 
-    validator = RegistryValidator(
-        catalogues,
-        source_root=bundled_path(),
-        justificante_corpus_root=empty_corpus_root,
-    )
+    validator = _validator(catalogues, justificante_corpus_root=empty_corpus_root)
     # No exception raised: provisional flag satisfies the gate
     validator.validate_modelo(mutated_modelo)
 
@@ -111,8 +127,8 @@ def test_fixture_present_round_trip_verified_validates(tmp_path: Path) -> None:
     corpus_root = tmp_path / "justificantes"
     modelo_fixture_dir = corpus_root / "130"
     modelo_fixture_dir.mkdir(parents=True)
-    # Place a stub PDF file to satisfy the fixture check
-    (modelo_fixture_dir / "2024-1T.pdf").write_bytes(b"%PDF-1.4 stub")
+    # Place a minimal PDF-like fixture to satisfy the fixture check.
+    (modelo_fixture_dir / "2024-1T.pdf").write_bytes(b"%PDF-1.4 specimen fixture")
 
     revision = modelo.revisions["2019-y-siguientes"]
     profile = _committed_profile(provisional=False).model_copy(
@@ -124,11 +140,7 @@ def test_fixture_present_round_trip_verified_validates(tmp_path: Path) -> None:
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
 
-    validator = RegistryValidator(
-        catalogues,
-        source_root=bundled_path(),
-        justificante_corpus_root=corpus_root,
-    )
+    validator = _validator(catalogues, justificante_corpus_root=corpus_root)
     # No exception raised: fixture present + corpus_round_trip_verified satisfies both gates
     validator.validate_modelo(mutated_modelo)
 
@@ -142,18 +154,19 @@ def test_corpus_root_derived_from_bundled_path() -> None:
     This exercises the production code path where justificante_corpus_root is
     NOT injected directly.  The derivation must resolve to
     src/aeat/tests/fixtures/justificantes, which exists on disk, so
-    _justificante_corpus_root must not be None.
+    justificante_corpus_root must not be None.
     """
     _modelo, catalogues = _committed_130()
-    validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
-    assert validator._justificante_corpus_root is not None, (
-        "corpus root derivation from bundled_path() returned None; "
-        "the provisional specimen gate is disabled in production"
+    validator = _validator(catalogues)
+    corpus_root = _assert_justificante_corpus_root(
+        validator,
+        missing_message=(
+            "corpus root derivation from bundled_path() returned None; "
+            "the provisional specimen gate is disabled in production"
+        ),
     )
-    assert validator._justificante_corpus_root.is_dir(), (
-        f"derived corpus root {validator._justificante_corpus_root} is not a directory"
-    )
-    assert validator._justificante_corpus_root.name == "justificantes"
+    assert corpus_root.is_dir(), f"derived corpus root {corpus_root} is not a directory"
+    assert corpus_root.name == "justificantes"
 
 
 def test_gate_fires_no_fixture_no_flag(tmp_path: Path) -> None:
@@ -176,12 +189,11 @@ def test_gate_fires_no_fixture_no_flag(tmp_path: Path) -> None:
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
 
-    validator = RegistryValidator(
-        catalogues,
-        source_root=_DATA_ROOT,
-        justificante_corpus_root=empty_corpus_root,
+    validator = _validator(catalogues, justificante_corpus_root=empty_corpus_root)
+    _assert_justificante_corpus_root(
+        validator,
+        missing_message="corpus root must be set; gate would be silent",
     )
-    assert validator._justificante_corpus_root is not None, "corpus root must be set; gate would be silent"
     with pytest.raises(RegistryValidationError, match="provisional_pending_specimen"):
         validator.validate_modelo(mutated_modelo)
 
@@ -209,13 +221,12 @@ def test_gate_fires_via_production_path() -> None:
     """
     modelo, catalogues = _committed_130()
 
-    validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
-    assert validator._justificante_corpus_root is not None, (
-        "corpus root derivation returned None; specimen gate is silently disabled in production"
+    validator = _validator(catalogues)
+    corpus_root = _assert_justificante_corpus_root(
+        validator,
+        missing_message="corpus root derivation returned None; specimen gate is silently disabled in production",
     )
-    assert validator._justificante_corpus_root.is_dir(), (
-        f"derived corpus root {validator._justificante_corpus_root} is not a directory"
-    )
+    assert corpus_root.is_dir(), f"derived corpus root {corpus_root} is not a directory"
 
     # Scenario B via production wiring: provisional flag opts out → no error
     revision = modelo.revisions["2019-y-siguientes"]

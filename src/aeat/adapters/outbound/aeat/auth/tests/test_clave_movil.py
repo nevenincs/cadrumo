@@ -565,7 +565,6 @@ class TestAuthenticateFresh:
     def test_qr_flow_writes_encrypted_metadata_and_storage_state(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(
             tmp_path,
@@ -606,7 +605,6 @@ class TestAuthenticateFresh:
     def test_non_qr_fallback_fills_dni_form(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(
             tmp_path,
@@ -653,7 +651,6 @@ class TestAuthenticateFresh:
     def test_non_qr_fallback_fills_nie_support_form(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(
             tmp_path,
@@ -680,7 +677,6 @@ class TestAuthenticateFresh:
     def test_non_qr_fallback_rejects_missing_nie_support(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(
             tmp_path,
@@ -699,7 +695,6 @@ class TestAuthenticateFresh:
     def test_non_qr_fallback_rejects_missing_fecha(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(
             tmp_path,
@@ -718,7 +713,6 @@ class TestAuthenticateFresh:
     def test_missing_identity_raises_configuration_error(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path)
         provider = ClaveMovilAuthProvider(settings)
@@ -735,7 +729,6 @@ class TestPostAuthLanding:
     def test_verify_clicks_selector_for_explicit_target_probe(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from .._authenticator import AeatSession
 
@@ -774,7 +767,6 @@ class TestPostAuthLanding:
     def test_explicit_verification_target_uses_selector_dispatch(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -794,7 +786,6 @@ class TestPostAuthLanding:
     def test_implicit_verification_target_keeps_recorded_landing(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -813,7 +804,6 @@ class TestPostAuthLanding:
     def test_authenticated_landing_accepts_pre303_post_auth_redirect(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -846,7 +836,6 @@ class TestPostAuthLanding:
     def test_representation_dispatcher_continues_only_own_name(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -865,7 +854,6 @@ class TestPostAuthLanding:
     def test_representation_dispatcher_dismisses_alert_modal_before_own_name(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -909,7 +897,6 @@ class TestPendingPetitionRefusal:
     def test_pending_petition_page_fails_fast_with_actionable_mode(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -943,7 +930,6 @@ class TestPendingPetitionRefusal:
     def test_post_auth_wait_detects_pending_petition_refusal_during_poll(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -962,7 +948,6 @@ class TestPendingPetitionRefusal:
     def test_pending_request_cancellation_waits_for_aeat_cancel_response(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -983,7 +968,6 @@ class TestPendingPetitionRefusal:
     def test_pending_request_cancel_confirmation_rejects_failed_response(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -1008,7 +992,6 @@ class TestClaveWaitState:
     def test_login_refuses_to_wait_without_observed_confirmation_state(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -1034,7 +1017,6 @@ class TestClaveWaitState:
     def test_login_accepts_observed_verification_code_as_wait_state(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -1061,7 +1043,6 @@ class TestProbePersistedSession:
     def test_probe_without_persisted_session_raises(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -1078,7 +1059,6 @@ class TestProbePersistedSession:
     def test_probe_uses_existing_encrypted_session_without_invalidating_on_failure(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
@@ -1121,7 +1101,6 @@ class TestProbePersistedSession:
     def test_probe_with_explicit_target_does_not_click_clave_selector(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         external = settings.external_constants()
@@ -1159,7 +1138,6 @@ class TestResume:
     def test_resume_from_fresh_encrypted_session(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         settings = _settings_for(
             tmp_path,

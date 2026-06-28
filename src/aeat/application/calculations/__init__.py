@@ -32,6 +32,7 @@ from ._cross_period_clean_state import (
     cross_period_dependency_inventory,
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
+    filing_external_evidence_blockers,
     partition_cross_period_requirements_by_activity_start,
 )
 from ._iva_compensation_history import (
@@ -43,6 +44,7 @@ from ._iva_compensation_history import (
     iva_compensation_annual_summary_from_filed_observation,
     iva_compensation_period_key,
     iva_compensation_state_from_filed_observation,
+    iva_compensation_state_from_registry_observation,
     seed_iva_compensation_period,
 )
 from ._iva_wallet_balance import query_iva_wallet_balance
@@ -124,9 +126,11 @@ __all__ = [
     "cross_period_dependency_requirements",
     "evaluate_cross_period_clean_state",
     "extract_modelo_303_local_iva_compensation_recurrence",
+    "filing_external_evidence_blockers",
     "iva_compensation_annual_summary_from_filed_observation",
     "iva_compensation_period_key",
     "iva_compensation_state_from_filed_observation",
+    "iva_compensation_state_from_registry_observation",
     "iva_wallet_decision_event_key",
     "iva_wallet_decision_key",
     "observation_key",

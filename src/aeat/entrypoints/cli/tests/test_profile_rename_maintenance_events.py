@@ -17,7 +17,6 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_bucket,
@@ -29,9 +28,9 @@ from ....domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app as root_app
-from ._profile_lifecycle_support import create_via_cli
+from ._profile_lifecycle_support import create_profile_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -66,13 +65,12 @@ def test_cli_rename_co_emits_profile_renamed_and_bucket_renamed() -> None:
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
 
-    runner = CliRunner()
-    create_via_cli(runner, "alpha")
+    create_profile_via_cli("alpha")
     pointer = read_profile_bucket("alpha")
     assert pointer is not None
 
     dispose_engine()
-    result = runner.invoke(root_app, ["config", "profile", "rename", "alpha", "beta"])
+    result = invoke_cached_cli(("config", "profile", "rename", "alpha", "beta"))
     assert result.exit_code == 0, f"rename failed: {result.output}"
 
     dispose_engine()
@@ -105,9 +103,8 @@ def test_cli_rename_of_non_active_profile_is_refused_loudly_and_changes_nothing(
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
 
-    runner = CliRunner()
-    create_via_cli(runner, "alpha")
-    create_via_cli(runner, "bravo")  # bravo is now the active profile
+    create_profile_via_cli("alpha")
+    create_profile_via_cli("bravo")  # bravo is now the active profile
     alpha_pointer = read_profile_bucket("alpha")
     bravo_pointer = read_profile_bucket("bravo")
     assert alpha_pointer is not None
@@ -115,7 +112,7 @@ def test_cli_rename_of_non_active_profile_is_refused_loudly_and_changes_nothing(
     assert alpha_pointer.bucket_id != bravo_pointer.bucket_id
 
     dispose_engine()
-    result = runner.invoke(root_app, ["config", "profile", "rename", "alpha", "gamma"])
+    result = invoke_cached_cli(("config", "profile", "rename", "alpha", "gamma"))
     assert result.exit_code != 0, f"expected refusal, got: {result.output}"
 
     dispose_engine()
@@ -138,11 +135,10 @@ def test_cli_rename_refuses_blank_target_with_localised_message() -> None:
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
 
-    runner = CliRunner()
-    create_via_cli(runner, "alpha")
+    create_profile_via_cli("alpha")
 
     dispose_engine()
-    result = runner.invoke(root_app, ["config", "profile", "rename", "alpha", "   "])
+    result = invoke_cached_cli(("config", "profile", "rename", "alpha", "   "))
     assert result.exit_code != 0, f"expected refusal, got: {result.output}"
 
     dispose_engine()

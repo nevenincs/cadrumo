@@ -19,7 +19,6 @@ from .._ids import CasillaId, LegalRefId, SourceRefId, validated_casilla_id
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-
 def _casilla_id(value: object) -> CasillaId:
     try:
         return validated_casilla_id(value, surface="test casilla id")
@@ -118,8 +117,9 @@ def test_casilla_observation_is_frozen() -> None:
         legal_refs=_LEGAL_REFS,
         source_refs=_SOURCE_REFS,
     )
+    field_name = "value"
     with pytest.raises(ValidationError):
-        obs.value = Decimal("100")  # type: ignore[misc]
+        setattr(obs, field_name, Decimal("100"))
 
 
 def test_casilla_observation_rejects_extra_fields() -> None:

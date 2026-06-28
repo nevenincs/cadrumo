@@ -1,8 +1,9 @@
 """Calendar aggregation and evidence merge for the overview application facade.
 
-Use of :class:`Schedule`, :class:`TaxpayerProfile` for compliance. Derives
-per-deadline filing evidence from filed :class:`ModeloRecord` rows so the
-calendar reflects which obligations already carry a justificante.
+The facade composes a :class:`~aeat.domain.deadlines.Schedule` from
+:class:`~aeat.domain.deadlines.TaxpayerProfile` facts and merges filed
+:class:`~aeat.domain.modelos.ModeloRecord` evidence so the calendar reflects
+which obligations already carry a justificante.
 """
 
 from __future__ import annotations

@@ -9,23 +9,15 @@ to obtain an ``TaxpayerProfile`` from the active profile bucket.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
-from ...core.setup_answers import SetupAnswers
-from ...domain.deadlines._models import (
-    IVARegime,
-    ModeloEnrollment,
-    ModeloIVAProfile,
-    TaxpayerProfile,
-)
+from ...domain.deadlines._models import TaxpayerProfile
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
-from ..user_profile._projections import record_to_path_values
+from ..user_profile._projections import projection_for_taxpayer, record_to_path_values
 from ..workflow._models import WorkflowState
 from . import _compiler as _compiler  # side-effect: registers PROFILE_KEYS before _keys_validation
-from ._catalogue import SETUP_FLOW
 from ._errors import WizardError
-from ._persistence import project_answers
 
 _ENROLMENT_KEY = "iva.regime"
 """Profile key whose presence flips the operator profile from ``identity-only``
@@ -139,10 +131,10 @@ def _next_wizard_action(
 def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
     """Build an :class:`TaxpayerProfile` from the active profile values.
 
-    The bridge runs the canonical-token dict through ``project_answers``
-    and re-shapes the typed fields onto the ``TaxpayerProfile`` record
-    consumed by the deadline engine and the filing runtime. Values come
-    from the profile bucket selected by the workflow state.
+    The bridge runs the active profile record through the canonical
+    user-profile taxpayer projection, which in turn builds the
+    ``TaxpayerProfile`` consumed by the deadline engine and filing runtime.
+    Values come from the profile bucket selected by the workflow state.
 
     Args:
         state: The current :class:`WorkflowState` from which the active
@@ -163,48 +155,12 @@ def load_active_taxpayer_profile(state: WorkflowState) -> TaxpayerProfile:
             context={"workflow_state": "no_active_profile"},
         )
     values: dict[str, str] = dict(record_to_path_values(record))
-    try:
-        typed = project_answers(SETUP_FLOW, values)
-    except ValidationError as exc:
-        raise WizardStatusError(
-            translated_message="application.wizard.status.errors.projection_failed",
-            context={"active_profile": resolve_active_bucket_id(), "errors": exc.error_count()},
-        ) from exc
-    if not isinstance(typed, SetupAnswers):
-        raise WizardStatusError(
-            translated_message="application.wizard.status.errors.unexpected_projection_type",
-            context={"flow_id": SETUP_FLOW.id, "projection_type": type(typed).__name__},
-        )
-    if not typed.tax_id:
+    if not values.get("identity.tax_id"):
         raise WizardStatusError(
             translated_message="application.wizard.status.errors.missing_tax_id",
             context={"active_profile": resolve_active_bucket_id()},
         )
-    return TaxpayerProfile(
-        tax_id=typed.tax_id,
-        iva_regime=IVARegime(
-            values.get("iva.regime", IVARegime.GENERAL.value),
-        ),  # iva.regime path unchanged in canonical schema
-        has_employees=typed.has_employees,
-        pays_professionals_with_retencion=typed.pays_professionals_with_retencion,
-        professional_income_withholding_ge_70pct=typed.professional_income_withholding_ge_70pct,
-        pays_rent_with_retencion=typed.pays_rent_with_retencion,
-        pays_capital_income_with_retencion=typed.pays_capital_income_with_retencion,
-        uses_objective_estimation_irpf=typed.uses_objective_estimation_irpf,
-        does_intracomunitario=typed.does_intracomunitario,
-        third_party_transactions_above_347_threshold=typed.third_party_transactions_above_347_threshold,
-        bienes_extranjero_above_threshold=typed.bienes_extranjero_above_threshold,
-        iva=ModeloIVAProfile(
-            roi_enrolled=typed.iva_roi_enrolled,
-            oss_enrolled=typed.iva_oss_enrolled,
-            intracommunity_operations_exceed_50000_eur=typed.iva_intracommunity_operations_exceed_50000_eur,
-        ),
-        enrollment=ModeloEnrollment(
-            large_company=typed.enrollment_large_company,
-            public_administration_budget_gt_6000000=typed.enrollment_public_administration_budget_gt_6000000,
-        ),
-        notes=typed.notes,
-    )
+    return projection_for_taxpayer(record)
 
 
 __all__ = [

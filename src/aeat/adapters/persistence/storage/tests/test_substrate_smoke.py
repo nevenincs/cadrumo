@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from .....tests.secure_sql import dev_test_database_password
 from .. import (
     EncryptedBlobStore,
     Envelope,
@@ -36,18 +37,19 @@ from .. import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
+def _file_master_provider(tmp_path: Path) -> FileFallbackMasterKeyProvider:
+    return FileFallbackMasterKeyProvider(
+        store_dir=tmp_path / "secrets",
+        passphrase_callback=dev_test_database_password,
+    )
+
+
 def test_master_key_persists_across_provider_instances(tmp_path: Path) -> None:
     """The file-backend master key is stable across re-binding the provider."""
-    first = FileFallbackMasterKeyProvider(
-        store_dir=tmp_path / "secrets",
-        passphrase_callback=lambda: "smoke-passphrase",
-    )
+    first = _file_master_provider(tmp_path)
     key_a = first.provision_master_key()
 
-    second = FileFallbackMasterKeyProvider(
-        store_dir=tmp_path / "secrets",
-        passphrase_callback=lambda: "smoke-passphrase",
-    )
+    second = _file_master_provider(tmp_path)
     assert second.get_master_key() == key_a
 
 

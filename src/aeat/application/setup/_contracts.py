@@ -1,4 +1,10 @@
-"""Pydantic contracts for workspace initialization."""
+"""Pydantic contracts for workspace initialization.
+
+:class:`InitializeWorkspaceCommand` carries the first-run profile facts,
+including :class:`IVARegime` and :class:`OutputLanguage` selections;
+:class:`InitializeWorkspaceResult` reports the created :class:`ProfileId` and
+:class:`BucketId`.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +24,12 @@ def _normalise_iva_regime(value: object) -> object:
 
 
 class InitializeWorkspaceCommand(BaseModel):
-    """Command to initialize a new active workspace profile and bucket."""
+    """Command to initialize a new active workspace profile and bucket.
+
+    The profile facts are consumed by
+    :func:`aeat.application.setup.initialize_workspace`; enum fields preserve
+    the domain vocabulary of :class:`IVARegime` and :class:`OutputLanguage`.
+    """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -70,7 +81,11 @@ class InitializeWorkspaceCommand(BaseModel):
 
 
 class InitializeWorkspaceResult(BaseModel):
-    """Result of successful workspace initialization."""
+    """Result of successful workspace initialization.
+
+    The created :class:`ProfileId` is also the initial storage
+    :class:`BucketId`, matching the UUID bucket-provisioning contract.
+    """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 

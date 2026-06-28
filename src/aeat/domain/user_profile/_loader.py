@@ -1,4 +1,9 @@
-"""Read-only loader for the centralized user-profile schema TOML."""
+"""Read-only loader for the centralized user-profile schema TOML.
+
+:func:`load_user_profile_schema` reads the bundled schema TOML into a
+:class:`ProfileSchemaDefinition` and raises :class:`UserProfileSchemaLoadError`
+when the file cannot be read or validated.
+"""
 
 from __future__ import annotations
 
@@ -21,6 +26,10 @@ def load_user_profile_schema(path: Path | None = None) -> ProfileSchemaDefinitio
 
     Returns:
         A strict, frozen :class:`ProfileSchemaDefinition`.
+
+    Raises:
+        :class:`UserProfileSchemaLoadError`: If the schema file cannot be stated,
+            parsed, or validated into :class:`ProfileSchemaDefinition`.
     """
     target = path if path is not None else bundled_path("registry", "aeat", "user_profile", "schema.toml")
     resolved = target.resolve()

@@ -10,7 +10,7 @@ or :class:`InvoiceCatalogue` directly when the caller supplies pre-loaded data.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -112,6 +112,17 @@ class _ImportRowPlan(NamedTuple):
     likely_duplicate_refs: tuple[BucketTransactionRef, ...]
 
 
+def _source_jurisdiction_from_raw_fields(raw_fields: Mapping[str, str]) -> str | None:
+    """Read canonical source-jurisdiction provenance from provider raw fields."""
+    for header, value in raw_fields.items():
+        normalized_header = " ".join(header.replace("\ufeff", "").replace("_", " ").replace("-", " ").lower().split())
+        if normalized_header != "source jurisdiction":
+            continue
+        normalized_value = value.strip()
+        return normalized_value or None
+    return None
+
+
 def _apply_fx_conversion(
     raw: RawTransaction,
     currency_normalizer: CurrencyNormalizationService | None,
@@ -192,6 +203,7 @@ def _evaluate_import_rows(
                 "value_in_eur": value_in_eur,
                 "rate_source": rate_source,
                 "rate_date": rate_date,
+                "source_jurisdiction": _source_jurisdiction_from_raw_fields(raw.raw_fields),
                 # D6: an imported row is freshly created at import time.
                 "created_at": stamped_at,
                 "modified_at": stamped_at,

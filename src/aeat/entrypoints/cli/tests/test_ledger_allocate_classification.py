@@ -10,19 +10,17 @@ finding, persona Nuria).
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import Any
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_RUNNER = CliRunner()
 
 
 @pytest.fixture(autouse=True)
@@ -31,11 +29,14 @@ def _isolated_storage(tmp_path: Path) -> Iterator[None]:
         yield
 
 
+def _invoke(args: Sequence[str], *, env: dict[str, str] | None = None) -> Result:
+    return invoke_cached_cli(args, env=env)
+
+
 def _imported_transaction_id(tmp_path: Path) -> str:
     """Create a profile, import one CSV transaction, return its id."""
 
-    created = _RUNNER.invoke(
-        app,
+    created = _invoke(
         [
             "config",
             "profile",
@@ -46,6 +47,12 @@ def _imported_transaction_id(tmp_path: Path) -> str:
             "00000001R",
             "--activity",
             "freelance",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Tester",
+            "--surnames",
+            "Allocation",
         ],
     )
     assert created.exit_code == 0, created.output
@@ -56,10 +63,10 @@ def _imported_transaction_id(tmp_path: Path) -> str:
         "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    imported = _RUNNER.invoke(app, ["app", "ledger", "import", str(statement), "--provider", "csv"])
+    imported = _invoke(["app", "ledger", "import", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
 
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     rows = payload.get("result", payload).get("rows", [])
@@ -68,8 +75,7 @@ def _imported_transaction_id(tmp_path: Path) -> str:
 
 
 def _allocate(transaction_id: str, business_pct: str) -> dict[str, Any]:
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -102,9 +108,8 @@ def test_allocate_zero_business_pct_yields_personal(tmp_path: Path) -> None:
     assert _allocate(txn, "0")["business_classification"] == "PERSONAL"
 
 
-def _allocate_raw(transaction_id: str, business_pct: str):
-    return _RUNNER.invoke(
-        app,
+def _allocate_raw(transaction_id: str, business_pct: str) -> Result:
+    return _invoke(
         [
             "app",
             "ledger",

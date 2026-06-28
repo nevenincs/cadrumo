@@ -13,12 +13,12 @@ These are the durable, CI-gating counterpart to the live persona testimonials.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import Any
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
@@ -26,13 +26,12 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
 _CORPUS = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "financial" / "ledger-corpus"
 _FILES = (
     "bbva-business-eur.csv",
@@ -40,6 +39,10 @@ _FILES = (
     "revolut-multi.csv",
     "n26-savings.csv",
 )
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -82,7 +85,7 @@ def _match(description: str, rules: list[dict[str, Any]]) -> dict[str, Any] | No
 def _import_corpus() -> int:
     total = 0
     for name in _FILES:
-        result = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
+        result = _invoke(["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
         total += 1
     return total
@@ -90,15 +93,14 @@ def _import_corpus() -> int:
 
 def _import_bbva() -> None:
     """Lighter import (single business account) for row-targeted journeys."""
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         ["app", "ledger", "import", str(_CORPUS / "bbva-business-eur.csv"), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
 
 
 def _list_rows() -> list[dict[str, Any]]:
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
@@ -119,8 +121,7 @@ def test_reimport_is_idempotent_dedups() -> None:
     _import_corpus()
     first = len(_list_rows())
     # Re-import one file; fingerprint dedup must skip every row.
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         ["--format", "json", "app", "ledger", "import", str(_CORPUS / _FILES[0]), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
@@ -131,8 +132,7 @@ def test_reimport_is_idempotent_dedups() -> None:
 
 
 def test_import_dry_run_does_not_persist() -> None:
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         ["app", "ledger", "import", str(_CORPUS / _FILES[0]), "--provider", "csv", "--dry-run"],
     )
     assert result.exit_code == 0, result.output
@@ -146,7 +146,7 @@ def test_import_preserves_foreign_currencies() -> None:
 
 
 # --- Journey 2: classification (single and bulk), allocate, and ratios -------
-def test_bulk_classify_from_oracle_resolved_at_runtime() -> None:
+def test_bulk_classify_from_oracle_resolved_at_runtime(tmp_path: Path) -> None:
     _import_corpus()
     rules = _oracle_rules()
     rows = _list_rows()
@@ -170,13 +170,10 @@ def test_bulk_classify_from_oracle_resolved_at_runtime() -> None:
             break
     assert len(expected) == 12
 
-    import tempfile
+    classify_csv = tmp_path / "classify.csv"
+    classify_csv.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, encoding="utf-8") as fh:
-        fh.write("\n".join(lines) + "\n")
-        classify_csv = fh.name
-
-    result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--from-csv", classify_csv])
+    result = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(classify_csv)])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)["result"]
     assert payload["applied"] == 12, payload
@@ -195,8 +192,7 @@ def test_single_classify_intracommunity_with_eu_state() -> None:
     de_rows = [r for r in rows if "cliente DE GmbH intracom" in r["description"]]
     assert de_rows, "corpus must contain a DE intracommunity client invoice"
     tx = de_rows[0]["transaction_id"]
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "ledger",
@@ -223,7 +219,7 @@ def test_single_classify_intracommunity_with_eu_state() -> None:
 # --- Journey 3: filter, review, and search ----------------------------------
 def test_review_renders_corpus() -> None:
     _import_corpus()
-    result = _RUNNER.invoke(app, ["app", "ledger", "review"])
+    result = _invoke(["app", "ledger", "review"])
     assert result.exit_code == 0, result.output
 
 
@@ -258,8 +254,7 @@ def test_split_then_merge_roundtrip() -> None:
     amount = abs(float(parent["amount"]))
     half = round(amount / 2, 2)
     other = round(amount - half, 2)
-    split = _RUNNER.invoke(
-        app,
+    split = _invoke(
         [
             "app",
             "ledger",
@@ -298,9 +293,9 @@ def test_archive_then_history() -> None:
     rows = _list_rows()
     personal = next(r for r in rows if "Suscripcion Netflix" in r["description"])
     tx = personal["transaction_id"]
-    archived = _RUNNER.invoke(app, ["app", "ledger", "archive", tx, "--reason", "personal", "--yes"])
+    archived = _invoke(["app", "ledger", "archive", tx, "--reason", "personal", "--yes"])
     assert archived.exit_code == 0, archived.output
-    history = _RUNNER.invoke(app, ["app", "ledger", "history", tx])
+    history = _invoke(["app", "ledger", "history", tx])
     assert history.exit_code == 0, history.output
 
 
@@ -311,7 +306,7 @@ def test_export_each_format(tmp_path: Path, fmt: str) -> None:
     # per row); there is no xlsx export verb on this surface.
     _import_corpus()
     out = tmp_path / f"ledger-export.{fmt}"
-    result = _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(out), "--export-format", fmt])
+    result = _invoke(["app", "ledger", "export", "--output", str(out), "--export-format", fmt])
     assert result.exit_code == 0, result.output
     assert out.exists() and out.stat().st_size > 0
 
@@ -321,10 +316,10 @@ def test_export_csv_roundtrips_back_through_import(tmp_path: Path) -> None:
     _import_corpus()
     before = len(_list_rows())
     out = tmp_path / "ledger-export.csv"
-    exported = _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(out), "--export-format", "csv"])
+    exported = _invoke(["app", "ledger", "export", "--output", str(out), "--export-format", "csv"])
     assert exported.exit_code == 0, exported.output
     # Re-importing the canonical export must dedup to zero new rows.
-    reimported = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "import", str(out), "--provider", "csv"])
+    reimported = _invoke(["--format", "json", "app", "ledger", "import", str(out), "--provider", "csv"])
     # The canonical export may or may not be recognised by a bank layout; either
     # it dedups (0 imported) or the layout is unrecognised -- both leave the
     # active row count unchanged, which is the fidelity invariant we assert.
@@ -333,7 +328,7 @@ def test_export_csv_roundtrips_back_through_import(tmp_path: Path) -> None:
 
 def test_status_reports_active_ledger() -> None:
     _import_corpus()
-    result = _RUNNER.invoke(app, ["app", "ledger", "status"])
+    result = _invoke(["app", "ledger", "status"])
     assert result.exit_code == 0, result.output
 
 
@@ -346,8 +341,7 @@ def test_allocate_records_business_proportion() -> None:
     _import_bbva()
     internet = _find(_list_rows(), "Factura internet fibra oficina enero")
     tx = internet["transaction_id"]
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "ledger",
@@ -371,24 +365,24 @@ def test_allocate_records_business_proportion() -> None:
 
 def test_ratios_eligible_set_list_validate() -> None:
     _import_bbva()
-    eligible = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "ratios", "eligible"])
+    eligible = _invoke(["--format", "json", "app", "ledger", "ratios", "eligible"])
     assert eligible.exit_code == 0, eligible.output
     blob = json.dumps(json.loads(eligible.output))
     category = "telefonia_movil" if "telefonia_movil" in blob else "vehiculo_combustible"
-    setr = _RUNNER.invoke(app, ["app", "ledger", "ratios", "set", category, "0.50"])
+    setr = _invoke(["app", "ledger", "ratios", "set", category, "0.50"])
     assert setr.exit_code == 0, setr.output
-    listed = _RUNNER.invoke(app, ["app", "ledger", "ratios", "list"])
+    listed = _invoke(["app", "ledger", "ratios", "list"])
     assert listed.exit_code == 0 and category in listed.output, listed.output
-    validate = _RUNNER.invoke(app, ["app", "ledger", "ratios", "validate"])
+    validate = _invoke(["app", "ledger", "ratios", "validate"])
     assert validate.exit_code == 0, validate.output
 
 
 # --- Journey 7: filter and search via review typed spec ---------------------
 def test_review_filter_by_period_and_status() -> None:
     _import_bbva()
-    by_period = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=1T", "--filter", "year=2025"])
+    by_period = _invoke(["app", "ledger", "review", "--filter", "period=1T", "--filter", "year=2025"])
     assert by_period.exit_code == 0, by_period.output
-    by_status = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "status=pending"])
+    by_status = _invoke(["app", "ledger", "review", "--filter", "status=pending"])
     assert by_status.exit_code == 0, by_status.output
 
 
@@ -399,8 +393,7 @@ def test_split_children_then_merge() -> None:
     amount = abs(float(parent["amount"]))
     half = round(amount / 2, 2)
     other = round(amount - half, 2)
-    split = _RUNNER.invoke(
-        app,
+    split = _invoke(
         [
             "app",
             "ledger",
@@ -437,8 +430,7 @@ def test_split_children_then_merge() -> None:
         "the parent transitions ACTIVE -> SPLIT once its children carry the balance"
     )
 
-    merged = _RUNNER.invoke(
-        app,
+    merged = _invoke(
         [
             "app",
             "ledger",
@@ -487,8 +479,7 @@ def test_stash_remove_and_track() -> None:
     _import_bbva()
     rows = _list_rows()
     stash_row = _find(rows, "Material oficina Papeleria Gomez")
-    stashed = _RUNNER.invoke(
-        app,
+    stashed = _invoke(
         ["app", "ledger", "stash", stash_row["transaction_id"], "--reason", "pending review", "--yes"],
     )
     assert stashed.exit_code == 0, stashed.output
@@ -505,7 +496,7 @@ def test_stash_remove_and_track() -> None:
     # verb today — stash/archive are "reversible" in the domain enum but no
     # ledger subcommand reverses them per row; surfaced to the coordinator as a
     # follow-up gap, documented here rather than faked.)
-    tracked = _RUNNER.invoke(app, ["app", "ledger", "track", stash_row["transaction_id"]])
+    tracked = _invoke(["app", "ledger", "track", stash_row["transaction_id"]])
     assert tracked.exit_code == 0, tracked.output
     assert "STASHED" in tracked.output, "track must report the row's STASHED lifecycle state"
     after_track = next((r for r in _list_rows() if r["transaction_id"] == stash_row["transaction_id"]), None)
@@ -515,8 +506,7 @@ def test_stash_remove_and_track() -> None:
     )
 
     remove_row = _find(rows, "Comida de trabajo Restaurante El Olivo")
-    removed = _RUNNER.invoke(
-        app,
+    removed = _invoke(
         ["app", "ledger", "remove", remove_row["transaction_id"], "--reason", "duplicate", "--yes"],
     )
     assert removed.exit_code == 0, removed.output
@@ -529,15 +519,15 @@ def test_stash_remove_and_track() -> None:
 # --- Journey 9: preflight and check gates ------------------------------------
 def test_preflight_and_check_surface_missing_facts() -> None:
     _import_bbva()
-    preflight = _RUNNER.invoke(app, ["app", "ledger", "preflight", "--period", "1T", "--year", "2025"])
+    preflight = _invoke(["app", "ledger", "preflight", "--period", "1T", "--year", "2025"])
     assert preflight.exit_code == 0, preflight.output
-    check = _RUNNER.invoke(app, ["app", "ledger", "check"])
+    check = _invoke(["app", "ledger", "check"])
     assert check.exit_code == 0, check.output
 
 
 # --- Operating-scale rendering: honest paging/truncation ---------------------------
 def _list_payload(*args: str) -> dict[str, Any]:
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list", *args])
+    listed = _invoke(["--format", "json", "app", "ledger", "list", *args])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload)
@@ -584,7 +574,7 @@ def test_list_paging_is_honest_and_never_silently_caps() -> None:
 def test_list_truncation_footer_states_the_full_total() -> None:
     _import_bbva()
     total = _list_payload()["total"]
-    listed = _RUNNER.invoke(app, ["app", "ledger", "list", "--limit", "5"])
+    listed = _invoke(["app", "ledger", "list", "--limit", "5"])
     assert listed.exit_code == 0, listed.output
     # The human footer names the full total so the cap is never silent.
     assert str(total) in listed.output
@@ -593,7 +583,7 @@ def test_list_truncation_footer_states_the_full_total() -> None:
 
 # --- Grouping / labelling + grouped display ----------------------------------------
 def _set_group(tx_id: str, label: str) -> None:
-    res = _RUNNER.invoke(app, ["app", "ledger", "update", tx_id, "--group", label])
+    res = _invoke(["app", "ledger", "update", tx_id, "--group", label])
     assert res.exit_code == 0, res.output
 
 
@@ -617,7 +607,7 @@ def test_group_label_assign_filter_and_grouped_display() -> None:
     assert "Proyecto Acme" in labels and None in labels
 
     # --by-group renders a section header naming the group.
-    grouped = _RUNNER.invoke(app, ["app", "ledger", "list", "--by-group"])
+    grouped = _invoke(["app", "ledger", "list", "--by-group"])
     assert grouped.exit_code == 0, grouped.output
     assert "# Proyecto Acme" in grouped.output
 
@@ -628,20 +618,20 @@ def test_unrelated_update_preserves_group_label() -> None:
     row = _find(rows, "Material oficina Papeleria Gomez")
     _set_group(row["transaction_id"], "Q1 viajes")
     # An edit to an unrelated field must NOT wipe the operator's grouping.
-    res = _RUNNER.invoke(app, ["app", "ledger", "update", row["transaction_id"], "--notes", "revisado"])
+    res = _invoke(["app", "ledger", "update", row["transaction_id"], "--notes", "revisado"])
     assert res.exit_code == 0, res.output
     after = {r["transaction_id"]: r for r in _list_rows()}[row["transaction_id"]]
     assert after["group_label"] == "Q1 viajes"
 
     # Passing an empty --group clears the label.
-    cleared = _RUNNER.invoke(app, ["app", "ledger", "update", row["transaction_id"], "--group", ""])
+    cleared = _invoke(["app", "ledger", "update", row["transaction_id"], "--group", ""])
     assert cleared.exit_code == 0, cleared.output
     final = {r["transaction_id"]: r for r in _list_rows()}[row["transaction_id"]]
     assert final["group_label"] is None
 
 
 # --- Batch transform / iterative refinement at scale -------------------------------
-def test_batch_transform_recategorize_relabel_reallocate_at_scale() -> None:
+def test_batch_transform_recategorize_relabel_reallocate_at_scale(tmp_path: Path) -> None:
     """Iterative refinement over a large slice: recategorize -> relabel -> reallocate.
 
     Proves the operator can amend hundreds of rows in batched passes and that
@@ -665,12 +655,9 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale() -> None:
         targeted[row["transaction_id"]] = cat
     assert len(targeted) >= 100, f"corpus must yield a hundreds-scale batch, got {len(targeted)}"
 
-    import tempfile
-
-    with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, encoding="utf-8") as fh:
-        fh.write("\n".join(lines) + "\n")
-        recat_csv = fh.name
-    res = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--from-csv", recat_csv])
+    recat_csv = tmp_path / "recategorize.csv"
+    recat_csv.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    res = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(recat_csv)])
     assert res.exit_code == 0, res.output
     payload = json.loads(res.output)["result"]
     assert payload["applied"] == len(targeted), payload
@@ -691,10 +678,9 @@ def test_batch_transform_recategorize_relabel_reallocate_at_scale() -> None:
     mixed_ids = slice_ids[:20]
     realloc = ["transaction_id,classification,business_pct"]
     realloc += [f"{tx_id},MIXED,0.60" for tx_id in mixed_ids]
-    with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, encoding="utf-8") as fh:
-        fh.write("\n".join(realloc) + "\n")
-        realloc_csv = fh.name
-    res2 = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--from-csv", realloc_csv])
+    realloc_csv = tmp_path / "reallocate.csv"
+    realloc_csv.write_text("\n".join(realloc) + "\n", encoding="utf-8")
+    res2 = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(realloc_csv)])
     assert res2.exit_code == 0, res2.output
     payload2 = json.loads(res2.output)["result"]
     assert payload2["applied"] == len(mixed_ids), payload2
@@ -719,13 +705,13 @@ def test_transfer_row_reclassified_to_internal_transfer_and_locked_out_of_tax() 
     assert transfer["direction"] == "OUTGOING"
     assert transfer["business_classification"] == "NOT_YET_PROCESSED"
 
-    reclass = _RUNNER.invoke(app, ["app", "ledger", "update", tx, "--direction", "INTERNAL_TRANSFER"])
+    reclass = _invoke(["app", "ledger", "update", tx, "--direction", "INTERNAL_TRANSFER"])
     assert reclass.exit_code == 0, reclass.output
     after = {r["transaction_id"]: r for r in _list_rows()}[tx]
     assert after["direction"] == "INTERNAL_TRANSFER"
 
     # A transfer must not be promotable to a tax-relevant BUSINESS row.
-    refused = _RUNNER.invoke(app, ["app", "ledger", "update", tx, "--classification", "BUSINESS"])
+    refused = _invoke(["app", "ledger", "update", tx, "--classification", "BUSINESS"])
     assert refused.exit_code != 0, refused.output
     assert after["business_classification"] != "BUSINESS"
 
@@ -749,8 +735,7 @@ def test_edit_editable_facts_records_edit_lineage_chain() -> None:
     target = _find(rows, "Material oficina Papeleria Gomez")
     old_id = target["transaction_id"]
 
-    res = _RUNNER.invoke(
-        app,
+    res = _invoke(
         ["app", "ledger", "update", old_id, "--description", "Material oficina (corregido)"],
     )
     assert res.exit_code == 0, res.output
@@ -774,18 +759,16 @@ def test_reclassify_retains_classification_event_chain() -> None:
     target = _find(rows, "Material oficina Papeleria Gomez")
     tx = target["transaction_id"]
 
-    first = _RUNNER.invoke(
-        app,
+    first = _invoke(
         ["app", "ledger", "classify", tx, "--classification", "BUSINESS", "--category-id", "material_oficina"],
     )
     assert first.exit_code == 0, first.output
-    second = _RUNNER.invoke(
-        app,
+    second = _invoke(
         ["app", "ledger", "classify", tx, "--classification", "BUSINESS", "--category-id", "asesoria_fiscal"],
     )
     assert second.exit_code == 0, second.output
 
-    history = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", tx])
+    history = _invoke(["--format", "json", "app", "ledger", "history", tx])
     assert history.exit_code == 0, history.output
     events = json.loads(history.output)["result"]["events"]
     classified = [e for e in events if e["event_type"] == "ledger.transaction.classified"]
@@ -885,7 +868,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
         ),
     )
 
-    refused = _RUNNER.invoke(app, ["app", "ledger", "update", tx, "--notes", "tweak"])
+    refused = _invoke(["app", "ledger", "update", tx, "--notes", "tweak"])
     assert refused.exit_code != 0, refused.output
     assert "finalized modelo" in refused.output.lower() or "modelo" in refused.output.lower()
 
@@ -901,8 +884,7 @@ def test_doclink_refuses_when_document_bytes_are_unreachable() -> None:
     tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
     link = "https://drive.google.com/file/d/ABC123ticket/view"
 
-    res = _RUNNER.invoke(
-        app,
+    res = _invoke(
         ["app", "ledger", "doclink", tx, "--source", "GOOGLE_DRIVE", "--reference", link, "--note", "ticket"],
     )
     assert res.exit_code != 0, res.output
@@ -918,8 +900,7 @@ def test_doclink_refuses_non_link_source(tmp_path: Path) -> None:
     rows = _list_rows()
     tx = _find(rows, "Material oficina Papeleria Gomez")["transaction_id"]
     # LOCAL_FILE is a valid AttachmentSource but not a document *link* source.
-    res = _RUNNER.invoke(
-        app,
+    res = _invoke(
         [
             "app",
             "ledger",
@@ -950,8 +931,7 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     biz = (amount * Decimal("0.6")).quantize(Decimal("0.01"))
     personal = amount - biz
 
-    split = _RUNNER.invoke(
-        app,
+    split = _invoke(
         [
             "app",
             "ledger",
@@ -982,8 +962,7 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
     per_child = next(t for t in children if "personal" in t.raw.description)
 
     # Classify each child independently: business carries base/IVA; personal does not.
-    cls_biz = _RUNNER.invoke(
-        app,
+    cls_biz = _invoke(
         [
             "app",
             "ledger",
@@ -996,8 +975,7 @@ def test_split_mixed_invoice_into_business_and_personal_children() -> None:
         ],
     )
     assert cls_biz.exit_code == 0, cls_biz.output
-    cls_per = _RUNNER.invoke(
-        app,
+    cls_per = _invoke(
         ["app", "ledger", "classify", per_child.transaction_id, "--classification", "PERSONAL"],
     )
     assert cls_per.exit_code == 0, cls_per.output
@@ -1044,8 +1022,7 @@ def test_xlsx_import_is_id_for_id_parity_with_csv(tmp_path: Path) -> None:
     # id-set — the two provider formats agree row-for-row.
     xlsx_path = tmp_path / "bbva.xlsx"
     _xlsx_mirror_of_csv(csv_path, xlsx_path)
-    xlsx_res = _RUNNER.invoke(
-        app,
+    xlsx_res = _invoke(
         ["--format", "json", "app", "ledger", "import", str(xlsx_path), "--provider", "xlsx"],
     )
     assert xlsx_res.exit_code == 0, xlsx_res.output
@@ -1056,13 +1033,12 @@ def test_xlsx_import_is_id_for_id_parity_with_csv(tmp_path: Path) -> None:
 def test_cross_format_reimport_dedups_by_fingerprint(tmp_path: Path) -> None:
     """Re-importing the same rows in a different format adds nothing."""
     csv_path = _CORPUS / "bbva-business-eur.csv"
-    _RUNNER.invoke(app, ["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    _invoke(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
     before = len(_list_rows())
     assert before > 40
     xlsx_path = tmp_path / "bbva.xlsx"
     _xlsx_mirror_of_csv(csv_path, xlsx_path)
-    reimport = _RUNNER.invoke(
-        app,
+    reimport = _invoke(
         ["--format", "json", "app", "ledger", "import", str(xlsx_path), "--provider", "xlsx"],
     )
     assert reimport.exit_code == 0, reimport.output
@@ -1073,13 +1049,13 @@ def test_cross_format_reimport_dedups_by_fingerprint(tmp_path: Path) -> None:
 def test_ofx_and_pdf_providers_import_real_transactions() -> None:
     """The OFX and PDF providers ingest real bank exports."""
     ofx = _FIN_FIXTURES / "synthetic-transactions.ofx"
-    ofx_res = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "import", str(ofx), "--provider", "ofx"])
+    ofx_res = _invoke(["--format", "json", "app", "ledger", "import", str(ofx), "--provider", "ofx"])
     assert ofx_res.exit_code == 0, ofx_res.output
     assert len(_list_rows()) > 0
 
-    _RUNNER.invoke(app, ["app", "ledger", "reset", "--yes"])
+    _invoke(["app", "ledger", "reset", "--yes"])
     pdf = _FIN_FIXTURES / "n26" / "n26-savings-2025-01.pdf"
-    pdf_res = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "import", str(pdf), "--provider", "pdf"])
+    pdf_res = _invoke(["--format", "json", "app", "ledger", "import", str(pdf), "--provider", "pdf"])
     assert pdf_res.exit_code == 0, pdf_res.output
     assert len(_list_rows()) > 0
 
@@ -1089,10 +1065,10 @@ def test_jsonl_export_roundtrips_back_through_import(tmp_path: Path) -> None:
     _import_bbva()
     before = len(_list_rows())
     out = tmp_path / "ledger.jsonl"
-    exported = _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(out), "--export-format", "jsonl"])
+    exported = _invoke(["app", "ledger", "export", "--output", str(out), "--export-format", "jsonl"])
     assert exported.exit_code == 0, exported.output
     assert out.exists() and out.read_text(encoding="utf-8").strip()
     # The canonical JSONL export carries the rich ledger schema (not a bank
     # layout); re-import leaves the active row count unchanged (no phantom rows).
-    _RUNNER.invoke(app, ["app", "ledger", "import", str(out), "--provider", "csv"])
+    _invoke(["app", "ledger", "import", str(out), "--provider", "csv"])
     assert len(_list_rows()) == before

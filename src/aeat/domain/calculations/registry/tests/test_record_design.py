@@ -11,7 +11,13 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from .....core.resources import bundled_path
-from .. import CasillaFieldKind, build_snapshot, load_registry_tree, resolve_export_layout
+from .. import (
+    CasillaFieldKind,
+    build_snapshot,
+    calculation_closure_legal_refs,
+    load_registry_tree,
+    resolve_export_layout,
+)
 from .._record_design import (
     build_diseno_coverage_report,
     calculation_closure_record_design_metadata,
@@ -33,6 +39,12 @@ _RECORD_DESIGN_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro"
 @cache
 def _committed_registry_tree():
     return load_registry_tree(bundled_path("registry", "aeat"))
+
+
+def _modelo_131_snapshot(*, filing_year: int, period: str = "1T"):
+    modelos, catalogues = _committed_registry_tree()
+    modelo = next(item for item in modelos if item.id == "131")
+    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period=period)
 
 
 def test_modelo_131_current_record_design_exposes_dpa_and_did_records() -> None:
@@ -386,6 +398,30 @@ def test_calculation_completeness_manifests_match_their_calculation_surface() ->
     assert checked > 0, "expected at least one calculation-completeness manifest"
 
 
+def test_calculation_completeness_manifest_legal_refs_match_calculation_closure() -> None:
+    """Every checked-in completeness manifest carries exactly its closure refs."""
+    modelos, _catalogues = _committed_registry_tree()
+
+    checked = 0
+    offenders: dict[tuple[str, str], dict[str, list[str]]] = {}
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            manifest = revision.completeness_manifest
+            if manifest is None:
+                continue
+            closure_refs = calculation_closure_legal_refs(revision, modelo.id)
+            manifest_refs = set(manifest.legal_refs)
+            if manifest_refs != closure_refs:
+                offenders[(modelo.id, revision.id)] = {
+                    "manifest_only": sorted(manifest_refs - closure_refs),
+                    "closure_only": sorted(closure_refs - manifest_refs),
+                }
+            checked += 1
+
+    assert not offenders
+    assert checked > 0, "expected at least one calculation-completeness manifest"
+
+
 def test_calculation_completeness_gate_is_live_for_every_calculation_bearing_modelo() -> None:
     """Every modelo with a calculation closure carries a manifest; the gate is live.
 
@@ -647,9 +683,7 @@ def test_modelo_131_registry_bindings_cover_official_structured_records(
     workbook_name: str,
     source_ref: str,
 ) -> None:
-    modelos, catalogues = _committed_registry_tree()
-    modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
+    snapshot = _modelo_131_snapshot(filing_year=filing_year)
     sheets = {sheet.name: sheet for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)}
 
     official_fields = {
@@ -677,9 +711,7 @@ def test_modelo_131_registry_bindings_cover_official_structured_records(
 
 
 def test_modelo_131_2024_dpa_territorial_reduction_fields_carry_specific_legal_basis() -> None:
-    modelos, catalogues = _committed_registry_tree()
-    modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="4T")
+    snapshot = _modelo_131_snapshot(filing_year=2024, period="4T")
     sheets = {
         sheet.name: sheet
         for sheet in extract_record_design_workbook(
@@ -716,9 +748,7 @@ def test_modelo_131_registry_bindings_cover_official_page_one_structured_fields(
     filing_year: int,
     workbook_name: str,
 ) -> None:
-    modelos, catalogues = _committed_registry_tree()
-    modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
+    snapshot = _modelo_131_snapshot(filing_year=filing_year)
     page = next(
         sheet
         for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)
@@ -767,9 +797,7 @@ def test_modelo_131_page_one_la_palma_fields_are_year_scoped(
     workbook_name: str,
     palma_legal_ref: str,
 ) -> None:
-    modelos, catalogues = _committed_registry_tree()
-    modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
+    snapshot = _modelo_131_snapshot(filing_year=filing_year)
     page = next(
         sheet
         for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)
@@ -791,9 +819,7 @@ def test_modelo_131_page_one_la_palma_fields_are_year_scoped(
 
 
 def test_modelo_131_current_page_one_agrarian_fields_preserve_territorial_meaning() -> None:
-    modelos, catalogues = _committed_registry_tree()
-    modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="1T")
+    snapshot = _modelo_131_snapshot(filing_year=2026)
     page = next(sheet for sheet in extract_record_design_workbook(_MODELO_131_CURRENT) if sheet.name == "Pág. 1")
     descriptions = {(field.offset, field.length): field.description for field in page.fields}
 
@@ -813,9 +839,7 @@ def test_modelo_131_current_page_one_agrarian_fields_preserve_territorial_meanin
 
 @pytest.mark.parametrize("filing_year", [2024, 2025, 2026])
 def test_modelo_131_export_records_derive_fields_from_reviewed_bindings(filing_year: int) -> None:
-    modelos, catalogues = _committed_registry_tree()
-    modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
+    snapshot = _modelo_131_snapshot(filing_year=filing_year)
     layout = resolve_export_layout(snapshot).layout
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 
@@ -847,9 +871,7 @@ def test_modelo_131_export_records_derive_fields_from_reviewed_bindings(filing_y
 
 @pytest.mark.parametrize("filing_year", [2023, 2024, 2025, 2026])
 def test_modelo_131_submitted_file_profiles_target_exported_casillas(filing_year: int) -> None:
-    modelos, catalogues = _committed_registry_tree()
-    modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
+    snapshot = _modelo_131_snapshot(filing_year=filing_year)
     layout = resolve_export_layout(snapshot).layout
     profile = next(
         item

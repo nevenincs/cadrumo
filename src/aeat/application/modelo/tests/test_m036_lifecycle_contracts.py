@@ -51,10 +51,12 @@ def test_command_carries_optional_justificante_and_note() -> None:
 def test_command_rejects_unknown_event_kind() -> None:
     """The closed-value axis rejects strings outside the AEAT-published set."""
     with pytest.raises(ValidationError):
-        M036DeclarationCommand(
-            profile_id="profile-test",
-            event_kind="cancelacion",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
-            declared_on=date(2026, 6, 3),
+        M036DeclarationCommand.model_validate(
+            {
+                "profile_id": "profile-test",
+                "event_kind": "cancelacion",
+                "declared_on": date(2026, 6, 3),
+            },
         )
 
 
@@ -185,12 +187,14 @@ def test_result_carries_bucket_id_field() -> None:
 def test_result_rejects_missing_bucket_id() -> None:
     """A result authored without bucket_id fails validation."""
     with pytest.raises(ValidationError):
-        M036DeclarationResult(  # type: ignore[call-arg]  # ty: ignore[missing-argument]  # negative test: intentionally invalid input
-            declaration_id="a" * 64,
-            profile_id="profile-test",
-            event_kind=CensoModeloEventKind.ALTA,
-            declared_on=date(2026, 6, 3),
-            recorded_at=datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
+        M036DeclarationResult.model_validate(
+            {
+                "declaration_id": "a" * 64,
+                "profile_id": "profile-test",
+                "event_kind": CensoModeloEventKind.ALTA,
+                "declared_on": date(2026, 6, 3),
+                "recorded_at": datetime(2026, 6, 3, 14, 0, 0, tzinfo=UTC),
+            },
         )
 
 

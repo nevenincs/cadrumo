@@ -22,6 +22,7 @@ from typing import Any, cast
 
 import pytest
 
+from ....application import wizard as _wizard  # noqa: F401 -- side effect: registers PROFILE_KEYS
 from ....core.config import override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
@@ -32,7 +33,17 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        override_settings(
+            aeat_auth_provider=None,
+            aeat_certificate_path=None,
+            aeat_certificate_password_secret=None,
+            aeat_clave_movil_dni_nie=None,
+            aeat_clave_movil_dni_fecha=None,
+            aeat_clave_movil_nie_soporte=None,
+        ),
+    ):
         yield
 
 
@@ -53,19 +64,6 @@ def _json(result) -> dict[str, Any]:
         if isinstance(inner, dict):
             return inner
     return payload
-
-
-def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Clear ambient auth env vars for tests that interact with auth CLI surfaces."""
-    for name in (
-        "AEAT_AUTH_PROVIDER",
-        "AEAT_CERTIFICATE_PATH",
-        "AEAT_CERTIFICATE_PASSWORD_SECRET",
-        "AEAT_CLAVE_MOVIL_DNI_NIE",
-        "AEAT_CLAVE_MOVIL_DNI_FECHA",
-        "AEAT_CLAVE_MOVIL_NIE_SOPORTE",
-    ):
-        monkeypatch.delenv(name, raising=False)
 
 
 def _invoke(args: list[str]):
@@ -157,8 +155,7 @@ def test_retired_invoice_declaration_and_archive_surfaces_are_not_user_facing() 
 # ---------------------------------------------------------------------
 
 
-def test_app_overview_status_bare_renders_counts(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    _isolate(monkeypatch, tmp_path)
+def test_app_overview_status_bare_renders_counts() -> None:
     result = _invoke(["--format", "json", "app", "overview", "status"])
     assert result.exit_code == 0
     payload = _json(result)
@@ -167,11 +164,7 @@ def test_app_overview_status_bare_renders_counts(monkeypatch: pytest.MonkeyPatch
     assert payload["drafts"] == 0
 
 
-def test_app_ledger_import_dry_run_does_not_persist(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate(monkeypatch, tmp_path)
+def test_app_ledger_import_dry_run_does_not_persist(tmp_path: Path) -> None:
     statement = tmp_path / "n26.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
@@ -398,10 +391,7 @@ def _assert_ledger_review_filtered_by_period_returns_empty(transaction_id: str) 
     assert filtered_out["filters"] == ["period=2026 06", f"id={transaction_id}"]
 
 
-def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
+def test_app_ledger_create_manual_transaction_persists_in_active_bucket() -> None:
     """End-to-end ledger CLI flow: add → list/view → update → classify → allocate → status → track → review.
 
     Each step is a small helper that owns its CLI invocation, JSON
@@ -409,7 +399,6 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
     reads as a linear narrative of the workflow with the
     transaction-id and intermediate payloads threaded through.
     """
-    _isolate(monkeypatch, tmp_path)
     init = _invoke(
         ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
     )
@@ -442,10 +431,7 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
     _assert_ledger_review_filtered_by_period_returns_empty(transaction_id)
 
 
-def test_app_ledger_list_reveal_identifiers_opt_in_surfaces_real_bucket_id(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
+def test_app_ledger_list_reveal_identifiers_opt_in_surfaces_real_bucket_id() -> None:
     """Default ledger list JSON redacts ``bucket_id``; the reveal opt-out shows the real UUID.
 
     Multi-client gestors must be able to disambiguate which bucket a command
@@ -453,7 +439,6 @@ def test_app_ledger_list_reveal_identifiers_opt_in_surfaces_real_bucket_id(
     profile/bucket identifier surfaces while the paste-safe placeholder stays
     the default.
     """
-    _isolate(monkeypatch, tmp_path)
     init = _invoke(
         ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
     )
@@ -473,10 +458,7 @@ def test_app_ledger_list_reveal_identifiers_opt_in_surfaces_real_bucket_id(
     assert revealed_payload["bucket_id"] != CLI_BUCKET_ID_PLACEHOLDER
 
 
-def test_config_profile_show_reveal_identifiers_opt_in_surfaces_real_profile_id(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
+def test_config_profile_show_reveal_identifiers_opt_in_surfaces_real_profile_id() -> None:
     """Default ``config profile show`` JSON redacts ``profile_id``; the opt-out reveals it.
 
     ``config profile show`` is the profile inspection surface. The
@@ -485,7 +467,6 @@ def test_config_profile_show_reveal_identifiers_opt_in_surfaces_real_profile_id(
     ``AEAT_CLI_REVEAL_IDENTIFIERS`` opt-out un-redacts the opaque profile UUID so
     a multi-client gestor's automation can key on the addressed profile.
     """
-    _isolate(monkeypatch, tmp_path)
     init = _invoke(
         ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
     )
@@ -504,10 +485,7 @@ def test_config_profile_show_reveal_identifiers_opt_in_surfaces_real_profile_id(
     assert revealed_payload["profile_id"] != CLI_PROFILE_ID_PLACEHOLDER
 
 
-def test_app_modelo_filing_record_list_text_header_is_well_formed(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
+def test_app_modelo_filing_record_list_text_header_is_well_formed() -> None:
     """The ``filing-record list`` text column header survives the identifier redactor.
 
     The tab-delimited header places ``bucket_id`` immediately before the
@@ -516,7 +494,6 @@ def test_app_modelo_filing_record_list_text_header_is_well_formed(
     header carries field names, never identifier values. The header row must pass
     through verbatim so automation can parse the columns.
     """
-    _isolate(monkeypatch, tmp_path)
     init = _invoke(
         ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
     )
@@ -565,10 +542,7 @@ class _LedgerLifecycleOutcome:
     reset_payload: dict[str, object]
 
 
-def _drive_ledger_lifecycle_round_trip(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> _LedgerLifecycleOutcome:
+def _drive_ledger_lifecycle_round_trip(tmp_path: Path) -> _LedgerLifecycleOutcome:
     """Drive the lifecycle round-trip: attach -> archive -> stash -> remove -> export -> reset.
 
     Three rows are created so the export and reset surfaces see a
@@ -576,7 +550,6 @@ def _drive_ledger_lifecycle_round_trip(
     stashed; the remove and reset paths exercise the final two
     inactive rows).
     """
-    _isolate(monkeypatch, tmp_path)
     init = _invoke(
         ["config", "profile", "create", "operator", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"],
     )
@@ -729,10 +702,9 @@ def _ledger_lifecycle_reset() -> tuple[dict[str, object], int, dict[str, object]
 
 
 def test_app_ledger_lifecycle_attach_records_purchase_invoice_evidence(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
     transaction = _json_object(outcome.attached_payload["transaction"])
     assert transaction["purchase_invoice_evidence_id"] == outcome.purchase_invoice_evidence_id
     assert outcome.attached_payload["bucket_event_ids"]
@@ -746,90 +718,77 @@ _LIFECYCLE_TRANSITION_EXPECTATIONS = (
 
 @pytest.mark.parametrize(("attribute", "expected_state"), _LIFECYCLE_TRANSITION_EXPECTATIONS)
 def test_app_ledger_lifecycle_transition_advances_lifecycle_state(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     attribute: str,
     expected_state: str,
 ) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
     payload = getattr(outcome, attribute)
     assert payload["transaction"]["lifecycle_state"] == expected_state
 
 
 def test_app_ledger_lifecycle_remove_dry_run_marks_payload(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
     assert outcome.dry_remove_payload["dry_run"] is True
 
 
 def test_app_ledger_lifecycle_remove_requires_yes_flag(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
     assert outcome.refused_remove_exit_code != 0
 
 
 def test_app_ledger_lifecycle_remove_with_yes_deletes_row(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
     assert outcome.removed_payload["removed"] is True
 
 
 def test_app_ledger_lifecycle_export_targets_active_profile_bucket(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
     assert outcome.bucket_id not in json.dumps(outcome.export_payload, sort_keys=True)
     assert outcome.export_payload["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER
 
 
 def test_app_ledger_lifecycle_export_records_three_rows(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
     assert outcome.export_payload["row_count"] == 3
     assert outcome.export_path.read_text(encoding="utf-8").count("\n") == 3
 
 
 def test_app_ledger_lifecycle_reset_dry_run_marks_payload(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
     assert outcome.dry_reset_payload["dry_run"] is True
 
 
 def test_app_ledger_lifecycle_reset_requires_yes_flag(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
     assert outcome.refused_reset_exit_code != 0
 
 
 def test_app_ledger_lifecycle_reset_with_yes_clears_three_rows(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
+    outcome = _drive_ledger_lifecycle_round_trip(tmp_path)
     assert outcome.reset_payload["reset"] is True
     removed_transaction_ids = outcome.reset_payload["removed_transaction_ids"]
     assert isinstance(removed_transaction_ids, list)
     assert len(removed_transaction_ids) == 3
 
 
-def test_app_ledger_import_reimport_review_round_trips_state(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate(monkeypatch, tmp_path)
+def test_app_ledger_import_reimport_review_round_trips_state(tmp_path: Path) -> None:
     init = _invoke(
         [
             "config",
@@ -880,20 +839,12 @@ def test_app_ledger_import_reimport_review_round_trips_state(
     assert reviewed_payload["description"] == "Subscription"
 
 
-def test_app_ledger_review_filter_rejects_unknown_key(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate(monkeypatch, tmp_path)
+def test_app_ledger_review_filter_rejects_unknown_key() -> None:
     result = _invoke(["app", "ledger", "review", "--filter", "kind=received"])
     assert result.exit_code != 0
 
 
-def test_set_ratio_is_not_a_ledger_verb(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate(monkeypatch, tmp_path)
+def test_set_ratio_is_not_a_ledger_verb() -> None:
     for command in ("set-ratio",):
         result = _invoke(["app", "ledger", command, "--help"])
         assert result.exit_code != 0

@@ -1,6 +1,7 @@
 """Ledger classification rule CLI command surface.
 
-Use of :class:`TransactionCatalogueRepository` for compliance.
+Rule commands apply, list, and mutate classification rules through
+:class:`TransactionCatalogueRepository` for the active bucket.
 """
 
 from __future__ import annotations

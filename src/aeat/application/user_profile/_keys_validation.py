@@ -30,6 +30,7 @@ from ...domain.contribuyente import (
     optional_profile_keys,
 )
 from ...domain.contribuyente._keys import _profile_keys as _get_profile_keys
+from ._completeness import conditional_profile_required_paths
 
 
 class ProfileValidationResult(BaseModel):
@@ -79,11 +80,12 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
     Returns a :class:`ProfileValidationResult`.
     """
     entries = _get_profile_keys()
-    required_keys = tuple(
+    static_required_keys = tuple(
         entry.key
         for entry in entries
         if entry.requirement is ProfileKeyRequirement.REQUIRED or _conditional_requirement_applies(values, entry)
     )
+    required_keys = tuple(dict.fromkeys((*static_required_keys, *conditional_profile_required_paths(values))))
     optional_keys = tuple(entry.key for entry in optional_profile_keys())
     known_keys = set(required_keys) | set(optional_keys)
 

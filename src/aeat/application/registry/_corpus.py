@@ -1,8 +1,12 @@
 """Application services for registry corpus projections.
 
-Manual verification can receive a :class:`ValidatedRegistryAuthority` so manual
-casilla references are checked against the same validated registry authority as
-runtime registry workflows.
+Citation services project :class:`TopicCatalogue` entries and
+:class:`NormativeReference` records into operator-facing reports.
+Manual services project extracted manual parts, rules, and verification
+results. Manual verification can receive a
+:class:`ValidatedRegistryAuthority` so manual casilla references are
+checked against the same validated registry authority as runtime
+registry workflows.
 """
 
 from __future__ import annotations
@@ -66,7 +70,7 @@ class RegistryManualId(StrEnum):
 
 
 class RegistryTopicProjection(BaseModel):
-    """Resolved topic content exposed by registry corpus services."""
+    """Resolved :class:`Topic` content exposed by registry corpus services."""
 
     model_config = _STRICT_FROZEN
 
@@ -78,7 +82,7 @@ class RegistryTopicProjection(BaseModel):
 
 
 class RegistryCitationReferenceProjection(BaseModel):
-    """One normative reference row in the registry citations surface."""
+    """One :class:`NormativeReference` row in the registry citations surface."""
 
     model_config = _STRICT_FROZEN
 
@@ -125,7 +129,12 @@ class RegistryCitationShowCommand(BaseModel):
 
 
 class RegistryCitationsListReport(BaseModel):
-    """Typed report for registry citation listing."""
+    """Typed report for registry citation listing.
+
+    Carries rendered :class:`RegistryTopicProjection` rows and
+    :class:`RegistryCitationReferenceProjection` rows from the local
+    normative corpus.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -138,7 +147,11 @@ class RegistryCitationsListReport(BaseModel):
 
 
 class RegistryCitationShowReport(BaseModel):
-    """Typed report for a single registry citation lookup."""
+    """Typed report for a single registry citation lookup.
+
+    Carries one :class:`RegistryCitationReferenceProjection`, optional
+    article detail, and related :class:`RegistryTopicProjection` rows.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -226,7 +239,11 @@ class RegistryManualVerifyCommand(BaseModel):
 
 
 class RegistryManualsListReport(BaseModel):
-    """Typed report for registry manual listing."""
+    """Typed report for registry manual listing.
+
+    Carries discovered :class:`RegistryManualPartProjection` rows plus
+    topic projections shared with the citation surfaces.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -281,7 +298,12 @@ class RegistryManualRuleProjection(BaseModel):
 
 
 class RegistryManualRulesReport(BaseModel):
-    """Typed report for manual rule listing."""
+    """Typed report for manual rule listing.
+
+    Projects manual rules into :class:`RegistryManualRuleProjection`
+    rows while preserving typed :class:`ManualCasillaReference`
+    references for registry cross-checking.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -298,7 +320,12 @@ class RegistryManualRulesReport(BaseModel):
 
 
 class RegistryManualVerificationReport(BaseModel):
-    """Typed report for manual corpus verification."""
+    """Typed report for manual corpus verification.
+
+    Summarizes a :class:`ManualVerificationReport` as normalized
+    :class:`RegistryCorpusIssueProjection` rows for the application
+    surface.
+    """
 
     model_config = _STRICT_FROZEN
 

@@ -1,8 +1,14 @@
-"""Typed input bundle for modelo work calculation.
+"""Typed input bundle and validation for modelo work calculation.
 
-Use of :class:`CalculationRevision` for compliance. Resolves the work unit's
-:class:`ModeloRevision` to guard each casilla key and data type against the
-revision's registry-declared casilla set.
+This module converts CLI override tokens into a
+:class:`WorkCalculateInputBundle`, resolves the active work unit's
+:class:`ModeloRevision`, and validates canonical casilla ids, binding channels,
+relation ids, and shortcut-derived semantic-role casillas before the calculate
+service persists a :class:`CalculationRevision`.
+
+The application result pairs that persisted revision with its parent
+:class:`~aeat.domain.modelos._work_unit.WorkUnit` and any non-blocking
+:class:`CalculationSourceDiagnostic` rows surfaced by bucket aggregation.
 """
 
 from __future__ import annotations

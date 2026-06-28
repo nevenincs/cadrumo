@@ -130,6 +130,15 @@ def taxpayer_profile_from_mapping(
         pays_rent_with_retencion=typed.pays_rent_with_retencion,
         pays_capital_income_with_retencion=typed.pays_capital_income_with_retencion,
         **objective_fields,
+        objective_estimation_prior_year_gross_income_eur=_parse_decimal(
+            canonical.get("irpf.objective_estimation_prior_year_gross_income_eur"),
+        ),
+        objective_estimation_prior_year_invoice_gross_income_eur=_parse_decimal(
+            canonical.get("irpf.objective_estimation_prior_year_invoice_gross_income_eur"),
+        ),
+        objective_estimation_prior_year_purchases_eur=_parse_decimal(
+            canonical.get("irpf.objective_estimation_prior_year_purchases_eur"),
+        ),
         does_intracomunitario=typed.does_intracomunitario,
         third_party_transactions_above_347_threshold=typed.third_party_transactions_above_347_threshold,
         bienes_extranjero_above_threshold=typed.bienes_extranjero_above_threshold,

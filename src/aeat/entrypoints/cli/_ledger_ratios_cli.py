@@ -1,6 +1,7 @@
 """Ledger ratios CLI command surface.
 
-Use of :class:`BucketEventHistoryRepository` for compliance.
+Ratio mutations append :class:`BucketEventHistoryRepository` events in the
+active bucket so category overrides remain auditable.
 """
 
 from __future__ import annotations

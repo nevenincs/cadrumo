@@ -23,6 +23,7 @@ from ...application.modelo import (
     modelo_work_create_applicability_refusal,
     modelo_work_create_refusal_locale_key,
     rename_work_unit,
+    require_profile_ready_for_modelo_work,
     resolve_registry_revision_for_work_target,
 )
 from ...core import Modelo, Period
@@ -127,7 +128,7 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
     )
 
 
-def _guard_stub_modelo(modelo: str) -> None:
+def guard_unsupported_work_modelo(modelo: str) -> None:
     from ._errors import CliRefusedBoundaryError
 
     modelo_code = modelo.strip()
@@ -203,7 +204,7 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
         _validate_filing_year(year)
         requested_revision = revision.strip() if revision is not None else None
         causante_ccaa = parse_tax_region(causante_ccaa_raw) if causante_ccaa_raw is not None else None
-        _guard_stub_modelo(modelo)
+        guard_unsupported_work_modelo(modelo)
         resolved_period = deps.resolve_year_period(year, period, modelo=modelo)
         resolved_year = resolved_period.year
         _validate_registry_target_before_profile_if_needed(
@@ -217,6 +218,19 @@ def _register_work_create_command(work_app: typer.Typer, deps: _LifecycleDeps) -
         _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable)
         resolved_bucket = bucket_id if bucket_id is not None else _active_bucket_id()
         resolved_actor = actor or deps.resolve_default_actor()
+        resolved_revision_id = resolve_registry_revision_for_work_target(
+            modelo=modelo,
+            filing_year=resolved_year,
+            period=resolved_period,
+            registry_revision_id=requested_revision,
+        )
+        require_profile_ready_for_modelo_work(
+            bucket_id=resolved_bucket,
+            modelo=modelo,
+            revision_id=resolved_revision_id,
+            filing_year=resolved_year,
+            period=resolved_period,
+        )
 
         try:
             ensure_result = ensure_modelo_work_unit_for_visible_target(
@@ -583,4 +597,4 @@ def _register_work_discard_command(work_app: typer.Typer, deps: _LifecycleDeps) 
         _emit_envelope(ctx, command="modelo.work.discard", result=result, lines=lines)
 
 
-__all__ = ["register_work_lifecycle_commands"]
+__all__ = ["guard_unsupported_work_modelo", "register_work_lifecycle_commands"]

@@ -1,4 +1,9 @@
-"""Local auth provider and persisted-session probes for operator services."""
+"""Local auth provider and persisted-session probes for operator services.
+
+The local probe path classifies :class:`AuthProviderKind` configuration with
+:class:`ProviderProbeResult` values and reuses persisted-session metadata via
+:func:`load_persisted_session`.
+"""
 
 from __future__ import annotations
 

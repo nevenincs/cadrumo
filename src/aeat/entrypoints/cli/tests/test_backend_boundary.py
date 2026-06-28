@@ -573,10 +573,6 @@ def test_cli_observability_wrapper_module_is_absent_from_command_tree() -> None:
 def test_cli_unit_tests_do_not_contain_process_state_or_xfail_language() -> None:
     """CLI unit tests must describe executable behavior, not rollout meta-state."""
 
-    # Files named ``test_modelo_<id>_stub_refusal.py`` are negative tests that
-    # assert the registry's stub-modelo runtime refusal — the word "stub" is
-    # the load-bearing domain term they verify, not rollout meta-language.
-    stub_refusal_file = re.compile(r"^test_modelo_\d+_stub_refusal\.py$")
     offences: list[str] = []
     for path in _iter_cli_test_files():
         if path == Path(__file__):
@@ -585,10 +581,7 @@ def test_cli_unit_tests_do_not_contain_process_state_or_xfail_language() -> None
         if rel in _LIVE_TEST_FILES:
             continue
         text = path.read_text(encoding="utf-8").lower()
-        is_stub_refusal = bool(stub_refusal_file.fullmatch(path.name))
         for phrase in _FORBIDDEN_TEST_PROCESS_LANGUAGE:
-            if is_stub_refusal and phrase == "stub":
-                continue
             pattern = re.compile(rf"(?<![a-z0-9_]){re.escape(phrase)}(?![a-z0-9_])")
             if pattern.search(text):
                 offences.append(f"{rel} contains {phrase!r}")

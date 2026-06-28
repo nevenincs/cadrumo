@@ -1,6 +1,16 @@
-"""Application-level addressing for modelo work CLI consumers.
+"""Application-level addressing for modelo work commands.
 
-Use of :class:`CalculationRevision` for compliance.
+The address facade converts exact ids and visible modelo/year/period targets
+into :class:`ModeloWorkAddress` values, resolves them through the selector
+contracts, and returns the matching
+:class:`~aeat.domain.modelos._work_unit.WorkUnit` or
+:class:`CalculationRevision`.
+
+Creation flows validate the law-determined registry revision before delegating
+to :func:`~aeat.application.modelo._work_lifecycle.create_work_unit`. Revision
+flows apply :class:`ModeloCalculationRevisionSelector` defaults so verify,
+file, and export commands consume only the lifecycle states they are allowed to
+handle.
 """
 
 from __future__ import annotations
@@ -162,10 +172,7 @@ class ModeloResolvedRevisionProjection:
         *,
         selector: ModeloCalculationRevisionSelector,
     ) -> ModeloResolvedRevisionProjection:
-        """Project an internal calculation revision into a :class:`ModeloResolvedRevisionProjection` support metadata.
-
-        Use of :class:`CalculationRevision` for compliance.
-        """
+        """Project a :class:`CalculationRevision` into a :class:`ModeloResolvedRevisionProjection`."""
         return cls(
             calculation_revision_id=revision.calculation_revision_id,
             short_calculation_revision_id=revision.calculation_revision_id[-12:],
@@ -500,6 +507,9 @@ def ensure_modelo_work_unit_for_visible_target(
     )
     if resolution.work_unit is not None:
         unit = resolution.work_unit
+        from ._profile_readiness_gate import require_profile_ready_for_work_unit
+
+        require_profile_ready_for_work_unit(unit)
         name_applied: str | None = None
         if name is not None and name.strip() and name.strip() != unit.name:
             unit = rename_work_unit(unit.work_unit_id, name, actor=actor)

@@ -30,6 +30,7 @@ from .. import (
     RemoteOperation,
     assert_remote_operation_allowed,
     build_snapshot,
+    calculation_closure_legal_refs,
     load_registry_tree,
     parse_export_payload,
     remote_state_policy_from_cross_reference,
@@ -173,6 +174,1038 @@ def _binding_map_by_casilla(*pairs: tuple[object, str]) -> Mapping[CasillaId, st
     return {_casilla_id(casilla_id): binding_id for casilla_id, binding_id in pairs}
 
 
+_GENERAL_BASE_ART_48_REF = "ley-35-2006:art-48"
+_SAVINGS_BASE_ART_49_REF = "ley-35-2006:art-49"
+_BASE_LIQUIDABLE_ART_50_REF = "ley-35-2006:art-50"
+_GENERAL_SCALE_ART_63_REF = "ley-35-2006:art-63"
+_SAVINGS_STATE_SCALE_ART_66_REF = "ley-35-2006:art-66"
+_STATE_DEDUCTION_ART_67_REF = "ley-35-2006:art-67"
+_NEW_COMPANY_INVESTMENT_ART_68_1_REF = "ley-35-2006:art-68.1"
+_BUSINESS_INVESTMENT_ART_68_2_REF = "ley-35-2006:art-68.2"
+_DONATION_DEDUCTION_ART_68_3_REF = "ley-35-2006:art-68.3"
+_CULTURAL_INTEREST_DEDUCTION_ART_68_5_REF = "ley-35-2006:art-68.5"
+_DEDUCTION_LIMITS_ART_69_REF = "ley-35-2006:art-69"
+_ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF = "ley-35-2006:da-50"
+_RENTAL_HOUSING_DEDUCTION_DT_15_REF = "ley-35-2006:dt-15"
+_AUTONOMIC_GENERAL_SCALE_ART_74_REF = "ley-35-2006:art-74"
+_AUTONOMIC_SAVINGS_SCALE_ART_76_REF = "ley-35-2006:art-76"
+_AUTONOMIC_DEDUCTION_ART_77_REF = "ley-35-2006:art-77"
+_ATTRIBUTION_REGIME_ART_86_REF = "ley-35-2006:art-86"
+_OBJECTIVE_ESTIMATION_ART_31_REF = "ley-35-2006:art-31"
+_ATTRIBUTION_OBJECTIVE_ESTIMATION_ART_39_REF = "rd-439-2007:art-39"
+_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF = "ley-35-2006:da-60"
+_FRACTIONAL_PAYMENT_ARTICLE_REF = "rd-439-2007:art-109"
+_PAYMENTS_ON_ACCOUNT_ARTICLE_REF = "ley-35-2006:art-99"
+_MODELO_100_2025_FORM_ORDER_REF = "orden-hac-277-2026:art-3"
+_BROAD_INCOME_CHAPTER_SPAN_REFS = frozenset(
+    {
+        "ley-35-2006:art-17",
+        "ley-35-2006:art-18",
+        "ley-35-2006:art-19",
+        "ley-35-2006:art-20",
+        "ley-35-2006:art-22",
+        "ley-35-2006:art-23",
+        "ley-35-2006:art-24",
+        "ley-35-2006:art-25",
+        "ley-35-2006:art-26",
+    }
+)
+_CAPITAL_GAINS_SECTION_REFS = frozenset(
+    {
+        "ley-35-2006:art-33",
+        "ley-35-2006:art-34",
+        _MODELO_100_2025_FORM_ORDER_REF,
+    }
+)
+_DONATION_DEDUCTION_CASILLAS = _casilla_ids("0552", "0553", "0722", "0723", "0724", "0725")
+_CASILLA_0921 = _casilla_id("0921")
+_CANARIAS_DONACION_DESCENDIENTES_ROLE = "irpf_deduccion_canarias_donacion_descendientes"
+_ANDALUCIA_EJERCICIO_FISICO_ROLE = "irpf_deduccion_andalucia_ejercicio_fisico"
+_CASILLA_1091 = _casilla_id("1091")
+_C_VALENCIANA_LABORES_NO_REMUNERADAS_ROLE = "irpf_deduccion_c_valenciana_labores_no_remuneradas_hogar"
+_EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE = "irpf_deduccion_extremadura_vivienda_zonas_rurales"
+_CASILLA_0581 = _casilla_id("0581")
+_DEDUCTION_LOSS_INTEREST_STATE_SECOND_ROLE = "irpf_intereses_demora_perdida_deduccion_estatal_2"
+_DEDUCTION_LOSS_INTEREST_AUTONOMIC_SECOND_ROLE = "irpf_intereses_demora_perdida_deduccion_autonomica_2"
+_ATTRIBUTION_REGIME_MODE_FLAG_REFS = frozenset(
+    {
+        _ATTRIBUTION_REGIME_ART_86_REF,
+        _MODELO_100_2025_FORM_ORDER_REF,
+    }
+)
+_ATTRIBUTION_REGIME_AGRICULTURAL_MODE_FLAG_REFS = frozenset(
+    {
+        _OBJECTIVE_ESTIMATION_ART_31_REF,
+        _ATTRIBUTION_REGIME_ART_86_REF,
+        _ATTRIBUTION_OBJECTIVE_ESTIMATION_ART_39_REF,
+        _MODELO_100_2025_FORM_ORDER_REF,
+    }
+)
+_ECONOMIC_ACTIVITY_SECTION_REFS = frozenset(
+    {
+        "ley-35-2006:art-27",
+        "ley-35-2006:art-28",
+        "ley-35-2006:art-30",
+        "ley-35-2006:art-31",
+        "ley-35-2006:art-32",
+        _MODELO_100_2025_FORM_ORDER_REF,
+    }
+)
+_GENERAL_BASE_GYP_LIMIT_CASILLA = _casilla_id("0433")
+_SAVINGS_BASE_GYP_LIMIT_CASILLA = _casilla_id("0446")
+_GENERAL_BASE_IMPONIBLE_CASILLA = _casilla_id("0435")
+_BASE_IMPONIBLE_AHORRO_CASILLA = _casilla_id("0460")
+_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA = _casilla_id("0505")
+_CAPITAL_MOBILIARIO_AHORRO_CASILLA = _casilla_id("0041")
+_ATTRIBUTION_REGIME_BASE_IMPUTADA_CASILLA = _casilla_id("0259")
+_GENERAL_BASE_IMPONIBLE_ROLE = "irpf_base_imponible_general"
+_ATTRIBUTION_REGIME_BASE_IMPUTADA_ROLE = "irpf_re_agrup_interes_economico_base_imponible_imputada"
+_ATTRIBUTION_REGIME_2025_MODE_FLAG_CASILLA_REFS: Mapping[CasillaId, frozenset[str]] = {
+    _casilla_id("0161"): _ATTRIBUTION_REGIME_MODE_FLAG_REFS,
+    _casilla_id("0162"): _ATTRIBUTION_REGIME_MODE_FLAG_REFS,
+    _casilla_id("0163"): _ATTRIBUTION_REGIME_AGRICULTURAL_MODE_FLAG_REFS,
+    _casilla_id("0164"): _ATTRIBUTION_REGIME_MODE_FLAG_REFS,
+}
+_INMUEBLE_ART_22_FORM_ORDER_REFS = frozenset({"ley-35-2006:art-22", _MODELO_100_2025_FORM_ORDER_REF})
+_INMUEBLE_2025_CONTINUITY_REFS: Mapping[str, frozenset[str]] = {
+    "irpf.inmueble.porcentaje-propiedad": _INMUEBLE_ART_22_FORM_ORDER_REFS,
+    "irpf.inmueble.vivienda-habitual-flag": _INMUEBLE_ART_22_FORM_ORDER_REFS,
+}
+_ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID = "renta-anexo-c-base-liquidable-negativa-general"
+_ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID = "renta-2025-base-liquidable-negativa-general-anterior"
+_ANEXO_C_BASE_NEGATIVE_GENERAL_REFS = frozenset(
+    {
+        _GENERAL_BASE_ART_48_REF,
+        _BASE_LIQUIDABLE_ART_50_REF,
+        _MODELO_100_2025_FORM_ORDER_REF,
+    }
+)
+_MEMBER_GROUNDED_2025_CONSTRUCT_IDS = frozenset(
+    {
+        "renta-final-settlement",
+        "renta-dependent-modelos",
+        "renta-payments-retentions",
+        _ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID,
+    }
+)
+_GENERAL_BASE_CUOTA_CASILLAS = _casilla_ids("0532", "0533")
+_ARTISTIC_ACTIVITY_REDUCTION_2025_CASILLA_REFS: Mapping[CasillaId, frozenset[str]] = {
+    _casilla_id("0058"): frozenset({_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF}),
+    _casilla_id("0237"): frozenset({_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF}),
+    _casilla_id("0384"): frozenset(
+        {_ARTISTIC_ACTIVITY_EXCEPTIONAL_REDUCTION_REF, _MODELO_100_2025_FORM_ORDER_REF}
+    ),
+}
+_CAPITAL_GAINS_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
+    ("toma_datos_ampliada", "gp_fondos_coti"): 10,
+    ("toma_datos_ampliada", "gp_otros_inmuebles"): 67,
+    ("toma_datos_ampliada", "gp_premios"): 25,
+}
+_OBJECTIVE_ESTIMATION_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
+    ("toma_datos_ampliada", "reg_estima_obj"): 39,
+    ("toma_datos_ampliada", "reg_estima_obj_agricola"): 74,
+}
+_AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
+    ("resultados", "deduccion_autonomica_res"): 482,
+    ("resultados", "datos_adicionales_anexo_b"): 230,
+}
+_NO_FRACTIONAL_PAYMENT_2025_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
+    ("resultados", "anexo_a_res"): 173,
+    ("resultados", "anexo_c_res"): 180,
+    ("resultados", "base_imponible_res"): 25,
+    ("resultados", "base_liquidable_res"): 13,
+    ("resultados", "calculo_impuesto_res"): 110,
+    ("resultados", "compensacion_conyuges_res"): 12,
+    ("resultados", "datos_adicionales_res"): 33,
+    ("resultados", "g_cambio_residencia_ext_res"): 1,
+    ("resultados", "gp_acciones_res"): 2,
+    ("resultados", "gp_derechos_res"): 2,
+    ("resultados", "gp_fondos_coti_res"): 2,
+    ("resultados", "gp_fondos_res"): 2,
+    ("resultados", "gp_otras_ganancias_ejer_ant_res"): 2,
+    ("resultados", "gp_otras_ganancias_res"): 1,
+    ("resultados", "gp_otros_criptomonedas_res"): 2,
+    ("resultados", "gp_otros_elementos_res"): 3,
+    ("resultados", "gp_otros_inmuebles_res"): 3,
+    ("resultados", "gp_premios_res"): 6,
+    ("resultados", "gp_reinversion_res"): 1,
+    ("resultados", "ingreso_devolucion_res"): 1,
+    ("resultados", "integracion_res"): 9,
+    ("resultados", "irpf_ccaa_res"): 3,
+    ("resultados", "red_base_imponible_res"): 9,
+    ("resultados", "reg_estima_obj_agricola_res"): 3,
+    ("resultados", "reg_estima_obj_res"): 3,
+    ("resultados", "regimenes_especiales_res"): 13,
+    ("resultados", "regularizacion_res"): 3,
+}
+_NO_FRACTIONAL_PAYMENT_2025_INPUT_SECTION_COUNTS: Mapping[tuple[str, ...], int] = {
+    ("toma_datos_ampliada",): 36,
+    ("toma_datos_ampliada", "anexo_a"): 49,
+    ("toma_datos_ampliada", "dt9"): 1,
+    ("toma_datos_ampliada", "g_cambio_residencia_ext"): 10,
+    ("toma_datos_ampliada", "gp_acciones"): 12,
+    ("toma_datos_ampliada", "gp_derechos"): 12,
+    ("toma_datos_ampliada", "gp_fondos"): 12,
+    ("toma_datos_ampliada", "gp_fondos_coti"): 10,
+    ("toma_datos_ampliada", "gp_otras_ganancias"): 1,
+    ("toma_datos_ampliada", "gp_otras_ganancias_ejer_ant"): 2,
+    ("toma_datos_ampliada", "gp_otros_criptomonedas"): 34,
+    ("toma_datos_ampliada", "gp_otros_elementos"): 47,
+    ("toma_datos_ampliada", "gp_otros_inmuebles"): 67,
+    ("toma_datos_ampliada", "gp_premios"): 25,
+    ("toma_datos_ampliada", "gp_reinversion"): 1,
+    ("toma_datos_ampliada", "inmuebles"): 128,
+    ("toma_datos_ampliada", "rdto_capital_mobiliario"): 3,
+    ("toma_datos_ampliada", "rdto_trabajo"): 7,
+    ("toma_datos_ampliada", "red_base_imponible"): 25,
+    ("toma_datos_ampliada", "reg_estima_directa"): 5,
+    ("toma_datos_ampliada", "reg_estima_obj"): 39,
+    ("toma_datos_ampliada", "reg_estima_obj_agricola"): 74,
+    ("toma_datos_ampliada", "regimen_especial"): 19,
+    ("toma_datos_ampliada", "regimenes_especiales"): 66,
+}
+_NO_PAYMENTS_ON_ACCOUNT_2025_INPUT_SECTION_COUNTS: Mapping[tuple[str, str], int] = {
+    ("toma_datos_ampliada", "gp_fondos_coti"): 10,
+    ("toma_datos_ampliada", "gp_otros_inmuebles"): 67,
+    ("toma_datos_ampliada", "gp_premios"): 25,
+    ("toma_datos_ampliada", "reg_estima_obj"): 39,
+    ("toma_datos_ampliada", "reg_estima_obj_agricola"): 74,
+    ("toma_datos_ampliada", "regimenes_especiales"): 66,
+}
+_PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS: Mapping[CasillaId, tuple[str, ...]] = {
+    _casilla_id("0153"): ("rendimientos_capital_inmobiliario", "retenciones"),
+    _casilla_id("0591"): ("resultado_declaracion",),
+    _casilla_id("0592"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0593"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0594"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0596"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0597"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0598"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0599"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0600"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0601"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0602"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0603"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0604"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0605"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0606"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+    _casilla_id("0609"): ("retenciones_ingresos_cuenta_pagos_fraccionados",),
+}
+_NO_FRACTIONAL_PAYMENT_2025_BINDING_IDS = frozenset(
+    {
+        "renta-2025-base-liquidable-negativa-general-anterior",
+    }
+)
+_NO_FRACTIONAL_PAYMENT_2025_CONSTRUCT_IDS = frozenset(
+    {
+        "renta-anexo-c-base-liquidable-negativa-general",
+        "renta-movable-capital",
+        "renta-real-estate-capital",
+        "renta-work-income",
+    }
+)
+_NO_FRACTIONAL_PAYMENT_2025_APPLICATION_LINK_IDS = frozenset({"modelo-100-deadline"})
+_SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025: Mapping[CasillaId, str] = {
+    _casilla_id("0528"): _GENERAL_SCALE_ART_63_REF,
+    _casilla_id("0529"): _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+    _casilla_id("0530"): _GENERAL_SCALE_ART_63_REF,
+    _casilla_id("0531"): _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
+    _casilla_id("0536"): _SAVINGS_STATE_SCALE_ART_66_REF,
+    _casilla_id("0537"): _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
+    _casilla_id("0538"): _SAVINGS_STATE_SCALE_ART_66_REF,
+    _casilla_id("0539"): _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
+}
+_ATTRIBUTION_DETAIL_ART_86_CASILLAS = _casilla_ids(
+    "0259",
+    "0264",
+    "0265",
+    "1597",
+    "1598",
+    "1599",
+    "1600",
+)
+_ATTRIBUTION_DETAIL_SECTIONS = frozenset(
+    {
+        "re_at_rentas",
+        "re_agrup_interes_economico",
+        "re_agrup_interes_economico_res",
+    }
+)
+_GENERAL_BASE_ART_48_ONLY_CASILLAS = _casilla_ids(
+    "0431",
+    "0432",
+    "0433",
+    "0434",
+    "0435",
+)
+_SAVINGS_BASE_ART_49_ONLY_CASILLAS = _casilla_ids(
+    "0429",
+    "0436",
+    "0439",
+    "0440",
+    "0441",
+    "0442",
+    "0443",
+    "0444",
+    "0445",
+    "0446",
+    "0447",
+    "0448",
+    "0449",
+    "0450",
+    "0451",
+    "0452",
+    "0453",
+    "0454",
+    "0455",
+    "0460",
+)
+_SAVINGS_BASE_ART_49_ONLY_ROLES = frozenset(
+    {
+        "irpf_base_imponible_ahorro",
+        "irpf_saldo_neto_gyp_ahorro_limite_25pct",
+        "irpf_saldo_neto_gyp_ahorro_pendiente",
+        "irpf_saldo_neto_gyp_ahorro_pendiente_resto",
+        "irpf_saldo_neto_rdto_capital_mobiliario_ahorro",
+        "irpf_saldo_neto_rdto_capital_mobiliario_ahorro_pendiente_reduccion",
+        "irpf_saldo_neto_rdto_capital_mobiliario_ejercicios_anteriores",
+        "irpf_saldo_neto_rdto_capital_mobiliario_resto_pendiente",
+    }
+)
+
+
+def _expression_casilla_refs(expression: Any) -> frozenset[CasillaId]:
+    refs: set[CasillaId] = set()
+    casilla_id = getattr(expression, "casilla_id", None)
+    if casilla_id is not None:
+        refs.add(casilla_id)
+    for arg in getattr(expression, "args", ()):
+        refs.update(_expression_casilla_refs(arg))
+    return frozenset(refs)
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_general_base_gains_cap_uses_general_base_article(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    formula_id = f"renta-{filing_year}-saldo-gp-base-general-cap-25"
+    formula = next(formula for formula in revision.formulas if formula.id == formula_id)
+    casilla = next(casilla for casilla in revision.casillas if casilla.id == _GENERAL_BASE_GYP_LIMIT_CASILLA)
+
+    for refs in (formula.legal_refs, casilla.legal_refs):
+        assert _GENERAL_BASE_ART_48_REF in refs
+        assert _SAVINGS_BASE_ART_49_REF not in refs
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_general_base_casillas_do_not_cite_savings_base_article(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    casillas_by_id = {
+        casilla.id: casilla for casilla in revision.casillas if casilla.id in _GENERAL_BASE_ART_48_ONLY_CASILLAS
+    }
+
+    assert set(casillas_by_id) == _GENERAL_BASE_ART_48_ONLY_CASILLAS
+    for casilla in casillas_by_id.values():
+        assert _GENERAL_BASE_ART_48_REF in casilla.legal_refs, casilla.id
+        assert _SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, casilla.id
+        assert _ATTRIBUTION_REGIME_ART_86_REF not in casilla.legal_refs, casilla.id
+
+    base_general = casillas_by_id[_GENERAL_BASE_IMPONIBLE_CASILLA]
+    assert base_general.semantic_role == _GENERAL_BASE_IMPONIBLE_ROLE
+    assert base_general.label == "Base imponible general"
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_savings_base_gains_cap_uses_savings_base_article(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    formula_id = f"renta-{filing_year}-saldo-gp-base-ahorro-cap-25"
+    formula = next(formula for formula in revision.formulas if formula.id == formula_id)
+    casilla = next(casilla for casilla in revision.casillas if casilla.id == _SAVINGS_BASE_GYP_LIMIT_CASILLA)
+
+    for refs in (formula.legal_refs, casilla.legal_refs):
+        assert _SAVINGS_BASE_ART_49_REF in refs
+        assert _GENERAL_BASE_ART_48_REF not in refs
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_savings_base_casillas_do_not_cite_general_base_article(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    casillas_by_id = {
+        casilla.id: casilla
+        for casilla in revision.casillas
+        if casilla.semantic_role in _SAVINGS_BASE_ART_49_ONLY_ROLES
+    }
+
+    assert set(casillas_by_id) == _SAVINGS_BASE_ART_49_ONLY_CASILLAS
+    for casilla in casillas_by_id.values():
+        assert _SAVINGS_BASE_ART_49_REF in casilla.legal_refs, casilla.id
+        assert _GENERAL_BASE_ART_48_REF not in casilla.legal_refs, casilla.id
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_attribution_regime_base_imputada_uses_attribution_article(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    casilla = next(
+        casilla for casilla in revision.casillas if casilla.id == _ATTRIBUTION_REGIME_BASE_IMPUTADA_CASILLA
+    )
+
+    assert _ATTRIBUTION_REGIME_ART_86_REF in casilla.legal_refs
+    assert casilla.semantic_role == _ATTRIBUTION_REGIME_BASE_IMPUTADA_ROLE
+    assert casilla.label == "Base imponible imputada"
+    assert _GENERAL_BASE_ART_48_REF not in casilla.legal_refs
+    assert _SAVINGS_BASE_ART_49_REF not in casilla.legal_refs
+    assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_attribution_detail_casillas_do_not_cite_fractional_payment_article(
+    filing_year: int,
+) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    casillas_by_id = {
+        casilla.id: casilla for casilla in revision.casillas if casilla.id in _ATTRIBUTION_DETAIL_ART_86_CASILLAS
+    }
+
+    assert set(casillas_by_id) == _ATTRIBUTION_DETAIL_ART_86_CASILLAS
+    for casilla in casillas_by_id.values():
+        assert _ATTRIBUTION_REGIME_ART_86_REF in casilla.legal_refs, casilla.id
+        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, casilla.id
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_attribution_detail_sections_do_not_cite_fractional_payment_article(
+    filing_year: int,
+) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    checked = [
+        casilla
+        for casilla in revision.casillas
+        if _ATTRIBUTION_DETAIL_SECTIONS & frozenset(casilla.section)
+    ]
+
+    assert checked
+    for casilla in checked:
+        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, casilla.id
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_savings_base_includes_current_capital_mobiliario(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    formula = next(
+        formula for formula in revision.formulas if formula.target_casilla_id == _BASE_IMPONIBLE_AHORRO_CASILLA
+    )
+
+    assert _SAVINGS_BASE_ART_49_REF in formula.legal_refs
+    assert _CAPITAL_MOBILIARIO_AHORRO_CASILLA in _expression_casilla_refs(formula.expression)
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_donation_deduction_surface_cites_art_68_3(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    casillas_by_id = {
+        casilla.id: casilla for casilla in revision.casillas if casilla.id in _DONATION_DEDUCTION_CASILLAS
+    }
+
+    assert set(casillas_by_id) == _DONATION_DEDUCTION_CASILLAS
+    for casilla in casillas_by_id.values():
+        assert _DONATION_DEDUCTION_ART_68_3_REF in casilla.legal_refs, casilla.id
+
+    formula_by_id = {
+        formula.id: formula
+        for formula in revision.formulas
+        if formula.id
+        in {
+            f"renta-{filing_year}-deduccion-donativos-estatal-50-porciento",
+            f"renta-{filing_year}-deduccion-donativos-autonomica-50-porciento",
+        }
+    }
+
+    assert set(formula_by_id) == {
+        f"renta-{filing_year}-deduccion-donativos-estatal-50-porciento",
+        f"renta-{filing_year}-deduccion-donativos-autonomica-50-porciento",
+    }
+    estatal = formula_by_id[f"renta-{filing_year}-deduccion-donativos-estatal-50-porciento"]
+    autonomica = formula_by_id[f"renta-{filing_year}-deduccion-donativos-autonomica-50-porciento"]
+    assert _DONATION_DEDUCTION_ART_68_3_REF in estatal.legal_refs
+    assert _STATE_DEDUCTION_ART_67_REF in estatal.legal_refs
+    assert _DONATION_DEDUCTION_ART_68_3_REF in autonomica.legal_refs
+    assert _AUTONOMIC_DEDUCTION_ART_77_REF in autonomica.legal_refs
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_cultural_interest_deduction_cites_art_68_5(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    role_refs = {
+        "irpf_deduccion_interes_cultural_estatal": _STATE_DEDUCTION_ART_67_REF,
+        "irpf_deduccion_interes_cultural_autonomica": _AUTONOMIC_DEDUCTION_ART_77_REF,
+    }
+    formula_suffixes = {
+        "irpf_deduccion_interes_cultural_estatal": "estatal",
+        "irpf_deduccion_interes_cultural_autonomica": "autonomica",
+    }
+
+    casillas_by_role = {
+        casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in role_refs
+    }
+    assert set(casillas_by_role) == set(role_refs)
+
+    anexo_casilla = next(
+        casilla
+        for casilla in revision.casillas
+        if casilla.semantic_role == "irpf_anexo_a_interes_cultural_deduccion_importe"
+    )
+    assert anexo_casilla.id == _casilla_id("0726")
+    assert _CULTURAL_INTEREST_DEDUCTION_ART_68_5_REF in anexo_casilla.legal_refs
+    assert _DEDUCTION_LIMITS_ART_69_REF in anexo_casilla.legal_refs
+
+    formulas_by_id = {formula.id: formula for formula in revision.formulas}
+    for role, quota_ref in role_refs.items():
+        suffix = formula_suffixes[role]
+        formula_id = f"renta-{filing_year}-deduccion-cultural-{suffix}-50-porciento"
+        casilla = casillas_by_role[role]
+        formula = formulas_by_id[formula_id]
+
+        assert _CULTURAL_INTEREST_DEDUCTION_ART_68_5_REF in casilla.legal_refs
+        assert _CULTURAL_INTEREST_DEDUCTION_ART_68_5_REF in formula.legal_refs
+        assert quota_ref in formula.legal_refs
+        assert "ley-35-2006:art-68" not in formula.legal_refs
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_new_company_investment_deduction_cites_art_68_1(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    anexo_section = ("resultados", "anexo_a_res", "deduccion_empresas_nueva_creacion_res")
+    state_casilla = next(
+        casilla
+        for casilla in revision.casillas
+        if casilla.semantic_role == "irpf_deduccion_empresa_nueva_creacion"
+    )
+    detail_casillas = [casilla for casilla in revision.casillas if tuple(casilla.section[:3]) == anexo_section]
+
+    assert state_casilla.id == _casilla_id("0549")
+    assert {casilla.id for casilla in detail_casillas} == _casilla_ids("0711", "0712", "0713", "0714")
+
+    offenders = {
+        casilla.id: casilla.legal_refs
+        for casilla in [state_casilla, *detail_casillas]
+        if _NEW_COMPANY_INVESTMENT_ART_68_1_REF not in casilla.legal_refs
+        or "ley-35-2006:art-68" in casilla.legal_refs
+    }
+    assert not offenders
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_business_investment_deductions_cite_art_68_2(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    section = ("resultados", "anexo_a_res", "deducciones_inversion_empresarial_res")
+    checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:3]) == section]
+
+    assert checked
+    offenders = {
+        casilla.id: casilla.legal_refs
+        for casilla in checked
+        if _BUSINESS_INVESTMENT_ART_68_2_REF not in casilla.legal_refs
+        or "ley-35-2006:art-68" in casilla.legal_refs
+    }
+    assert not offenders
+
+    formula = next(
+        formula
+        for formula in revision.formulas
+        if formula.id == f"renta-{filing_year}-deduccion-incentivos-inversion-empresarial-total"
+    )
+    assert _BUSINESS_INVESTMENT_ART_68_2_REF in formula.legal_refs
+    assert "ley-35-2006:art-68" not in formula.legal_refs
+
+
+@pytest.mark.parametrize("filing_year", range(2021, 2026))
+def test_modelo_100_energy_efficiency_deduction_formula_cites_da_50(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    casilla = next(
+        casilla
+        for casilla in revision.casillas
+        if casilla.semantic_role == "irpf_deduccion_eficiencia_energetica_viviendas"
+    )
+    formula = next(
+        formula
+        for formula in revision.formulas
+        if formula.id == f"renta-{filing_year}-deduccion-eficiencia-energetica-vivienda-suma"
+    )
+
+    assert _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF in casilla.legal_refs
+    assert _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF in formula.legal_refs
+    assert _STATE_DEDUCTION_ART_67_REF in formula.legal_refs
+    assert "ley-35-2006:art-68" not in formula.legal_refs
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_rental_housing_transitional_deduction_cites_dt_15(filing_year: int) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    role_refs = {
+        "irpf_deduccion_alquiler_vivienda_habitual_estatal": _STATE_DEDUCTION_ART_67_REF,
+        "irpf_deduccion_alquiler_vivienda_habitual_autonomica": _AUTONOMIC_DEDUCTION_ART_77_REF,
+    }
+    formula_suffixes = {
+        "irpf_deduccion_alquiler_vivienda_habitual_estatal": "estatal",
+        "irpf_deduccion_alquiler_vivienda_habitual_autonomica": "autonomica",
+    }
+
+    casillas_by_role = {
+        casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in role_refs
+    }
+    assert set(casillas_by_role) == set(role_refs)
+
+    formulas_by_id = {formula.id: formula for formula in revision.formulas}
+    for role, quota_ref in role_refs.items():
+        suffix = formula_suffixes[role]
+        formula_id = f"renta-{filing_year}-deduccion-alquiler-vivienda-{suffix}-50-porciento"
+        casilla = casillas_by_role[role]
+        formula = formulas_by_id[formula_id]
+
+        assert _RENTAL_HOUSING_DEDUCTION_DT_15_REF in casilla.legal_refs
+        assert _RENTAL_HOUSING_DEDUCTION_DT_15_REF in formula.legal_refs
+        assert quota_ref in formula.legal_refs
+        assert "ley-35-2006:art-68" not in formula.legal_refs
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "expected_section_tail", "expected_role", "expected_label_snippet"),
+    (
+        (
+            2020,
+            "canarias_res",
+            _CANARIAS_DONACION_DESCENDIENTES_ROLE,
+            "donaciones en metálico a descendientes",
+        ),
+        (
+            2021,
+            "canarias_res",
+            _CANARIAS_DONACION_DESCENDIENTES_ROLE,
+            "donaciones en metálico a descendientes",
+        ),
+        (
+            2022,
+            "canarias_res",
+            _CANARIAS_DONACION_DESCENDIENTES_ROLE,
+            "donaciones en metálico a descendientes",
+        ),
+        (
+            2023,
+            "canarias_res",
+            _CANARIAS_DONACION_DESCENDIENTES_ROLE,
+            "donaciones en metálico a descendientes",
+        ),
+        (
+            2024,
+            "canarias_res",
+            _CANARIAS_DONACION_DESCENDIENTES_ROLE,
+            "donaciones en metálico a descendientes",
+        ),
+        (
+            2025,
+            "andalucia_res",
+            _ANDALUCIA_EJERCICIO_FISICO_ROLE,
+            "ejercicio físico",
+        ),
+    ),
+)
+def test_modelo_100_casilla_0921_role_tracks_year_specific_official_meaning(
+    filing_year: int,
+    expected_section_tail: str,
+    expected_role: str,
+    expected_label_snippet: str,
+) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    casilla = next(casilla for casilla in revision.casillas if casilla.id == _CASILLA_0921)
+
+    assert casilla.number == "0921"
+    assert casilla.section[-1] == expected_section_tail
+    assert casilla.semantic_role == expected_role
+    assert expected_label_snippet in casilla.label
+    assert f"aeat-dr-100-{filing_year}-dictionary" in casilla.source_refs
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "expected_section_tail", "expected_role", "expected_label_snippet"),
+    (
+        (
+            2020,
+            "c_valenciana_res",
+            _C_VALENCIANA_LABORES_NO_REMUNERADAS_ROLE,
+            "labores no remuneradas en el hogar",
+        ),
+        (
+            2021,
+            "c_valenciana_res",
+            _C_VALENCIANA_LABORES_NO_REMUNERADAS_ROLE,
+            "labores no remuneradas en el hogar",
+        ),
+        (
+            2022,
+            "extremadura_res",
+            _EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
+            "vivienda habitual en zonas rurales",
+        ),
+        (
+            2023,
+            "extremadura_res",
+            _EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
+            "vivienda habitual en zonas rurales",
+        ),
+        (
+            2024,
+            "extremadura_res",
+            _EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
+            "vivienda habitual en zonas rurales",
+        ),
+        (
+            2025,
+            "extremadura_res",
+            _EXTREMADURA_VIVIENDA_ZONAS_RURALES_ROLE,
+            "vivienda habitual en zonas rurales",
+        ),
+    ),
+)
+def test_modelo_100_casilla_1091_role_tracks_year_specific_official_meaning(
+    filing_year: int,
+    expected_section_tail: str,
+    expected_role: str,
+    expected_label_snippet: str,
+) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    casilla = next(casilla for casilla in revision.casillas if casilla.id == _CASILLA_1091)
+
+    assert casilla.number == "1091"
+    assert casilla.section[-1] == expected_section_tail
+    assert casilla.semantic_role == expected_role
+    assert expected_label_snippet in casilla.label
+    assert f"aeat-dr-100-{filing_year}-dictionary" in casilla.source_refs
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "expected_role", "expected_label_snippet"),
+    (
+        (2020, _DEDUCTION_LOSS_INTEREST_STATE_SECOND_ROLE, "Parte estatal"),
+        (2021, _DEDUCTION_LOSS_INTEREST_STATE_SECOND_ROLE, "Parte estatal"),
+        (2022, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_SECOND_ROLE, "Parte autonómica"),
+        (2023, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_SECOND_ROLE, "Parte autonómica"),
+        (2024, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_SECOND_ROLE, "Parte autonómica"),
+        (2025, _DEDUCTION_LOSS_INTEREST_AUTONOMIC_SECOND_ROLE, "Parte autonómica"),
+    ),
+)
+def test_modelo_100_casilla_0581_role_tracks_year_specific_state_autonomic_column(
+    filing_year: int,
+    expected_role: str,
+    expected_label_snippet: str,
+) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    casilla = next(casilla for casilla in revision.casillas if casilla.id == _CASILLA_0581)
+
+    assert casilla.number == "0581"
+    assert casilla.section[-1] == "gravamenes_res"
+    assert casilla.semantic_role == expected_role
+    assert expected_label_snippet in casilla.label
+    assert f"aeat-dr-100-{filing_year}-dictionary" in casilla.source_refs
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_modelo_100_general_liquidable_and_cuota_chain_exclude_unrelated_articles(
+    filing_year: int,
+) -> None:
+    revision = _modelo_100_snapshot(filing_year).revision
+    checked_casilla_ids = {_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA, *_GENERAL_BASE_CUOTA_CASILLAS}
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in checked_casilla_ids}
+
+    assert set(casillas_by_id) == checked_casilla_ids
+    base_casilla = casillas_by_id[_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA]
+    assert _BASE_LIQUIDABLE_ART_50_REF in base_casilla.legal_refs
+    assert _SAVINGS_BASE_ART_49_REF not in base_casilla.legal_refs
+    assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in base_casilla.legal_refs
+
+    formula_by_target = {
+        formula.target_casilla_id: formula
+        for formula in revision.formulas
+        if formula.target_casilla_id in checked_casilla_ids
+    }
+    base_formula = formula_by_target.get(_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA)
+    if base_formula is not None:
+        assert _BASE_LIQUIDABLE_ART_50_REF in base_formula.legal_refs
+        assert _SAVINGS_BASE_ART_49_REF not in base_formula.legal_refs
+        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in base_formula.legal_refs
+
+    for casilla_id in _GENERAL_BASE_CUOTA_CASILLAS:
+        casilla = casillas_by_id[casilla_id]
+        formula = formula_by_target[casilla_id]
+        assert _GENERAL_SCALE_ART_63_REF in casilla.legal_refs, casilla.id
+        assert _SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, casilla.id
+        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, casilla.id
+        assert _SAVINGS_BASE_ART_49_REF not in formula.legal_refs, formula.id
+        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in formula.legal_refs, formula.id
+
+
+def test_modelo_100_2025_scale_result_casillas_use_scale_articles_not_fractional_payment_article() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    casillas_by_id = {
+        casilla.id: casilla
+        for casilla in revision.casillas
+        if casilla.id in _SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025
+    }
+    formula_by_target = {
+        formula.target_casilla_id: formula
+        for formula in revision.formulas
+        if formula.target_casilla_id in _SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025
+    }
+
+    assert set(casillas_by_id) == set(_SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025)
+    assert set(formula_by_target) == set(_SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025)
+    for casilla_id, expected_ref in _SCALE_RESULT_EXPECTED_ART_BY_CASILLA_2025.items():
+        casilla = casillas_by_id[casilla_id]
+        formula = formula_by_target[casilla_id]
+        assert expected_ref in casilla.legal_refs, casilla.id
+        assert expected_ref in formula.legal_refs, formula.id
+        assert _SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, casilla.id
+        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, casilla.id
+        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in formula.legal_refs, formula.id
+
+
+def test_modelo_100_2025_cuota_chain_casillas_do_not_cite_fractional_payment_article() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    checked = [
+        casilla
+        for casilla in revision.casillas
+        if casilla.id.isdigit() and "0500" <= casilla.id <= "0546"
+    ]
+
+    assert {casilla.id for casilla in checked} == {f"{number:04d}" for number in range(500, 547)}
+    offenders = {
+        casilla.id: casilla.legal_refs
+        for casilla in checked
+        if _FRACTIONAL_PAYMENT_ARTICLE_REF in casilla.legal_refs
+    }
+    assert not offenders
+
+
+def test_modelo_100_2025_autonomic_deduction_sections_use_art77_only() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    expected_refs = {_AUTONOMIC_DEDUCTION_ART_77_REF, "orden-hac-277-2026:art-3"}
+    for section, expected_count in _AUTONOMIC_DEDUCTION_2025_SECTION_COUNTS.items():
+        checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
+
+        assert len(checked) == expected_count
+        offenders = {
+            casilla.id: casilla.legal_refs
+            for casilla in checked
+            if set(casilla.legal_refs) != expected_refs
+        }
+        assert not offenders
+
+
+def test_modelo_100_2025_result_sections_do_not_cite_fractional_payment_article() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    for section, expected_count in _NO_FRACTIONAL_PAYMENT_2025_SECTION_COUNTS.items():
+        checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
+
+        assert len(checked) == expected_count
+        offenders = {
+            casilla.id: casilla.legal_refs
+            for casilla in checked
+            if _FRACTIONAL_PAYMENT_ARTICLE_REF in casilla.legal_refs
+        }
+        assert not offenders
+
+
+def test_modelo_100_2025_input_sections_do_not_cite_fractional_payment_article() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    for section, expected_count in _NO_FRACTIONAL_PAYMENT_2025_INPUT_SECTION_COUNTS.items():
+        checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
+
+        assert len(checked) == expected_count
+        offenders = {
+            casilla.id: casilla.legal_refs
+            for casilla in checked
+            if _FRACTIONAL_PAYMENT_ARTICLE_REF in casilla.legal_refs
+        }
+        assert not offenders
+
+
+def test_modelo_100_2025_input_sections_do_not_cite_payments_on_account_article() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    for section, expected_count in _NO_PAYMENTS_ON_ACCOUNT_2025_INPUT_SECTION_COUNTS.items():
+        checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
+
+        assert len(checked) == expected_count
+        offenders = {
+            casilla.id: casilla.legal_refs
+            for casilla in checked
+            if _PAYMENTS_ON_ACCOUNT_ARTICLE_REF in casilla.legal_refs
+        }
+        assert not offenders
+
+
+def test_modelo_100_2025_payments_on_account_article_stays_on_payment_casillas_only() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    observed = {
+        casilla.id: tuple(casilla.section[:2])
+        for casilla in revision.casillas
+        if _PAYMENTS_ON_ACCOUNT_ARTICLE_REF in casilla.legal_refs
+    }
+
+    assert observed == _PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS
+
+
+def test_modelo_100_2025_gain_sections_use_capital_gains_refs_only() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    for section, expected_count in _CAPITAL_GAINS_2025_SECTION_COUNTS.items():
+        checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
+
+        assert len(checked) == expected_count
+        offenders = {
+            casilla.id: casilla.legal_refs
+            for casilla in checked
+            if set(casilla.legal_refs) != _CAPITAL_GAINS_SECTION_REFS
+        }
+        assert not offenders
+
+
+def test_modelo_100_2025_attribution_mode_flags_use_attribution_refs_only() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    offenders = {
+        casilla_id: casillas[casilla_id].legal_refs
+        for casilla_id, expected_refs in _ATTRIBUTION_REGIME_2025_MODE_FLAG_CASILLA_REFS.items()
+        if set(casillas[casilla_id].legal_refs) != expected_refs
+    }
+
+    assert not offenders
+
+
+def test_modelo_100_2025_casillas_do_not_retain_full_income_chapter_span() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    offenders = {
+        casilla.id: casilla.legal_refs
+        for casilla in revision.casillas
+        if _BROAD_INCOME_CHAPTER_SPAN_REFS.issubset(casilla.legal_refs)
+    }
+
+    assert not offenders
+
+
+def test_modelo_100_2025_inmueble_continuity_uses_inmueble_refs_only() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    checked = [
+        evolution
+        for evolution in revision.casilla_continuidad_evolutions
+        if str(evolution.continuidad_id) in _INMUEBLE_2025_CONTINUITY_REFS
+    ]
+
+    assert len(checked) == 10
+    offenders = {
+        evolution.id: evolution.legal_refs
+        for evolution in checked
+        if set(evolution.legal_refs) != _INMUEBLE_2025_CONTINUITY_REFS[str(evolution.continuidad_id)]
+    }
+    assert not offenders
+
+
+def test_modelo_100_2025_anexo_c_base_negative_general_uses_member_refs_only() -> None:
+    snapshot = _modelo_100_snapshot(2025)
+    revision = snapshot.revision
+    construct = snapshot.constructs[_ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID]
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    formulas = {formula.id: formula for formula in revision.formulas}
+    bindings = {binding.id: binding for binding in revision.bindings}
+    member_refs: set[str] = set()
+
+    for casilla_id in construct.casilla_ids:
+        member_refs.update(casillas[casilla_id].legal_refs)
+    for formula_id in construct.formulas:
+        member_refs.update(formulas[formula_id].legal_refs)
+    for binding_id in construct.bindings:
+        member_refs.update(bindings[binding_id].legal_refs)
+
+    assert set(bindings[_ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID].legal_refs) == {
+        _GENERAL_BASE_ART_48_REF,
+        _MODELO_100_2025_FORM_ORDER_REF,
+    }
+    assert member_refs == _ANEXO_C_BASE_NEGATIVE_GENERAL_REFS
+    assert set(construct.legal_refs) == _ANEXO_C_BASE_NEGATIVE_GENERAL_REFS
+
+
+def test_modelo_100_2025_completeness_manifest_legal_refs_match_calculation_closure() -> None:
+    modelos_by_id, _catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision = modelo.revisions["2025"]
+    manifest = revision.completeness_manifest
+
+    assert manifest is not None
+    assert set(manifest.legal_refs) == calculation_closure_legal_refs(revision, modelo.id)
+
+
+def test_modelo_100_2025_objective_estimation_sections_use_activity_refs_only() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    for section, expected_count in _OBJECTIVE_ESTIMATION_2025_SECTION_COUNTS.items():
+        checked = [casilla for casilla in revision.casillas if tuple(casilla.section[:2]) == section]
+
+        assert len(checked) == expected_count
+        offenders = {
+            casilla.id: casilla.legal_refs
+            for casilla in checked
+            if set(casilla.legal_refs) != _ECONOMIC_ACTIVITY_SECTION_REFS
+        }
+        assert not offenders
+
+
+def test_modelo_100_2025_artistic_activity_reductions_use_da60_refs_only() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    offenders = {
+        casilla_id: casillas[casilla_id].legal_refs
+        for casilla_id, expected_refs in _ARTISTIC_ACTIVITY_REDUCTION_2025_CASILLA_REFS.items()
+        if set(casillas[casilla_id].legal_refs) != expected_refs
+    }
+
+    assert not offenders
+
+
+def test_modelo_100_2025_non_payment_metadata_do_not_cite_fractional_payment_article() -> None:
+    revision = _modelo_100_snapshot(2025).revision
+
+    bindings = {binding.id: binding for binding in revision.bindings}
+    constructs = {construct.id: construct for construct in revision.constructs}
+    application_links = {link.id: link for link in revision.application_links}
+
+    binding_offenders = {
+        binding_id: bindings[binding_id].legal_refs
+        for binding_id in _NO_FRACTIONAL_PAYMENT_2025_BINDING_IDS
+        if _FRACTIONAL_PAYMENT_ARTICLE_REF in bindings[binding_id].legal_refs
+    }
+    construct_offenders = {
+        construct_id: constructs[construct_id].legal_refs
+        for construct_id in _NO_FRACTIONAL_PAYMENT_2025_CONSTRUCT_IDS
+        if _FRACTIONAL_PAYMENT_ARTICLE_REF in constructs[construct_id].legal_refs
+    }
+    application_link_offenders = {
+        link_id: application_links[link_id].legal_refs
+        for link_id in _NO_FRACTIONAL_PAYMENT_2025_APPLICATION_LINK_IDS
+        if _FRACTIONAL_PAYMENT_ARTICLE_REF in application_links[link_id].legal_refs
+    }
+    deadline_offenders = {
+        deadline.id: deadline.legal_refs
+        for deadline in revision.deadline_windows
+        if _FRACTIONAL_PAYMENT_ARTICLE_REF in deadline.legal_refs
+    }
+    continuity_offenders = {
+        evolution.id: evolution.legal_refs
+        for evolution in revision.casilla_continuidad_evolutions
+        if _FRACTIONAL_PAYMENT_ARTICLE_REF in evolution.legal_refs
+    }
+
+    assert not binding_offenders
+    assert not construct_offenders
+    assert not application_link_offenders
+    assert not deadline_offenders
+    assert not continuity_offenders
+
+
 _PERSONAL_FAMILY_CASILLAS: frozenset[CasillaId] = _casilla_ids(
     "DPNIF_D",
     "DP_APENOM_D",
@@ -274,6 +1307,31 @@ def test_modelo_100_dependent_modelos_construct_covers_every_revision_relation()
     snapshot = _modelo_100_snapshot()
     dependencies = snapshot.constructs["renta-dependent-modelos"]
     assert set(dependencies.relations) == {relation.id for relation in snapshot.revision.relations}
+
+
+def test_modelo_100_2025_member_grounded_constructs_do_not_declare_extra_legal_refs() -> None:
+    snapshot = _modelo_100_snapshot()
+    revision = snapshot.revision
+    resolved_constructs = {construct.id: construct for construct in resolve_revision_constructs(revision)}
+    member_indexes = {
+        "casilla": {item.id: item for item in revision.casillas},
+        "formula": {item.id: item for item in revision.formulas},
+        "binding": {item.id: item for item in revision.bindings},
+        "relation": {item.id: item for item in revision.relations},
+        "dependency classification": {item.id: item for item in revision.dependency_classifications},
+    }
+    offenders: dict[str, list[str]] = {}
+
+    for construct_id in _MEMBER_GROUNDED_2025_CONSTRUCT_IDS:
+        construct = resolved_constructs[construct_id]
+        member_refs: set[str] = set()
+        for member in construct.members:
+            member_refs.update(getattr(member_indexes[member.kind][member.id], "legal_refs", ()))
+        extra_refs = sorted(set(construct.legal_refs) - member_refs)
+        if extra_refs:
+            offenders[construct_id] = extra_refs
+
+    assert not offenders
 
 
 def test_modelo_100_payments_retentions_construct_covers_classified_payment_bindings() -> None:

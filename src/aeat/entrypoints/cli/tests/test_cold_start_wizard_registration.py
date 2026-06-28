@@ -29,7 +29,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.config import SecretStoreBackend, Settings
+from ....core.config import PROJECT_ROOT, SecretStoreBackend, Settings
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -41,6 +41,25 @@ _REGISTRATION_LEAKS: tuple[str, ...] = (
     "project_answers has not been registered",
     "profile keys are not registered",
 )
+_SECRET_STORE_FILES: tuple[str, ...] = (
+    "master.key",
+    "master.kdf",
+    "salt",
+    "master.recovery.key",
+)
+
+
+def _workspace_secret_store_fingerprint() -> dict[str, tuple[int, int] | None]:
+    secret_root = PROJECT_ROOT / "var" / "secrets"
+    fingerprint: dict[str, tuple[int, int] | None] = {}
+    for filename in _SECRET_STORE_FILES:
+        path = secret_root / filename
+        if path.exists():
+            stat = path.stat()
+            fingerprint[filename] = (stat.st_size, stat.st_mtime_ns)
+        else:
+            fingerprint[filename] = None
+    return fingerprint
 
 
 def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedProcess[str]:
@@ -61,7 +80,7 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
         sys.exit(result.exit_code)
         """
     setting_env = str.upper
-    base_settings = Settings(_env_file=None)  # type: ignore[call-arg]  # ty: ignore[unknown-argument]
+    base_settings = Settings.model_validate({})
     env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     env.update(
         {
@@ -78,6 +97,43 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
         check=False,
         env=env,
     )
+
+
+def test_cold_process_profile_create_uses_local_storage_secret_store(tmp_path: Path) -> None:
+    workspace_secret_store_before = _workspace_secret_store_fingerprint()
+
+    setup = _run_cli_cold(
+        tmp_path,
+        ["config", "profile", "create", "coldprofile", "--tax-id", "45678912S", "--quiet"],
+    )
+
+    assert setup.returncode == 0, f"profile create failed: {setup.stdout}\n{setup.stderr}"
+    assert (tmp_path / "secrets" / "master.key").is_file()
+    assert (tmp_path / "secrets" / "master.kdf").is_file()
+    assert _workspace_secret_store_fingerprint() == workspace_secret_store_before
+
+
+def test_cold_process_overview_status_without_profile_registers_profile_keys(tmp_path: Path) -> None:
+    """A cold no-profile overview status renders a normal status report.
+
+    `overview status` builds the shared state projection even before a
+    profile exists. In a fresh interpreter no prior test has imported the
+    wizard package, so the projection itself must ensure the profile-key
+    registry is populated before any profile-key read.
+    """
+
+    result = _run_cli_cold(tmp_path, ["app", "overview", "status"])
+
+    for leak in _REGISTRATION_LEAKS:
+        assert leak not in result.stdout, (
+            f"overview status surfaced an unregistered core slot: {leak!r}\n{result.stdout}"
+        )
+    assert "Internal." not in result.stdout
+    assert "Traceback" not in result.stdout
+    assert result.returncode == 0, (
+        f"overview status failed in a cold no-profile process: {result.stdout}\n{result.stderr}"
+    )
+    assert "aeat config profile create NAME" in result.stdout
 
 
 def test_cold_process_work_create_registers_wizard_catalogue(tmp_path: Path) -> None:

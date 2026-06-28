@@ -12,7 +12,7 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal
 
-from pydantic import BaseModel, model_validator
+from pydantic import AnyHttpUrl, BaseModel, TypeAdapter, model_validator
 
 from .. import __version__
 from ..core import STRICT_FROZEN_CONFIG, Modelo
@@ -44,6 +44,7 @@ _log = get_logger(__name__)
 
 _REGISTRY_INTEGRITY_PROBE_YEAR: Final[int] = 2025
 _REGISTRY_INTEGRITY_PROBE_DATE: Final[date] = date(2025, 12, 31)
+_SITE_HEALTH_URL_ADAPTER: Final[TypeAdapter[AnyHttpUrl]] = TypeAdapter(AnyHttpUrl)
 
 DiagnosticStatus = Literal["ok", "warn", "fail"]
 
@@ -449,12 +450,11 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
 
 def _ok_site_health_status(url: str) -> SiteHealthStatus:
     from ..adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthState, SiteHealthStatus
-    from ..adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
 
     return SiteHealthStatus(
         state=SiteHealthState.OK,
         evidence=SiteHealthEvidence(
-            url=_URL_ADAPTER.validate_python(url),
+            url=_SITE_HEALTH_URL_ADAPTER.validate_python(url),
             http_status=200,
             html_fragment="",
             detected_markers=("healthy",),
@@ -1054,6 +1054,11 @@ def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
     )
 
 
+ensure_models_rebuilt = _ensure_models_rebuilt
+profile_check = _profile_check
+registry_cross_domain_integrity_check = _registry_cross_domain_integrity_check
+
+
 __all__ = [
     "CliVersionReport",
     "ConfigRepairReport",
@@ -1065,9 +1070,12 @@ __all__ = [
     "build_cli_version_report",
     "build_config_repair_report",
     "build_registry_integrity_report",
+    "ensure_models_rebuilt",
     "preview_quarantine_unreadable_secure_objects",
     "probe_browser_connectivity",
+    "profile_check",
     "quarantine_unreadable_secure_objects",
+    "registry_cross_domain_integrity_check",
     "render_browser_connectivity_text",
     "render_cli_version_text",
     "render_config_repair_text",

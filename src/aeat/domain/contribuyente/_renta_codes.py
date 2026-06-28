@@ -4,6 +4,12 @@ These enums model the small code sets consumed by the Modelo 100
 profile bindings. They are intentionally domain-owned so CLI and wizard
 surfaces can expose accepted values without hard-coding tax vocabulary
 in the presentation layer.
+
+:class:`RentaDeclaracionType`, :class:`RentaSexCode`,
+:class:`RentaMaritalStatus`, and :class:`RentaDisabilityGrade` back Modelo 100
+profile bindings; :class:`SituacionFamiliar` and
+:class:`SituacionFamiliarM145` keep the Art. 82 LIRPF joint-taxation axis
+separate from Modelo 145 withholding categories.
 """
 
 from __future__ import annotations

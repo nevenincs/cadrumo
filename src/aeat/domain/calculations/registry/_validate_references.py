@@ -13,13 +13,11 @@ from ._errors import RegistryValidationError
 from ._ids import BindingId
 from ._schema import InputKind, ModeloRevision
 from ._validate_cross_domain_snapshot import (
-    _CROSS_DOMAIN_SNAPSHOT_CHECKS as _CROSS_DOMAIN_SNAPSHOT_CHECKS,
+    CROSS_DOMAIN_SNAPSHOT_CHECKS,
+    check_cross_domain_snapshot_routing,
 )
 from ._validate_cross_domain_snapshot import (
     CrossDomainSnapshotCheck as CrossDomainSnapshotCheck,
-)
-from ._validate_cross_domain_snapshot import (
-    check_cross_domain_snapshot_routing,
 )
 from ._validate_cross_domain_snapshot import (
     register_cross_domain_snapshot_check as register_cross_domain_snapshot_check,
@@ -33,6 +31,8 @@ from ._validate_reference_sections import (
     check_dependency_classification_refs,
     check_export_layout_refs,
 )
+
+_CROSS_DOMAIN_SNAPSHOT_CHECKS = CROSS_DOMAIN_SNAPSHOT_CHECKS
 
 if TYPE_CHECKING:
     from ._schema import ExtractionProfileDefinition
@@ -55,7 +55,10 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
 
     checker.chk_legal_source_refs("modelo", snapshot.modelo.legal_refs, snapshot.modelo.source_refs)
     checker.chk_legal_source_refs("revision", revision.legal_refs, revision.source_refs)
+    checker.chk_tuple("revision.orden_aplicabilidad", revision.orden_aplicabilidad, checker.legal_ids)
 
+    _check_completeness_manifest_refs(checker, revision)
+    _check_casilla_continuidad_evolution_refs(checker, revision)
     _check_casilla_refs(checker, revision)
     _check_formula_refs(checker, revision)
     _check_parameter_refs(checker, revision)
@@ -65,6 +68,7 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     _check_cross_reference_refs(checker, revision)
     _check_workbook_parity_refs(checker, revision)
     _check_verification_expectation_refs(checker, revision)
+    _check_verification_predicate_refs(checker, revision)
     _check_application_link_refs(checker, revision)
     _check_deadline_window_refs(checker, revision)
     _check_filing_schedule_refs(checker, revision)
@@ -83,6 +87,30 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
         )
 
 
+def check_all_id_references(snapshot: RegistrySnapshot) -> None:
+    """Run the public referential-integrity gate for a :class:`RegistrySnapshot`.
+
+    Args:
+        snapshot: The :class:`RegistrySnapshot` whose revision references are checked.
+    """
+    _check_all_id_references(snapshot)
+
+
+def _check_completeness_manifest_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+    manifest = revision.completeness_manifest
+    if manifest is None:
+        return
+    cp = "calculation_completeness_manifest"
+    checker.chk(f"{cp}.source_ref", manifest.source_ref, checker.source_ids)
+    checker.chk_legal_source_refs(cp, manifest.legal_refs, manifest.source_refs)
+
+
+def _check_casilla_continuidad_evolution_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+    for evolution in revision.casilla_continuidad_evolutions:
+        cp = f"casilla_continuidad_evolution {evolution.id}"
+        checker.chk_legal_source_refs(cp, evolution.legal_refs, evolution.source_refs)
+
+
 def _check_casilla_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
     for casilla in revision.casillas:
         cp = f"casilla {casilla.id}"
@@ -98,6 +126,12 @@ def _check_casilla_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
                 f"{cp}.constraints",
                 casilla.constraints.legal_refs,
                 casilla.constraints.source_refs,
+            )
+        for alias in casilla.aliases:
+            checker.chk_legal_source_refs(
+                f"{cp}.alias {alias.label}",
+                alias.legal_refs,
+                alias.source_refs,
             )
 
 
@@ -129,6 +163,9 @@ def _check_parameter_refs(checker: _IdReferenceChecker, revision: ModeloRevision
         checker.chk_legal_source_refs(pp, parameter.legal_refs, parameter.source_refs)
         for citation in parameter.source_citations:
             checker.chk(f"{pp}.source_citations.{citation.source_ref}", citation.source_ref, checker.source_ids)
+        for row in parameter.convenio_rates:
+            rp = f"{pp}.convenio_rate {row.country_code}/{row.tipo_renta}/{row.valid_from.isoformat()}"
+            checker.chk_tuple(f"{rp}.legal_refs", row.legal_refs, checker.legal_ids)
 
 
 def _check_binding_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
@@ -206,6 +243,12 @@ def _check_verification_expectation_refs(checker: _IdReferenceChecker, revision:
         for total_kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
             checker.chk(f"{vep}.reconciliation_total_casilla_ids.{total_kind}", casilla_id, checker.casilla_ids)
         checker.chk_legal_source_refs(vep, expectation.legal_refs, expectation.source_refs)
+
+
+def _check_verification_predicate_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
+    for predicate in revision.verification_predicates:
+        vpp = f"verification_predicate {predicate.predicate_id}"
+        checker.chk_tuple(f"{vpp}.legal_refs", predicate.legal_refs, checker.legal_ids)
 
 
 def _check_application_link_refs(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:

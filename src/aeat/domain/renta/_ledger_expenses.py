@@ -1,4 +1,13 @@
-"""Renta deductible-expense observations derived from ledger facts."""
+"""Renta deductible-expense observations derived from ledger facts.
+
+:class:`RentaDeductibleExpenseFact` is evaluated through
+:func:`evaluate_renta_deductibility` using :class:`CategoryProfile` and
+:class:`RentaDeductibilityContext`; eligible
+:class:`RentaDeductibilityResult` values become
+:class:`RentaDeductibleExpenseObservation` records routed through
+:data:`RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` to registry
+:data:`CasillaId` bindings for :class:`~aeat.core.Modelo.M100`.
+"""
 
 from __future__ import annotations
 

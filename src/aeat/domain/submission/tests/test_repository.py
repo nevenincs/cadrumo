@@ -16,6 +16,7 @@ from ....adapters.persistence.storage import (
 )
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql._orm import SecureObjectRow
+from ....adapters.persistence.storage.sql.engine import get_engine
 from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import Period
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -39,7 +40,7 @@ def _make_filing(
     draft_id: str = "draft-abc123",
     attempt_ordinal: int = 1,
     status: SubmissionStatus = SubmissionStatus.PRESENTADA,
-    period: Period | dict[str, object] = _PERIOD,
+    period: object = _PERIOD,
 ) -> ModeloPresentado:
     submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     submission_id = make_submission_id(draft_id, attempt_ordinal)
@@ -49,15 +50,17 @@ def _make_filing(
         ended_at=submitted_at,
         status=status,
     )
-    return ModeloPresentado(
-        submission_id=submission_id,
-        draft_id=draft_id,
-        modelo="130",
-        period=period,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: model boundary coerces Period|dict; dict/combined-string shapes are exercised by callers
-        profile_tax_id="00000000T",
-        status=status,
-        submitted_at=submitted_at,
-        attempts=(attempt,),
+    return ModeloPresentado.model_validate(
+        {
+            "submission_id": submission_id,
+            "draft_id": draft_id,
+            "modelo": "130",
+            "period": period,
+            "profile_tax_id": "00000000T",
+            "status": status,
+            "submitted_at": submitted_at,
+            "attempts": (attempt,),
+        },
     )
 
 
@@ -111,7 +114,7 @@ class TestSaveLoad:
 
     def test_combined_period_string_rejected_at_model_boundary(self) -> None:
         with pytest.raises(ValidationError, match="period"):
-            _make_filing(period="2026Q1")  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: combined period string must be rejected at the model boundary
+            _make_filing(period="2026Q1")
 
 
 class TestListAndIter:
@@ -146,7 +149,7 @@ class TestListAndIter:
         repo.save(healthy)
         repo.save(future)
 
-        with session_scope(runtime_profile.repository._engine) as session:
+        with session_scope(get_engine(runtime_profile.settings)) as session:
             row = session.execute(
                 select(SecureObjectRow).where(
                     SecureObjectRow.namespace == SubmissionRepository.namespace,

@@ -1,16 +1,24 @@
 """Marker-based parsers for AEAT site-health classification.
 
-Three pure functions inspect the HTTP status, headers, and body of a
-response and decide whether it looks like an AEAT maintenance page, a
-Web Application Firewall challenge, or a rate-limit response. A
-convenience :func:`evaluate_response` runs them in deterministic order
-and returns the first non-``None`` classification.
+Three pure functions inspect the HTTP status, headers, and body of a response
+and decide whether it looks like AEAT maintenance, a Web Application Firewall
+challenge, or a rate-limit response. :func:`evaluate_response` runs them in a
+deterministic order and returns the first non-``None``
+:class:`SiteHealthStatus`.
 
-All parsers are deliberately synchronous, side-effect free, and free
-of any Playwright dependency so they can be driven from plain strings
-loaded from disk in unit tests. The marker corpora reflect the
-observed set of mantenimiento, WAF, and rate-limit responses on AEAT
-Sede Electrónica.
+The parsers are deliberately synchronous, side-effect free, and free of any
+Playwright dependency. :func:`aeat.adapters.outbound.aeat.browser._site_health_probe.probe_response`
+is the adapter boundary used by
+:meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.navigate`; it turns
+navigation responses into :class:`SiteHealthStatus` records that can be carried
+by :class:`aeat.core.errors.SiteHealthError`. The marker corpora reflect the
+observed mantenimiento, WAF, and rate-limit responses on AEAT Sede Electrónica.
+
+See Also:
+    :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
+        Frozen record returned by every positive parser classification.
+    :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthState`
+        Closed state catalogue emitted by this parser suite.
 """
 
 from __future__ import annotations
@@ -279,8 +287,8 @@ def parse_rate_limit_response(
 
     Short-circuits unless ``http_status`` is 429 or 503. When the
     response is a 503 and the body also matches a maintenance marker
-    the parser yields ``None`` so the maintenance parser can win —
-    AEAT's mantenimiento pages frequently answer with 503.
+    the parser yields ``None`` so :func:`parse_mantenimiento_banner`
+    can win; AEAT mantenimiento pages frequently answer with 503.
 
     ``Retry-After`` is read case-insensitively from ``headers`` and
     supports both forms permitted by RFC 9110 §10.2.3: a non-negative
@@ -361,6 +369,11 @@ def evaluate_response(
     rate_limit_retry_after_default: int,
 ) -> SiteHealthStatus | None:
     """Run the full parser suite and return the first non-OK hit.
+
+    This is the public parser entry point consumed by
+    :func:`aeat.adapters.outbound.aeat.browser._site_health_probe.probe_response`.
+    :class:`~aeat.adapters.outbound.aeat.browser.BrowserSession` then raises
+    :class:`aeat.core.errors.SiteHealthError` for any returned status.
 
     Parsers are evaluated in cost-then-specificity order:
 

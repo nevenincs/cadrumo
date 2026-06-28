@@ -1,8 +1,14 @@
-"""Calculation revision actions for modelo filings.
+"""Calculation revision actions for modelo work units.
 
-Resolves the law-determined :class:`RegistrySnapshot` for each work unit and
-asserts its revision at calc time before computing. Uses
-:class:`BucketEventHistoryRepository` and :class:`ModeloRevision` for compliance.
+The calculate paths resolve a law-determined :class:`RegistrySnapshot` from
+each :class:`~aeat.domain.modelos._work_unit.WorkUnit`, merge manual inputs with
+profile, borrador, IVA-wallet, and bucket aggregation channels, and execute
+:func:`calculate_registry_snapshot` against the asserted :class:`ModeloRevision`.
+
+Persistence is centralized through :class:`CalculationRevision`,
+:class:`~aeat.domain.modelos._calculation_repository.CalculationRevisionCatalogueRepository`,
+and :class:`BucketEventHistoryRepository`, so the work-unit pointer and
+``modelo.calculation.created`` event advance with the stored draft revision.
 """
 
 from __future__ import annotations
@@ -13,7 +19,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ...core import BindingSourceKind
+from ...core import BindingSourceKind, Modelo
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepository
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
@@ -38,7 +44,7 @@ from ...domain.modelos._protocols import (
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
-from ...domain.modelos._row_models import ModeloDetailRow
+from ...domain.modelos._row_models import Modelo349OperadorRow, ModeloDetailRow
 from ...domain.modelos._work_unit import WorkUnit, WorkUnitState
 from ...domain.period import period_end_date
 from ...domain.transactions import TransactionCatalogueRepository
@@ -252,6 +258,11 @@ _CALLER_OVERRIDABLE_CARRY_SOURCES: frozenset[BindingSourceKind] = frozenset(
     {BindingSourceKind.PREVIOUS_FILING, BindingSourceKind.RELATION_PREFILL},
 )
 
+_M349_NUMERO_OPERADORES_BINDING: BindingId = "iva-349-declarante-numero-operadores"
+_M349_IMPORTE_OPERACIONES_BINDING: BindingId = "iva-349-declarante-importe-operaciones"
+_M349_NUMERO_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-numero-rectificaciones"
+_M349_IMPORTE_RECTIFICACIONES_BINDING: BindingId = "iva-349-declarante-importe-rectificaciones"
+
 
 def calculate_modelo_revision(
     work_unit_id: str,
@@ -313,6 +324,9 @@ def calculate_modelo_revision(
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     work_units = wu_repo.load()
     work_unit = _load_work_unit_for_calculation(work_units, work_unit_id=work_unit_id)
+    from ._profile_readiness_gate import require_profile_ready_for_work_unit
+
+    require_profile_ready_for_work_unit(work_unit)
     snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
     # Casilla inputs are accepted only as canonical casilla.id values.
     # Printed registry numbers and BOE form numbers must fail before the
@@ -631,7 +645,10 @@ def _resolve_bucket_source_mesh(
             # binding is excluded here because the iva-wallet compensación
             # decision owns it (ruling D3).
             _previous_filing_resolution_excluding_iva_compensation(
-                PreviousFilingSourceResolver(registry_snapshot=snapshot).resolve(context),
+                PreviousFilingSourceResolver(
+                    registry_snapshot=snapshot,
+                    excluded_binding_ids=_iva_compensation_previous_filing_exclusions(),
+                ).resolve(context),
             ),
             # Relation canonical for cross-modelo fold-in. The relation resolver
             # folds prior filed observations through each declared relation's
@@ -646,6 +663,7 @@ def _resolve_bucket_source_mesh(
             RelationPrefillSourceResolver(registry_snapshot=snapshot).resolve(context),
         ),
     )
+    source_resolution = _source_resolution_excluding_iva_compensation(snapshot.revision, source_resolution)
     # Safety net: collect non-blocking advisories for every binding whose declared
     # source has no enrolled resolver and is not explicitly deferred.
     # handled_sources covers all enrolled-resolver owned_sources plus the three
@@ -805,6 +823,9 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             translated_message="application.modelo.errors.work_unit_discarded_cannot_calculate",
             context={"work_unit_id": work_unit_id},
         )
+    from ._profile_readiness_gate import require_profile_ready_for_work_unit
+
+    require_profile_ready_for_work_unit(work_unit)
 
     try:
         authority = _authority_via_resources()
@@ -883,12 +904,20 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         caller_binding_values=binding_values or {},
         caller_casilla_inputs=casilla_inputs or {},
     )
+    detail_row_binding_values = _detail_row_binding_values_for_calculation(
+        work_unit=work_unit,
+        detail_rows=detail_rows,
+    )
+    backend_binding_values = _merge_detail_row_binding_values(
+        source_resolution.binding_values,
+        detail_row_binding_values,
+    )
     backend_inputs = _merge_bucket_bound_inputs(
         revision=snapshot.revision,
         casilla_inputs=casilla_inputs or {},
         bound_inputs=resolve_available_bound_inputs_by_casilla_id(
             snapshot.revision,
-            source_resolution.binding_values,
+            backend_binding_values,
         ),
     )
     # Feed the relation-resolver's resolved relation_values onto the engine's
@@ -908,20 +937,28 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     # caller-override carve-out above).
     caller_binding_ids = frozenset((binding_values or {}).keys())
     unresolved_binding_ids = tuple(
-        binding_id for binding_id in source_resolution.unresolved_binding_ids if binding_id not in caller_binding_ids
+        binding_id
+        for binding_id in source_resolution.unresolved_binding_ids
+        if binding_id not in caller_binding_ids and binding_id not in detail_row_binding_values
     )
     source_diagnostics = tuple(
         diagnostic
         for diagnostic in source_resolution.diagnostics
         if (diagnostic.relation_id is None or diagnostic.relation_id not in caller_relation_ids)
-        and (diagnostic.binding_id is None or diagnostic.binding_id not in caller_binding_ids)
+        and (
+            diagnostic.binding_id is None
+            or (
+                diagnostic.binding_id not in caller_binding_ids
+                and diagnostic.binding_id not in detail_row_binding_values
+            )
+        )
     )
     revision = calculate_modelo_revision(
         work_unit_id,
         actor=actor,
         casilla_inputs=casilla_inputs or {},
         binding_values=binding_values or {},
-        backend_binding_values=source_resolution.binding_values,
+        backend_binding_values=backend_binding_values,
         backend_casilla_inputs=backend_inputs,
         iva_compensation_decision=iva_compensation_decision,
         iva_compensation_decision_repository=iva_compensation_decision_repository,
@@ -952,6 +989,35 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         revision=revision,
         source_diagnostics=source_diagnostics,
     )
+
+
+def _detail_row_binding_values_for_calculation(
+    *,
+    work_unit: WorkUnit,
+    detail_rows: tuple[ModeloDetailRow, ...],
+) -> dict[BindingId, Decimal]:
+    if str(work_unit.modelo) != Modelo.M349.value:
+        return {}
+    operador_rows = tuple(row for row in detail_rows if isinstance(row, Modelo349OperadorRow))
+    if not operador_rows:
+        return {}
+    importe_operaciones = sum((row.importe for row in operador_rows), Decimal("0"))
+    return {
+        _M349_NUMERO_OPERADORES_BINDING: Decimal(len(operador_rows)),
+        _M349_IMPORTE_OPERACIONES_BINDING: importe_operaciones,
+        _M349_NUMERO_RECTIFICACIONES_BINDING: Decimal("0"),
+        _M349_IMPORTE_RECTIFICACIONES_BINDING: Decimal("0"),
+    }
+
+
+def _merge_detail_row_binding_values(
+    source_binding_values: Mapping[BindingId, Decimal],
+    detail_row_binding_values: Mapping[BindingId, Decimal],
+) -> dict[BindingId, Decimal]:
+    merged = dict(source_binding_values)
+    for binding_id, value in detail_row_binding_values.items():
+        merged[binding_id] = merged.get(binding_id, Decimal("0")) + value
+    return merged
 
 
 def _merge_bucket_bound_inputs(
@@ -986,8 +1052,9 @@ def _previous_filing_resolution_excluding_iva_compensation(
     value and any matching provenance row before the resolution enters the
     source mesh.
 
-    Uses :class:`CalculationSourceResolution` (immutable); returns a copy with
-    the 303 compensation binding removed.
+    Because :class:`CalculationSourceResolution` is immutable, the exclusion
+    returns a copied resolution with only the 303 compensation binding and its
+    provenance removed.
     """
     from ..calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
 
@@ -998,6 +1065,37 @@ def _previous_filing_resolution_excluding_iva_compensation(
         update={
             "binding_values": {k: v for k, v in resolution.binding_values.items() if k != excluded},
             "provenance": tuple(item for item in resolution.provenance if not item.source_ref.endswith(f":{excluded}")),
+        },
+    )
+
+
+def _iva_compensation_previous_filing_exclusions() -> frozenset[BindingId]:
+    """Binding ids previous-filing must not resolve because the IVA wallet owns them."""
+    from ..calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
+
+    return frozenset({_MODELO_303_IVA_COMPENSATION_BINDING_ID})
+
+
+def _source_resolution_excluding_iva_compensation(
+    revision: ModeloRevision,
+    resolution: CalculationSourceResolution,
+) -> CalculationSourceResolution:
+    """Keep Modelo 303 prior-compensation owned exclusively by the IVA wallet."""
+    from ..calculations._binding_prefill import _MODELO_303_IVA_COMPENSATION_BINDING_ID
+
+    excluded = _MODELO_303_IVA_COMPENSATION_BINDING_ID
+    relation_ids = frozenset(rel.id for rel in revision.relations if rel.target_binding == excluded)
+    if excluded not in resolution.binding_values and not relation_ids.intersection(resolution.relation_values):
+        return resolution
+    return resolution.model_copy(
+        update={
+            "binding_values": {k: v for k, v in resolution.binding_values.items() if k != excluded},
+            "relation_values": {k: v for k, v in resolution.relation_values.items() if k not in relation_ids},
+            "provenance": tuple(
+                item
+                for item in resolution.provenance
+                if not item.source_ref.endswith(f":{excluded}") and item.source_ref.split(":", 1)[0] not in relation_ids
+            ),
         },
     )
 
@@ -1179,7 +1277,17 @@ def mark_revision_verificado_completo(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{existing.state.value!r}; only DRAFT revisions can be marked verified-complete",
         )
-    _refuse_direct_cross_period_verification(existing, work_unit_repository=work_unit_repository)
+    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
+    work_unit = wu_repo.load().get(existing.work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": existing.work_unit_id},
+        )
+    from ._profile_readiness_gate import require_profile_ready_for_work_unit
+
+    require_profile_ready_for_work_unit(work_unit)
+    _refuse_direct_cross_period_verification(existing, work_unit_repository=wu_repo)
     now = clock or _utc_now()
     verified = existing.model_copy(
         update={

@@ -14,10 +14,18 @@ from pathlib import Path
 
 from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
-from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot, filing_period_from_scope
+from ._schema import (
+    CasillaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    ParameterDefinition,
+    RegistryCatalogues,
+    RegistrySnapshot,
+    filing_period_from_scope,
+)
 from ._temporal import select_revision
 from ._validate import RegistryValidator
-from ._validate_references import _check_all_id_references
+from ._validate_references import check_all_id_references
 from ._validate_revision_identity import revision_reference_identity_failures
 
 _SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None]
@@ -163,8 +171,40 @@ def _build_validated_snapshot(
             classification.id: classification for classification in revision.dependency_classifications
         },
     )
-    _check_all_id_references(snapshot)
+    check_all_id_references(snapshot)
     return snapshot
+
+
+def build_validated_snapshot(
+    modelo: ModeloDefinition,
+    catalogues: RegistryCatalogues,
+    *,
+    filing_year: int,
+    period: str,
+    on: date | None = None,
+    revision_id: str | None = None,
+) -> RegistrySnapshot:
+    """Return a selected :class:`RegistrySnapshot` for an already validated modelo.
+
+    Args:
+        modelo: The validated :class:`ModeloDefinition` whose revision is selected.
+        catalogues: Legal and source catalogues used to populate the snapshot.
+        filing_year: The filing year to select a revision for.
+        period: The filing period to select a revision for.
+        on: Optional reference date for revision selection.
+        revision_id: Optional explicit revision identifier to select.
+
+    Returns:
+        The selected :class:`RegistrySnapshot`.
+    """
+    return _build_validated_snapshot(
+        modelo,
+        catalogues,
+        filing_year=filing_year,
+        period=period,
+        on=on,
+        revision_id=revision_id,
+    )
 
 
 def _collect_snapshot_ref_ids(
@@ -177,13 +217,21 @@ def _collect_snapshot_ref_ids(
     refs actually exercised by the slice — this helper aggregates the
     every-record-kind union the calculation-grounding rule mandates
     (legal_refs + source_refs preserved through every domain
-    boundary). Flat records share one walk; the three nesting record
-    kinds (export_layouts, deadline_windows, filing_schedules) carry
+    boundary). Flat records share one walk; nesting record
+    kinds carry
     their own explicit blocks because they nest inner records that
     also carry refs.
     """
     legal_ids = set(modelo.legal_refs).union(revision.legal_refs)
     source_ids = set(modelo.source_refs).union(revision.source_refs)
+    if revision.completeness_manifest is not None:
+        legal_ids.update(revision.completeness_manifest.legal_refs)
+        source_ids.update(revision.completeness_manifest.source_refs)
+    for evolution in revision.casilla_continuidad_evolutions:
+        legal_ids.update(evolution.legal_refs)
+        source_ids.update(evolution.source_refs)
+    for predicate in revision.verification_predicates:
+        legal_ids.update(predicate.legal_refs)
     flat_records = (
         revision.casillas,
         revision.formulas,
@@ -205,6 +253,22 @@ def _collect_snapshot_ref_ids(
         for record in kind_records:
             legal_ids.update(record.legal_refs)
             source_ids.update(record.source_refs)
+            if isinstance(record, CasillaDefinition):
+                if record.constraints is not None:
+                    legal_ids.update(record.constraints.legal_refs)
+                    source_ids.update(record.constraints.source_refs)
+                for alias in record.aliases:
+                    legal_ids.update(alias.legal_refs)
+                    source_ids.update(alias.source_refs)
+            if isinstance(record, ParameterDefinition):
+                for row in record.convenio_rates:
+                    legal_ids.update(row.legal_refs)
+    # Cross-reference applicability predicates carry their own legal/source
+    # evidence for the profile fact that gates the official/live surface.
+    for cross_reference in revision.live_cross_references:
+        for predicate in cross_reference.applicability_predicates:
+            legal_ids.update(predicate.legal_refs)
+            source_ids.update(predicate.source_refs)
     # Export layouts carry refs on the layout itself plus on every
     # field inside every record. Walk both axes explicitly so a future
     # binding-aware field gate still sees every nested ref.

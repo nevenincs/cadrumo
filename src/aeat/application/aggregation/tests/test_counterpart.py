@@ -10,6 +10,7 @@ from ....core import Period
 from ....core.aggregation import BindingSourceKind
 from ....core.external_constants import M347_THRESHOLD_EUR
 from .._counterpart import (
+    COUNTERPART_MODELO_KIND_CATALOGUE,
     CounterpartAggregation,
     CounterpartObservation,
     CounterpartSourceKind,
@@ -159,7 +160,6 @@ class TestAggregate349:
 
 class TestInvariants:
     def test_unregistered_modelo_raises_domain_error(self) -> None:
-        from .._counterpart import _MODELO_KIND_CATALOGUE
         from .._errors import AggregationUnsupportedModeloError
         from .._grouping import filter_observations_for_modelo
 
@@ -167,7 +167,7 @@ class TestInvariants:
             filter_observations_for_modelo(
                 (),
                 modelo="720",
-                catalogue=_MODELO_KIND_CATALOGUE,
+                catalogue=COUNTERPART_MODELO_KIND_CATALOGUE,
                 attribute_fn=lambda obs: obs.operation_kind,
                 aggregator_label="counterpart aggregator",
             )
@@ -193,26 +193,30 @@ class TestInvariants:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError, match="Period"):
-            CounterpartAggregation(
-                modelo="347",
-                period="2025",  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
-                rollups=(),
-                total_counterparties=0,
-                total_taxable_base=Decimal("0"),
-                total_invoice_total=Decimal("0"),
+            CounterpartAggregation.model_validate(
+                {
+                    "modelo": "347",
+                    "period": "2025",
+                    "rollups": (),
+                    "total_counterparties": 0,
+                    "total_taxable_base": Decimal("0"),
+                    "total_invoice_total": Decimal("0"),
+                },
             )
 
     def test_period_dict_is_not_coerced(self) -> None:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError, match="Period"):
-            CounterpartAggregation(
-                modelo="347",
-                period={"filing_year": 2025, "code": "0A"},  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
-                rollups=(),
-                total_counterparties=0,
-                total_taxable_base=Decimal("0"),
-                total_invoice_total=Decimal("0"),
+            CounterpartAggregation.model_validate(
+                {
+                    "modelo": "347",
+                    "period": {"filing_year": 2025, "code": "0A"},
+                    "rollups": (),
+                    "total_counterparties": 0,
+                    "total_taxable_base": Decimal("0"),
+                    "total_invoice_total": Decimal("0"),
+                },
             )
 
     def test_input_order_invariance(self) -> None:

@@ -26,14 +26,13 @@ from pathlib import Path
 
 import pytest
 import typer
-from typer.testing import CliRunner
 
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core import Period
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 from .._common import _canonical_period, _filter_canonical_period
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -201,9 +200,8 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _add_business_row_missing_facts(cli_runner: CliRunner) -> None:
-    add = cli_runner.invoke(
-        app,
+def _add_business_row_missing_facts() -> None:
+    add = invoke_cached_cli(
         [
             "app",
             "ledger",
@@ -225,16 +223,16 @@ def _add_business_row_missing_facts(cli_runner: CliRunner) -> None:
     assert add.exit_code == 0, add.output
 
 
-def test_preflight_accepts_aeat_token_with_year(cli_runner: CliRunner, _isolated_backend: None) -> None:
+def test_preflight_accepts_aeat_token_with_year(_isolated_backend: None) -> None:
     """``ledger preflight --period 1T --year 2026`` selects the Q1 2026 row and reports the gap.
 
     Real backend, real encrypted bucket: a February 2026 business row falls in
     Q1; the AEAT token plus ``--year`` must select it and surface the gap.
     """
 
-    _add_business_row_missing_facts(cli_runner)
+    _add_business_row_missing_facts()
 
-    result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
+    result = invoke_cached_cli(["app", "ledger", "preflight", "--period", "1T", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
     # The period echoes back as the operator-facing ``<token> <year>`` pair,
@@ -245,12 +243,12 @@ def test_preflight_accepts_aeat_token_with_year(cli_runner: CliRunner, _isolated
     assert "ready\tfalse" in result.output
 
 
-def test_status_accepts_aeat_token_with_year(cli_runner: CliRunner, _isolated_backend: None) -> None:
+def test_status_accepts_aeat_token_with_year(_isolated_backend: None) -> None:
     """``ledger status --period 1T --year 2026`` reports the Q1 totals."""
 
-    _add_business_row_missing_facts(cli_runner)
+    _add_business_row_missing_facts()
 
-    result = cli_runner.invoke(app, ["app", "ledger", "status", "--period", "1T", "--year", "2026"])
+    result = invoke_cached_cli(["app", "ledger", "status", "--period", "1T", "--year", "2026"])
 
     assert result.exit_code == 0, result.output
     for marker in ("expense_total\t242", "net_total\t-242", "1T 2026"):
@@ -258,32 +256,32 @@ def test_status_accepts_aeat_token_with_year(cli_runner: CliRunner, _isolated_ba
     assert "2026Q1" not in result.output
 
 
-def test_preflight_calendar_shape_refuses(cli_runner: CliRunner, _isolated_backend: None) -> None:
+def test_preflight_calendar_shape_refuses(_isolated_backend: None) -> None:
     """``ledger preflight --period 2026Q1 --year 2026`` refuses, naming the AEAT tokens."""
 
-    result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--period", "2026Q1", "--year", "2026"])
+    result = invoke_cached_cli(["app", "ledger", "preflight", "--period", "2026Q1", "--year", "2026"])
     assert result.exit_code != 0, result.output
     assert "1T" in result.output
 
 
-def test_status_period_without_year_refuses(cli_runner: CliRunner, _isolated_backend: None) -> None:
+def test_status_period_without_year_refuses(_isolated_backend: None) -> None:
     """``ledger status --period 1T`` (no --year) refuses, instructing to add --year."""
 
-    _add_business_row_missing_facts(cli_runner)
+    _add_business_row_missing_facts()
 
-    result = cli_runner.invoke(app, ["app", "ledger", "status", "--period", "1T"])
+    result = invoke_cached_cli(["app", "ledger", "status", "--period", "1T"])
     assert result.exit_code != 0, result.output
     assert "--year" in result.output
 
 
-def test_preflight_help_documents_aeat_tokens_and_year(cli_runner: CliRunner) -> None:
+def test_preflight_help_documents_aeat_tokens_and_year() -> None:
     """The preflight ``--period`` help documents the AEAT tokens; ``--year`` is present.
 
     No calendar shape is mentioned. Locale-default output is Spanish, so assert
     on the language-invariant notation tokens and the ``--year`` flag.
     """
 
-    result = cli_runner.invoke(app, ["app", "ledger", "preflight", "--help"])
+    result = invoke_cached_cli(["app", "ledger", "preflight", "--help"])
     assert result.exit_code == 0, result.output
     output = result.output
     assert "1T" in output

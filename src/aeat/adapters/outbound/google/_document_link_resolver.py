@@ -1,16 +1,18 @@
 """Scope-compatible resolution of recorded document links.
 
-A ledger row may carry recorded Gmail/Drive/URL document links (the offline
-doclink feature stores the link reference as evidence metadata; it never fetches
-the remote content). This resolver fetches the content **within the integration's
-deliberate minimal-scope posture**: the granted ``drive.file`` scope lets the app
-download Drive files it created or the operator explicitly picked, so a
-``GOOGLE_DRIVE`` link to such a file resolves. Operator-external documents —
-arbitrary Drive files (need ``drive.readonly``) and Gmail messages (need
-``gmail.readonly``) — are **sensitive scopes the integration does not request**;
-those links are refused with a typed, actionable error rather than silently
-failing. Expanding to sensitive scopes is a security-posture decision (Google app
-verification + re-consent), tracked separately.
+Ledger evidence may start from a recorded :class:`AttachmentSource` link, but
+the link is not stored as evidence by itself. :func:`resolve_document_link`
+fetches reachable Drive content as bytes so the caller can persist those bytes
+through :func:`aeat.domain.attachments.add_attachment_bytes`; the original link
+remains provenance metadata on that byte-bearing attachment.
+
+The resolver stays inside the integration's deliberate minimal-scope posture:
+``drive.file`` can download Drive files the app created or the operator picked,
+so a ``GOOGLE_DRIVE`` reference to such a file resolves. Operator-external
+documents, arbitrary Drive files that require ``drive.readonly``, and Gmail
+messages that require ``gmail.readonly`` are refused with
+:class:`OutboundStoragePermissionError` instead of being silently stored as
+links.
 """
 
 from __future__ import annotations
@@ -54,7 +56,16 @@ class _DriveService(Protocol):
 
 
 def parse_drive_file_id(reference: str) -> str | None:
-    """Extract a Drive file id from a Drive URL or a bare id; ``None`` if absent."""
+    """Extract the Drive file id consumed by :func:`resolve_document_link`.
+
+    Args:
+        reference: A Drive URL, ``?id=...`` link, bare Drive file id, or
+            non-Drive reference.
+
+    Returns:
+        The parsed Drive file id, or ``None`` when ``reference`` does not carry
+        a recognisable Drive id.
+    """
     candidate = reference.strip()
     for pattern in _DRIVE_ID_PATTERNS:
         match = pattern.search(candidate)
@@ -85,10 +96,10 @@ def resolve_document_link(
     credentials: object,
     service: _DriveService | None = None,
 ) -> bytes:
-    """Resolve a recorded document link to its bytes, within the granted scopes.
+    """Resolve a recorded :class:`AttachmentSource` link to bytes.
 
     Args:
-        source: The recorded link's :class:`AttachmentSource`.
+        source: The recorded link source.
         reference: The link reference (Drive URL / file id, Gmail link, or URL).
         credentials: Google OAuth credentials carrying the granted scopes.
         service: Optional pre-built Drive ``v3`` service. When ``None`` (the
@@ -97,15 +108,15 @@ def resolve_document_link(
             live network or real credentials.
 
     Returns:
-        The fetched document bytes (only for ``GOOGLE_DRIVE`` links the
-        ``drive.file`` scope can reach).
+        The fetched document bytes for ``GOOGLE_DRIVE`` links the ``drive.file``
+        scope can reach.
 
     Raises:
-        OutboundStoragePermissionError: For Gmail links and Drive files outside
-            the ``drive.file`` scope — the required sensitive scope is named in
-            the error ``context["required_scope"]``.
-        OutboundStorageValidationError: For sources that are not remote documents
-            or a Drive reference with no recognisable file id.
+        :class:`OutboundStoragePermissionError`: For Gmail links, arbitrary
+            URLs, and Drive files outside the ``drive.file`` scope. The
+            required sensitive scope is named in ``context["required_scope"]``.
+        :class:`OutboundStorageValidationError`: For sources that are not
+            remote documents, or a Drive reference with no recognisable file id.
     """
     if source is AttachmentSource.GMAIL:
         raise OutboundStoragePermissionError(

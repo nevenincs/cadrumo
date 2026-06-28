@@ -1,14 +1,14 @@
 """Spanish tax normatives corpus subpackage.
 
-Provides a strictly-validated catalogue of the Spanish tax normatives
-the autónomo automation cites. Every record is a strict pydantic v2
-model. Every permalink points at a real BOE consolidated-text URL.
-Every committed file is hand-reviewed before it lands on ``main``.
+Provides a strictly-validated :class:`NormativeCatalogue` of the Spanish tax
+normatives the autónomo automation cites. Every :class:`NormativeReference` is a
+strict pydantic v2 model, every permalink points at a real BOE consolidated-text
+URL, and :func:`~aeat.domain.normatives._verify.verify_catalogue` checks the
+committed corpus before use.
 
 Public surface — callers from outside this subpackage must import
-exclusively from ``aeat.domain.normatives`` and MUST NOT reach into private
-``_schema``, ``_loader``, ``_lookup``, ``_cite``, or ``_verify``
-modules.
+exclusively from :mod:`aeat.domain.normatives` and MUST NOT reach into private
+``_schema``, ``_loader``, ``_lookup``, ``_cite``, or ``_verify`` modules.
 
 Example::
 

@@ -1,6 +1,13 @@
 """Amendment actions for externally filed modelo baselines.
 
-Use of :class:`BucketEventHistoryRepository`, :class:`CalculationRevision`, :class:`ModeloRecord` for compliance.
+``amend_modelo_revision`` starts from a current, externally evidenced
+:class:`ModeloRecord`, builds a corrected :class:`CalculationRevision` with an
+explicit :class:`CalculationRevisionAmendmentKind`, supersedes the baseline
+filing, and stores the new amendment record as current.
+
+The side effects update the work-unit pointers and emit ``modelo.amended``
+through :class:`BucketEventHistoryRepository`, matching the event-history path
+used by imported and locally filed returns.
 """
 
 from __future__ import annotations

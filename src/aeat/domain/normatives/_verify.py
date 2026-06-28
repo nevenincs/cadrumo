@@ -1,9 +1,11 @@
-"""Catalogue-level verification for ``aeat.domain.normatives``.
+"""Catalogue-level verification for :mod:`aeat.domain.normatives`.
 
-The verifier re-runs schema validation (via the loader) and adds a
-handful of cross-record checks that cannot be expressed inside a
-single pydantic model: id uniqueness across files, article permalink
-shape, citation-renderer smoke test.
+:func:`verify_catalogue` re-runs :class:`NormativeCatalogue` schema validation
+through the loader and adds cross-record checks that cannot be expressed inside a
+single pydantic model: id uniqueness across files, article permalink shape, and
+the :func:`~aeat.domain.normatives._cite.cite` renderer smoke test. It returns a
+:class:`NormativeVerificationReport` populated with
+:class:`NormativeVerificationIssue` rows.
 """
 
 from __future__ import annotations

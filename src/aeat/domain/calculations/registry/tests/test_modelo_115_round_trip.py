@@ -9,6 +9,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import CasillaId, validated_casilla_id
+from .._errors import RegistryValidationError
 from .._formula_runtime import calculate_registry_snapshot
 from .._loader import load_registry_tree
 from .._snapshot import build_snapshot
@@ -37,5 +38,5 @@ def test_modelo_115_rejects_unknown_input_casilla() -> None:
     }
     date_context = {"filing_period": date(2025, 4, 20)}
 
-    with pytest.raises(Exception, match="unknown registry input casilla"):
+    with pytest.raises(RegistryValidationError, match="unknown registry input casilla"):
         calculate_registry_snapshot(snapshot, inputs=inputs, date_context=date_context)

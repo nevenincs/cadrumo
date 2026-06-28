@@ -26,6 +26,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.config import Settings
 from .. import AuthProviderKind
@@ -34,8 +35,8 @@ from .._sessions import storage_state_paths
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-@pytest.fixture(autouse=True)
-def _active_profile(tmp_path: Path) -> Iterator[None]:
+@pytest.fixture(autouse=True, name="_active_profile")
+def active_profile(tmp_path: Path) -> Iterator[None]:
     """Set the active-profile setting so the precedence chain resolves.
 
     Routes through :func:`aeat.core.config.override_settings`, the
@@ -126,5 +127,5 @@ def test_storage_state_paths_returns_strict_frozen_model(tmp_path: Path) -> None
     result = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
 
     attr = "storage_state"
-    with pytest.raises(Exception, match="frozen"):
+    with pytest.raises(ValidationError, match="frozen"):
         setattr(result, attr, tmp_path / "other.json")

@@ -5,7 +5,8 @@ filing records, calculation results, or verification reports depends on these
 Protocols, not on the concrete adapter-backed repository classes. This keeps
 the domain layer free of adapter imports while still providing typed port surfaces.
 
-Use of :class:`ModeloRecord` for compliance.
+The filing-record protocol returns :class:`ModeloRecord` catalogues while
+keeping application code independent of concrete storage adapters.
 """
 
 from __future__ import annotations

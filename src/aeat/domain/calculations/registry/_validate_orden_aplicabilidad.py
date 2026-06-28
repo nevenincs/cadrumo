@@ -36,9 +36,9 @@ from datetime import date
 from ._schema import LegalReference, ModeloRevision
 
 # Ratchet date: revisions whose valid_from is on or after this date MUST
-# declare orden_aplicabilidad.  Revisions before this date are accepted
+# declare orden_aplicabilidad. Revisions before this date are accepted
 # without it but tracked as follow-up items.
-_ORDEN_APLICABILIDAD_RATCHET_DATE = date(2026, 6, 10)
+ORDEN_APLICABILIDAD_RATCHET_DATE = date(2026, 6, 10)
 
 
 def validate_orden_aplicabilidad(
@@ -77,7 +77,7 @@ def validate_orden_aplicabilidad(
     hard: list[str] = []
     follow_up: list[str] = []
 
-    is_new_revision = revision.valid_from >= _ORDEN_APLICABILIDAD_RATCHET_DATE
+    is_new_revision = revision.valid_from >= ORDEN_APLICABILIDAD_RATCHET_DATE
     is_open_ended = revision.valid_to is None and revision.period_selector.year_from is not None
 
     if not revision.orden_aplicabilidad:
@@ -88,7 +88,7 @@ def validate_orden_aplicabilidad(
                 hard.append(
                     f"{scope}: revision {revision.id!r} (valid_from {revision.valid_from.isoformat()}) "
                     f"is a new revision (on or after ratchet date "
-                    f"{_ORDEN_APLICABILIDAD_RATCHET_DATE.isoformat()}) and MUST declare "
+                    f"{ORDEN_APLICABILIDAD_RATCHET_DATE.isoformat()}) and MUST declare "
                     f"orden_aplicabilidad citing the orden ministerial that approves this form; "
                     f"see registry-calculation-legal-grounding rule and D3 of the "
                     f"period-revision-resolution ADR",

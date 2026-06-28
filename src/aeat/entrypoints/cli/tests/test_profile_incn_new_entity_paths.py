@@ -26,10 +26,17 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app as root_app
+from ._profile_cli_support import (
+    create_quiet_profile as _create_profile,
+)
+from ._profile_cli_support import (
+    edit_quiet_profile as _edit_profile,
+)
+from ._profile_cli_support import (
+    profile_rows as _profile_rows,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -40,51 +47,28 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _profile_rows(runner: CliRunner, name: str) -> dict[str, str]:
-    """Run `config profile show NAME` and parse the tab-separated rows."""
-
-    result = runner.invoke(root_app, ["config", "profile", "show", name])
-    assert result.exit_code == 0, result.output
-    rows: dict[str, str] = {}
-    for line in result.output.splitlines():
-        if "\t" not in line:
-            continue
-        key, _, value = line.partition("\t")
-        rows[key.strip()] = value.strip()
-    return rows
-
-
 def test_incn_prior_12_months_flag_stores_the_decimal_fact() -> None:
     """The optional INCN figure of the prior 12 months lands in its own
     profile fact. Stored verbatim as a canonical decimal token so the
     Modelo 202 modality gate (6.000.000 EUR threshold, LIS Art. 40.3)
     can decide without re-parsing."""
 
-    runner = CliRunner()
-    result = runner.invoke(
-        root_app,
-        [
-            "config",
-            "profile",
-            "create",
-            "incn-co",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "legal_entity",
-            "--legal-entity-form",
-            "sl",
-            "--tax-id",
-            "B66012345",
-            "--activity",
-            "asesoria",
-            "--incn-prior-12-months",
-            "7500000.00",
-        ],
+    result = _create_profile(
+        "incn-co",
+        "--entity-type",
+        "legal_entity",
+        "--legal-entity-form",
+        "sl",
+        "--tax-id",
+        "B66012345",
+        "--activity",
+        "asesoria",
+        "--incn-prior-12-months",
+        "7500000.00",
     )
 
     assert result.exit_code == 0, result.output
-    rows = _profile_rows(runner, "incn-co")
+    rows = _profile_rows("incn-co")
     assert rows["taxpayer_type.incn_prior_12_months"] == "7500000.00"
 
 
@@ -94,29 +78,20 @@ def test_profile_creates_without_incn_flag_leaves_fact_unset() -> None:
     the downstream Modelo 202 modality gate stays at INCOMPLETE rather
     than guessing a modality."""
 
-    runner = CliRunner()
-    result = runner.invoke(
-        root_app,
-        [
-            "config",
-            "profile",
-            "create",
-            "no-incn-co",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "legal_entity",
-            "--legal-entity-form",
-            "sl",
-            "--tax-id",
-            "B66012345",
-            "--activity",
-            "comercio",
-        ],
+    result = _create_profile(
+        "no-incn-co",
+        "--entity-type",
+        "legal_entity",
+        "--legal-entity-form",
+        "sl",
+        "--tax-id",
+        "B66012345",
+        "--activity",
+        "comercio",
     )
 
     assert result.exit_code == 0, result.output
-    rows = _profile_rows(runner, "no-incn-co")
+    rows = _profile_rows("no-incn-co")
     assert "taxpayer_type.incn_prior_12_months" not in rows
 
 
@@ -161,30 +136,21 @@ def test_new_entity_first_two_profit_periods_flag_stores_the_bool() -> None:
     its own profile fact. A positively-declared True opts the entity
     into the 15 percent new-entity rate override."""
 
-    runner = CliRunner()
-    result = runner.invoke(
-        root_app,
-        [
-            "config",
-            "profile",
-            "create",
-            "new-co",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "legal_entity",
-            "--legal-entity-form",
-            "sl",
-            "--tax-id",
-            "B66012345",
-            "--activity",
-            "consultoria",
-            "--new-entity-first-two-profit-periods",
-        ],
+    result = _create_profile(
+        "new-co",
+        "--entity-type",
+        "legal_entity",
+        "--legal-entity-form",
+        "sl",
+        "--tax-id",
+        "B66012345",
+        "--activity",
+        "consultoria",
+        "--new-entity-first-two-profit-periods",
     )
 
     assert result.exit_code == 0, result.output
-    rows = _profile_rows(runner, "new-co")
+    rows = _profile_rows("new-co")
     assert rows["taxpayer_type.new_entity_first_two_profit_periods"] == "true"
     profile = _load_active_taxpayer_profile()
     assert profile.new_entity_first_two_profit_periods is True
@@ -201,29 +167,20 @@ def test_profile_creates_without_new_entity_flag_leaves_fact_undeclared() -> Non
     a stored ``"false"``), and the reloaded ``TaxpayerProfile``
     projection reads ``None``."""
 
-    runner = CliRunner()
-    result = runner.invoke(
-        root_app,
-        [
-            "config",
-            "profile",
-            "create",
-            "no-new-co",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "legal_entity",
-            "--legal-entity-form",
-            "sl",
-            "--tax-id",
-            "B66012345",
-            "--activity",
-            "asesoria",
-        ],
+    result = _create_profile(
+        "no-new-co",
+        "--entity-type",
+        "legal_entity",
+        "--legal-entity-form",
+        "sl",
+        "--tax-id",
+        "B66012345",
+        "--activity",
+        "asesoria",
     )
 
     assert result.exit_code == 0, result.output
-    rows = _profile_rows(runner, "no-new-co")
+    rows = _profile_rows("no-new-co")
     assert "taxpayer_type.new_entity_first_two_profit_periods" not in rows
     profile = _load_active_taxpayer_profile()
     assert profile.new_entity_first_two_profit_periods is None
@@ -236,30 +193,21 @@ def test_no_new_entity_first_two_profit_periods_flag_records_declared_false() ->
     ``TaxpayerProfile`` projects it to ``False`` — distinct from the
     undeclared three-state ``None``."""
 
-    runner = CliRunner()
-    result = runner.invoke(
-        root_app,
-        [
-            "config",
-            "profile",
-            "create",
-            "decline-new-co",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "legal_entity",
-            "--legal-entity-form",
-            "sl",
-            "--tax-id",
-            "B66012345",
-            "--activity",
-            "asesoria",
-            "--no-new-entity-first-two-profit-periods",
-        ],
+    result = _create_profile(
+        "decline-new-co",
+        "--entity-type",
+        "legal_entity",
+        "--legal-entity-form",
+        "sl",
+        "--tax-id",
+        "B66012345",
+        "--activity",
+        "asesoria",
+        "--no-new-entity-first-two-profit-periods",
     )
 
     assert result.exit_code == 0, result.output
-    rows = _profile_rows(runner, "decline-new-co")
+    rows = _profile_rows("decline-new-co")
     assert rows["taxpayer_type.new_entity_first_two_profit_periods"] == "false"
     profile = _load_active_taxpayer_profile()
     assert profile.new_entity_first_two_profit_periods is False
@@ -270,44 +218,28 @@ def test_edit_patches_incn_and_new_entity_flags_onto_existing_profile() -> None:
     new-entity state onto an existing profile without disturbing the
     other facts. Patch semantics, not a full rewrite."""
 
-    runner = CliRunner()
-    create = runner.invoke(
-        root_app,
-        [
-            "config",
-            "profile",
-            "create",
-            "edit-co",
-            "--quiet",
-            "--accept-defaults",
-            "--entity-type",
-            "legal_entity",
-            "--legal-entity-form",
-            "sl",
-            "--tax-id",
-            "B66012345",
-            "--activity",
-            "asesoria",
-        ],
+    create = _create_profile(
+        "edit-co",
+        "--entity-type",
+        "legal_entity",
+        "--legal-entity-form",
+        "sl",
+        "--tax-id",
+        "B66012345",
+        "--activity",
+        "asesoria",
     )
     assert create.exit_code == 0, create.output
 
-    edit = runner.invoke(
-        root_app,
-        [
-            "config",
-            "profile",
-            "edit",
-            "edit-co",
-            "--quiet",
-            "--incn-prior-12-months",
-            "1234567.89",
-            "--new-entity-first-two-profit-periods",
-        ],
+    edit = _edit_profile(
+        "edit-co",
+        "--incn-prior-12-months",
+        "1234567.89",
+        "--new-entity-first-two-profit-periods",
     )
     assert edit.exit_code == 0, edit.output
 
-    rows = _profile_rows(runner, "edit-co")
+    rows = _profile_rows("edit-co")
     assert rows["taxpayer_type.incn_prior_12_months"] == "1234567.89"
     assert rows["taxpayer_type.new_entity_first_two_profit_periods"] == "true"
     # Other facts left untouched by the patch edit.

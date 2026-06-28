@@ -188,13 +188,16 @@ def _convenio_row(
     rate: str,
     *,
     legal_ref_anchor: str = "convenio-art-7",
+    legal_refs: tuple[str, ...] | None = None,
     notes: str | None = None,
 ) -> ConvenioRateRow:
+    resolved_legal_refs = (legal_ref_anchor,) if legal_refs is None and rate != "NOT_YET_AUTHORED" else legal_refs or ()
     return ConvenioRateRow(
         country_code=country_code,
         tipo_renta=tipo_renta,
         rate=rate,
         legal_ref_anchor=legal_ref_anchor,
+        legal_refs=resolved_legal_refs,
         notes=notes,
         valid_from=date(2025, 1, 1),
         valid_to=date(2025, 12, 31),

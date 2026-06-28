@@ -1,6 +1,7 @@
 """Modelo 202 applicability modality gate.
 
-Use of :class:`TaxpayerProfile` for compliance.
+The full-profile entry point reads :class:`TaxpayerProfile` entity type and
+INCN facts, then delegates to the raw-input modality rule used by calculation.
 """
 
 from __future__ import annotations
@@ -114,8 +115,8 @@ def modelo_202_modality_from_inputs(
 def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVerdict:
     """Derive the Modelo 202 pago-fraccionado modality and return a :class:`Modelo202ModalityVerdict`.
 
-    Uses :class:`TaxpayerProfile` for entity-type classification; delegates the
-    rule to :func:`modelo_202_modality_from_inputs` (the single definition).
+    Reads :class:`TaxpayerProfile` entity type and INCN, then delegates the rule
+    to :func:`modelo_202_modality_from_inputs` (the single definition).
     """
     return modelo_202_modality_from_inputs(
         entity_type=profile.entity_type,

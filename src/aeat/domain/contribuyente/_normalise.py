@@ -12,6 +12,10 @@ key.
 This is the only definition of the profile-key normaliser. Callers
 import this function (or ``ProfileKey.normalise``, which forwards
 here) and never re-implement the rule.
+
+:func:`normalise_key` is the canonical lookup transform used by
+:class:`ProfileKey` and the profile-key registry before matching operator
+input against registry-owned profile paths.
 """
 
 from __future__ import annotations

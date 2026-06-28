@@ -9,9 +9,41 @@ validates, and caches registry material), and :class:`CasillaObservation`
 (one typed casilla value carrying full legal and source provenance).
 """
 
+# ruff: noqa: I001
+# Registry identifiers must be re-exported before imports that can re-enter this
+# package during validation bootstrap.
 from __future__ import annotations
 
 from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle, AeatNifIvaObservation
+from ._ids import (
+    ApplicationLinkId,
+    BindingId,
+    CasillaId,
+    ConstructId,
+    CrossReferenceId,
+    DeadlineWindowId,
+    DependencyClassificationId,
+    ExportFieldId,
+    ExportLayoutId,
+    ExtractionProfileId,
+    FormulaId,
+    LegalRefId,
+    ModeloId,
+    OracleId,
+    ParameterId,
+    RecordId,
+    RelationId,
+    RevisionId,
+    SourceRefId,
+    SupportRemovalDecisionId,
+    VerificationExpectationId,
+    WorkbookFixtureId,
+    WorkbookOutputId,
+    WorkbookParityRefId,
+    is_registry_id,
+    validated_casilla_id,
+    validated_casilla_id_map,
+)
 
 # Applicability is imported after _schema so its transitive import of
 # aeat.domain.deadlines (which depends on DeadlineWindowDefinition
@@ -164,35 +196,6 @@ from ._groi_oracle import (
     GroiOracle,
     GroiReplayDriver,
 )
-from ._ids import (
-    ApplicationLinkId,
-    BindingId,
-    CasillaId,
-    ConstructId,
-    CrossReferenceId,
-    DeadlineWindowId,
-    DependencyClassificationId,
-    ExportFieldId,
-    ExportLayoutId,
-    ExtractionProfileId,
-    FormulaId,
-    LegalRefId,
-    ModeloId,
-    OracleId,
-    ParameterId,
-    RecordId,
-    RelationId,
-    RevisionId,
-    SourceRefId,
-    SupportRemovalDecisionId,
-    VerificationExpectationId,
-    WorkbookFixtureId,
-    WorkbookOutputId,
-    WorkbookParityRefId,
-    is_registry_id,
-    validated_casilla_id,
-    validated_casilla_id_map,
-)
 from ._legal import verify_legal_catalogue, verify_legal_reference
 from ._live_parity import (
     CrossReferenceApplicability,
@@ -259,6 +262,7 @@ from ._record_design import (
     RecordDesignSheet,
     build_diseno_coverage_report,
     calculation_closure_casilla_ids,
+    calculation_closure_legal_refs,
     calculation_closure_record_design_metadata,
     derive_calculation_completeness_casillas,
     derive_diseno_coverage_casillas,
@@ -604,6 +608,7 @@ __all__ = [
     "bundled_authority",
     "calculate_registry_snapshot",
     "calculation_closure_casilla_ids",
+    "calculation_closure_legal_refs",
     "calculation_closure_record_design_metadata",
     "casilla_noncanonical_reference_targets",
     "casilla_noncanonical_reference_tokens",

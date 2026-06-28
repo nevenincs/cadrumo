@@ -247,6 +247,28 @@ def _validate_revision_closure_sections(
     failures.extend(validate_formula_dag(prefix, revision))
 
 
+def _validate_revision_reference_surfaces(
+    failures: list[str],
+    *,
+    prefix: str,
+    revision: ModeloRevision,
+    legal_refs: Mapping[str, LegalReference],
+    source_refs: Mapping[str, SourceReference],
+) -> None:
+    manifest = revision.completeness_manifest
+    if manifest is not None:
+        failures.extend(
+            _missing_refs(prefix, "calculation-completeness manifest", manifest.legal_refs, legal_refs, "legal"),
+        )
+        failures.extend(
+            _missing_refs(prefix, "calculation-completeness manifest", manifest.source_refs, source_refs, "source"),
+        )
+    for evolution in revision.casilla_continuidad_evolutions:
+        owner = f"casilla continuidad evolution {evolution.id!r}"
+        failures.extend(_missing_refs(prefix, owner, evolution.legal_refs, legal_refs, "legal"))
+        failures.extend(_missing_refs(prefix, owner, evolution.source_refs, source_refs, "source"))
+
+
 def validate_revision_definition(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
@@ -260,6 +282,13 @@ def validate_revision_definition(
     prefix = f"modelo {modelo.id} revision {revision.id}"
     failures.extend(_missing_refs(prefix, "revision", revision.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, "revision", revision.source_refs, source_refs, "source"))
+    _validate_revision_reference_surfaces(
+        failures,
+        prefix=prefix,
+        revision=revision,
+        legal_refs=legal_refs,
+        source_refs=source_refs,
+    )
     context = build_revision_validation_context(revision)
     if not context.ids_by_kind["workbook parity reference"]:
         failures.append(f"{prefix}: revision must declare official workbook parity coverage")

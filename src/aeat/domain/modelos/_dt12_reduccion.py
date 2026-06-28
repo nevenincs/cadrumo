@@ -2,6 +2,10 @@
 
 The 40% reducción on the part of a plan-de-pensiones capital rescate attributable
 to contributions made on or before 31-12-2006 (LIRPF Disposición Transitoria 12ª).
+:func:`compute_dt12_reduccion_plan_pensiones` accepts :class:`~decimal.Decimal`
+amounts, applies :data:`~aeat.core.external_constants.DT12_RESCATE_REDUCCION_RATE`,
+rounds with :func:`aeat.core.money.round_to_cents`, and raises
+:class:`PensionReduccionError` for invalid preconditions.
 """
 
 from __future__ import annotations

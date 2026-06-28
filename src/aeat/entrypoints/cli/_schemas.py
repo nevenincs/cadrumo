@@ -2,8 +2,9 @@
 
 Re-exports the strict ``--json`` contract primitives for CLI payload modules:
 the :class:`OutputSchema` base for command results, the :class:`SchemaEnvelope`
-wrapper, and the registry plus emit helpers. The canonical definitions live in
-:mod:`aeat.core.json_contract`; this module only re-exports them.
+wrapper, the :class:`Notice` channel, and the registry plus emit helpers. The
+canonical definitions live in :mod:`aeat.core.json_contract`; this module only
+re-exports them so CLI payload modules have a local import surface.
 """
 
 from __future__ import annotations

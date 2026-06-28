@@ -60,6 +60,12 @@ def _session(
     )
 
 
+def _sealed_session(bucket_id: str) -> BucketSession:
+    session = _session(bucket_id)
+    session.close()
+    return session
+
+
 def _issue_codes(runtime: StorageRuntime) -> tuple[StorageRuntimeReadinessCode, ...]:
     return tuple(issue.code for issue in runtime.readiness.issues)
 
@@ -92,33 +98,54 @@ def test_runtime_reports_missing_session_without_touching_route(tmp_path: Path) 
     assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.NO_ACTIVE_SESSION,)
 
 
-def test_runtime_reports_expired_active_session(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("session", "expected_code", "expected_session_flag"),
+    (
+        (
+            _session("bucket-a", opened_at=_NOW - timedelta(minutes=20), idle_minutes=5),
+            StorageRuntimeReadinessCode.SESSION_EXPIRED,
+            "expired",
+        ),
+        (
+            _sealed_session("bucket-a"),
+            StorageRuntimeReadinessCode.SESSION_SEALED,
+            "sealed",
+        ),
+        (
+            _session("bucket-b"),
+            StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH,
+            None,
+        ),
+        (
+            _session("bucket-a", unsecured_backend=True),
+            StorageRuntimeReadinessCode.UNSECURED_BACKEND,
+            "unsecured_backend",
+        ),
+    ),
+    ids=(
+        "expired",
+        "sealed",
+        "bucket-mismatch",
+        "unsecured-backend",
+    ),
+)
+def test_runtime_reports_unready_active_session_states(
+    tmp_path: Path,
+    session: BucketSession,
+    expected_code: StorageRuntimeReadinessCode,
+    expected_session_flag: str | None,
+) -> None:
     settings = _settings_for_bucket(tmp_path, "bucket-a")
-    opened_at = _NOW - timedelta(minutes=20)
-
-    with activate_session(_session("bucket-a", opened_at=opened_at, idle_minutes=5)):
-        runtime = inspect_storage_runtime(settings, now=_NOW)
-
-    assert runtime.readiness.ready is False
-    assert runtime.readiness.code is StorageRuntimeReadinessCode.SESSION_EXPIRED
-    assert runtime.active_session is not None
-    assert runtime.active_session.expired is True
-    assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.SESSION_EXPIRED,)
-
-
-def test_runtime_reports_sealed_active_session(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
-    session = _session("bucket-a")
-    session.close()
 
     with activate_session(session):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     assert runtime.readiness.ready is False
-    assert runtime.readiness.code is StorageRuntimeReadinessCode.SESSION_SEALED
+    assert runtime.readiness.code is expected_code
     assert runtime.active_session is not None
-    assert runtime.active_session.sealed is True
-    assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.SESSION_SEALED,)
+    if expected_session_flag is not None:
+        assert getattr(runtime.active_session, expected_session_flag) is True
+    assert _issue_codes(runtime) == (expected_code,)
 
 
 def test_runtime_reports_root_fallback_route_as_unready(tmp_path: Path) -> None:
@@ -132,18 +159,6 @@ def test_runtime_reports_root_fallback_route_as_unready(tmp_path: Path) -> None:
     assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET,)
 
 
-def test_runtime_reports_route_and_session_bucket_mismatch(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
-
-    with activate_session(_session("bucket-b")):
-        runtime = inspect_storage_runtime(settings, now=_NOW)
-
-    assert runtime.readiness.ready is False
-    assert runtime.readiness.code is StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH
-    assert runtime.active_session is not None
-    assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH,)
-
-
 def test_runtime_repository_factory_refuses_route_and_session_bucket_mismatch(tmp_path: Path) -> None:
     settings = _settings_for_bucket(tmp_path, "bucket-a")
 
@@ -154,19 +169,6 @@ def test_runtime_repository_factory_refuses_route_and_session_bucket_mismatch(tm
 
     assert runtime.readiness.code is StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
-
-
-def test_runtime_reports_unsecured_backend_as_unready(tmp_path: Path) -> None:
-    settings = _settings_for_bucket(tmp_path, "bucket-a")
-
-    with activate_session(_session("bucket-a", unsecured_backend=True)):
-        runtime = inspect_storage_runtime(settings, now=_NOW)
-
-    assert runtime.readiness.ready is False
-    assert runtime.readiness.code is StorageRuntimeReadinessCode.UNSECURED_BACKEND
-    assert runtime.active_session is not None
-    assert runtime.active_session.unsecured_backend is True
-    assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.UNSECURED_BACKEND,)
 
 
 def test_runtime_repository_factory_refuses_initial_unsecured_backend(tmp_path: Path) -> None:

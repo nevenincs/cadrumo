@@ -24,7 +24,8 @@ from .. import (
     build_overview_calendar,
     calendar_events_from_expedientes_snapshots,
 )
-from .test_calendar import _SOURCE_URL, _profile
+from .calendar_test_support import SOURCE_URL as _SOURCE_URL
+from .calendar_test_support import profile as _profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

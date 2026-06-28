@@ -707,13 +707,6 @@ class TestAbortReasons:
         assert preflight_step.details is not None
         assert preflight_step.details["provider_kind"] == AuthProviderKind.CLAVE_MOVIL.value
 
-    def test_unhandled_exception_from_deadline_engine(self) -> None:
-        fx = _fixtures()
-        fx.deadline_engine.raise_exc = RuntimeError("boom")
-        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
-        assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
-        assert result.steps[-1].stage is WorkflowStage.COMPUTING_DEADLINES
-
 
 class TestVerifyPurpose:
     """``WorkflowPurpose.VERIFY`` makes the run deadline-independent.
@@ -975,12 +968,12 @@ class TestGateProjectionAgreement:
         """A target present in the shared schedule clears the gate, and
         the projection's ``pending_obligations`` carries that same
         ``(modelo, period)``."""
-        from ....application.state_projection import _build_pending_obligations
+        from ....application.state_projection import build_pending_obligations
 
         profile = _profile()
         today = date(2026, 4, 12)
 
-        projection_obligations = _build_pending_obligations(profile, today=today)
+        projection_obligations = build_pending_obligations(profile, today=today)
         target = next(o for o in projection_obligations if o.modelo == "130")
 
         result = asyncio.run(
@@ -1000,14 +993,14 @@ class TestGateProjectionAgreement:
         """A target absent from the shared schedule aborts the gate with
         ``NO_PENDING_OBLIGATION``, and the projection's
         ``pending_obligations`` carries no such ``(modelo, period)``."""
-        from ....application.state_projection import _build_pending_obligations
+        from ....application.state_projection import build_pending_obligations
 
         profile = _profile()
         today = date(2026, 4, 12)
 
         absent_modelo = "130"
         absent_period = _period(2099, "4T")
-        projection_obligations = _build_pending_obligations(profile, today=today)
+        projection_obligations = build_pending_obligations(profile, today=today)
         assert not [o for o in projection_obligations if o.modelo == absent_modelo and o.period == absent_period]
 
         result = asyncio.run(
@@ -1026,7 +1019,7 @@ class TestGateProjectionAgreement:
         ``pending_obligations`` are byte-for-byte the same ``(modelo,
         period, opens_on, closes_on, status)`` rows — proving a single
         producer feeds both."""
-        from ....application.state_projection import _build_pending_obligations
+        from ....application.state_projection import build_pending_obligations
         from ....domain.deadlines import DeadlineEngine, compute_obligation_schedule
 
         profile = _profile()
@@ -1037,7 +1030,7 @@ class TestGateProjectionAgreement:
 
         projection_rows = {
             (o.modelo, o.period, o.opens_on, o.closes_on, o.status)
-            for o in _build_pending_obligations(profile, today=today)
+            for o in build_pending_obligations(profile, today=today)
         }
 
         assert gate_rows == projection_rows
@@ -1069,31 +1062,21 @@ class TestUnhandledEnvelope:
         synthetic.__cause__ = exc
         return build_error_envelope(synthetic)
 
-    def test_envelope_code_for_value_error(self) -> None:
-        env = self._envelope_for_unhandled(ValueError("bad value"))
+    @pytest.mark.parametrize(
+        "exc",
+        [
+            pytest.param(ValueError("bad value"), id="value-error"),
+            pytest.param(TypeError("wrong type"), id="type-error"),
+            pytest.param(KeyError("missing"), id="key-error"),
+            pytest.param(RuntimeError("boom"), id="runtime-error"),
+            pytest.param(AttributeError("no attr"), id="attribute-error"),
+        ],
+    )
+    def test_envelope_code_for_common_exception(self, exc: BaseException) -> None:
+        env = self._envelope_for_unhandled(exc)
         assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
         assert env.category == ErrorCategory.INTERNAL.value
         assert env.retryable is False
-
-    def test_envelope_code_for_type_error(self) -> None:
-        env = self._envelope_for_unhandled(TypeError("wrong type"))
-        assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
-        assert env.category == ErrorCategory.INTERNAL.value
-
-    def test_envelope_code_for_key_error(self) -> None:
-        env = self._envelope_for_unhandled(KeyError("missing"))
-        assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
-        assert env.category == ErrorCategory.INTERNAL.value
-
-    def test_envelope_code_for_runtime_error(self) -> None:
-        env = self._envelope_for_unhandled(RuntimeError("boom"))
-        assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
-        assert env.category == ErrorCategory.INTERNAL.value
-
-    def test_envelope_code_for_attribute_error(self) -> None:
-        env = self._envelope_for_unhandled(AttributeError("no attr"))
-        assert env.code == "INTERNAL_WORKFLOW_UNHANDLED"
-        assert env.category == ErrorCategory.INTERNAL.value
 
     def test_envelope_context_carries_stage_and_error_type(self) -> None:
         """The envelope context must surface the stage and error_type
@@ -1115,57 +1098,71 @@ class TestUnhandledEnvelope:
         assert env.context["stage"] == "COMPUTING_DEADLINES"
         assert env.context["error_type"] == "OSError"
 
-    def test_computing_deadlines_unhandled_emits_envelope_code(self) -> None:
-        """Real engine path: deadline engine raises ValueError ->
-        ``_record_unhandled`` builds an ``INTERNAL_WORKFLOW_UNHANDLED``
-        envelope and aborts with ``UNHANDLED_EXCEPTION``."""
-        fx = _fixtures()
-        fx.deadline_engine.raise_exc = ValueError("registry unavailable")
-        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
-        assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
-        assert result.steps[-1].stage is WorkflowStage.COMPUTING_DEADLINES
+    def _arm_unhandled_case(self, fx: _Fixtures, source: str, exc: BaseException) -> None:
+        if source == "deadline":
+            fx.deadline_engine.raise_exc = exc
+        elif source == "notifications":
+            fx.notifications_source.raise_exc = exc
+        elif source == "expedientes":
+            fx.expedientes_source.raise_exc = exc
+        elif source == "inputs":
+            fx.inputs_provider.raise_exc = exc
+        elif source == "draft_builder":
+            fx.draft_builder.raise_exc = exc
+        elif source == "preflight":
+            fx.submission_engine.preflight_exc = exc
+        else:
+            raise AssertionError(f"unknown unhandled workflow source: {source}")
 
-    def test_checking_inbox_unhandled_emits_envelope_code(self) -> None:
-        """Real engine path: notifications source raises TypeError ->
-        ``_record_unhandled`` fires at ``CHECKING_INBOX``."""
+    @pytest.mark.parametrize(
+        ("source", "exc", "expected_stage"),
+        [
+            pytest.param(
+                "deadline",
+                ValueError("registry unavailable"),
+                WorkflowStage.COMPUTING_DEADLINES,
+                id="computing-deadlines",
+            ),
+            pytest.param(
+                "notifications",
+                TypeError("unexpected type"),
+                WorkflowStage.CHECKING_INBOX,
+                id="checking-inbox",
+            ),
+            pytest.param(
+                "expedientes",
+                KeyError("no expediente"),
+                WorkflowStage.BUILDING_DRAFT,
+                id="building-draft-expedientes",
+            ),
+            pytest.param(
+                "inputs",
+                RuntimeError("inputs fetch failed"),
+                WorkflowStage.BUILDING_DRAFT,
+                id="building-draft-inputs",
+            ),
+            pytest.param(
+                "draft_builder",
+                AttributeError("missing field"),
+                WorkflowStage.BUILDING_DRAFT,
+                id="building-draft-builder",
+            ),
+            pytest.param(
+                "preflight",
+                OSError("network error"),
+                WorkflowStage.RUNNING_PREFLIGHT,
+                id="running-preflight",
+            ),
+        ],
+    )
+    def test_real_engine_unhandled_paths_emit_envelope_code(
+        self,
+        source: str,
+        exc: BaseException,
+        expected_stage: WorkflowStage,
+    ) -> None:
         fx = _fixtures()
-        fx.notifications_source.raise_exc = TypeError("unexpected type")
+        self._arm_unhandled_case(fx, source, exc)
         result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
         assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
-        assert result.steps[-1].stage is WorkflowStage.CHECKING_INBOX
-
-    def test_building_draft_expedientes_unhandled_emits_envelope_code(self) -> None:
-        """Real engine path: expedientes source raises KeyError ->
-        ``_record_unhandled`` fires at ``BUILDING_DRAFT`` (expedientes arm)."""
-        fx = _fixtures()
-        fx.expedientes_source.raise_exc = KeyError("no expediente")
-        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
-        assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
-        assert result.steps[-1].stage is WorkflowStage.BUILDING_DRAFT
-
-    def test_building_draft_inputs_unhandled_emits_envelope_code(self) -> None:
-        """Real engine path: inputs provider raises RuntimeError ->
-        ``_record_unhandled`` fires at ``BUILDING_DRAFT`` (inputs arm)."""
-        fx = _fixtures()
-        fx.inputs_provider.raise_exc = RuntimeError("inputs fetch failed")
-        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
-        assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
-        assert result.steps[-1].stage is WorkflowStage.BUILDING_DRAFT
-
-    def test_building_draft_builder_unhandled_emits_envelope_code(self) -> None:
-        """Real engine path: draft builder raises AttributeError ->
-        ``_record_unhandled`` fires at ``BUILDING_DRAFT`` (builder arm)."""
-        fx = _fixtures()
-        fx.draft_builder.raise_exc = AttributeError("missing field")
-        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
-        assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
-        assert result.steps[-1].stage is WorkflowStage.BUILDING_DRAFT
-
-    def test_running_preflight_unhandled_emits_envelope_code(self) -> None:
-        """Real engine path: submission engine raises OSError ->
-        ``_record_unhandled`` fires at ``RUNNING_PREFLIGHT``."""
-        fx = _fixtures()
-        fx.submission_engine.preflight_exc = OSError("network error")
-        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
-        assert result.aborted_reason is WorkflowAbortReason.UNHANDLED_EXCEPTION
-        assert result.steps[-1].stage is WorkflowStage.RUNNING_PREFLIGHT
+        assert result.steps[-1].stage is expected_stage

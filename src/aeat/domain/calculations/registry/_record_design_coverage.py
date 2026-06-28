@@ -1,4 +1,10 @@
-"""Off-load-path record-design coverage and calculation-closure derivations."""
+"""Off-load-path record-design coverage and calculation-closure derivations.
+
+:func:`calculation_closure_casilla_ids` and
+:func:`calculation_closure_legal_refs` derive bounded closure projections from
+a :class:`ModeloRevision`; :class:`DisenoCoverageReport` remains the advisory
+full-Diseño inventory.
+"""
 
 from __future__ import annotations
 
@@ -255,6 +261,43 @@ def calculation_closure_record_design_metadata(
         visit_endpoint=lambda casilla: metadata.add((casilla.segmento, casilla.number)),
     )
     return frozenset(metadata)
+
+
+def calculation_closure_legal_refs(revision: ModeloRevision, modelo_id: str) -> frozenset[str]:
+    """Return legal references carried by a revision's calculation closure.
+
+    Legal-ref projection of :func:`calculation_closure_casilla_ids`. The
+    completeness manifest is the reviewed ledger for the calculation closure,
+    so its own ``legal_refs`` must equal the refs carried by the closure
+    casillas plus their endpoint formula/binding definitions and verification
+    expectations.
+
+    Unresolved closure tokens are skipped here because
+    :func:`derive_calculation_completeness_casillas` and the manifest drift
+    gate already surface missing required casillas explicitly.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose calculation closure legal
+            references are projected.
+        modelo_id: Modelo identifier used to scope cross-modelo selectors.
+    """
+    declared_by_id = casillas_by_id(revision)
+    formulas_by_id = {formula.id: formula for formula in revision.formulas}
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    legal_refs: set[str] = set()
+
+    for casilla_id in calculation_closure_casilla_ids(revision, modelo_id):
+        casilla = declared_by_id.get(casilla_id)
+        if casilla is None:
+            continue
+        legal_refs.update(casilla.legal_refs)
+        if casilla.formula is not None:
+            legal_refs.update(formulas_by_id[casilla.formula].legal_refs)
+        if casilla.binding is not None:
+            legal_refs.update(bindings_by_id[casilla.binding].legal_refs)
+    for expectation in revision.verification_expectations:
+        legal_refs.update(expectation.legal_refs)
+    return frozenset(legal_refs)
 
 
 def derive_calculation_completeness_casillas(
@@ -559,6 +602,7 @@ __all__ = [
     "DisenoCoverageReport",
     "build_diseno_coverage_report",
     "calculation_closure_casilla_ids",
+    "calculation_closure_legal_refs",
     "calculation_closure_record_design_metadata",
     "derive_calculation_completeness_casillas",
     "derive_diseno_coverage_casillas",

@@ -633,8 +633,11 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
                 operand_casilla_refs=_operand_casilla_refs("0153"),
                 legal_refs=(
                     "ley-35-2006:art-99",
+                    "ley-35-2006:art-22",
+                    "ley-35-2006:art-23",
+                    "ley-35-2006:art-24",
+                    "ley-35-2006:art-101",
                     "rd-439-2007:art-100",
-                    "rd-439-2007:art-109",
                     "orden-hac-277-2026:art-3",
                 ),
                 source_refs=(

@@ -3,8 +3,8 @@
 Proves the settings dependency-injection contract: the operator-supplied
 ``--language`` value flows through ``override_settings`` (the
 ContextVar-backed Settings override seam) into ``output_language()``
-in the i18n renderer — without any test-side ``os.environ`` /
-``monkeypatch.setenv`` manipulation. The fixture establishes the
+in the i18n renderer — without any test-side process-environment
+mutation. The fixture establishes the
 override at root-callback time via ``ctx.with_resource(override_settings(
 aeat_output_language=language))`` (entrypoints/cli/__init__.py:127);
 this test verifies that surface end-to-end.
@@ -12,6 +12,7 @@ this test verifies that surface end-to-end.
 
 from __future__ import annotations
 
+import os
 from typing import cast
 
 import click
@@ -22,6 +23,8 @@ from click.testing import CliRunner
 from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_NO_FORCED_LANGUAGE_ENV: dict[str, str | None] = {"AEAT_OUTPUT_LANGUAGE": None}
 
 
 def _get_cli_command() -> click.Command:
@@ -49,18 +52,6 @@ def _get_cli_command() -> click.Command:
     return cast(click.Command, cmd)
 
 
-@pytest.fixture(autouse=True)
-def _no_force_english_for_this_test(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Drop the conftest-wide AEAT_OUTPUT_LANGUAGE=en autouse fixture's effect.
-
-    The conftest pins AEAT_OUTPUT_LANGUAGE to ``en`` so every CLI test
-    sees English output by default. For this test we need the CLI flag
-    to be the SOLE language selector, so we delete the env var the
-    autouse fixture set.
-    """
-    monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE", raising=False)
-
-
 def test_root_callback_language_flag_routes_through_override_settings(
     cli_runner: CliRunner,
 ) -> None:
@@ -73,7 +64,11 @@ def test_root_callback_language_flag_routes_through_override_settings(
     would fall back to the production default (``es``) regardless of
     the flag.
     """
-    result = cli_runner.invoke(_get_cli_command(), ["--language", "ca", "--help"])
+    result = cli_runner.invoke(
+        _get_cli_command(),
+        ["--language", "ca", "--help"],
+        env=_NO_FORCED_LANGUAGE_ENV,
+    )
     assert result.exit_code == 0, result.output
     # The flag-routed language must be honoured. Asserting on a CLI-
     # localised token that exists in the ca locale (the help heading
@@ -84,7 +79,6 @@ def test_root_callback_language_flag_routes_through_override_settings(
 
 def test_root_callback_language_flag_does_not_mutate_process_env(
     cli_runner: CliRunner,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Verifying the override path does not write to os.environ.
 
@@ -93,11 +87,12 @@ def test_root_callback_language_flag_does_not_mutate_process_env(
     leak into the parent process environment where subprocesses or
     later CLI invocations could inherit it.
     """
-    import os
-
-    monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE", raising=False)
     pre_value = os.environ.get("AEAT_OUTPUT_LANGUAGE")
-    result = cli_runner.invoke(_get_cli_command(), ["--language", "hu", "--help"])
+    result = cli_runner.invoke(
+        _get_cli_command(),
+        ["--language", "hu", "--help"],
+        env=_NO_FORCED_LANGUAGE_ENV,
+    )
     post_value = os.environ.get("AEAT_OUTPUT_LANGUAGE")
     assert result.exit_code == 0, result.output
     assert pre_value == post_value, (

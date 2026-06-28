@@ -1,6 +1,8 @@
 """Google Sheets calculation sync commands for ``aeat config google``.
 
-Use of :class:`RegistrySnapshot` for compliance.
+Google calc commands resolve a
+:class:`~aeat.domain.calculations.registry.RegistrySnapshot` before exporting
+or pulling sheet rows against the live calculation schema.
 """
 
 from __future__ import annotations

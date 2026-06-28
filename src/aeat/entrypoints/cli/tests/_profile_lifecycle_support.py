@@ -15,8 +15,6 @@ from __future__ import annotations
 import hashlib
 from datetime import UTC, datetime
 
-from typer.testing import CliRunner
-
 from ....adapters.persistence.storage.bucket._layout import provision_bucket_directory
 from ....adapters.persistence.storage.bucket._manifest import (
     BucketLifecycleStatus,
@@ -29,6 +27,7 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import load_settings
 from ....core.identity import nif_check_letter
+from ....tests.cli_runner import invoke_cached_cli
 
 
 def stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
@@ -121,12 +120,11 @@ def distinct_nif(name: str) -> str:
     return f"{number:08d}{nif_check_letter(number)}"
 
 
-def create_via_cli(runner: CliRunner, name: str, *, tax_id: str | None = None) -> None:
-    from .. import app as root_app
+def create_profile_via_cli(name: str, *, tax_id: str | None = None) -> None:
+    """Create a profile through the real cached root CLI command."""
 
-    result = runner.invoke(
-        root_app,
-        [
+    result = invoke_cached_cli(
+        (
             "config",
             "profile",
             "create",
@@ -140,6 +138,6 @@ def create_via_cli(runner: CliRunner, name: str, *, tax_id: str | None = None) -
             "design",
             "--iva-regime",
             "GENERAL",
-        ],
+        )
     )
     assert result.exit_code == 0, f"create {name!r} failed: {result.output}"

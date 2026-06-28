@@ -15,7 +15,9 @@ lives in the modelo binding consumer.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
+from types import MappingProxyType
 
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
@@ -144,6 +146,7 @@ _MODELO_KIND_CATALOGUE: dict[str, frozenset[str]] = {
     Modelo.M347.value: _MODELO_347_KINDS,
     Modelo.M349.value: _MODELO_349_KINDS,
 }
+COUNTERPART_MODELO_KIND_CATALOGUE: Mapping[str, frozenset[str]] = MappingProxyType(_MODELO_KIND_CATALOGUE)
 
 
 def _aggregate_for_modelo(
@@ -292,6 +295,7 @@ def declarable_for_347(aggregation: CounterpartAggregation, *, counterparty_nif:
 
 
 __all__ = [
+    "COUNTERPART_MODELO_KIND_CATALOGUE",
     "CounterpartAggregation",
     "CounterpartObservation",
     "CounterpartRollup",

@@ -51,6 +51,7 @@ def _create_natural_person() -> None:
             "--quiet", "--accept-defaults",
             "--tax-id", "12345678Z",
             "--name", "Operator",
+            "--surnames", "Guard",
             "--activity", "design",
             "--entity-type", "natural_person",
             "--irpf-income-categories", "actividad_economica",
@@ -72,6 +73,27 @@ def _create_legal_entity() -> None:
             "--activity", "consulting",
             "--entity-type", "legal_entity",
             "--legal-entity-form", "sl",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+
+
+def _create_non_resident_irnr_natural_person() -> None:
+    """Create a declared NON_RESIDENT_IRNR natural-person profile."""
+
+    result = invoke_cached_cli(
+        [
+            "config", "profile", "create", "nonresident",
+            "--quiet", "--accept-defaults",
+            "--tax-id", "X1234567L",
+            "--name", "Non Resident",
+            "--surnames", "Guard",
+            "--activity", "design",
+            "--entity-type", "natural_person",
+            "--irpf-income-categories", "actividad_economica",
+            "--irpf-estimation-regime", "directa_normal",
+            "--fiscal-residency", "non_resident_irnr",
+            "--country-of-fiscal-residence", "FR",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -125,6 +147,27 @@ def test_work_create_refuses_modelo_100_for_a_legal_entity(
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
     assert "100" in result.output
+
+
+def test_work_create_refuses_modelo_130_for_non_resident_irnr(
+    _isolated_cli_backend: Path,
+) -> None:
+    """A declared IRNR non-resident is refused the resident-IRPF M130 work unit."""
+
+    _create_non_resident_irnr_natural_person()
+    result = invoke_cached_cli(
+        [
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--revision", "2019-y-siguientes",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    assert "130" in result.output
+    assert "NON_RESIDENT_IRNR" in result.output
+    assert "--allow-not-applicable" in result.output
 
 
 def test_work_create_allow_not_applicable_bypasses_the_guard(

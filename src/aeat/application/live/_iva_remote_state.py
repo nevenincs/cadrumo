@@ -1,6 +1,7 @@
 """IVA remote-state, compensation-history, and wallet live actions.
 
-Use of :class:`SecureObjectRepository` for compliance.
+Encrypted acquisition manifests are stored through the active bucket's
+:class:`SecureObjectRepository` via the typed manifest repository.
 """
 
 from __future__ import annotations

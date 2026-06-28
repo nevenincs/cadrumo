@@ -1,4 +1,8 @@
-"""Strict pydantic v2 records for AEAT auth readiness."""
+"""Strict pydantic v2 records for AEAT auth readiness.
+
+:class:`AuthState` is the workflow-state auth snapshot updated by
+:func:`aeat.application.auth.update_auth`.
+"""
 
 from __future__ import annotations
 

@@ -10,16 +10,21 @@ adapter is wired through the live driver).
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from datetime import UTC, date, datetime
+from functools import cache
 from pathlib import Path
+from typing import cast
 
+import click
 import pytest
-from typer.testing import CliRunner
+from click.testing import CliRunner, Result
+from typer.main import get_command
 
 from ....application.live._censo import CensoSnapshotService
 from ....application.user_profile._orchestration import profile_create_storage_span
 from ....core.config import Settings
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._config import profile_app
 
@@ -28,6 +33,16 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _AEAT = Settings.external_constants().aeat
 _G313 = f"{_AEAT.domains.sede}{_AEAT.sede_paths.censo_g313_launcher}"
+_PROFILE_RUNNER = CliRunner()
+
+
+@cache
+def _profile_command() -> click.Command:
+    return cast(click.Command, get_command(profile_app))
+
+
+def _invoke_profile(args: Sequence[str]) -> Result:
+    return _PROFILE_RUNNER.invoke(_profile_command(), list(args))
 
 
 @pytest.fixture(autouse=True)
@@ -86,22 +101,22 @@ def _capture_snapshot(*, include_iae: bool = False) -> str:
     return snapshot.snapshot_id
 
 
-def test_censo_help_lists_four_verbs(cli_runner: CliRunner) -> None:
-    result = cli_runner.invoke(profile_app, ["censo", "--help"])
+def test_censo_help_lists_four_verbs() -> None:
+    result = _invoke_profile(("censo", "--help"))
 
     assert result.exit_code == 0
     for verb in ("pull", "show", "compare", "apply"):
         assert verb in result.output
 
 
-def test_censo_refresh_command_is_not_registered(cli_runner: CliRunner) -> None:
-    result = cli_runner.invoke(profile_app, ["censo", "refresh", "--help"])
+def test_censo_refresh_command_is_not_registered() -> None:
+    result = _invoke_profile(("censo", "refresh", "--help"))
 
     assert result.exit_code != 0
     assert "No such command" in result.output
 
 
-def test_refresh_refuses_without_live_gate(cli_runner: CliRunner) -> None:
+def test_refresh_refuses_without_live_gate() -> None:
     """Live refresh requires AEAT_LIVE_TESTS_ENABLED=1 to pass the
     access-gate. With the gate off (default), the CLI surfaces the
     refusal without ever touching a browser session.
@@ -116,7 +131,7 @@ def test_refresh_refuses_without_live_gate(cli_runner: CliRunner) -> None:
     _seed_active_profile()
 
     with override_settings(aeat_live_tests_enabled=""):
-        result = cli_runner.invoke(profile_app, ["censo", "pull"])
+        result = _invoke_profile(("censo", "pull"))
 
     assert result.exit_code != 0
     haystack = (result.output + " " + str(result.exception or "")).lower()
@@ -125,10 +140,10 @@ def test_refresh_refuses_without_live_gate(cli_runner: CliRunner) -> None:
     assert "live aeat reads require aeat_live_tests_enabled" in haystack
 
 
-def test_show_refuses_when_no_snapshot_exists(cli_runner: CliRunner) -> None:
+def test_show_refuses_when_no_snapshot_exists() -> None:
     _seed_active_profile()
 
-    result = cli_runner.invoke(profile_app, ["censo", "show"])
+    result = _invoke_profile(("censo", "show"))
 
     assert result.exit_code != 0
     # The CLI error boundary decoration is process-global memoised by
@@ -143,11 +158,11 @@ def test_show_refuses_when_no_snapshot_exists(cli_runner: CliRunner) -> None:
     assert "no censo snapshot" in haystack
 
 
-def test_show_emits_active_snapshot(cli_runner: CliRunner) -> None:
+def test_show_emits_active_snapshot() -> None:
     _seed_active_profile()
     snapshot_id = _capture_snapshot()
 
-    result = cli_runner.invoke(profile_app, ["censo", "show"])
+    result = _invoke_profile(("censo", "show"))
 
     assert result.exit_code == 0
     assert snapshot_id in result.output
@@ -155,22 +170,22 @@ def test_show_emits_active_snapshot(cli_runner: CliRunner) -> None:
     assert "state\tactive" in result.output
 
 
-def test_compare_reports_per_field_status(cli_runner: CliRunner) -> None:
+def test_compare_reports_per_field_status() -> None:
     _seed_active_profile()
     _capture_snapshot()
 
-    result = cli_runner.invoke(profile_app, ["censo", "compare"])
+    result = _invoke_profile(("censo", "compare"))
 
     assert result.exit_code == 0
     assert "censo_only\tcenso.establecimiento_type" in result.output
     assert "censo_only\tvivienda_office.total_m2" in result.output
 
 
-def test_apply_writes_censo_facts_onto_profile(cli_runner: CliRunner) -> None:
+def test_apply_writes_censo_facts_onto_profile() -> None:
     _seed_active_profile(without_taxpayer_axes=True)
     _capture_snapshot(include_iae=True)
 
-    result = cli_runner.invoke(profile_app, ["censo", "apply"])
+    result = _invoke_profile(("censo", "apply"))
 
     assert result.exit_code == 0
     assert "written\tcenso.establecimiento_type" in result.output
@@ -211,19 +226,20 @@ def test_apply_writes_censo_facts_onto_profile(cli_runner: CliRunner) -> None:
     assert modelo_100_fields["enrolment_sources"] == "taxpayer_type.entity_type=aeat_censo_derived"
 
 
-def test_compare_matches_after_apply(cli_runner: CliRunner) -> None:
+def test_compare_matches_after_apply() -> None:
     _seed_active_profile()
     _capture_snapshot()
-    cli_runner.invoke(profile_app, ["censo", "apply"])
+    applied = _invoke_profile(("censo", "apply"))
+    assert applied.exit_code == 0, applied.output
 
-    result = cli_runner.invoke(profile_app, ["censo", "compare"])
+    result = _invoke_profile(("censo", "compare"))
 
     assert result.exit_code == 0
     assert "matches\tcenso.establecimiento_type" in result.output
     assert "matches\tvivienda_office.total_m2" in result.output
 
 
-def test_apply_emits_censo_applied_bucket_event(cli_runner: CliRunner) -> None:
+def test_apply_emits_censo_applied_bucket_event() -> None:
     """Apply MUST emit CENSO_APPLIED so the stale-cascade walker
     has a typed event to react to. The CLI test never reached the
     catalogue before this assertion landed — the emission was
@@ -236,7 +252,7 @@ def test_apply_emits_censo_applied_bucket_event(cli_runner: CliRunner) -> None:
     _seed_active_profile()
     snapshot_id = _capture_snapshot()
 
-    result = cli_runner.invoke(profile_app, ["censo", "apply"])
+    result = _invoke_profile(("censo", "apply"))
     assert result.exit_code == 0, result.output
 
     catalogue = BucketEventHistoryRepository().load()
@@ -255,14 +271,14 @@ def test_apply_emits_censo_applied_bucket_event(cli_runner: CliRunner) -> None:
     assert payload["profile_id"] == active
 
 
-def test_rejected_subverb_returns_nonzero(cli_runner: CliRunner) -> None:
+def test_rejected_subverb_returns_nonzero() -> None:
     """Typer must refuse an undeclared subverb (e.g. 'diff' is not in
     {refresh, show, compare, apply}). Without this regression a typo
     would silently invoke nothing instead of erroring."""
 
     _seed_active_profile()
 
-    result = cli_runner.invoke(profile_app, ["censo", "diff"])
+    result = _invoke_profile(("censo", "diff"))
 
     assert result.exit_code != 0
 
@@ -272,8 +288,6 @@ def test_compare_emits_json_payload_with_typed_rows() -> None:
     CensoProfileComparison through model_dump(mode='json') cleanly."""
 
     import json
-
-    from ....tests.cli_runner import invoke_cached_cli
 
     _seed_active_profile(without_taxpayer_axes=True)
     _capture_snapshot()
@@ -301,8 +315,6 @@ def test_apply_emits_json_payload_with_written_paths() -> None:
     model_dump(mode='json'); written_paths is a tuple that JSON renders as a list."""
 
     import json
-
-    from ....tests.cli_runner import invoke_cached_cli
 
     _seed_active_profile(without_taxpayer_axes=True)
     _capture_snapshot(include_iae=True)

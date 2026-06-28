@@ -1,28 +1,35 @@
 """Read operator-edited Sheets cells back into structured records.
 
-Pairs with `_calc_sheets_apply.py`. The push side materialises a
-`SheetExportPlan` as a real Google Sheets workbook; this module
-reads the operator's edits back out, validates the workbook is
-still bound to the :class:`RegistrySnapshot` the engine compiled it from,
-and returns typed records the caller can apply to its ledger /
-filing flow.
+Pairs with :mod:`aeat.adapters.outbound.google._calc_sheets_apply`. The export
+side materialises a :class:`SheetExportPlan` as a real Google Sheets workbook;
+this module reads the operator's edits back out, validates the workbook is
+still bound to the :class:`RegistrySnapshot` the engine compiled it from, and
+returns typed records the caller can inspect, compute from, or assemble into
+ledger / filing inputs.
 
 Two safety gates fire before any value is read:
 
 1. **Drive ownership marker** — the spreadsheet must carry the
-   `appProperties.aeat_vault_app=aeat` marker. Reading values from a
+   ``appProperties.aeat_vault_app=aeat`` marker. Reading values from a
    spreadsheet that lacks the marker would mix operator content with
-   foreign Drive files and break the `aeat-vault/` isolation contract.
+   foreign Drive files and break the ``aeat-vault/`` isolation contract.
 2. **Registry-SHA metadata match** — the spreadsheet's developer
-   metadata must declare `aeat_registry_sha = <snapshot.registry_sha>`
-   and `aeat_modelo_id` / `aeat_revision_id` / `aeat_filing_year` /
-   `aeat_period` matching the caller's snapshot. A mismatch means
+   metadata must declare ``aeat_registry_sha = <snapshot.registry_sha>``
+   and ``aeat_modelo_id`` / ``aeat_revision_id`` / ``aeat_filing_year`` /
+   ``aeat_period`` matching the caller's snapshot. A mismatch means
    the workbook was compiled against a different registry slice —
    casilla identity/layout, formula chains, and bracket tables may have
    shifted. The pull is refused with a typed error.
 
 The pull adapter does NOT mutate any local state; it returns a
-`PullResult` and leaves applying the edits to the caller.
+:class:`PullResult` and leaves applying the edits to the caller.
+
+See Also:
+    :func:`pull_operator_edits` reads the workbook,
+    :func:`compute_from_pull` maps a matching pull into
+    :class:`RegistryCalculationResult`, and
+    :func:`verify_pull_coverage` compares a pull against its source
+    :class:`SheetExportPlan` when the caller still has that plan.
 """
 
 from __future__ import annotations
@@ -88,7 +95,7 @@ _DUPLICATE_SENSITIVE_METADATA_KEYS: Final[frozenset[str]] = frozenset(
 
 # A single batch-get value-range entry from the Sheets API.
 # Shape: {"range": str, "values": list[list[object]]}
-_ValueRange = dict[str, Any]
+ValueRange = dict[str, Any]
 
 
 class OperatorEdit(BaseModel):
@@ -229,7 +236,15 @@ class MetadataMatchState(StrEnum):
 
 
 class PullResult(BaseModel):
-    """Outcome of one pull cycle."""
+    """Outcome of one Google Sheets pull cycle.
+
+    Carries the typed edit families read from the workbook, the
+    :class:`PullMetadata` stamp recovered from developer metadata, the
+    :class:`MetadataMatchState` verdict against the caller's
+    :class:`RegistrySnapshot`, and the count of non-blank cells read.
+    ``metadata_match`` may be ``STALE`` or ``MISSING``; callers must treat that
+    as a refusal boundary before applying edits to local state.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -268,8 +283,9 @@ def _sheets_service(credentials: object) -> _GoogleResource:
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
-# .files() / .spreadsheets() only via runtime Discovery JSON dispatch; the stub type
-# carries .close() alone, so service helpers accept Any for the dynamic attribute access.
+# .files() / .spreadsheets() only via runtime Discovery JSON dispatch; the published
+# typing surface carries .close() alone, so service helpers accept Any for the dynamic
+# attribute access.
 def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
     """Refuse to read from a spreadsheet that lacks the ownership marker."""
     file_meta = execute_request(
@@ -291,8 +307,9 @@ def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
-# .spreadsheets() only via runtime Discovery JSON dispatch; the stub carries .close()
-# alone, so the service helper accepts Any for the dynamic attribute access.
+# .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
+# surface carries .close() alone, so the service helper accepts Any for the dynamic
+# attribute access.
 def _read_developer_metadata(
     sheets_service: Any,
     spreadsheet_id: str,
@@ -393,7 +410,7 @@ def _classify_metadata_match(
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource
-# object; no stub type available in google-api-python-client.
+# object; no precise static type is available in google-api-python-client.
 def _coerce_value(raw: Any) -> Decimal | str | bool | None:
     if raw is None or raw == "":
         return None
@@ -417,6 +434,11 @@ def pull_operator_edits(
 ) -> PullResult:
     """Read operator-edited cells back from a workbook into typed records.
 
+    This is the readback entrypoint behind ``aeat config google sync calc
+    pull``. It verifies the Drive ownership marker, reads developer metadata,
+    classifies metadata against ``snapshot``, reads operator/binding/relation
+    cells plus Detalle row-set blocks, and returns a :class:`PullResult`.
+
     Args:
         snapshot: The :class:`RegistrySnapshot` the workbook was compiled
             against. Used to derive the layout (cell addresses for
@@ -424,10 +446,10 @@ def pull_operator_edits(
             workbook's developer-metadata stamps.
         spreadsheet_id: The Drive file id of the workbook to read.
             Must already exist and carry the
-            `appProperties.aeat_vault_app=aeat` ownership marker.
-        credentials: A `google.oauth2.credentials.Credentials`-shaped
+            ``appProperties.aeat_vault_app=aeat`` ownership marker.
+        credentials: A ``google.oauth2.credentials.Credentials``-shaped
             object carrying a refresh + access token with at least
-            the `drive.file` + `spreadsheets` scopes.
+            the ``drive.file`` + ``spreadsheets`` scopes.
 
     Returns:
         A :class:`PullResult` carrying the operator edits, binding edits,
@@ -438,7 +460,11 @@ def pull_operator_edits(
         local store may corrupt data.
 
     Raises:
-        OutboundStorageValidationError: When ``spreadsheet_id`` is blank.
+        :class:`OutboundStorageValidationError`: When ``spreadsheet_id`` is
+            blank.
+        :class:`~aeat.adapters.outbound.storage.OutboundStorageError`: When
+            Drive or Sheets rejects the request, the target is missing, quota
+            is exhausted, or the workbook fails the app-owned marker gate.
     """
     if not spreadsheet_id.strip():
         raise OutboundStorageValidationError(
@@ -519,13 +545,14 @@ def _operator_input_addresses(
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
-# .spreadsheets() only via runtime Discovery JSON dispatch; the stub carries .close()
-# alone, so the service helper accepts Any for the dynamic attribute access.
+# .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
+# surface carries .close() alone, so the service helper accepts Any for the dynamic
+# attribute access.
 def _batch_get_values(
     sheets: Any,
     spreadsheet_id: str,
     ranges: list[str],
-) -> list[_ValueRange]:
+) -> list[ValueRange]:
     """One Sheets ``values.batchGet`` covering every supplied A1 range.
 
     Returns the raw ``valueRanges`` list from the response (each entry
@@ -548,7 +575,7 @@ def _batch_get_values(
     return response.get("valueRanges", []) or []
 
 
-def _raw_cell_value(value_ranges: list[_ValueRange], cursor: int) -> object:
+def _raw_cell_value(value_ranges: list[ValueRange], cursor: int) -> object:
     """Return the single-cell raw value at ``cursor`` in a batchGet response, or None."""
     vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
     rows = vr.get("values", []) or []
@@ -556,7 +583,7 @@ def _raw_cell_value(value_ranges: list[_ValueRange], cursor: int) -> object:
 
 
 def _decode_operator_edits(
-    value_ranges: list[_ValueRange],
+    value_ranges: list[ValueRange],
     cursor: int,
     operator_input_ids: list[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
@@ -583,7 +610,7 @@ def _decode_operator_edits(
 
 
 def _decode_binding_edits(
-    value_ranges: list[_ValueRange],
+    value_ranges: list[ValueRange],
     cursor: int,
     binding_ids: list[BindingId],
 ) -> tuple[tuple[BindingEdit, ...], int, int]:
@@ -607,7 +634,7 @@ def _decode_binding_edits(
 
 
 def _decode_relation_edits(
-    value_ranges: list[_ValueRange],
+    value_ranges: list[ValueRange],
     cursor: int,
     relation_ids: list[RelationId],
     metadata_pairs: Mapping[str, str],
@@ -694,8 +721,9 @@ def _parse_relation_metadata(
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
-# .spreadsheets() only via runtime Discovery JSON dispatch; the stub carries .close()
-# alone, so the service helper accepts Any for the dynamic attribute access.
+# .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
+# surface carries .close() alone, so the service helper accepts Any for the dynamic
+# attribute access.
 def _read_row_set_edits(
     snapshot: RegistrySnapshot,
     sheets: Any,
@@ -724,7 +752,7 @@ def _read_row_set_edits(
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource
-# object; no stub type available in google-api-python-client.
+# object; no precise static type is available in google-api-python-client.
 def _row_set_block_range(row_set: Any) -> str:
     """Build the A1 range covering the 50-row data block of one row-set."""
     last_column = max(col.header_address.column for col in row_set.columns)
@@ -736,13 +764,14 @@ def _row_set_block_range(row_set: Any) -> str:
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource exposes
-# .spreadsheets() only via runtime Discovery JSON dispatch; the stub carries .close()
-# alone, so the service helper accepts Any for the dynamic attribute access.
+# .spreadsheets() only via runtime Discovery JSON dispatch; the published typing
+# surface carries .close() alone, so the service helper accepts Any for the dynamic
+# attribute access.
 def _batch_get_values_for_row_sets(
     sheets: Any,
     spreadsheet_id: str,
     block_ranges: list[str],
-) -> list[_ValueRange]:
+) -> list[ValueRange]:
     """Sheets ``values.batchGet`` for row-set blocks; returns the raw valueRanges list."""
     response = execute_request(
         sheets.spreadsheets()
@@ -758,7 +787,7 @@ def _batch_get_values_for_row_sets(
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource
-# object; no stub type available in google-api-python-client.
+# object; no precise static type is available in google-api-python-client.
 def _decode_row_set_block(
     rows: list[list[object]],
     row_set: Any,
@@ -783,7 +812,7 @@ def _decode_row_set_block(
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource
-# object; no stub type available in google-api-python-client.
+# object; no precise static type is available in google-api-python-client.
 def _decode_row_set_cell(
     raw: object,
     col_index: int,
@@ -819,7 +848,7 @@ def _column_index_to_letters(column: int) -> str:
 
 
 class PullCoverageDiscrepancy(BaseModel):
-    """One coverage delta between a ``SheetExportPlan`` and a ``PullResult``.
+    """One coverage delta between a :class:`SheetExportPlan` and a :class:`PullResult`.
 
     The apply adapter writes a richly-shaped workbook (tariffs,
     constraints, protected ranges, row-sets); the pull adapter
@@ -920,22 +949,21 @@ def compute_from_pull(
     snapshot: RegistrySnapshot,
     pull: PullResult,
 ) -> RegistryCalculationResult:
-    """Run the local Decimal runtime against a `PullResult`'s edits and return a :class:`RegistryCalculationResult`.
+    """Run the local Decimal runtime against a :class:`PullResult`.
 
     Maps each edit family back to the runtime contract:
 
-    - `OperatorEdit.value` (Decimal | str | bool | None) → `inputs`
-      with `Decimal('0')` substituted for `None` so the runtime's
-      "every non-computed casilla has a value" precondition holds.
-    - `BindingEdit.value` is routed by the binding's `typed_enum`
-      declaration: numeric bindings flow into `binding_values` as
-      Decimals; enum bindings (e.g. CCAA) flow into
-      `enum_binding_values` as plain strings.
-    - `RelationEdit.value` flows into `relation_values` as Decimals,
-      with `Decimal('0')` substituted for `None`.
+    - ``OperatorEdit.value`` flows into runtime ``inputs``, with
+      ``Decimal("0")`` substituted for ``None`` so the runtime's "every
+      non-computed casilla has a value" precondition holds.
+    - ``BindingEdit.value`` is routed by the binding's ``typed_enum``
+      declaration: numeric bindings flow into ``binding_values`` as Decimals;
+      enum bindings flow into ``enum_binding_values`` as plain strings.
+    - ``RelationEdit.value`` flows into ``relation_values`` as Decimals,
+      with ``Decimal("0")`` substituted for ``None``.
 
     Refuses to compute when the workbook's metadata stamps do not
-    match the supplied snapshot (`pull.metadata_match != "matches"`).
+    match the supplied snapshot (``pull.metadata_match != "matches"``).
     The caller is responsible for handling stale workbooks before
     invoking this helper.
 
@@ -945,6 +973,14 @@ def compute_from_pull(
             relation periods, and the metadata-match gate.
         pull: The :class:`PullResult` carrying the operator-edited cells
             to compute from.
+
+    Returns:
+        A :class:`RegistryCalculationResult` produced by
+        :func:`aeat.domain.calculations.registry.calculate_registry_snapshot`.
+
+    Raises:
+        :class:`OutboundStorageConflictError`: When ``pull`` does not bind to
+            ``snapshot`` by metadata verdict and registry-SHA stamp.
     """
     _require_metadata_match(pull=pull, snapshot=snapshot)
     inputs = _collect_input_casilla_values(snapshot=snapshot, edits=pull.operator_edits)

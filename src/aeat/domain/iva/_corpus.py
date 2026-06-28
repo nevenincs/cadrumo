@@ -1,4 +1,9 @@
-"""IVA catalogue access through committed registry data."""
+"""IVA catalogue access through committed registry data.
+
+:func:`load_iva_rules_from_manual` preserves the manual-loader entry point
+while delegating to :func:`resolve_catalogue` and returning the reviewed
+:class:`IvaCatalogue` for the requested filing year.
+"""
 
 from __future__ import annotations
 

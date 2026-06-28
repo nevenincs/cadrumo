@@ -1,10 +1,9 @@
-"""Real-behavior tests for SetupAnswers coercion raises ProfileAnswerTypeError.
+"""Real-behavior tests for SetupAnswers answer-type validation.
 
 Pydantic wraps field-validator exceptions in ``ValidationError``. To exercise
-each migrated raise site directly, the tests call the ``@classmethod``
-validator methods on :class:`SetupAnswers` rather than going through the full
-model constructor. This confirms the raise site exists and the typed exception
-class is what gets raised at the coercion boundary, before pydantic wraps it.
+each migrated raise site through the public production boundary, the tests call
+``SetupAnswers.model_validate(...)`` and assert the wrapped validation message
+identifies the rejected field/type contract.
 
 Since :class:`SetupAnswers` is now canonical in :mod:`aeat.core.setup_answers`, its
 validators raise :class:`~aeat.core.errors.ProfileAnswerTypeError` directly.
@@ -16,8 +15,9 @@ the application-layer subclass still resolves correctly.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
-from ....core.errors import ERROR_REGISTRY, ProfileAnswerTypeError, build_error_envelope
+from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.setup_answers import SetupAnswers
 from .._errors import WizardAnswerTypeError
 
@@ -38,84 +38,37 @@ def test_wizard_answer_type_error_round_trips_through_build_error_envelope() -> 
     assert envelope.retryable is False
 
 
-# ── Per-field real coercion raises (direct validator calls) ───────────────────
-# Validators are called directly so the raise propagates without pydantic
-# wrapping it in ValidationError. Each call is the real production code path.
+# ── Per-field real coercion raises (public model boundary) ────────────────────
 
 
-def test_iva_regime_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="iva_regime"):
-        SetupAnswers._parse_iva_regime(42)  # type: ignore[arg-type]
-
-
-def test_entity_type_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="entity_type"):
-        SetupAnswers._parse_entity_type(42)  # type: ignore[arg-type]
-
-
-def test_legal_entity_form_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="legal_entity_form"):
-        SetupAnswers._parse_legal_entity_form(42)  # type: ignore[arg-type]
-
-
-def test_irpf_estimation_regime_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="irpf_estimation_regime"):
-        SetupAnswers._parse_irpf_estimation_regime(42)  # type: ignore[arg-type]
-
-
-def test_situacion_familiar_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="situacion_familiar"):
-        SetupAnswers._parse_situacion_familiar(42)  # type: ignore[arg-type]
-
-
-def test_unidad_familiar_descendientes_exclusivos_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="unidad_familiar_descendientes_exclusivos"):
-        SetupAnswers._parse_unidad_familiar_descendientes_exclusivos(42)  # type: ignore[arg-type]
-
-
-def test_irpf_special_regime_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="irpf_special_regime"):
-        SetupAnswers._parse_irpf_special_regime(42)  # type: ignore[arg-type]
-
-
-def test_fiscal_residency_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="fiscal_residency"):
-        SetupAnswers._parse_fiscal_residency(42)  # type: ignore[arg-type]
-
-
-def test_taxation_type_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="taxation_type"):
-        SetupAnswers._parse_taxation_type(42)  # type: ignore[arg-type]
-
-
-def test_taxpayer_sex_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="sex code"):
-        SetupAnswers._parse_sex_code(42)  # type: ignore[arg-type]
-
-
-def test_spouse_sex_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    # _parse_sex_code handles both taxpayer_sex and spouse_sex; any non-str/enum
-    # input from either field hits the same raise site.
-    with pytest.raises(ProfileAnswerTypeError, match="sex code"):
-        SetupAnswers._parse_sex_code(object())  # type: ignore[arg-type]
-
-
-def test_taxpayer_marital_status_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="taxpayer_marital_status"):
-        SetupAnswers._parse_marital_status(42)  # type: ignore[arg-type]
-
-
-def test_taxpayer_disability_grade_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="disability grade"):
-        SetupAnswers._parse_disability_grade(42)  # type: ignore[arg-type]
-
-
-def test_spouse_disability_grade_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    # _parse_disability_grade handles both taxpayer_ and spouse_ fields.
-    with pytest.raises(ProfileAnswerTypeError, match="disability grade"):
-        SetupAnswers._parse_disability_grade(object())  # type: ignore[arg-type]
-
-
-def test_tax_residence_ccaa_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(ProfileAnswerTypeError, match="tax_residence_ccaa"):
-        SetupAnswers._parse_tax_residence_ccaa(42)  # type: ignore[arg-type]
+@pytest.mark.parametrize(
+    ("field_name", "invalid_value", "message"),
+    (
+        ("iva_regime", 42, "iva_regime"),
+        ("entity_type", 42, "entity_type"),
+        ("legal_entity_form", 42, "legal_entity_form"),
+        ("irpf_estimation_regime", 42, "irpf_estimation_regime"),
+        ("situacion_familiar", 42, "situacion_familiar"),
+        (
+            "unidad_familiar_descendientes_exclusivos",
+            42,
+            "unidad_familiar_descendientes_exclusivos",
+        ),
+        ("irpf_special_regime", 42, "irpf_special_regime"),
+        ("fiscal_residency", 42, "fiscal_residency"),
+        ("taxation_type", 42, "taxation_type"),
+        ("taxpayer_sex", 42, "sex code"),
+        ("spouse_sex", object(), "sex code"),
+        ("taxpayer_marital_status", 42, "taxpayer_marital_status"),
+        ("taxpayer_disability_grade", 42, "disability grade"),
+        ("spouse_disability_grade", object(), "disability grade"),
+        ("tax_residence_ccaa", 42, "tax_residence_ccaa"),
+    ),
+)
+def test_setup_answer_model_rejects_invalid_answer_types(
+    field_name: str,
+    invalid_value: object,
+    message: str,
+) -> None:
+    with pytest.raises(ValidationError, match=message):
+        SetupAnswers.model_validate({"tax_id": "00000000T", field_name: invalid_value})

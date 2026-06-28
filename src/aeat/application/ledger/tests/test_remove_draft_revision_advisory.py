@@ -106,17 +106,16 @@ def _seed_revision_citing_transaction(
         updated_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
         current_calculation_revision_id=revision_id,
     )
-    audit_fields: dict[str, object] = {}
+    verified_at: datetime | None = None
+    verified_by: str | None = None
+    discarded_at: datetime | None = None
+    discarded_by: str | None = None
     if state is CalculationRevisionState.VERIFICADO_COMPLETO:
-        audit_fields = {
-            "verified_at": datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
-            "verified_by": "operator-A",
-        }
+        verified_at = datetime(2026, 5, 2, 9, 0, tzinfo=UTC)
+        verified_by = "operator-A"
     elif state is CalculationRevisionState.DESCARTADO:
-        audit_fields = {
-            "discarded_at": datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
-            "discarded_by": "operator-A",
-        }
+        discarded_at = datetime(2026, 5, 2, 9, 0, tzinfo=UTC)
+        discarded_by = "operator-A"
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
@@ -133,7 +132,10 @@ def _seed_revision_citing_transaction(
         ),
         created_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
         updated_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
-        **audit_fields,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: state-keyed audit-field splat
+        verified_at=verified_at,
+        verified_by=verified_by,
+        discarded_at=discarded_at,
+        discarded_by=discarded_by,
     )
     WorkUnitCatalogueRepository(objects=objects).save(WorkUnitCatalogue.from_work_units((work_unit,)))
     catalogue = CalculationRevisionCatalogueRepository(objects=objects).load()

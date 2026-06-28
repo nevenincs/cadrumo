@@ -21,21 +21,19 @@ class TestSafeSubpath:
         resolved = safe_subpath(tmp_path, "alpha/beta/gamma.json", context="test")
         assert resolved == (tmp_path / "alpha" / "beta" / "gamma.json").resolve()
 
-    def test_traversal_rejected(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize(
+        "unsafe_path",
+        (
+            "../escape.json",
+            "/etc/passwd",
+            "alpha\\beta.json",
+            "alpha/../beta.json",
+        ),
+        ids=("traversal", "absolute", "backslash", "double-dot"),
+    )
+    def test_unsafe_relative_paths_rejected(self, tmp_path: Path, unsafe_path: str) -> None:
         with pytest.raises(PathContainmentError):
-            safe_subpath(tmp_path, "../escape.json", context="test")
-
-    def test_absolute_path_rejected(self, tmp_path: Path) -> None:
-        with pytest.raises(PathContainmentError):
-            safe_subpath(tmp_path, "/etc/passwd", context="test")
-
-    def test_backslash_rejected(self, tmp_path: Path) -> None:
-        with pytest.raises(PathContainmentError):
-            safe_subpath(tmp_path, "alpha\\beta.json", context="test")
-
-    def test_double_dot_rejected(self, tmp_path: Path) -> None:
-        with pytest.raises(PathContainmentError):
-            safe_subpath(tmp_path, "alpha/../beta.json", context="test")
+            safe_subpath(tmp_path, unsafe_path, context="test")
 
     def test_inherits_value_error(self, tmp_path: Path) -> None:
         """Legacy ``except ValueError`` callers must still catch the typed error."""
@@ -50,21 +48,19 @@ class TestSafeRecordPath:
         resolved = safe_record_path(tmp_path, "abc123", context="test")
         assert resolved == (tmp_path / "abc123.json").resolve()
 
-    def test_traversal_token_rejected(self, tmp_path: Path) -> None:
+    @pytest.mark.parametrize(
+        "unsafe_token",
+        (
+            "../escape",
+            "alpha/beta",
+            "",
+            "a" * 200,
+        ),
+        ids=("traversal", "slash", "empty", "overlong"),
+    )
+    def test_unsafe_tokens_rejected(self, tmp_path: Path, unsafe_token: str) -> None:
         with pytest.raises(PathContainmentError):
-            safe_record_path(tmp_path, "../escape", context="test")
-
-    def test_slash_in_token_rejected(self, tmp_path: Path) -> None:
-        with pytest.raises(PathContainmentError):
-            safe_record_path(tmp_path, "alpha/beta", context="test")
-
-    def test_empty_token_rejected(self, tmp_path: Path) -> None:
-        with pytest.raises(PathContainmentError):
-            safe_record_path(tmp_path, "", context="test")
-
-    def test_overly_long_token_rejected(self, tmp_path: Path) -> None:
-        with pytest.raises(PathContainmentError):
-            safe_record_path(tmp_path, "a" * 200, context="test")
+            safe_record_path(tmp_path, unsafe_token, context="test")
 
 
 class TestSafeRepositoryId:
@@ -77,29 +73,21 @@ class TestSafeRepositoryId:
         token = "550e8400-e29b-41d4-a716-446655440000"
         assert safe_repository_id(token, context="submission_id") == token
 
-    def test_empty_rejected(self) -> None:
-        with pytest.raises(PathContainmentError, match="must be non-empty"):
-            safe_repository_id("", context="draft_id")
-
-    def test_forward_slash_rejected(self) -> None:
-        with pytest.raises(PathContainmentError, match="path separator"):
-            safe_repository_id("foo/bar", context="draft_id")
-
-    def test_backslash_rejected(self) -> None:
-        with pytest.raises(PathContainmentError, match="path separator"):
-            safe_repository_id("foo\\bar", context="draft_id")
-
-    def test_single_dot_rejected(self) -> None:
-        with pytest.raises(PathContainmentError, match="relative-path token"):
-            safe_repository_id(".", context="modelo")
-
-    def test_double_dot_rejected(self) -> None:
-        with pytest.raises(PathContainmentError, match="relative-path token"):
-            safe_repository_id("..", context="modelo")
-
-    def test_dot_prefix_rejected(self) -> None:
-        with pytest.raises(PathContainmentError, match="relative-path token"):
-            safe_repository_id(".hidden", context="csv")
+    @pytest.mark.parametrize(
+        ("unsafe_id", "context", "message"),
+        (
+            ("", "draft_id", "must be non-empty"),
+            ("foo/bar", "draft_id", "path separator"),
+            ("foo\\bar", "draft_id", "path separator"),
+            (".", "modelo", "relative-path token"),
+            ("..", "modelo", "relative-path token"),
+            (".hidden", "csv", "relative-path token"),
+        ),
+        ids=("empty", "forward-slash", "backslash", "single-dot", "double-dot", "dot-prefix"),
+    )
+    def test_unsafe_repository_ids_rejected(self, unsafe_id: str, context: str, message: str) -> None:
+        with pytest.raises(PathContainmentError, match=message):
+            safe_repository_id(unsafe_id, context=context)
 
     def test_context_label_appears_in_error(self) -> None:
         with pytest.raises(PathContainmentError, match=r"^submission_id must"):

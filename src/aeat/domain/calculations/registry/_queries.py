@@ -503,7 +503,7 @@ class RegistryQueryService:
         period: str,
         as_of: date | None = None,
     ) -> ModeloDescribeReport:
-        """Return a describe report for an exact ``(filing_year, period)`` scope."""
+        """Return a :class:`ModeloDescribeReport` for an exact ``(filing_year, period)`` scope."""
         definition, revision, registry_period = self._resolve_revision_for_scope(
             modelo,
             filing_year=filing_year,
@@ -621,7 +621,7 @@ class RegistryQueryService:
         required: bool | None = None,
         form_number: str | None = None,
     ) -> ModeloCasillasReport:
-        """Return casillas for an exact ``(filing_year, period)`` scope."""
+        """Return a :class:`ModeloCasillasReport` for an exact ``(filing_year, period)`` scope."""
         definition, revision, registry_period = self._resolve_revision_for_scope(
             modelo,
             filing_year=filing_year,
@@ -701,7 +701,7 @@ class RegistryQueryService:
         period: str,
         as_of: date | None = None,
     ) -> ModeloFormulasReport:
-        """Return formulas for an exact ``(filing_year, period)`` scope."""
+        """Return a :class:`ModeloFormulasReport` for an exact ``(filing_year, period)`` scope."""
         definition, revision, registry_period = self._resolve_revision_for_scope(
             modelo,
             filing_year=filing_year,

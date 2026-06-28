@@ -8,31 +8,36 @@ the no-network counterpart of the live Google export behavior.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+import json
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 from openpyxl import load_workbook
-from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _BBVA = _CORPUS / "bbva-business-eur.csv"
 
 
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
+
+
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    from ....application.user_profile._orchestration import profile_create_storage_span
+    from ....application.user_profile._testing import register_minimal_profile
+    from ....application.workflow._persistence import workflow_state_repository
+
     dispose_engine()
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
@@ -47,14 +52,12 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 
 def _import_bbva() -> None:
-    res = _RUNNER.invoke(app, ["app", "ledger", "import", str(_BBVA), "--provider", "csv"])
+    res = _invoke(["app", "ledger", "import", str(_BBVA), "--provider", "csv"])
     assert res.exit_code == 0, res.output
 
 
 def _active_row_count() -> int:
-    import json
-
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     return json.loads(listed.output)["result"]["total"]
 
@@ -63,7 +66,7 @@ def test_ledger_exports_xlsx_workbook_carrying_every_row(tmp_path: Path) -> None
     _import_bbva()
     rows = _active_row_count()
     out = tmp_path / "ledger.xlsx"
-    exported = _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(out), "--export-format", "xlsx"])
+    exported = _invoke(["app", "ledger", "export", "--output", str(out), "--export-format", "xlsx"])
     assert exported.exit_code == 0, exported.output
     assert out.exists()
 
@@ -86,7 +89,7 @@ def test_xlsx_export_roundtrips_back_through_import(tmp_path: Path) -> None:
     _import_bbva()
     before = _active_row_count()
     out = tmp_path / "ledger-roundtrip.xlsx"
-    exported = _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(out), "--export-format", "xlsx"])
+    exported = _invoke(["app", "ledger", "export", "--output", str(out), "--export-format", "xlsx"])
     assert exported.exit_code == 0, exported.output
 
     # Re-importing the canonical workbook leaves the active row count unchanged:
@@ -95,5 +98,5 @@ def test_xlsx_export_roundtrips_back_through_import(tmp_path: Path) -> None:
     # unrecognised layout. Both uphold the offline-backup fidelity invariant —
     # no phantom rows are ever added by a re-import. (Mirrors the canonical CSV
     # export roundtrip invariant.)
-    _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "import", str(out), "--provider", "xlsx"])
+    _invoke(["--format", "json", "app", "ledger", "import", str(out), "--provider", "xlsx"])
     assert _active_row_count() == before

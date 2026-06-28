@@ -4,9 +4,9 @@ Provides the ``aeat ledger`` command group for importing, reviewing, and
 exporting financial transaction data. Transaction records are accessed
 through :class:`TransactionCatalogueRepository` and invoice records through
 :class:`InvoiceCatalogueRepository`. Lifecycle events are appended to the
-profile audit trail via :class:`BucketEventHistoryRepository`.
-
-Use of :class:`OutputSchema` for compliance.
+profile audit trail via :class:`BucketEventHistoryRepository`. Mutation and
+read verbs emit typed :class:`OutputSchema` envelopes so CLI JSON stays aligned
+with the registered ledger payload contracts.
 """
 
 from __future__ import annotations
@@ -419,7 +419,8 @@ _FromCsvOpt = Annotated[
             "cli.ledger.classify.from_csv_help",
             default=(
                 "Path to a CSV file with columns transaction_id, classification"
-                "[, category_id, business_pct, taxable_base, iva_rate, iva_amount]."
+                "[, category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category, "
+                "irpf_category]."
             ),
         ),
     ),

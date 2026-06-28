@@ -1,15 +1,26 @@
-"""Strict pydantic v2 records for AEAT site-health detection.
+"""Strict records for AEAT site-health detection.
 
 The site-health layer classifies AEAT Sede Electrónica responses into a
-closed set of states (:class:`SiteHealthState`) so that a planned
-mantenimiento, a WAF challenge, or an HTTP 429/503 rate-limit answer
-becomes a first-class typed signal instead of an opaque DOM parse
-error collapsing into ``UNHANDLED_EXCEPTION`` somewhere downstream.
+closed :class:`SiteHealthState` catalogue. A planned mantenimiento page,
+WAF challenge, HTTP 429/503 rate-limit answer, or transport failure becomes a
+typed :class:`SiteHealthStatus` instead of collapsing into a generic browser
+or workflow exception.
 
-Every record in this module is frozen, strict, ``extra="forbid"``
-pydantic v2. The closed state catalogue is an :class:`enum.StrEnum`.
-Collections are ``tuple[str, ...]`` — list containers are forbidden on
-frozen models per project convention.
+Every record in this module is frozen, strict, ``extra="forbid"`` pydantic v2.
+The closed state catalogue is an :class:`enum.StrEnum`. Collections are
+``tuple[str, ...]`` so evidence remains immutable after classification.
+
+See Also:
+    :func:`aeat.adapters.outbound.aeat.browser._site_health_parsers.evaluate_response`
+        Pure parser entry point that creates :class:`SiteHealthStatus` records
+        from HTTP status, headers, and body text.
+    :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.navigate`
+        Browser navigation hook that raises
+        :class:`aeat.core.errors.SiteHealthError` when a non-OK status is
+        classified.
+    :class:`aeat.core.errors.SiteHealthStatusLike`
+        Core-layer structural view that lets application workflow and
+        diagnostics consume these adapter records without importing them.
 """
 
 from __future__ import annotations
@@ -35,6 +46,10 @@ _MAX_HTML_FRAGMENT_CHARS: Final = 4096
 
 class SiteHealthState(StrEnum):
     """Closed catalogue of AEAT site-health classifications.
+
+    Parser functions emit these states inside :class:`SiteHealthStatus`.
+    :class:`~aeat.core.errors.SiteHealthError` then carries non-OK states across
+    the browser/application boundary.
 
     Values:
         OK: No anomaly detected; the response looks like a healthy
@@ -76,6 +91,11 @@ class _SiteHealthRecord(BaseModel):
 class SiteHealthEvidence(_SiteHealthRecord):
     """Bounded evidence block captured alongside a classification.
 
+    Evidence is diagnostic, not a full response archive. The HTML fragment is
+    redacted and bounded before it is stored, while ``detected_markers`` keeps
+    the exact marker keys that caused the parser to choose a
+    :class:`SiteHealthState`.
+
     Attributes:
         url: The probe URL whose response was classified.
         http_status: HTTP status observed on the response. Bounded to
@@ -115,6 +135,12 @@ class SiteHealthEvidence(_SiteHealthRecord):
 
 class SiteHealthStatus(_SiteHealthRecord):
     """Full classification record for a single probe.
+
+    Produced by the parser suite and by
+    :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.navigate` for
+    transport failures. Non-OK records are carried by
+    :class:`aeat.core.errors.SiteHealthError`; diagnostics and workflow code
+    then inspect this record instead of re-parsing response bodies.
 
     Attributes:
         state: The detected :class:`SiteHealthState`.

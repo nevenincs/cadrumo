@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import secrets
+from typing import cast
 
 import pytest
 
@@ -142,13 +143,13 @@ class TestKeySizeValidation:
 
     def test_encrypt_wraps_invalid_plaintext_type_as_encryption_error(self) -> None:
         with pytest.raises(EncryptionError):
-            encrypt_record("payload", key=_fresh_key())  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
+            encrypt_record(cast(bytes, "payload"), key=_fresh_key())
 
     def test_decrypt_wraps_invalid_associated_data_type_as_decryption_error(self) -> None:
         key = _fresh_key()
         blob = encrypt_record(b"payload", key=key, associated_data=b"context")
         with pytest.raises(DecryptionError):
-            decrypt_record(blob, key=key, associated_data="context")  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
+            decrypt_record(blob, key=key, associated_data=cast(bytes, "context"))
 
 
 class TestEncryptedBlobShape:
@@ -248,7 +249,7 @@ class TestHkdfDerivation:
             derive_key(
                 key_material=b"ikm",
                 salt=b"salt",
-                context="aeat.context.v1",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
+                context=cast(bytes, "aeat.context.v1"),
             )
 
     def test_derived_key_can_drive_encrypt_round_trip(self) -> None:

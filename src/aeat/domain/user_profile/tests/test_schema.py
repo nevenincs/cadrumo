@@ -98,6 +98,10 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
     assert ccaa.type is ProfileFieldType.ENUM
     assert "cataluna" in ccaa.enum_values
 
+    situacion = schema.field("renta_family.situacion_familiar")
+    assert situacion.type is ProfileFieldType.ENUM
+    assert "soltero" in situacion.enum_values
+
 
 def test_user_profile_schema_models_are_strict_frozen_and_forbid_extras() -> None:
     field = ProfileFieldDefinition.model_validate(

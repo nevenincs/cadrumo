@@ -65,7 +65,8 @@ def _json_payload(result: Result) -> dict[str, object]:
     assert match, result.output
     parsed: object = json.loads(match.group(0))
     assert isinstance(parsed, dict)
-    return parsed  # ty: ignore[invalid-return-type]  # pyright: ignore[return-value]
+    assert all(isinstance(key, str) for key in parsed)
+    return cast(dict[str, object], parsed)
 
 
 def _active_revision_for(modelo: str, *, filing_year: int, period: str) -> str:
@@ -116,7 +117,8 @@ def test_preflight_defaults_revision_from_natural_key(cli_runner: CliRunner) -> 
     payload = _json_payload(result)
     result_data_obj = payload["result"]
     assert isinstance(result_data_obj, dict)
-    result_data: dict[str, object] = result_data_obj  # ty: ignore[invalid-assignment]  # pyright: ignore[assignment]
+    assert all(isinstance(key, str) for key in result_data_obj)
+    result_data = cast(dict[str, object], result_data_obj)
     assert result_data["modelo"] == "303"
     assert result_data["filing_year"] == 2026
     assert result_data["period"] == "1T"
@@ -158,8 +160,99 @@ def test_preflight_explicit_revision_override_is_honoured(cli_runner: CliRunner)
     payload = _json_payload(result)
     result_data_obj = payload["result"]
     assert isinstance(result_data_obj, dict)
-    result_data: dict[str, object] = result_data_obj  # ty: ignore[invalid-assignment]  # pyright: ignore[assignment]
+    assert all(isinstance(key, str) for key in result_data_obj)
+    result_data = cast(dict[str, object], result_data_obj)
     assert result_data["revision_id"] == expected_revision
+
+
+def test_preflight_reports_legal_entity_export_legal_name_requirement(cli_runner: CliRunner) -> None:
+    """Legal-entity M202 preflight must include export-header profile facts.
+
+    The command resolves a registry revision from the natural key, then passes
+    that revision into the profile preflight service. Without the revision,
+    export-header requirements such as ``identity.legal_name`` are invisible
+    and the CLI can claim readiness before modelo work creation refuses.
+    """
+    from typer.core import TyperGroup
+    from typer.main import get_command
+
+    cmd = get_command(root_app)
+    assert isinstance(cmd, (click.Command, TyperGroup))
+    create = cli_runner.invoke(
+        cast(click.Command, cmd),
+        [
+            "config",
+            "profile",
+            "create",
+            "sl-no-legal-name",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "legal_entity",
+            "--legal-entity-form",
+            "sl",
+            "--tax-id",
+            "B66012345",
+            "--name",
+            "Visible SL",
+            "--surnames",
+            "Visible SL",
+            "--activity",
+            "asesoria",
+            "--incn-prior-12-months",
+            "500000",
+        ],
+    )
+    assert create.exit_code == 0, create.output
+
+    result = cli_runner.invoke(
+        cast(click.Command, cmd),
+        [
+            "--format",
+            "json",
+            "config",
+            "profile",
+            "preflight",
+            "--modelo",
+            "202",
+            "--filing-year",
+            "2026",
+            "--period",
+            "1P",
+        ],
+    )
+
+    assert result.exit_code == 2, result.output
+    payload = _json_payload(result)
+    result_data_obj = payload["result"]
+    assert isinstance(result_data_obj, dict)
+    assert all(isinstance(key, str) for key in result_data_obj)
+    result_data = cast(dict[str, object], result_data_obj)
+    assert result_data["ready"] is False
+    missing_obj = result_data["missing"]
+    assert isinstance(missing_obj, list)
+    assert {
+        "selector": "export.header.legal_name",
+        "section_key": "identity",
+        "field_key": "legal_name",
+    } in missing_obj
+
+    text_result = cli_runner.invoke(
+        cast(click.Command, cmd),
+        [
+            "config",
+            "profile",
+            "preflight",
+            "--modelo",
+            "202",
+            "--filing-year",
+            "2026",
+            "--period",
+            "1P",
+        ],
+    )
+    assert text_result.exit_code == 2, text_result.output
+    assert "identity\tlegal_name" in text_result.output
 
 
 def test_preflight_refuses_unresolvable_natural_key_with_discovery_pointer(cli_runner: CliRunner) -> None:

@@ -24,6 +24,8 @@ from ...application.modelo import (
     WorkUnitNotFoundError,
     derive_taxpayer_files_economic_activity,
     file_modelo_revision,
+    get_work_unit,
+    require_profile_ready_for_work_unit,
     verify_modelo_revision,
 )
 from ...application.workflow import workflow_state_repository
@@ -173,6 +175,7 @@ def _register_work_verify_command(
                 selector=select.to_calculation_revision_selector().value,
                 default_for="verify",
             )
+            require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
             workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
             report = verify_modelo_revision(
                 selected_revision.calculation_revision_id,
@@ -488,6 +491,7 @@ def _register_work_file_command(
                 selector=select,
                 default_for="file",
             )
+            require_profile_ready_for_work_unit(get_work_unit(selected_revision.work_unit_id))
             workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
             record = file_modelo_revision(
                 selected_revision.calculation_revision_id,

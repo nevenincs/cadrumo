@@ -73,7 +73,7 @@ class FiledDeclaracionObservationProtocol(Protocol):
 
     @property
     def period(self) -> Period:
-        """Typed filing period for the declaration."""
+        """Typed :class:`Period` for the declaration."""
         ...
 
     @property

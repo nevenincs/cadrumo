@@ -7,7 +7,7 @@ Expected values are grounded in:
   Art. 7.p) cap: Ley 35/2006 Art. 7.p) BOE-A-2006-20764 (60,100 EUR)
   REBECA fraction: Ley 19/1994 Arts. 73.2 73.3 75.1 75.3 BOE-A-1994-15794 (0.50)
   DA 41 status: inactive_pending_eu_clearance per trabajador_del_mar.toml
-  RETMAR filing: Ley 47/2015 BOE-A-2015-11346
+  RETM filing: Ley 35/2006 Art. 96 BOE-A-2006-20764
 """
 
 from __future__ import annotations
@@ -16,6 +16,8 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.resources import bundled_path
+from ...calculations.registry import load_registry_tree
 from ...calculations.registry._bindings import CasillaObservation
 from .._maritime_exemption import (
     ART_7P_EXEMPTION_CAP_EUR,
@@ -36,10 +38,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ART_7P_LEGAL_REFS = ("ley-35-2006:art-7",)
 _REBECA_LEGAL_REFS = ("ley-19-1994:art-75",)
-_DA41_LEGAL_REFS = ("ley-35-2006:da-41", "ley-6-2018")
-_RETMAR_LEGAL_REFS = ("ley-47-2015",)
-_ART_7P_SOURCE_REFS = ("art-7p-foreign-work",)
-_REBECA_SOURCE_REFS = ("rebeca-50pct",)
+_DA41_LEGAL_REFS = ("ley-35-2006:da-41",)
+_RETMAR_LEGAL_REFS = ("ley-35-2006:art-96",)
+_ART_7P_SOURCE_REFS = ("boe-lirpf-art-7-authority",)
+_REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-authority",)
 
 
 # ---------------------------------------------------------------------------
@@ -224,7 +226,6 @@ class TestGuardDa41Inactive:
         err = exc_info.value
         assert err.context is not None
         assert err.context.get("legal_ref") == _DA41_LEGAL_REFS[0]
-        assert err.context.get("enabling_law") == _DA41_LEGAL_REFS[1]
 
 
 # ---------------------------------------------------------------------------
@@ -240,7 +241,7 @@ class TestCheckRetmarMandatoryFiling:
         with pytest.raises(ProfileCompletenessError) as exc_info:
             check_retmar_mandatory_filing(facts)
         assert "RETMAR" in str(exc_info.value)
-        assert "BOE-A-2015-11346" in str(exc_info.value)
+        assert "BOE-A-2006-20764" in str(exc_info.value)
 
     def test_does_not_raise_when_not_registered(self) -> None:
         check_retmar_mandatory_filing(MaritimeWorkerFacts(retmar_registered=False))
@@ -539,3 +540,47 @@ def test_rebeca_legal_refs_contain_no_wrong_provision() -> None:
         facts=facts,
     )
     assert obs.legal_refs == _REBECA_LEGAL_REFS
+
+
+def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:
+    """Runtime maritime provenance must resolve through typed registry catalogues."""
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+
+    art7p_obs = calculate_art_7p_exemption(
+        annual_salary=Decimal("36500"),
+        qualifying_days=100,
+        facts=MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            vessel_flag="foreign",
+            waters_type="international",
+        ),
+    )
+    rebeca_obs = calculate_rebeca_exemption(
+        gross_navigation_income=Decimal("30000"),
+        facts=MaritimeWorkerFacts(
+            worker_class="trabajador_del_mar",
+            vessel_registry="REBECA",
+        ),
+    )
+
+    legal_refs = set(art7p_obs.legal_refs) | set(rebeca_obs.legal_refs)
+    source_refs = set(art7p_obs.source_refs) | set(rebeca_obs.source_refs)
+
+    with pytest.raises(MaritimeExemptionInactiveError) as da41_error:
+        guard_da41_inactive(
+            MaritimeWorkerFacts(
+                worker_class="trabajador_del_mar",
+                tuna_fleet=True,
+                pending_eu_clearance=True,
+            ),
+        )
+    assert da41_error.value.context is not None
+    legal_refs.add(str(da41_error.value.context["legal_ref"]))
+
+    with pytest.raises(ProfileCompletenessError) as retm_error:
+        check_retmar_mandatory_filing(MaritimeWorkerFacts(retmar_registered=True))
+    assert retm_error.value.context is not None
+    legal_refs.add(str(retm_error.value.context["legal_ref"]))
+
+    assert sorted(ref for ref in legal_refs if ref not in catalogues.legal) == []
+    assert sorted(ref for ref in source_refs if ref not in catalogues.sources) == []

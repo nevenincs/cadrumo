@@ -1,8 +1,9 @@
 """Rental-register aggregate calculations.
 
-The aggregate layer pulls per-finca and per-contract data from the
-rental register repositories for a given ejercicio and returns
-factual LIRPF rental amounts:
+:func:`compute_finca_aggregates` pulls per-finca and per-contract data from the
+rental register repositories for a given ejercicio and returns a
+:class:`FincaAggregates` result with :class:`FincaAttribution` and
+:class:`ContractTierAttribution` audit breakdowns for factual LIRPF rental amounts:
 
 * gross rent collected from active contracts.
 * deductible expenses after the art. 23.1 cap.

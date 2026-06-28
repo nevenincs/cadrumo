@@ -1,14 +1,31 @@
 """Reconstruct a :class:`ModeloDraft` from an AEAT justificante PDF.
 
 The operator keeps the justificante PDF of a past filing on disk. This
-module parses the PDF via :mod:`aeat.adapters.inbound.justificante`,
-materialises an empty draft scaffold (every casilla ``EMPTY``) via the
-registered builder for the modelo, and co-produces a ``ModeloPresentado``
-record so the import is usable as the baseline for amendment flows.
+module parses the PDF into a :class:`aeat.domain.justificante.Justificante`
+via :func:`aeat.adapters.inbound.justificante.parse_justificante`, validates
+the printed period against the active registry subview, asks
+:func:`aeat.application.filing.build_draft` to materialise an empty draft
+scaffold, and co-produces a companion
+:class:`aeat.domain.submission.ModeloPresentado` record so the import can be
+used as an amendment baseline.
+
+The justificante is receipt metadata, not a full casilla-value source. When
+the active registry requires inputs or binding values that the receipt cannot
+provide, import fails with :class:`aeat.domain.filing.ModeloImportError`
+instead of fabricating tax values.
 
 No AEAT certificate authentication or network call is involved — the
 command is a pure offline transform from (PDF bytes) → (draft, submission,
 warnings).
+
+See Also:
+    :mod:`aeat.adapters.inbound.justificante`
+        Local PDF parser that extracts the typed receipt record.
+    :func:`aeat.application.filing.build_runtime_schema_provider`
+        Registry-backed schema provider used to validate supported periods
+        and build the draft scaffold.
+    :func:`aeat.application.filing.build_complementaria`
+        Amendment flow that can consume the imported submission baseline.
 """
 
 from __future__ import annotations
@@ -65,7 +82,7 @@ class JustificanteImportResult:
     pulling ``ModeloPresentado`` in at module scope would cycle).
 
     Attributes:
-        draft: The freshly built scaffold with every casilla empty.
+        draft: The freshly built :class:`ModeloDraft` scaffold.
         submission: The companion :class:`aeat.domain.submission.ModeloPresentado`
             that lets the amendment engine treat the imported draft as a
             baseline.

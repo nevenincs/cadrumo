@@ -36,6 +36,7 @@ from typing import Any
 import pytest
 
 from ....core.resources import resources
+from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile import (
     UserProfileFact,
     UserProfileRecord,
@@ -43,9 +44,10 @@ from ....domain.user_profile import (
     profile_binding_selectors,
 )
 from .._profile_binding import (
-    _inject_derived_marriage_facts,  # pyright: ignore[reportPrivateUsage]
-    _profile_fact_index,  # pyright: ignore[reportPrivateUsage]
-    _resolve_one,  # pyright: ignore[reportPrivateUsage]
+    inject_derived_marriage_facts,
+    profile_fact_index,
+    resolve_profile_binding_value,
+    resolve_profile_sourced_bindings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -56,7 +58,7 @@ _PERIOD = "0A"
 _CLOCK = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
 
 
-def _modelo_100_snapshot():  # type: ignore[no-untyped-def]
+def _modelo_100_snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
@@ -177,7 +179,7 @@ def test_profile_model_selector_resolves_via_model_selector_alias() -> None:
     """
     schema = load_user_profile_schema()
     record = _full_m100_profile()
-    fact_index = _profile_fact_index(record, schema)
+    fact_index = profile_fact_index(record, schema)
 
     # The alias must be present in the index
     assert "TaxResidenceProfile.ccaa" in fact_index, (
@@ -206,11 +208,11 @@ def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
     """
     schema = load_user_profile_schema()
     record = _full_m100_profile()
-    fact_index = _profile_fact_index(record, schema)
+    fact_index = profile_fact_index(record, schema)
     # Marriage-derived facts (full_year, month_start, month_end) are not stored as
     # profile facts but are injected at binding-resolution time.  The full-population
     # fixture supplies renta_taxpayer.marriage_date so injection populates them here.
-    _inject_derived_marriage_facts(fact_index, _YEAR)
+    inject_derived_marriage_facts(fact_index, _YEAR)
 
     # Deliberately absent binding — tested separately.
     absent = "renta-2025-profile-taxpayer-death-date"
@@ -230,10 +232,60 @@ def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
         if selector.get("repeating"):
             continue
 
-        value = _resolve_one(binding, fact_index)
+        value = resolve_profile_binding_value(binding, fact_index)
         assert value is not None, (
             f"binding {binding_id!r} resolved to None from the full-population fixture; selector={selector!r}"
         )
+
+
+def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date() -> None:
+    """A single taxpayer does not owe an impossible marriage date to resolve 0245-0247."""
+    snapshot = _modelo_100_snapshot()
+    record = UserProfileRecord(
+        profile_id=_BUCKET_ID,
+        display_name="Single binding pin taxpayer",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 15)),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+        ),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+
+    resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)
+
+    assert resolved.binding_values["renta-2025-profile-marriage-full-year"] == Decimal("0")
+    assert resolved.binding_values["renta-2025-profile-marriage-month-start"] == Decimal("0")
+    assert resolved.binding_values["renta-2025-profile-marriage-month-end"] == Decimal("0")
+
+
+def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved() -> None:
+    """A married taxpayer still needs the actual marriage date for Art. 82 month facts."""
+    snapshot = _modelo_100_snapshot()
+    record = UserProfileRecord(
+        profile_id=_BUCKET_ID,
+        display_name="Married binding pin taxpayer",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 15)),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="2"),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+        ),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+
+    resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)
+
+    assert "renta-2025-profile-marriage-full-year" not in resolved.binding_values
+    assert "renta-2025-profile-marriage-month-start" not in resolved.binding_values
+    assert "renta-2025-profile-marriage-month-end" not in resolved.binding_values
 
 
 def test_typed_values_match_expected_python_types() -> None:
@@ -246,7 +298,7 @@ def test_typed_values_match_expected_python_types() -> None:
     """
     schema = load_user_profile_schema()
     record = _full_m100_profile()
-    fact_index = _profile_fact_index(record, schema)
+    fact_index = profile_fact_index(record, schema)
 
     profile_bindings = _profile_bindings()
     binding_map = {str(b.id): b for b in profile_bindings}
@@ -258,7 +310,7 @@ def test_typed_values_match_expected_python_types() -> None:
         ("renta-2025-profile-family-descendants-eu-eea-deduction", bool),
     ]:
         binding = binding_map[binding_id]
-        value = _resolve_one(binding, fact_index)
+        value = resolve_profile_binding_value(binding, fact_index)
         assert value is not None, f"{binding_id!r} resolved to None unexpectedly"
         assert isinstance(value, bool), f"{binding_id!r}: expected bool, got {type(value).__name__} ({value!r})"
 
@@ -268,7 +320,7 @@ def test_typed_values_match_expected_python_types() -> None:
         "renta-2025-profile-spouse-birth-date",
     ]:
         binding = binding_map[binding_id]
-        value = _resolve_one(binding, fact_index)
+        value = resolve_profile_binding_value(binding, fact_index)
         assert value is not None, f"{binding_id!r} resolved to None unexpectedly"
         assert isinstance(value, date), f"{binding_id!r}: expected date, got {type(value).__name__} ({value!r})"
 
@@ -283,7 +335,7 @@ def test_typed_values_match_expected_python_types() -> None:
         if binding_id not in binding_map:
             continue
         binding = binding_map[binding_id]
-        value = _resolve_one(binding, fact_index)
+        value = resolve_profile_binding_value(binding, fact_index)
         assert value is not None, f"{binding_id!r} resolved to None unexpectedly"
         assert isinstance(value, str), f"{binding_id!r}: expected str, got {type(value).__name__} ({value!r})"
 
@@ -298,7 +350,7 @@ def test_typed_values_match_expected_python_types() -> None:
         if binding_id not in binding_map:
             continue
         binding = binding_map[binding_id]
-        value = _resolve_one(binding, fact_index)
+        value = resolve_profile_binding_value(binding, fact_index)
         assert value is not None, f"{binding_id!r} resolved to None unexpectedly"
         assert isinstance(value, Decimal), f"{binding_id!r}: expected Decimal, got {type(value).__name__} ({value!r})"
 
@@ -313,11 +365,11 @@ def test_absent_fact_resolves_to_none_anti_tautology() -> None:
     """
     schema = load_user_profile_schema()
     record = _full_m100_profile()
-    fact_index = _profile_fact_index(record, schema)
+    fact_index = profile_fact_index(record, schema)
 
     profile_bindings = _profile_bindings()
     death_date_binding = next(b for b in profile_bindings if str(b.id) == "renta-2025-profile-taxpayer-death-date")
-    value = _resolve_one(death_date_binding, fact_index)
+    value = resolve_profile_binding_value(death_date_binding, fact_index)
     assert value is None, f"expected None for deliberately absent death-date binding, got {value!r}"
 
 

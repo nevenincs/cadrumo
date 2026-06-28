@@ -40,6 +40,7 @@ def _distinct_valid_nif(profile_id: str) -> str:
 
 _REQUIRED_PLACEHOLDERS: Mapping[str, str] = {
     "identity.name": "Test Operator",
+    "identity.surnames": "Test Operator",
     "tax_residence.ccaa": "madrid",
     "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": IVARegime.GENERAL,

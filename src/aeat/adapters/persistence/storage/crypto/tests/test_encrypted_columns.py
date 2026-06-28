@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 import secrets
 from collections.abc import Iterator
+from typing import cast
 
 import pytest
 from sqlalchemy import Engine, create_engine, select
@@ -293,7 +294,7 @@ class TestHashedLookup:
 
     def test_invalid_plaintext_type_carries_storage_validation_locale_key(self) -> None:
         with pytest.raises(StorageValidationError) as excinfo:
-            HashedLookup.compute(b"not-str")  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
+            HashedLookup.compute(cast(str, b"not-str"))
         assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
 
 

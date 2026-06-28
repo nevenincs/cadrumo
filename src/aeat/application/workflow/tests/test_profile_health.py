@@ -15,6 +15,7 @@ from ....core import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
+from ... import wizard as _wizard  # noqa: F401
 from .._profile_health import (
     assess_active_profile_health,
     repair_active_profile_manifest_status,

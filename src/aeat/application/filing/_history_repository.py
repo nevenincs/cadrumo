@@ -1,10 +1,22 @@
 """Governed-persistence repository for filing-history records.
 
-Filing history contains submitted modelos, periods, timestamps, and AEAT
-status evidence. Records are stored as encrypted byte objects in the
-primary SQL backend at :class:`SensitivityClass` ``AUDIT`` via a
-:class:`SecureObjectRepository`; no plaintext filing-history JSON or envelope
-file lands on disk.
+This repository persists lightweight :class:`aeat.application.filing.ModeloHistory`
+payloads keyed by modelo. Each payload contains submitted modelos, typed
+periods, timestamps, and recorded status strings; richer current /
+superseded filing lifecycle records live in :mod:`aeat.domain.modelos`.
+
+Records are stored as encrypted byte objects in the primary SQL backend at
+:class:`SensitivityClass` ``AUDIT`` via a :class:`SecureObjectRepository`;
+no plaintext filing-history JSON or envelope file lands on disk.
+
+See Also:
+    :class:`aeat.application.filing.ModeloHistory`
+        Strict payload persisted by this repository.
+    :mod:`aeat.application.filing._runtime_repository`
+        Active-profile bucket resolution and runtime secure-object creation.
+    :data:`aeat.adapters.persistence.storage.APPLICATION_FILING_HISTORY_NAMESPACE`
+        Namespace, sensitivity, schema-version, and object-key contract for
+        these secure objects.
 """
 
 from __future__ import annotations
@@ -29,7 +41,7 @@ from ._runtime_repository import (
 
 
 class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
-    """Repository over encrypted SQL-backed filing history records."""
+    """Repository over encrypted SQL-backed :class:`ModeloHistory` records."""
 
     namespace: ClassVar[str] = APPLICATION_FILING_HISTORY_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = APPLICATION_FILING_HISTORY_NAMESPACE.sensitivity

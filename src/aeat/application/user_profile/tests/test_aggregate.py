@@ -313,7 +313,7 @@ def _aggregate(**overrides: object) -> ProfileAggregate:
         "status": UserProfileStatus.ACTIVE,
     }
     defaults.update(overrides)
-    return ProfileAggregate(**defaults)  # type: ignore[arg-type]
+    return ProfileAggregate.model_validate(defaults)
 
 
 def test_aggregate_rejects_naive_created_at() -> None:

@@ -32,8 +32,8 @@ from .._schema import DataBindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_DUMMY_LEGAL_ID = "rd-439-2007:art-110"
-_DUMMY_SOURCE_ID = "aeat-modelo-130-instructions"
+_MINIMAL_LEGAL_REF_ID = "rd-439-2007:art-110"
+_MINIMAL_SOURCE_REF_ID = "aeat-modelo-130-instructions"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
 
 
@@ -98,8 +98,8 @@ def _binding(*, source: str, op: BindingAggregationOp | None) -> DataBindingDefi
             "source": source,
             "selector": _WELL_SHAPED_SELECTORS.get(source, {"target_casilla_id": _M130_INGRESOS_CASILLA}),
             "aggregation": None if op is None else BindingAggregation(op=op),
-            "legal_refs": (_DUMMY_LEGAL_ID,),
-            "source_refs": (_DUMMY_SOURCE_ID,),
+            "legal_refs": (_MINIMAL_LEGAL_REF_ID,),
+            "source_refs": (_MINIMAL_SOURCE_REF_ID,),
         },
     )
 
@@ -209,5 +209,6 @@ def test_missing_op_is_rejected_at_model_validation() -> None:
 def test_binding_aggregation_is_frozen() -> None:
     """The typed model is immutable, matching the registry strict-frozen config."""
     aggregation = BindingAggregation(op=BindingAggregationOp.SUM)
+    field_name = "op"
     with pytest.raises(ValidationError):
-        aggregation.op = BindingAggregationOp.ROWS  # type: ignore[misc]
+        setattr(aggregation, field_name, BindingAggregationOp.ROWS)

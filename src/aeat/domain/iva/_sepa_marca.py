@@ -1,5 +1,9 @@
 """Marca SEPA derivation for the Modelo 303 cuenta-devolución (DID) block.
 
+:func:`derive_sepa_marca` returns :class:`SepaMarca` from the country fields
+carried by :class:`aeat.domain.deadlines.RefundAccount`, the refund-account
+model consumed by Modelo 303 settlement flows.
+
 The official Diseño de Registros DR303 ``DP303DID`` page carries a single
 ``Marca SEPA`` indicator (position 194, length 1) classifying the refund
 account AEAT pays into:

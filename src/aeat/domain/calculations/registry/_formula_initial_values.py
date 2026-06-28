@@ -1,6 +1,8 @@
 """Initial-value assembly for registry formula evaluation.
 
-Use of :class:`CasillaObservation`, :class:`ModeloRevision` for compliance.
+The :class:`ModeloRevision` declares the casilla and binding slots that seed
+calculation; materialisation emits :class:`CasillaObservation` rows carrying
+registry provenance.
 """
 
 from __future__ import annotations
@@ -28,7 +30,8 @@ def materialise_observations(
 ) -> tuple[CasillaObservation, ...]:
     """Project per-casilla runtime state into the canonical observation tuple.
 
-    Use of :class:`CasillaObservation` for compliance.
+    Each returned :class:`CasillaObservation` is either preserved from computed
+    provenance or rebuilt from the registry casilla's legal/source references.
     """
     materialised: list[CasillaObservation] = []
     for casilla_id in sorted(values):
@@ -70,7 +73,8 @@ def initial_values(
 ) -> tuple[dict[CasillaId, Decimal], frozenset[CasillaId]]:
     """Build initial numeric casilla values and absent-by-design markers.
 
-    Use of :class:`ModeloRevision` for compliance.
+    The :class:`ModeloRevision` supplies casilla membership, formula targets,
+    and bound slot declarations before formula evaluation starts.
     """
     casillas = casillas_by_id(revision)
     _reject_unknown_inputs(inputs, casillas)

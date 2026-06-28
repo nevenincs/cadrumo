@@ -1,7 +1,7 @@
 """Real-behavior tests for the calc-sheets pull adapter type refinements.
 
 Exercises the helpers whose ``-> Any`` annotations were narrowed to
-typed aliases (``_ValueRange``, ``_GoogleResource`` via Protocol) to
+typed aliases (``ValueRange``, ``_GoogleResource`` via Protocol) to
 confirm the structural contracts hold at runtime — no mocks, no patches.
 """
 
@@ -11,7 +11,9 @@ from decimal import Decimal
 
 import pytest
 
+from .....domain.calculations.registry import BindingId, RelationId
 from .._calc_sheets_pull import (
+    ValueRange,
     _batch_get_values,
     _decode_binding_edits,
     _decode_operator_edits,
@@ -22,11 +24,11 @@ from .._calc_sheets_pull import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 # ---------------------------------------------------------------------------
-# _ValueRange structural shape preserved through helpers
+# ValueRange structural shape preserved through helpers
 # ---------------------------------------------------------------------------
 
 
-def _value_range(range_: str, values: list[list[object]]) -> dict[str, object]:
+def _value_range(range_: str, values: list[list[object]]) -> ValueRange:
     return {"range": range_, "values": values}
 
 
@@ -59,7 +61,7 @@ def test_batch_get_values_returns_empty_list_for_empty_ranges() -> None:
     """No API call must be issued when ranges is empty.
 
     ``_batch_get_values`` is the primary entry point narrowed from
-    ``list[Any]`` to ``list[_ValueRange]``.  Passing empty ranges is the
+    ``list[Any]`` to ``list[ValueRange]``.  Passing empty ranges is the
     only branch exercisable without live credentials; a real list is
     returned and its type is correct (empty list of dicts).
     """
@@ -70,13 +72,13 @@ def test_batch_get_values_returns_empty_list_for_empty_ranges() -> None:
         def spreadsheets(self) -> object:
             raise AssertionError("spreadsheets() must not be called for empty ranges")
 
-    result = _batch_get_values(_NeverCalledSheets(), "some-id", [])  # type: ignore[arg-type]
+    result = _batch_get_values(_NeverCalledSheets(), "some-id", [])
     assert result == []
     assert isinstance(result, list)
 
 
 # ---------------------------------------------------------------------------
-# _decode_operator_edits over typed _ValueRange list
+# _decode_operator_edits over typed ValueRange list
 # ---------------------------------------------------------------------------
 
 
@@ -112,7 +114,7 @@ def test_decode_operator_edits_reads_decimal_from_value_range() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _decode_binding_edits over typed _ValueRange list
+# _decode_binding_edits over typed ValueRange list
 # ---------------------------------------------------------------------------
 
 
@@ -124,9 +126,9 @@ def test_decode_binding_edits_returns_empty_for_no_ids() -> None:
 
 
 def test_decode_binding_edits_reads_string_from_value_range() -> None:
-    binding_id: str = "ccaa"
+    binding_id: BindingId = "ccaa"
     vr = _value_range("Bindings!C3", [["madrid"]])
-    edits, cursor, count = _decode_binding_edits([vr], 0, [binding_id])  # type: ignore[arg-type]
+    edits, cursor, count = _decode_binding_edits([vr], 0, [binding_id])
     assert len(edits) == 1
     assert edits[0].binding == binding_id
     assert edits[0].value == "madrid"
@@ -135,7 +137,7 @@ def test_decode_binding_edits_reads_string_from_value_range() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _decode_relation_edits over typed _ValueRange list
+# _decode_relation_edits over typed ValueRange list
 # ---------------------------------------------------------------------------
 
 
@@ -147,9 +149,9 @@ def test_decode_relation_edits_returns_empty_for_no_ids() -> None:
 
 
 def test_decode_relation_edits_reads_decimal_from_value_range() -> None:
-    relation_id: str = "r001"
+    relation_id: RelationId = "r001"
     vr = _value_range("Tarifas!D4", [[99.5]])
-    edits, cursor, count = _decode_relation_edits([vr], 0, [relation_id], {})  # type: ignore[arg-type]
+    edits, cursor, count = _decode_relation_edits([vr], 0, [relation_id], {})
     assert len(edits) == 1
     assert edits[0].relation == relation_id
     assert edits[0].value == Decimal("99.5")

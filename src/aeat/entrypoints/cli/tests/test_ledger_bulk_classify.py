@@ -62,6 +62,27 @@ def _list_transactions() -> list[dict[str, Any]]:
     return payload.get("result", payload).get("rows", [])
 
 
+def _stored_transaction(transaction_id: str) -> Any:
+    from ....core import resolve_active_bucket_id
+    from ....domain.transactions import TransactionCatalogueRepository
+
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    return TransactionCatalogueRepository(bucket_id=bucket_id).load().transactions[transaction_id]
+
+
+def _import_many_transactions(tmp_path: Path, *, count: int) -> list[str]:
+    lines = ["Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"]
+    for idx in range(1, count + 1):
+        lines.append(f"2026-05-{idx:02d},Vendor {idx},INV-{idx:03d},{idx}.00,EUR,many-{idx:03d}")
+    csv_path = tmp_path / "many.csv"
+    csv_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    assert result.exit_code == 0, result.output
+    return [row["transaction_id"] for row in _list_transactions()]
+
+
 # ---------------------------------------------------------------------------
 # --from-csv tests
 # ---------------------------------------------------------------------------
@@ -99,6 +120,27 @@ def test_classify_from_csv_partial_failure_applies_valid_rows(tmp_path: Path) ->
     assert payload["failures"]  # at least one failure for unknown id
 
 
+def test_classify_from_csv_all_failed_exits_nonzero(tmp_path: Path) -> None:
+    _import_two_transactions(tmp_path)
+
+    csv_content = "transaction_id,classification\nmissing-short,BUSINESS\nmissing-long,PERSONAL\n"
+    csv_file = tmp_path / "all_failed.csv"
+    csv_file.write_text(csv_content, encoding="utf-8")
+
+    result = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+    assert result.exit_code != 0, result.output
+    envelope = json.loads(result.output)
+    payload = envelope["result"]
+    assert envelope["status"] == "warning", envelope
+    assert envelope["notices"][0]["code"] == "ledger.classify.bulk_all_failed", envelope
+    assert payload["total"] == 2, payload
+    assert payload["applied"] == 0, payload
+    assert len(payload["failures"]) == 2, payload
+
+
 def test_classify_from_csv_rejects_pipeline_managed_state(tmp_path: Path) -> None:
     """A bulk row naming a pipeline-managed state reds (mirrors the single-classify guard).
 
@@ -133,6 +175,105 @@ def test_classify_from_csv_rejects_unknown_column(tmp_path: Path) -> None:
 
     result = _RUNNER.invoke(app, ["app", "ledger", "classify", "--from-csv", str(csv_file)])
     assert result.exit_code != 0
+
+
+def test_classify_from_csv_accepts_iva_category_column(tmp_path: Path) -> None:
+    """Bulk CSV accepts the same IVA category field as single-row classify."""
+    from ....domain.iva import IvaCategory
+
+    tx1, _tx2 = _import_two_transactions(tmp_path)
+    csv_file = tmp_path / "iva_category.csv"
+    csv_file.write_text(
+        f"transaction_id,classification,iva_category\n{tx1},BUSINESS,domestic_general_21\n",
+        encoding="utf-8",
+    )
+
+    result = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["applied"] == 1, payload
+    assert payload["failures"] == [], payload
+    assert _stored_transaction(tx1).iva_category is IvaCategory.DOMESTIC_GENERAL_21
+
+
+def test_classify_from_csv_accepts_irpf_category_column(tmp_path: Path) -> None:
+    """Bulk CSV accepts the same IRPF category field as single-row classify."""
+    tx1, _tx2 = _import_two_transactions(tmp_path)
+    csv_file = tmp_path / "irpf_category.csv"
+    csv_file.write_text(
+        "transaction_id,classification,irpf_category\n"
+        f"{tx1},BUSINESS,actividades_economicas_directa_simplificada\n",
+        encoding="utf-8",
+    )
+
+    result = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["applied"] == 1, payload
+    assert payload["failures"] == [], payload
+    assert _stored_transaction(tx1).irpf_category == "actividades_economicas_directa_simplificada"
+
+
+def test_classify_from_csv_accepts_display_id_prefix(tmp_path: Path) -> None:
+    """Bulk CSV resolves transaction ids like single-row classify does."""
+    tx1, _tx2 = _import_two_transactions(tmp_path)
+    by_id = {row["transaction_id"]: row for row in _list_transactions()}
+    display_id = by_id[tx1]["display_id"]
+    csv_file = tmp_path / "short_id.csv"
+    csv_file.write_text(f"transaction_id,classification\n{display_id},BUSINESS\n", encoding="utf-8")
+
+    result = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["applied"] == 1, payload
+    assert payload["failures"] == [], payload
+    by_id = {row["transaction_id"]: row for row in _list_transactions()}
+    assert by_id[tx1]["business_classification"] == "BUSINESS"
+
+
+def test_classify_from_csv_ambiguous_prefix_is_row_failure(tmp_path: Path) -> None:
+    """An ambiguous short id fails that row while other valid rows apply."""
+    transaction_ids = _import_many_transactions(tmp_path, count=17)
+    by_initial: dict[str, list[str]] = {}
+    for transaction_id in transaction_ids:
+        by_initial.setdefault(transaction_id[0], []).append(transaction_id)
+    ambiguous_prefix, ambiguous_matches = next(
+        (prefix, matches) for prefix, matches in by_initial.items() if len(matches) > 1
+    )
+    valid_id = ambiguous_matches[0]
+    csv_file = tmp_path / "ambiguous_prefix.csv"
+    csv_file.write_text(
+        "transaction_id,classification\n"
+        f"{valid_id},BUSINESS\n"
+        f"{ambiguous_prefix},PERSONAL\n",
+        encoding="utf-8",
+    )
+
+    result = _RUNNER.invoke(
+        app,
+        ["--format", "json", "app", "ledger", "classify", "--from-csv", str(csv_file)],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["applied"] == 1, payload
+    assert len(payload["failures"]) == 1, payload
+    assert payload["failures"][0]["transaction_id"] == ambiguous_prefix, payload
+    assert "matches" in payload["failures"][0]["reason"], payload
+    by_id = {row["transaction_id"]: row for row in _list_transactions()}
+    assert by_id[valid_id]["business_classification"] == "BUSINESS"
 
 
 def test_classify_from_csv_exclusive_with_id(tmp_path: Path) -> None:

@@ -20,11 +20,13 @@ gap is diagnosable from the failure alone.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from .....core.resources import bundled_path
 from .._loader import load_registry_tree
-from .._schema import ModeloDefinition
+from .._schema import ModeloDefinition, RelationDefinition
 from .._validate_relation_periods import select_relation_source_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -149,7 +151,12 @@ _ACCEPTED_CHAIN_DEPENDENCY_ROLES = frozenset(
 )
 
 
-def _chain_role_offences(*, summary, feeder_id: str, summary_id: str) -> tuple[str, ...]:  # type: ignore[no-untyped-def]
+def _chain_role_offences(
+    *,
+    summary: ModeloDefinition,
+    feeder_id: str,
+    summary_id: str,
+) -> tuple[str, ...]:
     """Return any dependency_role offences for one (feeder -> summary) pair across all revisions."""
     offences: list[str] = []
     for revision in summary.revisions.values():
@@ -189,7 +196,12 @@ def test_every_declared_relation_resolves_to_a_real_source_casilla() -> None:
 _CROSS_MODEL_RELATION_KINDS = frozenset({"cross_model_output", "annual_summary"})
 
 
-def _relation_source_offence(relation, *, modelo_id: str, registry) -> str | None:  # type: ignore[no-untyped-def]
+def _relation_source_offence(
+    relation: RelationDefinition,
+    *,
+    modelo_id: str,
+    registry: Mapping[str, ModeloDefinition],
+) -> str | None:
     """Return a chain-cohesion offence message for one relation, or ``None`` when it resolves.
 
     Only ``cross_model_output`` and ``annual_summary`` relations

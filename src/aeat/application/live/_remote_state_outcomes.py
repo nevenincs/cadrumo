@@ -1,6 +1,7 @@
 """Outcome and redaction helpers for live IVA remote-state acquisition.
 
-Use of :class:`SensitivityClass` for compliance.
+Failure contexts are redacted with the :class:`SensitivityClass` diagnostic
+policy before they are copied into live IVA read outcomes.
 """
 
 from __future__ import annotations

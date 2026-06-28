@@ -31,30 +31,34 @@ regression fence for the landed FX-conversion surface.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile._orchestration import profile_create_storage_span
-from ....application.user_profile._testing import register_minimal_profile
-from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _REVOLUT = _CORPUS / "revolut-multi.csv"
 
 
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
+
+
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    from ....application.user_profile._orchestration import profile_create_storage_span
+    from ....application.user_profile._testing import register_minimal_profile
+    from ....application.workflow._persistence import workflow_state_repository
+
     dispose_engine()
     with (
         override_settings(aeat_local_storage_root=tmp_path, aeat_output_language="en"),
@@ -82,12 +86,12 @@ def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object
 
 
 def _import_revolut() -> None:
-    result = _RUNNER.invoke(app, ["app", "ledger", "import", str(_REVOLUT), "--provider", "csv"])
+    result = _invoke(["app", "ledger", "import", str(_REVOLUT), "--provider", "csv"])
     assert result.exit_code == 0, result.output
 
 
 def _list_rows() -> list[dict[str, object]]:
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
@@ -176,8 +180,7 @@ def test_classify_uk_us_receipts_as_export_business_income() -> None:
         assert rule is not None, desc
         assert rule.get("classification") == "BUSINESS"
         assert rule.get("iva_category") == "export_third_country_zero_rated"
-        result = _RUNNER.invoke(
-            app,
+        result = _invoke(
             [
                 "app",
                 "ledger",
@@ -227,7 +230,7 @@ def test_export_json_surfaces_eur_equivalent_and_fx_rate(tmp_path: Path) -> None
     """
     _import_revolut()
     out = tmp_path / "revolut-export.jsonl"
-    exported = _RUNNER.invoke(app, ["app", "ledger", "export", "--output", str(out), "--export-format", "jsonl"])
+    exported = _invoke(["app", "ledger", "export", "--output", str(out), "--export-format", "jsonl"])
     assert exported.exit_code == 0, exported.output
     text = out.read_text(encoding="utf-8")
     assert "GBP" in text, "export must carry the native currency"

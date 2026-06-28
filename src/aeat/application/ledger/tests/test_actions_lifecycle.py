@@ -6,6 +6,7 @@ import pytest
 
 from ._action_test_support import (
     UTC,
+    BucketEventHistoryRepository,
     BucketEventType,
     BusinessClassification,
     CalculationRevisionCatalogueRepository,
@@ -13,19 +14,21 @@ from ._action_test_support import (
     InvoiceCatalogue,
     InvoiceCatalogueRepository,
     ManualLedgerTransactionCommand,
+    ManualLedgerTransactionResult,
     SecureObjectRepository,
     TransactionCatalogue,
+    TransactionCatalogueRepository,
     TransactionDirection,
     TransactionLifecycleState,
     TransactionValidationError,
     WorkUnitCatalogueRepository,
-    _persist_verified_revision_citing_transaction,
-    _purchase_invoice,
     _repositories,
     archive_manual_transaction,
     create_manual_transaction,
     date,
     datetime,
+    persist_verified_revision_citing_transaction,
+    purchase_invoice,
     remove_manual_transaction,
     reset_ledger_catalogue,
     restore_manual_transaction,
@@ -35,6 +38,35 @@ from ._action_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _create_manual_row(
+    secure_objects: SecureObjectRepository,
+    *,
+    description: str,
+    idempotency_key: str,
+    amount: Decimal | None = None,
+    booked_date: date | None = None,
+    occurred_at: datetime | None = None,
+) -> tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, ManualLedgerTransactionResult]:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    resolved_booked_date = booked_date if booked_date is not None else date(2026, 5, 2)
+    resolved_amount = amount if amount is not None else Decimal("25.00")
+    resolved_occurred_at = occurred_at if occurred_at is not None else datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
+    created = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            bucket_id="bucket-a",
+            booked_date=resolved_booked_date,
+            amount=resolved_amount,
+            direction=TransactionDirection.OUTGOING,
+            description=description,
+            idempotency_key=idempotency_key,
+        ),
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        occurred_at=resolved_occurred_at,
+    )
+    return transaction_repository, event_repository, created
 
 
 def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_objects: SecureObjectRepository) -> None:
@@ -294,18 +326,12 @@ def test_restore_archived_transaction_returns_it_to_active(secure_objects: Secur
 
 
 def test_restore_refuses_an_already_active_transaction(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("50.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="already active row",
-            idempotency_key="restore-active-refusal",
-        ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+    transaction_repository, event_repository, created = _create_manual_row(
+        secure_objects,
+        description="already active row",
+        idempotency_key="restore-active-refusal",
+        amount=Decimal("50.00"),
+        booked_date=date(2026, 5, 1),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
 
@@ -329,19 +355,10 @@ def test_restore_refuses_an_already_active_transaction(secure_objects: SecureObj
 
 
 def test_restore_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="modelo source row stashed",
-            idempotency_key="restore-blocked",
-        ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+    transaction_repository, event_repository, created = _create_manual_row(
+        secure_objects,
+        description="modelo source row stashed",
+        idempotency_key="restore-blocked",
     )
     stash_manual_transaction(
         bucket_id="bucket-a",
@@ -352,7 +369,7 @@ def test_restore_refuses_finalized_modelo_reference(secure_objects: SecureObject
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 5, 9, 0, tzinfo=UTC),
     )
-    _persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
+    persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         restore_manual_transaction(
@@ -491,7 +508,7 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
-    purchase_evidence = _purchase_invoice()
+    purchase_evidence = purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
@@ -544,19 +561,10 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
 
 
 def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="dry run row",
-            idempotency_key="remove-dry-run",
-        ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+    transaction_repository, event_repository, created = _create_manual_row(
+        secure_objects,
+        description="dry run row",
+        idempotency_key="remove-dry-run",
     )
 
     report = remove_manual_transaction(
@@ -578,21 +586,12 @@ def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objec
 
 
 def test_remove_manual_transaction_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="modelo source row",
-            idempotency_key="remove-blocked",
-        ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+    transaction_repository, event_repository, created = _create_manual_row(
+        secure_objects,
+        description="modelo source row",
+        idempotency_key="remove-blocked",
     )
-    _persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
+    persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
 
     dry_run = remove_manual_transaction(
         bucket_id="bucket-a",
@@ -620,21 +619,12 @@ def test_remove_manual_transaction_refuses_finalized_modelo_reference(secure_obj
 
 
 def test_lifecycle_change_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="modelo source row",
-            idempotency_key="lifecycle-blocked",
-        ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+    transaction_repository, event_repository, created = _create_manual_row(
+        secure_objects,
+        description="modelo source row",
+        idempotency_key="lifecycle-blocked",
     )
-    _persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
+    persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         archive_manual_transaction(
@@ -659,19 +649,10 @@ def test_lifecycle_change_refuses_finalized_modelo_reference(secure_objects: Sec
 def test_remove_manual_transaction_refuses_finalized_reference_to_prior_edit_id(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="modelo source row",
-            idempotency_key="prior-id",
-        ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+    transaction_repository, event_repository, created = _create_manual_row(
+        secure_objects,
+        description="modelo source row",
+        idempotency_key="prior-id",
     )
     updated = update_manual_transaction(
         transaction_id=created.ref.transaction_id,
@@ -687,7 +668,7 @@ def test_remove_manual_transaction_refuses_finalized_reference_to_prior_edit_id(
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
     )
-    _persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
+    persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         remove_manual_transaction(
@@ -708,7 +689,7 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
-    purchase_evidence = _purchase_invoice()
+    purchase_evidence = purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     first = create_manual_transaction(
         ManualLedgerTransactionCommand(
@@ -836,21 +817,12 @@ def test_reset_ledger_catalogue_clears_a_large_ledger_without_payload_overflow(
 
 
 def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
-    transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id="bucket-a",
-            booked_date=date(2026, 5, 2),
-            amount=Decimal("25.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="modelo source row",
-            idempotency_key="reset-blocked",
-        ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
-        occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
+    transaction_repository, event_repository, created = _create_manual_row(
+        secure_objects,
+        description="modelo source row",
+        idempotency_key="reset-blocked",
     )
-    _persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
+    persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
 
     dry_run = reset_ledger_catalogue(
         bucket_id="bucket-a",

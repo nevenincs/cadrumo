@@ -35,8 +35,7 @@ from ....domain.deadlines.taxpayer_model import (
     IrpfIncomeCategory,
     TaxpayerProfile,
 )
-from .. import OverviewCalendarRange, build_overview_calendar
-from .._explain import build_overview_explain
+from .. import OverviewCalendarRange, build_overview_calendar, build_overview_explain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -176,8 +175,11 @@ def test_derive_modelo_applicability_is_the_shared_implementation() -> None:
     ensures both surfaces use the same rule table and there is no
     divergence path through a separate implementation.
     """
+    from inspect import getclosurevars
+
     from .. import derive_modelo_applicability as calendar_fn
-    from .._explain import derive_modelo_applicability as explain_fn  # type: ignore[attr-defined]
+
+    explain_fn = getclosurevars(build_overview_explain).globals["derive_modelo_applicability"]
 
     assert calendar_fn is explain_fn, (
         "calendar and explain modules import different derive_modelo_applicability "

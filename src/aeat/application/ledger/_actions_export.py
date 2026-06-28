@@ -194,6 +194,7 @@ def _ledger_export_row(*, bucket_id: str, transaction: Transaction) -> LedgerExp
         direction=transaction.direction.value,
         counterparty=raw.display_counterparty,
         description=raw.description,
+        source_jurisdiction=transaction.source_jurisdiction or "",
         business_classification=transaction.business_classification.value,
         business_pct=_optional_decimal(transaction.business_pct),
         category_id=transaction.category_id or "",

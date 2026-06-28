@@ -1,10 +1,18 @@
-"""Storage provider abstraction public surface.
+"""Public outbound storage provider API.
 
-Exports the `StorageProvider` Protocol, provider boundary records, the
-`ProviderKind` enum, remote mirror manifest helpers, the
-`get_storage_provider` factory, and the typed `OutboundStorageError`
-hierarchy. Concrete backend classes remain private implementation details;
-consumers depend on the Protocol, records, manifest helpers, and factory.
+Re-exports the :class:`StorageProvider` Protocol, the :class:`ProviderKind`
+selector, provider boundary records such as :class:`ProviderObjectMetadata`
+and :class:`ProviderProbeReport`, remote mirror records such as
+:class:`RemoteMirrorNamespaceManifest` and :class:`RemoteMirrorInspection`,
+the :func:`get_storage_provider` factory, manifest helpers including
+:func:`build_remote_mirror_namespace_manifest` and
+:func:`inspect_remote_mirror_upload`, and the typed
+:class:`OutboundStorageError` hierarchy.
+
+Concrete backends in :mod:`aeat.adapters.outbound.storage._local` and
+:mod:`aeat.adapters.outbound.storage._google_drive` remain private
+implementation details; consumers depend on this Protocol, these records, the
+manifest helpers, and the factory.
 """
 
 from __future__ import annotations

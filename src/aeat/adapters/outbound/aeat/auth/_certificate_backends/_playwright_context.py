@@ -1,4 +1,4 @@
-"""Playwright per-context client-certificate backend (primary).
+"""Playwright per-context client-certificate backend.
 
 Playwright (Python, ``>=1.46``) exposes client certs as a per-context
 kwarg on :meth:`playwright.async_api.Browser.new_context`::
@@ -13,6 +13,11 @@ There is **no post-hoc injection hook**: a context that was constructed
 without ``client_certificates`` cannot be retrofitted with one. This
 backend therefore validates the contract at call time rather than
 mutating the context.
+
+:class:`CertificateContextProvisioner` calls
+:func:`build_client_certificates_kwarg` while creating a browser context and
+then stamps :data:`CERTIFICATE_CONTEXT_MARKER`; :class:`PlaywrightContextBackend`
+later checks that marker for the selected :class:`LoadedCertificate`.
 """
 
 from __future__ import annotations
@@ -64,9 +69,10 @@ def build_client_certificates_kwarg(
 class PlaywrightContextBackend(_CertBackend):
     """Primary backend — per-context client cert via Playwright.
 
-    Implements the
-    :class:`aeat.adapters.outbound.aeat.auth._certificate_backends._base._CertBackend`
-    contract for browser-driven sessions. The verify leg delegates to
+    Implements the :class:`_CertBackend` contract for browser-driven
+    certificate sessions. The ``preload`` leg validates the
+    :data:`CERTIFICATE_CONTEXT_MARKER` stamp produced by
+    :class:`CertificateContextProvisioner`. The ``verify`` leg delegates to
     :class:`HttpxFallbackBackend`, which fails closed unless a future backend
     can perform mTLS verification without materialising plaintext key files.
     """

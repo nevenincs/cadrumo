@@ -21,6 +21,7 @@ from .. import (
     validated_casilla_id,
 )
 from .._bindings import RegistryModeloObservation
+from .._text import normalise_corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -96,6 +97,52 @@ def _snapshot_130(modelo_130_registry: _ModeloFixture, *, period: str = "1T", fi
     )
 
 
+def test_modelo_130_casilla_15_grounding_uses_aeat_instruction_citation(
+    modelo_130_registry: _ModeloFixture,
+) -> None:
+    modelo, catalogues = modelo_130_registry
+
+    art_110 = catalogues.legal["rd-439-2007:art-110"]
+    art_110_required_text = normalise_corpus_text("\n".join(art_110.required_text))
+
+    assert art_110.article == "110"
+    assert "rd-439-2007:art-110-5" not in catalogues.legal
+    assert "20 por ciento del rendimiento neto" in art_110.required_text
+    assert "trimestres anteriores del mismo año" in art_110.required_text
+    assert "resultados negativos" not in art_110_required_text
+    assert "casilla 15" not in art_110_required_text
+    assert "apartado 110.5 vigente" in art_110.notes
+
+    revision = modelo.revisions["2019-y-siguientes"]
+    carry_binding = next(
+        binding for binding in revision.bindings if binding.id == "modelo-130-resultados-negativos-anteriores"
+    )
+    carry_casilla = next(casilla for casilla in revision.casillas if casilla.id == _M130_CARRY_FORWARD_CASILLA)
+    instruction_source = catalogues.sources["aeat-modelo-130-instructions"]
+
+    assert carry_binding.source == "previous_filing"
+    assert carry_binding.selector == {
+        "source_modelo": "130",
+        "source_casilla_id": "saldo-negativo-fin-periodo",
+        "source_period_offset_from_target": -1,
+        "max_year_delta": 0,
+    }
+    assert carry_binding.source_refs == ("aeat-modelo-130-instructions",)
+    assert carry_binding.source_citations
+    assert carry_casilla.constraints.source_refs == ("aeat-modelo-130-instructions",)
+    assert instruction_source.evidence_tier == "official_source_guidance"
+    assert instruction_source.kind == "instructions"
+
+    citation = carry_binding.source_citations[0]
+    assert citation.source_ref == "aeat-modelo-130-instructions"
+    assert "importe (sin signo) de los resultados negativos" in citation.required_text
+    assert "en ningún caso podrá figurar en la casilla 15 un importe superior" in citation.required_text
+
+    instruction_text = normalise_corpus_text((bundled_path() / instruction_source.corpus_path).read_text("utf-8"))
+    for required_text in citation.required_text:
+        assert normalise_corpus_text(required_text) in instruction_text
+
+
 def test_modelo_130_validated_snapshot_owns_workflow_surfaces(modelo_130_registry: _ModeloFixture) -> None:
     modelo, catalogues = modelo_130_registry
     snapshot = build_snapshot(
@@ -131,8 +178,9 @@ def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_re
 
     The Modelo 130 `modelo-130-resultados-negativos-anteriores`
     binding declares `source_period_offset_from_target = -1` and
-    `max_year_delta = 0` to model AEAT's RD 439/2007 art. 110.5
-    same-ejercicio rule: 1T pulls from a hypothetical "0T" which
+    `max_year_delta = 0` to model AEAT's same-ejercicio instruction
+    rule under the RD 439/2007 art. 110 pago-fraccionado framework:
+    1T pulls from a hypothetical "0T" which
     does not exist within the same ejercicio, so the binding
     produces no anchor and casilla 15 materialises Decimal(0)
     through the absent-by-design constructor path. The

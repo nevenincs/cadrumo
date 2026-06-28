@@ -100,15 +100,16 @@ def _emit_envelope(
             ``@register_schema(...)`` argument on the result model).
         result: The strict-validated payload model to surface as
             ``envelope.result``. Must be a pydantic model registered
-            under ``command`` in :data:`SCHEMA_REGISTRY`; the CLI
+            under ``command`` in
+            :data:`~aeat.core.json_contract.SCHEMA_REGISTRY`; the CLI
             conformance gate enforces this at test time.
         lines: Iterable of pre-formatted text lines (used unchanged
             for text mode).
-        notices: Optional typed non-blocking diagnostics (warnings,
-            advisories, next-step hints) surfaced on the envelope's
-            ``notices`` channel. The text-mode rendering is unchanged;
-            callers fold the same notices into ``lines`` themselves so
-            JSON and text cannot drift.
+        notices: Optional typed :class:`~aeat.core.json_contract.Notice`
+            diagnostics surfaced on the envelope's ``notices`` channel.
+            The text-mode rendering is unchanged; callers fold the same
+            notices into ``lines`` themselves so JSON and text cannot
+            drift.
     """
     from ...core.json_contract import emit_json_success
 

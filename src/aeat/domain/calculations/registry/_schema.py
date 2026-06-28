@@ -1208,7 +1208,7 @@ class RegistrySnapshot(RegistryModel):
 
 
 def filing_period_from_scope(filing_year: int, period: str) -> Period | None:
-    """Return a core Period when the registry token is a real filing-period code."""
+    """Return a core :class:`Period` when the registry token is a real filing-period code."""
     try:
         return Period.from_year_and_code(filing_year, period)
     except ValueError:

@@ -1,6 +1,8 @@
 """Ledger lifecycle and transaction-structure CLI commands.
 
-Use of :class:`OutputSchema`, :class:`TransactionCatalogueRepository` for compliance.
+Lifecycle commands resolve transactions through the shared repository helpers
+and emit typed :class:`OutputSchema` mutation envelopes for every structural
+change.
 """
 
 from __future__ import annotations

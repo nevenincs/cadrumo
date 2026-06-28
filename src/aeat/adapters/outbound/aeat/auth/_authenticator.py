@@ -1,17 +1,18 @@
-"""Unified live-AEAT authenticator.
+"""Certificate-backed live-AEAT authenticator.
 
-This module is the single entry point every remote-read module
-(filing history, missing-filing detection, AEAT messages, IVA balance
-tracking) depends on. It composes the certificate loader, the
-Playwright browser session, and the login-assertion flow into a narrow
-async surface.
+This module implements the certificate concrete for the application
+:class:`aeat.application.auth.AuthProvider` contract. It composes
+:class:`CertificateBundle` loading, mTLS handshake checks, a
+:class:`CertificateContextProvisioner`-backed browser context, and a
+post-auth login probe into a narrow async provider surface.
 
-The module also defines :class:`AeatSession` and
-:class:`AeatLoginAssertion` — the two pydantic records that describe
-"what it means to have live AEAT access right now" and "what
-happened the last time we verified that access". Both records are
-strict, frozen, carry no secret material, and are safe to log or
-serialise into the submission audit trail.
+The provider returns the imported :class:`AeatSession` and
+:class:`AeatLoginAssertion` records owned by
+:mod:`aeat.adapters.outbound.aeat.auth._authenticator_types`. Captured
+Playwright storage state is written through the encrypted session store
+with :class:`PersistedSessionMetadata`, then resumed only after hash,
+idle-deadline, certificate thumbprint, certificate subject, and live
+probe checks pass.
 
 Design notes:
 
@@ -118,7 +119,7 @@ AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = _Settings().aeat_browser_navigati
 
 
 class AeatAuthenticator:
-    """Single entry point for live AEAT access.
+    """Certificate implementation of the application :class:`AuthProvider`.
 
     The authenticator owns:
 
@@ -138,9 +139,11 @@ class AeatAuthenticator:
             session = await auth.authenticate()
             assertion = await auth.verify_login(session)
 
-    Callers that only need the synchronous parts (health, handshake,
-    NIF extraction) can instantiate without entering the async
-    context.
+    Returned sessions use :class:`CertificateSessionDetail`, login probes use
+    :class:`CertificateLoginAssertionDetail`, and persisted resume state is
+    validated against :class:`PersistedSessionMetadata`. Callers that only
+    need synchronous health, handshake, or NIF extraction can instantiate
+    without entering the async context.
     """
 
     kind: AuthProviderKind = AuthProviderKind.CERTIFICATE
@@ -260,11 +263,13 @@ class AeatAuthenticator:
         """Produce an authenticated :class:`AeatSession`.
 
         The method first attempts to resume a previously captured
-        Playwright ``storage_state``. If that persisted state is
-        missing, malformed, stale, certificate-mismatched, or fails
-        a live verification probe, it is deleted and the method
-        falls back to a fresh certificate handshake plus browser
-        login flow.
+        Playwright ``storage_state`` backed by
+        :class:`PersistedSessionMetadata`. If that persisted state is
+        missing, malformed, stale, certificate-mismatched, or fails a live
+        verification probe, it is deleted and the method falls back to a
+        fresh certificate handshake plus browser login flow. Fresh contexts
+        are created through :class:`CertificateContextProvisioner` so the
+        AEAT origin receives the configured client certificate.
 
         Args:
             browser_session: Optional existing browser session to reuse.
@@ -522,7 +527,7 @@ class AeatAuthenticator:
         return await self.verify_login(session, target_url=target_url)
 
     async def capture_storage_state(self, session: AeatSession) -> Path:
-        """Persist the active Playwright storage state and AEAT metadata."""
+        """Persist the active Playwright state and :class:`PersistedSessionMetadata`."""
         async with self._lock:
             if self._active_session != session:
                 raise AeatLoginAssertionError(
@@ -538,10 +543,13 @@ class AeatAuthenticator:
         browser_session: BrowserSessionLike | None = None,
         target_url: str | None = None,
     ) -> AeatSession:
-        """Resume a persisted AEAT browser session from ``path``.
+        """Resume a certificate :class:`AeatSession` from encrypted storage.
 
-        Returns:
-            An :class:`AeatSession` reconstructed from the persisted state.
+        The persisted browser state and :class:`PersistedSessionMetadata` are
+        validated before a :class:`CertificateContextProvisioner` opens a
+        context with the restored storage state. A successful live probe
+        refreshes ``authenticated_at`` and ``idle_deadline`` before the
+        session is returned.
         """
         async with self._lock:
             if self._context is not None:
@@ -720,7 +728,7 @@ class AeatAuthenticator:
         session: AeatSession,
         target: str,
     ) -> AeatLoginAssertion:
-        """Run the post-auth navigation probe against ``target``."""
+        """Run the post-auth probe and build an :class:`AeatLoginAssertion`."""
         attempted_at = now()
         start = time.perf_counter()
 
@@ -768,7 +776,7 @@ class AeatAuthenticator:
         )
 
     async def _capture_storage_state_locked(self, session: AeatSession) -> Path:
-        """Persist the active Playwright storage-state and metadata."""
+        """Write encrypted storage state with :class:`PersistedSessionMetadata`."""
         context = self._context
         if context is None:
             raise AeatLoginAssertionError(
@@ -810,7 +818,13 @@ class AeatAuthenticator:
         browser_session: BrowserSessionLike | None,
         target_url: str,
     ) -> AeatSession:
-        """Resume a persisted Playwright state pair under ``self._lock``."""
+        """Resume encrypted Playwright state under ``self._lock``.
+
+        Rebuilds a certificate-backed :class:`AeatSession` from
+        :class:`PersistedSessionMetadata`, verifies it with a live
+        :class:`AeatLoginAssertion`, and re-captures storage state after the
+        successful probe so the persisted envelope stays current.
+        """
         storage_state_path = path
         cert = self.load_certificate()
         persisted = self._load_persisted_browser_session(storage_state_path)
@@ -1030,7 +1044,7 @@ class AeatAuthenticator:
         return persisted
 
     def _read_persisted_metadata(self, storage_state_path: Path) -> PersistedSessionMetadata:
-        """Load and validate the persisted metadata."""
+        """Load and validate :class:`PersistedSessionMetadata` from storage."""
         persisted = self._load_persisted_browser_session(storage_state_path)
         metadata: PersistedSessionMetadata | None = None
         metadata_failed = False
@@ -1082,7 +1096,7 @@ class AeatAuthenticator:
         return _session_store.storage_state_sha256(payload_dict)
 
     def _raise_invalid_persisted_state(self, storage_state_path: Path, reason: str) -> NoReturn:
-        """Delete the persisted state pair and raise a typed invalidation error."""
+        """Delete persisted state and raise :class:`_PersistedSessionInvalidError`."""
         reason_code = persisted_session_reason_code(reason)
         self._invalidate_persisted_state(storage_state_path, reason_code)
         raise _PersistedSessionInvalidError(

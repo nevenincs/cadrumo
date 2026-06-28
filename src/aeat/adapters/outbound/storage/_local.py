@@ -1,14 +1,16 @@
-"""Local-filesystem `StorageProvider` implementation.
+"""Local-filesystem :class:`aeat.adapters.outbound.storage.StorageProvider` implementation.
 
 Stores objects under a configurable root directory. Each namespace is
 a subdirectory; each object is a single file named
-`<hmac_prefix_8>--<label>.<ext>`. Metadata
-(content_hash, byte_length, written_at, full HMAC, label) lives in a
-sibling JSON sidecar so the listing API can return
-`ProviderObjectMetadata` without re-hashing the payload.
+``<hmac_prefix_8>--<label>.<ext>``. Metadata (``content_hash``,
+``byte_length``, ``written_at``, full HMAC, and label) lives in a sibling JSON
+sidecar so the listing API can return :class:`ProviderObjectMetadata` without
+re-hashing the payload.
 
 Bytes-in / bytes-out: encryption + classification stay above this
-layer. The provider treats every payload as opaque bytes.
+layer. The provider treats every payload as opaque bytes and uses
+:func:`aeat.adapters.outbound.storage._integrity.verify_content_hash` to
+enforce the stored digest on read.
 """
 
 from __future__ import annotations
@@ -85,7 +87,7 @@ def _validate_label(label: str) -> str:
 
 
 def _filename(object_key_hmac: str, label: str, *, extension: str = _FILE_EXTENSION) -> str:
-    """Build the canonical filename `<hmac_prefix_8>--<label><extension>`."""
+    """Build the canonical filename ``<hmac_prefix_8>--<label><extension>``."""
     prefix = object_key_hmac[:_HMAC_PREFIX_LEN]
     return f"{prefix}--{label}{extension}"
 
@@ -95,7 +97,7 @@ def _sidecar_filename(object_key_hmac: str, label: str) -> str:
 
 
 class LocalFileSystemProvider:
-    """Bytes-in / bytes-out provider backed by a `pathlib` directory tree."""
+    """Bytes-in / bytes-out provider backed by a :class:`pathlib.Path` tree."""
 
     def __init__(self, root: Path) -> None:
         """Bind the provider to ``root``.
@@ -108,7 +110,7 @@ class LocalFileSystemProvider:
 
     @property
     def root(self) -> Path:
-        """Absolute ``~pathlib.Path`` to the provider's storage root directory."""
+        """Provider storage root as a :class:`pathlib.Path`."""
         return self._root
 
     def _ensure_namespace_dir(self, namespace: str) -> Path:
@@ -170,7 +172,7 @@ class LocalFileSystemProvider:
     ) -> ProviderObjectMetadata:
         """Atomically write the object and its sidecar, returning :class:`ProviderObjectMetadata`.
 
-        Atomicity guarantee: the payload file is written to a `.tmp`
+        Atomicity guarantee: the payload file is written to a ``.tmp``
         sibling and renamed into place. The sidecar is written
         afterwards; on sidecar-write failure the payload is removed so
         no orphaned object lingers without metadata.
@@ -251,8 +253,9 @@ class LocalFileSystemProvider:
 
         Locates the ``.bin`` file by HMAC prefix, loads the sibling
         ``.meta.json`` sidecar, reads the raw bytes, and compares the
-        SHA-256 digest against the sidecar's ``content_hash`` field.  Both
-        ``sha256-<hex>`` prefixed strings and bare hex digests are accepted.
+        :func:`aeat.core.hashing.sha256_hex` digest against the sidecar's
+        ``content_hash`` field through :func:`verify_content_hash`. Both
+        ``sha256-<hex>``-prefixed strings and bare hex digests are accepted.
 
         Args:
             namespace: Logical bucket name; maps to a subdirectory of
@@ -263,15 +266,16 @@ class LocalFileSystemProvider:
             A two-tuple of ``(payload_bytes, :class:`ProviderObjectMetadata`)``.
 
         Raises:
-            OutboundStorageNotFoundError: When the object file is absent.
-            OutboundStorageIntegrityError: When the sidecar is missing,
-                unreadable, or contains non-JSON content; or when the
+            :class:`OutboundStorageNotFoundError`: When the object file is
+                absent.
+            :class:`OutboundStorageIntegrityError`: When the sidecar is
+                missing, unreadable, or contains non-JSON content; or when the
                 payload digest does not match the stored hash.
-            OutboundStoragePermissionError: When the object file cannot be
-                read due to OS permissions.
-            StorageCorruptionError: When the sidecar ``byte_length`` field
-                has an unexpected type.
-            OutboundStorageValidationError: When ``namespace`` or
+            :class:`OutboundStoragePermissionError`: When the object file
+                cannot be read due to OS permissions.
+            :class:`StorageCorruptionError`: When the sidecar ``byte_length``
+                field has an unexpected type.
+            :class:`OutboundStorageValidationError`: When ``namespace`` or
                 ``object_key_hmac`` fail format checks.
         """
         namespace_clean = _validate_namespace(namespace)
@@ -345,7 +349,7 @@ class LocalFileSystemProvider:
     def delete(self, namespace: str, object_key_hmac: str) -> bool:
         """Remove the object file and its sidecar from disk.
 
-        Returns ``False`` immediately when the object is absent — deleting a
+        Returns ``False`` immediately when the object is absent; deleting a
         non-existent object is idempotent.  The sidecar is removed with
         ``missing_ok=True`` so a pre-existing orphaned payload without a
         sidecar is still cleanly deleted.
@@ -359,9 +363,9 @@ class LocalFileSystemProvider:
             was already absent.
 
         Raises:
-            OutboundStoragePermissionError: When the OS refuses the
+            :class:`OutboundStoragePermissionError`: When the OS refuses the
                 ``unlink`` call.
-            OutboundStorageValidationError: When ``namespace`` or
+            :class:`OutboundStorageValidationError`: When ``namespace`` or
                 ``object_key_hmac`` fail format checks.
         """
         namespace_clean = _validate_namespace(namespace)
@@ -411,14 +415,14 @@ class LocalFileSystemProvider:
             :class:`ProviderObjectMetadata` records in sorted filename order.
 
         Raises:
-            OutboundStorageNotFoundError: When the namespace directory is
-                absent.
-            OutboundStorageIntegrityError: When a sidecar file is unreadable
-                or contains non-JSON content.
-            StorageCorruptionError: When a sidecar ``byte_length`` field has
-                an unexpected type.
-            OutboundStorageValidationError: When ``namespace`` fails format
-                checks.
+            :class:`OutboundStorageNotFoundError`: When the namespace
+                directory is absent.
+            :class:`OutboundStorageIntegrityError`: When a sidecar file is
+                unreadable or contains non-JSON content.
+            :class:`StorageCorruptionError`: When a sidecar ``byte_length``
+                field has an unexpected type.
+            :class:`OutboundStorageValidationError`: When ``namespace`` fails
+                format checks.
         """
         namespace_clean = _validate_namespace(namespace)
         namespace_dir = self._root / namespace_clean
@@ -469,16 +473,16 @@ class LocalFileSystemProvider:
         ``read_only=True``, performs a sentinel write/delete round-trip in
         a ``_probe`` namespace to confirm write access end-to-end.
 
-        The method never raises; every failure mode is encoded in the
-        returned ``ProviderProbeReport``.
+        The method never raises; every failure mode is encoded in the returned
+        :class:`ProviderProbeReport`.
 
         Args:
             read_only: When ``True``, skip the sentinel write round-trip and
                 report ``writable=False`` regardless of actual permissions.
 
         Returns:
-            A ``ProviderProbeReport`` with ``reachable``, ``writable``, and a
-            human-readable ``detail`` string describing the outcome.
+            A :class:`ProviderProbeReport` with ``reachable``, ``writable``,
+            and a human-readable ``detail`` string describing the outcome.
         """
         if not self._root.exists():
             try:

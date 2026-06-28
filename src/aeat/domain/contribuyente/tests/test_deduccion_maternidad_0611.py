@@ -205,7 +205,7 @@ class TestParseDescendienteFlagMesesTrabajo:
             parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=13")
 
     def test_meses_trabajo_negative_raises(self) -> None:
-        with pytest.raises((ValueError, Exception)):
+        with pytest.raises(ValueError, match="MESES_TRABAJO must be 0"):
             parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=-1")
 
 

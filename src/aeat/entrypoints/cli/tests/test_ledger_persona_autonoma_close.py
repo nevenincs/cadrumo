@@ -20,12 +20,11 @@ Harness is shared with the corpus-journey suite: an isolated profile backend via
 from __future__ import annotations
 
 import json
-import tempfile
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
@@ -33,12 +32,11 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
 _CORPUS = FIXTURES_DIR / "financial" / "ledger-corpus"
 _FILES = (
     "bbva-business-eur.csv",
@@ -46,6 +44,10 @@ _FILES = (
     "revolut-multi.csv",
     "n26-savings.csv",
 )
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
 
 
 @pytest.fixture(autouse=True)
@@ -78,12 +80,12 @@ def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object
 
 def _import_corpus() -> None:
     for name in _FILES:
-        result = _RUNNER.invoke(app, ["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
+        result = _invoke(["app", "ledger", "import", str(_CORPUS / name), "--provider", "csv"])
         assert result.exit_code == 0, f"{name}: {result.output}"
 
 
 def _list_rows() -> list[dict[str, object]]:
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
     return payload.get("result", payload).get("rows", [])
@@ -96,7 +98,7 @@ def _is_q1_2025(row: dict[str, object]) -> bool:
     return date.startswith("2025-01") or date.startswith("2025-02") or date.startswith("2025-03")
 
 
-def test_marta_closes_1t_2025_end_to_end() -> None:
+def test_marta_closes_1t_2025_end_to_end(tmp_path: Path) -> None:
     """Marta's full first quarterly close as she would run it."""
     rules = _oracle_rules()
 
@@ -110,7 +112,7 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
 
     # --- Narrow to the quarter --------------------------------------------
     # Marta tries the documented filter first: review --filter period=1T --filter year=2025.
-    by_period = _RUNNER.invoke(app, ["app", "ledger", "review", "--filter", "period=1T", "--filter", "year=2025"])
+    by_period = _invoke(["app", "ledger", "review", "--filter", "period=1T", "--filter", "year=2025"])
     assert by_period.exit_code == 0, by_period.output
     # TESTIMONIAL: `review` renders a human table but does not emit a JSON row
     # list she can drive programmatically; to actually *act* on the quarter she
@@ -147,11 +149,10 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
 
     assert len(expected) >= 10, f"Marta's quarter should carry a meaningful classify workload, got {len(expected)}"
 
-    with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, encoding="utf-8") as fh:
-        fh.write("\n".join(classify_lines) + "\n")
-        classify_csv = fh.name
+    classify_csv = tmp_path / "marta-1t-classifications.csv"
+    classify_csv.write_text("\n".join(classify_lines) + "\n", encoding="utf-8")
 
-    bulk = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "classify", "--from-csv", classify_csv])
+    bulk = _invoke(["--format", "json", "app", "ledger", "classify", "--from-csv", str(classify_csv)])
     assert bulk.exit_code == 0, bulk.output
     bulk_result = json.loads(bulk.output)["result"]
     # TESTIMONIAL: bulk classify reports total/applied/skipped/failures — a
@@ -177,8 +178,7 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
     if internet is not None:
         tx_id_val = internet.get("transaction_id")
         if isinstance(tx_id_val, str):
-            mixed = _RUNNER.invoke(
-                app,
+            mixed = _invoke(
                 [
                     "app",
                     "ledger",
@@ -196,8 +196,7 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
 
     # --- Readiness gates --------------------------------------------------
     # Marta runs preflight for the quarter to see what's still missing.
-    preflight = _RUNNER.invoke(
-        app,
+    preflight = _invoke(
         ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", "2025"],
     )
     assert preflight.exit_code == 0, preflight.output
@@ -209,28 +208,26 @@ def test_marta_closes_1t_2025_end_to_end() -> None:
     # explicit, per-transaction issue list (reason + detail), not a bare bool.
 
     # `check` audits anomalies across every period the ledger touches.
-    check = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "check"])
+    check = _invoke(["--format", "json", "app", "ledger", "check"])
     assert check.exit_code == 0, check.output
     chk = json.loads(check.output)["result"]
     assert "issues" in chk, chk
 
     # `status` is Marta's at-a-glance summary for the quarter.
-    status = _RUNNER.invoke(app, ["app", "ledger", "status", "--period", "1T", "--year", "2025"])
+    status = _invoke(["app", "ledger", "status", "--period", "1T", "--year", "2025"])
     assert status.exit_code == 0, status.output
 
     # --- Export the quarter -----------------------------------------------
     # Marta exports the whole ledger for her gestor. TESTIMONIAL: `export` has
     # no --period flag, so she cannot hand her gestor *just* the quarter; the
     # export is the entire bucket and her gestor must filter downstream.
-    with tempfile.TemporaryDirectory() as tmp:
-        out_csv = Path(tmp) / "marta-1t-2025.csv"
-        exported = _RUNNER.invoke(
-            app,
-            ["--format", "json", "app", "ledger", "export", "--output", str(out_csv), "--export-format", "csv"],
-        )
-        assert exported.exit_code == 0, exported.output
-        assert out_csv.exists() and out_csv.stat().st_size > 0
-        export_result = json.loads(exported.output)["result"]
-        # The export envelope carries a row count and a sha256 — good for an
-        # operator who wants a verifiable hand-off artefact.
-        assert export_result.get("row_count", export_result.get("rows", 0)) > 0, export_result
+    out_csv = tmp_path / "marta-1t-2025.csv"
+    exported = _invoke(
+        ["--format", "json", "app", "ledger", "export", "--output", str(out_csv), "--export-format", "csv"],
+    )
+    assert exported.exit_code == 0, exported.output
+    assert out_csv.exists() and out_csv.stat().st_size > 0
+    export_result = json.loads(exported.output)["result"]
+    # The export envelope carries a row count and a sha256 — good for an
+    # operator who wants a verifiable hand-off artefact.
+    assert export_result.get("row_count", export_result.get("rows", 0)) > 0, export_result

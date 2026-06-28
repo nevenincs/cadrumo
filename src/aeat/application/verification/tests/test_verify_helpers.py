@@ -203,8 +203,8 @@ def test_classify_discrepancy_round_trips_casilla_id_and_delta() -> None:
 def _declaracion(casilla_ids: tuple[CasillaId, ...]) -> DeclaracionObservation:
     """Build a real :class:`DeclaracionObservation` with the given casillas.
 
-    Uses the actual pydantic model — no fakes / stand-ins. Required
-    PDF-provenance fields are filled with stable test-only stubs
+    Uses the actual pydantic model with no stand-ins. Required
+    PDF-provenance fields are filled with stable test-only values
     because the helpers under test (`_compute_coverage`,
     `_compose_narrative`) only read ``.values``."""
     values = tuple(

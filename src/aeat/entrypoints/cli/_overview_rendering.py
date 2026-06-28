@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from ...application.overview import OverviewStatusReport
+from ...core import Modelo
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 
 
 def overview_next_step_notices(report: OverviewStatusReport) -> list[Notice]:
-    """Surface the workspace-state next-step guidance as ``info`` notices.
+    """Surface the workspace-state next-step guidance as :class:`Notice` values.
 
     Mirrors the text-mode ``_next_step_lines`` guidance so JSON consumers
     receive the same forward guidance the text surface already shows,
@@ -55,10 +56,7 @@ def _next_step_lines(report: OverviewStatusReport) -> tuple[str, ...]:
                 "cli.overview.status.next_work_calculate_command",
                 default="  aeat app modelo work list - resume an in-progress modelo work unit.",
             ),
-            tr(
-                "cli.overview.status.next_work_create_command",
-                default="  aeat app modelo work create - start a work unit for another modelo.",
-            ),
+            _modelo_work_create_guidance_line(report),
             tr("cli.overview.status.next_landing_command"),
         )
     if report.transactions > 0 or report.invoices > 0:
@@ -66,16 +64,39 @@ def _next_step_lines(report: OverviewStatusReport) -> tuple[str, ...]:
             tr(
                 "cli.overview.status.next_review_command",
             ),
-            tr(
-                "cli.overview.status.next_modelo_work_command",
-                default="  aeat app modelo work create - start a modelo declaration from your ledger data.",
-            ),
+            _modelo_work_from_ledger_guidance_line(report),
             tr("cli.overview.status.next_landing_command"),
         )
     return (
         tr("cli.overview.status.next_import_command"),
         tr("cli.overview.status.next_review_command"),
         tr("cli.overview.status.next_landing_command"),
+    )
+
+
+def _modelo_210_unsupported_guidance_line(report: OverviewStatusReport) -> str | None:
+    if Modelo.M210.value in report.unsupported_work_create_modelos:
+        return tr(
+            "cli.overview.status.next_modelo_210_unsupported_command",
+            default=(
+                "  aeat app modelo describe 210 - Modelo 210 is visible for IRNR discovery, "
+                "but local work-unit creation is not supported yet; file through AEAT Sede G320."
+            ),
+        )
+    return None
+
+
+def _modelo_work_create_guidance_line(report: OverviewStatusReport) -> str:
+    return _modelo_210_unsupported_guidance_line(report) or tr(
+        "cli.overview.status.next_work_create_command",
+        default="  aeat app modelo work create - start a work unit for another modelo.",
+    )
+
+
+def _modelo_work_from_ledger_guidance_line(report: OverviewStatusReport) -> str:
+    return _modelo_210_unsupported_guidance_line(report) or tr(
+        "cli.overview.status.next_modelo_work_command",
+        default="  aeat app modelo work create - start a modelo declaration from your ledger data.",
     )
 
 

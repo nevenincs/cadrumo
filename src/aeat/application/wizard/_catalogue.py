@@ -386,6 +386,16 @@ _PROFILE_SECTION = WizardSection(
             answer_type=str,
         ),
         WizardQuestion(
+            id="legal-name",
+            profile_key="identity.legal_name",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.profile.legal-name.prompt"),
+            help=tr("wizard.setup.profile.legal-name.help"),
+            required=False,
+            visible_when=_ENTITY_LEGAL,
+            answer_type=str,
+        ),
+        WizardQuestion(
             id="activity",
             profile_key="activities.description",
             widget=WizardWidget.TEXT,
@@ -470,7 +480,7 @@ _TAXPAYER_SECTION = WizardSection(
             # (which maps to form rows); this axis drives the verifier check
             # and future casilla routing.
             id="situacion-familiar",
-            profile_key="renta_taxpayer.situacion_familiar",
+            profile_key="renta_family.situacion_familiar",
             widget=WizardWidget.SELECT,
             prompt=tr("wizard.setup.taxpayer.situacion-familiar.prompt"),
             help=tr("wizard.setup.taxpayer.situacion-familiar.help"),

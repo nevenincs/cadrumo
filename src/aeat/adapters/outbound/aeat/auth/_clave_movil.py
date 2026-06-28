@@ -5,6 +5,12 @@ Cl@ve Móvil flow against the live portal. Captures the URL template,
 form selectors, and polling endpoints needed to drive the AEAT QR page
 to a successful login handshake.
 
+The provider returns :class:`AeatSession` and :class:`AeatLoginAssertion`
+records with Cl@ve-specific detail payloads. Fresh logins persist
+:class:`ClaveMovilSessionMetadata` next to encrypted Playwright storage state;
+resume and diagnostic probes rebuild :class:`ClaveMovilSessionDetail` from that
+metadata without carrying credential material in the session record.
+
 Design summary:
 
 * Cl@ve Móvil is a human-in-the-loop flow. The provider observes only
@@ -19,6 +25,12 @@ Design summary:
   storage keys keep the Cl@ve and certificate sessions separate. Each
   persisted object is tagged with :class:`SensitivityClass` SESSION so
   the storage substrate applies the correct at-rest treatment.
+
+See Also:
+    :class:`ClaveMovilSessionMetadata` for the encrypted persistence contract,
+    :class:`ClaveMovilSessionDetail` for the public session payload, and
+    :class:`ClaveMovilApprovalTimeoutError` for operator-reportable live-flow
+    failures.
 """
 
 from __future__ import annotations
@@ -104,6 +116,11 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
     ``kind == AuthProviderKind.CLAVE_MOVIL``. Fresh login can run the
     configured non-QR confirmation flow or the alternate QR flow;
     resume runs headlessly because the stored cookies are sufficient.
+
+    The provider owns the lifecycle contract; :class:`_ClaveMovilPageFlowMixin`
+    supplies page-driving helpers and this class turns those browser outcomes
+    into :class:`AeatSession`, :class:`AeatLoginAssertion`, and
+    :class:`AuthProviderDescription` records.
     """
 
     kind: AuthProviderKind = AuthProviderKind.CLAVE_MOVIL
@@ -136,7 +153,9 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         Attempts to resume a cached session first. Falls back to the
         human-in-the-loop QR-scan flow (or the non-QR DNI/NIE +
         contraste fallback, when
-        ``AEAT_CLAVE_PREFER_NON_QR=true``).
+        ``AEAT_CLAVE_PREFER_NON_QR=true``). Fresh success writes
+        :class:`ClaveMovilSessionMetadata` and returns a session whose
+        provider detail is :class:`ClaveMovilSessionDetail`.
         """
         async with self._lock:
             if self._active_session is not None:
@@ -179,6 +198,8 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         fresh login and NEVER deletes the persisted session, even when
         the probe fails. Callers can therefore use it as a pure diagnostic
         without accidentally triggering a fresh operator-mediated Cl@ve request.
+        A successful probe refreshes the stored idle deadline using the
+        returned :class:`AeatLoginAssertion` timestamp.
 
         Returns:
             A 2-tuple of (:class:`AeatSession`, :class:`AeatLoginAssertion`).
@@ -303,6 +324,10 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         the session metadata has a concrete post-auth landing URL, the probe
         can navigate there directly.
 
+        The returned :class:`AeatLoginAssertion` carries
+        :class:`ClaveMovilLoginAssertionDetail`, including the observed landing
+        URL and whether the probe reached an authenticated AEAT page.
+
         Returns:
             An :class:`AeatLoginAssertion` describing the probe outcome.
         """
@@ -390,7 +415,9 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         is paired with ``info``, never the loudest ``error`` token
         (round-5 M5). A malformed identity is a real configuration
         fault and surfaces as ``warning``; the no-identity case is an
-        undeclared state and surfaces as ``info``.
+        undeclared state and surfaces as ``info``. Identity validation is
+        delegated to :func:`classify_identity`, which raises
+        :class:`ClaveMovilConfigurationError` for unsupported DNI/NIE shapes.
         """
         dni_nie = unwrap_optional_secret(self._settings.aeat_clave_movil_dni_nie).strip()
         if not dni_nie:
@@ -427,7 +454,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
         )
 
     async def close(self) -> None:
-        """Tear down any retained Playwright context + browser session."""
+        """Tear down any retained :class:`BrowserContextLike` and browser session."""
         async with self._lock:
             await self._drop_context()
             await self._close_browser_session(self._browser_session)

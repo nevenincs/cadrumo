@@ -13,7 +13,6 @@ from pydantic import AnyHttpUrl, TypeAdapter
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, Modelo202Modality
-from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante, JustificanteRepository
 from ....domain.modelos import (
     CalculationRevision,
@@ -32,6 +31,7 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     derive_filing_record_id,
 )
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
@@ -39,6 +39,7 @@ from ...modelo import (
     create_work_unit,
     import_external_filing_evidence,
 )
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     CalculationObservationRepository,
     CrossPeriodCleanStateBlocker,
@@ -50,6 +51,7 @@ from .. import (
     cross_period_dependency_inventory,
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
+    filing_external_evidence_blockers,
     partition_cross_period_requirements_by_activity_start,
 )
 
@@ -69,14 +71,26 @@ _GROUP_MEMBER_B = "B00000001"
 _GROUP_MEMBER_C = "C00000002"
 
 
-def _workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
+def _store_ready_profile(*, bucket_id: str = _BUCKET_ID, tax_id: str = "X1234567L") -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Cross-period clean-state test profile",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value=tax_id),
+                UserProfileFact(path="identity.name", value="Ready"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+                UserProfileFact(path="activities.description", value="test activity"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+            ),
+            created_at=_CLOCK,
+            updated_at=_CLOCK,
+        ),
     )
 
 
@@ -307,73 +321,52 @@ def _live_capture_filing(*, csv: str, kind: ExternalEvidenceKind) -> ModeloRecor
     )
 
 
-def test_live_capture_evidence_clears_justificante_verification(tmp_path: Path) -> None:
-    """A filing stamped with AEAT_LIVE_CAPTURE evidence clears the justificante gate."""
-    from ....domain.justificante import JustificanteRepository
-    from .._cross_period_clean_state import _filing_external_evidence_blockers
+def _external_evidence_blockers(
+    filing: ModeloRecord,
+    source_kind: str,
+    expected_tax_id: str | None = "X1234567L",
+    source_metadata: dict[str, str] | None = None,
+) -> list[CrossPeriodCleanStateBlocker]:
+    return filing_external_evidence_blockers(
+        filing,
+        source_kind,
+        JustificanteRepository(),
+        expected_tax_id,
+        source_metadata,
+    )
 
+
+@pytest.mark.parametrize(
+    ("csv", "expected_tax_id", "mismatch_expected"),
+    (
+        pytest.param("LIVECAP130MATCH01", "X1234567L", False, id="matching-taxpayer"),
+        pytest.param("LIVECAP130NOIDENT", None, True, id="missing-expected-taxpayer"),
+        pytest.param("LIVECAP130CASE01", "x1234567l", False, id="case-insensitive-taxpayer"),
+    ),
+)
+def test_live_capture_evidence_reconciles_taxpayer_identity(
+    tmp_path: Path,
+    csv: str,
+    expected_tax_id: str | None,
+    mismatch_expected: bool,
+) -> None:
+    """Live-capture receipt reconciliation requires the expected taxpayer axis."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        csv = "LIVECAP130ABCD01"
         _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
         filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
-        blockers = _filing_external_evidence_blockers(
-            filing,
-            "app_filing",
-            JustificanteRepository(),
-            "X1234567L",
-        )
+        blockers = _external_evidence_blockers(filing, "app_filing", expected_tax_id)
 
-        assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION not in blockers
-        assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD not in blockers
-        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
-
-
-def test_live_capture_evidence_requires_expected_taxpayer_identity(tmp_path: Path) -> None:
-    """A matching receipt cannot clear the gate unless the taxpayer axis is known."""
-    from ....domain.justificante import JustificanteRepository
-    from .._cross_period_clean_state import _filing_external_evidence_blockers
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        csv = "LIVECAP130NOIDENT"
-        _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
-        filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
-
-        blockers = _filing_external_evidence_blockers(
-            filing,
-            "app_filing",
-            JustificanteRepository(),
-            None,
-        )
-
+    assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION not in blockers
+    assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD not in blockers
+    if mismatch_expected:
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
-
-
-def test_live_capture_taxpayer_match_is_case_insensitive(tmp_path: Path) -> None:
-    """Taxpayer comparison is canonicalized while still requiring the same identity."""
-    from ....domain.justificante import JustificanteRepository
-    from .._cross_period_clean_state import _filing_external_evidence_blockers
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        csv = "LIVECAP130CASE01"
-        _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
-        filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
-
-        blockers = _filing_external_evidence_blockers(
-            filing,
-            "app_filing",
-            JustificanteRepository(),
-            "x1234567l",
-        )
-
+    else:
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
 
 
 def test_live_capture_evidence_rejects_mismatched_typed_justificante_period(tmp_path: Path) -> None:
     """A matching ejercicio label cannot override a mismatched typed Period value."""
-    from ....domain.justificante import JustificanteRepository
-    from .._cross_period_clean_state import _filing_external_evidence_blockers
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         csv = "LIVECAP130MISMATCH"
         pdf_bytes = b"%PDF-1.4\n% mismatched period justificante\n%%EOF\n"
@@ -396,12 +389,7 @@ def test_live_capture_evidence_rejects_mismatched_typed_justificante_period(tmp_
         )
         filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
-        blockers = _filing_external_evidence_blockers(
-            filing,
-            "app_filing",
-            JustificanteRepository(),
-            "X1234567L",
-        )
+        blockers = _external_evidence_blockers(filing, "app_filing")
 
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
 
@@ -410,86 +398,62 @@ def test_live_capture_evidence_rejects_mismatched_filed_history_justificante_csv
     tmp_path: Path,
 ) -> None:
     """Filed-history metadata cannot point at a different justificante than the filing record."""
-    from ....domain.justificante import JustificanteRepository
-    from .._cross_period_clean_state import _filing_external_evidence_blockers
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         csv = "LIVECAP130CSVLOCK"
         _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
         filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
-        blockers = _filing_external_evidence_blockers(
+        blockers = _external_evidence_blockers(
             filing,
             "aeat_sede_justificante",
-            JustificanteRepository(),
-            "X1234567L",
-            {"aeat_register_status": "ALTA", "authenticated_identity": "X1234567L", "aeat_justificante_csv": "OTHER"},
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "authenticated_identity": "X1234567L",
+                "aeat_justificante_csv": "OTHER",
+            },
         )
 
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
 
 
-def test_live_capture_evidence_accepts_matching_plural_filed_history_justificante_csv(
+@pytest.mark.parametrize(
+    ("csvs_metadata", "mismatch_expected"),
+    (
+        pytest.param("OTHER,{csv}", False, id="plural-includes-filing-csv"),
+        pytest.param("OTHER-ONE,OTHER-TWO", True, id="plural-excludes-filing-csv"),
+    ),
+)
+def test_live_capture_evidence_reconciles_plural_filed_history_justificante_csv(
     tmp_path: Path,
+    csvs_metadata: str,
+    mismatch_expected: bool,
 ) -> None:
-    """Plural filed-history CSV metadata clears only when it contains the filing receipt."""
-    from ....domain.justificante import JustificanteRepository
-    from .._cross_period_clean_state import _filing_external_evidence_blockers
-
+    """Plural filed-history CSV metadata must not bypass reference reconciliation."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         csv = "LIVECAP130CSVSET"
         _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
         filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
-        blockers = _filing_external_evidence_blockers(
+        blockers = _external_evidence_blockers(
             filing,
             "aeat_sede_justificante",
-            JustificanteRepository(),
-            "X1234567L",
-            {
+            source_metadata={
                 "aeat_register_status": "ALTA",
                 "authenticated_identity": "X1234567L",
-                "aeat_justificante_csvs": f"OTHER,{csv}",
+                "aeat_justificante_csvs": csvs_metadata.format(csv=csv),
             },
         )
 
-        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
-
-
-def test_live_capture_evidence_rejects_plural_filed_history_justificante_csv_without_match(
-    tmp_path: Path,
-) -> None:
-    """Plural filed-history CSV metadata must not bypass reference reconciliation."""
-    from ....domain.justificante import JustificanteRepository
-    from .._cross_period_clean_state import _filing_external_evidence_blockers
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        csv = "LIVECAP130CSVSETMISS"
-        _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
-        filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
-
-        blockers = _filing_external_evidence_blockers(
-            filing,
-            "aeat_sede_justificante",
-            JustificanteRepository(),
-            "X1234567L",
-            {
-                "aeat_register_status": "ALTA",
-                "authenticated_identity": "X1234567L",
-                "aeat_justificante_csvs": "OTHER-ONE,OTHER-TWO",
-            },
-        )
-
+    if mismatch_expected:
         assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD in blockers
+    else:
+        assert CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD not in blockers
 
 
 def test_live_capture_evidence_rejects_mismatched_filed_history_presentation_id(
     tmp_path: Path,
 ) -> None:
     """When AEAT exposes both references, expediente and justificante presentation id must agree."""
-    from ....domain.justificante import JustificanteRepository
-    from .._cross_period_clean_state import _filing_external_evidence_blockers
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         csv = "LIVECAP130PRESID"
         period = Period.from_year_and_code(2026, "1T")
@@ -502,12 +466,10 @@ def test_live_capture_evidence_rejects_mismatched_filed_history_presentation_id(
         )
         filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
-        blockers = _filing_external_evidence_blockers(
+        blockers = _external_evidence_blockers(
             filing,
             "aeat_sede_justificante",
-            JustificanteRepository(),
-            "X1234567L",
-            {
+            source_metadata={
                 "aeat_register_status": "ALTA",
                 "authenticated_identity": "X1234567L",
                 "aeat_expediente_id": "DIFFERENT-PRESENTATION-ID",
@@ -521,20 +483,15 @@ def test_live_capture_evidence_rejects_expediente_only_metadata_without_comparab
     tmp_path: Path,
 ) -> None:
     """Expediente-only filed history cannot verify a receipt lacking presentation id."""
-    from ....domain.justificante import JustificanteRepository
-    from .._cross_period_clean_state import _filing_external_evidence_blockers
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         csv = "LIVECAP130EXPONLY"
         _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026, presentation_id=None)
         filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
 
-        blockers = _filing_external_evidence_blockers(
+        blockers = _external_evidence_blockers(
             filing,
             "aeat_sede_justificante",
-            JustificanteRepository(),
-            "X1234567L",
-            {
+            source_metadata={
                 "aeat_register_status": "ALTA",
                 "authenticated_identity": "X1234567L",
                 "aeat_expediente_id": "EXPEDIENTE-WITHOUT-CSV-REFERENCE",
@@ -546,20 +503,12 @@ def test_live_capture_evidence_rejects_expediente_only_metadata_without_comparab
 
 def test_csv_register_evidence_clears_with_matching_justificante_metadata(tmp_path: Path) -> None:
     """A CSV-register reference clears the gate only when its justificante is enrolled."""
-    from ....domain.justificante import JustificanteRepository
-    from .._cross_period_clean_state import _filing_external_evidence_blockers
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         csv = "CSVREG130ABCD01"
         _persist_justificante_metadata(csv, modelo="130", period="1T", filing_year=2026)
         filing = _live_capture_filing(csv=csv, kind=ExternalEvidenceKind.AEAT_CSV_REGISTER)
 
-        blockers = _filing_external_evidence_blockers(
-            filing,
-            "aeat_csv_register",
-            JustificanteRepository(),
-            "X1234567L",
-        )
+        blockers = _external_evidence_blockers(filing, "aeat_csv_register")
 
         assert CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION not in blockers
         assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD not in blockers
@@ -568,39 +517,23 @@ def test_csv_register_evidence_clears_with_matching_justificante_metadata(tmp_pa
 
 def test_csv_register_evidence_without_enrolled_justificante_still_blocks(tmp_path: Path) -> None:
     """A CSV-register reference without its parsed receipt cannot clear clean-state."""
-    from ....domain.justificante import JustificanteRepository
-    from .._cross_period_clean_state import _filing_external_evidence_blockers
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         filing = _live_capture_filing(csv="CSVREG130NOJUST", kind=ExternalEvidenceKind.AEAT_CSV_REGISTER)
 
-        blockers = _filing_external_evidence_blockers(
-            filing,
-            "aeat_csv_register",
-            JustificanteRepository(),
-            "X1234567L",
-        )
+        blockers = _external_evidence_blockers(filing, "aeat_csv_register")
 
         assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD in blockers
 
 
 def test_bare_aeat_acceptance_without_external_evidence_does_not_clear_cross_period_gate(tmp_path: Path) -> None:
     """A bare acceptance bit is not enough without an AEAT evidence reference."""
-    from ....domain.justificante import JustificanteRepository
-    from .._cross_period_clean_state import _filing_external_evidence_blockers
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         base = _live_capture_filing(csv="LIVECAP130BARE01", kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE)
         legacy_payload = base.model_dump(mode="python")
         legacy_payload["external_evidence"] = None
         filing = ModeloRecord.model_construct(**legacy_payload)
 
-        blockers = _filing_external_evidence_blockers(
-            filing,
-            "app_filing",
-            JustificanteRepository(),
-            "X1234567L",
-        )
+        blockers = _external_evidence_blockers(filing, "app_filing")
 
         assert CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE in blockers
         assert CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE in blockers
@@ -614,6 +547,7 @@ def _seed_official_303_source_filings(
     source_kind_by_period: dict[str, str] | None = None,
     source_metadata_by_period: dict[str, dict[str, str] | None] | None = None,
 ) -> None:
+    _store_ready_profile()
     evidence_kind_by_period = evidence_kind_by_period or {}
     skip_justificante_metadata_periods = skip_justificante_metadata_periods or set()
     source_kind_by_period = source_kind_by_period or {}
@@ -768,6 +702,25 @@ def _seed_legacy_source_filing_record(
     )
 
 
+BUCKET_ID = _BUCKET_ID
+CLOCK = _CLOCK
+GROUP_MEMBER_A = _GROUP_MEMBER_A
+GROUP_MEMBER_B = _GROUP_MEMBER_B
+M353_PERIOD = _M353_PERIOD
+M353_YEAR = _M353_YEAR
+M390_PERIOD = _M390_PERIOD
+M390_REVISION = _M390_REVISION
+M390_YEAR = _M390_YEAR
+m390_first_quarter_evidence = _m390_first_quarter_evidence
+member_fan_in_requirement = _member_fan_in_requirement
+persist_justificante_metadata = _persist_justificante_metadata
+seed_member_322_filing = _seed_member_322_filing
+seed_official_303_source_filings = _seed_official_303_source_filings
+snapshot_353 = _snapshot_353
+snapshot_390 = _snapshot_390
+store_ready_profile = _store_ready_profile
+
+
 def test_cross_period_clean_state_blocks_missing_required_prior_filings(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         verdict = evaluate_cross_period_clean_state(
@@ -850,6 +803,60 @@ def test_m100_pagos_fraccionados_conditional_on_economic_activity(tmp_path: Path
     assert {"130", "131"} & blocking(autonomo)
     # Undeclared income categories: fail-closed — 130/131 stay enforced.
     assert scoped(undeclared).isdisjoint({"130", "131"})
+
+
+def test_m100_pagos_fraccionados_scopes_out_mutually_exclusive_m131(tmp_path: Path) -> None:
+    """A direct-estimation autonomo owes M130, not M131, so only M130 stays enforced."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        verdict = evaluate_cross_period_clean_state(
+            resources().modelos.authority.snapshot("100", filing_year=2025, period="0A"),
+            bucket_id=_BUCKET_ID,
+            observation_repository=CalculationObservationRepository(),
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            taxpayer_tax_id="X1234567L",
+            taxpayer_files_economic_activity=True,
+            not_applicable_source_modelos=frozenset({"131"}),
+        )
+
+    scoped = {item.requirement.source_modelo for item in verdict.dependencies if item.modelo_not_applicable_advisory}
+    blocking = {item.requirement.source_modelo for item in verdict.dependencies if not item.clean}
+
+    assert "131" in scoped
+    assert "130" not in scoped
+    assert "130" in blocking
+
+
+def test_m100_zero_prior_negative_base_carry_scopes_previous_filing_evidence(tmp_path: Path) -> None:
+    """An explicit zero prior BIN does not require prior M100 evidence."""
+    zero_binding = "renta-2025-base-liquidable-negativa-general-anterior"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        verdict = evaluate_cross_period_clean_state(
+            resources().modelos.authority.snapshot("100", filing_year=2025, period="0A"),
+            bucket_id=_BUCKET_ID,
+            observation_repository=CalculationObservationRepository(),
+            filing_repository=ModeloRecordCatalogueRepository(),
+            calculation_repository=CalculationRevisionCatalogueRepository(),
+            verification_repository=VerificationReportCatalogueRepository(),
+            taxpayer_tax_id="X1234567L",
+            taxpayer_files_economic_activity=False,
+            zero_value_previous_filing_binding_ids=frozenset({zero_binding}),
+        )
+
+    zero_carry = next(
+        item
+        for item in verdict.dependencies
+        if item.requirement.origin is CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING
+        and item.requirement.origin_ids == (zero_binding,)
+    )
+    assert zero_carry.clean
+    assert zero_carry.zero_value_previous_filing_advisory is True
+    assert all(
+        item.clean
+        for item in verdict.dependencies
+        if item.requirement.source_modelo == "100" and item.requirement.filing_year == 2024
+    )
 
 
 def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> None:

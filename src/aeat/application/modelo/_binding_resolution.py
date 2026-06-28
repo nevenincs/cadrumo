@@ -1,6 +1,11 @@
 """Application-owned binding input resolution for modelo calculations.
 
-Use of :class:`ModeloRevision`, :class:`RegistrySnapshot` for compliance.
+This module overlays source tiers for one :class:`RegistrySnapshot`: profile,
+borrador, backend mesh, and caller values all land in a
+:class:`~aeat.application.aggregation.CalculationSourceResolution` before the
+engine evaluates the snapshot's :class:`ModeloRevision`. See also
+:func:`resolve_profile_source_tier` and :func:`resolve_borrador_source_tier` for
+the two application-owned precedence tiers.
 """
 
 from __future__ import annotations
@@ -204,7 +209,8 @@ def resolve_available_bound_inputs_by_casilla_id(
 ) -> dict[CasillaId, Decimal]:
     """Project available binding values into input values keyed by bound ``casilla.id``.
 
-    Use of :class:`ModeloRevision` for compliance.
+    The :class:`ModeloRevision` supplies the bound casilla-to-binding mapping;
+    only values already present in ``binding_values`` are projected.
     """
     resolved: dict[CasillaId, Decimal] = {}
     for casilla in revision.casillas:

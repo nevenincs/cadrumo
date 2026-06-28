@@ -6,8 +6,7 @@ to operators. Verifies the four observable contracts the verb must hold:
 
 1. Help text renders in the operator's locale (no raw ``tr()`` keys leak).
 2. The JSON envelope passes :meth:`OutputSchema.model_validate` and carries
-   typed CasillaObservation rows with ``legal_refs`` traceable to the
-   pathway BOE anchor.
+   typed CasillaObservation rows with canonical ``legal_refs`` ids.
 3. The DA 41 inactive guard refuses with the registered error code when
    the active profile carries the tuna-fleet selector facts, driven
    end-to-end through the CLI verb body.
@@ -129,9 +128,7 @@ class TestArt7pEnvelopeContract:
         assert validated.worker_class == "trabajador_del_mar"
         assert len(validated.observations) == 1
         observation = validated.observations[0]
-        combined = " ".join(observation.legal_refs)
-        assert "BOE-A-2006-20764" in combined
-        assert "Art. 7.p)" in combined
+        assert observation.legal_refs == ["ley-35-2006:art-7"]
         # Flat projection mirrors the typed observation.
         assert validated.casilla_values[observation.casilla_id] == observation.value
 
@@ -161,15 +158,14 @@ class TestRetmarMandatoryFilingWarningSurface:
         assert validated.retmar_mandatory_filing is True
         # The RETMAR warning rides the registered ProfileCompletenessError
         # translated through the error registry; the Spanish anchor must
-        # name RETMAR and the Ley 47/2015 BOE id.
+        # name RETMAR and the LIRPF art. 96 BOE id.
         assert validated.retmar_warning is not None
         assert "RETMAR" in validated.retmar_warning
-        assert "BOE-A-2015-11346" in validated.retmar_warning
+        assert "BOE-A-2006-20764" in validated.retmar_warning
         # The observation payload is still produced (the warning is
         # non-blocking per service contract).
         assert len(validated.observations) == 1
-        combined = " ".join(validated.observations[0].legal_refs)
-        assert "BOE-A-1994-15794" in combined
+        assert validated.observations[0].legal_refs == ["ley-19-1994:art-75"]
 
 
 class TestDa41InactiveGuard:

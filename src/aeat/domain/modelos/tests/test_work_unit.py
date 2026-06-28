@@ -32,8 +32,10 @@ from ....application.modelo import (
     list_work_units,
     rename_work_unit,
 )
+from ....application.user_profile import UserProfileLifecycleRepository
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
+from ...user_profile import UserProfileFact, UserProfileRecord
 from .._errors import ModeloValidationError
 from .._repository import (
     WorkUnitCatalogueRepository,
@@ -51,16 +53,41 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+_ACTION_BUCKET_ID = "work-unit-test"
 _P_2026_1T = Period.from_year_and_code(2026, "1T")
 _P_2026_2T = Period.from_year_and_code(2026, "2T")
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Test"),
+    UserProfileFact(path="identity.surnames", value="Operator"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
 
 
 @pytest.fixture
 def repo(tmp_path: Path) -> Iterator[WorkUnitCatalogueRepository]:
     """Yield a real work-unit repository through the active test runtime."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="work-unit-test") as profile:
-        yield WorkUnitCatalogueRepository(bucket_id=profile.bucket_id)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_ACTION_BUCKET_ID) as profile:
+        _seed_ready_profile(profile.bucket_id, objects=profile.repository)
+        yield WorkUnitCatalogueRepository(bucket_id=profile.bucket_id, objects=profile.repository)
+
+
+def _seed_ready_profile(bucket_id: str, *, objects: Any) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Test Operator",
+            facts=_READY_PROFILE_FACTS,
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -174,6 +201,29 @@ def _build_unit(**overrides: Any) -> WorkUnit:
     return WorkUnit(**kwargs)
 
 
+def _create_action_work_unit(
+    repo: WorkUnitCatalogueRepository,
+    *,
+    modelo: str = "303",
+    period: Period = _P_2026_1T,
+    revision_id: str = "2009-y-siguientes",
+    name: str | None = None,
+    causante_ccaa: Any | None = None,
+    clock: datetime = _T0,
+) -> WorkUnit:
+    return create_work_unit(
+        bucket_id=_ACTION_BUCKET_ID,
+        modelo=modelo,
+        filing_year=period.filing_year,
+        period=period,
+        revision_id=revision_id,
+        name=name,
+        causante_ccaa=causante_ccaa,
+        repository=repo,
+        clock=clock,
+    )
+
+
 def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
     """``model_config = strict / frozen / extra='forbid'`` — extras
     fail validation; mutation after construction raises."""
@@ -267,25 +317,8 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key(repo: WorkUnitCatal
     """Two ``create_work_unit`` calls with the same four-axis key
     return the same record without producing duplicates."""
 
-    first = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
-    second = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        name="ignored-because-already-exists",
-        repository=repo,
-        clock=_T0,
-    )
+    first = _create_action_work_unit(repo)
+    second = _create_action_work_unit(repo, name="ignored-because-already-exists")
     assert first.work_unit_id == second.work_unit_id
     assert second.name == first.name  # rename is the dedicated mutation
     # Real-backend invariant: only one record under the deterministic
@@ -297,29 +330,12 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key(repo: WorkUnitCatal
 
 
 def test_create_work_unit_uses_default_name_when_no_name_supplied(repo: WorkUnitCatalogueRepository) -> None:
-    unit = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
+    unit = _create_action_work_unit(repo)
     assert unit.name == "303-2026-1T"
 
 
 def test_create_work_unit_honours_explicit_name(repo: WorkUnitCatalogueRepository) -> None:
-    unit = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        name="renta-1t-2026-draft",
-        repository=repo,
-        clock=_T0,
-    )
+    unit = _create_action_work_unit(repo, name="renta-1t-2026-draft")
     assert unit.name == "renta-1t-2026-draft"
 
 
@@ -329,20 +345,24 @@ def test_create_work_unit_honours_explicit_name(repo: WorkUnitCatalogueRepositor
 
 
 def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalogueRepository) -> None:
-    for bucket, modelo, year, period, revision_id in (
-        ("bucket-B", "303", 2026, "1T", "2009-y-siguientes"),
-        ("bucket-A", "303", 2026, "2T", "2009-y-siguientes"),
-        ("bucket-A", "130", 2026, "1T", "2019-y-siguientes"),
-    ):
-        create_work_unit(
-            bucket_id=bucket,
-            modelo=modelo,
-            filing_year=year,
-            period=Period.from_year_and_code(year, period),
-            revision_id=revision_id,
-            repository=repo,
-            clock=_T0,
-        )
+    repo.save(
+        WorkUnitCatalogue.from_work_units(
+            tuple(
+                _build_unit(
+                    bucket_id=bucket,
+                    modelo=modelo,
+                    filing_year=year,
+                    period=Period.from_year_and_code(year, period),
+                    revision_id=revision_id,
+                )
+                for bucket, modelo, year, period, revision_id in (
+                    ("bucket-B", "303", 2026, "1T", "2009-y-siguientes"),
+                    ("bucket-A", "303", 2026, "2T", "2009-y-siguientes"),
+                    ("bucket-A", "130", 2026, "1T", "2019-y-siguientes"),
+                )
+            ),
+        ),
+    )
     units = list_work_units(repository=repo)
     keys = tuple((u.bucket_id, str(u.modelo), u.period.registry_token) for u in units)
     assert keys == (
@@ -353,23 +373,25 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalo
 
 
 def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository) -> None:
-    create_work_unit(
-        bucket_id="bucket-A",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
-    create_work_unit(
-        bucket_id="bucket-B",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_2T,
-        revision_id="2009-y-siguientes",
-        repository=repo,
-        clock=_T0,
+    repo.save(
+        WorkUnitCatalogue.from_work_units(
+            (
+                _build_unit(
+                    bucket_id="bucket-A",
+                    modelo="303",
+                    filing_year=2026,
+                    period=_P_2026_1T,
+                    revision_id="2009-y-siguientes",
+                ),
+                _build_unit(
+                    bucket_id="bucket-B",
+                    modelo="303",
+                    filing_year=2026,
+                    period=_P_2026_2T,
+                    revision_id="2009-y-siguientes",
+                ),
+            ),
+        ),
     )
     only_a = list_work_units(bucket_id="bucket-A", repository=repo)
     assert len(only_a) == 1
@@ -385,15 +407,7 @@ def test_get_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueRepositor
 
 
 def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at(repo: WorkUnitCatalogueRepository) -> None:
-    original = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
+    original = _create_action_work_unit(repo)
     later = datetime(2026, 2, 1, 12, 0, 0, tzinfo=UTC)
     renamed = rename_work_unit(
         original.work_unit_id,
@@ -425,15 +439,7 @@ def test_discard_work_unit_transitions_to_discarded_state(repo: WorkUnitCatalogu
     """A fresh draft work unit is moved to DISCARDED with audit
     metadata captured (actor + reason + timestamp)."""
 
-    original = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
+    original = _create_action_work_unit(repo)
     discard_time = datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC)
     discarded = discard_work_unit(
         original.work_unit_id,
@@ -451,15 +457,7 @@ def test_discard_work_unit_transitions_to_discarded_state(repo: WorkUnitCatalogu
 
 
 def test_discard_work_unit_accepts_omitted_reason(repo: WorkUnitCatalogueRepository) -> None:
-    original = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
+    original = _create_action_work_unit(repo)
     discarded = discard_work_unit(
         original.work_unit_id,
         actor="operator-A",
@@ -482,15 +480,7 @@ def test_discard_work_unit_raises_when_already_discarded(repo: WorkUnitCatalogue
     corrupt the audit trail. The error names the original actor /
     timestamp so the operator can correlate."""
 
-    unit = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
+    unit = _create_action_work_unit(repo)
     discard_work_unit(
         unit.work_unit_id,
         actor="operator-A",
@@ -511,15 +501,7 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueR
     Attempting to rename it raises WorkUnitMutationRefusedError so
     the operator can correct course (create a fresh work unit)."""
 
-    unit = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
+    unit = _create_action_work_unit(repo)
     discard_work_unit(
         unit.work_unit_id,
         actor="operator-A",
@@ -531,24 +513,8 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueR
 
 
 def test_list_work_units_excludes_discarded_by_default(repo: WorkUnitCatalogueRepository) -> None:
-    unit_draft = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
-    unit_to_discard = create_work_unit(
-        bucket_id="default",
-        modelo="130",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2019-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
+    unit_draft = _create_action_work_unit(repo)
+    unit_to_discard = _create_action_work_unit(repo, modelo="130", revision_id="2019-y-siguientes")
     discard_work_unit(
         unit_to_discard.work_unit_id,
         actor="operator-A",
@@ -560,24 +526,8 @@ def test_list_work_units_excludes_discarded_by_default(repo: WorkUnitCatalogueRe
 
 
 def test_list_work_units_includes_discarded_when_flag_set(repo: WorkUnitCatalogueRepository) -> None:
-    unit_draft = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
-    unit_to_discard = create_work_unit(
-        bucket_id="default",
-        modelo="130",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2019-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
+    unit_draft = _create_action_work_unit(repo)
+    unit_to_discard = _create_action_work_unit(repo, modelo="130", revision_id="2019-y-siguientes")
     discard_work_unit(
         unit_to_discard.work_unit_id,
         actor="operator-A",
@@ -682,10 +632,11 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="work-unit-events-test") as profile:
+        _seed_ready_profile(profile.bucket_id, objects=profile.repository)
         wu_repo = WorkUnitCatalogueRepository(objects=profile.repository)
         bv_repo = BucketEventHistoryRepository(objects=profile.repository)
         unit = create_work_unit(
-            bucket_id="default",
+            bucket_id=profile.bucket_id,
             modelo="303",
             filing_year=2026,
             period=_P_2026_1T,
@@ -726,16 +677,7 @@ def test_causante_ccaa_roundtrips_through_repository(repo: WorkUnitCatalogueRepo
 
     from ...contribuyente._ccaa import CCAA
 
-    unit = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        causante_ccaa=CCAA.MADRID,
-        repository=repo,
-        clock=_T0,
-    )
+    unit = _create_action_work_unit(repo, causante_ccaa=CCAA.MADRID)
     assert unit.causante_ccaa is CCAA.MADRID
 
     reloaded = repo.load().get(unit.work_unit_id)
@@ -754,26 +696,8 @@ def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogu
 
     from ...contribuyente._ccaa import CCAA
 
-    first = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        causante_ccaa=CCAA.MADRID,
-        repository=repo,
-        clock=_T0,
-    )
-    second = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        causante_ccaa=CCAA.CATALUNA,
-        repository=repo,
-        clock=_T0,
-    )
+    first = _create_action_work_unit(repo, causante_ccaa=CCAA.MADRID)
+    second = _create_action_work_unit(repo, causante_ccaa=CCAA.CATALUNA)
     # Idempotency: same work_unit_id, first creation wins.
     assert first.work_unit_id == second.work_unit_id
 
@@ -781,13 +705,5 @@ def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogu
 def test_causante_ccaa_none_by_default(repo: WorkUnitCatalogueRepository) -> None:
     """causante_ccaa defaults to None for modelos that do not require it."""
 
-    unit = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period=_P_2026_1T,
-        revision_id="2009-y-siguientes",
-        repository=repo,
-        clock=_T0,
-    )
+    unit = _create_action_work_unit(repo)
     assert unit.causante_ccaa is None

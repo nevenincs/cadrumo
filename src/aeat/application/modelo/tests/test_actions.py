@@ -186,6 +186,24 @@ def _source_bound_revision() -> ModeloRevision:
     )
 
 
+def _predicate_finding(
+    *,
+    predicate_id: str,
+    legal_ref: str,
+    expression: str,
+    casilla_values: dict[CasillaId, Decimal],
+):
+    predicate = VerificationPredicateDefinition(
+        predicate_id=predicate_id,
+        legal_refs=(legal_ref,),
+        expression=expression,
+        finding_kind="BLOCKING_RULE",
+    )
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, _resident_profile())
+    assert len(findings) == 1
+    return predicate, findings[0]
+
+
 def _blocked_wallet_decision(
     *,
     divergence: IvaCompensationDivergence,
@@ -275,28 +293,27 @@ def test_iva_ledger_exempt_regimes_contains_enum_members() -> None:
         )
 
 
-def test_iva_ledger_exempt_regimes_includes_simplificado() -> None:
-    """SIMPLIFICADO must be in the exempt set — removing it would silently break ledger bypass."""
-    assert IVARegime.SIMPLIFICADO in _IVA_LEDGER_EXEMPT_REGIMES
+@pytest.mark.parametrize(
+    ("regime", "expected_member"),
+    (
+        pytest.param(IVARegime.SIMPLIFICADO, True, id="simplificado-bypasses-ledger"),
+        pytest.param(IVARegime.GENERAL, False, id="general-requires-ledger"),
+    ),
+)
+def test_iva_ledger_exempt_regime_membership_matches_contract(regime: IVARegime, expected_member: bool) -> None:
+    """Only exempt IVA regimes bypass ledger preflight."""
+    assert (regime in _IVA_LEDGER_EXEMPT_REGIMES) is expected_member
 
 
-def test_iva_ledger_exempt_regimes_excludes_general() -> None:
-    """GENERAL must not be in the exempt set — it is subject to ledger preflight."""
-    assert IVARegime.GENERAL not in _IVA_LEDGER_EXEMPT_REGIMES
-
-
-def test_workflow_period_resolves_modelo_130_quarter_from_registry_deadline_shape() -> None:
-    """Modelo 130 deadline windows use the registry-declared ``YYYYQn`` shape."""
-
-    work_unit = _minimal_work_unit(modelo="130", period="1T", filing_year=2026)
-
-    assert workflow_period_for_work_unit(work_unit) == Period.from_year_and_code(2026, "1T")
-
-
-def test_workflow_period_resolves_modelo_303_quarter_from_registry_deadline_shape() -> None:
-    """Modelo 303 deadline windows use the registry-declared ``YYYY-nT`` shape."""
-
-    work_unit = _minimal_work_unit(modelo="303", period="1T", filing_year=2026)
+@pytest.mark.parametrize(
+    "modelo",
+    (
+        pytest.param("130", id="m130-yyyyqn-deadline-shape"),
+        pytest.param("303", id="m303-yyyy-nt-deadline-shape"),
+    ),
+)
+def test_workflow_period_resolves_quarter_from_registry_deadline_shape(modelo: str) -> None:
+    work_unit = _minimal_work_unit(modelo=modelo, period="1T", filing_year=2026)
 
     assert workflow_period_for_work_unit(work_unit) == Period.from_year_and_code(2026, "1T")
 
@@ -315,21 +332,13 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
     must contain the predicate_id and expression as rendered by the locale
     catalogue (not a raw f-string).
     """
-    predicate = VerificationPredicateDefinition(
+    predicate, finding = _predicate_finding(
         predicate_id="test-cross-casilla-001",
-        legal_refs=("irpf:art1",),
+        legal_ref="irpf:art1",
         expression=f'all_nonzero(["{_PREDICATE_REQUIRED_LEFT_CASILLA}","{_PREDICATE_REQUIRED_RIGHT_CASILLA}"])',
-        finding_kind="BLOCKING_RULE",
-    )
-    # Both casillas are zero — predicate is violated.
-    findings = _evaluate_verification_predicates(
-        (predicate,),
-        {_PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0), _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0)},
-        _resident_profile(),
+        casilla_values={_PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0), _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0)},
     )
 
-    assert len(findings) == 1
-    finding = findings[0]
     # The message must contain the predicate_id and expression (from the locale template).
     assert "test-cross-casilla-001" in finding.message
     assert predicate.expression in finding.message
@@ -339,20 +348,13 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
 
 def test_cross_casilla_invariant_next_action_is_localised() -> None:
     """_evaluate_verification_predicates emits a tr()-rendered next_action for a violated predicate."""
-    predicate = VerificationPredicateDefinition(
+    _, finding = _predicate_finding(
         predicate_id="test-cross-casilla-002",
-        legal_refs=("irpf:art2",),
+        legal_ref="irpf:art2",
         expression=f'any_nonzero(["{_PREDICATE_OPTIONAL_LEFT_CASILLA}","{_PREDICATE_OPTIONAL_RIGHT_CASILLA}"])',
-        finding_kind="BLOCKING_RULE",
-    )
-    findings = _evaluate_verification_predicates(
-        (predicate,),
-        {_PREDICATE_OPTIONAL_LEFT_CASILLA: Decimal(0), _PREDICATE_OPTIONAL_RIGHT_CASILLA: Decimal(0)},
-        _resident_profile(),
+        casilla_values={_PREDICATE_OPTIONAL_LEFT_CASILLA: Decimal(0), _PREDICATE_OPTIONAL_RIGHT_CASILLA: Decimal(0)},
     )
 
-    assert len(findings) == 1
-    finding = findings[0]
     assert finding.next_action is not None
     # The next_action must contain the predicate_id (from the locale template).
     assert "test-cross-casilla-002" in finding.next_action
@@ -448,39 +450,32 @@ def test_art20_reduccion_advisory_fires_within_band_and_is_localised() -> None:
     assert finding.message != "application.modelo.findings.art20_reduccion_possible"
 
 
-def test_art20_reduccion_advisory_silent_in_negative_cases() -> None:
+@pytest.mark.parametrize(
+    "casilla_values",
+    (
+        pytest.param(
+            {_ART20_RNT_CASILLA: Decimal("25000"), _ART20_REDUCCION_CASILLA: Decimal("0")},
+            id="above-ceiling",
+        ),
+        pytest.param(
+            {_ART20_RNT_CASILLA: Decimal("12000"), _ART20_REDUCCION_CASILLA: Decimal("3500")},
+            id="reduction-already-declared",
+        ),
+        pytest.param({_ART20_RNT_CASILLA: Decimal("0"), _ART20_REDUCCION_CASILLA: Decimal("0")}, id="zero-rnt"),
+    ),
+)
+def test_art20_reduccion_advisory_silent_for_declared_or_ineligible_values(
+    casilla_values: dict[CasillaId, Decimal],
+) -> None:
     """The art. 20 advisory must NOT fire when there is nothing to surface.
 
     No false positive when: RNT is at/above the ceiling (reduction is genuinely zero),
-    the reducción is already declared, RNT is zero, or the roles are absent.
+    the reducción is already declared, or RNT is zero.
     """
-    revision = _art20_revision()
+    assert _art20_reduccion_advisory_finding(_art20_revision(), casilla_values) is None
 
-    # Above the ceiling: the art. 20 reduction is legitimately zero — no advisory.
-    assert (
-        _art20_reduccion_advisory_finding(
-            revision,
-            {_ART20_RNT_CASILLA: Decimal("25000"), _ART20_REDUCCION_CASILLA: Decimal("0")},
-        )
-        is None
-    )
-    # Reduction already declared — nothing to surface.
-    assert (
-        _art20_reduccion_advisory_finding(
-            revision,
-            {_ART20_RNT_CASILLA: Decimal("12000"), _ART20_REDUCCION_CASILLA: Decimal("3500")},
-        )
-        is None
-    )
-    # RNT zero — no eligible income.
-    assert (
-        _art20_reduccion_advisory_finding(
-            revision,
-            {_ART20_RNT_CASILLA: Decimal("0"), _ART20_REDUCCION_CASILLA: Decimal("0")},
-        )
-        is None
-    )
-    # Roles absent — the advisory cannot resolve its casillas.
+
+def test_art20_reduccion_advisory_silent_when_roles_absent() -> None:
     assert _art20_reduccion_advisory_finding(_test_revision(), {}) is None
 
 

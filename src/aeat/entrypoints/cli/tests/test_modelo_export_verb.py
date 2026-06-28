@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....application.modelo import resolve_registry_revision_for_work_target
 from ....application.user_profile._orchestration import profile_create_storage_span, set_active_fields
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
@@ -27,11 +28,24 @@ from ....domain.modelos._codes import ModeloCode
 from ....domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from ....domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile import UserProfileFact
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
+
+
+def _active_registry_revision_id(*, modelo: str, filing_year: int, period: str) -> str:
+    return resolve_registry_revision_for_work_target(
+        modelo=modelo,
+        filing_year=filing_year,
+        period=Period.from_year_and_code(filing_year, period),
+        registry_revision_id=None,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -54,7 +68,7 @@ def _seed_work_unit_only(*, modelo: str = "130", filing_year: int = 2026, period
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = "r" + "0" * 63
+    revision_id = _active_registry_revision_id(modelo=modelo, filing_year=filing_year, period=period)
     filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -138,6 +152,15 @@ def _set_export_profile_name() -> None:
     )
 
 
+def _clear_export_profile_surnames() -> None:
+    workflow_state_repository().update(
+        lambda state: set_active_fields(
+            state,
+            (UserProfileFact(path="identity.surnames", value=None),),
+        ),
+    )
+
+
 def _seed_modelo_111_revisions(
     *,
     states: tuple[CalculationRevisionState, ...],
@@ -149,7 +172,7 @@ def _seed_modelo_111_revisions(
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    registry_revision_id = "r" + "1" * 63
+    registry_revision_id = _active_registry_revision_id(modelo="111", filing_year=filing_year, period=period)
     filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -228,7 +251,7 @@ def _seed_exportable_modelo_111_revision(
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    revision_id = "r" + "1" * 63
+    revision_id = _active_registry_revision_id(modelo=modelo, filing_year=filing_year, period=period)
     filing_period = Period.from_year_and_code(filing_year, period)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
@@ -274,7 +297,6 @@ def _seed_exportable_modelo_111_revision(
 
 
 def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
-    cli_runner: CliRunner,
     tmp_path: Path,
 ) -> None:
     """Exporting a verified-complete modelo-111 revision end-to-end
@@ -292,8 +314,7 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     work_unit_id, _ = _seed_exportable_modelo_111_revision()
     out = tmp_path / "modelo-111.txt"
 
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         ["app", "modelo", "export", work_unit_id, "--output", str(out)],
     )
 
@@ -303,7 +324,6 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
 
 
 def test_export_resolves_visible_target_to_current_verified_revision(
-    cli_runner: CliRunner,
     tmp_path: Path,
 ) -> None:
     """Natural-key export defaults to the current verified-complete revision."""
@@ -315,8 +335,7 @@ def test_export_resolves_visible_target_to_current_verified_revision(
     )
     out = tmp_path / "modelo-111-current.txt"
 
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -341,7 +360,6 @@ def test_export_resolves_visible_target_to_current_verified_revision(
 
 
 def test_export_prefers_filed_pointer_over_current_verified_revision(
-    cli_runner: CliRunner,
     tmp_path: Path,
 ) -> None:
     """Natural-key export prefers filed pointer before current verified pointer."""
@@ -354,8 +372,7 @@ def test_export_prefers_filed_pointer_over_current_verified_revision(
     )
     out = tmp_path / "modelo-111-filed.txt"
 
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -380,7 +397,6 @@ def test_export_prefers_filed_pointer_over_current_verified_revision(
 
 
 def test_export_refuses_ambiguous_verified_revisions_without_pointer(
-    cli_runner: CliRunner,
     tmp_path: Path,
 ) -> None:
     """Natural-key export refuses multiple verified candidates without a pointer."""
@@ -390,8 +406,7 @@ def test_export_refuses_ambiguous_verified_revisions_without_pointer(
     )
     out = tmp_path / "modelo-111-ambiguous.txt"
 
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "modelo",
@@ -413,42 +428,40 @@ def test_export_refuses_ambiguous_verified_revisions_without_pointer(
 
 
 def test_export_modelo_111_refuses_when_profile_name_missing(
-    cli_runner: CliRunner,
     tmp_path: Path,
 ) -> None:
     """When the active profile lacks ``identity.surnames`` the export
     must refuse with a clear error naming the missing profile fact
-    rather than fabricating a placeholder name. ``register_minimal_profile``
-    sets ``identity.name`` but not ``identity.surnames``."""
+    rather than fabricating a placeholder name."""
 
+    _clear_export_profile_surnames()
     work_unit_id, _ = _seed_exportable_modelo_111_revision()
     out = tmp_path / "modelo-111.txt"
 
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         ["app", "modelo", "export", work_unit_id, "--output", str(out)],
     )
 
     assert result.exit_code != 0, result.output
+    assert "surnames" in result.output.lower(), result.output
     assert not out.exists()
 
 
-def test_export_requires_output_flag(cli_runner: CliRunner) -> None:
+def test_export_requires_output_flag() -> None:
     """``--output`` is required; missing it surfaces as Typer usage error."""
 
     work_unit_id = _seed_work_unit_only()
 
-    result = cli_runner.invoke(app, ["app", "modelo", "export", work_unit_id])
+    result = _invoke(["app", "modelo", "export", work_unit_id])
     assert result.exit_code != 0, result.output
 
 
-def test_export_refuses_unknown_work_unit(cli_runner: CliRunner, tmp_path: Path) -> None:
+def test_export_refuses_unknown_work_unit(tmp_path: Path) -> None:
     """A work unit id that resolves to no exportable revision must
     refuse rather than write an empty file."""
 
     out = tmp_path / "out.txt"
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         ["app", "modelo", "export", "0" * 64, "--output", str(out)],
     )
     assert result.exit_code != 0, result.output
@@ -456,7 +469,6 @@ def test_export_refuses_unknown_work_unit(cli_runner: CliRunner, tmp_path: Path)
 
 
 def test_export_refuses_work_unit_with_no_exportable_revision(
-    cli_runner: CliRunner,
     tmp_path: Path,
 ) -> None:
     """A work unit whose only revision is in DRAFT state must refuse;
@@ -465,26 +477,24 @@ def test_export_refuses_work_unit_with_no_exportable_revision(
     work_unit_id, _ = _seed_work_unit_with_draft_revision()
     out = tmp_path / "out.txt"
 
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         ["app", "modelo", "export", work_unit_id, "--output", str(out)],
     )
     assert result.exit_code != 0, result.output
     assert not out.exists()
 
 
-def test_export_help_advertises_local_only(cli_runner: CliRunner) -> None:
+def test_export_help_advertises_local_only() -> None:
     """The export verb help string must state ``Local-only`` so the
     operator cannot mistake the verb for an AEAT-contacting submit."""
 
-    result = cli_runner.invoke(app, ["app", "modelo", "export", "--help"])
+    result = _invoke(["app", "modelo", "export", "--help"])
     assert result.exit_code == 0, result.output
     assert "modelo" in result.output.lower()
     assert any(token in result.output.lower() for token in ("local-only", "local;", "local.", "nunca")), result.output
 
 
 def test_export_refuses_explicit_revision_in_draft_state(
-    cli_runner: CliRunner,
     tmp_path: Path,
 ) -> None:
     """When --revision targets a DRAFT revision explicitly, the service
@@ -494,8 +504,7 @@ def test_export_refuses_explicit_revision_in_draft_state(
     work_unit_id, calc_rev_id = _seed_work_unit_with_draft_revision()
     out = tmp_path / "out.txt"
 
-    result = cli_runner.invoke(
-        app,
+    result = _invoke(
         [
             "app",
             "modelo",

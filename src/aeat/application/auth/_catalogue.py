@@ -1,4 +1,9 @@
-"""Typed catalogue for ``aeat config auth providers``."""
+"""Typed catalogue for ``aeat config auth providers``.
+
+:class:`AuthProviderListing` records feed :data:`AUTH_PROVIDER_CATALOGUE`; the
+query helpers expose implemented and reserved provider ids to the operator
+auth command surface.
+"""
 
 from __future__ import annotations
 

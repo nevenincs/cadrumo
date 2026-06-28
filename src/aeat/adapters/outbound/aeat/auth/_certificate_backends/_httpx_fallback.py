@@ -1,11 +1,15 @@
-"""httpx-based mTLS handshake backend placeholder.
+"""Fail-closed httpx mTLS handshake backend.
 
 The Python :mod:`ssl` API used by :mod:`httpx` requires certificate-chain
 material to be loaded from file paths. Writing decrypted PEM/key material to
 temporary files violates the secure-storage boundary, so this backend fails
 closed instead of materialising certificate secrets outside the encrypted
-backend. Browser sessions should use
-:class:`aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`.
+backend.
+
+``CertificateBackend.HTTPX_FALLBACK`` remains available as a dispatch target so
+certificate health checks return a structured :class:`HandshakeResult` instead
+of attempting an unsafe downgrade. Browser sessions should use
+:class:`~aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`.
 """
 
 from __future__ import annotations
@@ -28,7 +32,8 @@ class HttpxFallbackBackend(_CertBackend):
     """mTLS handshake probe that fails closed under the secure-storage policy.
 
     Verify-only backend; rejects any attempt to preload a browser
-    context. See :class:`aeat.adapters.outbound.aeat.auth._certificate_backends.PlaywrightContextBackend`
+    context with :class:`AuthConfigurationError`. See
+    :class:`~aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context.PlaywrightContextBackend`
     for the interactive counterpart.
     """
 

@@ -1,21 +1,33 @@
-"""Fichero-BOE serialiser for registry-backed fixed-width specs.
+"""Fichero-BOE serialiser for explicit fixed-width specs.
 
 The serialiser is format-generic: one :func:`serialise` drives every
-registry export layout via a validated tuple of :class:`RecordFieldSpec` entries. A
-registry-backed filing layout supplies:
+caller-supplied layout represented as a validated tuple of
+:class:`RecordFieldSpec` entries. The caller supplies:
 
 - field layout, validated before use.
 - content byte length excluding the CRLF terminator.
-- wire encoding declared by the registry layout.
+- wire encoding for the payload.
 - required header ``field_id`` values the draft MUST
   provide.
 
-The caller passes a :class:`aeat.application.filing.ModeloDraft` plus
-a ``headers`` mapping for metadata fields (identity, year, period,
-and so on). CRLF terminator ownership stays with this function; the
-per-field encoders in
+The caller passes casilla values plus a ``headers`` mapping for metadata
+fields (identity, year, period, and so on). CRLF terminator ownership
+stays with this function; the per-field encoders in
 :mod:`aeat.adapters.outbound.aeat.export._formats._record_spec` do
 not emit line endings.
+
+The active application export path renders
+:class:`aeat.domain.calculations.registry.ExportLayoutDefinition`
+records through :func:`aeat.application.filing.export_draft`; this module
+is the lower-level explicit-spec serialiser paired with
+:func:`aeat.adapters.outbound.aeat.export._formats._deserialise.deserialise`.
+
+See Also:
+    :class:`aeat.domain.calculations.registry.ExportRecordDefinition`
+        Canonical registry record declaration consumed by the application
+        export renderer.
+    :class:`aeat.adapters.outbound.aeat.export.AeatExportFormatError`
+        Error raised for fixed-width layout and value violations.
 """
 
 from __future__ import annotations

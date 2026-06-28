@@ -618,6 +618,8 @@ def _mutation_signature(transaction: Transaction) -> tuple[object, ...]:
         transaction.taxable_base,
         transaction.iva_rate,
         transaction.iva_amount,
+        transaction.iva_category,
+        transaction.counterparty_eu_member_state,
         transaction.irpf_category,
         transaction.usage_ratio_id,
         transaction.prorrata_reference,
@@ -650,6 +652,8 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
         and command.taxable_base == current.taxable_base
         and command.iva_rate == current.iva_rate
         and command.iva_amount == current.iva_amount
+        and command.iva_category == current.iva_category
+        and command.counterparty_eu_member_state == current.counterparty_eu_member_state
         and command.irpf_category == current.irpf_category
         and command.usage_ratio_id == current.usage_ratio_id
         and command.prorrata_reference == current.prorrata_reference

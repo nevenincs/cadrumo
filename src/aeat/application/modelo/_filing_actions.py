@@ -1,6 +1,10 @@
 """Filing-record actions for modelo calculation revisions.
 
-Use of :class:`BucketEventHistoryRepository` for compliance.
+``file_modelo_revision`` promotes a verified :class:`CalculationRevision` into a
+current :class:`ModeloRecord` after the :class:`WorkflowEngine` preflight gate
+passes. Filing transitions and audit entries are persisted through the
+:class:`BucketEventHistoryRepository` path shared by the modelo revision
+services.
 """
 
 from __future__ import annotations
@@ -101,8 +105,9 @@ def file_modelo_revision(
             to file.
         actor: Operator identifier recorded in the filing record and audit
             trail.
-        workflow_profile: The :class:`TaxpayerProfile` used to evaluate workflow
-            gate conditions.
+        workflow_profile: The :class:`TaxpayerProfile` used to evaluate
+            :class:`WorkflowEngine` gate conditions and cross-period clean-state
+            applicability.
         notes: Optional operator-supplied filing notes.
         refund_election: The operator's per-filing Modelo 303 negative-result
             disposition election. Defaults to ``COMPENSAR`` (carry the credit
@@ -170,6 +175,9 @@ def file_modelo_revision(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
         )
+    from ._profile_readiness_gate import require_profile_ready_for_work_unit
+
+    require_profile_ready_for_work_unit(work_unit)
     iva_compensation_decision = _require_iva_compensation_revision_match(
         work_unit,
         target,
@@ -190,6 +198,8 @@ def file_modelo_revision(
         activity_start_date=workflow_profile.activity_start_date,
         modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
         taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
+        workflow_profile=workflow_profile,
+        target_revision=target,
     )
 
     now = clock or _utc_now()
@@ -240,6 +250,7 @@ def file_modelo_revision(
         bucket_event_repository=bv_repo,
         calculation_observation_repository=obs_repo,
         refunded=refunded,
+        taxpayer_nif=workflow_profile.tax_id,
     )
 
 
@@ -266,7 +277,7 @@ def list_filing_records(
     return tuple(
         sorted(
             records,
-            key=lambda r: (r.bucket_id, r.filing_year, str(r.modelo), r.period, r.filed_at),
+            key=lambda r: (r.bucket_id, r.filing_year, str(r.modelo), r.period.registry_token, r.filed_at),
         ),
     )
 

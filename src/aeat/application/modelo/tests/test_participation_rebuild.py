@@ -50,10 +50,6 @@ _IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-def _hex(seed: str) -> str:
-    return (seed * 64)[:64]
-
-
 def _work_unit(*, modelo: str, period: str, revision_seed: str) -> WorkUnit:
     typed_period = Period.from_year_and_code(2024, period)
     work_unit_id = derive_work_unit_id(
@@ -85,13 +81,16 @@ def _revision(*, work_unit: WorkUnit, state: CalculationRevisionState, txids: tu
         casilla_values={},
         source_transaction_ids=txids,
     )
-    extra: dict[str, datetime | str] = {}  # only datetime / actor-label keys; **splat below is scaffolding
+    verified_at: datetime | None = None
+    verified_by: str | None = None
+    filed_at: datetime | None = None
+    filed_by: str | None = None
     if state in {CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO}:
-        extra["verified_at"] = _T0 + timedelta(hours=1)
-        extra["verified_by"] = "aeat.cli.modelo.verify"
+        verified_at = _T0 + timedelta(hours=1)
+        verified_by = "aeat.cli.modelo.verify"
     if state is CalculationRevisionState.PRESENTADO:
-        extra["filed_at"] = _T0 + timedelta(hours=2)
-        extra["filed_by"] = "aeat.cli.modelo.file"
+        filed_at = _T0 + timedelta(hours=2)
+        filed_by = "aeat.cli.modelo.file"
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
@@ -100,7 +99,10 @@ def _revision(*, work_unit: WorkUnit, state: CalculationRevisionState, txids: tu
         source_transaction_ids=txids,
         created_at=_T0,
         updated_at=_T0 + timedelta(hours=2),
-        **extra,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: conditional datetime/actor-label **dict splat
+        verified_at=verified_at,
+        verified_by=verified_by,
+        filed_at=filed_at,
+        filed_by=filed_by,
     )
 
 

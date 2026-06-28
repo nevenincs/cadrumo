@@ -44,64 +44,31 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 # ---------------------------------------------------------------------------
 
 
-def test_ordered_candidates_pdf_suffix_leads_with_pdf_n26(tmp_path: Path) -> None:
-    """``.pdf`` suffix puts PdfN26Provider first; the bare suffix is
-    enough to commit to the PDF parser before any content sniffing."""
-    target = tmp_path / "statement.pdf"
-    target.write_bytes(b"%PDF stub")
+@pytest.mark.parametrize(
+    ("suffix", "content", "provider_type"),
+    [
+        (".pdf", b"%PDF-1.4\n% financial statement sample\n", PdfN26Provider),
+        (".xlsx", b"PK\x03\x04 workbook container sample", XlsxProvider),
+        (".ofx", b"<OFX><BANKMSGSRSV1></BANKMSGSRSV1></OFX>", OfxProvider),
+        (".qfx", b"<OFX><BANKMSGSRSV1></BANKMSGSRSV1></OFX>", OfxProvider),
+        (".csv", b"date,description,amount\n", CsvProvider),
+        (".txt", b"date,description,amount\n", CsvProvider),
+    ],
+    ids=("pdf", "xlsx", "ofx", "qfx", "csv", "txt-csv"),
+)
+def test_ordered_candidates_known_suffix_leads_with_declared_provider(
+    tmp_path: Path,
+    suffix: str,
+    content: bytes,
+    provider_type: type[object],
+) -> None:
+    """Known suffixes take precedence before content sniffing."""
+    target = tmp_path / f"statement{suffix}"
+    target.write_bytes(content)
 
     candidates = _ordered_candidates(target)
 
-    assert isinstance(candidates[0], PdfN26Provider)
-
-
-def test_ordered_candidates_xlsx_suffix_leads_with_xlsx(tmp_path: Path) -> None:
-    target = tmp_path / "statement.xlsx"
-    target.write_bytes(b"PK stub")
-
-    candidates = _ordered_candidates(target)
-
-    assert isinstance(candidates[0], XlsxProvider)
-
-
-def test_ordered_candidates_ofx_suffix_leads_with_ofx(tmp_path: Path) -> None:
-    target = tmp_path / "statement.ofx"
-    target.write_bytes(b"<OFX> stub")
-
-    candidates = _ordered_candidates(target)
-
-    assert isinstance(candidates[0], OfxProvider)
-
-
-def test_ordered_candidates_qfx_suffix_leads_with_ofx(tmp_path: Path) -> None:
-    """``.qfx`` is the Quicken-flavoured OFX alias; same provider
-    leads its candidate list."""
-    target = tmp_path / "statement.qfx"
-    target.write_bytes(b"<OFX> stub")
-
-    candidates = _ordered_candidates(target)
-
-    assert isinstance(candidates[0], OfxProvider)
-
-
-def test_ordered_candidates_csv_suffix_leads_with_csv(tmp_path: Path) -> None:
-    target = tmp_path / "statement.csv"
-    target.write_bytes(b"date,description,amount\n")
-
-    candidates = _ordered_candidates(target)
-
-    assert isinstance(candidates[0], CsvProvider)
-
-
-def test_ordered_candidates_txt_suffix_leads_with_csv(tmp_path: Path) -> None:
-    """``.txt`` is the CSV-with-different-extension alias; routed
-    through the CSV provider."""
-    target = tmp_path / "statement.txt"
-    target.write_bytes(b"date,description,amount\n")
-
-    candidates = _ordered_candidates(target)
-
-    assert isinstance(candidates[0], CsvProvider)
+    assert isinstance(candidates[0], provider_type)
 
 
 # ---------------------------------------------------------------------------
@@ -109,49 +76,28 @@ def test_ordered_candidates_txt_suffix_leads_with_csv(tmp_path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_ordered_candidates_pdf_magic_byte_leads_with_pdf_n26(tmp_path: Path) -> None:
-    """An unknown-extension file whose first bytes are ``%PDF``
-    routes to PdfN26Provider first."""
+@pytest.mark.parametrize(
+    ("content", "provider_type"),
+    [
+        (b"%PDF-1.4\n% financial statement sample\n", PdfN26Provider),
+        (b"PK\x03\x04 workbook container sample", XlsxProvider),
+        (b"<?xml version='1.0'?><OFX><BODY/></OFX>", OfxProvider),
+        (b"<HEADER/>\n<BANKTRANLIST>" + b"x" * 50, OfxProvider),
+    ],
+    ids=("pdf-magic", "zip-magic", "ofx-envelope", "banktranlist-marker"),
+)
+def test_ordered_candidates_unknown_suffix_magic_bytes_lead_with_declared_provider(
+    tmp_path: Path,
+    content: bytes,
+    provider_type: type[object],
+) -> None:
+    """Unknown suffixes fall through to the documented magic-byte dispatch."""
     target = tmp_path / "statement.bin"
-    target.write_bytes(b"%PDF-1.4\n%a-binary-stub")
+    target.write_bytes(content)
 
     candidates = _ordered_candidates(target)
 
-    assert isinstance(candidates[0], PdfN26Provider)
-
-
-def test_ordered_candidates_pk_magic_byte_leads_with_xlsx(tmp_path: Path) -> None:
-    """An unknown-extension file whose first bytes are ``PK``
-    (ZIP/xlsx container) routes to XlsxProvider first."""
-    target = tmp_path / "statement.bin"
-    target.write_bytes(b"PK\x03\x04 stub-zip")
-
-    candidates = _ordered_candidates(target)
-
-    assert isinstance(candidates[0], XlsxProvider)
-
-
-def test_ordered_candidates_ofx_marker_leads_with_ofx(tmp_path: Path) -> None:
-    """An unknown-extension file whose first 256 bytes contain
-    ``<OFX>`` routes to OfxProvider first."""
-    target = tmp_path / "statement.bin"
-    target.write_bytes(b"<?xml version='1.0'?><OFX><BODY/></OFX>")
-
-    candidates = _ordered_candidates(target)
-
-    assert isinstance(candidates[0], OfxProvider)
-
-
-def test_ordered_candidates_banktranlist_marker_leads_with_ofx(tmp_path: Path) -> None:
-    """The ``<BANKTRANLIST>`` substring (anywhere in the first 256
-    bytes) also routes to OfxProvider — older OFX exports omit the
-    leading ``<OFX>`` envelope tag."""
-    target = tmp_path / "statement.bin"
-    target.write_bytes(b"<HEADER/>\n<BANKTRANLIST>" + b"x" * 50)
-
-    candidates = _ordered_candidates(target)
-
-    assert isinstance(candidates[0], OfxProvider)
+    assert isinstance(candidates[0], provider_type)
 
 
 # ---------------------------------------------------------------------------

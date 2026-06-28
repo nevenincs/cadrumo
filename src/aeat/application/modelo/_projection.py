@@ -1,6 +1,14 @@
-"""Application services for modelo projection and comparison commands.
+"""Projection and year-comparison services for modelo calculations.
 
-Use of :class:`CalculationRevision` for compliance.
+The Modelo 100 projection path reads persisted :class:`CalculationRevision`
+rows from quarterly Modelo 130 work units, resolves the annual
+:class:`RegistrySnapshot`, overlays profile-sourced bindings, and runs
+:func:`calculate_registry_snapshot` without persisting a new revision.
+
+The comparison path selects the best draft or verified
+:class:`CalculationRevision` for each requested year, grounds each delta row in
+the compared registry snapshots, and returns either a
+:class:`ModeloProjectServiceResult` or :class:`ModeloCompareServiceResult`.
 """
 
 from __future__ import annotations

@@ -1,4 +1,10 @@
-"""Read-only IVA regulation catalogue registry."""
+"""Read-only IVA regulation catalogue registry.
+
+:func:`load_iva_catalogue` validates one committed TOML file into an
+:class:`IvaCatalogue` whose entries are keyed by :class:`IvaCategory` and
+stored as :class:`IvaRegulation`; :func:`resolve_catalogue` selects the year
+catalogue used by filing-date consumers.
+"""
 
 from __future__ import annotations
 

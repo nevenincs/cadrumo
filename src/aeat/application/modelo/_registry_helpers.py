@@ -1,6 +1,12 @@
-"""Registry lookup and verification helpers for modelo actions.
+"""Registry lookup and casilla validation helpers for modelo actions.
 
-Use of :class:`CalculationRevision`, :class:`ModeloRevision`, :class:`RegistrySnapshot` for compliance.
+The helper layer resolves :class:`RegistrySnapshot` instances through the
+central registry resources, validates operator/imported casilla maps against
+the selected :class:`ModeloRevision`, and refuses non-canonical printed-number
+tokens before the calculation engine or persistence layer sees them.
+
+It also verifies stored :class:`CalculationRevision` payloads by re-deriving
+their content-addressed identifiers and checking observation/value consistency.
 """
 
 from __future__ import annotations
@@ -70,7 +76,9 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
 ) -> dict[CasillaId, Decimal]:
     """Validate operator-supplied numeric input casillas against the revision.
 
-    Use of :class:`ModeloRevision` for compliance.
+    The :class:`ModeloRevision` supplies the declared casilla ids, data types,
+    and non-canonical reference targets used to reject ambiguous or malformed
+    operator input.
     """
     if not casilla_inputs:
         return {}
@@ -371,7 +379,9 @@ def verification_predicates_for_revision(
 def assert_revision_content_integrity(revision: CalculationRevision) -> None:
     """Check revision integrity; raise :exc:`StoredCalculationDriftError` on drift.
 
-    Use of :class:`CalculationRevision` for compliance.
+    The supplied :class:`CalculationRevision` is re-hashed from its persisted
+    inputs, bindings, relations, casilla values, and source metadata before its
+    provenance observations are compared with ``casilla_values``.
     """
     expected = derive_calculation_revision_id(
         work_unit_id=revision.work_unit_id,
@@ -382,6 +392,7 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
         source_transaction_ids=revision.source_transaction_ids,
         borrador_snapshot_id=revision.borrador_snapshot_id,
         bindings_sourced_from_borrador=revision.bindings_sourced_from_borrador,
+        detail_rows=revision.detail_rows,
     )
     if expected != revision.calculation_revision_id:
         raise StoredCalculationDriftError(

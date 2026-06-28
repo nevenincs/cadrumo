@@ -23,20 +23,16 @@ from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
 
-import click
 import pytest
-from click.testing import CliRunner
-from typer.main import get_command
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span, set_active_fields
 from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....domain.user_profile import UserProfileFact
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -109,9 +105,7 @@ def _binding_ids_in_listing(output: str) -> set[str]:
     return ids
 
 
-def test_bindings_list_missing_returns_strict_subset_of_unfiltered(
-    cli_runner: CliRunner,
-) -> None:
+def test_bindings_list_missing_returns_strict_subset_of_unfiltered() -> None:
     """``--missing`` removes EXACTLY the profile-resolved bindings.
 
     With an active profile that satisfies four of Modelo 100's
@@ -123,10 +117,9 @@ def test_bindings_list_missing_returns_strict_subset_of_unfiltered(
     _seed_partial_modelo_100_profile()
     scope = ["app", "modelo", "bindings", "list", "--modelo", _MODELO, "--year", str(_YEAR), "--period", _PERIOD]
 
-    cmd = cast(click.Command, get_command(app))
-    unfiltered = cli_runner.invoke(cmd, scope)
+    unfiltered = invoke_cached_cli(scope)
     assert unfiltered.exit_code == 0, unfiltered.output
-    filtered = cli_runner.invoke(cmd, [*scope, "--missing"])
+    filtered = invoke_cached_cli([*scope, "--missing"])
     assert filtered.exit_code == 0, filtered.output
 
     all_ids = _binding_ids_in_listing(unfiltered.output)
@@ -145,9 +138,7 @@ def test_bindings_list_missing_returns_strict_subset_of_unfiltered(
     assert "missing_filter\tTrue" in filtered.output
 
 
-def test_bindings_list_without_missing_retains_profile_resolved_rows(
-    cli_runner: CliRunner,
-) -> None:
+def test_bindings_list_without_missing_retains_profile_resolved_rows() -> None:
     """Without ``--missing`` the profile-resolved bindings are still listed.
 
     The unfiltered listing is the full configured-binding set: a binding
@@ -159,8 +150,7 @@ def test_bindings_list_without_missing_retains_profile_resolved_rows(
     _seed_partial_modelo_100_profile()
     scope = ["app", "modelo", "bindings", "list", "--modelo", _MODELO, "--year", str(_YEAR), "--period", _PERIOD]
 
-    cmd = cast(click.Command, get_command(app))
-    unfiltered = cli_runner.invoke(cmd, scope)
+    unfiltered = invoke_cached_cli(scope)
     assert unfiltered.exit_code == 0, unfiltered.output
 
     all_ids = _binding_ids_in_listing(unfiltered.output)

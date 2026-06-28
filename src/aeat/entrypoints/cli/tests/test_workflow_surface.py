@@ -814,7 +814,7 @@ def test_config_profile_show_requires_active_profile_with_typed_error(
 def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
     encrypted_user_cli: Path,
 ) -> None:
-    """Profile creation must persist ``iva.regime`` for the deadline engine."""
+    """Profile creation normalizes lowercase ``iva.regime`` for the deadline engine."""
     from ....application.user_profile._projections import projection_for_taxpayer
     from ....application.workflow import workflow_state_repository
     from ....domain.deadlines import IVARegime
@@ -831,7 +831,7 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
             "--activity",
             "Servicios",
             "--iva-regime",
-            "GENERAL",
+            "general",
         ],
     )
     assert created.exit_code == 0, created.output
@@ -844,6 +844,40 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
         assert record is not None
         profile = projection_for_taxpayer(record, tax_id_default="00000000T")
     assert profile.iva_regime is IVARegime.GENERAL
+
+
+def test_config_profile_create_persists_situacion_familiar(
+    encrypted_user_cli: Path,
+) -> None:
+    """The exposed Art. 82 situacion-familiar flag must persist to a schema-backed fact."""
+    from ....application.user_profile import record_to_path_values
+    from ....application.workflow import workflow_state_repository
+
+    created = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "operator",
+            "--quiet",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+            "--situacion-familiar",
+            "soltero",
+        ],
+    )
+    assert created.exit_code == 0, created.output
+
+    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+
+    with activate_master_key_provider(get_master_key_provider()):
+        state = workflow_state_repository().load()
+        record = state.active_profile_record()
+        assert record is not None
+        values = record_to_path_values(record)
+    assert values["renta_family.situacion_familiar"] == "soltero"
 
 
 def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_engine(

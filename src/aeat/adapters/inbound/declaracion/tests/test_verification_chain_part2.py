@@ -279,36 +279,40 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
     )
 
 
-def test_verification_chain_m180_parser_extracts_declaracion_pdf_casillas() -> None:
-    """Parser extracts the 3 M180 summary casillas from the synthetic corpus fixture.
+_ANNUAL_SUMMARY_PARSER_CASES: tuple[tuple[str, str], ...] = (
+    ("180", "M180/2024-0A"),
+    ("193", "M193/2024-0A"),
+)
 
-    GROUNDED authority: synthetic fixture generated from AEAT-published printed
-    form text (src/aeat/tests/fixtures/justificantes/180/2024-0A.pdf).
 
-    The M180 formulas aggregate M115 quarterly relation values — the
-    decl.retenciones-total formula uses { relation = "modelo-180-rel-115-retenciones-anual" }.
-    Extraction verdict: VERIFIED.  Engine verdict: see the companion test
-    test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_relation_values.
-    """
-    pdf_path = FIXTURES_DIR / "justificantes" / "180" / "2024-0A.pdf"
+@pytest.mark.parametrize(
+    ("modelo", "case_label"),
+    _ANNUAL_SUMMARY_PARSER_CASES,
+    ids=("m180", "m193"),
+)
+def test_verification_chain_annual_summary_parser_extracts_declaracion_pdf_casillas(
+    modelo: str,
+    case_label: str,
+) -> None:
+    pdf_path = FIXTURES_DIR / "justificantes" / modelo / "2024-0A.pdf"
 
     try:
         filing = parse_declaracion(
             pdf_path,
-            modelo_override="180",
+            modelo_override=modelo,
             año_override=2024,
             period_override="0A",
         )
     except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [M180/2024-0A]: parse_declaracion raised.\n  error: {exc}")
+        pytest.fail(f"PARSER-GAP [{case_label}]: parse_declaracion raised.\n  error: {exc}")
 
     extracted = {v.casilla_id: v.printed_value for v in filing.values}
     assert set(extracted.keys()) == _DECL_SUMMARY_CASILLAS, (
-        f"PARSER-GAP [M180/2024-0A]: unexpected casilla set.\n  got: {sorted(extracted)}"
+        f"PARSER-GAP [{case_label}]: unexpected casilla set.\n  got: {sorted(extracted)}"
     )
     for casilla_id, value in extracted.items():
         assert isinstance(value, Decimal), (
-            f"PARSER-GAP [M180/2024-0A]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r}"
+            f"PARSER-GAP [{case_label}]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r}"
         )
 
 
@@ -757,38 +761,6 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
         assert engine_val == extracted_val, (
             f"FORMULA-MISMATCH [M131/yr=2026-1T]: engine casilla {closure_id!r} = {engine_val!r}, "
             f"AEAT-printed = {extracted_val!r}.\n  inputs: {inputs}"
-        )
-
-
-def test_verification_chain_m193_parser_extracts_declaracion_pdf_casillas() -> None:
-    """Parser extracts the 3 M193 summary casillas from the synthetic corpus fixture.
-
-    GROUNDED authority: synthetic fixture generated from AEAT-published Diseno de
-    Registro DR_Modelo_193_2024.pdf committed at
-    src/aeat/tests/fixtures/justificantes/193/2024-0A.pdf.
-
-    Extraction verdict: VERIFIED. Engine verdict: see the companion test
-    test_verification_chain_m193_engine_recomputes_closure_casillas_from_m123_relation_values.
-    """
-    pdf_path = FIXTURES_DIR / "justificantes" / "193" / "2024-0A.pdf"
-
-    try:
-        filing = parse_declaracion(
-            pdf_path,
-            modelo_override="193",
-            año_override=2024,
-            period_override="0A",
-        )
-    except DeclaracionParseError as exc:
-        pytest.fail(f"PARSER-GAP [M193/2024-0A]: parse_declaracion raised.\n  error: {exc}")
-
-    extracted = {v.casilla_id: v.printed_value for v in filing.values}
-    assert set(extracted.keys()) == _DECL_SUMMARY_CASILLAS, (
-        f"PARSER-GAP [M193/2024-0A]: unexpected casilla set.\n  got: {sorted(extracted)}"
-    )
-    for casilla_id, value in extracted.items():
-        assert isinstance(value, Decimal), (
-            f"PARSER-GAP [M193/2024-0A]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r}"
         )
 
 

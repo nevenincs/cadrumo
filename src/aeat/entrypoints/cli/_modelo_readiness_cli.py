@@ -17,6 +17,7 @@ from ._common import _emit_envelope
 from ._errors import CliRefusedBoundaryError
 from ._modelo_payloads import (
     LedgerIssuePayload,
+    ModeloReadinessMissingBindingPayload,
     ModeloReadinessMissingRequirementPayload,
     ModeloReadinessResult,
 )
@@ -126,6 +127,9 @@ def _readiness_result(
         period=report.period,
         ready=report.ready,
         profile_ready=report.profile_ready,
+        registry_ready=report.registry_ready,
+        registry_refusal=report.registry_refusal,
+        binding_ready=report.binding_ready,
         missing=[
             ModeloReadinessMissingRequirementPayload(
                 section_key=req.section_key,
@@ -133,6 +137,14 @@ def _readiness_result(
                 selector=req.selector,
             )
             for req in report.missing
+        ],
+        missing_bindings=[
+            ModeloReadinessMissingBindingPayload(
+                binding_id=req.binding_id,
+                source=req.source,
+                input_channel=req.input_channel,
+            )
+            for req in report.missing_bindings
         ],
         ledger_preflight_required=report.ledger_preflight_required,
         ledger_ready=report.ledger_ready,
@@ -166,7 +178,11 @@ def _readiness_lines(
         "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness",
         f"ready\t{report.ready}",
         f"profile_ready\t{report.profile_ready}",
+        f"registry_ready\t{report.registry_ready}",
+        f"registry_refusal\t{report.registry_refusal}",
+        f"binding_ready\t{report.binding_ready}",
         f"missing\t{len(report.missing)}",
+        f"missing_bindings\t{len(report.missing_bindings)}",
         f"ledger_preflight_required\t{report.ledger_preflight_required}",
         f"ledger_ready\t{report.ledger_ready if report.ledger_ready is not None else ''}",
         f"ledger_period\t{report.ledger_period or ''}",
@@ -176,6 +192,8 @@ def _readiness_lines(
     ]
     for requirement in report.missing:
         lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
+    for binding in report.missing_bindings:
+        lines.append(f"missing_binding\t{binding.binding_id}\t{binding.source}\t{binding.input_channel}")
     for issue in report.ledger_issues:
         lines.append(f"ledger_issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
     return lines

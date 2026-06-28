@@ -1,4 +1,19 @@
-"""Anti-bot evasion strategies for Playwright."""
+"""Anti-bot evasion strategies for Playwright contexts.
+
+:class:`aeat.adapters.outbound.aeat.browser.BrowserSession` applies an
+:class:`EvasionStrategy` after creating each Playwright ``BrowserContext`` and
+before returning it to auth providers or Sede readers. The default
+:class:`PlaywrightStealthEvasion` delegates to the optional
+``playwright-stealth`` package and raises :class:`BrowserEvasionError` with the
+browser-extra install hint when that package is unavailable.
+
+See Also:
+    :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.create_context`
+        Applies the configured evasion strategy during context preparation.
+    :class:`aeat.adapters.outbound.aeat.browser.BrowserFailureMode`
+        Carries ``EVASION_FAILED`` when strategy application fails inside the
+        central session wrapper.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +30,11 @@ logger = get_logger(__name__)
 
 
 class EvasionStrategy(Protocol):
-    """Protocol for applying evasion techniques to a BrowserContext."""
+    """Protocol for applying evasion techniques to a Playwright context.
+
+    Custom implementations can be supplied to :class:`BrowserSession` tests or
+    adapter callers; production code defaults to :class:`PlaywrightStealthEvasion`.
+    """
 
     async def apply(self, context: BrowserContext) -> None:
         """Apply anti-bot evasion techniques to the given context.
@@ -27,7 +46,7 @@ class EvasionStrategy(Protocol):
 
 
 class PlaywrightStealthEvasion:
-    """Evasion strategy utilizing the playwright-stealth package.
+    """Evasion strategy backed by the ``playwright-stealth`` package.
 
     Targets the ``playwright-stealth`` 2.x class-based API
     (``Stealth().apply_stealth_async``). The 1.x module-level
@@ -35,7 +54,7 @@ class PlaywrightStealthEvasion:
     """
 
     async def apply(self, context: BrowserContext) -> None:
-        """Apply playwright-stealth patches to the context.
+        """Apply ``playwright-stealth`` patches to ``context``.
 
         Args:
             context: The Playwright BrowserContext to patch.

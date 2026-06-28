@@ -80,6 +80,8 @@ class TemporalApplicability(RegistryModel):
 
 
 class LegalReference(RegistryModel):
+    """Legal-authority citation row carried by registry definitions."""
+
     id: LegalRefId
     evidence_tier: Literal["legal_authority"]
     authority: Literal["boe", "aeat", "eu", "autonomous_community", "other"]
@@ -89,6 +91,7 @@ class LegalReference(RegistryModel):
         "real_decreto_ley",
         "orden",
         "reglamento",
+        "acuerdo_internacional",
         "directiva",
         "manual",
         "instruction",
@@ -127,6 +130,8 @@ class LegalReference(RegistryModel):
 
 
 class SourceReference(RegistryModel):
+    """Official-source evidence row with bundled-corpus integrity metadata."""
+
     id: SourceRefId
     evidence_tier: EvidenceTier
     authority: Literal["aeat", "boe", "eu", "autonomous_community", "other"]
@@ -171,6 +176,8 @@ class SourceReference(RegistryModel):
 
 
 class LegalParameter(RegistryModel):
+    """Versioned legal parameter value cited by registry formulas."""
+
     id: str
     evidence_tier: Literal["legal_authority"]
     value: str

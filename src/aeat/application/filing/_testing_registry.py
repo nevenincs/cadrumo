@@ -1,10 +1,20 @@
 """Registry-backed draft builders for filing tests.
 
-:func:`build_registry_filing_draft` constructs a :class:`ModeloDraft`
-through the production registry runtime. It calls
-:func:`aeat.application.filing.approve_draft` with an empty
-:class:`TransactionCatalogue` so the approval basis is deterministic
-in tests that have no ledger state.
+The helpers keep tests on the same path as production filing: they resolve a
+typed :class:`~aeat.core.Period` through
+:func:`aeat.application.filing.build_runtime_schema_provider`, call
+:func:`aeat.application.filing.build_draft`, and only use
+:func:`aeat.application.filing.approve_draft` when the requested
+:class:`~aeat.domain.submission.ModeloDraftStatus` is
+:attr:`~aeat.domain.submission.ModeloDraftStatus.APROBADO`. The approval path
+receives an empty :class:`TransactionCatalogue` so tests without ledger state
+get a deterministic approval basis.
+
+See Also:
+    :mod:`aeat.application.filing.runtime`
+        Production registry schema-provider projection.
+    :mod:`aeat.application.filing.testing`
+        Public fixture helper facade that re-exports these builders.
 """
 
 from __future__ import annotations
@@ -29,7 +39,7 @@ _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 
 @dataclass(frozen=True, slots=True)
 class RegistryTestProfile:
-    """Minimal filing profile used by registry-backed filing tests."""
+    """Minimal :class:`aeat.application.filing.ModeloProfile` for registry-backed tests."""
 
     tax_id: str
     display_name: str
@@ -44,7 +54,30 @@ def build_registry_filing_draft(
     binding_values: ModeloInputs | None = None,
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
-    """Build and return a :class:`ModeloDraft` through the validated registry runtime path."""
+    """Build a :class:`ModeloDraft` through the validated registry runtime path.
+
+    Args:
+        modelo: Stable modelo id to resolve from the bundled registry.
+        period: Typed :class:`~aeat.core.Period`; raw string periods are
+            rejected before registry lookup.
+        profile_tax_id: Tax identifier written to the generated test profile.
+        casilla_values: Casilla input mapping passed to
+            :func:`aeat.application.filing.build_draft`.
+        binding_values: Optional registry binding inputs. Keys that duplicate
+            ``casilla_values`` are rejected so fixture data cannot shadow itself.
+        status: Desired final :class:`~aeat.domain.submission.ModeloDraftStatus`.
+            ``APROBADO`` uses :func:`aeat.application.filing.approve_draft`;
+            every other status clears approval metadata on the built draft.
+
+    Returns:
+        The built :class:`ModeloDraft`, approved only when ``status`` is
+        :attr:`~aeat.domain.submission.ModeloDraftStatus.APROBADO`.
+
+    Raises:
+        ModeloBuilderError: When ``period`` is not a
+            :class:`~aeat.core.Period`, duplicate input ids are supplied, or
+            the registry build/approval path rejects the fixture inputs.
+    """
     if not isinstance(period, Period):
         raise ModeloBuilderError("registry filing test helper requires a core.Period")
     typed_period = period
@@ -98,7 +131,28 @@ def build_registry_filing_draft_from_decimals[CasillaKey, BindingKey](
 ) -> ModeloDraft:
     """Coerce decimal strings before building through the registry runtime.
 
-    Returns a :class:`ModeloDraft`.
+    Casilla keys are canonicalised with
+    :func:`aeat.domain.calculations.registry.validated_casilla_id`; binding
+    keys are validated as registry ``BindingId`` tokens before the coerced
+    values are forwarded to :func:`build_registry_filing_draft`.
+
+    Args:
+        modelo: Stable modelo id to resolve from the bundled registry.
+        period: Typed :class:`~aeat.core.Period` passed through unchanged.
+        profile_tax_id: Tax identifier written to the generated test profile.
+        casilla_decimals: Casilla-id keyed values as :class:`Decimal` instances
+            or decimal strings.
+        binding_decimals: Optional binding-id keyed values as
+            :class:`Decimal` instances or decimal strings.
+        status: Desired final :class:`~aeat.domain.submission.ModeloDraftStatus`.
+
+    Returns:
+        The :class:`ModeloDraft` returned by :func:`build_registry_filing_draft`.
+
+    Raises:
+        ValueError: When a casilla key is not a canonical casilla id.
+        ModeloBuilderError: When a binding key is not a canonical binding id.
+        decimal.InvalidOperation: When a decimal string cannot be parsed.
     """
     coerced: dict[CasillaId, Decimal] = {}
     for casilla_id, raw in casilla_decimals.items():

@@ -9,10 +9,16 @@ the headline casillas, so the CLI can lead with it before the full
 table.
 
 The headline casillas are taken from the modelo's own registry
-metadata, never hand-picked: the ``reconciliation_total_casilla_ids`` of the
-revision's verification expectations name the result-to-pay /
-result-to-refund casillas, and the verification expectation's
-``computed_casilla_ids`` enumerate the modelo's key computed outputs.
+metadata, never hand-picked. The revision's parent :class:`WorkUnit`
+selects the registry snapshot, whose :class:`VerificationExpectationDefinition`
+entries use ``reconciliation_total_casilla_ids`` for result-to-pay /
+result-to-refund casillas and ``computed_casilla_ids`` for the modelo's
+key computed outputs.
+
+See Also:
+    :func:`aeat.application.filing.summarise_calculation`
+        Draft-calculation summary surface for filing workflows; this module
+        handles persisted modelo revisions instead.
 """
 
 from __future__ import annotations
@@ -36,7 +42,15 @@ _log = get_logger(__name__)
 
 
 class ResultSummaryRow(BaseModel):
-    """One headline casilla in a calculation result summary."""
+    """One application row for a headline casilla in a calculation summary.
+
+    Rows are emitted only for casillas present in the source
+    :class:`CalculationRevision` values. ``result_ingresar`` and
+    ``result_devolver`` identify registry-declared reconciliation totals;
+    ``key_figure`` identifies a computed output retained for the CLI summary.
+    CLI JSON rendering serializes this model into ``ResultSummaryRowPayload``
+    rows with string decimal values.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -53,7 +67,13 @@ class ResultSummaryRow(BaseModel):
 
 
 class CalculationResultSummary(BaseModel):
-    """Distilled headline figures for a persisted calculation revision."""
+    """Distilled headline figures for a persisted calculation revision.
+
+    The modelo, filing year, and typed :class:`Period` come from the parent
+    :class:`WorkUnit`; rows are :class:`ResultSummaryRow` values selected from
+    that work unit's registry snapshot. Text rendering uses the period's bare
+    registry token so the summary header does not duplicate the filing year.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -68,13 +88,24 @@ def calculation_result_summary(
     *,
     work_unit_resolver: Callable[[str], WorkUnit] = get_work_unit,
 ) -> CalculationResultSummary | None:
-    """Return the headline :class:`CalculationResultSummary` for a persisted :class:`CalculationRevision`.
+    """Return the registry-derived headline summary for ``revision``, if available.
 
-    Resolves the revision's work unit and registry snapshot, then picks
-    the headline casillas from the snapshot's verification expectations.
-    Returns ``None`` when the work unit or registry snapshot cannot be
-    resolved, or when the modelo declares no verification expectation —
-    the caller then renders only the full casilla table.
+    ``revision`` is the persisted :class:`CalculationRevision` attempt and
+    provides ``casilla_values``. The function resolves its parent
+    :class:`WorkUnit`, then reads the registry snapshot's verification
+    expectations for that work unit's revision. Missing work-unit or snapshot
+    lookup errors return ``None`` so callers can render only the full casilla
+    table; unexpected errors are allowed to propagate.
+
+    For each :class:`VerificationExpectationDefinition`,
+    ``reconciliation_total_casilla_ids`` are considered first and produce
+    ``result_ingresar`` or ``result_devolver`` rows. Remaining unique
+    ``computed_casilla_ids`` produce ``key_figure`` rows. A result casilla is
+    emitted once and skipped later if it also appears as a computed key figure.
+
+    Rows are emitted only when their casilla id exists in
+    ``revision.casilla_values``. Returns ``None`` when no candidate row
+    survives.
     """
     casilla_values = revision.casilla_values
     try:

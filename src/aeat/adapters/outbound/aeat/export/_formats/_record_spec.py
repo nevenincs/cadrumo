@@ -1,9 +1,14 @@
-"""Fixed-width record-spec primitives for fichero-BOE export.
+"""Fixed-width record-spec primitives for explicit fichero-BOE layouts.
 
-Registry-backed export definitions provide tuples of
-:class:`RecordFieldSpec` entries describing the BOE *Diseño de
-registros* field layout. The encoders defined here produce the byte-exact
-output the AEAT portal expects via "importar datos".
+The :class:`RecordFieldSpec` and :class:`SegmentSpec` records describe a
+small adapter-local fixed-width layout that can be passed to
+:func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`
+or :func:`aeat.adapters.outbound.aeat.export._formats._deserialise.deserialise`.
+The canonical product export path is registry-backed:
+:class:`aeat.domain.calculations.registry.ExportLayoutDefinition` and
+:class:`aeat.domain.calculations.registry.ExportRecordDefinition` drive
+:func:`aeat.application.filing.export_draft` and
+:func:`aeat.domain.calculations.registry.parse_export_payload`.
 
 Primitive-safety contract:
 
@@ -17,8 +22,15 @@ Primitive-safety contract:
 - :func:`validate_record_specs` enforces monotonic
   ``offset + length == next.offset`` across a spec tuple.
 
-Registry-backed export definitions pin the concrete wire encoding via the
+Explicit-spec callers pin the concrete wire encoding via the
 :data:`FicheroBoeEncoding` literal.
+
+See Also:
+    :class:`aeat.domain.calculations.registry.ExportFieldDefinition`
+        Canonical registry field declaration for modelo export layouts.
+    :class:`aeat.adapters.outbound.aeat.export.AeatExportFormatError`
+        Error raised when an explicit fixed-width spec or encoded value
+        violates the adapter contract.
 """
 
 from __future__ import annotations
@@ -150,6 +162,14 @@ class RecordFieldSpec(BaseModel):
             Defaults to ``UNSIGNED``. Set to ``INLINE_SIGN`` for
             fields that carry the sign in the leading byte. Ignored for
             non-CURRENCY kinds.
+
+    See Also:
+        :class:`aeat.domain.calculations.registry.ExportFieldDefinition`
+            Registry-backed declaration used by the application export
+            renderer.
+        :func:`record_field`
+            Compact constructor that applies kind-aware defaults before
+            producing this record.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -429,6 +449,13 @@ class SegmentSpec(BaseModel):
             segment-local (1-based within this segment, not global).
         total_length: Byte content length of this segment, excluding
             any CRLF terminator.
+
+    See Also:
+        :class:`aeat.domain.calculations.registry.ExportRecordDefinition`
+            Registry-backed record declaration for the active modelo export
+            renderer.
+        :func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise_envelope`
+            Explicit-spec envelope serialiser that consumes segments.
     """
 
     model_config = STRICT_FROZEN_CONFIG

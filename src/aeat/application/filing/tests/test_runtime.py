@@ -12,9 +12,9 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
+from typing import Protocol
 
 import pytest
-import time_machine as tm
 from pydantic import ValidationError
 
 from ....core import Period, TaxDomain
@@ -33,9 +33,9 @@ from ....domain.filing import ModeloBuilderError
 from ..runtime import (
     RegistryCasillaCollection,
     RegistryCasillaSchema,
-    _collection_from_snapshot,
-    _value_type,
     build_runtime_schema_provider,
+    collection_from_snapshot,
+    registry_value_type,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -46,6 +46,11 @@ _TEST_PERIOD = Period.from_year_and_code(_TEST_YEAR, "1T")
 _CASILLA_01: CasillaId = validated_casilla_id("01", surface="_CASILLA_01")
 _CASILLA_02: CasillaId = validated_casilla_id("02", surface="_CASILLA_02")
 _MISSING_INPUT_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_INPUT_CASILLA")
+
+
+class _TimeMachineController(Protocol):
+    def move_to(self, destination: object, *, tick: bool = False) -> None:
+        """Move the test clock to ``destination``."""
 
 
 def _source_casilla_refs() -> dict[CasillaId, tuple[str, ...]]:
@@ -82,8 +87,7 @@ def test_legal_refs_survive_projection() -> None:
         assert isinstance(schema, RegistryCasillaSchema)
         expected = source.get(schema.casilla_id, ())
         assert schema.legal_refs == expected, (
-            f"legal_refs mismatch for casilla {schema.casilla_id}: "
-            f"projected={schema.legal_refs!r}, source={expected!r}"
+            f"legal_refs mismatch for casilla {schema.casilla_id}: projected={schema.legal_refs!r}, source={expected!r}"
         )
 
 
@@ -155,7 +159,7 @@ def test_runtime_schema_provider_rejects_raw_period_string() -> None:
         build_runtime_schema_provider(
             modelos=[_TEST_MODELO],
             filing_year=_TEST_YEAR,
-            period=_TEST_PERIOD.registry_token,  # pyright: ignore  # ty: ignore  # negative test: raw str rejected
+            period=_TEST_PERIOD.registry_token,
         )
 
     assert exc_info.value.translated_message == "application.filing.runtime.errors.period_type"
@@ -164,7 +168,7 @@ def test_runtime_schema_provider_rejects_raw_period_string() -> None:
 
 def test_unsupported_casilla_data_type_error_is_localized() -> None:
     with pytest.raises(ModeloBuilderError) as exc_info:
-        _value_type("blob")
+        registry_value_type("blob")
 
     assert exc_info.value.translated_message == "application.filing.runtime.errors.unsupported_casilla_data_type"
     assert exc_info.value.context == {"data_type": "blob"}
@@ -224,7 +228,7 @@ def test_registry_casilla_collection_rejects_duplicate_casilla_ids() -> None:
         RegistryCasillaCollection(
             casillas=(casilla, casilla.model_copy()),
             schema_version="registry:test:rev",
-    )
+        )
     assert exc_info.value.translated_message == "application.filing.runtime.errors.ambiguous_casilla_schema"
     assert exc_info.value.context == {"schema_version": "registry:test:rev", "casilla_ids": _CASILLA_01}
 
@@ -308,7 +312,7 @@ def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> Non
     )
 
     with pytest.raises(ModeloBuilderError, match="casilla reference token '01' is ambiguous") as exc_info:
-        _collection_from_snapshot(snapshot)
+        collection_from_snapshot(snapshot)
 
     assert exc_info.value.translated_message == "application.filing.runtime.errors.ambiguous_casilla_schema"
     assert exc_info.value.context is not None
@@ -380,7 +384,7 @@ def test_runtime_projection_rejects_casilla_binding_id_collision() -> None:
     )
 
     with pytest.raises(ModeloBuilderError, match="duplicate registry id '01' shared by casilla, binding"):
-        _collection_from_snapshot(snapshot)
+        collection_from_snapshot(snapshot)
 
 
 def _revision_validation_years(revision: ModeloRevision) -> tuple[int, ...]:
@@ -422,7 +426,7 @@ def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_sch
                         f"bundled runtime schema coordinate {context} has ambiguous revision refs: "
                         f"{identity_failures!r}"
                     )
-                    collection = _collection_from_snapshot(snapshot)
+                    collection = collection_from_snapshot(snapshot)
                     assert collection.schema_version == f"registry:{modelo.id}:{revision.id}"
                     source_ids = tuple(sorted(casilla.id for casilla in snapshot.revision.casillas))
                     projected_ids = tuple(schema.casilla_id for schema in collection.all())
@@ -459,11 +463,11 @@ def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_sch
     assert not offences, "ambiguous runtime casilla schema projection:\n  " + "\n  ".join(offences)
 
 
-def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path, time_machine: tm.TimeMachineFixture) -> None:  # ty: ignore[possibly-missing-attribute]  # time_machine ships no typed TimeMachineFixture export
+def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path, time_machine: _TimeMachineController) -> None:
     """_registry_tree_fingerprint must cache results with a 1-second TTL and support clearing."""
     import os
 
-    from ..runtime import _registry_tree_fingerprint, clear_runtime_fingerprint_cache
+    from ..runtime import clear_runtime_fingerprint_cache, registry_tree_fingerprint
 
     clear_runtime_fingerprint_cache()
     reg_root = tmp_path / "registry"
@@ -474,21 +478,21 @@ def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path, time_machine: tm.Ti
     toml_file.write_text("a = 1")
 
     time_machine.move_to("2026-06-09T12:00:00+00:00")
-    fp1 = _registry_tree_fingerprint(reg_root)
+    fp1 = registry_tree_fingerprint(reg_root)
 
     toml_file.write_text("a = 2")
     os.utime(toml_file, (1812542400, 1812542400))  # 2027-06-09 12:00:00
 
-    fp2 = _registry_tree_fingerprint(reg_root)
+    fp2 = registry_tree_fingerprint(reg_root)
     assert fp2 == fp1
 
     clear_runtime_fingerprint_cache()
-    fp3 = _registry_tree_fingerprint(reg_root)
+    fp3 = registry_tree_fingerprint(reg_root)
     assert fp3 != fp1
 
     toml_file.write_text("a = 3")
     os.utime(toml_file, (1812542405, 1812542405))
 
     time_machine.move_to("2026-06-09T12:00:02+00:00")
-    fp4 = _registry_tree_fingerprint(reg_root)
+    fp4 = registry_tree_fingerprint(reg_root)
     assert fp4 != fp3

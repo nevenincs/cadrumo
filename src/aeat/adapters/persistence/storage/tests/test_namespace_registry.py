@@ -414,67 +414,69 @@ def _make_namespace_definition(**overrides: object) -> SecureObjectNamespaceDefi
     return SecureObjectNamespaceDefinition.model_validate(defaults)
 
 
-def test_namespace_key_with_surrounding_whitespace_raises_namespace_registry_error() -> None:
+def _assert_caused_by_namespace_registry_error(error: ValidationError) -> None:
+    causes = [entry.get("ctx", {}).get("error") for entry in error.errors()]
+    assert any(isinstance(cause, NamespaceRegistryError) for cause in causes)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        {"key": " whitespace_key "},
+        {"key": "path/sep"},
+        {"namespace": "aeat/bad"},
+        {"namespace": " aeat.bad "},
+        {"default_object_key": " bad "},
+        {"default_object_key": "path/sep"},
+    ),
+    ids=(
+        "key-whitespace",
+        "key-path-separator",
+        "namespace-path-separator",
+        "namespace-whitespace",
+        "default-key-whitespace",
+        "default-key-path-separator",
+    ),
+)
+def test_namespace_definition_invariant_violations_raise_namespace_registry_error(
+    overrides: Mapping[str, object],
+) -> None:
     with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(key=" whitespace_key ")
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+        _make_namespace_definition(**overrides)
+
+    _assert_caused_by_namespace_registry_error(exc_info.value)
 
 
-def test_namespace_key_with_path_separator_raises_namespace_registry_error() -> None:
+@pytest.mark.parametrize(
+    ("overrides", "expected_message"),
+    (
+        (
+            {"remote_mirror_requires_revision": False},
+            "ciphertext remote mirror namespaces require revision and integrity metadata",
+        ),
+        (
+            {"remote_mirror_requires_integrity_manifest": False},
+            "ciphertext remote mirror namespaces require revision and integrity metadata",
+        ),
+        (
+            {"remote_mirror_policy": StorageRemoteMirrorPolicy.TEST_ONLY},
+            "local-only and test-only namespaces must not require remote mirror metadata",
+        ),
+    ),
+    ids=(
+        "ciphertext-requires-revision",
+        "ciphertext-requires-integrity-manifest",
+        "test-only-rejects-metadata-requirements",
+    ),
+)
+def test_namespace_definition_remote_mirror_policy_constraints_are_enforced(
+    overrides: Mapping[str, object],
+    expected_message: str,
+) -> None:
     with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(key="path/sep")
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+        _make_namespace_definition(**overrides)
 
-
-def test_namespace_slug_with_path_separator_raises_namespace_registry_error() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(namespace="aeat/bad")
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
-
-
-def test_namespace_slug_with_whitespace_raises_namespace_registry_error() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(namespace=" aeat.bad ")
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
-
-
-def test_default_object_key_with_whitespace_raises_namespace_registry_error() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(default_object_key=" bad ")
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
-
-
-def test_default_object_key_with_path_separator_raises_namespace_registry_error() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(default_object_key="path/sep")
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
-
-
-def test_ciphertext_remote_mirror_policy_requires_revision_metadata() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(remote_mirror_requires_revision=False)
-    errors = exc_info.value.errors()
-    assert any("ciphertext remote mirror namespaces require revision and integrity metadata" in str(e) for e in errors)
-
-
-def test_ciphertext_remote_mirror_policy_requires_integrity_metadata() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(remote_mirror_requires_integrity_manifest=False)
-    errors = exc_info.value.errors()
-    assert any("ciphertext remote mirror namespaces require revision and integrity metadata" in str(e) for e in errors)
-
-
-def test_test_only_remote_mirror_policy_rejects_metadata_requirements() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_namespace_definition(remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY)
-    errors = exc_info.value.errors()
-    assert any("local-only and test-only namespaces must not require remote mirror metadata" in str(e) for e in errors)
+    assert any(expected_message in str(error) for error in exc_info.value.errors())
 
 
 def _make_path_definition(**overrides: object) -> StoragePathDefinition:
@@ -488,32 +490,28 @@ def _make_path_definition(**overrides: object) -> StoragePathDefinition:
     return StoragePathDefinition.model_validate(defaults)
 
 
-def test_path_key_with_whitespace_raises_namespace_registry_error() -> None:
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        {"key": " bad_key "},
+        {"key": "path/sep"},
+        {"segment": " bad_segment "},
+        {"segment": "path/sep"},
+    ),
+    ids=(
+        "key-whitespace",
+        "key-path-separator",
+        "segment-whitespace",
+        "segment-path-separator",
+    ),
+)
+def test_path_definition_invariant_violations_raise_namespace_registry_error(
+    overrides: Mapping[str, object],
+) -> None:
     with pytest.raises(ValidationError) as exc_info:
-        _make_path_definition(key=" bad_key ")
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+        _make_path_definition(**overrides)
 
-
-def test_path_key_with_path_separator_raises_namespace_registry_error() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_path_definition(key="path/sep")
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
-
-
-def test_path_segment_with_whitespace_raises_namespace_registry_error() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_path_definition(segment=" bad_segment ")
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
-
-
-def test_path_segment_with_path_separator_raises_namespace_registry_error() -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        _make_path_definition(segment="path/sep")
-    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
-    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+    _assert_caused_by_namespace_registry_error(exc_info.value)
 
 
 def test_duplicate_namespace_keys_raise_namespace_registry_error() -> None:

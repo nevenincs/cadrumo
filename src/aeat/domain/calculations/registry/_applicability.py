@@ -93,6 +93,7 @@ from pydantic import BaseModel, Field
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Modelo
+from ...deadlines import FiscalResidency
 from ...deadlines.taxpayer_model import (
     EntityType,
     IrpfEstimationRegime,
@@ -230,6 +231,12 @@ class ModeloApplicabilityRule(BaseModel):
             módulos owes Modelo 130. This is the axis that splits Modelo
             130 (estimación directa) from Modelo 131 (estimación
             objetiva): the two are mutually exclusive on the regime.
+        applicable_fiscal_residencies: The fiscal residency categories
+            the modelo applies to. Empty means the modelo does not gate
+            on fiscal residency. An undeclared residency is kept on the
+            resident-IRPF default path described by ``TaxpayerProfile``;
+            a declared residency outside this set is a positive
+            exclusion.
         required_payer_fact: The :class:`PayerFact` the modelo's
             applicability depends on, or ``None`` when the modelo does
             not gate on a payer fact. When set, a profile that
@@ -262,6 +269,7 @@ class ModeloApplicabilityRule(BaseModel):
     applicable_entity_types: frozenset[EntityType] = Field(min_length=1)
     required_income_categories: frozenset[IrpfIncomeCategory] = frozenset()
     required_estimation_regimes: frozenset[IrpfEstimationRegime] = frozenset()
+    applicable_fiscal_residencies: frozenset[FiscalResidency] = frozenset()
     required_payer_fact: PayerFact | None = None
     applicable_reason: str = Field(min_length=1)
     not_applicable_reason: str = Field(min_length=1)
@@ -307,6 +315,12 @@ class ModeloApplicabilityRule(BaseModel):
         # not re-gated on those axes — its applicability is settled by
         # the entity type.
         if profile.entity_type is EntityType.NATURAL_PERSON:
+            if (
+                self.applicable_fiscal_residencies
+                and profile.fiscal_residency is not None
+                and profile.fiscal_residency not in self.applicable_fiscal_residencies
+            ):
+                return self._not_applicable()
             # A natural-person modelo that gates on income category needs
             # at least one declared category to match.
             if self.required_income_categories:
@@ -611,17 +625,20 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
                 IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
             },
         ),
+        applicable_fiscal_residencies=frozenset({FiscalResidency.RESIDENT_IRPF}),
         applicable_reason=(
             "Modelo 130 (pago fraccionado del IRPF): la persona física "
-            "declara rendimientos de actividades económicas en estimación "
-            "directa, que generan la obligación del pago fraccionado."
+            "residente IRPF declara rendimientos de actividades económicas "
+            "en estimación directa, que generan la obligación del pago "
+            "fraccionado."
         ),
         not_applicable_reason=(
             "Modelo 130 no aplica: el pago fraccionado en estimación "
-            "directa solo corresponde a la persona física que obtiene "
-            "rendimientos de actividades económicas determinados por ese "
-            "método. Una actividad en estimación objetiva presenta el "
-            "Modelo 131."
+            "directa solo corresponde a la persona física residente IRPF "
+            "que obtiene rendimientos de actividades económicas determinados "
+            "por ese método. Una actividad en estimación objetiva presenta "
+            "el Modelo 131; un contribuyente NON_RESIDENT_IRNR queda en la "
+            "ruta IRNR."
         ),
         # Modelo 130 is an IRPF pago-fraccionado cuota self-assessment:
         # an attribution entity asked about it gets the pass-through
@@ -635,6 +652,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "rd-439-2007:art-110",
             "orden-eha-672-2007:art-1",
             "ley-35-2006:art-99",
+            "trlirnr-rdleg-5-2004:art-2",
         ),
     ),
     # Modelo 131 — pago fraccionado del IRPF, estimación OBJETIVA (módulos).
@@ -756,12 +774,11 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "retención."
         ),
         # LIRPF art. 99 — obligación de retener; RD 439/2007 art. 108 —
-        # resumen anual de las retenciones e ingresos a cuenta; RD
-        # 439/2007 art. 109 — declaración informativa anual (Modelo 190).
+        # declaración trimestral/mensual y resumen anual de las retenciones
+        # e ingresos a cuenta.
         legal_refs=(
             "ley-35-2006:art-99",
             "rd-439-2007:art-108",
-            "rd-439-2007:art-109",
         ),
     ),
     # Modelo 180 — resumen anual de retenciones e ingresos a cuenta del
@@ -784,11 +801,12 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         ),
         # LIRPF art. 99 — obligación de retener; RD 439/2007 art. 100 —
         # retención sobre el arrendamiento de inmuebles urbanos; RD
-        # 439/2007 art. 109 — declaración informativa anual (Modelo 180).
+        # 439/2007 art. 108 — declaración trimestral/mensual y resumen
+        # anual de las retenciones e ingresos a cuenta.
         legal_refs=(
             "ley-35-2006:art-99",
             "rd-439-2007:art-100",
-            "rd-439-2007:art-109",
+            "rd-439-2007:art-108",
         ),
     ),
     # Modelo 349 — declaración recapitulativa de operaciones

@@ -1,10 +1,10 @@
 """Verification report builder for ``aeat manual verify``.
 
-Walks a committed manual part, validates every JSON file against the
-strict schema, and reports dangling cross-references, missing
-multilingual completeness, and records lacking reviewer metadata. The
-report is a pydantic model so the CLI can render it deterministically
-and so tests can assert on its shape.
+:func:`verify_manual_dir` walks a committed manual part, validates every JSON
+file against the strict :class:`Manual` and :class:`Section` schema, and reports
+dangling cross-references, missing multilingual completeness, and load failures
+as :class:`ManualVerificationIssue` rows in a
+:class:`ManualVerificationReport`.
 """
 
 from __future__ import annotations

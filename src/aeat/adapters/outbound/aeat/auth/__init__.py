@@ -1,14 +1,15 @@
-"""AEAT Sede authentication: providers, sessions, and certificate health.
+"""AEAT Sede authentication public facade.
 
-The outbound auth surface establishes and verifies authenticated sessions
-against the AEAT Sede electrónica. It implements the application-layer
-:class:`AuthProvider` contract for each supported provider kind and gates
-every live interaction behind the core access gate.
+This package is the public import point for outbound authentication. It
+re-exports the application-layer :class:`AuthProvider` protocol, the
+supported :class:`AuthProviderKind` values, concrete providers, session and
+assertion records, provider detail payloads, certificate helpers, and the
+live-read gate types used around AEAT Sede electrónica access.
 
 Major declarations:
 
-* :func:`~aeat.adapters.outbound.aeat.auth.select_provider` — dispatch a
-  :class:`AuthProviderKind` to its concrete provider
+* :func:`~aeat.adapters.outbound.aeat.auth.select_provider` — map a
+  :class:`AuthProviderKind` to the concrete outbound provider
   (:class:`AeatAuthenticator` for client certificates,
   :class:`ClaveMovilAuthProvider` for Cl@ve Móvil).
 * :class:`AeatSession` and :class:`AeatLoginAssertion` — the authenticated
@@ -22,6 +23,17 @@ Major declarations:
 
 Live reads pass through :class:`AeatAccessGate`; no path performs a remote
 write to the AEAT.
+
+See Also:
+    :mod:`aeat.application.auth`
+        Application-owned provider protocol, operator actions, and lazy
+        selection wrapper that delegates to this facade.
+    :class:`AeatAuthenticator`
+        Certificate-backed provider returned for
+        ``AuthProviderKind.CERTIFICATE``.
+    :class:`ClaveMovilAuthProvider`
+        Human-in-the-loop Cl@ve Móvil provider returned for
+        ``AuthProviderKind.CLAVE_MOVIL``.
 """
 
 from __future__ import annotations
@@ -165,7 +177,18 @@ def select_provider(
     settings: Settings,
     browser_session_factory: BrowserSessionFactory | None = None,
 ) -> AuthProvider:
-    """Return the concrete outbound :class:`AuthProvider` for ``kind``."""
+    """Return the concrete outbound :class:`AuthProvider` for ``kind``.
+
+    ``AuthProviderKind.CERTIFICATE`` builds an :class:`AeatAuthenticator`;
+    ``AuthProviderKind.CLAVE_MOVIL`` builds a :class:`ClaveMovilAuthProvider`.
+    The optional browser session factory is forwarded to either provider so
+    application code can share Playwright sessions without depending on
+    adapter internals.
+
+    Raises:
+        AuthConfigurationError: If ``kind`` is outside the supported
+            :class:`AuthProviderKind` set.
+    """
     if kind is AuthProviderKind.CERTIFICATE:
         return AeatAuthenticator(
             settings,

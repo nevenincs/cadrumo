@@ -1,9 +1,9 @@
 """Self-test for the shared :mod:`_repository_test_suite` contract.
 
 Runs :func:`assert_secure_repository_contract` against a throwaway
-:class:`SecureBoundRepository[_DummyPayload]` subclass to prove the
+:class:`SecureBoundRepository[_ContractPayload]` subclass to prove the
 suite is honest before any of the 8 consumer test files migrate onto
-it. The dummy payload mirrors the shape used by the
+it. The contract payload mirrors the shape used by the
 :mod:`test_secure_bound_repository` roundtrip test introduced in
 contract: a frozen, strict, ``extra='forbid'`` Pydantic model with a
 required ``id`` field plus two further required fields whose
@@ -38,7 +38,7 @@ from .._secure_repository import SecureBoundRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-class _DummyPayload(BaseModel):
+class _ContractPayload(BaseModel):
     """Throwaway typed payload exercising the contract.
 
     Three required fields keep the strict-equality witness honest:
@@ -54,28 +54,27 @@ class _DummyPayload(BaseModel):
     label: str
 
 
-class _DummyRepository(SecureBoundRepository[_DummyPayload]):
-    namespace: ClassVar[str] = "aeat.test.envelope.secure_bound_contract_dummy"
+class _ContractRepository(SecureBoundRepository[_ContractPayload]):
+    namespace: ClassVar[str] = "aeat.test.envelope.secure_bound_contract"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
-    payload_type: ClassVar[type[BaseModel]] = _DummyPayload
+    payload_type: ClassVar[type[BaseModel]] = _ContractPayload
 
     @override
-    def extract_identifier(self, payload: _DummyPayload) -> str:
+    def extract_identifier(self, payload: _ContractPayload) -> str:
         return payload.id
 
 
-def test_dummy_repository_satisfies_secure_contract(
+def test_contract_repository_satisfies_secure_contract(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The dummy ``SecureBoundRepository`` honours every contract check."""
+    """The contract ``SecureBoundRepository`` honours every contract check."""
 
-    first = _DummyPayload(id="alpha-001", value=4242, label="firstwitness")
-    second = _DummyPayload(id="beta-002", value=9999, label="secondwitness")
+    first = _ContractPayload(id="alpha-001", value=4242, label="firstwitness")
+    second = _ContractPayload(id="beta-002", value=9999, label="secondwitness")
 
-    case = SecureRepositoryContractCase[_DummyPayload](
-        repository_factory=_DummyRepository,
+    case = SecureRepositoryContractCase[_ContractPayload](
+        repository_factory=_ContractRepository,
         first_payload=first,
         second_payload=second,
         # All three string witnesses appear plainly in the original
@@ -88,7 +87,6 @@ def test_dummy_repository_satisfies_secure_contract(
     executed = assert_secure_repository_contract(
         case,
         tmp_path=tmp_path,
-        monkeypatch=monkeypatch,
     )
     assert executed == EXPECTED_CHECK_COUNT, (
         f"contract suite executed {executed} checks; expected "
@@ -111,7 +109,7 @@ def test_expected_check_count_matches_published_canon() -> None:
     assert EXPECTED_CHECK_COUNT == 11
 
 
-def test_dummy_repository_engine_is_real_sqlite(tmp_path: Path) -> None:
+def test_contract_repository_engine_is_real_sqlite(tmp_path: Path) -> None:
     """Sanity gate: the contract harness builds a real SQLite engine.
 
     No mocks, no fakes; if this ever returns something other than a

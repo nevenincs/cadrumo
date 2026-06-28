@@ -1,6 +1,10 @@
 """Art. 81 LIRPF deducción maternidad computation helpers.
 
 Pure-domain arithmetic; no entrypoint or CLI dependencies.
+:func:`compute_deduccion_maternidad_0611` applies the central
+:data:`~aeat.core.external_constants.DEDUCCION_MATERNIDAD_MENSUAL_EUR` and
+:data:`~aeat.core.external_constants.DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR`
+limits used by :class:`RentaFamilyProfile`.
 """
 
 from __future__ import annotations

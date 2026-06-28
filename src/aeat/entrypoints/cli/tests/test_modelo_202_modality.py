@@ -254,6 +254,8 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
             "B12345674",
             "--name",
             "Company",
+            "--surnames",
+            "Company SL",
             "--activity",
             "consulting",
             "--entity-type",

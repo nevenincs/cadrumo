@@ -29,6 +29,22 @@ _UUID_TEXT_RE = re.compile(
 )
 
 
+def _seed_modelo_130_ready_profile(bucket_id: str) -> None:
+    from ....application.user_profile import UserProfileLifecycleRepository
+    from ....domain.user_profile import UserProfileFact, UserProfileRecord
+
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Modelo 130 guidance profile",
+            facts=(
+                UserProfileFact(path="identity.name", value="Test"),
+                UserProfileFact(path="identity.surnames", value="Operator"),
+            ),
+        ),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Discoverability: the modelo `describe` verb is listed in `modelo --help`
 # and resolves; the ledger `preflight` verb is listed in `ledger --help` and
@@ -111,28 +127,33 @@ def test_invalid_modelo_period_surfaces_accepted_set() -> None:
     assert "1T" in result.output and "4T" in result.output
 
 
-def test_describe_accepts_explicit_year_period_scope() -> None:
-    result = invoke_cached_cli(["app", "modelo", "describe", "303", "--year", "2026", "--period", "1T"])
+@pytest.mark.parametrize(
+    ("command", "expected_fragments"),
+    [
+        (
+            ["app", "modelo", "describe", "303", "--year", "2026", "--period", "1T"],
+            ("303", "2009-y-siguientes"),
+        ),
+        (
+            ["app", "modelo", "casillas", "303", "--year", "2026", "--period", "1T", "--input-kind", "computed"],
+            ("iva.resultado-regimen-general",),
+        ),
+        (
+            ["app", "modelo", "formulas", "303", "--year", "2026", "--period", "1T"],
+            ("formula_id",),
+        ),
+    ],
+    ids=("describe", "casillas", "formulas"),
+)
+def test_registry_discovery_accepts_explicit_year_period_scope(
+    command: list[str],
+    expected_fragments: tuple[str, ...],
+) -> None:
+    result = invoke_cached_cli(command)
 
     assert result.exit_code == 0, result.output
-    assert "303" in result.output
-    assert "2009-y-siguientes" in result.output
-
-
-def test_casillas_accepts_explicit_year_period_scope() -> None:
-    result = invoke_cached_cli(
-        ["app", "modelo", "casillas", "303", "--year", "2026", "--period", "1T", "--input-kind", "computed"],
-    )
-
-    assert result.exit_code == 0, result.output
-    assert "iva.resultado-regimen-general" in result.output
-
-
-def test_formulas_accepts_explicit_year_period_scope() -> None:
-    result = invoke_cached_cli(["app", "modelo", "formulas", "303", "--year", "2026", "--period", "1T"])
-
-    assert result.exit_code == 0, result.output
-    assert "formula_id" in result.output
+    for fragment in expected_fragments:
+        assert fragment in result.output
 
 
 @pytest.mark.parametrize(
@@ -290,6 +311,29 @@ def test_work_calculate_binding_help_points_at_bindings_list() -> None:
     assert "bindings list --missing" in collapsed
 
 
+def test_work_calculate_relation_help_names_m200_m202_relation_channels() -> None:
+    """The `--relation` help tells M200 operators not to use binding ids for M202 pagos."""
+
+    result = invoke_cached_cli(
+        ["app", "modelo", "work", "calculate", "--help"],
+        env={"COLUMNS": "240"},
+        color=False,
+    )
+    assert result.exit_code == 0, result.output
+    ascii_only = "".join(c for c in result.output if c.isascii())
+    collapsed = " ".join(ascii_only.split())
+    assert "--relation" in collapsed
+    assert "KEY=VALUE" in collapsed
+    assert "id de binding" in collapsed or "binding id" in collapsed
+    assert "bindings list --missing" in collapsed
+    assert "Modelo 200" in collapsed
+    assert "M202" in collapsed
+    assert "pagos fraccionados" in collapsed
+    assert "40.3 casilla 34" in collapsed
+    assert "40.2 casilla 03" in collapsed
+    assert "0" in collapsed
+
+
 def test_work_calculate_enters_bucket_source_mesh_calculation_boundary() -> None:
     """The work calculation application helper must use the bucket-backed boundary.
 
@@ -347,6 +391,7 @@ def test_missing_binding_guidance_routes_by_binding_source(tmp_path) -> None:
 
     period = Period.from_year_and_code(2025, "1T")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="missing-binding-route") as runtime:
+        _seed_modelo_130_ready_profile(runtime.bucket_id)
         unit = create_work_unit(
             bucket_id=runtime.bucket_id,
             modelo="130",
@@ -374,6 +419,96 @@ def test_missing_binding_guidance_routes_by_binding_source(tmp_path) -> None:
         # previous_filing-sourced: keep the --binding guidance, not ledger.
         assert "--binding KEY=VALUE" in prev_filing_guidance
         assert "ledger preflight" not in prev_filing_guidance
+
+
+def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path) -> None:
+    """The live M200 relation-prefill path warns rather than refusing calculation."""
+
+    from ....application.modelo import create_work_unit
+    from ....application.user_profile import UserProfileLifecycleRepository
+    from ....core import Period
+    from ....domain.user_profile import UserProfileFact, UserProfileRecord
+    from ....tests.secure_sql import isolated_runtime_profile
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="m200-missing-relation-guidance") as runtime:
+        UserProfileLifecycleRepository(bucket_id=runtime.bucket_id, objects=runtime.repository).save(
+            UserProfileRecord(
+                profile_id=runtime.bucket_id,
+                display_name="M200 relation guidance profile",
+                facts=(
+                    UserProfileFact(path="identity.tax_id", value="B12345678"),
+                    UserProfileFact(path="identity.legal_name", value="M200 Relation Guidance SL"),
+                    UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
+                    UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+                    UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000"),
+                    UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value="false"),
+                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                ),
+            ),
+        )
+        unit = create_work_unit(
+            bucket_id=runtime.bucket_id,
+            modelo="200",
+            filing_year=2024,
+            period=Period.from_year_and_code(2024, "0A"),
+            revision_id="2024-y-siguientes",
+        )
+        result = invoke_cached_cli(
+            [
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                unit.work_unit_id,
+                "--casilla", "00501=100000.00",
+                "--casilla", "DP200013:00417=0.00",
+                "--casilla", "DP200013:00418=0.00",
+                "--casilla", "01032=0.00",
+                "--casilla", "DP200014:00547=0.00",
+                "--casilla", "DP200014:01033=0.00",
+                "--casilla", "DP200014:01034=0.00",
+                "--binding", "modelo-200-2024-profile-legal-entity-form=sl",
+                "--binding", "modelo-200-2024-profile-new-entity-flag=0",
+                "--binding", "modelo-200-2024-profile-incn-prior-12-months=500000",
+                "--binding", "modelo-200-2024-profile-tributacion-estado-porcentaje=100",
+                "--binding", "modelo-200-2024-bin-pendiente-ejercicios-anteriores=0",
+                "--binding", "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
+                "--binding", "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
+                "--relation", "modelo-200-2024-rel-202-pagos-fraccionados=1800",
+            ],
+        )
+
+    assert result.exit_code == 0, result.output
+    assert "Traceback" not in result.output
+    assert (
+        "ADVISORY: relation 'modelo-200-2024-rel-202-pagos-fraccionados-40-2' requires modelo 202"
+        in result.output
+    )
+    assert "source filing is missing or incomplete" in result.output
+
+
+def test_missing_relation_guidance_helper_routes_m200_m202_to_relation_flag() -> None:
+    """If a relation error reaches the refusal helper, it must point at --relation."""
+
+    from ....domain.calculations.registry import RegistryValidationError
+    from .._modelo import _missing_binding_guidance
+
+    error = RegistryValidationError(
+        "relation 'modelo-200-2024-rel-202-pagos-fraccionados-40-2' has no supplied value",
+        translated_message="errors.calc.relation_value_missing",
+        context={"relation_id": "modelo-200-2024-rel-202-pagos-fraccionados-40-2"},
+    )
+
+    guidance = _missing_binding_guidance(error, "no-such-work-unit")
+
+    assert "--relation RELATION_ID=VALUE" in guidance
+    assert "not --binding" in guidance
+    assert "DP200014B:00611" in guidance
+    assert "40.3 casilla 34" in guidance
+    assert "40.2 casilla 03" in guidance
+    assert "unused modality to 0" in guidance
+    assert "--binding KEY=VALUE" not in guidance
 
 
 def test_bindings_discovery_command_renders_runnable_period_token() -> None:
@@ -462,11 +597,12 @@ def test_casillas_form_number_filter_no_match_returns_empty_table() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_bindings_list_emits_readiness_category_for_every_row() -> None:
+def test_bindings_list_emits_readiness_and_borrador_columns_per_row() -> None:
     """``bindings list`` enriches each binding row with a readiness
     category from the closed set (ledger source / profile fact /
     prior filed revision / live observation / bucket / waiver /
-    blocking finding / casilla)."""
+    blocking finding / casilla), and reports the ``borrador_capable``
+    flag per binding so callers can identify AEAT-prefilled casillas."""
 
     result = invoke_cached_cli(
         ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "1T"],
@@ -478,19 +614,6 @@ def test_bindings_list_emits_readiness_category_for_every_row() -> None:
     # ``ledger_iva_aggregation`` so every row's readiness column is
     # "ledger source".
     assert "ledger source" in result.output
-
-
-def test_bindings_list_emits_borrador_capable_column_per_row() -> None:
-    """``bindings list`` reports the ``borrador_capable`` flag per
-    binding so callers can tell at a glance which casillas the AEAT
-    borrador prefills versus those the operator must supply."""
-
-    result = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "1T"],
-    )
-    assert result.exit_code == 0, result.output
-    # The text-mode header carries the new column.
-    assert "borrador_capable" in result.output
     # Every binding row ends in either ``True`` or ``False`` for the
     # new column. Detect by matching the binding-id prefix on at
     # least one row.
@@ -511,6 +634,78 @@ def test_bindings_list_missing_filter_excludes_constant_value_bindings() -> None
     )
     assert result.exit_code == 0, result.output
     assert "missing_filter\tTrue" in result.output
+
+
+def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
+    """M200 missing-input discovery names the M202 pago relation ids, not just target bindings."""
+
+    result = invoke_cached_cli(
+        [
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "200",
+            "--year",
+            "2024",
+            "--period",
+            "0A",
+            "--missing",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "missing_filter\tTrue" in result.output
+    assert "\tmodelo-200-2024-pagos-fraccionados-anuales\trelation_prefill\trelation input\t" in result.output
+    assert (
+        "\tmodelo-200-2024-pagos-fraccionados-anuales-40-2\trelation_prefill\trelation input\t"
+        in result.output
+    )
+    assert (
+        "relation_guidance\tModelo 200 M202 pagos fraccionados feed DP200014B:00611 "
+        "through --relation values, not --binding target binding ids."
+    ) in result.output
+    assert "mutually exclusive per filing" in result.output
+    assert "unused modality" in result.output
+    assert (
+        "relation_input\tmodelo-200-2024-rel-202-pagos-fraccionados\tM202 40.3 casilla 34\t"
+        "use --relation modelo-200-2024-rel-202-pagos-fraccionados=VALUE\t"
+        "paired target binding modelo-200-2024-pagos-fraccionados-anuales"
+    ) in result.output
+    assert (
+        "relation_input\tmodelo-200-2024-rel-202-pagos-fraccionados-40-2\tM202 40.2 casilla 03\t"
+        "use --relation modelo-200-2024-rel-202-pagos-fraccionados-40-2=VALUE\t"
+        "paired target binding modelo-200-2024-pagos-fraccionados-anuales-40-2"
+    ) in result.output
+
+
+def test_bindings_list_without_missing_does_not_append_m200_relation_guidance() -> None:
+    """The extra M200/M202 relation instructions belong to the missing-input view."""
+
+    result = invoke_cached_cli(
+        [
+            "--language",
+            "en",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "200",
+            "--year",
+            "2024",
+            "--period",
+            "0A",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "missing_filter\tFalse" in result.output
+    assert "relation_guidance\t" not in result.output
+    assert "relation_input\tmodelo-200-2024-rel-202-pagos-fraccionados" not in result.output
 
 
 def test_bindings_resolve_echoes_override_for_known_key() -> None:
@@ -711,25 +906,20 @@ def test_evidence_kind_rejects_unrelated_token() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_validate_work_unit_id_accepts_valid_hex64() -> None:
-    """A 64-character lowercase hex string is accepted and returned stripped."""
-    import typer as _typer
-
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("a" * 64, "a" * 64),
+        (f"  {'b' * 64}  ", "b" * 64),
+    ],
+    ids=("plain", "trimmed"),
+)
+def test_validate_work_unit_id_accepts_valid_hex64_and_strips_whitespace(raw: str, expected: str) -> None:
     from .._modelo import _validate_work_unit_id
 
-    valid = "a" * 64
-    result = _validate_work_unit_id(valid)
-    assert result == valid
+    result = _validate_work_unit_id(raw)
+    assert result == expected
     assert isinstance(result, str)
-    _ = _typer  # ensure import is referenced
-
-
-def test_validate_work_unit_id_strips_whitespace() -> None:
-    """Leading/trailing whitespace is stripped before validation."""
-    from .._modelo import _validate_work_unit_id
-
-    valid = "b" * 64
-    assert _validate_work_unit_id(f"  {valid}  ") == valid
 
 
 @pytest.mark.parametrize(

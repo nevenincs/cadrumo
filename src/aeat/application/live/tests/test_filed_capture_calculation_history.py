@@ -17,8 +17,8 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
     ObservedCasillaValue,
+    observed_casillas_from_submitted_file,
 )
-from ....adapters.outbound.aeat.sede._declarations import _observed_casillas_from_submitted_file
 from ....core import Period
 from ....core.external_constants import load_external_constants
 from ....core.resources import resources
@@ -304,21 +304,25 @@ def test_filed_observation_capture_enrolls_matching_justificante_metadata(tmp_pa
         assert loaded.tax_id == "00000000T"
 
 
-def test_filed_observation_capture_refuses_wrong_taxpayer_justificante_metadata(tmp_path: Path) -> None:
+_REFUSED_JUSTIFICANTE_METADATA_CASES = (
+    pytest.param("X1234567L", "13020260410ABCD1234EFGH5678", id="wrong-taxpayer"),
+    pytest.param("00000000T", "13020260410ZZZZ1234EFGH5678", id="mismatched-presentation-id"),
+)
+
+
+@pytest.mark.parametrize(("authenticated_identity", "expediente_id"), _REFUSED_JUSTIFICANTE_METADATA_CASES)
+def test_filed_observation_capture_refuses_invalid_justificante_metadata(
+    tmp_path: Path,
+    authenticated_identity: str,
+    expediente_id: str,
+) -> None:
     with _secure_backend(tmp_path):
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store, authenticated_identity="X1234567L")
-
-        csvs = persist_filed_justificante_metadata(observation, store=store)
-
-        assert csvs == ()
-        assert JustificanteRepository().load("ABCD1234EFGH5678") is None
-
-
-def test_filed_observation_capture_refuses_mismatched_presentation_id_metadata(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
-        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store, expediente_id="13020260410ZZZZ1234EFGH5678")
+        observation = _stored_130_justificante_observation(
+            store,
+            authenticated_identity=authenticated_identity,
+            expediente_id=expediente_id,
+        )
 
         csvs = persist_filed_justificante_metadata(observation, store=store)
 
@@ -883,7 +887,7 @@ def _parsed_303_submitted_file_observation(
         archive_link_text="Ver",
         declaration_copy_link_text=None,
     )
-    observed = _observed_casillas_from_submitted_file(
+    observed = observed_casillas_from_submitted_file(
         snapshot=resources().modelos.authority.snapshot("303", filing_year=year, period=period),
         declaration=declaration,
         body=body,
@@ -1049,12 +1053,12 @@ def _prior_303_observation(
         ),
         casillas=(
             *(
-                    (
-                        ObservedCasillaValue(
-                            casilla_id=_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-                            value=str(prior_pending),
-                            source_artefact_kind="submitted_file",
-                            source_locator="submitted-file:110",
+                (
+                    ObservedCasillaValue(
+                        casilla_id=_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+                        value=str(prior_pending),
+                        source_artefact_kind="submitted_file",
+                        source_locator="submitted-file:110",
                         confidence=1.0,
                     ),
                 )

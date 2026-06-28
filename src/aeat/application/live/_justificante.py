@@ -331,7 +331,7 @@ class JustificanteCaptureSnapshotService(SnapshotService[JustificanteCaptureSnap
         pdf_sha256: str,
         captured_at: datetime,
     ) -> JustificanteCaptureSnapshot:
-        """Persist one captured justificante and return the ACTIVE snapshot.
+        """Persist one captured justificante and return the ACTIVE :class:`JustificanteCaptureSnapshot`.
 
         Idempotent on the receipt content address: re-capturing the same
         signed PDF returns the existing snapshot. A re-filed period (a new
@@ -513,6 +513,9 @@ def reconcile_capture(
     writes the plaintext receipt to disk. This is the live-sourced equivalent of
     the operator hand-passing a downloaded justificante via the local
     ``reconcile file --file PATH`` surface.
+
+    Returns:
+        A :class:`ModeloReconciliationReport` for the in-memory receipt comparison.
     """
     from ..modelo import (
         ModeloReconciliationBytesCommand,
@@ -726,13 +729,14 @@ def _existing_capture_evidence_matches_current_csv(filing: ModeloRecord, csv: st
 def stamp_capture_evidence_if_filed(snapshot: JustificanteCaptureSnapshot) -> ModeloRecord | None:
     """Best-effort variant of :func:`register_capture_as_filing_evidence`.
 
-    Returns the stamped record when the captured period has a current filing
-    record, or ``None`` when none exists yet (the snapshot is still persisted;
-    the operator can stamp later by filing the period, then re-capturing) or the
-    captured PDF is not parseable into a justificante. Used by the capture
-    orchestrator so a capture of a period not yet filed in-app does not fail.
-    A present-but-conflicting local filing record is not best-effort: identity,
-    period, modelo, and existing-evidence conflicts propagate to the caller.
+    Returns the stamped :class:`ModeloRecord` when the captured period has a
+    current filing record, or ``None`` when none exists yet (the snapshot is
+    still persisted; the operator can stamp later by filing the period, then
+    re-capturing) or the captured PDF is not parseable into a justificante. Used
+    by the capture orchestrator so a capture of a period not yet filed in-app
+    does not fail. A present-but-conflicting local filing record is not
+    best-effort: identity, period, modelo, and existing-evidence conflicts
+    propagate to the caller.
     """
     from ...domain.justificante import JustificanteParseError
     from ...domain.modelos import ModeloRecordCatalogueRepository

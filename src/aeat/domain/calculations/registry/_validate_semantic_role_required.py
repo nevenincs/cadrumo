@@ -42,9 +42,13 @@ _REQUIRED_ROLE_LABEL_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     # semantics - signed cuota vs. prior-period balance - and would
     # need their own roles).
     (re.compile(r"^Resultado a ingresar$", re.IGNORECASE), "cuota_a_ingresar"),
-    # "Base imponible general" / "Base imponible imputada" - IRPF
-    # base imponible across M100 revisions. 12/12 covered.
-    (re.compile(r"^Base imponible (general|imputada)\s*$", re.IGNORECASE), "base_imponible_irpf"),
+    # M100 IRPF base surfaces: the general base and special-regime
+    # imputed base are distinct roles despite similar labels.
+    (re.compile(r"^Base imponible general\s*$", re.IGNORECASE), "irpf_base_imponible_general"),
+    (
+        re.compile(r"^Base imponible imputada\s*$", re.IGNORECASE),
+        "irpf_re_agrup_interes_economico_base_imponible_imputada",
+    ),
     # "Base imponible o importe..." / "Base imponible o importes
     # rectificados" - M349 intracomunitario amount + rectifications.
     (re.compile(r"^Base imponible o importe", re.IGNORECASE), "base_intracomunitaria"),

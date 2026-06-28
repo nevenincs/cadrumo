@@ -1,6 +1,11 @@
 """Persistence helpers for modelo calculation revisions and filing transitions.
 
-Use of :class:`CalculationRevision`, :class:`CasillaObservation`, :class:`ModeloRecord` for compliance.
+The calculate path stores draft :class:`CalculationRevision` rows with their
+provenance-bearing :class:`CasillaObservation` entries and emits
+``modelo.calculation.created`` through the bucket-event catalogue. The filing
+path promotes a verified revision into a current :class:`ModeloRecord`,
+supersedes any prior current filing for the work target, and co-emits
+participation-index and cross-period observation projections.
 """
 
 from __future__ import annotations
@@ -112,7 +117,8 @@ def persist_calculation_revision(
     """Persist a freshly calculated draft revision and return the :class:`CalculationRevision`.
 
     Returns the existing duplicate when an identical revision is already persisted.
-    Uses :class:`CasillaObservation` for provenance.
+    The supplied :class:`CasillaObservation` rows carry the legal and source
+    provenance persisted with a new calculation revision.
     """
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -250,10 +256,12 @@ def persist_filed_revision(
     calculation_observation_repository: CalculationObservationRepository | None = None,
     participation_index_repository: TransactionParticipationIndexRepository | None = None,
     refunded: bool = False,
+    taxpayer_nif: str | None = None,
 ) -> ModeloRecord:
     """Persist the filing transition for a verified-complete calculation revision and return a :class:`ModeloRecord`.
 
-    Uses :class:`CalculationRevision` for the source revision.
+    The ``target`` :class:`CalculationRevision` is the verified-complete source
+    revision that becomes ``PRESENTADO`` when this transition succeeds.
 
     When ``calculation_observation_repository`` is supplied the filed revision's
     casilla observations are additionally persisted into the cross-period
@@ -418,6 +426,8 @@ def persist_filed_revision(
             repository=calculation_observation_repository,
             captured_at=now,
             refunded=refunded,
+            taxpayer_nif=taxpayer_nif,
+            filing_record_id=new_filing_id,
         )
 
     return new_filing

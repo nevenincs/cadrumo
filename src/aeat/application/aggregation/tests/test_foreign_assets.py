@@ -196,22 +196,26 @@ class TestInvariants:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError, match="Period"):
-            ForeignAssetsAggregation(
-                modelo="720",
-                period="2025",  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
-                rollups=(),
-                total_assets=0,
-                total_valuation_eur=Decimal("0"),
+            ForeignAssetsAggregation.model_validate(
+                {
+                    "modelo": "720",
+                    "period": "2025",
+                    "rollups": (),
+                    "total_assets": 0,
+                    "total_valuation_eur": Decimal("0"),
+                },
             )
 
     def test_period_dict_is_not_coerced(self) -> None:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError, match="Period"):
-            ForeignAssetsAggregation(
-                modelo="720",
-                period={"filing_year": 2025, "code": "0A"},  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # negative test: intentionally invalid input
-                rollups=(),
-                total_assets=0,
-                total_valuation_eur=Decimal("0"),
+            ForeignAssetsAggregation.model_validate(
+                {
+                    "modelo": "720",
+                    "period": {"filing_year": 2025, "code": "0A"},
+                    "rollups": (),
+                    "total_assets": 0,
+                    "total_valuation_eur": Decimal("0"),
+                },
             )

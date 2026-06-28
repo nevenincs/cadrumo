@@ -23,7 +23,7 @@ import functools
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import pytest
 from cryptography import x509
@@ -37,17 +37,12 @@ from ......core.config import CertificateBackend, Settings
 from ......core.i18n import tr
 from ......tests.secure_sql import isolated_runtime_profile
 from .. import (
-    AEAT_SESSION_IDLE_TTL,
     AeatAuthenticator,
     AeatLoginAssertionError,
-    AeatSession,
-    BrowserSessionLike,
-    CertificateSessionDetail,
     HandshakeResult,
     LoadedCertificate,
     load_certificate,
 )
-from .._providers import AuthProviderKind
 from ..certificate import CertificateBundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -120,9 +115,9 @@ def _load_cert(tmp_path: Path) -> LoadedCertificate:
 def _settings_for(bundle_path: Path) -> Settings:
     """Create Settings with certificate path and token directory overrides.
 
-    Uses override_settings (ContextVar-backed, live-tests-friendly) instead of
-    monkeypatch.setenv per the project no-monkeypatch mandate in CLAUDE.md
-    (aeat-local-execution + aeat-quality-gates rules). Callers must wrap the
+    Uses override_settings (ContextVar-backed, live-tests-friendly) rather than
+    process-environment mutation (aeat-local-execution + aeat-quality-gates
+    rules). Callers must wrap the
     returned Settings context within override_settings().
     """
     return Settings(
@@ -163,18 +158,19 @@ class _RecordingBrowserContext:
         self.closed = True
 
 
+class _RecordingResponse:
+    status = 200
+
+
 class _RecordingPage:
     def __init__(self) -> None:
         self.url = "https://www6.aeat.es/protected"
         self.status = 200
 
-    async def goto(self, url: str, *, timeout: float | None = None) -> object:
+    async def goto(self, url: str, *, timeout: float | None = None) -> _RecordingResponse:
         del timeout
-
-        class _Resp:
-            status = 200
-
-        return _Resp()
+        self.url = url
+        return _RecordingResponse()
 
     async def close(self) -> None:
         pass
@@ -225,29 +221,6 @@ class _FailingHandshakeVerifier:
         )
 
 
-def _certificate_session(
-    *,
-    authenticated_at: datetime,
-    idle_deadline: datetime,
-    thumbprint: str = "abc123",
-    subject: str = "CN=test",
-    identity_nif: str = "12345678Z",
-    storage_state_path: Path | None = None,
-) -> AeatSession:
-    return AeatSession(
-        provider_kind=AuthProviderKind.CERTIFICATE,
-        authenticated_at=authenticated_at,
-        idle_deadline=idle_deadline,
-        storage_state_path=storage_state_path,
-        identity_nif=identity_nif,
-        provider_detail=CertificateSessionDetail(
-            certificate_thumbprint=thumbprint,
-            certificate_subject=subject,
-            handshake=_successful_handshake(),
-        ),
-    )
-
-
 # ---------------------------------------------------------------------------
 # already_active translated_message
 # ---------------------------------------------------------------------------
@@ -257,22 +230,23 @@ def test_authenticate_already_active_carries_translated_message(
     tmp_path: Path,
 ) -> None:
     """authenticate raises AeatLoginAssertionError with already_active key
-    when _active_session is set before the call."""
+    when authenticate is called while a real session is still active."""
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path)
     authenticator = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
-
-    now = datetime.now(UTC)
-    authenticator._active_session = _certificate_session(  # type: ignore[attr-defined]
-        authenticated_at=now,
-        idle_deadline=now + AEAT_SESSION_IDLE_TTL,
-    )
+    browser_session = _RecordingBrowserSession()
 
     async def run() -> None:
-        with pytest.raises(AeatLoginAssertionError) as exc_info:
-            await authenticator.authenticate(browser_session=cast(BrowserSessionLike, _RecordingBrowserSession()))
-        exc = exc_info.value
-        assert exc.translated_message == "adapters.auth.authenticator.errors.already_active"
+        try:
+            session = await authenticator.authenticate(browser_session=browser_session)
+            assert session.identity_nif == "12345678Z"
+
+            with pytest.raises(AeatLoginAssertionError) as exc_info:
+                await authenticator.authenticate(browser_session=browser_session)
+            exc = exc_info.value
+            assert exc.translated_message == "adapters.auth.authenticator.errors.already_active"
+        finally:
+            await authenticator.close()
 
     asyncio.run(run())
 
@@ -294,7 +268,7 @@ def test_authenticate_assertion_failed_carries_translated_message(
 
     # cert_ok=True -> context carries CERTIFICATE_CONTEXT_MARKER (marker check passes).
     # The probe fails because handshake.success=False -> assertion_failed raised.
-    browser_session = cast(BrowserSessionLike, _RecordingBrowserSession())
+    browser_session = _RecordingBrowserSession()
 
     async def run() -> None:
         with pytest.raises(AeatLoginAssertionError) as exc_info:

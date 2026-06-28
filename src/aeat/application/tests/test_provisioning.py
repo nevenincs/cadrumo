@@ -45,11 +45,9 @@ def test_probe_ollama_vision_unreachable_returns_unavailable_with_remediation() 
 
 def test_probe_playwright_browser_absent_when_cache_empty(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """An empty browsers cache reports unavailable with the install command."""
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(tmp_path))
-    status = probe_playwright_browser()
+    status = probe_playwright_browser(cache_root=tmp_path)
     assert status.service == "playwright-chromium"
     assert status.available is False
     assert status.remediation == "playwright install chromium"
@@ -57,12 +55,10 @@ def test_probe_playwright_browser_absent_when_cache_empty(
 
 def test_probe_playwright_browser_present_when_chromium_build_exists(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A `chromium-*` build directory in the cache reports available."""
     (tmp_path / "chromium-1234").mkdir()
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(tmp_path))
-    status = probe_playwright_browser()
+    status = probe_playwright_browser(cache_root=tmp_path)
     assert status.service == "playwright-chromium"
     assert status.available is True
     assert status.remediation == ""
@@ -70,11 +66,9 @@ def test_probe_playwright_browser_present_when_chromium_build_exists(
 
 def test_probe_playwright_browser_missing_root_is_unavailable_not_an_error(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A nonexistent cache root reports unavailable rather than raising OSError."""
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(tmp_path / "does-not-exist"))
-    status = probe_playwright_browser()
+    status = probe_playwright_browser(cache_root=tmp_path / "does-not-exist")
     assert status.available is False
 
 

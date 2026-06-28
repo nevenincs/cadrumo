@@ -1,19 +1,17 @@
 """Active-profile resolver for the Google OAuth Desktop integration.
 
-Every `aeat config google ...` command and every secure-store read or
-write the OAuth flow performs is scoped to a single AEAT profile.
-This module exposes one entry point — `resolve_active_profile` —
-that the CLI surface and the secure-store accessors call to obtain
-that profile's immutable UUID identity. Resolution flows through the
-operator-facing precedence chain in
-`application/workflow/_models.resolve_active_bucket_id`
-(Settings override > plaintext pointer file); per-invocation
-`--profile` overrides on `aeat config google` verbs are removed
-so profile selection is one chain, one source of truth.
+Every ``aeat config google ...`` command and every secure-store read or write
+performed by :mod:`aeat.adapters.outbound.google._oauth_flow` and
+:mod:`aeat.adapters.outbound.google._session_store` is scoped to one AEAT
+profile. :func:`resolve_active_profile` obtains that profile's immutable bucket
+UUID through :func:`aeat.core.resolve_active_bucket_id`, the operator-facing
+precedence chain driven by :class:`aeat.core.config.Settings` and the plaintext
+active-profile pointer file.
 
-There is no global Google session, no shared cross-profile token, and
-no multi-account binding within a single profile. The whole-package
-contract is enforced at this single chokepoint.
+There is no global Google session, no shared cross-profile token, and no
+multi-account binding within a single profile. A missing profile is raised as
+:class:`GoogleAuthProfileUnboundError` so the CLI and storage factory render
+the same localised repair guidance.
 """
 
 from __future__ import annotations
@@ -31,11 +29,11 @@ def resolve_active_profile() -> str:
         non-empty string.
 
     Raises:
-        GoogleAuthProfileUnboundError: When the operator-facing
-            precedence chain resolves to ``None``. The error carries
-            a `suggestion` pointing to `aeat config profile create NAME` and a
-            `context` payload naming the resolution attempt for
-            renderers.
+        :class:`GoogleAuthProfileUnboundError`: When the
+            :func:`aeat.core.resolve_active_bucket_id` precedence chain resolves
+            to no profile. The error carries a ``suggestion`` pointing to
+            ``aeat config profile create NAME`` and a ``context`` payload naming
+            the failed resolution attempt for renderers.
     """
     resolved = resolve_active_bucket_id()
     if resolved is not None and resolved.strip():

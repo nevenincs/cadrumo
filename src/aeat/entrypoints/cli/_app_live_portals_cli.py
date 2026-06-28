@@ -1,6 +1,7 @@
 """Portal registry command registration for ``aeat app live portals``.
 
-Use of :class:`PortalCategory` for compliance.
+The list verb accepts :class:`PortalCategory` filters and projects local portal
+registry metadata into CLI envelopes.
 """
 
 from __future__ import annotations
@@ -86,7 +87,8 @@ def portals_list(
 ) -> None:
     """List local AEAT portal registry entries, optionally filtered by category or modelo.
 
-    Use of :class:`PortalCategory` for compliance.
+    The ``category`` option is parsed as :class:`PortalCategory` and passed to
+    the registry category filter.
     """
     from ...domain.portals import PORTAL_REGISTRY, portals_by_category, portals_for_modelo
 

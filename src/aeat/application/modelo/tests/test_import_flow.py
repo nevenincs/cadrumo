@@ -11,11 +11,12 @@ consumes these records as its baseline.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -49,7 +50,9 @@ from ....domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
 from ....domain.modelos._work_unit import WorkUnit
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     AmendmentEvidenceMissingError,
     ExternalModeloImportError,
@@ -109,6 +112,18 @@ _M111_ACTIVITY_AMOUNT_CASILLA: CasillaId = _casilla_id("24")
 _M111_ACTIVITY_WITHHELD_CASILLA: CasillaId = _casilla_id("27")
 _M111_TOTAL_WITHHELD_CASILLA: CasillaId = _casilla_id("29")
 
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Test"),
+    UserProfileFact(path="identity.surnames", value="Operator"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
+
 
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
@@ -116,12 +131,25 @@ def repos(tmp_path: Path) -> Iterator[_Repos]:
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
         objects = profile.repository
+        _seed_ready_profile(UserProfileLifecycleRepository(bucket_id="default", objects=objects), bucket_id="default")
         wu = WorkUnitCatalogueRepository(objects=objects)
         cr = CalculationRevisionCatalogueRepository(objects=objects)
         fr = ModeloRecordCatalogueRepository(objects=objects)
         vr = VerificationReportCatalogueRepository(objects=objects)
         bv = BucketEventHistoryRepository(objects=objects)
         yield wu, cr, fr, vr, bv
+
+
+def _seed_ready_profile(repository: UserProfileLifecycleRepository, *, bucket_id: str) -> None:
+    repository.save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Test Operator",
+            facts=_READY_PROFILE_FACTS,
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
 
 
 def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository):
@@ -158,29 +186,67 @@ class _ImportOutcome:
     filing: ModeloRecord
 
 
-def _drive_import_persists_filing(repos: _Repos) -> _ImportOutcome:
-    """Run the seed-work-unit + import-evidence scenario and bundle the observable state."""
-    wu_repo, cr_repo, fr_repo, _evidence_repo, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
+def _persist_matching_justificante(
+    reference_id: str,
+    work_unit: WorkUnit,
+    *,
+    captured_at: datetime,
+    period: str | None = None,
+    tax_id: str = _TAX_ID,
+) -> None:
     persist_justificante_metadata(
-        "JUST-2026-303-Q1-OPERATOR1",
+        reference_id,
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
-        captured_at=_T1,
+        period=period or work_unit.period.registry_token,
+        captured_at=captured_at,
+        tax_id=tax_id,
     )
-    filing = import_external_filing_evidence(
+
+
+def _import_external_filing(
+    repos: _Repos,
+    work_unit: WorkUnit,
+    *,
+    casilla_values: Mapping[Any, Decimal] | None = None,
+    evidence_kind: ExternalEvidenceKind = ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+    evidence_reference_id: str,
+    expected_tax_id: str | None = None,
+    clock: datetime = _T1,
+    actor: str = "aeat-import",
+) -> ModeloRecord:
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    resolved_casilla_values = {_IMPORT_INCOME_CASILLA: Decimal("1500")} if casilla_values is None else casilla_values
+    return import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
-        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500"), _IMPORT_EXPENSE_CASILLA: Decimal("300")},
-        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-        evidence_reference_id="JUST-2026-303-Q1-OPERATOR1",
-        actor="aeat-import",
+        casilla_values=resolved_casilla_values,
+        evidence_kind=evidence_kind,
+        evidence_reference_id=evidence_reference_id,
+        actor=actor,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        expected_tax_id=expected_tax_id,
+        clock=clock,
+    )
+
+
+def _drive_import_persists_filing(repos: _Repos) -> _ImportOutcome:
+    """Run the seed-work-unit + import-evidence scenario and bundle the observable state."""
+    wu_repo, _, _, _, _ = repos
+    work_unit = _seed_work_unit(wu_repo)
+    _persist_matching_justificante(
+        "JUST-2026-303-Q1-OPERATOR1",
+        work_unit,
+        captured_at=_T1,
+    )
+    filing = _import_external_filing(
+        repos,
+        work_unit,
+        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500"), _IMPORT_EXPENSE_CASILLA: Decimal("300")},
+        evidence_reference_id="JUST-2026-303-Q1-OPERATOR1",
         expected_tax_id=_TAX_ID,
-        clock=_T1,
     )
     return _ImportOutcome(work_unit=work_unit, filing=filing)
 
@@ -333,43 +399,31 @@ def test_import_supersedes_prior_current_filing(repos: _Repos) -> None:
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
-    persist_justificante_metadata(
+    _persist_matching_justificante(
         "JUST-FIRST",
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
+        work_unit,
         captured_at=_T1,
     )
-
-    first = import_external_filing_evidence(
-        work_unit_id=work_unit.work_unit_id,
+    first = _import_external_filing(
+        repos,
+        work_unit,
         casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
-        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
         evidence_reference_id="JUST-FIRST",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
         expected_tax_id=_TAX_ID,
         clock=_T1,
     )
 
-    persist_justificante_metadata(
+    _persist_matching_justificante(
         "CSV-SECOND",
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
+        work_unit,
         captured_at=_T2,
     )
-    second = import_external_filing_evidence(
-        work_unit_id=work_unit.work_unit_id,
+    second = _import_external_filing(
+        repos,
+        work_unit,
         casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1600")},
         evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
         evidence_reference_id="CSV-SECOND",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
         expected_tax_id=_TAX_ID,
         clock=_T2,
     )
@@ -403,23 +457,17 @@ def test_import_then_amend_unlocks_amendment_path(repos: _Repos) -> None:
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
-    persist_justificante_metadata(
+    _persist_matching_justificante(
         "JUST-BASELINE",
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
+        work_unit,
         captured_at=_T1,
     )
 
-    imported = import_external_filing_evidence(
-        work_unit_id=work_unit.work_unit_id,
+    imported = _import_external_filing(
+        repos,
+        work_unit,
         casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500"), _IMPORT_EXPENSE_CASILLA: Decimal("300")},
-        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
         evidence_reference_id="JUST-BASELINE",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
         expected_tax_id=_TAX_ID,
         clock=_T1,
     )
@@ -463,19 +511,15 @@ def test_import_refuses_casilla_ids_not_in_registry(repos: _Repos) -> None:
     Imported baselines are the legal source of truth for amend
     paths — fabricated casilla ids cannot be silently accepted."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
 
     with pytest.raises(ExternalModeloImportError) as exc_info:
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
+        _import_external_filing(
+            repos,
+            work_unit,
             casilla_values={_UNKNOWN_IMPORT_CASILLA: Decimal("100")},
-            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="JUST-FABRICATED",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             clock=_T1,
         )
     assert exc_info.value.translated_message == "application.modelo.errors.external_import_unknown_casillas"
@@ -488,7 +532,7 @@ def test_import_refuses_casilla_ids_not_in_registry(repos: _Repos) -> None:
 def test_import_refuses_printed_number_metadata_token(repos: _Repos) -> None:
     """External imports must not treat a printed number as a casilla reference."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _, _, _, _ = repos
     work_unit = create_work_unit(
         bucket_id="default",
         modelo="303",
@@ -500,15 +544,11 @@ def test_import_refuses_printed_number_metadata_token(repos: _Repos) -> None:
     )
 
     with pytest.raises(ExternalModeloImportError, match="non-canonical reference tokens") as exc_info:
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
+        _import_external_filing(
+            repos,
+            work_unit,
             casilla_values={_M303_PRINTED_RESULT_TOKEN: Decimal("100")},
-            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="JUST-PRINTED-NUMBER",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             clock=_T1,
         )
 
@@ -521,19 +561,15 @@ def test_import_refuses_printed_number_metadata_token(repos: _Repos) -> None:
 def test_import_refuses_non_string_casilla_keys_without_coercion(repos: _Repos) -> None:
     """Malformed external casilla keys fail before registry membership checks."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
 
     with pytest.raises(ExternalModeloImportError) as exc_info:
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
+        _import_external_filing(
+            repos,
+            work_unit,
             casilla_values={1: Decimal("100")},
-            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="JUST-MALFORMED",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             clock=_T1,
         )
     assert exc_info.value.translated_message == "application.modelo.errors.external_import_unknown_casillas"
@@ -545,19 +581,15 @@ def test_import_refuses_empty_casilla_values(repos: _Repos) -> None:
     """The import path requires at least one casilla value — a
     zero-value mapping doesn't represent any real receipt."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
 
     with pytest.raises(ExternalModeloImportError) as raised:
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
+        _import_external_filing(
+            repos,
+            work_unit,
             casilla_values={},
-            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="JUST-WHATEVER",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             clock=_T1,
         )
     assert raised.value.translated_message == "application.modelo.errors.external_filing_no_casilla_values"
@@ -567,38 +599,29 @@ def test_import_refuses_empty_evidence_reference(repos: _Repos) -> None:
     """The import path requires a non-empty evidence reference id —
     without it the baseline can't be traced back to the receipt."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
 
     with pytest.raises(ExternalModeloImportError) as raised:
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
+        _import_external_filing(
+            repos,
+            work_unit,
             casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
-            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
             evidence_reference_id="   ",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             clock=_T1,
         )
     assert raised.value.translated_message == "application.modelo.errors.external_filing_evidence_reference_blank"
 
 
 def test_import_refuses_justificante_evidence_without_persisted_artifact(repos: _Repos) -> None:
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
 
     with pytest.raises(ExternalModeloImportError) as raised:
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
-            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
-            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        _import_external_filing(
+            repos,
+            work_unit,
             evidence_reference_id="JUST-MISSING",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             expected_tax_id=_TAX_ID,
             clock=_T1,
         )
@@ -607,26 +630,19 @@ def test_import_refuses_justificante_evidence_without_persisted_artifact(repos: 
 
 
 def test_import_refuses_justificante_evidence_without_expected_tax_id(repos: _Repos) -> None:
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
-    persist_justificante_metadata(
+    _persist_matching_justificante(
         "JUST-NO-TAX-ID",
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
+        work_unit,
         captured_at=_T1,
     )
 
     with pytest.raises(ExternalModeloImportError) as raised:
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
-            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
-            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        _import_external_filing(
+            repos,
+            work_unit,
             evidence_reference_id="JUST-NO-TAX-ID",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             clock=_T1,
         )
 
@@ -634,26 +650,20 @@ def test_import_refuses_justificante_evidence_without_expected_tax_id(repos: _Re
 
 
 def test_import_refuses_justificante_evidence_for_different_period(repos: _Repos) -> None:
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
-    persist_justificante_metadata(
+    _persist_matching_justificante(
         "JUST-MISMATCH",
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
+        work_unit,
         period="2T",
         captured_at=_T1,
     )
 
     with pytest.raises(ExternalModeloImportError) as raised:
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
-            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
-            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        _import_external_filing(
+            repos,
+            work_unit,
             evidence_reference_id="JUST-MISMATCH",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             expected_tax_id=_TAX_ID,
             clock=_T1,
         )
@@ -662,26 +672,19 @@ def test_import_refuses_justificante_evidence_for_different_period(repos: _Repos
 
 
 def test_import_refuses_justificante_evidence_for_different_taxpayer(repos: _Repos) -> None:
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
-    persist_justificante_metadata(
+    _persist_matching_justificante(
         "JUST-WRONG-TAXPAYER",
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
+        work_unit,
         captured_at=_T1,
     )
 
     with pytest.raises(ExternalModeloImportError) as raised:
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
-            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
-            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        _import_external_filing(
+            repos,
+            work_unit,
             evidence_reference_id="JUST-WRONG-TAXPAYER",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             expected_tax_id="B12345678",
             clock=_T1,
         )
@@ -690,26 +693,19 @@ def test_import_refuses_justificante_evidence_for_different_taxpayer(repos: _Rep
 
 
 def test_import_justificante_taxpayer_match_is_case_insensitive(repos: _Repos) -> None:
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
-    persist_justificante_metadata(
+    _persist_matching_justificante(
         "JUST-CASE-TAXPAYER",
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
+        work_unit,
         captured_at=_T1,
         tax_id="X1234567L",
     )
 
-    filing = import_external_filing_evidence(
-        work_unit_id=work_unit.work_unit_id,
-        casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
-        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+    filing = _import_external_filing(
+        repos,
+        work_unit,
         evidence_reference_id="JUST-CASE-TAXPAYER",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
         expected_tax_id="x1234567l",
         clock=_T1,
     )
@@ -720,19 +716,15 @@ def test_import_justificante_taxpayer_match_is_case_insensitive(repos: _Repos) -
 
 
 def test_import_csv_register_refuses_without_enrolled_justificante(repos: _Repos) -> None:
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _, _, _, _ = repos
     work_unit = _seed_work_unit(wu_repo)
 
     with pytest.raises(ExternalModeloImportError) as exc_info:
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
-            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
+        _import_external_filing(
+            repos,
+            work_unit,
             evidence_kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
             evidence_reference_id="CSV-MISSING-JUSTIFICANTE",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             expected_tax_id=_TAX_ID,
             clock=_T1,
         )
@@ -742,7 +734,7 @@ def test_import_csv_register_refuses_without_enrolled_justificante(repos: _Repos
 def test_import_refuses_discarded_work_unit(repos: _Repos) -> None:
     """A discarded work unit cannot accept new imports."""
 
-    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    wu_repo, _, _, _, bv_repo = repos
     work_unit = _seed_work_unit(wu_repo)
     discard_work_unit(
         work_unit.work_unit_id,
@@ -753,15 +745,10 @@ def test_import_refuses_discarded_work_unit(repos: _Repos) -> None:
     )
 
     with pytest.raises(WorkUnitMutationRefusedError):
-        import_external_filing_evidence(
-            work_unit_id=work_unit.work_unit_id,
-            casilla_values={_IMPORT_INCOME_CASILLA: Decimal("1500")},
-            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        _import_external_filing(
+            repos,
+            work_unit,
             evidence_reference_id="JUST-LATE",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
             clock=_T2,
         )
 

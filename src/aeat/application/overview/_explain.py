@@ -20,6 +20,7 @@ on so the operator can audit them. Local-only: never contacts AEAT.
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Protocol
 
 from pydantic import BaseModel, Field
 
@@ -47,6 +48,10 @@ coerced via ``.value``), and integers (numeric thresholds). Widening
 this union is a contract change; keep it tight so the boundary
 remains a typed surface rather than a ``dict[str, Any]`` escape hatch.
 """
+
+
+class DeadlineExplanationEngine(Protocol):
+    def explain(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> str: ...
 
 
 class OverviewExplain(BaseModel):
@@ -167,7 +172,7 @@ def build_overview_explain(
     *,
     modelo: str,
     year: int | None = None,
-    engine: DeadlineEngine | None = None,
+    engine: DeadlineExplanationEngine | None = None,
 ) -> OverviewExplain:
     """Decompose a modelo's applicability against the operator's profile.
 
@@ -247,7 +252,7 @@ def _scheduling_rationale(
     *,
     modelo: str,
     year: int,
-    engine: DeadlineEngine | None,
+    engine: DeadlineExplanationEngine | None,
 ) -> str | None:
     """Return the deadline engine's scheduling text, or ``None``.
 
@@ -274,6 +279,7 @@ def _scheduling_rationale(
 
 
 __all__ = [
+    "DeadlineExplanationEngine",
     "OverviewExplain",
     "build_overview_explain",
 ]

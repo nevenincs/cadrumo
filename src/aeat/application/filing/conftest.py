@@ -16,6 +16,17 @@ assertions and broke the encrypted-payload-path lookup which uses the
 per-test tmp_path. The proper hoist would also need a per-test
 rollback teardown, which is tracked separately. Until that lands,
 function-scope autouse is the correct shape.
+
+See Also:
+    :func:`aeat.tests.secure_sql.isolated_runtime_profile`
+        Shared helper that provisions the real active-profile bucket runtime
+        used by this fixture.
+    :class:`aeat.tests.secure_sql.TestRuntimeProfile`
+        Frozen record yielded by the helper so tests can inspect the isolated
+        storage root, bucket id, runtime, and repository.
+    :mod:`aeat.adapters.persistence.storage.sql.conftest`
+        Module-scoped storage fixture shape used only where transactional
+        rollback isolates per-test state.
 """
 
 from __future__ import annotations
@@ -32,5 +43,6 @@ _BUCKET_ID = "filing-test"
 
 @pytest.fixture(autouse=True)
 def _active_bucket_runtime(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    """Yield a function-scoped active filing bucket runtime for each test."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile

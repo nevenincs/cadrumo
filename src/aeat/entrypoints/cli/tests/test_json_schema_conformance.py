@@ -15,14 +15,20 @@ must be fixed before the suite goes green.
 
 from __future__ import annotations
 
-from typing import TypeGuard, cast
+from collections.abc import Callable, Sequence
+from typing import Any, Protocol, TypeGuard, cast
 
 import click
 import pytest
 import typer
 from typer.main import get_command as _typer_get_command
 
-from ....core.json_contract import SCHEMA_REGISTRY, SchemaEnvelope
+from ....application.ledger._models import (
+    LedgerCatalogueResetReport,
+    LedgerRemovalBlocker,
+    LedgerTransactionRemovalReport,
+)
+from ....core.json_contract import SCHEMA_REGISTRY, OutputSchema, SchemaEnvelope
 
 # Import the per-package payload modules so their @register_schema
 # decorators populate SCHEMA_REGISTRY before the gate inspects it.
@@ -67,6 +73,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _APP_NAMESPACE_PASSTHROUGH = frozenset({"live"})
 _APP_NAMESPACE_FLATTEN = frozenset({"ledger", "modelo", "overview", "registry", "review"})
+
+
+class _PayloadWithStaleDraftRefs(Protocol):
+    stale_draft_revision_references: Sequence[object]
+
+
+type _LedgerReport = LedgerTransactionRemovalReport | LedgerCatalogueResetReport
+type _LedgerReportFactory = Callable[[], _LedgerReport]
+type _LedgerPayloadClass = type[OutputSchema]
 
 # Intentional, asserted command-path → registry-key divergences.
 #
@@ -278,9 +293,8 @@ def test_registered_schema_envelope_round_trips(command_path: str) -> None:
     """
     schema = SCHEMA_REGISTRY[command_path]
     # Subscripting the generic with a runtime variable is exactly what this gate
-    # exercises (the registry maps each command to its schema at runtime); both
-    # checkers reject a runtime value in a type-subscript position.
-    envelope_cls = SchemaEnvelope[schema]  # type: ignore[valid-type]  # ty: ignore[invalid-type-form]
+    # exercises: the registry maps each command to its schema at runtime.
+    envelope_cls = cast(Any, SchemaEnvelope)[schema]
     assert envelope_cls.__pydantic_generic_metadata__["args"] == (schema,)
 
 
@@ -446,9 +460,8 @@ _HEX_64_C = "c" * 64
 _HEX_64_D = "d" * 64
 
 
-def _populated_removal_blocker():  # type: ignore[no-untyped-def]
+def _populated_removal_blocker() -> LedgerRemovalBlocker:
     """Build a fully-populated ``LedgerRemovalBlocker`` with every field non-default."""
-    from ....application.ledger._models import LedgerRemovalBlocker
 
     return LedgerRemovalBlocker(
         work_unit_id=_HEX_64_A,
@@ -460,9 +473,8 @@ def _populated_removal_blocker():  # type: ignore[no-untyped-def]
     )
 
 
-def _populated_removal_report():  # type: ignore[no-untyped-def]
+def _populated_removal_report() -> LedgerTransactionRemovalReport:
     """Build a ``LedgerTransactionRemovalReport`` with every defaultable field non-default."""
-    from ....application.ledger._models import LedgerTransactionRemovalReport
 
     return LedgerTransactionRemovalReport(
         bucket_id="bucket-parity",
@@ -479,9 +491,8 @@ def _populated_removal_report():  # type: ignore[no-untyped-def]
     )
 
 
-def _populated_reset_report():  # type: ignore[no-untyped-def]
+def _populated_reset_report() -> LedgerCatalogueResetReport:
     """Build a ``LedgerCatalogueResetReport`` with every defaultable field non-default."""
-    from ....application.ledger._models import LedgerCatalogueResetReport
 
     return LedgerCatalogueResetReport(
         bucket_id="bucket-parity",
@@ -498,7 +509,7 @@ def _populated_reset_report():  # type: ignore[no-untyped-def]
     )
 
 
-def _report_payload_mirror_pairs():  # type: ignore[no-untyped-def]
+def _report_payload_mirror_pairs() -> tuple[tuple[_LedgerReportFactory, _LedgerPayloadClass, str], ...]:
     """Known ``(report_factory, payload_class, label)`` mirror pairs.
 
     Each payload's docstring declares it mirrors the report via
@@ -517,7 +528,11 @@ def _report_payload_mirror_pairs():  # type: ignore[no-untyped-def]
     ("report_factory", "payload_class", "label"),
     [pytest.param(factory, payload, label, id=label) for factory, payload, label in _report_payload_mirror_pairs()],
 )
-def test_report_payload_mirror_accepts_full_dump(report_factory, payload_class, label) -> None:  # type: ignore[no-untyped-def]
+def test_report_payload_mirror_accepts_full_dump(
+    report_factory: _LedgerReportFactory,
+    payload_class: _LedgerPayloadClass,
+    label: str,
+) -> None:
     """The CLI payload mirror ``model_validate``s its report's full JSON dump.
 
     Constructs a fully-populated backend report (including a non-empty
@@ -535,7 +550,7 @@ def test_report_payload_mirror_accepts_full_dump(report_factory, payload_class, 
         f"{label} fixture must populate stale_draft_revision_references so the parity "
         "gate exercises the field that broke the round-trip"
     )
-    payload = payload_class.model_validate(dump)
+    payload = cast(_PayloadWithStaleDraftRefs, payload_class.model_validate(dump))
     assert payload.stale_draft_revision_references, (
         f"{label} payload {payload_class.__name__} dropped stale_draft_revision_references "
         "on the round-trip; mirror the field so the advisory reaches the JSON envelope"

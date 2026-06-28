@@ -1,18 +1,19 @@
 """LIRPF art. 23.1 expense rollup with art. 23.1.a) cap.
 
-Per-finca per-year aggregation of categorised gastos. Implements the
-art. 23.1.a) párrafo segundo cap: ``intereses de los capitales
-ajenos`` (FINANCIACION_INTERESES) plus ``gastos de conservación y
-reparación`` (CONSERVACION_REPARACION) jointly capped at the
-ingresos íntegros del arrendamiento for the same period; the excess
-carries forward up to 4 years and is consumed against future
-ingresos for the same finca.
+:func:`compute_gastos_for_year` aggregates per-finca
+:class:`FincaGasto` rows into a :class:`GastosForYear` result by
+:class:`ExpenseCategory`. It implements the art. 23.1.a) párrafo segundo cap:
+``intereses de los capitales ajenos`` (FINANCIACION_INTERESES) plus ``gastos de
+conservación y reparación`` (CONSERVACION_REPARACION) jointly capped at the
+ingresos íntegros del arrendamiento for the same period; the excess carries
+forward up to 4 years and is consumed against future ingresos for the same
+finca.
 
-Carry-forward representation: a per-finca FIFO queue keyed by
-origination year. Each entry records the original-year and the
-remaining unconsumed amount. Entries older than 4 years are
-dropped at rollup time per BOE: "El exceso ... se podrá deducir
-en los cuatro años siguientes".
+Carry-forward representation: a per-finca FIFO queue of
+:class:`CarryForwardEntry` rows keyed by origination year. Each entry records the
+original-year and the remaining unconsumed amount. Entries older than 4 years are
+dropped at rollup time per BOE: "El exceso ... se podrá deducir en los cuatro
+años siguientes".
 """
 
 from __future__ import annotations

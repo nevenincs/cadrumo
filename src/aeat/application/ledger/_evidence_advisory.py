@@ -2,12 +2,17 @@
 
 A non-blocking diagnostic: when an invoice's on-host-extracted text appears to
 print an IVA figure that disagrees with the registry-DERIVED IVA, surface an
-advisory so the operator verifies before filing. The printed figure is parsed
-deterministically on-host from the evidence text (never emitted by the model) and
-is used ONLY for this advisory -- it is never persisted and never overrides the
-derived value (llm-selects-system-derives-tax-numbers /
-no-silent-under-declaration). Parsing is best-effort; a miss simply yields no
-advisory.
+advisory so the operator verifies before filing. The public
+:func:`printed_iva_advisory` helper feeds the ``evidence_advisory`` field on
+:class:`aeat.application.ledger._llm_classification.LLMSaturatedSuggestion`
+after the saturation path has resolved evidence through
+:class:`aeat.domain.transactions.PromptSpec`.
+
+The printed figure is parsed deterministically on-host from the evidence text
+(never emitted by the model) and is used ONLY for this advisory -- it is never
+persisted and never overrides the derived value
+(llm-selects-system-derives-tax-numbers / no-silent-under-declaration). Parsing
+is best-effort; a miss simply yields no advisory.
 """
 
 from __future__ import annotations
@@ -25,7 +30,7 @@ _IVA_AMOUNT = re.compile(
 
 
 def _parse_amount(raw: str) -> Decimal | None:
-    """Parse a Spanish- or plain-formatted decimal string, best-effort."""
+    """Parse a Spanish- or plain-formatted :class:`~decimal.Decimal` string, best-effort."""
     text = raw.strip()
     if "," in text:
         # Spanish: dot is the thousands separator, comma the decimal.
@@ -44,10 +49,17 @@ def printed_iva_advisory(
 ) -> str | None:
     """Return an advisory string when the printed IVA disagrees with the derived IVA.
 
+    The comparison is a best-effort cross-check between on-host-extracted
+    evidence text and the registry-derived IVA amount carried by
+    :class:`aeat.application.ledger._llm_classification.LLMSaturatedSuggestion`;
+    it never supplies a tax value for persistence.
+
     Args:
         evidence_text: On-host-extracted text of the attached evidence, or ``None``.
-        derived_iva_amount: The registry-derived IVA amount, or ``None``.
-        tolerance: Absolute cent tolerance for the comparison.
+        derived_iva_amount: The registry-derived :class:`~decimal.Decimal` IVA
+            amount, or ``None``.
+        tolerance: Absolute cent :class:`~decimal.Decimal` tolerance for the
+            comparison.
 
     Returns:
         A non-blocking advisory message when a printed IVA figure is found and

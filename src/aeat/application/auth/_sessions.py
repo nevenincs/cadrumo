@@ -1,4 +1,10 @@
-"""Persisted AEAT session discovery and verification."""
+"""Persisted AEAT session discovery and verification.
+
+:func:`ensure_authenticated_aeat_session` returns
+:class:`AuthenticatedAeatSessionResult` after coordinating
+:class:`AuthProviderKind` selection, :class:`SessionStoreProtocol` persistence,
+and :class:`PersistedAuthSession` reuse.
+"""
 
 from __future__ import annotations
 

@@ -1,7 +1,17 @@
 """Verification actions and predicates for modelo filings.
 
-Use of :class:`BucketEventHistoryRepository`, :class:`CalculationRevision`, :class:`CasillaObservation`,
-:class:`RegistrySnapshot`, :class:`TaxpayerProfile`, and :class:`TransactionCatalogueRepository` for compliance.
+``verify_modelo_revision`` evaluates a draft :class:`CalculationRevision` against
+its :class:`RegistrySnapshot`, workflow :class:`TaxpayerProfile`, ledger
+diagnostics, and cross-period clean-state verdicts before persisting a
+:class:`~aeat.domain.modelos._verification_report.VerificationReport`.
+
+Verification emits bucket-history entries through
+:class:`BucketEventHistoryRepository`, stores casilla-level
+:class:`CasillaObservation` provenance, and uses
+:class:`TransactionCatalogueRepository` only for evidence advisories over source
+transactions. See also
+:func:`~aeat.application.calculations.evaluate_cross_period_clean_state` for the
+shared cross-period gate used by verify, file, and export.
 """
 
 from __future__ import annotations
@@ -22,6 +32,7 @@ from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectTyp
 from ...domain.buckets._protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
     M210_RATE_SENTINELS,
+    ApplicabilityVerdict,
     CasillaDefinition,
     CasillaId,
     CasillaObservation,
@@ -30,6 +41,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     VerificationPredicateDefinition,
     derive_modelo_202_modality,
+    derive_modelo_applicability,
     validated_casilla_id,
 )
 from ...domain.deadlines import FiscalResidency, IrpfIncomeCategory, TaxpayerProfile
@@ -111,6 +123,7 @@ from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
 from ._m210_rate import resolve_m210_rate as _resolve_m210_rate
+from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 from ._registry_resources import authority_via_resources as _authority_via_resources
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
@@ -156,6 +169,8 @@ _PREDICATE_EQUALS = _re.compile(r"^equals\(\[(?P<ids>[^\]]*)\]\)$")
 # First use site: M210 representante-fiscal gate per
 # m210-irnr-full-engine ADR §D2.5 (TRLIRNR Art 10).
 _PREDICATE_PROFILE_FIELD_REQUIRED = _re.compile(r'^profile_field_required\("(?P<field>[^"]+)", "(?P<filter>[^"]+)"\)$')
+_M349_NUMERO_RECTIFICACIONES_CASILLA: CasillaId = "decl.numero-rectificaciones"
+_M349_IMPORTE_RECTIFICACIONES_CASILLA: CasillaId = "decl.importe-rectificaciones"
 
 # Per-predicate next_action dispatch. Predicates listed here emit their
 # dedicated next_action prose via a direct tr() call (so the locale
@@ -448,6 +463,9 @@ def _rewrite_m210_sentinels(
     return tuple(rewritten), findings
 
 
+rewrite_m210_sentinels = _rewrite_m210_sentinels
+
+
 def _evaluate_advisory_predicate_fires(
     expression: str,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -577,6 +595,11 @@ def _evaluate_verification_predicates(
     return findings
 
 
+evaluate_advisory_predicate_fires = _evaluate_advisory_predicate_fires
+evaluate_predicate_expression = _evaluate_predicate_expression
+evaluate_verification_predicates = _evaluate_verification_predicates
+
+
 def _manual_fact_basis_entries(input_values_by_casilla_id: Mapping[CasillaId, str]) -> tuple[ManualFactBasisEntry, ...]:
     """Project a revision's operator casilla inputs into manual fact-basis entries.
 
@@ -632,6 +655,9 @@ def _cross_period_expected_member_sets_from_profile(
     return (*profile_sets, *tuple(explicit_member_sets))
 
 
+cross_period_expected_member_sets_from_profile = _cross_period_expected_member_sets_from_profile
+
+
 def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | None:
     """Whether the taxpayer files actividad-económica pagos fraccionados (130/131).
 
@@ -647,6 +673,81 @@ def derive_taxpayer_files_economic_activity(profile: TaxpayerProfile) -> bool | 
     return IrpfIncomeCategory.ACTIVIDAD_ECONOMICA in profile.irpf_income_categories
 
 
+def derive_not_applicable_source_modelos(profile: TaxpayerProfile, modelos: Iterable[str]) -> frozenset[str] | None:
+    """Return source modelos positively known not applicable for ``profile``.
+
+    The clean-state gate is fail-closed: if applicability derivation raises or
+    returns an incomplete/undetermined verdict for any queried modelo, callers
+    receive ``None`` and suppress nothing. A positive ``NOT_APPLICABLE`` result
+    is grounded in the same deadline/applicability rules that decide whether the
+    :class:`TaxpayerProfile` files M130 vs M131.
+    """
+    not_applicable: set[str] = set()
+    for modelo in sorted({str(modelo) for modelo in modelos}):
+        try:
+            applicability = derive_modelo_applicability(profile, modelo)
+        except (ModeloError, TypeError, ValueError):
+            return None
+        if applicability.verdict is ApplicabilityVerdict.NOT_APPLICABLE:
+            not_applicable.add(modelo)
+        elif applicability.verdict not in {
+            ApplicabilityVerdict.APPLICABLE,
+            ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
+        }:
+            return None
+    return frozenset(not_applicable)
+
+
+_MODELO_202_INCN_PROFILE_FACT = "taxpayer_type.incn_prior_12_months"
+
+
+def _modelo_202_incomplete_modality_finding(
+    *,
+    work_unit: WorkUnit,
+    profile: TaxpayerProfile,
+) -> ModeloVerificationFinding | None:
+    """Return a blocking finding when an M202 revision has no filing-grade modality."""
+    if str(work_unit.modelo) != Modelo.M202.value:
+        return None
+    verdict = derive_modelo_202_modality(profile)
+    if verdict.modality is not Modelo202Modality.INCOMPLETE:
+        return None
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message=(
+            "Modelo 202 modality is incomplete: profile fact "
+            f"{_MODELO_202_INCN_PROFILE_FACT} (INCN prior 12 months) is required to choose "
+            "LIS art. 40.2 vs art. 40.3 before verification, filing, or export."
+        ),
+        next_action=(
+            f"Set {_MODELO_202_INCN_PROFILE_FACT} on the active taxpayer profile, then recalculate "
+            "and rerun verification."
+        ),
+        legal_refs=verdict.legal_refs,
+    )
+
+
+def _raise_if_modelo_202_modality_incomplete(*, work_unit: WorkUnit, profile: TaxpayerProfile | None) -> None:
+    if profile is None:
+        return
+    finding = _modelo_202_incomplete_modality_finding(work_unit=work_unit, profile=profile)
+    if finding is None:
+        return
+    raise ModeloCrossPeriodCleanStateError(
+        finding.message,
+        translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
+        context={
+            "modelo": str(work_unit.modelo),
+            "filing_year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+            "missing_profile_fact": _MODELO_202_INCN_PROFILE_FACT,
+            "modality": Modelo202Modality.INCOMPLETE.value,
+        },
+        suggestion=finding.next_action,
+    )
+
+
 def _cross_period_clean_state_verdict_for_work_unit(
     work_unit: WorkUnit,
     *,
@@ -659,6 +760,9 @@ def _cross_period_clean_state_verdict_for_work_unit(
     activity_start_date: date | None = None,
     modelo_202_modality: Modelo202Modality | None = None,
     taxpayer_files_economic_activity: bool | None = None,
+    workflow_profile: TaxpayerProfile | None = None,
+    not_applicable_source_modelos: frozenset[str] | None = None,
+    zero_value_previous_filing_binding_ids: frozenset[str] | None = None,
 ) -> CrossPeriodCleanStateVerdict | None:
     """Evaluate the cross-period clean-state verdict for a work unit.
 
@@ -684,6 +788,16 @@ def _cross_period_clean_state_verdict_for_work_unit(
         )
     except (FileNotFoundError, RegistrySnapshotError):
         return None
+    if not_applicable_source_modelos is None and workflow_profile is not None:
+        conditional_source_modelos = frozenset(
+            classification.source_modelo
+            for classification in snapshot.revision.dependency_classifications
+            if classification.conditional_on_economic_activity
+        )
+        not_applicable_source_modelos = derive_not_applicable_source_modelos(
+            workflow_profile,
+            conditional_source_modelos,
+        )
     return evaluate_cross_period_clean_state(
         snapshot,
         bucket_id=work_unit.bucket_id,
@@ -696,6 +810,8 @@ def _cross_period_clean_state_verdict_for_work_unit(
         activity_start_date=activity_start_date,
         modelo_202_modality=modelo_202_modality,
         taxpayer_files_economic_activity=taxpayer_files_economic_activity,
+        not_applicable_source_modelos=not_applicable_source_modelos,
+        zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids,
     )
 
 
@@ -737,6 +853,27 @@ _IVA_COMPENSATION_CARRY_LEGAL_REF: str = "ley-37-1992:art-99"
 #: obligation existed turns on the start-of-activity censo declaration
 #: (RGAT — RD 1065/2007 — art. 9, declaración de alta en el censo).
 _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS: tuple[str, ...] = ("rd-1065-2007:art-9",)
+_M100_ZERO_VALUE_PREVIOUS_FILING_BINDING_RE = _re.compile(
+    r"^renta-\d{4}-base-liquidable-negativa-general-anterior$",
+)
+_M100_ZERO_BIN_LEGAL_REFS: tuple[str, ...] = ("ley-35-2006:art-48",)
+
+
+def _zero_value_previous_filing_binding_ids(target: CalculationRevision | None) -> frozenset[str]:
+    """Return whitelisted previous-filing binding ids explicitly supplied as zero."""
+    if target is None:
+        return frozenset()
+    binding_ids: set[str] = set()
+    for binding_id, raw_value in target.binding_overrides.items():
+        if not _M100_ZERO_VALUE_PREVIOUS_FILING_BINDING_RE.fullmatch(str(binding_id)):
+            continue
+        try:
+            value = Decimal(str(raw_value).strip())
+        except (_decimal.DecimalException, ValueError):
+            continue
+        if value == 0:
+            binding_ids.add(str(binding_id))
+    return frozenset(binding_ids)
 
 
 def _cross_period_dependency_legal_refs(origin_ids: tuple[str, ...]) -> tuple[str, ...]:
@@ -819,6 +956,8 @@ def _cross_period_clean_state_findings(
             findings.append(_cross_period_non_official_local_chain_advisory_finding(verdict, evidence))
         if evidence.suppressed_first_year_fractional:
             findings.append(_cross_period_first_year_fractional_suppression_advisory_finding(verdict, evidence))
+        if evidence.zero_value_previous_filing_advisory:
+            findings.append(_cross_period_zero_value_previous_filing_advisory_finding(verdict, evidence))
     if activity_start_date is None and has_first_filer_candidate_block:
         findings.append(_cross_period_missing_activity_start_finding(verdict))
     if verdict.has_modelo_not_applicable_advisory:
@@ -997,25 +1136,61 @@ def _summarize_cross_period_ids(
 def _cross_period_modelo_not_applicable_advisory_finding(
     verdict: CrossPeriodCleanStateVerdict,
 ) -> ModeloVerificationFinding:
-    """NON-BLOCKING summary advisory: deps on retenciones modelos the taxpayer suffers but does not file.
+    """NON-BLOCKING summary advisory: dependencies on modelos the taxpayer does not file.
 
     Surfaces the not-applicable suppression so it is operator-visible (no-silent-under-declaration).
     """
-    modelos = sorted({
-        item.requirement.source_modelo
-        for item in verdict.dependencies
-        if item.modelo_not_applicable_advisory
-    })
+    modelos = sorted(
+        {item.requirement.source_modelo for item in verdict.dependencies if item.modelo_not_applicable_advisory}
+    )
+    legal_refs = tuple(
+        dict.fromkeys(
+            ref
+            for item in verdict.dependencies
+            if item.modelo_not_applicable_advisory
+            for ref in _cross_period_dependency_legal_refs(item.requirement.origin_ids)
+        ),
+    )
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
         message=(
-            "cross-period dependencies on retenciones modelos the taxpayer suffers but does not file "
-            f"were scoped out as not-applicable: {', '.join(modelos)}. Their retenciones come from the "
-            "income certificate (operator-provided or a filed source), not a return the taxpayer files; "
-            "enter the suffered retenciones on the corresponding casilla."
+            "cross-period dependencies on source modelos the taxpayer does not file were scoped out as "
+            f"not-applicable: {', '.join(modelos)}. For suffered retenciones, enter the income-certificate "
+            "amount on the corresponding casilla; for mutually exclusive pagos fraccionados, confirm the "
+            "activity-estimation regime on the profile."
         ),
-        next_action="Enter the suffered retenciones from your income certificate on the retenciones casilla.",
+        next_action=(
+            "Enter suffered retenciones from the income certificate where applicable, and confirm the "
+            "profile's IRPF estimation regime if a mutually exclusive pago-fraccionado modelo was scoped out."
+        ),
+        legal_refs=legal_refs,
+    )
+
+
+def _cross_period_zero_value_previous_filing_advisory_finding(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence: CrossPeriodDependencyEvidence,
+) -> ModeloVerificationFinding:
+    """NON-BLOCKING advisory for an explicit zero prior-year carry."""
+    requirement = evidence.requirement
+    requirement_period = requirement.period.registry_token
+    origin_text = _summarize_cross_period_ids(requirement.origin_ids)
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message=(
+            "cross-period previous-filing carry treated as zero by explicit operator input: "
+            f"modelo={requirement.source_modelo} year={requirement.filing_year} "
+            f"period={requirement_period} origin_ids={origin_text} for target modelo={verdict.target_modelo} "
+            f"year={verdict.target_filing_year} period={verdict.target_period.registry_token}. No prior filing "
+            "evidence is required because the taxpayer is not applying a positive prior-year negative-base balance."
+        ),
+        next_action=(
+            "If a prior-year negative general base balance exists and is being applied, replace the zero "
+            "with the carried amount and capture/import the prior Modelo 100 AEAT evidence before filing."
+        ),
+        legal_refs=(*_M100_ZERO_BIN_LEGAL_REFS, *_cross_period_dependency_legal_refs(requirement.origin_ids)),
     )
 
 
@@ -1146,7 +1321,10 @@ def _require_cross_period_clean_state(
     activity_start_date: date | None = None,
     modelo_202_modality: Modelo202Modality | None = None,
     taxpayer_files_economic_activity: bool | None = None,
+    workflow_profile: TaxpayerProfile | None = None,
+    target_revision: CalculationRevision | None = None,
 ) -> None:
+    _raise_if_modelo_202_modality_incomplete(work_unit=work_unit, profile=workflow_profile)
     verdict = _cross_period_clean_state_verdict_for_work_unit(
         work_unit,
         observation_repository=observation_repository,
@@ -1158,6 +1336,8 @@ def _require_cross_period_clean_state(
         activity_start_date=activity_start_date,
         modelo_202_modality=modelo_202_modality,
         taxpayer_files_economic_activity=taxpayer_files_economic_activity,
+        workflow_profile=workflow_profile,
+        zero_value_previous_filing_binding_ids=_zero_value_previous_filing_binding_ids(target_revision),
     )
     findings = _cross_period_clean_state_findings(
         verdict,
@@ -1212,13 +1392,14 @@ def _iva_wallet_decision_covers_cross_period_dependency(
         return False
     if getattr(decision, "target_period", None) != verdict.target_period:
         return False
-    if getattr(decision, "selected_amount", None) is None:
+    selected_amount = getattr(decision, "selected_amount", None)
+    if selected_amount is None:
         return False
     selected_authority = str(getattr(decision, "selected_authority", ""))
-    if selected_authority not in {"aeat_wallet", "taxpayer_override"}:
-        return False
     source_kinds = {str(getattr(source, "source_kind", "")) for source in getattr(decision, "authority_sources", ())}
-    return bool(source_kinds & {"aeat_wallet", "taxpayer_override"})
+    if selected_authority in {"aeat_wallet", "taxpayer_override"}:
+        return bool(source_kinds & {"aeat_wallet", "taxpayer_override"})
+    return False
 
 
 #: Legal grounding for the missing-evidence advisory. Deducting input IVA
@@ -1295,8 +1476,10 @@ def verify_modelo_revision(
 ) -> VerificationReport:
     """Evaluate a draft revision against registry, clean-state, provenance, and workflow gates.
 
-    Returns a :class:`VerificationReport`. Uses :class:`TaxpayerProfile` and
-    :class:`TransactionCatalogueRepository` for compliance checks.
+    Returns a :class:`VerificationReport`. The supplied :class:`TaxpayerProfile`
+    scopes deadline/applicability decisions, while
+    :class:`TransactionCatalogueRepository` supplies transaction-evidence
+    advisories for source rows attached to the :class:`CalculationRevision`.
     """
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
@@ -1328,12 +1511,21 @@ def verify_modelo_revision(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
         )
+    from ._profile_readiness_gate import require_profile_ready_for_work_unit
+
+    require_profile_ready_for_work_unit(work_unit)
 
     findings, resolved_casilla_ids, missing_required_casilla_ids = _collect_revision_verification_findings(
         work_unit=work_unit,
         target=target,
         profile=workflow_profile,
     )
+    incomplete_modality_finding = _modelo_202_incomplete_modality_finding(
+        work_unit=work_unit,
+        profile=workflow_profile,
+    )
+    if incomplete_modality_finding is not None:
+        findings.append(incomplete_modality_finding)
     iva_compensation_decision = None
     try:
         iva_compensation_decision = _require_iva_compensation_revision_match(
@@ -1359,6 +1551,8 @@ def verify_modelo_revision(
                 activity_start_date=workflow_profile.activity_start_date,
                 modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
                 taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
+                workflow_profile=workflow_profile,
+                zero_value_previous_filing_binding_ids=_zero_value_previous_filing_binding_ids(target),
             ),
             iva_compensation_decision=iva_compensation_decision,
             activity_start_date=workflow_profile.activity_start_date,
@@ -1620,6 +1814,13 @@ def _collect_revision_verification_findings(
     for casilla in snapshot.revision.casillas:
         casilla_id = casilla.id
         if casilla.input_kind == InputKind.MANUAL and casilla.required:
+            if _detail_row_template_casilla_is_satisfied(
+                work_unit=work_unit,
+                target=target,
+                casilla=casilla,
+            ):
+                resolved_casilla_ids.append(casilla_id)
+                continue
             if casilla_id in revision_keys:
                 resolved_casilla_ids.append(casilla_id)
             else:
@@ -1659,7 +1860,30 @@ def _collect_revision_verification_findings(
     if art20_finding is not None:
         findings.append(art20_finding)
 
+    findings.extend(_objective_estimation_exclusion_advisory_findings(work_unit=work_unit, profile=profile))
+
     return findings, resolved_casilla_ids, missing_required_casilla_ids
+
+
+def _detail_row_template_casilla_is_satisfied(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    casilla: CasillaDefinition,
+) -> bool:
+    if str(work_unit.modelo) != Modelo.M349.value or not casilla.section:
+        return False
+    section = str(casilla.section[0])
+    if section == "operador":
+        return any(getattr(row, "row_type", None) == "operador" for row in target.detail_rows)
+    if section != "rectificacion":
+        return False
+    return target.casilla_values.get(_M349_NUMERO_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal(
+        "0"
+    ) and target.casilla_values.get(_M349_IMPORTE_RECTIFICACIONES_CASILLA, Decimal("0")) == Decimal("0")
+
+
+require_cross_period_clean_state = _require_cross_period_clean_state
 
 
 def _missing_required_casilla_finding(
@@ -1689,6 +1913,9 @@ def _missing_required_casilla_finding(
     )
 
 
+missing_required_casilla_finding = _missing_required_casilla_finding
+
+
 def _iva_wallet_blocking_verification_finding(
     decision: IvaCompensationReconciliationDecision,
 ) -> ModeloVerificationFinding:
@@ -1699,6 +1926,9 @@ def _iva_wallet_blocking_verification_finding(
         next_action=tr("application.modelo.findings.iva_wallet_next_action"),
         legal_refs=(_IVA_COMPENSATION_CARRY_LEGAL_REF,),
     )
+
+
+iva_wallet_blocking_verification_finding = _iva_wallet_blocking_verification_finding
 
 
 def _iva_wallet_error_verification_finding(error: ModeloIvaWalletReconciliationBlocked) -> ModeloVerificationFinding:

@@ -11,18 +11,22 @@ fixtures and helpers in ``_profile_lifecycle_support``.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....core.config import load_settings
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app as root_app
-from ._profile_lifecycle_support import create_via_cli, seed
+from ._profile_lifecycle_support import create_profile_via_cli, seed
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
 
 
 @pytest.fixture(autouse=True)
@@ -42,7 +46,7 @@ def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
     The autouse ``_isolated_backend`` fixture runs first and installs
     an empty isolated_profile_storage_root; this fixture layers on
     top by yielding the same tmp_path storage root so callers can
-    use create_via_cli.
+    use create_profile_via_cli.
     """
     # _isolated_backend's isolated_profile_storage_root already set
     # aeat_local_storage_root to tmp_path / "aeat-storage".
@@ -65,8 +69,7 @@ def test_profile_rename_is_label_only_and_keeps_uuid_directory_and_key(
     from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
-    runner = CliRunner()
-    create_via_cli(runner, "alpha")
+    create_profile_via_cli("alpha")
 
     pointer_before = read_profile_bucket("alpha")
     assert pointer_before is not None
@@ -75,7 +78,7 @@ def test_profile_rename_is_label_only_and_keeps_uuid_directory_and_key(
     assert bucket_dir.is_dir()
 
     dispose_engine()
-    result = runner.invoke(root_app, ["config", "profile", "rename", "alpha", "beta"])
+    result = _invoke(("config", "profile", "rename", "alpha", "beta"))
     assert result.exit_code == 0, f"rename failed: {result.output}"
     assert "display_name\tbeta" in result.output
     assert "previous_display_name\talpha" in result.output
@@ -106,14 +109,13 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 
-    runner = CliRunner()
-    create_via_cli(runner, "alice")
+    create_profile_via_cli("alice")
     alice_pointer = read_profile_bucket("alice")
     assert alice_pointer is not None
     uuid_before = alice_pointer.bucket_id
 
     dispose_engine()
-    rename_result = runner.invoke(root_app, ["config", "profile", "rename", "alice", "bob"])
+    rename_result = _invoke(("config", "profile", "rename", "alice", "bob"))
     assert rename_result.exit_code == 0, f"rename failed: {rename_result.output}"
 
     # Reading the profile record directly via the lifecycle service requires an
@@ -127,7 +129,7 @@ def test_profile_rename_keeps_record_readable_under_unchanged_key(
     assert record.display_name == "bob"
 
     dispose_engine()
-    show_result = runner.invoke(root_app, ["config", "profile", "show", "bob"])
+    show_result = _invoke(("config", "profile", "show", "bob"))
     assert show_result.exit_code == 0, f"show failed: {show_result.output}"
     assert "record_validity\tvalid" in show_result.output, show_result.output
     assert "missing_profile_record" not in show_result.output, show_result.output
@@ -148,7 +150,6 @@ def test_profile_rename_refuses_a_label_taken_by_another_live_profile(
     """``profile rename A B`` is refused when label B already belongs to a profile."""
     from ....adapters.persistence.storage.sql.engine import dispose_engine
 
-    runner = CliRunner()
     # Both profiles are setup-only for the rename refusal test; use seed so the
     # wizard create does not attempt the cross-bucket tax-id uniqueness scan
     # against a closed per-bucket session.
@@ -156,7 +157,7 @@ def test_profile_rename_refuses_a_label_taken_by_another_live_profile(
     seed("beta")
 
     dispose_engine()
-    result = runner.invoke(root_app, ["config", "profile", "rename", "alpha", "beta"])
+    result = _invoke(("config", "profile", "rename", "alpha", "beta"))
     assert result.exit_code != 0, f"expected refusal, got: {result.output}"
 
 
@@ -166,13 +167,11 @@ def test_profile_create_refuses_case_insensitive_duplicate_label(
     """Display-name uniqueness is enforced case-insensitively across live profiles."""
     from ....adapters.persistence.storage.sql.engine import dispose_engine
 
-    runner = CliRunner()
-    create_via_cli(runner, "operator")
+    create_profile_via_cli("operator")
 
     dispose_engine()
-    result = runner.invoke(
-        root_app,
-        [
+    result = _invoke(
+        (
             "config",
             "profile",
             "create",
@@ -186,7 +185,7 @@ def test_profile_create_refuses_case_insensitive_duplicate_label(
             "design",
             "--iva-regime",
             "GENERAL",
-        ],
+        )
     )
     assert result.exit_code != 0, f"expected case-insensitive refusal, got: {result.output}"
 
@@ -207,30 +206,27 @@ def test_profile_import_label_lands_second_copy_under_new_name(
     from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
-    runner = CliRunner()
     # Seed the source profile via the canonical path (no tax-id cross-scan issue).
     seed("operator")
 
     dispose_engine()
     bundle_path = _per_bucket_backend / "operator-bundle.json"
-    export_result = runner.invoke(
-        root_app,
-        ["config", "profile", "export", "operator", "--to", str(bundle_path)],
+    export_result = _invoke(
+        ("config", "profile", "export", "operator", "--to", str(bundle_path)),
     )
     assert export_result.exit_code == 0, export_result.output
     assert bundle_path.is_file()
 
     # Re-importing under the original name dead-ends on a label-taken refusal.
     dispose_engine()
-    clash = runner.invoke(root_app, ["config", "profile", "import", str(bundle_path)])
+    clash = _invoke(("config", "profile", "import", str(bundle_path)))
     assert clash.exit_code != 0, clash.output
 
     # Re-importing with --label mints a fresh UUID and lands a second copy
     # under the new operator-facing name.
     dispose_engine()
-    relabelled = runner.invoke(
-        root_app,
-        ["config", "profile", "import", str(bundle_path), "--label", "operator-restored"],
+    relabelled = _invoke(
+        ("config", "profile", "import", str(bundle_path), "--label", "operator-restored"),
     )
     assert relabelled.exit_code == 0, relabelled.output
     assert "display_name\toperator-restored" in relabelled.output
@@ -245,7 +241,7 @@ def test_profile_import_label_lands_second_copy_under_new_name(
 
 # --- profile-lifecycle navigation from a no-active-session state ---
 #
-# These tests drive the full ``root_app`` so the CLI root callback (the
+# These tests drive the full root CLI so the CLI root callback (the
 # active-session gate) participates. The ``profile_app``-direct tests
 # in the sibling module never reach that callback, so they cannot observe
 # the lockout where a lifecycle-navigation verb reaches a decrypting read
@@ -267,7 +263,6 @@ def test_switch_surviving_profile_after_deleting_the_active_one(
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....core import resolve_active_bucket_id
 
-    runner = CliRunner()
     # Both profiles are setup for the switch/delete test; seed both so the
     # wizard create does not hit the cross-bucket tax-id scan against a closed
     # per-bucket session.
@@ -275,17 +270,17 @@ def test_switch_surviving_profile_after_deleting_the_active_one(
     seed("beta")
 
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "switch", "alpha"]).exit_code == 0
+    assert _invoke(("config", "switch", "alpha")).exit_code == 0
 
     dispose_engine()
-    deleted = runner.invoke(root_app, ["config", "profile", "delete", "alpha", "--yes"])
+    deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
 
     # The active-profile pointer is now cleared. ``switch`` must still
     # succeed — it is the verb that establishes a session, not one that
     # requires a pre-existing one.
     dispose_engine()
-    switched = runner.invoke(root_app, ["config", "switch", "beta"])
+    switched = _invoke(("config", "switch", "beta"))
     assert switched.exit_code == 0, switched.output
     assert "active_profile\tbeta" in switched.output
 
@@ -307,16 +302,15 @@ def test_first_switch_from_a_no_active_profile_state_succeeds(
     from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....core import resolve_active_bucket_id
 
-    runner = CliRunner()
-    create_via_cli(runner, "solo")
+    create_profile_via_cli("solo")
 
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "profile", "logout"]).exit_code == 0
+    assert _invoke(("config", "profile", "logout")).exit_code == 0
     dispose_engine()
     assert resolve_active_bucket_id() is None
 
     dispose_engine()
-    switched = runner.invoke(root_app, ["config", "switch", "solo"])
+    switched = _invoke(("config", "switch", "solo"))
     assert switched.exit_code == 0, switched.output
     assert "active_profile\tsolo" in switched.output
 
@@ -333,19 +327,18 @@ def test_list_and_status_work_from_a_no_active_session_state(
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
 
-    runner = CliRunner()
-    create_via_cli(runner, "alpha")
+    create_profile_via_cli("alpha")
 
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "profile", "logout"]).exit_code == 0
+    assert _invoke(("config", "profile", "logout")).exit_code == 0
 
     dispose_engine()
-    listed = runner.invoke(root_app, ["config", "profile", "list"])
+    listed = _invoke(("config", "profile", "list"))
     assert listed.exit_code == 0, listed.output
     assert "alpha" in listed.output
 
     dispose_engine()
-    status = runner.invoke(root_app, ["config", "profile", "status"])
+    status = _invoke(("config", "profile", "status"))
     assert status.exit_code == 0, status.output
     assert "bucket session" not in status.output
 
@@ -361,14 +354,13 @@ def test_delete_active_profile_states_the_pointer_was_cleared(
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
 
-    runner = CliRunner()
-    create_via_cli(runner, "alpha")
+    create_profile_via_cli("alpha")
 
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "switch", "alpha"]).exit_code == 0
+    assert _invoke(("config", "switch", "alpha")).exit_code == 0
 
     dispose_engine()
-    deleted = runner.invoke(root_app, ["config", "profile", "delete", "alpha", "--yes"])
+    deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
     assert "status\ttombstoned" in deleted.output
     # The cleared-pointer consequence is explicit in the output.
@@ -389,18 +381,17 @@ def test_delete_non_active_profile_omits_the_cleared_pointer_notice(
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
 
-    runner = CliRunner()
     # Both profiles are setup for the delete test; seed both so the wizard
     # create does not hit the cross-bucket tax-id scan against a closed session.
     seed("alpha")
     seed("beta")
     # Make "beta" the active profile (simulating "active after the second
     # create") so delete of inactive "alpha" can be verified.
-    assert runner.invoke(root_app, ["config", "switch", "beta"]).exit_code == 0
+    assert _invoke(("config", "switch", "beta")).exit_code == 0
 
     # ``beta`` is active; delete the inactive ``alpha``.
     dispose_engine()
-    deleted = runner.invoke(root_app, ["config", "profile", "delete", "alpha", "--yes"])
+    deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
     assert "status\ttombstoned" in deleted.output
     assert "active_profile\t<none>" not in deleted.output
@@ -419,14 +410,13 @@ def test_delete_unknown_profile_refuses_with_an_unknown_profile_message(
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
 
-    runner = CliRunner()
-    create_via_cli(runner, "alpha")
+    create_profile_via_cli("alpha")
 
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "profile", "logout"]).exit_code == 0
+    assert _invoke(("config", "profile", "logout")).exit_code == 0
 
     dispose_engine()
-    refused = runner.invoke(root_app, ["config", "profile", "delete", "ghost", "--yes"])
+    refused = _invoke(("config", "profile", "delete", "ghost", "--yes"))
     assert refused.exit_code != 0, refused.output
     flat = refused.output.lower()
     # The refusal names the unknown profile and does NOT leak the
@@ -448,14 +438,13 @@ def test_delete_valid_profile_with_no_active_session_succeeds(
     from ....adapters.persistence.storage.sql.engine import dispose_engine
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
 
-    runner = CliRunner()
-    create_via_cli(runner, "alpha")
+    create_profile_via_cli("alpha")
 
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "profile", "logout"]).exit_code == 0
+    assert _invoke(("config", "profile", "logout")).exit_code == 0
 
     dispose_engine()
-    deleted = runner.invoke(root_app, ["config", "profile", "delete", "alpha", "--yes"])
+    deleted = _invoke(("config", "profile", "delete", "alpha", "--yes"))
     assert deleted.exit_code == 0, deleted.output
     assert "status\ttombstoned" in deleted.output
     # The profile is gone from the live surface.
@@ -474,15 +463,13 @@ def test_deleted_profile_name_is_reusable_by_create_and_rename(
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
 
-    runner = CliRunner()
     seed("operator", tax_id="00000000T")
-    # Route through root_app so the error boundary is active for all verbs.
-    assert runner.invoke(root_app, ["config", "profile", "delete", "operator", "--yes"]).exit_code == 0
+    # Route through the root CLI so the error boundary is active for all verbs.
+    assert _invoke(("config", "profile", "delete", "operator", "--yes")).exit_code == 0
 
     dispose_engine()
-    created = runner.invoke(
-        root_app,
-        [
+    created = _invoke(
+        (
             "config",
             "profile",
             "create",
@@ -497,17 +484,17 @@ def test_deleted_profile_name_is_reusable_by_create_and_rename(
             "design",
             "--iva-regime",
             "GENERAL",
-        ],
+        )
     )
     assert created.exit_code == 0, created.output
 
     # And the freed name is reachable through ``rename`` too. Delete the
     # recreated profile, seed a live one, rename it onto the freed name.
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "profile", "delete", "operator", "--yes"]).exit_code == 0
+    assert _invoke(("config", "profile", "delete", "operator", "--yes")).exit_code == 0
     seed("colleague", tax_id="00000001R")
     dispose_engine()
-    renamed = runner.invoke(root_app, ["config", "profile", "rename", "colleague", "operator"])
+    renamed = _invoke(("config", "profile", "rename", "colleague", "operator"))
     assert renamed.exit_code == 0, renamed.output
     assert "display_name\toperator" in renamed.output
 
@@ -525,7 +512,6 @@ def test_show_tombstoned_profile_is_session_context_independent(
     """
     from ....adapters.persistence.storage.sql.engine import dispose_engine
 
-    runner = CliRunner()
     # Both profiles are setup for the show/tombstone test; seed both so the
     # wizard create does not hit the cross-bucket tax-id scan.
     seed("alpha")
@@ -533,19 +519,19 @@ def test_show_tombstoned_profile_is_session_context_independent(
 
     # ``beta`` is active after the second seed. Tombstone ``alpha``.
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "profile", "delete", "alpha", "--yes"]).exit_code == 0
+    assert _invoke(("config", "profile", "delete", "alpha", "--yes")).exit_code == 0
 
     # Context 1: ``beta`` session active.
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "switch", "beta"]).exit_code == 0
+    assert _invoke(("config", "switch", "beta")).exit_code == 0
     dispose_engine()
-    with_session = runner.invoke(root_app, ["config", "profile", "show", "alpha"])
+    with_session = _invoke(("config", "profile", "show", "alpha"))
 
     # Context 2: no active session.
     dispose_engine()
-    assert runner.invoke(root_app, ["config", "profile", "logout"]).exit_code == 0
+    assert _invoke(("config", "profile", "logout")).exit_code == 0
     dispose_engine()
-    no_session = runner.invoke(root_app, ["config", "profile", "show", "alpha"])
+    no_session = _invoke(("config", "profile", "show", "alpha"))
 
     # Identical outcome in both session contexts: the tombstoned record
     # resolves and renders its tombstoned status.

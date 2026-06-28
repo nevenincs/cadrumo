@@ -1,9 +1,10 @@
 """Modelo declaration export: write a verified-complete or filed calculation revision to a local AEAT-compatible file.
 
-``export_modelo_revision`` accepts a :class:`CalculationRevision` id, builds
-and approves a :class:`ModeloDraft` from the revision's captured inputs, then writes
+``export_modelo_revision`` accepts a :class:`CalculationRevision` id, rebuilds
+and approves a :class:`ModeloDraft` from the revision replay inputs, then writes
 a fichero-BOE-formatted artefact to the operator-supplied output path. A
-``MODELO_EXPORTED`` event is appended to the :class:`BucketEventHistoryRepository`.
+``MODELO_EXPORTED`` event is appended to the
+:class:`BucketEventHistoryRepository`.
 
 The service is local-only: it never contacts AEAT and never invokes
 ``require_live_read``. Export is fundamentally an offline operation
@@ -74,20 +75,20 @@ from ..filing import (
     export_draft,
     filing_profile_from_taxpayer,
 )
-from . import _iva_wallet_gate
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloRefundAccountMissingError,
     WorkUnitNotFoundError,
 )
+from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._result_disposition_resolution import resolve_modelo_result_disposition
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 from ._revision_replay_inputs import revision_filing_replay_inputs
 from ._verification_actions import (
-    _cross_period_expected_member_sets_from_profile,
-    _require_cross_period_clean_state,
+    cross_period_expected_member_sets_from_profile,
     derive_taxpayer_files_economic_activity,
+    require_cross_period_clean_state,
 )
 
 #: AEAT-assigned program-identifier code stamped into the optional
@@ -101,10 +102,14 @@ _PROGRAM_VERSION_CODE = "A001"
 #: Canonical user-profile fact paths for the operator's legal name.
 _PROFILE_SURNAMES_PATH = "identity.surnames"
 _PROFILE_NAME_PATH = "identity.name"
+_PROFILE_LEGAL_NAME_PATH = "identity.legal_name"
+_PROFILE_ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
+_LEGAL_ENTITY_TYPE = "legal_entity"
 _LOGGER = get_logger(__name__)
-_require_persisted_iva_compensation_decision_matches_revision = (
-    _iva_wallet_gate.require_persisted_iva_compensation_decision_matches_revision
-)
+
+
+def _compose_legal_full_name(*, surnames: str, name: str) -> str:
+    return " ".join(part for part in (surnames.strip(), name.strip()) if part)
 
 
 class ModeloIvaWalletDecisionProvenance(BaseModel):
@@ -311,6 +316,9 @@ def _iva_wallet_decision_export_provenance(
     )
 
 
+iva_wallet_decision_export_provenance = _iva_wallet_decision_export_provenance
+
+
 def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> None:
     """Refuse ledger-derived exports that lack bundled evidence or a reference."""
     if not revision.source_transaction_ids:
@@ -351,21 +359,24 @@ def _load_revision_for_export(
 
 
 def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
-    """Return ``(surnames, name)`` from the active bucket's persisted profile.
+    """Return ``(surnames, name)`` export-header slots from the active profile.
 
     The operator's legal name is not carried on the deadline-engine
     :class:`TaxpayerProfile` (which holds only ``tax_id``); it lives in
-    the schema-driven user-profile fact catalogue under the canonical
-    ``identity.surnames`` / ``identity.name`` paths. Export needs both
-    because every modelo fichero-BOE envelope declares ``surnames`` and
-    ``name`` as required header fields.
+    the schema-driven user-profile fact catalogue. Natural-person
+    exports populate the individual ``surnames`` / ``name`` slots. Legal
+    entities populate the official 60-character ``surnames`` slot with
+    the company/legal name and leave the 20-character individual-name
+    slot blank.
 
     Args:
         bucket_id: The active profile bucket id whose persisted profile
             facts are read for the operator name.
 
     Returns:
-        A ``(surnames, name)`` tuple of non-blank strings.
+        A ``(surnames, name)`` tuple for the export header. ``name`` may
+        be blank for legal entities whose official layout reserves that
+        slot for individual filers.
 
     Raises:
         ModeloExportError: When the active bucket has no persisted
@@ -386,6 +397,16 @@ def _operator_name_facts(bucket_id: str) -> tuple[str, str]:
     facts = record_to_path_values(record)
     surnames = (facts.get(_PROFILE_SURNAMES_PATH) or "").strip()
     name = (facts.get(_PROFILE_NAME_PATH) or "").strip()
+    legal_name = (facts.get(_PROFILE_LEGAL_NAME_PATH) or "").strip()
+    entity_type = (facts.get(_PROFILE_ENTITY_TYPE_PATH) or "").strip()
+    if entity_type == _LEGAL_ENTITY_TYPE:
+        if not legal_name:
+            raise ModeloExportError(
+                translated_message="application.modelo.errors.export_operator_name_missing",
+                context={"missing": [_PROFILE_LEGAL_NAME_PATH]},
+            )
+        return legal_name, ""
+
     missing = [path for path, value in ((_PROFILE_SURNAMES_PATH, surnames), (_PROFILE_NAME_PATH, name)) if not value]
     if missing:
         raise ModeloExportError(
@@ -531,6 +552,8 @@ def _compose_export_headers(
         "declaration_type": declaration_type,
         "surnames": surnames,
         "name": name,
+        "full_name": _compose_legal_full_name(surnames=surnames, name=name),
+        "entity_type": workflow_profile.entity_type.value if workflow_profile.entity_type is not None else "",
         "fecha_inicio_periodo": _ddmmaaaa(period_start),
         "fecha_fin_periodo": _ddmmaaaa(period_end),
         "devengo_start_date": _ddmmaaaa(period_start),
@@ -567,6 +590,9 @@ def _compose_export_headers(
     return headers
 
 
+compose_export_headers = _compose_export_headers
+
+
 def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
     """Return the typed :class:`~aeat.core.Period` carried by the work unit."""
     if work_unit.period.filing_year != work_unit.filing_year:
@@ -585,6 +611,14 @@ def _approve_export_draft(
     actor: str,
     approved_at: datetime,
 ) -> tuple[Period, ModeloDraft]:
+    """Build and approve the export draft for one :class:`CalculationRevision`.
+
+    The :class:`TaxpayerProfile` is forwarded to
+    :func:`~aeat.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`
+    so export uses the same profile-applicability relation inputs as the filing
+    workflow gate. Returns the resolved :class:`~aeat.core.Period` and approved
+    :class:`ModeloDraft`.
+    """
     period = _resolve_work_unit_period(work_unit)
     schema_provider = build_runtime_schema_provider(
         filing_year=period.filing_year,
@@ -636,12 +670,12 @@ def export_modelo_revision(
     """Export a verified-complete or filed calculation revision to disk.
 
     ``workflow_profile`` is the :class:`TaxpayerProfile` used to compose the
-    filing draft headers.
+    filing draft headers and to replay profile-applicability relation inputs.
 
     Local-only: never contacts AEAT. Re-builds the filing draft from
-    the revision's captured ``input_values_by_casilla_id`` and
-    replay override maps so the exported file reflects the same legal
-    casilla map that would be filed.
+    :func:`~aeat.application.modelo._revision_replay_inputs.revision_filing_replay_inputs`
+    so the exported file reflects the same legal casilla and relation map that
+    would be filed.
 
     Emits ``MODELO_EXPORTED`` into the bucket-event-history catalogue
     with the calculation revision id, work unit id, output path,
@@ -684,19 +718,22 @@ def export_modelo_revision(
             translated_message="application.modelo.errors.export_cross_bucket_refused",
             context={"work_unit_id": work_unit.work_unit_id},
         )
-    iva_wallet_decision = _require_persisted_iva_compensation_decision_matches_revision(
+    from ._profile_readiness_gate import require_profile_ready_for_work_unit
+
+    require_profile_ready_for_work_unit(work_unit)
+    iva_wallet_decision = require_persisted_iva_compensation_decision_matches_revision(
         work_unit,
         revision,
         repository=iva_compensation_decision_repository,
     )
-    _require_cross_period_clean_state(
+    require_cross_period_clean_state(
         work_unit,
         observation_repository=obs_repo,
         filing_repository=fr_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         iva_compensation_decision=iva_wallet_decision,
-        expected_member_sets=_cross_period_expected_member_sets_from_profile(
+        expected_member_sets=cross_period_expected_member_sets_from_profile(
             workflow_profile,
             cross_period_expected_member_sets,
         ),
@@ -704,6 +741,8 @@ def export_modelo_revision(
         activity_start_date=workflow_profile.activity_start_date,
         modelo_202_modality=derive_modelo_202_modality(workflow_profile).modality,
         taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
+        workflow_profile=workflow_profile,
+        target_revision=revision,
     )
     iva_wallet_provenance = _iva_wallet_decision_export_provenance(iva_wallet_decision)
 
@@ -840,5 +879,7 @@ __all__ = [
     "ModeloExportResult",
     "ModeloIvaWalletDecisionProvenance",
     "_raise_if_ledger_export_evidence_missing",
+    "compose_export_headers",
     "export_modelo_revision",
+    "iva_wallet_decision_export_provenance",
 ]

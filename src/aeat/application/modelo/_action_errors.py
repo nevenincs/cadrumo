@@ -103,6 +103,10 @@ class ModeloAggregationBindingError(ModeloError):
     """Raised when bucket-derived aggregation bindings conflict with caller input."""
 
 
+class ModeloProfileReadinessError(ModeloError):
+    """Raised when filing-grade modelo work starts with missing active-profile facts."""
+
+
 class CasillaProvenanceMissingError(ModeloError):
     """Raised when an engine-result casilla has no registry definition."""
 
@@ -166,6 +170,7 @@ __all__ = [
     "ModeloAggregationBindingError",
     "ModeloApplicabilityFilterError",
     "ModeloCrossPeriodCleanStateError",
+    "ModeloProfileReadinessError",
     "ModeloRecordNotFoundError",
     "ModeloRefundAccountMissingError",
     "ModeloRefundElectionNotEligibleError",

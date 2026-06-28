@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 
 from ._action_test_support import (
-    _POST_UPDATE_EVENT_PAYLOADS,
-    _PRESERVED_CREATE_AUDIT_FIELDS,
-    _UPDATED_FIELD_EXPECTATIONS,
+    POST_UPDATE_EVENT_PAYLOADS,
+    PRESERVED_CREATE_AUDIT_FIELDS,
+    UPDATED_FIELD_EXPECTATIONS,
     UTC,
     BucketEvent,
     BucketEventHistoryRepository,
@@ -29,14 +29,14 @@ from ._action_test_support import (
     TransactionValidationError,
     UsageRatioProfile,
     WorkUnitCatalogueRepository,
-    _persist_verified_revision_citing_transaction,
-    _purchase_invoice,
     _repositories,
     attach_manual_transaction_evidence,
     create_manual_transaction,
     dataclass,
     date,
     datetime,
+    persist_verified_revision_citing_transaction,
+    purchase_invoice,
     update_manual_transaction,
     update_manual_transaction_fields,
 )
@@ -110,7 +110,7 @@ def test_update_manual_transaction_persists_replacement_transaction_id(secure_ob
     assert outcome.updated.ref.transaction_id in outcome.reloaded.transactions
 
 
-@pytest.mark.parametrize(("attr_path", "expected"), _UPDATED_FIELD_EXPECTATIONS)
+@pytest.mark.parametrize(("attr_path", "expected"), UPDATED_FIELD_EXPECTATIONS)
 def test_update_manual_transaction_replaces_field(
     secure_objects: SecureObjectRepository,
     attr_path: str,
@@ -123,7 +123,7 @@ def test_update_manual_transaction_replaces_field(
     assert actual == expected
 
 
-@pytest.mark.parametrize("attr", _PRESERVED_CREATE_AUDIT_FIELDS)
+@pytest.mark.parametrize("attr", PRESERVED_CREATE_AUDIT_FIELDS)
 def test_update_manual_transaction_preserves_original_audit_field(
     secure_objects: SecureObjectRepository,
     attr: str,
@@ -156,7 +156,7 @@ def test_update_manual_transaction_links_update_events_to_result(secure_objects:
     assert [event.event_id for event in outcome.events[1:]] == list(outcome.updated.bucket_event_ids)
 
 
-@pytest.mark.parametrize(("event_index", "payload_key", "expected"), _POST_UPDATE_EVENT_PAYLOADS)
+@pytest.mark.parametrize(("event_index", "payload_key", "expected"), POST_UPDATE_EVENT_PAYLOADS)
 def test_update_manual_transaction_event_payload_marks_mutation_kind(
     secure_objects: SecureObjectRepository,
     event_index: int,
@@ -290,7 +290,7 @@ def test_update_manual_transaction_emits_purchase_evidence_attachment_event(
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
-    purchase_evidence = _purchase_invoice()
+    purchase_evidence = purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
@@ -344,7 +344,7 @@ def test_attach_manual_transaction_evidence_delegates_to_validated_backend_patch
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
-    purchase_evidence = _purchase_invoice()
+    purchase_evidence = purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
@@ -385,7 +385,7 @@ def test_update_manual_transaction_mixed_edit_and_evidence_lineage_uses_evidence
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
-    purchase_evidence = _purchase_invoice()
+    purchase_evidence = purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
@@ -445,7 +445,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_obj
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
-    _persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
+    persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         update_manual_transaction(

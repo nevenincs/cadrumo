@@ -1,4 +1,10 @@
-"""Read-only spending-category profile registry."""
+"""Read-only spending-category profile registry.
+
+:func:`load_category_profile_registry` reads committed TOML profile files into
+immutable mappings from :class:`SpendingCategory` to :class:`CategoryProfile`;
+:func:`resolve_category_profiles` selects the exact year registry used by
+classification and filing review surfaces.
+"""
 
 from __future__ import annotations
 

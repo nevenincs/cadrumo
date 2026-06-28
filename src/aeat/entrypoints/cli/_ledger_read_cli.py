@@ -1,6 +1,8 @@
 """Read, discovery, and reporting commands for ``aeat app ledger``.
 
-Use of :class:`BucketEventHistoryRepository`, :class:`TransactionCatalogueRepository` for compliance.
+Read commands load transactions through :class:`TransactionCatalogueRepository`
+and read :class:`BucketEventHistoryRepository` events for history and
+review-derived filters.
 """
 
 from __future__ import annotations
@@ -438,6 +440,8 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
     def ledger_list(
         ctx: typer.Context,
         filters: list[str] = typer.Option([], "--filter", help=tr("cli.ledger.list.filter_help")),
+        period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.status.period_help")),
+        year: int | None = typer.Option(None, "--year", help=tr("cli.ledger.status.year_help")),
         limit: int | None = typer.Option(None, "--limit", min=1, help=tr("cli.ledger.list.limit_help")),
         offset: int = typer.Option(0, "--offset", min=0, help=tr("cli.ledger.list.offset_help")),
         group: str | None = typer.Option(None, "--group", help=tr("cli.ledger.list.group_filter_help")),
@@ -460,8 +464,13 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
     ) -> None:
         """List bucket-scoped ledger transactions through the backend read service."""
         transaction_repository = _tx_repo(_state())
+        resolved_filters = list(filters)
+        if period is not None:
+            resolved_filters.append(f"period={period}")
+        if year is not None:
+            resolved_filters.append(f"year={year}")
         try:
-            spec = parse_ledger_list_filter_spec(filters)
+            spec = parse_ledger_list_filter_spec(resolved_filters)
         except FilterParseError as exc:
             raise _bad(ledger_filter_parse_error_message(exc)) from exc
         projection = project_ledger_list(
@@ -534,6 +543,9 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
             f"\t{_field(transaction_payload.taxable_base)}",
             f"{tr('cli.ledger.labels.iva_rate', default='IVA rate')}\t{_field(transaction_payload.iva_rate)}",
             f"{tr('cli.ledger.labels.iva_amount', default='IVA amount')}\t{_field(transaction_payload.iva_amount)}",
+            f"{tr('cli.ledger.labels.iva_category')}\t{_field(transaction_payload.iva_category)}",
+            f"{tr('cli.ledger.labels.counterparty_eu_member_state', default='EU counterparty')}"
+            f"\t{_field(transaction_payload.counterparty_eu_member_state)}",
             f"{tr('cli.ledger.labels.irpf_category', default='IRPF category')}"
             f"\t{_field(transaction_payload.irpf_category)}",
             f"{tr('cli.ledger.labels.notes', default='Notes')}\t{_field(transaction_payload.notes)}",

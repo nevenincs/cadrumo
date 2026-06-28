@@ -85,6 +85,7 @@ from ._declarations import (
     shared_playwright,
     walk_declarations_register,
 )
+from ._declarations_observations import observed_casillas_from_submitted_file
 from ._errors import (
     ExpedienteNotFoundError,
     JustificanteFetchError,
@@ -168,6 +169,7 @@ __all__ = [
     "fetch_notifications_query",
     "fetch_notifications_summary",
     "find_expediente",
+    "observed_casillas_from_submitted_file",
     "open_declarations_register",
     "parse_expediente_detail",
     "parse_iva_compensation_wallet_html",

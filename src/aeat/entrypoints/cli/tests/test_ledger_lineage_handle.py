@@ -16,12 +16,12 @@ resolution behaviour are all asserted against real catalogue state.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import Any
 
 import pytest
-from typer.testing import CliRunner
+from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile._orchestration import profile_create_storage_span
@@ -29,12 +29,18 @@ from ....application.user_profile._testing import register_minimal_profile
 from ....application.workflow._persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.transactions import derive_transaction_id
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_RUNNER = CliRunner()
+
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
+
+
+def _json_result(result: Result) -> dict[str, Any]:
+    return json.loads(result.output)["result"]
 
 
 @pytest.fixture(autouse=True)
@@ -54,8 +60,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 def _add_row(*, amount: str, description: str, idempotency_key: str) -> str:
     """Create one manual ledger row and return its content-addressed id."""
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         [
             "--format",
             "json",
@@ -77,7 +82,7 @@ def _add_row(*, amount: str, description: str, idempotency_key: str) -> str:
         ],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)["result"]
+    payload = _json_result(result)
     transaction_id = payload["transaction_id"]
     assert isinstance(transaction_id, str) and len(transaction_id) == 64
     return transaction_id
@@ -93,20 +98,18 @@ def _active_repo() -> Any:
 
 
 def _list_rows() -> list[dict[str, Any]]:
-    listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    payload = json.loads(listed.output)
-    return payload.get("result", payload).get("rows", [])
+    return _json_result(listed)["rows"]
 
 
 def _update_description(transaction_id: str, new_description: str) -> str:
     """Edit the narrative (an id-affecting fact) and return the heir's new id."""
-    result = _RUNNER.invoke(
-        app,
+    result = _invoke(
         ["--format", "json", "app", "ledger", "update", transaction_id, "--description", new_description],
     )
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["result"]["transaction_id"]
+    return _json_result(result)["transaction_id"]
 
 
 # --- update: the old handle keeps answering across all three read verbs -------
@@ -137,15 +140,15 @@ def test_history_resolves_a_superseded_old_id() -> None:
     old_id = _add_row(amount="100.00", description="Material oficina", idempotency_key="row-1")
     new_id = _update_description(old_id, "Material oficina (corregido)")
 
-    by_old = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", old_id])
+    by_old = _invoke(["--format", "json", "app", "ledger", "history", old_id])
     assert by_old.exit_code == 0, by_old.output
-    old_payload = json.loads(by_old.output)["result"]
+    old_payload = _json_result(by_old)
     # The old handle resolves to the current (heir) row.
     assert old_payload["transaction_id"] == new_id
 
-    by_new = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", new_id])
+    by_new = _invoke(["--format", "json", "app", "ledger", "history", new_id])
     assert by_new.exit_code == 0, by_new.output
-    new_payload = json.loads(by_new.output)["result"]
+    new_payload = _json_result(by_new)
 
     # Both handles surface the same lineage chain: the pre-edit create event
     # (anchored on the old id) AND the post-edit update event (anchored on the
@@ -169,9 +172,9 @@ def test_view_resolves_a_superseded_old_id_to_the_current_row() -> None:
     old_id = _add_row(amount="100.00", description="Material oficina", idempotency_key="row-1")
     new_id = _update_description(old_id, "Material oficina (corregido)")
 
-    by_old = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", old_id])
+    by_old = _invoke(["--format", "json", "app", "ledger", "view", old_id])
     assert by_old.exit_code == 0, by_old.output
-    payload = json.loads(by_old.output)["result"]
+    payload = _json_result(by_old)
     assert payload["transaction_id"] == new_id
     assert payload["transaction"]["description"] == "Material oficina (corregido)"
 
@@ -181,9 +184,9 @@ def test_track_resolves_a_superseded_old_id() -> None:
     old_id = _add_row(amount="100.00", description="Material oficina", idempotency_key="row-1")
     new_id = _update_description(old_id, "Material oficina (corregido)")
 
-    by_old = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "track", old_id])
+    by_old = _invoke(["--format", "json", "app", "ledger", "track", old_id])
     assert by_old.exit_code == 0, by_old.output
-    payload = json.loads(by_old.output)["result"]
+    payload = _json_result(by_old)
     assert payload["transaction"]["transaction_id"] == new_id
 
 
@@ -195,20 +198,20 @@ def test_multi_edit_chain_resolves_the_oldest_handle() -> None:
     assert len({id_0, id_1, id_2}) == 3
 
     for handle in (id_0, id_1, id_2):
-        view = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", handle])
+        view = _invoke(["--format", "json", "app", "ledger", "view", handle])
         assert view.exit_code == 0, f"{handle}: {view.output}"
-        assert json.loads(view.output)["result"]["transaction_id"] == id_2
+        assert _json_result(view)["transaction_id"] == id_2
 
-    history = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", id_0])
+    history = _invoke(["--format", "json", "app", "ledger", "history", id_0])
     assert history.exit_code == 0, history.output
-    assert json.loads(history.output)["result"]["transaction_id"] == id_2
+    assert _json_result(history)["transaction_id"] == id_2
 
 
 def test_current_id_still_resolves_unchanged() -> None:
     """The live-id path is unchanged: a current id resolves directly."""
     tx = _add_row(amount="100.00", description="Material oficina", idempotency_key="row-1")
     for verb in ("history", "view", "track"):
-        result = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", verb, tx])
+        result = _invoke(["--format", "json", "app", "ledger", verb, tx])
         assert result.exit_code == 0, f"{verb}: {result.output}"
 
 
@@ -216,7 +219,7 @@ def test_unknown_id_with_no_lineage_still_refuses() -> None:
     """An id that names neither a live row nor any lineage handle is refused."""
     _add_row(amount="100.00", description="Material oficina", idempotency_key="row-1")
     absent = "f" * 64
-    result = _RUNNER.invoke(app, ["app", "ledger", "view", absent])
+    result = _invoke(["app", "ledger", "view", absent])
     assert result.exit_code != 0, result.output
 
 
@@ -226,8 +229,7 @@ def test_split_parent_id_still_resolves_after_split() -> None:
     its lineage (the split children) is visible through ``history``.
     """
     parent = _add_row(amount="100.00", description="Subcontratacion", idempotency_key="row-1")
-    split = _RUNNER.invoke(
-        app,
+    split = _invoke(
         [
             "app",
             "ledger",
@@ -254,17 +256,17 @@ def test_split_parent_id_still_resolves_after_split() -> None:
     child_a = next(r for r in rows if "parte A" in r["description"])["transaction_id"]
 
     # The parent handle still answers (it was never removed).
-    parent_view = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", parent])
+    parent_view = _invoke(["--format", "json", "app", "ledger", "view", parent])
     assert parent_view.exit_code == 0, parent_view.output
-    assert json.loads(parent_view.output)["result"]["transaction_id"] == parent
+    assert _json_result(parent_view)["transaction_id"] == parent
 
     # The split siblings (parent -> children) surface when opted in.
-    history = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", parent, "--include-split-siblings"])
+    history = _invoke(["--format", "json", "app", "ledger", "history", parent, "--include-split-siblings"])
     assert history.exit_code == 0, history.output
-    events = json.loads(history.output)["result"]["events"]
+    events = _json_result(history)["events"]
     assert any(e["event_type"] == "ledger.transaction.split" for e in events)
     # The child id is independently addressable.
-    child_view = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", child_a])
+    child_view = _invoke(["--format", "json", "app", "ledger", "view", child_a])
     assert child_view.exit_code == 0, child_view.output
 
 
@@ -274,8 +276,7 @@ def test_merged_children_ids_still_resolve_after_merge() -> None:
     keep resolving, and the fresh merged row carries a new content-addressed id.
     """
     parent = _add_row(amount="100.00", description="Subcontratacion", idempotency_key="row-1")
-    split = _RUNNER.invoke(
-        app,
+    split = _invoke(
         [
             "app",
             "ledger",
@@ -299,8 +300,7 @@ def test_merged_children_ids_still_resolve_after_merge() -> None:
     child_a = next(r for r in rows if "parte A" in r["description"])["transaction_id"]
     child_b = next(r for r in rows if "parte B" in r["description"])["transaction_id"]
 
-    merged = _RUNNER.invoke(
-        app,
+    merged = _invoke(
         [
             "--format",
             "json",
@@ -317,24 +317,24 @@ def test_merged_children_ids_still_resolve_after_merge() -> None:
         ],
     )
     assert merged.exit_code == 0, merged.output
-    merged_id = json.loads(merged.output)["result"]["merged_transaction_id"]
+    merged_id = _json_result(merged)["merged_transaction_id"]
     assert merged_id not in {child_a, child_b, parent}
 
     # The archived child ids still resolve to their own (ARCHIVED) records.
     for child in (child_a, child_b):
-        view = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", child])
+        view = _invoke(["--format", "json", "app", "ledger", "view", child])
         assert view.exit_code == 0, f"{child}: {view.output}"
-        assert json.loads(view.output)["result"]["transaction_id"] == child
+        assert _json_result(view)["transaction_id"] == child
 
     # The merge event chain is reachable from the parent handle.
-    history = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "history", parent])
+    history = _invoke(["--format", "json", "app", "ledger", "history", parent])
     assert history.exit_code == 0, history.output
-    events = json.loads(history.output)["result"]["events"]
+    events = _json_result(history)["events"]
     assert any(e["event_type"] == "ledger.transaction.merged" for e in events)
 
     # The fresh merged row's id is its own content hash (content-addressing
     # unchanged) and is independently addressable.
-    merged_view = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "view", merged_id])
+    merged_view = _invoke(["--format", "json", "app", "ledger", "view", merged_id])
     assert merged_view.exit_code == 0, merged_view.output
     catalogue = _active_repo().load()
     merged_tx = catalogue.get(merged_id)

@@ -25,6 +25,7 @@ from . import (
     ProfileValidationIssue,
     ProfileValidationReport,
 )
+from ._completeness import conditional_profile_missing_required
 
 _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 """The single accepted date layout: zero-padded ``YYYY-MM-DD``.
@@ -80,6 +81,7 @@ class ProfileValidationService:
         for fact in facts:
             issues.extend(self._validate_one_fact(fact))
         issues.extend(self._required_field_issues(facts))
+        issues.extend(self._conditional_completeness_issues(facts))
         return ProfileValidationReport(
             profile_id=profile_id,
             schema_version=self._schema.version,
@@ -191,6 +193,21 @@ class ProfileValidationService:
                     )
         return tuple(issues)
 
+    def _conditional_completeness_issues(
+        self,
+        facts: tuple[UserProfileFact, ...],
+    ) -> tuple[ProfileValidationIssue, ...]:
+        values = {fact.path: self._render_fact_value(fact.value) for fact in facts if fact.value is not None}
+        return tuple(
+            ProfileValidationIssue(
+                severity=BaseSeverity.ERROR,
+                code="conditional_required_field_missing",
+                path=path,
+                message=f"conditionally required field {path} is missing",
+            )
+            for path in conditional_profile_missing_required(values)
+        )
+
     @staticmethod
     def _section_field_key(path: str) -> str:
         head, _, tail = path.partition(".")
@@ -199,6 +216,12 @@ class ProfileValidationService:
         if tail and "." in tail and tail.split(".", 1)[0].isdigit():
             tail = tail.split(".", 1)[1]
         return f"{head}.{tail.split('.', 1)[0]}"
+
+    @staticmethod
+    def _render_fact_value(value: object) -> str:
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        return str(value)
 
 
 __all__ = ["ProfileValidationService"]

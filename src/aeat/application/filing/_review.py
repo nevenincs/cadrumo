@@ -2,14 +2,28 @@
 
 Provides the :func:`approve_draft` / :func:`unapprove_draft` /
 :func:`refresh_review_status` lifecycle on top of
-:class:`aeat.domain.filing.ModeloDraft`, plus the deterministic
-fingerprint pipeline that lets :func:`approval_stale_reasons` detect
-when an APPROVED draft has been invalidated by upstream changes.
+:class:`aeat.domain.filing.ModeloDraft` and
+:class:`aeat.domain.submission.ModeloDraftStatus`, plus the deterministic
+:class:`aeat.domain.filing.ModeloApprovalBasis` fingerprint pipeline that lets
+:func:`approval_stale_reasons` detect when a
+:attr:`~aeat.domain.submission.ModeloDraftStatus.APROBADO` draft has been
+invalidated by upstream changes.
 
-The :func:`compute_current_approval_basis` helper accepts an optional
-:class:`TransactionCatalogueRepository` override; when omitted, it
-loads the :class:`TransactionCatalogue` from the encrypted
-secure-object backend.
+The :func:`compute_current_approval_basis` helper accepts optional
+:class:`aeat.domain.transactions.TransactionCatalogue` and category-profile
+overrides. When the catalogue override is omitted, it loads the
+:class:`~aeat.domain.transactions.TransactionCatalogue` from the encrypted
+secure-object backend through
+:class:`aeat.domain.transactions.TransactionCatalogueRepository`.
+
+See Also:
+    :func:`aeat.application.filing.build_runtime_schema_provider`
+        Builds the registry-backed schema provider whose casilla and formula
+        surface participates in the approval basis.
+    :func:`aeat.application.review.drafts_pending`
+        Emits stale filing approvals as high-severity review queue items.
+    :class:`aeat.domain.filing.ModeloApprovalBasis`
+        Persisted digest bundle compared during stale detection.
 """
 
 from __future__ import annotations
@@ -90,7 +104,12 @@ def compute_current_approval_basis(
     transaction_catalogue: TransactionCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
 ) -> ModeloApprovalBasis:
-    """Return the :class:`ModeloApprovalBasis` digests for the current upstream state.
+    """Return the :class:`ModeloApprovalBasis` digests for current upstream state.
+
+    The basis hashes the draft identity and validation surface, the supplied or
+    persisted :class:`TransactionCatalogue`, the supplied or bundled
+    :class:`~aeat.domain.categories.CategoryProfile` mapping, and the active
+    registry schema/formula surface exposed by ``schema_provider``.
 
     Args:
         draft: The :class:`aeat.domain.filing.ModeloDraft` whose basis
@@ -101,7 +120,7 @@ def compute_current_approval_basis(
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional :class:`TransactionCatalogue` override.
             When ``None``, the catalogue is loaded from the encrypted
-            SecureObjectRepository.
+            :class:`~aeat.domain.transactions.TransactionCatalogueRepository`.
         category_profiles: Optional override of the active category
             profile map. Defaults to the bundled 2025 registry.
 
@@ -198,7 +217,7 @@ def approve_draft(
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
     approved_at: datetime | None = None,
 ) -> ModeloDraft:
-    """Stamp approval metadata on ``draft`` and promote it to ``APPROVED``.
+    """Stamp approval metadata on ``draft`` and promote it to ``APROBADO``.
 
     Args:
         draft: The :class:`ModeloDraft` to approve. Must be
@@ -308,7 +327,7 @@ def refresh_review_status(
 
     Downstream-status drafts (submitted / acknowledged / rejected /
     amended / cancelled) get any leftover approval metadata cleared
-    so historical state cannot pretend to be current. APPROVED drafts
+    so historical state cannot pretend to be current. ``APROBADO`` drafts
     transition to :attr:`ModeloDraftStatus.APROBACION_CADUCADA` when
     :func:`approval_stale_reasons` returns a non-empty tuple.
 
@@ -395,7 +414,7 @@ def refresh_review_status(
 
 
 def describe_stale_reason(reason: ModeloApprovalStaleReason) -> str:
-    """Return a short user-facing English explanation for ``reason``.
+    """Return a short localized explanation for ``reason``.
 
     Args:
         reason: The :class:`ModeloApprovalStaleReason` to describe.

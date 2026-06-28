@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -11,7 +11,13 @@ import pytest
 from ....core import CasillaId, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistryModeloObservation
-from ....domain.deadlines import CrossPeriodGroupMemberRoster, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines import (
+    CrossPeriodGroupMemberRoster,
+    EntityType,
+    IrpfIncomeCategory,
+    IVARegime,
+    TaxpayerProfile,
+)
 from ....domain.filing import ModeloDraftError
 from ....domain.modelos import (
     CalculationRevision,
@@ -22,6 +28,7 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     upsert_calculation_revision,
 )
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
@@ -31,10 +38,12 @@ from ...calculations import (
     cross_period_dependency_requirements,
 )
 from ...calculations._cross_period_clean_state import _OFFICIAL_SOURCE_KINDS
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     APP_FILING_SOURCE_KIND,
     ModeloCrossPeriodCleanStateError,
     ModeloExportCommand,
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
     export_modelo_revision,
     file_modelo_revision,
@@ -58,6 +67,28 @@ def _workflow_profile() -> TaxpayerProfile:
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
     )
+
+
+def _seed_m100_profile_facts(bucket_id: str, objects: object) -> None:
+    record = UserProfileRecord(
+        profile_id=bucket_id,
+        display_name="Test runtime profile",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="X1234567L"),
+            UserProfileFact(path="identity.name", value="Test"),
+            UserProfileFact(path="identity.surnames", value="Salaried"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
+            UserProfileFact(path="renta_taxpayer.sex", value="M"),
+            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+        ),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).save(record)
 
 
 def _seed_verified_revision(
@@ -102,6 +133,9 @@ def _seed_draft_revision(
     modelo: str,
     filing_year: int,
     period: str,
+    binding_overrides: dict[str, str] | None = None,
+    relation_overrides: dict[str, str] | None = None,
+    casilla_values: dict[CasillaId, Decimal] | None = None,
 ) -> str:
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
     work_unit = create_work_unit(
@@ -112,16 +146,23 @@ def _seed_draft_revision(
         revision_id=snapshot.revision.id,
         clock=_CLOCK,
     )
+    resolved_binding_overrides = binding_overrides or {}
+    resolved_relation_overrides = relation_overrides or {}
+    resolved_casilla_values = casilla_values or {}
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values={},
+        binding_overrides=resolved_binding_overrides,
+        relation_overrides=resolved_relation_overrides,
+        casilla_values=resolved_casilla_values,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.BORRADOR,
+        binding_overrides=resolved_binding_overrides,
+        relation_overrides=resolved_relation_overrides,
+        casilla_values=resolved_casilla_values,
         created_at=_CLOCK,
         updated_at=_CLOCK,
     )
@@ -274,7 +315,10 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp
             period="0A",
         )
         salaried = _workflow_profile().model_copy(
-            update={"irpf_income_categories": frozenset({IrpfIncomeCategory.TRABAJO})},
+            update={
+                "entity_type": EntityType.NATURAL_PERSON,
+                "irpf_income_categories": frozenset({IrpfIncomeCategory.TRABAJO}),
+            },
         )
         report = verify_modelo_revision(
             revision_id,
@@ -293,6 +337,65 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp
     }
     # The M100->M100 prior-year self-carry is a separate first-filer concern, not a withholding dep.
     assert not blocked, f"salaried M100 must not be cross-period-blocked on withholding/pagos deps, got {blocked}"
+
+
+def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path: Path) -> None:
+    """A salaried M100 with explicit zero prior BIN is filable without prior M100 evidence."""
+    zero_binding = "renta-2025-base-liquidable-negativa-general-anterior"
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="c3-salaried-m100-zero-bin") as profile:
+        _seed_m100_profile_facts(profile.bucket_id, profile.repository)
+        snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+        work_unit = create_work_unit(
+            bucket_id=profile.bucket_id,
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision_id=snapshot.revision.id,
+            clock=_CLOCK,
+        )
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            actor="operator-test",
+            casilla_inputs={
+                "0003": Decimal("32000.00"),
+                "0013": Decimal("2100.00"),
+                "0014": Decimal("0"),
+                "0015": Decimal("0"),
+                "0016": Decimal("0"),
+            },
+            binding_values={
+                "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+                "renta-2025-modelo-111-retenciones-periodicas": Decimal("4200.00"),
+                "renta-2025-modelo-115-retenciones-periodicas": Decimal("0"),
+                "renta-2025-modelo-123-retenciones-periodicas": Decimal("0"),
+                zero_binding: Decimal("0"),
+            },
+            clock=_CLOCK,
+        ).revision
+        revision_id = revision.calculation_revision_id
+        salaried = _workflow_profile().model_copy(
+            update={
+                "entity_type": EntityType.NATURAL_PERSON,
+                "irpf_income_categories": frozenset({IrpfIncomeCategory.TRABAJO}),
+            },
+        )
+        report = verify_modelo_revision(
+            revision_id,
+            actor="operator-test",
+            workflow_profile=salaried,
+            clock=_CLOCK,
+        )
+
+    assert report.granted_verificado_completo is True
+    assert not any(
+        finding.kind is ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN
+        for finding in report.findings
+    )
+    assert any(
+        finding.kind is ModeloVerificationFindingKind.ADVISORY
+        and "previous-filing carry treated as zero" in finding.message
+        for finding in report.findings
+    )
 
 
 def test_export_modelo_390_passes_clean_state_with_imported_bound_justificantes(tmp_path: Path) -> None:

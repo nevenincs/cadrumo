@@ -13,13 +13,11 @@ from pydantic import ValidationError as ValidationError
 from .....core import TaxDomain, freeze_toml
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
-from .....core.resources import bundled_path
 from .. import (
     CasillaId,
     InputKind,
     RegistryValidationError,
     ValidatedRegistryAuthority,
-    load_registry_tree,
     validated_casilla_id,
 )
 from .._schema import (
@@ -51,11 +49,14 @@ from .._schema import (
     VerificationExpectationDefinition,
     WorkbookParityReference,
 )
-from .._validate_references import _check_all_id_references
+from .._snapshot import build_validated_snapshot
+from .._validate_references import check_all_id_references
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 __all__ = [
+    "DUMMY_LEGAL_ID",
+    "DUMMY_SOURCE_ID",
     "ExportFieldDefinition",
     "ExportRecordDefinition",
     "ExtractionTargetDefinition",
@@ -63,16 +64,25 @@ __all__ = [
     "RegistryValidationError",
     "ValidatedRegistryAuthority",
     "ValidationError",
-    "_check_all_id_references",
+    "build_minimal_snapshot",
+    "build_snapshot_with_missing_legal",
+    "build_snapshot_with_missing_source",
+    "check_all_id_references",
+    "completeness_manifest",
     "freeze_toml",
     "logging",
+    "minimal_application_link",
+    "minimal_casilla",
+    "minimal_catalogues",
+    "minimal_legal_ref",
+    "minimal_modelo",
+    "minimal_revision",
+    "minimal_source_ref",
+    "minimal_workbook_ref",
+    "segmented_casilla",
+    "single_segment_casilla",
+    "snapshot_for_revision",
 ]
-
-
-def _load_registry() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
-
-    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    return modelos, catalogues
 
 
 def _snapshot_for_revision(
@@ -81,11 +91,10 @@ def _snapshot_for_revision(
     revision: ModeloRevision,
 ) -> RegistrySnapshot:
     """Build a minimal snapshot for a given revision without running integrity checks."""
-    from .._snapshot import _build_validated_snapshot
 
     filing_year = revision.period_selector.year_from or 2024
     period = next(iter(revision.period_selector.periods))
-    return _build_validated_snapshot(
+    return build_validated_snapshot(
         modelo,
         catalogues,
         filing_year=filing_year,
@@ -333,3 +342,22 @@ def _completeness_manifest(
         legal_refs=(_DUMMY_LEGAL_ID,),
         source_refs=(_DUMMY_SOURCE_ID,),
     )
+
+
+DUMMY_LEGAL_ID = _DUMMY_LEGAL_ID
+DUMMY_SOURCE_ID = _DUMMY_SOURCE_ID
+build_minimal_snapshot = _build_minimal_snapshot
+build_snapshot_with_missing_legal = _build_snapshot_with_missing_legal
+build_snapshot_with_missing_source = _build_snapshot_with_missing_source
+completeness_manifest = _completeness_manifest
+minimal_application_link = _minimal_application_link
+minimal_casilla = _minimal_casilla
+minimal_catalogues = _minimal_catalogues
+minimal_legal_ref = _minimal_legal_ref
+minimal_modelo = _minimal_modelo
+minimal_revision = _minimal_revision
+minimal_source_ref = _minimal_source_ref
+minimal_workbook_ref = _minimal_workbook_ref
+segmented_casilla = _segmented_casilla
+single_segment_casilla = _single_segment_casilla
+snapshot_for_revision = _snapshot_for_revision

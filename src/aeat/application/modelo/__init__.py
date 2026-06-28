@@ -46,7 +46,9 @@ Only when layers 1-3 produce zero blocking findings AND layer 4 passes
 does ``verify_modelo_revision`` grant ``VERIFICADO_COMPLETO`` and
 persist the :class:`~aeat.domain.modelos._verification_report.ModeloVerificationReport`.
 
-Use of :class:`CalculationRevision` for compliance.
+The facade carries :class:`CalculationRevision` through calculation,
+verification, filing, and export so callers address one persisted revision
+instead of duplicating workflow state.
 """
 
 from __future__ import annotations
@@ -79,6 +81,7 @@ from ._action_errors import (
     ExternalModeloImportError,
     ModeloAggregationBindingError,
     ModeloCrossPeriodCleanStateError,
+    ModeloProfileReadinessError,
     ModeloRecordNotFoundError,
     ModeloRefundElectionNotEligibleError,
     ModeloWorkflowGateError,
@@ -146,6 +149,7 @@ from ._history import (
 from ._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
     ModeloIvaWalletReconciliationBlockedError,
+    require_persisted_iva_compensation_decision_matches_revision,
 )
 from ._iva_wallet_seed import (
     ModeloIvaWalletCorrectionNoRecordError,
@@ -178,6 +182,10 @@ from ._participation_index_rebuild import (
 from ._profile_binding import (
     ProfileBindingResolutionError,
     resolve_profile_sourced_bindings,
+)
+from ._profile_readiness_gate import (
+    require_profile_ready_for_modelo_work,
+    require_profile_ready_for_work_unit,
 )
 from ._projection import (
     ModeloCompareDeltaRow,
@@ -390,6 +398,7 @@ __all__ = [
     "ModeloIvaWalletSeedNegativeAmountError",
     "ModeloIvaWalletSeedNoTaxpayerError",
     "ModeloMaritimeExemptionPreview",
+    "ModeloProfileReadinessError",
     "ModeloProjectInvalidDecimalOverrideError",
     "ModeloProjectM100Projection",
     "ModeloProjectM130Accumulated",
@@ -522,6 +531,9 @@ __all__ = [
     "registry_list_modelos",
     "registry_modelo_codes",
     "rename_work_unit",
+    "require_persisted_iva_compensation_decision_matches_revision",
+    "require_profile_ready_for_modelo_work",
+    "require_profile_ready_for_work_unit",
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",
     "resolve_modelo_100_borrador_bindings",

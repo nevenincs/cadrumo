@@ -21,16 +21,13 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_RUNNER = CliRunner()
 
 #: The display label the operator chooses at create — the only id they know.
 _LABEL = "operator"
@@ -54,8 +51,7 @@ def _create_profile_and_resolve_uuid() -> str:
     the UUIDv4 bucket directory + manifest and writes the active-profile pointer
     to that UUID (never the label).
     """
-    created = _RUNNER.invoke(
-        app,
+    created = invoke_cached_cli(
         [
             "config",
             "profile",
@@ -65,8 +61,12 @@ def _create_profile_and_resolve_uuid() -> str:
             "--accept-defaults",
             "--tax-id",
             "12345678Z",
+            "--entity-type",
+            "natural_person",
             "--name",
             "Operator",
+            "--surnames",
+            "Override",
             "--activity",
             "design",
         ],
@@ -92,7 +92,7 @@ def test_env_override_by_display_label_resolves_the_profile_bucket() -> None:
     assert uuid != _LABEL, "the bucket id must be a minted UUID, not the label"
 
     with override_settings(aeat_active_profile=_LABEL):
-        listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+        listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
 
     assert listed.exit_code == 0, listed.output
     # The command resolved the operator's bucket and rendered the (empty) ledger
@@ -112,7 +112,7 @@ def test_env_override_by_uuid_is_unchanged() -> None:
     uuid = _create_profile_and_resolve_uuid()
 
     with override_settings(aeat_active_profile=uuid):
-        listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+        listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
 
     assert listed.exit_code == 0, listed.output
     assert "REFUSED_PROFILE_NOT_FOUND" not in listed.output
@@ -197,7 +197,7 @@ def test_env_override_ambiguous_label_refuses_cleanly_not_traceback() -> None:
     _write_second_live_bucket_sharing_label(_LABEL)  # bucket 2: same label
 
     with override_settings(aeat_active_profile=_LABEL):
-        listed = _RUNNER.invoke(app, ["--language", "en", "app", "ledger", "list"])
+        listed = invoke_cached_cli(["--language", "en", "app", "ledger", "list"])
 
     assert listed.exit_code != 0, listed.output
     combined = _combined_output(listed)
@@ -223,7 +223,7 @@ def test_profile_flag_ambiguous_label_refuses_with_dedicated_key() -> None:
     _create_profile_and_resolve_uuid()  # bucket 1: label "operator"
     _write_second_live_bucket_sharing_label(_LABEL)  # bucket 2: same label
 
-    listed = _RUNNER.invoke(app, ["--language", "en", "--profile", _LABEL, "app", "ledger", "list"])
+    listed = invoke_cached_cli(["--language", "en", "--profile", _LABEL, "app", "ledger", "list"])
 
     assert listed.exit_code != 0, listed.output
     combined = _combined_output(listed)
@@ -243,6 +243,6 @@ def test_env_override_unknown_label_does_not_resolve() -> None:
     _create_profile_and_resolve_uuid()
 
     with override_settings(aeat_active_profile="no-such-profile"):
-        listed = _RUNNER.invoke(app, ["--format", "json", "app", "ledger", "list"])
+        listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
 
     assert listed.exit_code != 0, listed.output

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from functools import lru_cache
+from typing import Protocol
 
 import pytest
 
@@ -16,6 +17,7 @@ from .._relation_aggregation import relation_aggregation_op
 from .._relations import relation_source_requirements
 from .._runtime_graph import expression_relation_refs
 from .._schema import (
+    DataBindingDefinition,
     DependencyClassificationDefinition,
     InputKind,
     ModeloDefinition,
@@ -101,20 +103,20 @@ def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
 _PROFILE_SCHEDULE_SOURCE_MODELOS = frozenset({"036", "037", "840"})
 
 
-def _assert_periodic_to_annual_summary_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
+def _assert_periodic_to_annual_summary_contract(relation: RelationDefinition, *, scope: str) -> None:
     assert relation.kind == "annual_summary", scope
     assert relation.target_periods == ("0A",), scope
     assert len(relation.source_periods) > 1, scope
     assert relation_aggregation_op(relation) == RelationAggregationOp.SUM, scope
 
 
-def _assert_instalment_to_final_settlement_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
+def _assert_instalment_to_final_settlement_contract(relation: RelationDefinition, *, scope: str) -> None:
     assert relation.kind == "cross_model_output", scope
     assert relation.target_periods == ("0A",), scope
     assert relation.source_periods, scope
 
 
-def _assert_direct_calculation_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
+def _assert_direct_calculation_contract(relation: RelationDefinition, *, scope: str) -> None:
     # A direct-calculation relation feeds a value into a calculation:
     # either a cross-model output, or an intra-modelo prior-period
     # carry-forward (`previous_period`) where a modelo reads its own
@@ -123,15 +125,19 @@ def _assert_direct_calculation_contract(relation, *, scope: str) -> None:  # typ
     assert relation.target_periods, scope
 
 
-def _assert_factual_evidence_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
+def _assert_factual_evidence_contract(relation: RelationDefinition, *, scope: str) -> None:
     assert relation.kind == "cross_model_output", scope
 
 
-def _assert_profile_schedule_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
+def _assert_profile_schedule_contract(relation: RelationDefinition, *, scope: str) -> None:
     assert relation.source_modelo in _PROFILE_SCHEDULE_SOURCE_MODELOS, scope
 
 
-_ROLE_CONTRACT_VALIDATORS = {
+class _RelationRoleContractValidator(Protocol):
+    def __call__(self, relation: RelationDefinition, *, scope: str) -> None: ...
+
+
+_ROLE_CONTRACT_VALIDATORS: Mapping[str, _RelationRoleContractValidator] = {
     "periodic_to_annual_summary": _assert_periodic_to_annual_summary_contract,
     "instalment_to_final_settlement": _assert_instalment_to_final_settlement_contract,
     "direct_calculation": _assert_direct_calculation_contract,
@@ -140,7 +146,7 @@ _ROLE_CONTRACT_VALIDATORS = {
 }
 
 
-def _assert_relation_role_contract(relation, *, scope: str) -> None:  # type: ignore[no-untyped-def]
+def _assert_relation_role_contract(relation: RelationDefinition, *, scope: str) -> None:
     """Dispatch to the per-role contract validator (no-op for unrecognised roles).
 
     Each role's contract lives in its own
@@ -234,7 +240,12 @@ def test_relation_target_bindings_mirror_source_contract() -> None:
                 )
 
 
-def _assert_relation_binding_mirrors_source(*, binding, relation, scope: str) -> None:  # type: ignore[no-untyped-def]
+def _assert_relation_binding_mirrors_source(
+    *,
+    binding: DataBindingDefinition,
+    relation: RelationDefinition,
+    scope: str,
+) -> None:
     """Verify a relation's target binding mirrors the relation's source contract.
 
     Reads four optional selector keys (``source_modelo`` /

@@ -10,32 +10,33 @@ guard), and rejects invalid date input cleanly.
 
 from __future__ import annotations
 
-import pytest
-from typer.testing import CliRunner
+from collections.abc import Sequence
 
-from .. import app
+import pytest
+from click.testing import Result
+
+from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-@pytest.fixture()
-def runner() -> CliRunner:
-    return CliRunner()
+def _invoke(args: Sequence[str]) -> Result:
+    return invoke_cached_cli(args)
 
 
 @pytest.mark.parametrize("verb", ["alta", "modificacion", "baja"])
-def test_m036_verb_advertises_flag_set(runner: CliRunner, verb: str) -> None:
+def test_m036_verb_advertises_flag_set(verb: str) -> None:
     """Each verb's --help surfaces --declared-on / --sede-justificante / --note."""
-    result = runner.invoke(app, ["app", "modelo", "m036", verb, "--help"])
+    result = _invoke(["app", "modelo", "m036", verb, "--help"])
     assert result.exit_code == 0, result.output
     assert "--declared-on" in result.output
     assert "--sede-justificante" in result.output
     assert "--note" in result.output
 
 
-def test_m036_group_lists_three_verbs(runner: CliRunner) -> None:
+def test_m036_group_lists_three_verbs() -> None:
     """``aeat app modelo m036 --help`` lists the three declarative verbs."""
-    result = runner.invoke(app, ["app", "modelo", "m036", "--help"])
+    result = _invoke(["app", "modelo", "m036", "--help"])
     assert result.exit_code == 0, result.output
     assert "alta" in result.output
     assert "modificacion" in result.output
@@ -43,20 +44,18 @@ def test_m036_group_lists_three_verbs(runner: CliRunner) -> None:
 
 
 @pytest.mark.parametrize("verb", ["alta", "modificacion", "baja"])
-def test_m036_rejects_invalid_declared_on(runner: CliRunner, verb: str) -> None:
+def test_m036_rejects_invalid_declared_on(verb: str) -> None:
     """An unparseable --declared-on fails cleanly with a non-zero exit."""
-    result = runner.invoke(
-        app,
+    result = _invoke(
         ["app", "modelo", "m036", verb, "--declared-on", "not-a-date"],
     )
     assert result.exit_code != 0
 
 
 @pytest.mark.parametrize("verb", ["alta", "modificacion", "baja"])
-def test_m036_refuses_without_active_profile(runner: CliRunner, verb: str) -> None:
+def test_m036_refuses_without_active_profile(verb: str) -> None:
     """No active profile -> the cold-start guard refuses with a translated message."""
-    result = runner.invoke(
-        app,
+    result = _invoke(
         ["app", "modelo", "m036", verb, "--declared-on", "2026-06-04"],
     )
     assert result.exit_code != 0

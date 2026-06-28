@@ -37,6 +37,7 @@ from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
+from ...core import Modelo as _Modelo
 from ...core.decimal import coerce_decimal_strict as _coerce_decimal_strict
 from ...core.logging import get_logger as _get_logger
 from ...domain.deadlines import (
@@ -135,6 +136,24 @@ def build_filing_obligation_advisories(
     return ()
 
 
+def build_unsupported_work_create_modelos(
+    raw_values: Mapping[str, object] | None,
+) -> tuple[str, ...]:
+    """Return registry-visible modelos whose local work-create path is unsupported."""
+    if raw_values is None:
+        return ()
+    fiscal_residency = (
+        str(
+            raw_values.get("taxpayer.fiscal_residency") or raw_values.get("taxpayer_type.fiscal_residency") or "",
+        )
+        .strip()
+        .lower()
+    )
+    if fiscal_residency == "non_resident_irnr":
+        return (_Modelo.M210.value,)
+    return ()
+
+
 def overview_status_report_from_projection(
     projection: OperatorStateProjection,
     *,
@@ -167,6 +186,7 @@ def overview_status_report_from_projection(
         calculation_revisions=projection.workspace.calculation_revisions,
         unreadable_rows=projection.workspace.unreadable_rows,
         filing_obligation_advisories=build_filing_obligation_advisories(raw_values),
+        unsupported_work_create_modelos=build_unsupported_work_create_modelos(raw_values),
     )
 
 
@@ -216,6 +236,7 @@ __all__ = [
     "build_overview_calendar_events",
     "build_overview_explain",
     "build_overview_status_report",
+    "build_unsupported_work_create_modelos",
     "calendar_applicability_profile_keys_for_modelo",
     "calendar_censo_enrolment_profile_keys",
     "calendar_events_from_expedientes_snapshots",

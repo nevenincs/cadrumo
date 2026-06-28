@@ -24,7 +24,6 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from ....adapters.persistence.storage import SensitivityClass
 from ....application.user_profile._repository import (
@@ -33,12 +32,10 @@ from ....application.user_profile._repository import (
     user_profile_value_object_key,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .. import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_RUNNER = CliRunner()
 
 # Profile id / bucket id used throughout; must be a valid bucket identifier.
 _PROFILE_ID = "test-boundary-profile"
@@ -50,7 +47,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
     Uses ``isolated_runtime_profile`` (real KEK/DEK, real SQLite engine)
     so ``require_ready()`` passes without the unsecured-backend guard.
-    CLI invocations via ``CliRunner`` run in the same thread, inheriting
+    CLI invocations run in the same thread, inheriting
     the active ``_active_session`` and ``load_settings`` ContextVars.
     """
     with isolated_runtime_profile(
@@ -151,7 +148,7 @@ def test_drifted_stored_profile_surfaces_stored_data_boundary_message(
 
     # Invoke with no <name> argument so the CLI resolves the active profile
     # from settings (the ContextVar set by isolated_runtime_profile).
-    result = _RUNNER.invoke(app, ["config", "profile", "show"])
+    result = invoke_cached_cli(["config", "profile", "show"])
 
     assert result.exit_code != 0, result.output
     combined = result.output or ""
@@ -176,7 +173,7 @@ def test_drifted_stored_profile_boundary_is_distinct_from_unexpected_error(
     profile_id = _seed_profile(runtime_profile)
     _corrupt_stored_profile(profile_id, runtime_profile)
 
-    result = _RUNNER.invoke(app, ["config", "profile", "show"])
+    result = invoke_cached_cli(["config", "profile", "show"])
 
     assert result.exit_code != 0, result.output
     combined = result.output or ""
@@ -209,8 +206,7 @@ def test_malformed_cli_input_surfaces_input_time_validation_boundary(
     # parser raises ValidationError inside the command.  This test does
     # not assert on the exact pydantic message (which is internal) but
     # checks the CLI boundary path is the input-time one.
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "ledger",

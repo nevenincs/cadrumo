@@ -9,6 +9,7 @@ import pytest
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from ..._export_field_kind import CasillaFieldKind
 from .. import CasillaId, RegistrySnapshot, validated_casilla_id
+from .._schema import DataBindingDefinition
 from ._registry_schema_support import (
     _EXPECTED_DEADLINE_WINDOWS,
     _EXPECTED_LIVE_CROSS_REFERENCES,
@@ -20,8 +21,10 @@ from ._registry_schema_support import (
     ExportFieldDefinition,
     ExtractionTargetDefinition,
     FormulaExpression,
+    ModeloDefinition,
     ModeloRevision,
     Path,
+    RegistryCatalogues,
     RegistryLoadError,
     RegistryValidationError,
     RegistryValidator,
@@ -47,6 +50,20 @@ _MISSING_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_
 _NAMED_LABEL_CASILLA: CasillaId = validated_casilla_id("my-label", surface="_NAMED_LABEL_CASILLA")
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 _DECL_CNAE_CASILLA: CasillaId = validated_casilla_id("decl.cnae", surface="_DECL_CNAE_CASILLA")
+
+
+def _validate_modelo(modelo: ModeloDefinition, catalogues: RegistryCatalogues) -> None:
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
+def _validate_revision(modelo: ModeloDefinition, catalogues: RegistryCatalogues, revision: ModeloRevision) -> None:
+    _validate_modelo(_with_revision(modelo, revision), catalogues)
+
+
+def _with_binding(revision: ModeloRevision, binding: DataBindingDefinition) -> ModeloRevision:
+    return revision.model_copy(
+        update={"bindings": tuple(binding if item.id == binding.id else item for item in revision.bindings)},
+    )
 
 
 @pytest.fixture
@@ -184,9 +201,7 @@ def test_revision_without_casillas_is_registry_validation_failure() -> None:
         RegistryValidationError,
         match="revision must declare at least one casilla",
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
-            _with_revision(modelo, empty_revision),
-        )
+        _validate_revision(modelo, catalogues, empty_revision)
 
 
 def test_committed_snapshot_lists_four_quarterly_deadline_windows(modelo_130_snapshot: RegistrySnapshot) -> None:
@@ -338,7 +353,7 @@ def test_validator_rejects_duplicate_formula_targets() -> None:
     mutated = revision.model_copy(update={"formulas": (*revision.formulas, duplicate)})
 
     with pytest.raises(RegistryValidationError, match="duplicate formula target"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_formula_id_matching_casilla_id() -> None:
@@ -356,7 +371,7 @@ def test_validator_rejects_formula_id_matching_casilla_id() -> None:
     mutated = revision.model_copy(update={"casillas": casillas, "formulas": formulas})
 
     with pytest.raises(RegistryValidationError, match=f"duplicate registry id '{formula.target_casilla_id}'"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_reports_casilla_binding_id_collision_owners() -> None:
@@ -370,7 +385,7 @@ def test_validator_reports_casilla_binding_id_collision_owners() -> None:
         RegistryValidationError,
         match=rf"duplicate registry id '{re.escape(collision_id)}' shared by casilla, binding",
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_formula_target_mismatch() -> None:
@@ -381,7 +396,7 @@ def test_validator_rejects_formula_target_mismatch() -> None:
     mutated = revision.model_copy(update={"formulas": (mismatched_formula, *revision.formulas[1:])})
 
     with pytest.raises(RegistryValidationError, match=f"targeting '{_NUMERIC_CASILLA_01}'"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_requires_workbook_parity_coverage() -> None:
@@ -389,7 +404,7 @@ def test_validator_requires_workbook_parity_coverage() -> None:
     revision = _revision(modelo).model_copy(update={"workbook_parity_refs": ()})
 
     with pytest.raises(RegistryValidationError, match="must declare official workbook parity coverage"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, revision))
+        _validate_revision(modelo, catalogues, revision)
 
 
 def test_modelo_file_rejects_unknown_support_removal_decision(tmp_path: Path) -> None:
@@ -432,7 +447,7 @@ def test_validator_rejects_removal_decision_for_active_registry_surface() -> Non
     mutated = revision.model_copy(update={"support_removal_decisions": (decision,)})
 
     with pytest.raises(RegistryValidationError, match="but it is still present"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_modelo_file_rejects_formula_workbook_without_runner(tmp_path: Path) -> None:
@@ -462,7 +477,7 @@ def test_validator_rejects_formula_workbook_without_executable_parity_source() -
     mutated = revision.model_copy(update={"workbook_parity_refs": (workbook,)})
 
     with pytest.raises(RegistryValidationError, match="requires executable parity evidence source"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_formula_without_official_source_guidance() -> None:
@@ -477,7 +492,7 @@ def test_validator_rejects_formula_without_official_source_guidance() -> None:
     mutated = revision.model_copy(update={"formulas": formulas})
 
     with pytest.raises(RegistryValidationError, match="requires official_source_guidance source evidence"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_formula_citation_missing_from_official_source() -> None:
@@ -495,7 +510,7 @@ def test_validator_rejects_formula_citation_missing_from_official_source() -> No
     mutated = revision.model_copy(update={"formulas": formulas})
 
     with pytest.raises(RegistryValidationError, match=r"source citation .* missing text"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_binding_citation_missing_from_official_source() -> None:
@@ -506,34 +521,31 @@ def test_validator_rejects_binding_citation_missing_from_official_source() -> No
         citation.model_copy(update={"required_text": ("official source does not contain this binding anchor",)})
         for citation in binding.source_citations
     )
-    bindings = tuple(
-        item.model_copy(update={"source_citations": bad_citations}) if item.id == binding.id else item
-        for item in revision.bindings
-    )
-    mutated = revision.model_copy(update={"bindings": bindings})
+    mutated = _with_binding(revision, binding.model_copy(update={"source_citations": bad_citations}))
 
     with pytest.raises(RegistryValidationError, match=r"source citation .* missing text"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_invoice_binding_without_typed_selector() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
-    binding = revision.bindings[0].model_copy(
-        update={
-            "source": "collectible_invoice",
-            "selector": {"claves": ("E",)},
-            "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
-        },
+    mutated = _with_binding(
+        revision,
+        revision.bindings[0].model_copy(
+            update={
+                "source": "collectible_invoice",
+                "selector": {"claves": ("E",)},
+                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
+            },
+        ),
     )
-    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
-    mutated = revision.model_copy(update={"bindings": bindings})
 
     # The unified validator preserves the underlying pydantic field error rather
     # than flattening to a generic "malformed selector": the missing ``fact`` key
     # is named explicitly (selector violates _InvoiceSelector / fact Field required).
     with pytest.raises(RegistryValidationError, match=r"selector violates _InvoiceSelector"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_profile_binding_selector_missing_from_user_profile_schema() -> None:
@@ -541,71 +553,72 @@ def test_validator_rejects_profile_binding_selector_missing_from_user_profile_sc
     revision = modelo.revisions["2025"]
     binding = next(item for item in revision.bindings if item.source == "profile")
     mutated_binding = binding.model_copy(update={"selector": {**binding.selector, "profile_key": "unknown.profile"}})
-    mutated = revision.model_copy(
-        update={"bindings": tuple(mutated_binding if item.id == binding.id else item for item in revision.bindings)},
-    )
+    mutated = _with_binding(revision, mutated_binding)
 
     with pytest.raises(
         RegistryValidationError,
         match=r"user-profile schema .* selector 'unknown\.profile'",
     ):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_invoice_binding_aggregation_mismatch() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
-    binding = revision.bindings[0].model_copy(
-        update={
-            "source": "collectible_invoice",
-            "selector": {"fact": "operator_count", "claves": ("E",)},
-            "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
-        },
+    mutated = _with_binding(
+        revision,
+        revision.bindings[0].model_copy(
+            update={
+                "source": "collectible_invoice",
+                "selector": {"fact": "operator_count", "claves": ("E",)},
+                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
+            },
+        ),
     )
-    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
-    mutated = revision.model_copy(update={"bindings": bindings})
 
     with pytest.raises(RegistryValidationError, match="requires aggregation op 'count_distinct'"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_invoice_rectification_delta_without_rectification_scope() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
-    binding = revision.bindings[0].model_copy(
-        update={
-            "source": "collectible_invoice",
-            "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
-            "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
-        },
+    mutated = _with_binding(
+        revision,
+        revision.bindings[0].model_copy(
+            update={
+                "source": "collectible_invoice",
+                "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
+                "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
+            },
+        ),
     )
-    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
-    mutated = revision.model_copy(update={"bindings": bindings})
 
     with pytest.raises(RegistryValidationError, match="requires rectification_scope 'only_rectifications'"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_invoice_period_rows_without_rectification_scope() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
-    binding = revision.bindings[0].model_copy(
-        update={
-            "source": "collectible_invoice",
-            "selector": {
-                "fact": "row_field",
-                "row_field": "base_imponible",
-                "grouping": "operator_clave_period",
-                "claves": ("E",),
+    mutated = _with_binding(
+        revision,
+        revision.bindings[0].model_copy(
+            update={
+                "source": "collectible_invoice",
+                "selector": {
+                    "fact": "row_field",
+                    "row_field": "base_imponible",
+                    "grouping": "operator_clave_period",
+                    "claves": ("E",),
+                },
+                "aggregation": BindingAggregation(op=BindingAggregationOp.ROWS),
             },
-            "aggregation": BindingAggregation(op=BindingAggregationOp.ROWS),
-        },
+        ),
     )
-    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
-    mutated = revision.model_copy(update={"bindings": bindings})
 
     with pytest.raises(RegistryValidationError, match="grouping 'operator_clave_period' requires"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_export_fields_can_reference_structured_bindings() -> None:
@@ -635,7 +648,7 @@ def test_export_fields_can_reference_structured_bindings() -> None:
     new_field = bound_revision.export_layouts[0].records[0].fields[0]
     assert new_field.kind is CasillaFieldKind.BINDING
     assert new_field.binding == revision.bindings[0].id
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, bound_revision))
+    _validate_revision(modelo, catalogues, bound_revision)
 
 
 def test_validator_rejects_export_field_with_unknown_binding() -> None:
@@ -663,9 +676,7 @@ def test_validator_rejects_export_field_with_unknown_binding() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match="unknown binding"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
-            _with_revision(modelo, bound_revision),
-        )
+        _validate_revision(modelo, catalogues, bound_revision)
 
 
 def test_validator_rejects_literal_export_field_longer_than_declared_length() -> None:
@@ -687,7 +698,7 @@ def test_validator_rejects_literal_export_field_longer_than_declared_length() ->
     mutated = revision.model_copy(update={"export_layouts": layouts})
 
     with pytest.raises(RegistryValidationError, match=r"literal length .* exceeds declared length"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_parameter_without_official_source_guidance() -> None:
@@ -702,7 +713,7 @@ def test_validator_rejects_parameter_without_official_source_guidance() -> None:
     mutated = revision.model_copy(update={"parameters": parameters})
 
     with pytest.raises(RegistryValidationError, match="requires official_source_guidance source evidence"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_modelo_file_rejects_static_cross_reference_as_executable_parity(tmp_path: Path) -> None:
@@ -726,7 +737,7 @@ def test_validator_rejects_cross_reference_source_tier_mismatch() -> None:
     mutated = revision.model_copy(update={"live_cross_references": (cross_reference,)})
 
     with pytest.raises(RegistryValidationError, match="requires official_source_guidance source evidence"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_modelo_file_rejects_runner_without_formula_workbook(tmp_path: Path) -> None:
@@ -764,7 +775,7 @@ def test_validator_rejects_extraction_profile_unknown_casilla() -> None:
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
 
     with pytest.raises(RegistryValidationError, match=r"extraction profile .* unknown casilla"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_extraction_profile_artefact_surface_mismatch() -> None:
@@ -774,7 +785,7 @@ def test_validator_rejects_extraction_profile_artefact_surface_mismatch() -> Non
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
 
     with pytest.raises(RegistryValidationError, match="surface 'declaracion_pdf' requires"):
-        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_extraction_target_definition_roundtrip() -> None:

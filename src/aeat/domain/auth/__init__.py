@@ -1,7 +1,8 @@
-"""Domain layer for AEAT auth protocol primitives.
+"""Domain facade for AEAT apoderamiento scope parsing primitives.
 
-Re-exports the apoderamientos scope vocabulary so callers import from the package
-root rather than reaching into the ``apoderamientos`` submodule.
+Re-exports :class:`ApoderadoScope`, :class:`ApoderamientosCatalogue`, and
+:class:`UnknownScopeError` together with :func:`parse_scope_tokens` so callers
+can import the scope vocabulary from :mod:`aeat.domain.auth`.
 """
 
 from __future__ import annotations
