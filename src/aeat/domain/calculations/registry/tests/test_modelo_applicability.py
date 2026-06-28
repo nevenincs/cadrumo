@@ -142,6 +142,27 @@ def test_non_resident_irnr_natural_person_does_not_owe_modelo_130() -> None:
     assert "trlirnr-rdleg-5-2004:art-2" in result.legal_refs
 
 
+def test_non_resident_irnr_natural_person_does_not_owe_modelo_100() -> None:
+    """Declared IRNR non-residency positively excludes the resident-IRPF M100."""
+
+    non_resident_autonomo = TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        iva_regime=IVARegime.GENERAL,
+        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        country_of_fiscal_residence="FR",
+    )
+
+    result = derive_modelo_applicability(non_resident_autonomo, "100")
+
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert result.applicable is False
+    assert "NON_RESIDENT_IRNR" in result.reason
+    assert "trlirnr-rdleg-5-2004:art-2" in result.legal_refs
+
+
 def test_objective_estimation_boolean_without_declared_regime_routes_to_m131() -> None:
     """An autónomo who flags módulos but leaves the regime undeclared owes M131, not M130.
 
