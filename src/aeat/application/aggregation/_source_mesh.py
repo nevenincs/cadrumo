@@ -23,6 +23,7 @@ from ...core.i18n import tr
 from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...domain.calculations.registry import BindingId, CasillaId, ModeloRevision, RelationId
+from ...domain.modelos._row_models import ModeloDetailRow
 from ._errors import AggregationValidationError, t
 
 
@@ -213,6 +214,7 @@ class CalculationSourceResolution(BaseModel):
     unresolved_relation_ids: tuple[RelationId, ...] = Field(default_factory=tuple)
     unresolved_binding_ids: tuple[BindingId, ...] = Field(default_factory=tuple)
     bound_inputs_by_casilla_id: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
+    detail_rows: tuple[ModeloDetailRow, ...] = Field(default_factory=tuple)
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
     # Typed borrador provenance. Carried only by the borrador resolution
     # (``Modelo100BorradorSourceResolver``); ``merge_source_resolutions``
@@ -396,6 +398,7 @@ def merge_source_resolutions(
     unresolved_relation_ids: set[RelationId] = set()
     unresolved_binding_ids: set[BindingId] = set()
     bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = {}
+    detail_rows: list[ModeloDetailRow] = []
     source_transaction_ids: set[str] = set()
     diagnostics: list[CalculationSourceDiagnostic] = []
     provenance: list[CalculationSourceProvenance] = []
@@ -413,6 +416,7 @@ def merge_source_resolutions(
         owned_sources.update(resolution.owned_sources)
         diagnostics.extend(resolution.diagnostics)
         provenance.extend(resolution.provenance)
+        detail_rows.extend(resolution.detail_rows)
         source_transaction_ids.update(resolution.source_transaction_ids)
         unresolved_relation_ids.update(resolution.unresolved_relation_ids)
         unresolved_binding_ids.update(resolution.unresolved_binding_ids)
@@ -452,6 +456,7 @@ def merge_source_resolutions(
             ),
         ),
         bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
+        detail_rows=tuple(detail_rows),
         source_transaction_ids=tuple(sorted(source_transaction_ids)),
         borrador_provenance=borrador_provenance,
         diagnostics=tuple(diagnostics),
@@ -488,6 +493,7 @@ def merge_source_resolutions_by_precedence(
     unresolved_relation_ids: set[RelationId] = set()
     unresolved_binding_ids: set[BindingId] = set()
     bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = {}
+    detail_rows: list[ModeloDetailRow] = []
     source_transaction_ids: set[str] = set()
     diagnostics: list[CalculationSourceDiagnostic] = []
     provenance: list[CalculationSourceProvenance] = []
@@ -498,6 +504,7 @@ def merge_source_resolutions_by_precedence(
         owned_sources.update(tier.owned_sources)
         diagnostics.extend(tier.diagnostics)
         provenance.extend(tier.provenance)
+        detail_rows.extend(tier.detail_rows)
         source_transaction_ids.update(tier.source_transaction_ids)
         unresolved_relation_ids.update(tier.unresolved_relation_ids)
         unresolved_binding_ids.update(tier.unresolved_binding_ids)
@@ -526,6 +533,7 @@ def merge_source_resolutions_by_precedence(
             ),
         ),
         bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
+        detail_rows=tuple(detail_rows),
         source_transaction_ids=tuple(sorted(source_transaction_ids)),
         borrador_provenance=borrador_provenance,
         diagnostics=tuple(diagnostics),

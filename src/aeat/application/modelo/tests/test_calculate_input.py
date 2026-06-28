@@ -9,7 +9,10 @@ import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_profile_storage_root
+from ...user_profile._orchestration import profile_create_storage_span
+from ...user_profile._testing import register_minimal_profile
+from ...workflow._persistence import workflow_state_repository
 from .. import create_work_unit
 from .._calculate_input import (
     ModeloCalculateCasillaInputError,
@@ -37,9 +40,22 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp
     period = Period.from_year_and_code(2024, "0A")
     snapshot = resources().modelos.authority.snapshot("200", filing_year=2024, period=period.registry_token)
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="calculate-input-casilla-id") as profile:
+    bucket_id = "calculate-input-casilla-id"
+    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(bucket_id):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=bucket_id,
+                overrides={
+                    "identity.tax_id": "B66012345",
+                    "identity.legal_name": "Calculate Input SL",
+                    "taxpayer_type.entity_type": "legal_entity",
+                    "taxpayer_type.legal_entity_form": "sl",
+                },
+            ),
+        )
         work_unit = create_work_unit(
-            bucket_id=profile.bucket_id,
+            bucket_id=bucket_id,
             modelo="200",
             filing_year=2024,
             period=period,
