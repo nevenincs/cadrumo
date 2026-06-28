@@ -1,4 +1,8 @@
-"""Category profile schema consumed by downstream classifiers."""
+"""Category profile schema consumed by downstream classifiers.
+
+:class:`CategoryProfile` binds a :class:`SpendingCategory` to its display label,
+:class:`ProportionalityRule`, and optional :class:`IvaDeductibilityHint`.
+"""
 
 from __future__ import annotations
 

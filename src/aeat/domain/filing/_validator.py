@@ -12,6 +12,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...core import Modelo
 from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
@@ -32,6 +33,24 @@ if TYPE_CHECKING:  # pragma: no cover - type-only import
     from ..calculations.registry import CasillaId
 
 _logger = get_logger(__name__)
+_REQUIRED_MISSING_CODE = "casilla-required-missing"
+_M349_OPERADOR_TEMPLATE_BINDINGS_BY_CASILLA: dict[str, tuple[str, ...]] = {
+    "op.codigo-pais": ("iva-349-operador-row-codigo-pais",),
+    "op.nif-comunitario": ("iva-349-operador-row-nif",),
+    "op.apellidos-razon-social": ("iva-349-operador-row-apellidos",),
+    "op.clave-operacion": ("iva-349-operador-row-clave",),
+    "op.base-imponible": ("iva-349-operador-row-base",),
+}
+_M349_RECTIFICACION_TEMPLATE_CASILLAS: frozenset[str] = frozenset(
+    {
+        "rect.ejercicio-rectificado",
+        "rect.periodo-rectificado",
+        "rect.base-rectificada",
+        "rect.base-anterior",
+    },
+)
+_M349_NUMERO_RECTIFICACIONES_CASILLA = "decl.numero-rectificaciones"
+_M349_IMPORTE_RECTIFICACIONES_CASILLA = "decl.importe-rectificaciones"
 
 
 class ModeloValidator:
@@ -135,11 +154,13 @@ class ModeloValidator:
                 continue
             value = by_id.get(casilla.casilla_id)
             if value is None or value.kind is ModeloValueKind.EMPTY or value.value is None:
+                if _required_casilla_satisfied_by_row_bindings(draft, str(casilla.casilla_id)):
+                    continue
                 out.append(
                     ModeloValidationFinding(
                         casilla_id=casilla.casilla_id,
                         severity=BaseSeverity.ERROR,
-                        code="casilla-required-missing",
+                        code=_REQUIRED_MISSING_CODE,
                         message=tr("filing.validation.required_missing"),
                         references_rules=(),
                     ),
@@ -227,6 +248,32 @@ class ModeloValidator:
                 references_rules=(),
             ),
         ]
+
+
+def _required_casilla_satisfied_by_row_bindings(draft: ModeloDraft, casilla_id: str) -> bool:
+    if str(draft.modelo) != Modelo.M349.value:
+        return False
+    binding_ids = _M349_OPERADOR_TEMPLATE_BINDINGS_BY_CASILLA.get(casilla_id)
+    if binding_ids is not None:
+        return all(_row_binding_has_value(draft, binding_id) for binding_id in binding_ids)
+    if casilla_id in _M349_RECTIFICACION_TEMPLATE_CASILLAS:
+        return _m349_zero_rectifications(draft)
+    return False
+
+
+def _row_binding_has_value(draft: ModeloDraft, binding_id: str) -> bool:
+    return any(
+        str(value.binding_id) == binding_id and value.row_index is not None and value.value not in {None, ""}
+        for value in draft.binding_values
+    )
+
+
+def _m349_zero_rectifications(draft: ModeloDraft) -> bool:
+    values = {str(value.casilla_id): value.value for value in draft.values}
+    return (
+        values.get(_M349_NUMERO_RECTIFICACIONES_CASILLA) == Decimal("0")
+        and values.get(_M349_IMPORTE_RECTIFICACIONES_CASILLA) == Decimal("0")
+    )
 
 
 def apply_validation(

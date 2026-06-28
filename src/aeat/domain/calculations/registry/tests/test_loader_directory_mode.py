@@ -20,10 +20,11 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaId, _loader, validated_casilla_id
+from .. import CasillaId, validated_casilla_id
 from .._errors import RegistryLoadError, RegistryValidationError
 from .._loader import (
     discover_modelo_sources,
+    load_legal_parameters_only,
     load_modelo_directory,
     load_modelo_file,
     load_modelo_source,
@@ -44,6 +45,8 @@ _COMPLETENESS_CASILLA_0002: CasillaId = validated_casilla_id(
     "0002",
     surface="_COMPLETENESS_CASILLA_0002",
 )
+_MINIMAL_MANIFEST_TEXT = '[modelo]\nid = "999"\ntitle = "x"\n'
+_MINIMAL_REVISION_TEXT = '[revisions."2025"]\nvalid_from = 2025-01-01\n'
 
 
 def _build_directory_layout(
@@ -60,6 +63,73 @@ def _build_directory_layout(
     revisions_dir.mkdir(exist_ok=True)
     for filename, content in revision_files.items():
         (revisions_dir / filename).write_text(content, encoding="utf-8")
+
+
+def _minimal_fragment_revision_layout(
+    target_dir: Path,
+    *,
+    revision_text: str = _MINIMAL_REVISION_TEXT,
+    fragment_dirs: tuple[str, ...] = (),
+) -> Path:
+    """Materialise a minimal ``revisions/2025/`` tree and return that revision dir."""
+
+    revision_dir = target_dir / "revisions" / "2025"
+    revision_dir.mkdir(parents=True)
+    (target_dir / "manifest.toml").write_text(_MINIMAL_MANIFEST_TEXT, encoding="utf-8")
+    (revision_dir / "revision.toml").write_text(revision_text, encoding="utf-8")
+    for relative_dir in fragment_dirs:
+        (revision_dir / relative_dir).mkdir(parents=True)
+    return revision_dir
+
+
+def _write_locale_fragment(locales_dir: Path, language: str, filename: str, text: str) -> None:
+    language_dir = locales_dir / language
+    language_dir.mkdir(parents=True, exist_ok=True)
+    (language_dir / filename).write_text(text, encoding="utf-8")
+
+
+def _write_minimal_localized_modelo(target_dir: Path, casilla_ids: tuple[str, ...]) -> Path:
+    revision_dir = target_dir / "revisions" / "2025"
+    revision_dir.mkdir(parents=True)
+    (target_dir / "manifest.toml").write_text(
+        """
+[modelo]
+id = "999"
+title = "Localized loader test"
+official_name = "Localized loader test"
+tax_domain = "iva"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    casilla_tables = "\n".join(
+        f"""
+[[revisions."2025".casillas]]
+id = "{casilla_id}"
+number = "{index}"
+label = "Casilla {index}"
+section = ["liquidacion"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip()
+        for index, casilla_id in enumerate(casilla_ids, start=1)
+    )
+    (revision_dir / "revision.toml").write_text(
+        f"""
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = {{ years = [2025], periods = ["0A"] }}
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+{casilla_tables}
+""".lstrip(),
+        encoding="utf-8",
+    )
+    return revision_dir
 
 
 def _split_single_file_modelo_text(text: str) -> tuple[str, str, dict[str, str]]:
@@ -208,12 +278,9 @@ def test_directory_mode_rejects_duplicate_revision_id_across_file_and_fragment_d
     """A revision id cannot be owned by both ``revisions/<id>.toml`` and ``revisions/<id>/``."""
 
     target = tmp_path / "duplicate_rev_file_and_dir"
-    target.mkdir()
-    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntitle = "test"\n', encoding="utf-8")
-    revisions_dir = target / "revisions"
-    revisions_dir.mkdir()
+    revision_dir = _minimal_fragment_revision_layout(target)
+    revisions_dir = revision_dir.parent
     (revisions_dir / "2025.toml").write_text('[revisions."2025"]\nvalid_from = 2025-01-01\n', encoding="utf-8")
-    (revisions_dir / "2025").mkdir()
     (revisions_dir / "2025" / "revision.toml").write_text(
         '[revisions."2025"]\nvalid_from = 2025-01-01\n',
         encoding="utf-8",
@@ -935,18 +1002,15 @@ formulas = ["formula-1"]
     assert actual == expected
 
 
-def test_directory_mode_rejects_export_record_scalar_conflict(tmp_path: Path) -> None:
-    """Same-id record fragments must not silently override record metadata."""
-
-    target = tmp_path / "999"
-    (target / "revisions" / "2025" / "export").mkdir(parents=True)
-    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntitle = "x"\n', encoding="utf-8")
-    (target / "revisions" / "2025" / "revision.toml").write_text(
-        '[revisions."2025"]\nvalid_from = 2025-01-01\n',
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "export" / "record-a.toml").write_text(
-        """
+@pytest.mark.parametrize(
+    ("fragment_dir", "fragment_files", "error_match"),
+    (
+        pytest.param(
+            "export",
+            (
+                (
+                    "record-a.toml",
+                    """
 [[revisions."2025".export_layouts]]
 id = "layout"
 
@@ -954,10 +1018,10 @@ id = "layout"
 id = "record"
 record_type = "1"
 """.lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "export" / "record-b.toml").write_text(
-        """
+                ),
+                (
+                    "record-b.toml",
+                    """
 [[revisions."2025".export_layouts]]
 id = "layout"
 
@@ -965,10 +1029,52 @@ id = "layout"
 id = "record"
 record_type = "2"
 """.lstrip(),
-        encoding="utf-8",
-    )
+                ),
+            ),
+            "field 'record_type' conflicts",
+            id="export-record-metadata",
+        ),
+        pytest.param(
+            "constructs",
+            (
+                (
+                    "one.toml",
+                    """
+[[revisions."2025".constructs]]
+id = "workflow"
+title = "One"
+casilla_ids = ["0001"]
+""".lstrip(),
+                ),
+                (
+                    "two.toml",
+                    """
+[[revisions."2025".constructs]]
+id = "workflow"
+title = "Two"
+formulas = ["formula-1"]
+""".lstrip(),
+                ),
+            ),
+            "field 'title' conflicts",
+            id="construct-metadata",
+        ),
+    ),
+)
+def test_directory_mode_rejects_fragment_scalar_conflicts(
+    tmp_path: Path,
+    fragment_dir: str,
+    fragment_files: tuple[tuple[str, str], ...],
+    error_match: str,
+) -> None:
+    """Same-id fragments must not silently override scalar metadata."""
 
-    with pytest.raises(RegistryLoadError, match="field 'record_type' conflicts"):
+    target = tmp_path / "999"
+    revision_dir = _minimal_fragment_revision_layout(target, fragment_dirs=(fragment_dir,))
+    for filename, fragment_text in fragment_files:
+        (revision_dir / fragment_dir / filename).write_text(fragment_text, encoding="utf-8")
+
+    with pytest.raises(RegistryLoadError, match=error_match):
         load_modelo_directory(target)
 
 
@@ -976,31 +1082,7 @@ def test_directory_mode_rejects_duplicate_export_field_ids_after_record_merge(tm
     """Same-id record fragments must not create ambiguous nested field ids."""
 
     target = tmp_path / "999"
-    (target / "revisions" / "2025" / "export").mkdir(parents=True)
-    (target / "manifest.toml").write_text(
-        """
-[modelo]
-id = "999"
-title = "Fragment test"
-official_name = "Fragment test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "revision.toml").write_text(
-        """
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
+    export_dir = _minimal_fragment_revision_layout(target, fragment_dirs=("export",)) / "export"
     duplicate_field_fragment = """
 [[revisions."2025".export_layouts]]
 id = "modelo-999-layout"
@@ -1029,11 +1111,11 @@ signed = false
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 """.lstrip()
-    (target / "revisions" / "2025" / "export" / "record-a.toml").write_text(
+    (export_dir / "record-a.toml").write_text(
         duplicate_field_fragment,
         encoding="utf-8",
     )
-    (target / "revisions" / "2025" / "export" / "record-b.toml").write_text(
+    (export_dir / "record-b.toml").write_text(
         duplicate_field_fragment,
         encoding="utf-8",
     )
@@ -1042,48 +1124,13 @@ source_refs = ["aeat-manual"]
         load_modelo_directory(target)
 
 
-def test_directory_mode_rejects_construct_scalar_conflict(tmp_path: Path) -> None:
-    """Same-id construct fragments must not silently override construct metadata."""
-
-    target = tmp_path / "999"
-    (target / "revisions" / "2025" / "constructs").mkdir(parents=True)
-    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntitle = "x"\n', encoding="utf-8")
-    (target / "revisions" / "2025" / "revision.toml").write_text(
-        '[revisions."2025"]\nvalid_from = 2025-01-01\n',
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "constructs" / "one.toml").write_text(
-        """
-[[revisions."2025".constructs]]
-id = "workflow"
-title = "One"
-casilla_ids = ["0001"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-    (target / "revisions" / "2025" / "constructs" / "two.toml").write_text(
-        """
-[[revisions."2025".constructs]]
-id = "workflow"
-title = "Two"
-formulas = ["formula-1"]
-""".lstrip(),
-        encoding="utf-8",
-    )
-
-    with pytest.raises(RegistryLoadError, match="field 'title' conflicts"):
-        load_modelo_directory(target)
-
-
 def test_directory_mode_rejects_fragment_revision_id_mismatch(tmp_path: Path) -> None:
     """Fragments under ``revisions/<id>/`` must declare the same revision id."""
 
     target = tmp_path / "999"
-    (target / "revisions" / "2025").mkdir(parents=True)
-    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntitle = "x"\n', encoding="utf-8")
-    (target / "revisions" / "2025" / "revision.toml").write_text(
-        '[revisions."2024"]\nvalid_from = 2024-01-01\n',
-        encoding="utf-8",
+    _minimal_fragment_revision_layout(
+        target,
+        revision_text='[revisions."2024"]\nvalid_from = 2024-01-01\n',
     )
 
     with pytest.raises(RegistryLoadError, match="expected '2025'"):
@@ -1094,13 +1141,11 @@ def test_directory_mode_rejects_fragment_scalar_redeclaration(tmp_path: Path) ->
     """A fragmented revision has one owner for each scalar revision field."""
 
     target = tmp_path / "999"
-    (target / "revisions" / "2025").mkdir(parents=True)
-    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntitle = "x"\n', encoding="utf-8")
-    (target / "revisions" / "2025" / "revision.toml").write_text(
-        '[revisions."2025"]\nlabel = "one"\n',
-        encoding="utf-8",
+    revision_dir = _minimal_fragment_revision_layout(
+        target,
+        revision_text='[revisions."2025"]\nlabel = "one"\n',
     )
-    (target / "revisions" / "2025" / "extra.toml").write_text(
+    (revision_dir / "extra.toml").write_text(
         '[revisions."2025"]\nlabel = "two"\n',
         encoding="utf-8",
     )
@@ -1141,6 +1186,61 @@ def test_committed_registry_tree_loads_directory_modelos() -> None:
     assert {load_modelo_source(source).id for source in sources} == loaded_ids
     assert any(source.layout == "directory" for source in sources)
     assert all(source.layout == "directory" for source in sources)
+
+
+def test_legal_parameters_only_rejects_unknown_legal_refs(tmp_path: Path) -> None:
+    """The cycle-safe parameter loader must not return ungrounded legal refs."""
+
+    legal_dir = tmp_path / "legal"
+    legal_dir.mkdir()
+    (legal_dir / "parameters.toml").write_text(
+        """
+[parameters."test-rate"]
+evidence_tier = "legal_authority"
+value = "0.21"
+unit = "fraction"
+applies_to = "test-case"
+legal_refs = ["ley-test:art-1"]
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "registry-test"
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        RegistryLoadError,
+        match=r"legal parameter 'test-rate' references unknown legal id 'ley-test:art-1'",
+    ):
+        load_legal_parameters_only(tmp_path)
+
+
+def test_registry_tree_rejects_parameter_unknown_legal_refs(tmp_path: Path) -> None:
+    """The full registry merge validates legal-parameter legal refs before returning."""
+
+    legal_dir = tmp_path / "legal"
+    legal_dir.mkdir()
+    (tmp_path / "modelos").mkdir()
+    (legal_dir / "parameters.toml").write_text(
+        """
+[parameters."test-rate"]
+evidence_tier = "legal_authority"
+value = "0.21"
+unit = "fraction"
+applies_to = "test-case"
+legal_refs = ["ley-test:art-1"]
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "registry-test"
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        RegistryLoadError,
+        match=r"legal parameter 'test-rate' references unknown legal id 'ley-test:art-1'",
+    ):
+        load_registry_tree(tmp_path)
 
 
 def test_committed_key_modelos_load_through_generic_fragment_sources() -> None:
@@ -1301,41 +1401,28 @@ def test_committed_directory_source_inventory_lists_every_revision_fragment_toml
 def test_locale_translation_fragments_merge_by_language_directory(tmp_path: Path) -> None:
     """Locale directories allow large reviewable language fragments."""
 
-    locales_dir = tmp_path / "locales"
-    en_dir = locales_dir / "en"
-    en_dir.mkdir(parents=True)
-    (en_dir / "001-labels.toml").write_text(
-        '[labels]\n"0001" = "One"\n',
-        encoding="utf-8",
-    )
-    (en_dir / "002-help.toml").write_text(
-        '[help]\n"0002" = "Two help"\n',
-        encoding="utf-8",
-    )
+    revision_dir = _write_minimal_localized_modelo(tmp_path / "localized", ("0001", "0002"))
+    locales_dir = revision_dir / "locales"
+    _write_locale_fragment(locales_dir, "en", "001-labels.toml", '[labels]\n"0001" = "One"\n')
+    _write_locale_fragment(locales_dir, "en", "002-help.toml", '[help]\n"0002" = "Two help"\n')
 
-    translations = _loader._load_locale_translations(locales_dir)
+    modelo = load_modelo_directory(tmp_path / "localized")
+    casillas = {casilla.id: casilla for casilla in modelo.revisions["2025"].casillas}
 
-    assert translations["en"].labels == {"0001": "One"}
-    assert translations["en"].help == {"0002": "Two help"}
+    assert casillas[_COMPLETENESS_CASILLA_0001].localized_labels == {"en": "One"}
+    assert casillas[_COMPLETENESS_CASILLA_0002].localized_help == {"en": "Two help"}
 
 
 def test_locale_translation_fragments_reject_duplicate_keys(tmp_path: Path) -> None:
     """Fragmented locale tables must remain unambiguous."""
 
-    locales_dir = tmp_path / "locales"
-    en_dir = locales_dir / "en"
-    en_dir.mkdir(parents=True)
-    (en_dir / "001-labels.toml").write_text(
-        '[labels]\n"0001" = "One"\n',
-        encoding="utf-8",
-    )
-    (en_dir / "002-labels.toml").write_text(
-        '[labels]\n"0001" = "Uno"\n',
-        encoding="utf-8",
-    )
+    revision_dir = _write_minimal_localized_modelo(tmp_path / "localized", ("0001",))
+    locales_dir = revision_dir / "locales"
+    _write_locale_fragment(locales_dir, "en", "001-labels.toml", '[labels]\n"0001" = "One"\n')
+    _write_locale_fragment(locales_dir, "en", "002-labels.toml", '[labels]\n"0001" = "Uno"\n')
 
     with pytest.raises(RegistryValidationError, match="Duplicate 'en' locale translation keys"):
-        _loader._load_locale_translations(locales_dir)
+        load_modelo_directory(tmp_path / "localized")
 
 
 def test_committed_registry_toml_files_stay_reviewable() -> None:

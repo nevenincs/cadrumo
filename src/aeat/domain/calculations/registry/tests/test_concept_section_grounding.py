@@ -24,8 +24,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _ACTIVIDADES_CHAPTER = frozenset({f"ley-35-2006:art-{n}" for n in (27, 28, 30, 31, 32)})
 
-# section tag -> (required article that must be present, years the section exists)
-_CONCEPT_SECTION_GROUNDING: dict[str, tuple[str, tuple[int, ...]]] = {
+# section tag -> (required article(s), years the section exists)
+_CONCEPT_SECTION_GROUNDING: dict[str, tuple[str | tuple[str, ...], tuple[int, ...]]] = {
     # saldos negativos de ganancias y pérdidas — integración y compensación
     "saldos_neg_gy_p_general_res": ("ley-35-2006:art-48", (2021, 2022, 2023, 2024)),
     "saldos_neg_gy_p_ahorro_res": ("ley-35-2006:art-49", (2021, 2022, 2023, 2024)),
@@ -42,8 +42,9 @@ _CONCEPT_SECTION_GROUNDING: dict[str, tuple[str, tuple[int, ...]]] = {
     "deduc_ascendiente_disc_res": ("ley-35-2006:art-81-bis", (2021, 2022, 2023, 2024)),
     "deduc_descendiente_disc_res": ("ley-35-2006:art-81-bis", (2021, 2022, 2023, 2024)),
     "deduc_conyuge_disc_res": ("ley-35-2006:art-81-bis", (2021, 2022, 2023, 2024)),
-    # base imponible (integración y compensación de saldos) — arts. 48/49.
-    "base_imponible_res": ("ley-35-2006:art-48", (2021, 2022, 2023, 2024)),
+    # base imponible is a mixed result section: general base -> art. 48,
+    # savings base -> art. 49.
+    "base_imponible_res": (("ley-35-2006:art-48", "ley-35-2006:art-49"), (2021, 2022, 2023, 2024)),
     "base_liquidable_res": ("ley-35-2006:art-50", (2021, 2022, 2023, 2024)),
     # base liquidable general negativa (carry-forward) — art. 50; grounded via the
     # binding-aware pass (casilla + construct + binding coherently, resolving V19).
@@ -62,21 +63,27 @@ def _section_casillas(filing_year: int, section_tag: str):
 
 
 def _params():
-    for tag, (article, years) in _CONCEPT_SECTION_GROUNDING.items():
+    for tag, (articles, years) in _CONCEPT_SECTION_GROUNDING.items():
+        expected_articles = (articles,) if isinstance(articles, str) else articles
         for y in years:
-            yield pytest.param(tag, article, y, id=f"{tag}-{y}")
+            yield pytest.param(tag, expected_articles, y, id=f"{tag}-{y}")
 
 
-@pytest.mark.parametrize(("section_tag", "article", "year"), list(_params()))
-def test_concept_section_grounds_in_its_article_not_actividades(section_tag: str, article: str, year: int) -> None:
+@pytest.mark.parametrize(("section_tag", "articles", "year"), list(_params()))
+def test_concept_section_grounds_in_its_article_not_actividades(
+    section_tag: str,
+    articles: tuple[str, ...],
+    year: int,
+) -> None:
     """Every box in a corrected concept-section carries its concept article and no
     actividades article."""
     casillas = _section_casillas(year, section_tag)
     assert casillas, f"M100 {year} section {section_tag} must have casillas"
     actividades = [(c.id, sorted(c.legal_refs)) for c in casillas if _ACTIVIDADES_CHAPTER & set(c.legal_refs)]
     assert not actividades, f"M100 {year} {section_tag}: boxes still cite the actividades chapter: {actividades}"
-    missing = [(c.id, sorted(c.legal_refs)) for c in casillas if article not in set(c.legal_refs)]
-    assert not missing, f"M100 {year} {section_tag}: boxes not grounded in {article}: {missing}"
+    expected = set(articles)
+    missing = [(c.id, sorted(c.legal_refs)) for c in casillas if expected.isdisjoint(c.legal_refs)]
+    assert not missing, f"M100 {year} {section_tag}: boxes not grounded in {sorted(expected)}: {missing}"
 
 
 def _prevision_social_casillas(filing_year: int):

@@ -1,4 +1,10 @@
-"""Lookup helpers for IVA registry data."""
+"""Lookup helpers for IVA registry data.
+
+:func:`lookup_rate` resolves :class:`EUMemberState` and :class:`IvaRateKind`
+queries into :class:`IvaRateRecord` records loaded by
+:func:`aeat.domain.iva.load_iva_rate_table`; :func:`cite` renders
+:class:`IvaCategory` catalogue citations from an :class:`IvaCatalogue`.
+"""
 
 from __future__ import annotations
 

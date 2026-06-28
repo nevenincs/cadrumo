@@ -1,6 +1,7 @@
 """Shared base classes and aliases for registry schema models.
 
-Use of :class:`SensitivityClass` for compliance.
+The ``SensitivityClassField`` alias coerces registry ``output_sensitivity``
+tokens into :class:`SensitivityClass` members before strict schema validation.
 """
 
 from __future__ import annotations
@@ -96,6 +97,7 @@ FormulaOperator = Literal[
     "lookup_bracket",
     "lookup_bracket_by_ccaa",
     "m210_resolve_rate",
+    "m210_resolve_base_imponible",
     "lookup_parameter_by_entity_type",
     "lookup_bracket_by_entity_type",
     "previous_period_value",

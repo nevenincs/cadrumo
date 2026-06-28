@@ -117,7 +117,8 @@ def iva_rate_kind(rate: IvaRate) -> IvaRateKind | None:
 
     ``NOT_SUBJECT`` has no OSS/IOSS rate tier because it is outside the
     taxable-supply universe; callers that need a Modelo 369 candidate should
-    skip or reject it explicitly.
+    skip or reject it explicitly. Numeric and exempt slots return their
+    corresponding :class:`IvaRateKind`.
     """
     return _IVA_RATE_TO_IVA_KIND.get(rate)
 

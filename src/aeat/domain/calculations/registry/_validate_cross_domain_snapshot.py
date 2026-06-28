@@ -36,6 +36,7 @@ class CrossDomainSnapshotCheck(Protocol):
 
 
 _CROSS_DOMAIN_SNAPSHOT_CHECKS: list[CrossDomainSnapshotCheck] = []
+CROSS_DOMAIN_SNAPSHOT_CHECKS = _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
 
 def register_cross_domain_snapshot_check(check: CrossDomainSnapshotCheck) -> None:

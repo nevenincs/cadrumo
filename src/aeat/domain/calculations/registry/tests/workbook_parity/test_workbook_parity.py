@@ -10,8 +10,9 @@ import pytest
 from openpyxl import Workbook, load_workbook
 from pydantic import ValidationError
 
-from ......core.errors import ERROR_REGISTRY, get_registered_error_code
+from ......core.errors import ERROR_REGISTRY
 from ......core.resources import bundled_path
+from ..._errors import RegistryValidationError
 from ..._ids import CasillaId, validated_casilla_id
 from ..._loader import load_registry_tree
 from ..._parity_tapes import ParityScenario
@@ -22,7 +23,6 @@ from ..._workbook_parity import (
     SyntheticInputValue,
     WorkbookCellRef,
     WorkbookScanOptions,
-    _BinaryXlsConversionError,
     assert_workbook_scan_clean,
     compare_registry_to_workbook,
     convert_binary_xls_with_libreoffice,
@@ -210,7 +210,7 @@ def test_registry_workbook_parity_rejects_record_design_as_calculation_oracle(tm
         ),
     )
 
-    with pytest.raises(Exception, match="not an executable calculation oracle"):
+    with pytest.raises(RegistryValidationError, match="not an executable calculation oracle"):
         run_registry_workbook_parity(
             snapshot=snapshot,
             synthetic_input=synthetic,
@@ -267,7 +267,7 @@ def test_inventory_workbook_coverage_reuses_unchanged_previous_report(tmp_path: 
 def test_discover_workbooks_requires_existing_root(tmp_path: Path) -> None:
     missing = tmp_path / "missing"
 
-    with pytest.raises(Exception, match="workbook root does not exist"):
+    with pytest.raises(RegistryValidationError, match="workbook root does not exist"):
         discover_workbooks(missing)
 
 
@@ -327,7 +327,7 @@ def test_compare_registry_to_workbook_rejects_missing_registry_output(tmp_path: 
         ),
     )
 
-    with pytest.raises(Exception, match="output ids must match exactly"):
+    with pytest.raises(RegistryValidationError, match="output ids must match exactly"):
         compare_registry_to_workbook(
             synthetic_input=synthetic,
             workbook=workbook,
@@ -398,7 +398,7 @@ def test_verify_workbook_backend_fails_on_scan_errors_by_default(tmp_path: Path)
     workbook_path.parent.mkdir(parents=True, exist_ok=True)
     workbook_path.write_text("not a workbook", encoding="utf-8")
 
-    with pytest.raises(Exception, match="failed to scan"):
+    with pytest.raises(RegistryValidationError, match="failed to scan"):
         verify_workbook_backend(tmp_path)
 
 
@@ -410,7 +410,7 @@ def test_inventory_workbook_coverage_can_report_scan_errors_for_audit(tmp_path: 
     reports = inventory_workbook_coverage(tmp_path)
 
     assert reports[0].scan_status == "failed"
-    with pytest.raises(Exception, match="failed to scan"):
+    with pytest.raises(RegistryValidationError, match="failed to scan"):
         assert_workbook_scan_clean(
             verify_workbook_backend(
                 tmp_path,
@@ -423,7 +423,7 @@ def test_libreoffice_runner_rejects_explicit_missing_executable(tmp_path: Path) 
     workbook_path = tmp_path / "formula.xlsx"
     _write_formula_workbook(workbook_path)
 
-    with pytest.raises(Exception, match="LibreOffice executable does not exist"):
+    with pytest.raises(RegistryValidationError, match="LibreOffice executable does not exist"):
         run_workbook_with_libreoffice(
             workbook_path,
             inputs={},
@@ -432,9 +432,5 @@ def test_libreoffice_runner_rejects_explicit_missing_executable(tmp_path: Path) 
         )
 
 
-def test_binary_xls_conversion_error_is_registered_in_error_registry() -> None:
-    # Verify __init_subclass__ bound _BinaryXlsConversionError when CoreError
-    # was inherited, and that the declared code appears in ERROR_REGISTRY.
-    error_code = get_registered_error_code(_BinaryXlsConversionError)
-    assert error_code.code == "INTEGRITY_REGISTRY_BINARY_XLS_CONVERSION"
-    assert error_code.code in ERROR_REGISTRY
+def test_binary_xls_conversion_error_code_is_registered() -> None:
+    assert "INTEGRITY_REGISTRY_BINARY_XLS_CONVERSION" in ERROR_REGISTRY

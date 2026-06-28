@@ -16,6 +16,7 @@ from .._record_design import extract_record_design_pdf
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _LEGAL_IDS = {
+    "rd-439-2007:art-88",
     "resolucion-dgt-2011-01-03-modelo-145:aprobacion",
     "resolucion-dgt-2013-12-17-modelo-145:amendment",
     "resolucion-dgt-2014-12-18-modelo-145:amendment",
@@ -39,11 +40,19 @@ def test_modelo_145_legal_authority_is_reviewed_and_corpus_backed() -> None:
     verify_legal_catalogue(legal, source_root=bundled_path())
 
     assert {entry.document_id for entry in legal.values()} == {
+        "BOE-A-2007-6820",
         "BOE-A-2011-208",
         "BOE-A-2014-59",
         "BOE-A-2014-13679",
     }
     assert all(entry.evidence_tier == "legal_authority" for entry in legal.values())
+
+    art_88 = legal["rd-439-2007:art-88"]
+    assert art_88.article == "88"
+    assert "deberán comunicar al pagador la situación personal y familiar" in art_88.required_text
+    assert "El contenido de las comunicaciones se ajustará al modelo que se apruebe por Resolución" in (
+        art_88.required_text
+    )
 
 
 def test_modelo_145_source_authority_files_match_catalogue_fingerprints() -> None:
@@ -57,6 +66,18 @@ def test_modelo_145_source_authority_files_match_catalogue_fingerprints() -> Non
     assert sources["aeat-modelo-145-obligaciones-retenedor"].evidence_tier == "official_source_guidance"
     assert sources["aeat-modelo-145-form"].kind == "form_spec"
     assert sources["aeat-dr-145-v20"].evidence_tier == "layout_authority"
+
+
+def test_modelo_145_form_cites_rd_439_art_88_regulatory_anchor() -> None:
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    form_source = catalogues.sources["aeat-modelo-145-form"]
+    form_extract = bundled_path() / f"{form_source.corpus_path}.extracted.json"
+    payload = json.loads(form_extract.read_text(encoding="utf-8"))
+    form_text = "\n".join(unit["text"] for unit in payload["units"])
+
+    assert "rd-439-2007:art-88" in catalogues.legal
+    assert "Comunicación de datos al pagador (artículo 88 del Reglamento del IRPF)" in form_text
+    assert "a los efectos previstos en el artículo 88 del Reglamento del IRPF" in form_text
 
 
 def test_modelo_145_aeat_sources_pin_non_filing_scope() -> None:

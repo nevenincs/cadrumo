@@ -33,22 +33,24 @@ def _make_justificante(
 ) -> Justificante:
     pdf = tmp_path / f"{csv}.pdf"
     pdf.write_bytes(b"%PDF-1.4\n%EOF\n")
-    return Justificante(
-        csv=csv,
-        modelo="130",
-        period=period,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]  # test scaffolding: before-validator coerces raw token; bare-year negative test exercises rejection
-        ejercicio="2026",
-        presentation_id=None,
-        presented_at=datetime(2026, 4, 10, 11, 23, 45, tzinfo=UTC),
-        tax_id="00000000T",
-        total_a_ingresar=Decimal("10.00"),
-        total_a_devolver=None,
-        verification_url=TypeAdapter(AnyHttpUrl).validate_python(
-            aeat_url("sede", JUSTIFICANTE_VERIFY_PATH_FIXTURE),
-        ),
-        source_pdf_path=pdf,
-        source_pdf_sha256=hashlib.sha256(pdf.read_bytes()).hexdigest(),
-        parsed_at=datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),
+    return Justificante.model_validate(
+        {
+            "csv": csv,
+            "modelo": "130",
+            "period": period,
+            "ejercicio": "2026",
+            "presentation_id": None,
+            "presented_at": datetime(2026, 4, 10, 11, 23, 45, tzinfo=UTC),
+            "tax_id": "00000000T",
+            "total_a_ingresar": Decimal("10.00"),
+            "total_a_devolver": None,
+            "verification_url": TypeAdapter(AnyHttpUrl).validate_python(
+                aeat_url("sede", JUSTIFICANTE_VERIFY_PATH_FIXTURE),
+            ),
+            "source_pdf_path": pdf,
+            "source_pdf_sha256": hashlib.sha256(pdf.read_bytes()).hexdigest(),
+            "parsed_at": datetime(2026, 4, 12, 0, 0, 0, tzinfo=UTC),
+        },
     )
 
 

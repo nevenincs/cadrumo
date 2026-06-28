@@ -15,7 +15,6 @@ from .....tests.registry_observations import registry_grounded_modelo_observatio
 from .._authority import ValidatedRegistryAuthority
 from .._bindings import (
     CasillaObservation,
-    _PreviousModeloSelector,
     previous_filing_observation_requirements,
     previous_filing_source_reference,
     resolve_previous_filing_binding_values,
@@ -24,7 +23,11 @@ from .._errors import RegistryValidationError
 from .._formula_initial_values import materialise_observations
 from .._formula_runtime import calculate_registry_snapshot
 from .._ids import validated_casilla_id
-from .._relations import relation_source_requirements, resolve_relation_values_from_observations
+from .._relations import (
+    RegistryFoldRequirement,
+    relation_source_requirements,
+    resolve_relation_values_from_observations,
+)
 from .._schema import CasillaId, DataBindingDefinition, RegistrySnapshot
 from .._snapshot import build_snapshot
 
@@ -453,62 +456,109 @@ def test_previous_filing_binding_requires_complete_observed_casillas(
         )
 
 
-def test_previous_modelo_selector_max_year_delta_unset_preserves_unbounded_anchors() -> None:
-    selector = _PreviousModeloSelector(
-        source_modelo="130",
-        source_casilla_id=_M130_SALDO_NEGATIVO_CASILLA,
-        source_period_offset_from_target=-1,
+def test_previous_filing_requirements_max_year_delta_unset_preserves_unbounded_anchors(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    assert _previous_filing_offset_year_periods(committed_modelo_130_snapshot, target_period="1T") == ((2025, ("4T",)),)
+    assert _previous_filing_offset_year_periods(committed_modelo_130_snapshot, target_period="2T") == ((2026, ("1T",)),)
+
+
+def test_previous_filing_requirements_max_year_delta_zero_drops_cross_ejercicio_offset_anchor(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    assert (
+        _previous_filing_offset_year_periods(
+            committed_modelo_130_snapshot,
+            target_period="1T",
+            max_year_delta=0,
+        )
+        == ()
     )
 
-    assert selector.max_year_delta is None
-    assert selector.required_period_anchors_for_target("1T") == ((-1, "4T"),)
-    assert selector.required_period_anchors_for_target("2T") == ((0, "1T"),)
 
-
-def test_previous_modelo_selector_max_year_delta_zero_drops_cross_ejercicio_offset_anchor() -> None:
-    selector = _PreviousModeloSelector(
-        source_modelo="130",
-        source_casilla_id=_M130_SALDO_NEGATIVO_CASILLA,
-        source_period_offset_from_target=-1,
+def test_previous_filing_requirements_max_year_delta_zero_admits_same_ejercicio_offset_anchors(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    assert _previous_filing_offset_year_periods(
+        committed_modelo_130_snapshot,
+        target_period="2T",
         max_year_delta=0,
-    )
-
-    assert selector.required_period_anchors_for_target("1T") == ()
-
-
-def test_previous_modelo_selector_max_year_delta_zero_admits_same_ejercicio_offset_anchors() -> None:
-    selector = _PreviousModeloSelector(
-        source_modelo="130",
-        source_casilla_id=_M130_SALDO_NEGATIVO_CASILLA,
-        source_period_offset_from_target=-1,
+    ) == ((2026, ("1T",)),)
+    assert _previous_filing_offset_year_periods(
+        committed_modelo_130_snapshot,
+        target_period="3T",
         max_year_delta=0,
-    )
+    ) == ((2026, ("2T",)),)
+    assert _previous_filing_offset_year_periods(
+        committed_modelo_130_snapshot,
+        target_period="4T",
+        max_year_delta=0,
+    ) == ((2026, ("3T",)),)
 
-    assert selector.required_period_anchors_for_target("2T") == ((0, "1T"),)
-    assert selector.required_period_anchors_for_target("3T") == ((0, "2T"),)
-    assert selector.required_period_anchors_for_target("4T") == ((0, "3T"),)
 
-
-def test_previous_modelo_selector_max_year_delta_one_admits_one_year_cross_ejercicio_anchor() -> None:
-    selector = _PreviousModeloSelector(
-        source_modelo="130",
-        source_casilla_id=_M130_SALDO_NEGATIVO_CASILLA,
-        source_period_offset_from_target=-1,
+def test_previous_filing_requirements_max_year_delta_one_admits_one_year_cross_ejercicio_anchor(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    assert _previous_filing_offset_year_periods(
+        committed_modelo_130_snapshot,
+        target_period="1T",
         max_year_delta=1,
-    )
+    ) == ((2025, ("4T",)),)
+    assert _previous_filing_offset_year_periods(
+        committed_modelo_130_snapshot,
+        target_period="2T",
+        max_year_delta=1,
+    ) == ((2026, ("1T",)),)
 
-    assert selector.required_period_anchors_for_target("1T") == ((-1, "4T"),)
-    assert selector.required_period_anchors_for_target("2T") == ((0, "1T"),)
 
-
-def test_previous_modelo_selector_max_year_delta_rejects_negative_values() -> None:
-    with pytest.raises(ValidationError, match="max_year_delta must be non-negative"):
-        _PreviousModeloSelector(
-            source_modelo="130",
-            source_casilla_id=_M130_SALDO_NEGATIVO_CASILLA,
-            source_period_offset_from_target=-1,
+def test_previous_filing_requirements_max_year_delta_rejects_negative_values(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    with pytest.raises(RegistryValidationError, match="max_year_delta must be non-negative"):
+        _previous_filing_offset_year_periods(
+            committed_modelo_130_snapshot,
+            target_period="1T",
             max_year_delta=-1,
         )
+
+
+def _previous_filing_offset_year_periods(
+    snapshot: RegistrySnapshot,
+    *,
+    target_period: str,
+    max_year_delta: int | None = None,
+) -> tuple[tuple[int, tuple[str, ...]], ...]:
+    requirements = _previous_filing_offset_requirements(
+        snapshot,
+        target_period=target_period,
+        max_year_delta=max_year_delta,
+    )
+    return tuple((requirement.filing_year, requirement.periods) for requirement in requirements)
+
+
+def _previous_filing_offset_requirements(
+    snapshot: RegistrySnapshot,
+    *,
+    target_period: str,
+    max_year_delta: int | None,
+) -> tuple[RegistryFoldRequirement, ...]:
+    selector: dict[str, object] = {
+        "source": "previous_filing",
+        "source_modelo": "130",
+        "source_casilla_id": _M130_SALDO_NEGATIVO_CASILLA,
+        "source_period_offset_from_target": -1,
+    }
+    if max_year_delta is not None:
+        selector["max_year_delta"] = max_year_delta
+    binding = _previous_year_net_income_binding(snapshot).model_copy(
+        update={
+            "id": "test-previous-filing-offset-requirements",
+            "selector": selector,
+            "aggregation": BindingAggregation(op=BindingAggregationOp.COPY),
+        },
+    )
+    revision = snapshot.revision.model_copy(update={"bindings": (binding,)})
+    return previous_filing_observation_requirements(revision, filing_year=2026, period=target_period)
 
 
 def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
@@ -604,7 +654,7 @@ def test_previous_filing_resolver_skips_cap_suppressed_binding(
 def test_registry_formula_runtime_rejects_non_decimal_input(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    with pytest.raises(Exception, match="must be a Decimal"):
+    with pytest.raises(RegistryValidationError, match="must be a Decimal"):
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
             inputs={_M130_INGRESOS_CASILLA: 100},
@@ -736,7 +786,7 @@ def test_registry_formula_runtime_rejects_missing_non_snapshot_parameter_axis(
     mutated_revision = committed_modelo_130_snapshot.revision.model_copy(update={"parameters": parameters})
     mutated_snapshot = committed_modelo_130_snapshot.model_copy(update={"revision": mutated_revision})
 
-    with pytest.raises(Exception, match="requires date axis 'devengo_date'"):
+    with pytest.raises(RegistryValidationError, match="requires date axis 'devengo_date'"):
         calculate_registry_snapshot(
             mutated_snapshot,
             inputs={

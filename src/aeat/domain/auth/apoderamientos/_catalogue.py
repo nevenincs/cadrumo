@@ -1,4 +1,9 @@
-"""Scope catalogue loader and scope-token parser."""
+"""Apoderamiento scope catalogue loader and parser.
+
+Defines :class:`ApoderadoScope` and :class:`ApoderamientosCatalogue`, loads the
+shipped registry through :func:`load_default_catalogue`, and validates
+operator-supplied tokens with :func:`parse_scope_tokens`.
+"""
 
 from __future__ import annotations
 
@@ -144,8 +149,8 @@ def _resolve_scope_token(
 ) -> tuple[str, ...]:
     """Resolve one validated scope token to the catalogue codes it expands to.
 
-    The literal ``ALL`` token expands to every catalogue code in
-    declaration order. Any other token must be a known catalogue
+    The literal ``ALL`` token expands to every catalogue code in sorted
+    catalogue-code order. Any other token must be a known catalogue
     code; otherwise an :class:`UnknownScopeError` is raised with the
     catalogue version that rejected it so the operator can spot
     catalogue drift versus their local fixture.

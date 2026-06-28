@@ -1,4 +1,9 @@
-"""Portal host resolution through the centralized external constants registry."""
+"""Resolve :class:`PortalHost` origins from external constants.
+
+These helpers keep hostnames centralized for :class:`PortalMetadata`
+validation and portal-entry assembly rather than embedding AEAT domains in
+individual catalogue entries.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +15,7 @@ from ._errors import PortalValidationError
 
 
 def portal_host_origin(subdomain: PortalHost) -> str:
-    """Return the configured HTTPS origin for ``subdomain``."""
+    """Return the configured HTTPS origin for a :class:`PortalHost`."""
     domains = Settings.external_constants().aeat.domains
     if subdomain is PortalHost.SEDE:
         return domains.sede
@@ -30,7 +35,7 @@ def portal_host_origin(subdomain: PortalHost) -> str:
 
 
 def portal_host_name(subdomain: PortalHost) -> str:
-    """Return the configured hostname for ``subdomain``."""
+    """Return the configured hostname for a :class:`PortalHost`."""
     host = urlsplit(portal_host_origin(subdomain)).netloc
     if not host:
         raise PortalValidationError(f"configured portal origin for {subdomain!r} has no host")

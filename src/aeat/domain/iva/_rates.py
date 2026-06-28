@@ -1,4 +1,10 @@
-"""Read-only IVA rate registry."""
+"""Read-only IVA rate registry.
+
+:func:`load_iva_rate_table` validates committed rate TOML into mappings from
+:class:`EUMemberState` to dated :class:`IvaRateRecord` windows partitioned by
+:class:`IvaRateKind`, rejecting same-kind overlaps with
+:class:`IvaRateOverlapError`.
+"""
 
 from __future__ import annotations
 

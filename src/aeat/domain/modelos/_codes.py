@@ -1,4 +1,9 @@
-"""Validated AEAT modelo identifier value object."""
+"""Validated AEAT modelo identifier value object.
+
+:class:`ModeloCode` enforces the three-digit identifier shape used by modelo
+work units and registry lookups, raising :class:`ModeloValidationError` before
+filing-grade availability is resolved from registry snapshots.
+"""
 
 from __future__ import annotations
 

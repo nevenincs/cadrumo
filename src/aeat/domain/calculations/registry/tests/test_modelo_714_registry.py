@@ -19,6 +19,7 @@ from .. import (
     load_registry_tree,
     validated_casilla_id,
 )
+from .._legal import verify_legal_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,6 +42,12 @@ _PATRIMONIO_REDUCCION_LIMITE_80_CASILLA: CasillaId = validated_casilla_id(
 _PATRIMONIO_CUOTA_A_INGRESAR_CASILLA: CasillaId = validated_casilla_id(
     "patrimonio.cuota-a-ingresar",
     surface="_PATRIMONIO_CUOTA_A_INGRESAR_CASILLA",
+)
+_PATRIMONIO_LEGAL_REFS = (
+    "ley-19-1991:art-4-9",
+    "ley-19-1991:art-28",
+    "ley-19-1991:art-30",
+    "ley-19-1991:art-31",
 )
 
 
@@ -85,6 +92,26 @@ def test_modelo_714_validator_accepts_committed_definition() -> None:
     assert modelo.id == "714"
     assert modelo.revisions, "714 must declare at least one revision"
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
+def test_modelo_714_legal_refs_are_boe_corpus_backed() -> None:
+    """All Ley 19/1991 references used by 714 verify against bundled BOE corpus."""
+    modelo, catalogues = _load_modelo_714()
+    legal = {legal_ref: catalogues.legal[legal_ref] for legal_ref in _PATRIMONIO_LEGAL_REFS}
+
+    verify_legal_catalogue(legal, source_root=bundled_path())
+
+    assert set(_PATRIMONIO_LEGAL_REFS) <= set(modelo.legal_refs)
+    assert {entry.document_id for entry in legal.values()} == {"BOE-A-1991-14392"}
+    assert legal["ley-19-1991:art-4-9"].article == "4.Nueve"
+    assert "vivienda habitual" in legal["ley-19-1991:art-4-9"].required_text
+    assert "300.000 euros" in legal["ley-19-1991:art-4-9"].required_text
+    assert legal["ley-19-1991:art-30"].article == "30"
+    assert "0,2" in legal["ley-19-1991:art-30"].required_text
+    assert "3,5" in legal["ley-19-1991:art-30"].required_text
+    assert legal["ley-19-1991:art-31"].article == "31"
+    assert "60 por 100" in legal["ley-19-1991:art-31"].required_text
+    assert "80 por 100" in legal["ley-19-1991:art-31"].required_text
 
 
 def test_modelo_714_revision_2021_declares_constructs() -> None:

@@ -9,6 +9,7 @@ import pytest
 from .....core.resources import bundled_path
 from ....deadlines import (
     EntityType,
+    FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IrpfSpecialRegime,
@@ -114,9 +115,31 @@ def test_actividad_economica_without_declared_regime_defaults_to_directa_m130() 
     )
     # The undeclared regime defaults to directa (the LIRPF default method).
     assert autonomo_no_regime.irpf_estimation_regime is None
+    assert autonomo_no_regime.fiscal_residency is None
     assert autonomo_no_regime.uses_objective_estimation_irpf is False
     assert derive_modelo_applicability(autonomo_no_regime, "130").verdict is ApplicabilityVerdict.APPLICABLE
     assert derive_modelo_applicability(autonomo_no_regime, "131").verdict is ApplicabilityVerdict.NOT_APPLICABLE
+
+
+def test_non_resident_irnr_natural_person_does_not_owe_modelo_130() -> None:
+    """Declared IRNR non-residency positively excludes the resident-IRPF M130."""
+
+    non_resident_autonomo = TaxpayerProfile(
+        tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
+        iva_regime=IVARegime.GENERAL,
+        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        country_of_fiscal_residence="FR",
+    )
+
+    result = derive_modelo_applicability(non_resident_autonomo, "130")
+
+    assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
+    assert result.applicable is False
+    assert "NON_RESIDENT_IRNR" in result.reason
+    assert "trlirnr-rdleg-5-2004:art-2" in result.legal_refs
 
 
 def test_objective_estimation_boolean_without_declared_regime_routes_to_m131() -> None:

@@ -33,7 +33,7 @@ from .._schema import (
     RegistryCatalogues,
 )
 from .._validate_orden_aplicabilidad import (
-    _ORDEN_APLICABILIDAD_RATCHET_DATE,
+    ORDEN_APLICABILIDAD_RATCHET_DATE,
     validate_orden_aplicabilidad,
 )
 
@@ -58,14 +58,15 @@ _VALID_LEGAL_REF = LegalReference(
     effective_from=date(2000, 1, 1),
     review_status="reviewed",
 )
-# A dummy source ref to satisfy LegalRefs/SourceRefs min_length=1 constraint.
-_DUMMY_SOURCE_REF = "src-test-0001"
+# Minimal source ref used wherever a test revision needs one valid reference
+# before the orden_aplicabilidad gate can run.
+_MINIMAL_SOURCE_REF = "src-test-0001"
 
 _VALID_CATALOGUE: dict[str, LegalReference] = {
     "orden-test-0001:art-1": _VALID_LEGAL_REF,
 }
 
-_POST_RATCHET_DATE = _ORDEN_APLICABILIDAD_RATCHET_DATE  # 2026-06-10
+_POST_RATCHET_DATE = ORDEN_APLICABILIDAD_RATCHET_DATE  # 2026-06-10
 
 
 def _make_revision(
@@ -82,8 +83,9 @@ def _make_revision(
 ) -> ModeloRevision:
     """Build a minimal ModeloRevision for gate testing.
 
-    ``legal_refs`` defaults to the dummy source ref entry to satisfy
-    ``LegalRefs`` ``min_length=1``.  Pass an explicit tuple to override.
+    ``legal_refs`` defaults to the minimal source ref entry to satisfy
+    ``LegalRefs`` ``min_length=1`` before gate validation. Pass an explicit
+    tuple to override.
     """
     if year_from is not None:
         selector = PeriodSelector(year_from=year_from, year_to=year_to, periods=periods)
@@ -91,16 +93,15 @@ def _make_revision(
         selector = PeriodSelector(years=years, periods=periods)
     else:
         raise ValueError("supply either year_from or years")
-    # LegalRefs and SourceRefs both require min_length=1; use the dummy ref so
-    # pydantic validation passes before our gate runs.
-    effective_legal_refs: tuple[str, ...] = legal_refs if legal_refs is not None else (_DUMMY_SOURCE_REF,)
+    # LegalRefs and SourceRefs both require min_length=1 before this gate runs.
+    effective_legal_refs: tuple[str, ...] = legal_refs if legal_refs is not None else (_MINIMAL_SOURCE_REF,)
     return ModeloRevision(
         id=revision_id,
         valid_from=valid_from,
         valid_to=valid_to,
         period_selector=selector,
         legal_refs=effective_legal_refs,
-        source_refs=(_DUMMY_SOURCE_REF,),
+        source_refs=(_MINIMAL_SOURCE_REF,),
         orden_aplicabilidad=orden_aplicabilidad,
     )
 
@@ -120,7 +121,7 @@ def test_ratchet_hard_fails_new_revision_without_orden_aplicabilidad() -> None:
         valid_to=date(2026, 12, 31),
         years=(2026,),
         periods=("1T",),
-        # legal_refs defaults to dummy entry (min_length=1 satisfied)
+        # legal_refs defaults to minimal entry (min_length=1 satisfied)
         orden_aplicabilidad=(),
     )
     hard, follow_up = validate_orden_aplicabilidad(
@@ -152,7 +153,7 @@ def test_ratchet_follow_up_for_existing_revision_without_orden_aplicabilidad() -
         valid_to=date(2019, 12, 31),
         years=(2019,),
         periods=("1T",),
-        # legal_refs defaults to dummy entry (min_length=1 satisfied)
+        # legal_refs defaults to minimal entry (min_length=1 satisfied)
         orden_aplicabilidad=(),
     )
     hard, follow_up = validate_orden_aplicabilidad(
@@ -240,9 +241,10 @@ def test_orden_aplicabilidad_absent_from_legal_refs_is_hard_failure() -> None:
         valid_to=date(2020, 12, 31),
         years=(2020,),
         periods=("1T",),
-        # orden-test-0001:art-1 is intentionally NOT in legal_refs (only dummy
-        # ref present), but IS in the catalogue — triggers check (iii) failure.
-        legal_refs=(_DUMMY_SOURCE_REF,),
+        # orden-test-0001:art-1 is intentionally NOT in legal_refs (only the
+        # minimal required ref is present), but IS in the catalogue — triggers
+        # check (iii) failure.
+        legal_refs=(_MINIMAL_SOURCE_REF,),
         orden_aplicabilidad=("orden-test-0001:art-1",),
     )
     hard, _ = validate_orden_aplicabilidad(
@@ -272,7 +274,7 @@ def test_s24_open_ended_pre_ratchet_revision_without_orden_is_follow_up() -> Non
         valid_to=None,  # open-ended
         year_from=2019,
         periods=("1T",),
-        # legal_refs defaults to dummy entry (min_length=1 satisfied)
+        # legal_refs defaults to minimal entry (min_length=1 satisfied)
         orden_aplicabilidad=(),
     )
     hard, follow_up = validate_orden_aplicabilidad(

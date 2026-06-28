@@ -488,7 +488,7 @@ def test_replay_payload_rejects_observed_with_non_string_keys() -> None:
     """strict=True rejects non-string keys in observed mapping."""
     # JSON always produces str keys; the path that matters is Python-level
     # model_validate with a dict that has non-str keys.
-    with pytest.raises((ValidationError, Exception)):
+    with pytest.raises(ValidationError):
         ReplayPayload.model_validate({"observed": {1: "value"}})
 
 

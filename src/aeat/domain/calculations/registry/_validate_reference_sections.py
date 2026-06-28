@@ -20,6 +20,8 @@ _CONSTRUCT_MEMBER_AXES: tuple[tuple[str, str], ...] = (
     ("formulas", "formula_ids"),
     ("parameters", "parameter_ids"),
     ("bindings", "binding_ids"),
+    ("algorithm_providers", "algorithm_provider_ids"),
+    ("algorithm_bindings", "algorithm_binding_ids"),
     ("relations", "relation_ids"),
     ("export_layouts", "export_layout_ids"),
     ("extraction_profiles", "extraction_profile_ids"),
@@ -28,6 +30,7 @@ _CONSTRUCT_MEMBER_AXES: tuple[tuple[str, str], ...] = (
     ("verification_expectations", "verification_expectation_ids"),
     ("application_links", "application_link_ids"),
     ("deadline_windows", "deadline_window_ids"),
+    ("filing_schedules", "filing_schedule_ids"),
     ("support_removal_decisions", "support_removal_decision_ids"),
     ("dependency_classifications", "dependency_classification_ids"),
 )
@@ -87,6 +90,8 @@ def check_export_layout_refs(checker: IdReferenceChecker, revision: ModeloRevisi
                 record.requires_positive_casilla_id,
                 checker.casilla_ids,
             )
+            for row_field, casilla_id in record.row_field_casilla_ids.items():
+                checker.chk(f"{rcp}.row_field_casilla_ids.{row_field}", casilla_id, checker.casilla_ids)
             for field in record.fields:
                 efp = f"{rcp}.field {field.id}"
                 checker.chk_opt(f"{efp}.casilla_id", field.casilla_id, checker.casilla_ids)

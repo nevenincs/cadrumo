@@ -213,39 +213,25 @@ def test_validate_accepts_canonical_iva_repercutido_binding() -> None:
     assert result is None
 
 
-def test_validate_rejects_unknown_category() -> None:
+_MALFORMED_SELECTOR_CASES = (
+    pytest.param({"categories": ("bogus",)}, id="unknown-category"),
+    pytest.param({"rate_kinds": ("medium",)}, id="unknown-rate-kind"),
+    pytest.param({"flow_direction": "unknown"}, id="unknown-flow-direction"),
+    pytest.param({"categories": ()}, id="empty-categories"),
+    pytest.param({"rate_kinds": ()}, id="empty-rate-kinds"),
+    pytest.param({"fact": "bogus"}, id="unknown-fact"),
+)
+
+
+@pytest.mark.parametrize("selector_updates", _MALFORMED_SELECTOR_CASES)
+def test_validate_rejects_malformed_selector(selector_updates: dict[str, object]) -> None:
     with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), categories=("bogus",)))
-
-
-def test_validate_rejects_unknown_rate_kind() -> None:
-    with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), rate_kinds=("medium",)))
-
-
-def test_validate_rejects_unknown_flow_direction() -> None:
-    with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), flow_direction="unknown"))
-
-
-def test_validate_rejects_empty_categories() -> None:
-    with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), categories=()))
-
-
-def test_validate_rejects_empty_rate_kinds() -> None:
-    with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), rate_kinds=()))
+        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), **selector_updates))
 
 
 def test_validate_rejects_non_sum_aggregation() -> None:
     with pytest.raises(RegistryValidationError, match="aggregation op 'sum'"):
         validate_ledger_iva_aggregation_binding_definition(_with_aggregation(_binding(), BindingAggregationOp.COPY))
-
-
-def test_validate_rejects_unknown_fact() -> None:
-    with pytest.raises(RegistryValidationError, match="malformed"):
-        validate_ledger_iva_aggregation_binding_definition(_with_selector(_binding(), fact="bogus"))
 
 
 def test_validate_rejects_wrong_source_kind() -> None:
@@ -254,43 +240,55 @@ def test_validate_rejects_wrong_source_kind() -> None:
         validate_ledger_iva_aggregation_binding_definition(binding)
 
 
-def test_resolve_filters_by_flow_direction_repercutido() -> None:
-    revision = _revision_with_bindings(_binding())
-    observations = [
-        _observation(flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
-        _observation(flow=IvaFlowDirection.SOPORTADO, iva=Decimal("105")),
-        _observation(flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO, iva=Decimal("90")),
-    ]
-    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("210")}
-
-
-def test_resolve_filters_by_flow_direction_soportado() -> None:
-    revision = _revision_with_bindings(_binding("modelo-303-iva-soportado-interiores-cuota"))
-    observations = [
-        _observation(flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
-        _observation(flow=IvaFlowDirection.SOPORTADO, iva=Decimal("105")),
-    ]
-    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    assert result == {"modelo-303-iva-soportado-interiores-cuota": Decimal("105")}
-
-
-def test_resolve_filters_by_flow_direction_autorepercutido() -> None:
-    revision = _revision_with_bindings(_binding("modelo-303-iva-autorepercutido-intracomunitaria-cuota"))
-    observations = [
-        _observation(
-            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-            iva=Decimal("42"),
+_SINGLE_BINDING_SELECTOR_CASES = (
+    pytest.param(
+        "modelo-303-iva-repercutido-general-cuota",
+        (
+            _observation(flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
+            _observation(flow=IvaFlowDirection.SOPORTADO, iva=Decimal("105")),
+            _observation(flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO, iva=Decimal("90")),
         ),
-        _observation(
-            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            flow=IvaFlowDirection.SOPORTADO,
-            iva=Decimal("99"),
+        Decimal("210"),
+        id="repercutido",
+    ),
+    pytest.param(
+        "modelo-303-iva-soportado-interiores-cuota",
+        (
+            _observation(flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
+            _observation(flow=IvaFlowDirection.SOPORTADO, iva=Decimal("105")),
         ),
-    ]
+        Decimal("105"),
+        id="soportado",
+    ),
+    pytest.param(
+        "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
+        (
+            _observation(
+                category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+                flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+                iva=Decimal("42"),
+            ),
+            _observation(
+                category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+                flow=IvaFlowDirection.SOPORTADO,
+                iva=Decimal("99"),
+            ),
+        ),
+        Decimal("42"),
+        id="autorepercutido-intracomunitaria",
+    ),
+)
+
+
+@pytest.mark.parametrize(("binding_id", "observations", "expected_amount"), _SINGLE_BINDING_SELECTOR_CASES)
+def test_resolve_filters_by_binding_selector(
+    binding_id: str,
+    observations: tuple[IvaLedgerObservation, ...],
+    expected_amount: Decimal,
+) -> None:
+    revision = _revision_with_bindings(_binding(binding_id))
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    assert result == {"modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("42")}
+    assert result == {binding_id: expected_amount}
 
 
 def test_resolve_routes_domestic_reverse_charge_to_devengado_and_deducible_net_zero() -> None:

@@ -580,7 +580,7 @@ class TestConvenioAplicable:
         assert self._profile("NL").convenio_aplicable == "BOE-A-1972-674 España-Países Bajos"
 
     def test_ma_maps_to_espana_marruecos_convenio(self) -> None:
-        # BOE-A-1985-13340 España-Marruecos added in task #225.
+        # BOE-A-1985-9280 is the Spain-Morocco double-taxation treaty.
         profile = TaxpayerProfile(
             tax_id="X1234567L",
             iva_regime=IVARegime.GENERAL,
@@ -589,7 +589,7 @@ class TestConvenioAplicable:
             representante_fiscal_nif="12345678Z",
             representante_fiscal_nombre="Rep Marroquí",
         )
-        assert profile.convenio_aplicable == "BOE-A-1985-13340 España-Marruecos"
+        assert profile.convenio_aplicable == "BOE-A-1985-9280 España-Marruecos"
 
     def test_unknown_country_returns_none(self) -> None:
         # ZZ is not a real ISO code and has no convenio entry.

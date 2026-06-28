@@ -37,7 +37,8 @@ def _resolve_host(subdomain: PortalHost) -> str:
 def portal_path(portal: Portal) -> str:
     """Return the centralized relative path for a portal catalogue entry.
 
-    Use of :class:`Portal` for compliance.
+    The :class:`Portal` value addresses the external-constants portal path
+    registry.
     """
     paths = Settings.external_constants().aeat.portal_paths.paths
     try:

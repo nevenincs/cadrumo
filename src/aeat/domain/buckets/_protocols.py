@@ -4,6 +4,11 @@ Application-layer code that persists or loads bucket event catalogues
 depends on this Protocol, not on the concrete adapter-backed
 ``BucketEventHistoryRepository``. This keeps the domain layer free of
 adapter imports while still providing a typed port surface.
+
+:class:`BucketEventHistoryRepositoryProtocol` abstracts ``exists`` / ``load`` /
+``save`` operations over :class:`BucketEventHistoryCatalogue`, allowing
+services to emit :class:`BucketEvent` history without importing the concrete
+:class:`aeat.domain.buckets.BucketEventHistoryRepository`.
 """
 
 from __future__ import annotations

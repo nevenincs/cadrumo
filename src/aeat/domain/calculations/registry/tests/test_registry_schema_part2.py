@@ -232,6 +232,62 @@ def test_validator_rejects_roll_forward_balances_with_wrong_arity() -> None:
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
 
+@pytest.mark.parametrize(
+    ("operator_name", "expression"),
+    (
+        ("all_nonzero", 'all_nonzero(["01", "missing-casilla"])'),
+        ("any_nonzero", 'any_nonzero(["01", "missing-casilla"])'),
+        ("cap_le_when_positive", 'cap_le_when_positive(["15", "missing-casilla"])'),
+        ("equals", 'equals(["01", "missing-casilla"])'),
+        ("implies_nonzero", 'implies_nonzero(["01", "missing-casilla"])'),
+        ("implies_any_nonzero", 'implies_any_nonzero(["01", "02", "missing-casilla"])'),
+        ("roll_forward_balances", 'roll_forward_balances(["01", "02", "03", "missing-casilla"])'),
+    ),
+)
+def test_validator_rejects_verification_predicate_unknown_casilla_refs(
+    operator_name: str,
+    expression: str,
+) -> None:
+    """Every casilla-list predicate operator must resolve ids against the revision."""
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    predicate = VerificationPredicateDefinition(
+        predicate_id=f"modelo-130-{operator_name}-missing-casilla",
+        legal_refs=("rd-439-2007:art-110",),
+        expression=expression,
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=rf"{operator_name} references unknown casilla 'missing-casilla'",
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_known_verification_predicate_with_malformed_casilla_list() -> None:
+    """Known operators must use the parseable casilla-list form, not silent-pass syntax."""
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-malformed-any-nonzero",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='any_nonzero("01")',
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    with pytest.raises(RegistryValidationError, match=r"any_nonzero expression .* is malformed"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
 def test_validator_rejects_verification_predicate_with_malformed_expression() -> None:
     """Predicate whose expression is not a parseable DSL call fails."""
 
@@ -653,6 +709,7 @@ def test_convenio_rate_table_parses_with_mixed_decimal_and_not_yet_authored() ->
     assert parameter.convenio_rates[0].country_code == "MA"
     assert parameter.convenio_rates[0].tipo_renta == "interest"
     assert parameter.convenio_rates[0].rate == "0.10"
+    assert parameter.convenio_rates[0].legal_refs == ("convenio-es-ma-art-14",)
     assert parameter.convenio_rates[1].country_code == "AR"
     assert parameter.convenio_rates[1].tipo_renta == "pension"
     assert parameter.convenio_rates[1].rate == "NOT_YET_AUTHORED"
@@ -702,4 +759,72 @@ def test_convenio_rate_table_rejects_malformed_rate_string() -> None:
             legal_ref_anchor="convenio-es-ma-art-14",
             valid_from=date(2025, 1, 1),
             valid_to=date(2025, 12, 31),
+        )
+
+
+def test_convenio_rate_table_rejects_concrete_rate_without_row_legal_refs() -> None:
+    """A concrete Convenio override rate must cite the treaty article that grounds it."""
+
+    with pytest.raises(ValidationError, match="concrete rates must declare legal_refs"):
+        ConvenioRateRow(
+            country_code="MA",
+            tipo_renta="interest",
+            rate="0.10",
+            legal_ref_anchor="convenio-es-ma-1978:art-11",
+            valid_from=date(2025, 1, 1),
+            valid_to=date(2025, 12, 31),
+        )
+
+
+@pytest.mark.parametrize(
+    ("rate", "legal_refs"),
+    (
+        ("0.10", ("trlirnr-rdleg-5-2004:art-25.1.f",)),
+        ("DOMESTIC_TARIFF", ("trlirnr-rdleg-5-2004:art-25.1.b",)),
+    ),
+)
+def test_convenio_rate_table_rejects_authored_rate_when_anchor_not_in_row_legal_refs(
+    rate: str,
+    legal_refs: tuple[str, ...],
+) -> None:
+    """Authored Convenio rows cannot advertise an anchor outside the validated legal tuple."""
+
+    with pytest.raises(ValidationError, match="legal_ref_anchor must be included in legal_refs"):
+        ConvenioRateRow(
+            country_code="MA",
+            tipo_renta="interest",
+            rate=rate,
+            legal_ref_anchor="convenio-es-ma-1978:art-11",
+            legal_refs=legal_refs,
+            valid_from=date(2025, 1, 1),
+            valid_to=date(2025, 12, 31),
+        )
+
+
+def test_validator_rejects_convenio_rate_row_with_unknown_legal_ref() -> None:
+    """Nested Convenio row legal_refs must resolve through the registry legal catalogue."""
+
+    modelo, catalogues = _committed_modelo("210")
+    revision = modelo.revisions["2025"]
+    parameter = next(item for item in revision.parameters if item.id == "m210-convenio-rates")
+    target_row = next(row for row in parameter.convenio_rates if row.country_code == "MA")
+    mutated_row = target_row.model_copy(update={"legal_refs": ("convenio-es-ma-1978:missing-art",)})
+    mutated_parameter = parameter.model_copy(
+        update={
+            "convenio_rates": tuple(
+                mutated_row if row is target_row else row for row in parameter.convenio_rates
+            ),
+        },
+    )
+    mutated_revision = revision.model_copy(
+        update={
+            "parameters": tuple(
+                mutated_parameter if item.id == parameter.id else item for item in revision.parameters
+            ),
+        },
+    )
+
+    with pytest.raises(RegistryValidationError, match="convenio_rate MA/interest"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
+            _with_revision(modelo, mutated_revision),
         )

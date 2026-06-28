@@ -1,3 +1,10 @@
+"""Currency normalization value models.
+
+Defines :class:`MonetaryAmount`, :class:`NormalizedAmount`, and
+:class:`CurrencyNormalizationStatus` for the EUR conversion results produced by
+:class:`CurrencyNormalizationService`.
+"""
+
 from __future__ import annotations
 
 from datetime import date
