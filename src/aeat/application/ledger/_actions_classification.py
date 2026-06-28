@@ -59,6 +59,9 @@ from ._models import (
     ManualLedgerTransactionPatch,
 )
 
+_BULK_CLASSIFY_NON_PATCH_COLUMNS = frozenset({"transaction_id"})
+_BULK_CLASSIFY_PATCH_COLUMNS = BULK_CLASSIFY_ALLOWED_COLUMNS - _BULK_CLASSIFY_NON_PATCH_COLUMNS
+
 
 def bulk_classify_from_csv(
     *,
@@ -76,7 +79,9 @@ def bulk_classify_from_csv(
     The CSV must contain ``transaction_id`` and ``classification`` columns;
     ``category_id``, ``business_pct``, ``usage_ratio_id``, ``taxable_base``,
     ``iva_rate``, ``iva_amount``, ``iva_category``, and ``irpf_category`` are
-    optional. The tax facts ride the same
+    optional. Blank optional cells are treated as omitted, so a partial CSV
+    classification row preserves existing tax facts instead of clearing them
+    accidentally. Populated tax facts ride the same
     :class:`ManualLedgerTransactionPatch` and
     :func:`update_manual_transaction_fields` write path the single-classify
     surface uses, so a bulk row persists the same typed
@@ -108,9 +113,10 @@ def bulk_classify_from_csv(
             "bulk classify CSV must include 'transaction_id' and 'classification' columns",
         )
 
-    parsed_rows: list[BulkClassifyRow] = []
+    parsed_rows: list[tuple[int, BulkClassifyRow, frozenset[str]]] = []
     parse_failures: list[BulkClassifyFailure] = []
     for idx, raw_row in enumerate(reader):
+        normalised_row = {k: (v.strip() or None if v is not None else v) for k, v in raw_row.items()}
         try:
             parsed = BulkClassifyRow.model_validate(
                 # A present-but-blank optional cell (e.g. an empty
@@ -120,7 +126,7 @@ def bulk_classify_from_csv(
                 # same typed ``Decimal`` coercion the single-classify path
                 # uses, so a malformed value reds the row rather than
                 # coercing silently.
-                {k: (v.strip() or None if v is not None else v) for k, v in raw_row.items()},
+                normalised_row,
                 strict=False,
             )
         except (ValidationError, ValueError, KeyError) as exc:
@@ -147,7 +153,12 @@ def bulk_classify_from_csv(
                 ),
             )
             continue
-        parsed_rows.append(parsed)
+        provided_patch_columns = frozenset(
+            column
+            for column in _BULK_CLASSIFY_PATCH_COLUMNS
+            if column != "classification" and normalised_row.get(column) is not None
+        )
+        parsed_rows.append((idx, parsed, provided_patch_columns))
 
     apply_failures: list[BulkClassifyFailure] = []
     all_event_ids: list[str] = []
@@ -168,18 +179,15 @@ def bulk_classify_from_csv(
         calculation_repository=calculation_repository,
     )
 
-    for idx, row in enumerate(parsed_rows):
-        patch = ManualLedgerTransactionPatch(
-            business_classification=row.classification,
-            category_id=row.category_id,
-            business_pct=row.business_pct,
-            usage_ratio_id=row.usage_ratio_id,
-            taxable_base=row.taxable_base,
-            iva_rate=row.iva_rate,
-            iva_amount=row.iva_amount,
-            iva_category=row.iva_category,
-            irpf_category=row.irpf_category,
+    for idx, row, provided_patch_columns in parsed_rows:
+        patch_values: dict[str, object] = {"business_classification": row.classification}
+        patch_values.update(
+            {
+                column: getattr(row, column)
+                for column in provided_patch_columns
+            }
         )
+        patch = ManualLedgerTransactionPatch.model_validate(patch_values)
         try:
             resolved_transaction_id = resolve_transaction_id(row.transaction_id, working.transactions.keys())
             current = _require_transaction(working, resolved_transaction_id)

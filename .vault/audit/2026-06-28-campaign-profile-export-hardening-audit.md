@@ -1378,6 +1378,19 @@ Wave-sixteen verification:
   this check because this profile-bound command failed closed without an active
   synthetic profile/passphrase in the shared worktree.
 
+Wave seventeen opened with three delegated CLI-only personas while the coding
+agent fixed a non-overlapping defect carried from Helena's wave-sixteen run:
+partial bulk-classify CSV rows now preserve existing taxable-base, IVA, and
+IRPF facts when optional tax columns are omitted or left blank. Blank optional
+cells continue to behave as omitted cells, matching the existing CSV contract,
+while populated cells still use the shared single-row classify write path.
+Verification:
+
+- `vaultspec-rag search "bulk classify CSV omitted columns clearing taxable base iva irpf facts preserve existing transaction classification" --type code --json --timeout 30`
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_preserves_existing_tax_facts_when_columns_omitted src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py::test_classify_from_csv_blank_optional_tax_cells_preserve_existing_values`
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
+- `uv run --no-sync ruff check src/aeat/application/ledger/_actions_classification.py src/aeat/entrypoints/cli/tests/test_ledger_bulk_classify.py`
+
 Full-suite verification was intentionally not claimed because this shared
 worktree carries extensive unrelated WIP.
 
@@ -1452,10 +1465,6 @@ Residual backlog:
 - Make mixed-use allocation/category recovery more understandable; the all-failed
   bulk classify exit-code defect is fixed, but personas still saw category/ratio
   contradictions.
-- Preserve existing taxable base, IVA, and IRPF facts when bulk-classify CSV
-  rows omit those columns; Helena's partial CSV classification path showed that
-  omitted fields can be cleared while the operator is only trying to set
-  classification metadata.
 - Reduce repeated local-evidence advisory noise in M390 verification output.
 - Add text-output coverage for readiness missing-binding detail rows and direct
   legacy verified-revision coverage for M202 file/export guards if legacy state
