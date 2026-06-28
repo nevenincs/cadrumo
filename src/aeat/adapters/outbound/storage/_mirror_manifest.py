@@ -1,4 +1,14 @@
-"""Remote ciphertext mirror manifest construction and persistence."""
+"""Remote ciphertext mirror manifest construction, persistence, and inspection.
+
+This module converts
+:class:`aeat.adapters.persistence.storage.sql._secure_object_records.SecureObjectRawRow`
+records into :class:`RemoteMirrorNamespaceManifest` payloads, stores those
+payloads through :class:`StorageProvider` under
+:data:`REMOTE_MIRROR_MANIFEST_NAMESPACE`, and reports mirror drift as
+:class:`RemoteMirrorInspection` records. Google sync uses the inspection
+helpers to distinguish partial uploads, partial downloads, stale mirrors, and
+revision conflicts without exposing plaintext secure-object payloads.
+"""
 
 from __future__ import annotations
 
@@ -29,7 +39,14 @@ def build_remote_mirror_namespace_manifest(
     namespace: str,
     rows: Iterable[SecureObjectRawRow],
 ) -> RemoteMirrorNamespaceManifest:
-    """Build a :class:`RemoteMirrorNamespaceManifest` from raw ciphertext rows for one namespace."""
+    """Build a :class:`RemoteMirrorNamespaceManifest` for one ciphertext namespace.
+
+    Only rows whose
+    :class:`~aeat.adapters.persistence.storage.sql._secure_object_records.SecureObjectRawRow`
+    namespace matches ``namespace`` are included. Each row becomes a
+    :class:`RemoteMirrorObjectManifest`, and the latest revision watermark is
+    derived from the newest ``revision_written_at`` among those entries.
+    """
     entries = tuple(_remote_mirror_object_manifest(row) for row in rows if row.namespace == namespace)
     timed_entries = tuple(entry for entry in entries if entry.revision_written_at is not None)
 
@@ -52,7 +69,12 @@ def put_remote_mirror_namespace_manifest(
     provider: StorageProvider,
     manifest: RemoteMirrorNamespaceManifest,
 ) -> ProviderObjectMetadata:
-    """Persist a namespace mirror manifest and return its :class:`ProviderObjectMetadata`."""
+    """Persist ``manifest`` through ``provider`` and return its :class:`ProviderObjectMetadata`.
+
+    The manifest JSON is written as an object in
+    :data:`REMOTE_MIRROR_MANIFEST_NAMESPACE` with a
+    :func:`aeat.core.hashing.sha256_hex` content hash.
+    """
     payload = manifest.model_dump_json().encode("utf-8")
     return provider.put(
         REMOTE_MIRROR_MANIFEST_NAMESPACE,
@@ -67,7 +89,12 @@ def get_remote_mirror_namespace_manifest(
     provider: StorageProvider,
     namespace: str,
 ) -> RemoteMirrorNamespaceManifest | None:
-    """Return the :class:`RemoteMirrorNamespaceManifest` for ``namespace`` when one exists."""
+    """Return the stored :class:`RemoteMirrorNamespaceManifest` for ``namespace``.
+
+    Missing manifest objects return ``None``. Malformed manifest payloads are
+    translated to :class:`OutboundStorageIntegrityError` so callers can handle
+    them through the outbound storage error hierarchy.
+    """
     try:
         payload, _metadata = provider.get(REMOTE_MIRROR_MANIFEST_NAMESPACE, _manifest_object_key_hmac(namespace))
     except OutboundStorageNotFoundError:
@@ -89,7 +116,9 @@ def inspect_remote_mirror_upload(
 
     Returns:
         A :class:`RemoteMirrorInspection` describing the drift between the
-        expected manifest and the remote mirror.
+        expected manifest and the remote mirror. Issues use
+        :class:`RemoteMirrorIssueKind` values such as ``PARTIAL_UPLOAD``,
+        ``STALE_MIRROR``, and ``REVISION_CONFLICT``.
     """
     remote_manifest = _load_remote_manifest(provider, expected_manifest.namespace)
     issues = list(_compare_manifest_objects(local=expected_manifest, remote=remote_manifest))
@@ -132,7 +161,12 @@ def inspect_remote_mirror_download(
     provider: StorageProvider,
     remote_manifest: RemoteMirrorNamespaceManifest,
 ) -> RemoteMirrorInspection:
-    """Detect whether a remote manifest can be downloaded completely; return a :class:`RemoteMirrorInspection`."""
+    """Return whether every object in ``remote_manifest`` is downloadable.
+
+    Missing objects, unreadable objects, integrity failures, and provider
+    metadata drift are reported as ``PARTIAL_DOWNLOAD`` issues on the returned
+    :class:`RemoteMirrorInspection`.
+    """
     issues: list[RemoteMirrorIssue] = []
     for entry in remote_manifest.objects:
         try:
@@ -164,7 +198,11 @@ def compare_remote_mirror_manifests(
     local: RemoteMirrorNamespaceManifest,
     remote: RemoteMirrorNamespaceManifest,
 ) -> RemoteMirrorInspection:
-    """Compare local and remote namespace manifests and return a :class:`RemoteMirrorInspection`."""
+    """Compare two namespace manifests and return a :class:`RemoteMirrorInspection`.
+
+    The comparison classifies absent entries, stale remote revisions, and
+    divergent revision lineages as :class:`RemoteMirrorIssue` records.
+    """
     return RemoteMirrorInspection(
         namespace=local.namespace,
         issues=tuple(_compare_manifest_objects(local=local, remote=remote)),
@@ -298,7 +336,12 @@ def _is_stale_remote_entry(
 
 
 def remote_mirror_object_key_hmac(namespace: str, object_key: bytes) -> str:
-    """Compute the provider object key used for mirrored ciphertext rows."""
+    """Compute the provider object key used for mirrored ciphertext rows.
+
+    The digest combines the logical ``namespace`` and the raw secure-object
+    ``object_key`` bytes so the remote provider sees only deterministic
+    ciphertext object identifiers.
+    """
     hasher = hashlib.sha256()
     hasher.update(namespace.encode())
     hasher.update(b"\x00")

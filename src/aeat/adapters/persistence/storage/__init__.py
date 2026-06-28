@@ -240,6 +240,7 @@ from .master_key._active_session import (
     activate_session,
     get_active_master_key,
     has_active_bucket_session,
+    suspend_active_session,
 )
 from .master_key._master_key import (
     EphemeralMasterKeyProvider,
@@ -523,6 +524,7 @@ __all__ = [
     "secure_object_namespace_logical_path",
     "secure_object_repository_for_bucket",
     "session_scope",
+    "suspend_active_session",
     "unwrap_master_key",
     "unwrap_recovery_envelope",
     "verify_corpus_manifest",

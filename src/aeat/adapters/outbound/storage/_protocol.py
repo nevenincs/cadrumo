@@ -1,9 +1,11 @@
-"""`StorageProvider` Protocol — the v1 storage backend contract.
+""":class:`StorageProvider` Protocol - the v1 storage backend contract.
 
-Concrete backends implement this Protocol behind the provider factory.
-The coordinator depends only on this public surface, the provider records,
-and the typed outbound storage error hierarchy; concrete backend classes
-remain private implementation details.
+Concrete backends implement this Protocol behind
+:func:`aeat.adapters.outbound.storage.get_storage_provider`. The coordinator
+depends only on this public surface, the provider records
+:class:`ProviderObjectMetadata` and :class:`ProviderProbeReport`, and the typed
+:class:`aeat.adapters.outbound.storage.OutboundStorageError` hierarchy;
+concrete backend classes remain private implementation details.
 
 Bytes are the unit of payload. Encryption + classification + envelope
 handling happens above the provider layer (in the application sync
@@ -23,15 +25,20 @@ from ._records import ProviderObjectMetadata, ProviderProbeReport
 class StorageProvider(Protocol):
     """Bytes-in / bytes-out per-namespace object store.
 
+    The protocol is selected by
+    :func:`aeat.adapters.outbound.storage.get_storage_provider` from the
+    configured :class:`aeat.adapters.outbound.storage.ProviderKind`, but callers
+    operate only on the protocol and its boundary records.
+
     Implementations must be safe to instantiate from settings without
     network IO. Backend setup, credential refresh, remote-folder
-    creation, and filesystem root creation happen lazily on `probe()` or
+    creation, and filesystem root creation happen lazily on :meth:`probe` or
     the first read/write operation.
 
     Provider methods translate expected backend failures into the
-    `OutboundStorageError` hierarchy at this boundary. Native backend
-    exceptions should not cross the Protocol surface except for
-    programming errors.
+    :class:`aeat.adapters.outbound.storage.OutboundStorageError` hierarchy at
+    this boundary. Native backend exceptions should not cross the Protocol
+    surface except for programming errors.
     """
 
     def put(
@@ -52,9 +59,10 @@ class StorageProvider(Protocol):
                 operator-visible listings carry the HMAC prefix.
             payload: Bytes to write. Already encrypted at the
                 application layer; providers do not decrypt or inspect.
-            content_hash: Cryptographic hash of `payload` for integrity
-                round-tripping (`OutboundStorageIntegrityError` raised on read
-                if the stored hash diverges).
+            content_hash: Cryptographic hash of ``payload`` for integrity
+                round-tripping
+                (:class:`aeat.adapters.outbound.storage.OutboundStorageIntegrityError`
+                raised on read if the stored hash diverges).
             label: Human-readable suffix appended to the filename for
                 operator orientation. Derived from the per-namespace
                 label deriver registered at the application layer.

@@ -103,7 +103,7 @@ def test_classify_metadata_returns_missing_for_empty_pairs() -> None:
     snapshot = _modelo_130_snapshot()
     verdict, metadata = _classify_metadata_match({}, snapshot)
     assert verdict is MetadataMatchState.MISSING
-    # Missing metadata still returns a PullMetadata stub so callers can
+    # Missing metadata still returns a PullMetadata placeholder so callers can
     # render the result without None-checking every field.
     assert metadata.modelo_id == "missing"
     assert metadata.revision_id == "missing"

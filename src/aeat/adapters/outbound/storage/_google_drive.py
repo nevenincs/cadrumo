@@ -1,26 +1,30 @@
-"""Google Drive v3 `StorageProvider` implementation.
+"""Google Drive v3 :class:`aeat.adapters.outbound.storage.StorageProvider` implementation.
 
-Maps the `StorageProvider` Protocol onto the Drive API:
+Maps the :class:`aeat.adapters.outbound.storage.StorageProvider` Protocol onto
+the Drive API:
 
 - Each namespace is a folder directly under the operator-configured
-  `aeat-vault/` root. The root folder is auto-created on first probe
-  under the parent specified by `aeat_google_drive_root_folder_id` if
-  absent. The root folder ID is required when `aeat_storage_provider_kind=google_drive`.
-- Each object is a `files().create(...)` upload with a binary
-  `mimeType=application/octet-stream`, named
-  `<hmac_prefix_8>--<label>.bin`. The Drive `appProperties` field
-  carries the per-object commit-log payload from
-  `aeat.adapters.outbound.google.DriveAppProperties` (written on every
-  push by P03's coordinator, not by this provider).
-- Downloads use `files().get_media(fileId=...)`.
-- HttpError status codes are mapped onto the typed `OutboundStorageError`
-  hierarchy: 401/403 → Permission, 404 → NotFound, 409 → Conflict,
-  429 → Quota, 5xx → Unavailable, every other failure → Network.
+  ``aeat-vault/`` root. The root folder ID is required when
+  ``aeat_storage_provider_kind=google_drive`` and the vault folder is created
+  lazily under ``aeat_google_drive_root_folder_id``.
+- Each object is a ``files().create(...)`` upload with
+  ``mimeType=application/octet-stream``, named
+  ``<hmac_prefix_8>--<label>.bin``. The Drive ``appProperties`` field carries
+  the ownership marker, namespace, full object-key HMAC, and stored
+  ``content_hash`` used to construct :class:`ProviderObjectMetadata`.
+- Downloads use ``files().get_media(fileId=...)`` and validate full SHA-256
+  payload hashes through :func:`verify_content_hash`.
+- HttpError status codes are mapped onto the typed :class:`OutboundStorageError`
+  hierarchy: 401/403 -> :class:`OutboundStoragePermissionError`, 404 ->
+  :class:`OutboundStorageNotFoundError`, 409 ->
+  :class:`OutboundStorageConflictError`, 429 ->
+  :class:`OutboundStorageQuotaError`, 5xx ->
+  :class:`OutboundStorageUnavailableError`, every other failure ->
+  :class:`OutboundStorageNetworkError`.
 
-The `service_factory` constructor argument lets tests inject a fake
-Drive v3 Resource-shaped object so unit tests run without the real
-google-api-python-client. The real factory lives in `_service_factory`
-and is the default when no override is supplied.
+The :func:`_service_factory` helper constructs the real Drive v3 resource
+lazily so importing this module does not require google-api-python-client or
+settings initialization.
 """
 
 from __future__ import annotations
@@ -102,9 +106,9 @@ def _filename(object_key_hmac: str, label: str) -> str:
 
 
 def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageError:
-    """Translate a Google API HttpError (or any upstream failure) into a typed `OutboundStorageError`.
+    """Translate a Google API HttpError into a typed :class:`OutboundStorageError`.
 
-    The lazy-import guard makes this callable without `google-api-python-client`
+    The lazy-import guard makes this callable without ``google-api-python-client``
     installed, which is important for unit tests that inject fakes.
     """
     status = getattr(getattr(error, "resp", None), "status", None)
@@ -165,7 +169,7 @@ def _service_factory(credentials: object) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE
 
 
 class GoogleDriveProvider:
-    """Bytes-in / bytes-out provider against Google Drive v3."""
+    """Bytes-in / bytes-out :class:`StorageProvider` backed by Google Drive v3."""
 
     def __init__(self, *, credentials: object, root_folder_id: str, vault_folder_name: str | None = None) -> None:
         """Initialise the provider with credentials and the root Drive folder.
@@ -177,7 +181,8 @@ class GoogleDriveProvider:
                 to the centralized settings value.
 
         Raises:
-            OutboundStorageValidationError: When ``root_folder_id`` is blank.
+            :class:`OutboundStorageValidationError`: When ``root_folder_id`` or
+                ``vault_folder_name`` is blank.
         """
         if not root_folder_id.strip():
             raise OutboundStorageValidationError(
@@ -202,7 +207,7 @@ class GoogleDriveProvider:
 
     @property
     def root_folder_id(self) -> str:
-        """Drive folder ID used as the parent of the ``aeat-vault/`` root folder."""
+        """Drive folder ID used as the parent of the configured vault folder."""
         return self._root_folder_id
 
     # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY:
@@ -240,10 +245,10 @@ class GoogleDriveProvider:
         )
 
     def _resolve_vault_folder(self) -> str:
-        """Resolve (or create) the `aeat-vault/` folder ID under the configured root.
+        """Resolve or create the configured vault folder under ``root_folder_id``.
 
         Refuses to adopt a pre-existing folder of the same name unless
-        it carries the `appProperties.aeat_vault_app=aeat` ownership
+        it carries the ``appProperties.aeat_vault_app=aeat`` ownership
         marker — protects operator-created same-named work from
         silent merge. Cached for the lifetime of the provider instance.
         """
@@ -338,10 +343,10 @@ class GoogleDriveProvider:
         )
 
     def _resolve_namespace_folder(self, namespace: str, *, create: bool = True) -> str | None:
-        """Resolve (or create) the namespace folder ID under `aeat-vault/`.
+        """Resolve or create the namespace folder ID under the vault folder.
 
         Returns ``None`` when the namespace folder does not exist and
-        `create=False`.
+        ``create=False``.
         """
         cached = self._namespace_folder_ids.get(namespace)
         if cached is not None:
@@ -433,7 +438,7 @@ class GoogleDriveProvider:
         content_hash: str,
         label: str,
     ) -> ProviderObjectMetadata:
-        r"""Upload ``payload`` to Drive and return object metadata.
+        r"""Upload ``payload`` to Drive and return :class:`ProviderObjectMetadata`.
 
         If a file for ``object_key_hmac`` already exists the existing Drive
         file is updated in-place (``files().update``); otherwise a new file
@@ -461,12 +466,14 @@ class GoogleDriveProvider:
             :class:`ProviderObjectMetadata` populated from the Drive API response.
 
         Raises:
-            OutboundStorageValidationError: When ``namespace``,
+            :class:`OutboundStorageValidationError`: When ``namespace``,
                 ``object_key_hmac``, or ``content_hash`` are blank.
-            OutboundStoragePermissionError: On HTTP 401 or 403 from Drive.
-            OutboundStorageQuotaError: On HTTP 429 from Drive.
-            OutboundStorageUnavailableError: On HTTP 5xx from Drive.
-            OutboundStorageNetworkError: On any other Drive API failure.
+            :class:`OutboundStoragePermissionError`: On HTTP 401 or 403 from
+                Drive.
+            :class:`OutboundStorageQuotaError`: On HTTP 429 from Drive.
+            :class:`OutboundStorageUnavailableError`: On HTTP 5xx from Drive.
+            :class:`OutboundStorageNetworkError`: On any other Drive API
+                failure.
         """
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
@@ -535,8 +542,10 @@ class GoogleDriveProvider:
 
         Uses ``files().get_media`` to stream bytes.  If the stored
         ``content_hash`` is a ``sha256-<hex>`` string, the payload digest is
-        recomputed after download and compared; a mismatch raises
-        ``OutboundStorageIntegrityError`` before the payload is returned.
+        recomputed after download and compared through
+        :func:`verify_content_hash`; a mismatch raises
+        :class:`aeat.adapters.outbound.storage.OutboundStorageIntegrityError`
+        before the payload is returned.
 
         Args:
             namespace: Logical bucket name.
@@ -546,15 +555,17 @@ class GoogleDriveProvider:
             A two-tuple of ``(payload_bytes, :class:`ProviderObjectMetadata`)``.
 
         Raises:
-            OutboundStorageNotFoundError: When the namespace folder or object
-                file is absent from Drive.
-            OutboundStorageIntegrityError: When the downloaded payload does not
-                match the stored SHA-256 digest.
-            OutboundStorageValidationError: When ``namespace`` or
+            :class:`OutboundStorageNotFoundError`: When the namespace folder or
+                object file is absent from Drive.
+            :class:`aeat.adapters.outbound.storage.OutboundStorageIntegrityError`:
+                When the downloaded payload does not match the stored SHA-256
+                digest.
+            :class:`OutboundStorageValidationError`: When ``namespace`` or
                 ``object_key_hmac`` are blank.
-            OutboundStoragePermissionError: On HTTP 401 or 403 from Drive.
-            OutboundStorageNetworkError: On any other Drive API failure or
-                when ``get_media`` returns a non-bytes value.
+            :class:`OutboundStoragePermissionError`: On HTTP 401 or 403 from
+                Drive.
+            :class:`OutboundStorageNetworkError`: On any other Drive API
+                failure or when ``get_media`` returns a non-bytes value.
         """
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
@@ -623,7 +634,7 @@ class GoogleDriveProvider:
         """Permanently delete the Drive file for ``object_key_hmac``.
 
         Returns ``False`` immediately (without error) when the namespace
-        folder or the object file does not exist — deleting a non-existent
+        folder or the object file does not exist; deleting a non-existent
         object is idempotent at the provider boundary.
 
         Args:
@@ -635,10 +646,12 @@ class GoogleDriveProvider:
             namespace or object was already absent.
 
         Raises:
-            OutboundStorageValidationError: When ``namespace`` or
+            :class:`OutboundStorageValidationError`: When ``namespace`` or
                 ``object_key_hmac`` are blank.
-            OutboundStoragePermissionError: On HTTP 401 or 403 from Drive.
-            OutboundStorageNetworkError: On any other Drive API failure.
+            :class:`OutboundStoragePermissionError`: On HTTP 401 or 403 from
+                Drive.
+            :class:`OutboundStorageNetworkError`: On any other Drive API
+                failure.
         """
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
@@ -665,8 +678,10 @@ class GoogleDriveProvider:
             Namespace name strings in Drive-returned order.
 
         Raises:
-            OutboundStoragePermissionError: On HTTP 401 or 403 from Drive.
-            OutboundStorageNetworkError: On any other Drive API failure.
+            :class:`OutboundStoragePermissionError`: On HTTP 401 or 403 from
+                Drive.
+            :class:`OutboundStorageNetworkError`: On any other Drive API
+                failure.
         """
         service = self._get_service()
         vault_id = self._resolve_vault_folder()
@@ -703,11 +718,14 @@ class GoogleDriveProvider:
             :class:`ProviderObjectMetadata` records in Drive-returned order.
 
         Raises:
-            OutboundStorageNotFoundError: When the namespace folder is absent
-                from Drive.
-            OutboundStorageValidationError: When ``namespace`` is blank.
-            OutboundStoragePermissionError: On HTTP 401 or 403 from Drive.
-            OutboundStorageNetworkError: On any other Drive API failure.
+            :class:`OutboundStorageNotFoundError`: When the namespace folder is
+                absent from Drive.
+            :class:`OutboundStorageValidationError`: When ``namespace`` is
+                blank.
+            :class:`OutboundStoragePermissionError`: On HTTP 401 or 403 from
+                Drive.
+            :class:`OutboundStorageNetworkError`: On any other Drive API
+                failure.
         """
         namespace_clean = _validate_namespace(namespace)
         service = self._get_service()
@@ -758,15 +776,15 @@ class GoogleDriveProvider:
            ``put`` then ``delete`` against a ``_probe`` namespace to confirm
            write access end-to-end.
 
-        The method never raises; every failure mode is encoded in the
-        returned ``ProviderProbeReport``.
+        The method never raises; every failure mode is encoded in the returned
+        :class:`ProviderProbeReport`.
 
         Args:
             read_only: When ``True``, skip the sentinel write round-trip and
                 report ``writable=False`` regardless of actual permissions.
 
         Returns:
-            A ``ProviderProbeReport`` with ``reachable``, ``writable``,
+            A :class:`ProviderProbeReport` with ``reachable``, ``writable``,
             ``root_folder_present``, and a human-readable ``detail`` string.
         """
         try:
@@ -870,7 +888,7 @@ class GoogleDriveProvider:
 # googleapiclient.discovery.build() returns an untyped Resource object; no stub
 # narrows the concrete type.
 def _build_media_body(payload: bytes) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRIVE-BUILD-FACTORY
-    """Build a `MediaIoBaseUpload` from `payload`. Lazy-imported."""
+    """Build a ``MediaIoBaseUpload`` from ``payload``. Lazy-imported."""
     try:
         from googleapiclient.http import MediaIoBaseUpload
     except ImportError as exc:
@@ -891,7 +909,7 @@ def _metadata_from_drive_entry(
     namespace: str,
     object_key_hmac: str,
 ) -> ProviderObjectMetadata:
-    """Convert a Drive `files().get/list` response entry into our record."""
+    """Convert a Drive ``files().get/list`` response into :class:`ProviderObjectMetadata`."""
     byte_length_raw = entry.get("size", 0)
     try:
         byte_length = int(byte_length_raw) if byte_length_raw is not None else 0

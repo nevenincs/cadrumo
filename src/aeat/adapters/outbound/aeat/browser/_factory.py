@@ -1,25 +1,29 @@
-"""Default browser-session factory for auth providers.
+"""Default Playwright browser-session factory for auth providers.
 
-Auth providers accept a ``BrowserSessionFactory`` — an async callable
-that returns a ``BrowserSessionLike``. The default factory wires
-the auth workflow end-to-end by supplying a Playwright-backed
-session, while
-:func:`aeat.adapters.outbound.aeat.auth.select_provider` continues to
-accept ``browser_session_factory=None`` so tests can inject their own
+Auth providers accept a
+:class:`aeat.adapters.outbound.aeat.auth.BrowserSessionFactory`: an async
+callable that returns a
+:class:`aeat.adapters.outbound.aeat.auth.BrowserSessionLike`. The default
+factory supplies that protocol with a Playwright-backed :class:`BrowserSession`,
+while :func:`aeat.adapters.outbound.aeat.auth.select_provider` still accepts
+``browser_session_factory=None`` so tests and callers can inject their own
 in-process implementations.
 
 This module provides:
 
-* :class:`DefaultBrowserSession` — a ``BrowserSessionLike`` wrapper
-  that owns a ``Playwright`` instance + :class:`BrowserSession`
-  pair. Its ``close()`` tears down both.
-* :func:`default_browser_session_factory` — the async callable that
-  matches :class:`aeat.adapters.outbound.aeat.auth.BrowserSessionFactory` and yields a
-  ``DefaultBrowserSession`` on demand.
+* :class:`DefaultBrowserSession`, the
+  :class:`~aeat.adapters.outbound.aeat.auth.BrowserSessionLike` wrapper that
+  owns a ``Playwright`` runtime and :class:`BrowserSession` pair.
+* :func:`default_browser_session_factory`, the production
+  :class:`~aeat.adapters.outbound.aeat.auth.BrowserSessionFactory` entry point
+  used by auth providers and diagnostics.
+* :func:`shared_playwright_runtime` and :func:`opened_browser_page`, the
+  lower-level helpers used by bulk Sede readers that need to reuse one
+  Playwright runtime across several :class:`Profile`-scoped contexts.
 
-The CLI wires this factory into ``select_provider`` so
-the auth workflow works in production, while tests keep
-injecting their own in-process implementations.
+The factory path owns Playwright startup, optional ``browser`` extra checks, and
+best-effort teardown logging. Auth providers remain typed to the protocol, while
+this module carries the concrete runtime wiring.
 """
 
 from __future__ import annotations
@@ -60,14 +64,14 @@ def _log_teardown_failure(
 
 
 class DefaultBrowserSession:
-    """``BrowserSessionLike`` wrapper that owns its own Playwright.
+    """Concrete :class:`~aeat.adapters.outbound.aeat.auth.BrowserSessionLike`.
 
-    Auth providers receive a ``BrowserSessionLike`` but should not need
-    to know whether the backing Playwright runtime was started
-    specifically for this session or re-used across a longer-running
-    process. ``DefaultBrowserSession`` lets the first case work cleanly:
-    it constructs Playwright when the factory is called, and tears it
-    down in ``close()``.
+    Auth providers depend on the protocol rather than on :class:`BrowserSession`
+    or Playwright directly. ``DefaultBrowserSession`` is the production adapter
+    for that protocol: it owns one Playwright runtime, one :class:`BrowserSession`,
+    and a :class:`Profile` through the wrapped session. Its :meth:`close` method
+    tears the pair down in order, so provider ``close()`` paths do not need a
+    second runtime-specific hook.
     """
 
     def __init__(
@@ -75,7 +79,7 @@ class DefaultBrowserSession:
         playwright: Playwright,
         session: BrowserSession,
     ) -> None:
-        """Wrap an existing Playwright runtime and ``BrowserSession`` pair.
+        """Wrap an existing Playwright runtime and :class:`BrowserSession` pair.
 
         Args:
             playwright: An already-started Playwright runtime.  Its
@@ -107,7 +111,9 @@ class DefaultBrowserSession:
         """Delegate context creation to the underlying :class:`BrowserSession`.
 
         Accepts the same keyword arguments as
-        ``BrowserSession.create_context`` and forwards them unchanged.
+        :meth:`BrowserSession.create_context` and forwards them unchanged, so
+        certificate provisioners and persisted Cl@ve storage state use the same
+        path as callers that work with :class:`BrowserSession` directly.
         """
         return await self._session.create_context(
             provisioner=provisioner,
@@ -116,7 +122,7 @@ class DefaultBrowserSession:
         )
 
     async def navigate(self, page: Page, url: str) -> Response | None:
-        """Navigate through the central BrowserSession health-probed path."""
+        """Navigate through :meth:`BrowserSession.navigate`."""
         return await self._session.navigate(page, url)
 
     async def close(self) -> None:
@@ -149,10 +155,15 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     """Start Playwright and return a wrapped :class:`DefaultBrowserSession`.
 
     The returned object satisfies
-    :class:`aeat.adapters.outbound.aeat.auth.BrowserSessionLike` and owns its Playwright
-    instance for the full lifetime. Call ``await session.close()``
-    when you are done — auth providers already do this in their
-    ``close()`` path.
+    :class:`aeat.adapters.outbound.aeat.auth.BrowserSessionLike` and owns its
+    Playwright runtime for the full lifetime. The :class:`Profile` name follows
+    the active bucket when one exists and falls back to a diagnostic sentinel so
+    browser connectivity probes can run before profile setup is complete.
+
+    Auth providers pass their own kind-namespaced storage-state paths to
+    :meth:`BrowserSession.create_context`; the profile storage path built here is
+    only the fallback for direct callers. Call ``await session.close()`` when you
+    are done. Auth providers already do that in their ``close()`` path.
     """
     from .....core import resolve_active_bucket_id
 
@@ -178,7 +189,10 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
 async def create_browser_session(settings: Settings, profile: Profile) -> DefaultBrowserSession:
     """Start Playwright and return a :class:`DefaultBrowserSession`.
 
-    Wraps a :class:`BrowserSession` for ``profile``.
+    Wraps a :class:`BrowserSession` for ``profile`` after the optional
+    ``browser`` extra has been checked by ``_start_playwright``. If wrapper
+    construction fails after Playwright starts, the partially opened runtime is
+    stopped before the original failure is re-raised.
     """
     playwright = await _start_playwright()
     try:
@@ -206,7 +220,13 @@ async def create_browser_session(settings: Settings, profile: Profile) -> Defaul
 
 @asynccontextmanager
 async def shared_playwright_runtime() -> AsyncIterator[Playwright]:
-    """Yield a centrally owned Playwright runtime for bulk browser workflows."""
+    """Yield a centrally owned Playwright runtime for bulk browser workflows.
+
+    Callers that need several :class:`Profile`-scoped contexts can start
+    Playwright once here and pass the yielded runtime into
+    :func:`opened_browser_page`. The context manager owns only the Playwright
+    runtime; each page/context pair is still owned by the helper that opens it.
+    """
     playwright = await _start_playwright()
     try:
         yield playwright
@@ -233,7 +253,13 @@ async def opened_browser_page(
     storage_state_path: Path | None = None,
     storage_state: dict[str, Any] | None = None,
 ) -> AsyncIterator[tuple[Page, BrowserContext]]:
-    """Yield a central :class:`BrowserSession` page/context pair and close both."""
+    """Yield a :class:`BrowserSession` page/context pair and close both.
+
+    The helper builds a short-lived :class:`BrowserSession` around the supplied
+    Playwright runtime, forwards ``provisioner`` and storage-state arguments to
+    :meth:`BrowserSession.create_context`, yields the fresh ``(page, context)``
+    pair, and closes the context and browser session during teardown.
+    """
     browser_session = BrowserSession(playwright=playwright, settings=settings, profile=profile)
     context = await browser_session.create_context(
         provisioner=provisioner,

@@ -22,7 +22,7 @@ _PROBE_URL = f"{Settings.external_constants().aeat.domains.sede}/"
 
 
 class _RecordingEvasion(EvasionStrategy):
-    """A dummy evasion strategy that records when it was called."""
+    """A recording evasion strategy used to assert invocation."""
 
     def __init__(self) -> None:
         self.called = False

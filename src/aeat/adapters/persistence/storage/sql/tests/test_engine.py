@@ -11,7 +11,10 @@ from __future__ import annotations
 import logging
 import os
 import threading
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
 import pytest
 from sqlalchemy import text
@@ -28,33 +31,34 @@ def _settings_for(url: str) -> Settings:
     return Settings(aeat_database_url=url)
 
 
+@contextmanager
+def _engine_for(settings: Settings) -> Iterator[Any]:
+    engine = create_engine_from_settings(settings)
+    try:
+        yield engine
+    finally:
+        engine.dispose()
+        dispose_engine(settings)
+
+
 def test_engine_round_trips_query_against_tmp_sqlite(tmp_path: Path) -> None:
     """A fresh engine built from settings can execute SQL against a tmp file."""
     db_file = tmp_path / "engine.db"
     settings = _settings_for(f"sqlite:///{db_file.as_posix()}")
-    engine = create_engine_from_settings(settings)
-    try:
+    with _engine_for(settings) as engine:
         with engine.connect() as conn:
             value = conn.execute(text("select 7")).scalar_one()
         assert value == 7
         assert db_file.exists()
-    finally:
-        engine.dispose()
-        dispose_engine(settings)
 
 
 def test_engine_applies_concurrency_pragmas(tmp_path: Path) -> None:
     """A file-backed SQLite engine sets busy_timeout (and keeps foreign_keys on)."""
     db_file = tmp_path / "pragmas.db"
     settings = _settings_for(f"sqlite:///{db_file.as_posix()}")
-    engine = create_engine_from_settings(settings)
-    try:
-        with engine.connect() as conn:
-            assert conn.execute(text("PRAGMA busy_timeout")).scalar_one() == 5000
-            assert conn.execute(text("PRAGMA foreign_keys")).scalar_one() == 1
-    finally:
-        engine.dispose()
-        dispose_engine(settings)
+    with _engine_for(settings) as engine, engine.connect() as conn:
+        assert conn.execute(text("PRAGMA busy_timeout")).scalar_one() == 5000
+        assert conn.execute(text("PRAGMA foreign_keys")).scalar_one() == 1
 
 
 def test_concurrent_writers_do_not_raise_database_locked(tmp_path: Path) -> None:
@@ -111,14 +115,10 @@ def test_engine_creates_parent_directory(tmp_path: Path) -> None:
     """The factory creates missing parent directories for SQLite files."""
     db_file = tmp_path / "nested" / "missing" / "engine.db"
     settings = _settings_for(f"sqlite:///{db_file.as_posix()}")
-    engine = create_engine_from_settings(settings)
-    try:
+    with _engine_for(settings) as engine:
         with engine.connect() as conn:
             conn.execute(text("select 1"))
         assert db_file.parent.exists()
-    finally:
-        engine.dispose()
-        dispose_engine(settings)
 
 
 def test_engine_success_log_does_not_expose_database_path(
@@ -130,13 +130,8 @@ def test_engine_success_log_does_not_expose_database_path(
     settings = _settings_for(f"sqlite:///{db_file.as_posix()}")
 
     caplog.set_level(logging.DEBUG, logger=_ENGINE_LOGGER_NAME)
-    engine = create_engine_from_settings(settings)
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("select 1"))
-    finally:
-        engine.dispose()
-        dispose_engine(settings)
+    with _engine_for(settings) as engine, engine.connect() as conn:
+        conn.execute(text("select 1"))
 
     messages = tuple(record.getMessage() for record in caplog.records if record.name == _ENGINE_LOGGER_NAME)
     assert any("created engine route_marker=" in message for message in messages)
@@ -178,14 +173,10 @@ def test_engine_builds_against_derived_storage_root_fallback(tmp_path: Path) -> 
     )
     fallback_db = storage_root / "aeat.db"
     assert settings.aeat_database_url == f"sqlite:///{fallback_db.as_posix()}"
-    engine = create_engine_from_settings(settings)
-    try:
+    with _engine_for(settings) as engine:
         with engine.connect() as conn:
             assert conn.execute(text("select 5")).scalar_one() == 5
         assert fallback_db.exists()
-    finally:
-        engine.dispose()
-        dispose_engine(settings)
 
 
 def test_engine_anchors_relative_sqlite_urls_to_project_root(tmp_path: Path) -> None:
@@ -195,17 +186,15 @@ def test_engine_anchors_relative_sqlite_urls_to_project_root(tmp_path: Path) -> 
     settings = _settings_for(f"sqlite:///{relative_db.as_posix()}")
     original_cwd = Path.cwd()
     os.chdir(tmp_path)
-    engine = create_engine_from_settings(settings)
     try:
-        with engine.connect() as conn:
-            conn.execute(text("select 1"))
-        assert Path(engine.url.database or "") == anchored_db
-        assert anchored_db.exists()
-        assert not (tmp_path / relative_db).exists()
+        with _engine_for(settings) as engine:
+            with engine.connect() as conn:
+                conn.execute(text("select 1"))
+            assert Path(engine.url.database or "") == anchored_db
+            assert anchored_db.exists()
+            assert not (tmp_path / relative_db).exists()
     finally:
         os.chdir(original_cwd)
-        engine.dispose()
-        dispose_engine(settings)
         if anchored_db.exists():
             anchored_db.unlink()
         parent = anchored_db.parent

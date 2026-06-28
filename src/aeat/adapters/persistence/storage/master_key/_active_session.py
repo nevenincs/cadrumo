@@ -127,6 +127,16 @@ def has_active_bucket_session() -> bool:
     return _active_session.get() is not None
 
 
+@contextmanager
+def suspend_active_session() -> Iterator[None]:
+    """Temporarily clear the active :class:`BucketSession` for the current context."""
+    token = _active_session.set(None)
+    try:
+        yield
+    finally:
+        _active_session.reset(token)
+
+
 def _close_active_session_at_exit() -> None:
     """Best-effort close of the active session on interpreter shutdown.
 
@@ -156,4 +166,5 @@ __all__ = [
     "activate_session",
     "get_active_master_key",
     "has_active_bucket_session",
+    "suspend_active_session",
 ]

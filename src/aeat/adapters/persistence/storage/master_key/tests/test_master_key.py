@@ -28,6 +28,7 @@ from ...errors import (
     DecryptionError,
     KeyringUnavailableError,
     MasterKeyMaterialMissingError,
+    MasterKeyPassphraseMismatchError,
     MasterKeyUnavailableError,
     SecretStoreError,
     UnsecuredModeRefusedError,
@@ -451,7 +452,7 @@ class TestFileFallbackProvider:
         second_key = second.get_master_key()
         assert first_key == second_key
 
-    def test_wrong_passphrase_raises(self, tmp_path: Path) -> None:
+    def test_wrong_passphrase_raises_typed_subclass_of_master_key_unavailable(self, tmp_path: Path) -> None:
         FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "right-passphrase",
@@ -461,28 +462,13 @@ class TestFileFallbackProvider:
         # inherit from MasterKeyUnavailableError so legacy catchers
         # still work, but the typed subclass lets the CLI render a
         # class-specific actionable hint.
-        from ...errors import MasterKeyPassphraseMismatchError
-
-        with pytest.raises(MasterKeyPassphraseMismatchError) as excinfo:
+        with pytest.raises(MasterKeyUnavailableError) as excinfo:
             FileFallbackMasterKeyProvider(
                 store_dir=tmp_path / "secrets",
                 passphrase_callback=lambda: "wrong-passphrase",
             ).get_master_key()
+        assert isinstance(excinfo.value, MasterKeyPassphraseMismatchError)
         assert excinfo.value.translated_message == "errors.auth.auth_storage_master_key_passphrase_mismatch"
-
-    def test_wrong_passphrase_inherits_from_master_key_unavailable(self, tmp_path: Path) -> None:
-        """Pre-existing `pytest.raises(MasterKeyUnavailableError)` catchers continue to work via inheritance."""
-        FileFallbackMasterKeyProvider(
-            store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "right-passphrase",
-        ).provision_master_key()
-
-        # The narrowed subclass still satisfies the parent type.
-        with pytest.raises(MasterKeyUnavailableError):
-            FileFallbackMasterKeyProvider(
-                store_dir=tmp_path / "secrets",
-                passphrase_callback=lambda: "wrong-passphrase",
-            ).get_master_key()
 
     def test_passphrase_via_settings(self, tmp_path: Path) -> None:
         with override_settings(aeat_secret_passphrase="from-env-var"):

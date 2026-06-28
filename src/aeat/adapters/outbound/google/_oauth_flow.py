@@ -1,19 +1,25 @@
-"""Google OAuth Desktop login flow.
+"""Google OAuth Desktop login flow for per-profile Google sessions.
 
-Runs the operator-supplied Cloud Console Desktop OAuth client through
-the loopback IP + PKCE flow defined by Google's OAuth 2.0 for
-Installed Applications guide. The implementation uses
-`google_auth_oauthlib.flow.InstalledAppFlow.run_local_server(port=0)`
-so the OS picks an ephemeral loopback port and the consent screen
-opens in the operator's default browser.
+Runs an operator-supplied :class:`OAuthClient` through Google's loopback
+IP + PKCE Desktop flow using
+``google_auth_oauthlib.flow.InstalledAppFlow.run_local_server(port=0)``.
+The operating system picks an ephemeral loopback port and opens the
+consent screen in the operator's default browser.
 
 Two policy gates fire before any network IO happens:
 
-1. The active profile must be bound (resolver in `_active_profile`).
-2. If the secret store is running in `unsecured` mode AND the active
-   profile carries a real Spanish NIF / NIE / CIF, the flow refuses
-   with `GoogleAuthUnsecuredModeRefusedError`. This mirrors the
-   substrate's existing NIF-canary behaviour.
+1. The caller must pass a profile identity resolved by
+   :func:`aeat.adapters.outbound.google._active_profile.resolve_active_profile`.
+2. When :class:`~aeat.core.config.SecretStoreBackend` is configured as
+   ``UNSECURED`` and that profile carries a real Spanish NIF / NIE / CIF,
+   :func:`check_unsecured_mode_safety` refuses with
+   :class:`GoogleAuthUnsecuredModeRefusedError`.
+
+See Also:
+    :func:`run_login_flow` executes the login path,
+    :func:`credentials_to_records` produces :class:`OAuthToken` and
+    :class:`OAuthMetadata`, and :data:`REQUIRED_SCOPES` defines the consent
+    surface the Google account must grant.
 """
 
 from __future__ import annotations
@@ -51,14 +57,15 @@ def require_interactive_terminal() -> None:
     The Desktop OAuth flow opens the consent screen in the operator's
     browser and then blocks a loopback HTTP receiver until consent
     completes. In a non-interactive invocation (piped, redirected, cron,
-    or another agent) ``stdin`` is not a TTY, no operator can complete
-    the flow, and the receiver would block forever — the silent-hang
-    failure mode this guard eliminates.
+    or another agent) ``stdin`` is not a TTY, no operator can complete the
+    flow, and the receiver would block forever. This guard eliminates that
+    silent-hang failure mode before :func:`run_login_flow` calls the local
+    server.
 
     Raises:
-        GoogleAuthNonInteractiveError: When ``sys.stdin`` is not attached
-            to a terminal (no TTY). Carries the interactive-terminal
-            prerequisite as a suggestion.
+        :class:`GoogleAuthNonInteractiveError`: When ``sys.stdin`` is not
+            attached to a terminal. The exception carries the
+            interactive-terminal prerequisite as a suggestion.
     """
     stdin = sys.stdin
     isatty = getattr(stdin, "isatty", None)
@@ -74,15 +81,21 @@ def require_interactive_terminal() -> None:
 def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
     """Refuse the OAuth flow when unsecured mode meets a real NIF.
 
+    The guard mirrors the storage substrate's NIF-canary rule: real taxpayer
+    identifiers must not enter OAuth token setup while
+    :class:`~aeat.core.config.SecretStoreBackend` is running in unsecured mode.
+
     Args:
-        profile: Resolved active profile UUID (per `_active_profile`).
-        tax_id: The active profile's `tax.id` value. Empty string when
-            the profile has no tax id stored.
+        profile: Active profile UUID resolved by
+            :func:`aeat.adapters.outbound.google._active_profile.resolve_active_profile`.
+        tax_id: The active profile's ``identity.tax_id`` value. Empty string
+            when the profile has no stored tax identifier.
 
     Raises:
-        GoogleAuthUnsecuredModeRefusedError: When
-            `aeat_secret_store_backend=unsecured` AND `tax_id` parses
-            as a real Spanish tax identifier per `looks_like_real_tax_id`.
+        :class:`GoogleAuthUnsecuredModeRefusedError`: When
+            ``aeat_secret_store_backend=unsecured`` and ``tax_id`` parses as a
+            real Spanish tax identifier per
+            :func:`~aeat.adapters.persistence.storage.master_key.looks_like_real_tax_id`.
     """
     settings = load_settings()
     if settings.aeat_secret_store_backend is not SecretStoreBackend.UNSECURED:
@@ -98,13 +111,22 @@ def check_unsecured_mode_safety(profile: str, tax_id: str) -> None:
 
 
 def resolve_active_tax_id(profile_id: str) -> str:
-    """Return the `identity.tax_id` value for the profile UUID, or empty string.
+    """Return the ``identity.tax_id`` value for the profile UUID.
 
-    ``profile_id`` is the immutable UUID profile identity (per
-    ``_active_profile.resolve_active_profile``). Loads the canonical
-    user-profile record from that profile's bucket and reads the
-    identity tax-id fact. Used by the orchestrator to feed
-    `check_unsecured_mode_safety`.
+    ``profile_id`` is the immutable profile identity returned by
+    :func:`aeat.adapters.outbound.google._active_profile.resolve_active_profile`.
+    The resolver loads the profile bucket pointer through
+    :func:`aeat.application.workflow.read_profile_bucket_by_id`, opens the
+    canonical user-profile lifecycle service, and reads the tax-id fact used
+    by :func:`check_unsecured_mode_safety`.
+
+    Returns:
+        The stored ``identity.tax_id`` value, or an empty string when the
+        profile record has no tax identifier.
+
+    Raises:
+        :class:`GoogleAuthProfileUnboundError`: When the profile bucket
+            manifest or canonical profile record cannot be resolved.
     """
     from ....application.user_profile import build_lifecycle_service, fact_value
     from ....application.workflow import read_profile_bucket_by_id
@@ -138,25 +160,31 @@ def credentials_to_records(
     granted_scopes: tuple[str, ...],
     issued_at: datetime,
 ) -> tuple[OAuthToken, OAuthMetadata]:
-    """Map a `google.oauth2.credentials.Credentials` triple into our records.
+    """Map OAuth credential fields into persisted Google session records.
+
+    The consent screen must grant every scope in :data:`REQUIRED_SCOPES`.
+    The returned :class:`OAuthToken` carries the refresh credential and the
+    returned :class:`OAuthMetadata` carries the linked Google account, granted
+    scope tuple, and issuance timestamps used by the session store.
 
     Args:
         refresh_token: The refresh token returned by the consent screen.
-        token_uri: The token endpoint URL (mirrors the OAuth client).
+        token_uri: The token endpoint URL mirrored from :class:`OAuthClient`.
         account_email: The Google account that completed the consent.
         granted_scopes: Scopes the consent screen actually granted.
         issued_at: Timestamp the credential was first issued.
 
     Returns:
         A 2-tuple of (:class:`OAuthToken`, :class:`OAuthMetadata`) ready for
-        SecureObjectRepository persistence. Both records validate strict
-        pydantic invariants; the metadata refuses tuples missing
-        ``drive.file`` or ``spreadsheets``.
+        :class:`~aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+        persistence through :mod:`aeat.adapters.outbound.google._session_store`.
+        Both records validate strict pydantic invariants; metadata refuses
+        granted-scope tuples missing any :data:`REQUIRED_SCOPES` member.
 
     Raises:
-        GoogleAuthScopeInsufficientError: When `granted_scopes` omits
-            either required scope. Re-raised separately from the
-            pydantic `ValidationError` so the CLI can surface a
+        :class:`GoogleAuthScopeInsufficientError`: When ``granted_scopes``
+            omits any required scope. Re-raised separately from the pydantic
+            ``ValidationError`` so the CLI can surface a
             concrete remediation hint.
     """
     missing = tuple(scope for scope in REQUIRED_SCOPES if scope not in granted_scopes)
@@ -180,17 +208,24 @@ def credentials_to_records(
 def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuthMetadata]:
     """Execute the loopback-IP + PKCE OAuth Desktop flow.
 
-    Always runs the real `google_auth_oauthlib.flow.InstalledAppFlow.
-    run_local_server(port=0)` against `accounts.google.com`. No test
-    seams. Failure modes surface as typed `GoogleAuthError` subclasses
-    with concrete remediation context.
+    Always runs the real
+    ``google_auth_oauthlib.flow.InstalledAppFlow.run_local_server(port=0)``
+    against ``accounts.google.com``. The flow checks profile state with
+    :func:`resolve_active_tax_id`, applies :func:`check_unsecured_mode_safety`,
+    requires :func:`require_interactive_terminal`, then maps the resulting
+    credential fields through :func:`credentials_to_records`.
 
     Args:
-        client: The operator-imported OAuth client metadata.
-        profile: Resolved active profile UUID (per `_active_profile`).
+        client: Operator-imported Desktop OAuth client metadata.
+        profile: Active profile UUID resolved by
+            :func:`aeat.adapters.outbound.google._active_profile.resolve_active_profile`.
 
     Returns:
         A 2-tuple of (:class:`OAuthToken`, :class:`OAuthMetadata`) ready for persistence.
+
+    Raises:
+        :class:`~aeat.adapters.outbound.google._errors.GoogleAuthError`: Any
+            typed OAuth refusal with concrete remediation context.
     """
     check_unsecured_mode_safety(profile, resolve_active_tax_id(profile))
     # Gate the blocking loopback consent receiver: refuse fast in a
@@ -212,9 +247,9 @@ def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuth
 def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ...]]:
     """Loopback-IP + PKCE OAuth Desktop flow runner.
 
-    Imports `google_auth_oauthlib` lazily so the failure mode of a
+    Imports ``google_auth_oauthlib`` lazily so the failure mode of a
     missing transitive dependency surfaces as a typed
-    `GoogleAuthNetworkError` rather than an opaque ImportError.
+    :class:`GoogleAuthNetworkError` rather than an opaque ``ImportError``.
     """
     try:
         from google_auth_oauthlib.flow import InstalledAppFlow
@@ -269,7 +304,7 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
 
 
 def _raise_local_server_error(exc: Exception) -> NoReturn:
-    """Translate upstream local-server OAuth failures into the GoogleAuth hierarchy."""
+    """Translate upstream local-server OAuth failures into the Google auth hierarchy."""
     message = str(exc).lower()
     if "browser" in message or "webbrowser" in message:
         raise GoogleAuthBrowserOpenError(
@@ -290,15 +325,15 @@ def _raise_local_server_error(exc: Exception) -> NoReturn:
 
 
 def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
-    """Verify the ID token and return the `email` claim.
+    """Verify the ID token and return the ``email`` claim.
 
     Follows Google's OpenID Connect verification guidance:
     https://developers.google.com/identity/openid-connect/openid-connect#validatinganidtoken
 
     Verification requires the audience (our OAuth client_id) to match
-    the token's `aud` claim. The OAuth client must have requested the
-    `openid` + `userinfo.email` scopes for Google to include the
-    `email` claim in the id_token.
+    the token's ``aud`` claim. :data:`REQUIRED_SCOPES` must include the
+    ``openid`` + ``userinfo.email`` pair for Google to include the ``email``
+    claim in the ID token.
 
     Args:
         credentials: Google credentials object carrying ``id_token`` and ``scopes``.
@@ -308,9 +343,10 @@ def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
         The verified email address extracted from the ID token payload.
 
     Raises:
-        GoogleAuthScopeInsufficientError: When the credential carries no ``id_token``.
-        GoogleAuthNetworkError: When ``google.oauth2.id_token`` is not importable
-            or the verification HTTP fetch fails.
+        :class:`GoogleAuthScopeInsufficientError`: When the credential carries
+            no ``id_token`` or the verified payload has no ``email`` claim.
+        :class:`GoogleAuthNetworkError`: When ``google.oauth2.id_token`` is not
+            importable or the verification HTTP fetch fails.
     """
     id_token_jwt = getattr(credentials, "id_token", None)
     if id_token_jwt is None:

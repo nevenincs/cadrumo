@@ -1,11 +1,13 @@
 """Typed exception hierarchy for the Google OAuth Desktop integration.
 
-Every subclass binds to a stable `ErrorCode` declared in
-`aeat.core.errors.registry._adapters` so the public CLI taxonomy stays
-explicit and grep-stable. Constructors carry structured remediation
-context (`context={...}`) so renderers can surface actionable guidance
-without leaking the underlying secret material that the OAuth flow
-handles.
+Every subclass is an :class:`~aeat.core.errors.AeatError` with a stable
+:class:`~aeat.core.errors.ErrorCode` declared in the adapter error registry.
+That keeps the public CLI taxonomy explicit while
+:mod:`aeat.entrypoints.cli._config._google_errors` can map concrete
+:class:`GoogleAuthError` subclasses to localised refusal text. Constructors
+carry structured remediation context (``context={...}``) so renderers can
+surface actionable guidance without leaking the secret material handled by
+:mod:`aeat.adapters.outbound.google._oauth_flow`.
 """
 
 from __future__ import annotations
@@ -14,7 +16,11 @@ from ....core.errors import AeatError
 
 
 class GoogleAuthError(AeatError):
-    """Base class for every Google OAuth Desktop authentication failure."""
+    """Base class for every Google OAuth Desktop authentication failure.
+
+    Catch this at CLI boundaries that need one Google-auth refusal arm while
+    preserving the concrete :class:`~aeat.core.errors.ErrorCode` on each leaf.
+    """
 
 
 class GoogleAuthValidationError(GoogleAuthError):
@@ -32,7 +38,8 @@ class GoogleAuthClientRevokedError(GoogleAuthError):
 class GoogleAuthRevokedError(GoogleAuthError):
     """Raised when the refresh token was revoked (e.g. via myaccount.google.com).
 
-    Maps to Google's `invalid_grant` response with `error_description="Token has been expired or revoked."`.
+    Maps to Google's ``invalid_grant`` response with
+    ``error_description="Token has been expired or revoked."``.
     """
 
 
@@ -77,7 +84,11 @@ class GoogleAuthKeychainLockedError(GoogleAuthError):
 
 
 class GoogleAuthProfileUnboundError(GoogleAuthError):
-    """Raised when no active profile is bound on workflow state and no `--profile` override is given."""
+    """Raised when Google auth cannot resolve the active AEAT profile.
+
+    Emitted by :func:`aeat.adapters.outbound.google._active_profile.resolve_active_profile`
+    and profile-loading guards in :mod:`aeat.adapters.outbound.google._oauth_flow`.
+    """
 
 
 __all__ = [

@@ -1,17 +1,20 @@
-"""Pydantic records and enums for the storage provider abstraction.
+"""Pydantic records and enums for the :class:`StorageProvider` abstraction.
 
 Provider records anchor the storage boundary:
 
-- `ProviderKind` — closed enum naming the v1 backends.
-- `ProviderObjectMetadata` — per-object metadata returned by listing /
+- :class:`ProviderKind` - closed enum naming the v1 backends.
+- :class:`ProviderObjectMetadata` - per-object metadata returned by listing /
   fetching operations. Carries the object key HMAC, namespace, byte
   size, content hash, and backend-native identifier.
-- `ProviderProbeReport` — health-probe result. Reports whether the
+- :class:`ProviderProbeReport` - health-probe result. Reports whether the
   backend is reachable, writable, and (when applicable) bound to the
-  expected root folder. The `read_only` field surfaces whether the
+  expected root folder. The ``read_only`` field surfaces whether the
   probe ran in read-only mode (no sentinel-write round-trip).
-- `RemoteMirror*` records — immutable manifest and inspection records
-  for remote ciphertext mirror reconciliation.
+- :class:`RemoteMirrorObjectManifest`,
+  :class:`RemoteMirrorNamespaceManifest`, :class:`RemoteMirrorIssue`, and
+  :class:`RemoteMirrorInspection` - immutable manifest and inspection records
+  for remote ciphertext mirror reconciliation by
+  :mod:`aeat.adapters.outbound.storage._mirror_manifest`.
 """
 
 from __future__ import annotations
@@ -43,14 +46,14 @@ _StorageRevisionId = Annotated[
 
 
 class ProviderKind(StrEnum):
-    """Closed enumeration of supported storage backends."""
+    """Closed enumeration of supported storage backends selected by :func:`get_storage_provider`."""
 
     LOCAL_FILESYSTEM = "local_filesystem"
     GOOGLE_DRIVE = "google_drive"
 
 
 class RemoteMirrorIssueKind(StrEnum):
-    """Remote ciphertext mirror degradation classes."""
+    """Remote ciphertext mirror degradation classes carried by :class:`RemoteMirrorIssue`."""
 
     PARTIAL_UPLOAD = "partial_upload"
     PARTIAL_DOWNLOAD = "partial_download"
@@ -59,11 +62,12 @@ class RemoteMirrorIssueKind(StrEnum):
 
 
 class ProviderObjectMetadata(BaseModel):
-    """Per-object metadata returned by the storage provider listing API.
+    """Per-object metadata returned by :class:`StorageProvider` operations.
 
-    `provider_object_id` is the backend-native identifier (a filesystem
-    path for `LocalFileSystemProvider`, a Drive `fileId` for
-    `GoogleDriveProvider`). The coordinator threads it through
+    Returned by :meth:`StorageProvider.put`, :meth:`StorageProvider.get`, and
+    :meth:`StorageProvider.iter_objects`. ``provider_object_id`` is the
+    backend-native identifier (a filesystem path for the local provider, a
+    Drive ``fileId`` for the Google Drive provider). The coordinator threads it through
     subsequent get/delete/patch calls without re-resolving by name.
     """
 
@@ -78,12 +82,12 @@ class ProviderObjectMetadata(BaseModel):
 
 
 class ProviderProbeReport(BaseModel):
-    """Result of a `probe()` health check against a storage backend.
+    """Result of a :meth:`StorageProvider.probe` health check against a storage backend.
 
-    `reachable` is True iff the backend endpoint responds at all.
-    `writable` is True iff a sentinel payload write/delete succeeded;
+    ``reachable`` is True iff the backend endpoint responds at all.
+    ``writable`` is True iff a sentinel payload write/delete succeeded;
     inherently False when the probe runs in read-only mode.
-    `root_folder_present` is non-None only when the backend supports
+    ``root_folder_present`` is non-None only when the backend supports
     the notion of an operator-configured root folder (currently
     Google Drive).
     """
@@ -99,7 +103,7 @@ class ProviderProbeReport(BaseModel):
 
 
 class RemoteMirrorObjectManifest(BaseModel):
-    """One ciphertext object entry recorded in a remote mirror manifest."""
+    """One ciphertext object entry recorded in a :class:`RemoteMirrorNamespaceManifest`."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -117,7 +121,11 @@ class RemoteMirrorObjectManifest(BaseModel):
 
 
 class RemoteMirrorNamespaceManifest(BaseModel):
-    """Manifest persisted beside remote ciphertext objects for one namespace."""
+    """Manifest persisted beside remote ciphertext objects for one namespace.
+
+    Built by :func:`build_remote_mirror_namespace_manifest` and persisted by
+    :func:`put_remote_mirror_namespace_manifest`.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -130,7 +138,7 @@ class RemoteMirrorNamespaceManifest(BaseModel):
 
 
 class RemoteMirrorIssue(BaseModel):
-    """One detected remote mirror degradation."""
+    """One detected remote mirror degradation in a :class:`RemoteMirrorInspection`."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -141,7 +149,7 @@ class RemoteMirrorIssue(BaseModel):
 
 
 class RemoteMirrorInspection(BaseModel):
-    """Typed result of comparing or probing a remote mirror namespace."""
+    """Typed result returned by remote mirror comparison and inspection helpers."""
 
     model_config = STRICT_FROZEN_CONFIG
 

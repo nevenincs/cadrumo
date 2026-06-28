@@ -1,16 +1,20 @@
-"""Google outbound adapter primitives: OAuth records and scopes.
+"""Public re-exports for Google outbound adapter primitives.
 
-Holds the typed OAuth client, token, and metadata records plus the Drive
-and Sheets scope constants used by the read-only Google export mirror,
-together with the Google auth error taxonomy. Google Sheets is a one-way
-export mirror here, never an authority.
+This package boundary exposes OAuth records and scope constants from
+:mod:`aeat.adapters.outbound.google._records`, the Google auth error taxonomy
+from :mod:`aeat.adapters.outbound.google._errors`, and scoped document-link
+helpers from :mod:`aeat.adapters.outbound.google._document_link_resolver`.
+Google Sheets remains a one-way export mirror here, never an authority.
 
 Major declarations:
 
 * :class:`OAuthClient`, :class:`OAuthToken`, and :class:`OAuthMetadata` —
   the typed OAuth credential records.
+* :class:`DriveAppProperties` — the typed Drive ``appProperties`` payload.
 * :data:`REQUIRED_SCOPES`, with :data:`DRIVE_FILE_SCOPE` and
   :data:`SHEETS_SCOPE` — the requested OAuth scopes.
+* :func:`parse_drive_file_id` and :func:`resolve_document_link` — the
+  minimal-scope Drive document-link helpers.
 * :class:`GoogleAuthError` and its subclasses — the Google auth failure
   taxonomy.
 """

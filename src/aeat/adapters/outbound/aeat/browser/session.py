@@ -1,4 +1,20 @@
-"""BrowserSession factory for creating configured Playwright contexts."""
+"""Playwright browser-session manager for AEAT outbound adapters.
+
+:class:`BrowserSession` is the concrete browser runtime behind the
+application auth providers and live Sede readers. It creates one
+Playwright ``BrowserContext`` at a time from a :class:`Profile`, optional
+persisted storage state, and an optional
+:class:`aeat.adapters.outbound.aeat.auth.BrowserContextProvisioner`.
+Certificate auth passes a
+:class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner` so
+the AEAT origin receives the configured PKCS#12 certificate at context
+construction time.
+
+The session also applies the configured :class:`EvasionStrategy` and exposes
+:meth:`BrowserSession.navigate`, the health-probed navigation path that turns
+AEAT maintenance, WAF, rate-limit, and transport failures into typed
+:class:`SiteHealthStatus` or :class:`BrowserError` outcomes.
+"""
 
 from __future__ import annotations
 
@@ -42,7 +58,13 @@ logger = get_logger(__name__)
 
 
 class BrowserSession:
-    """Factory and manager for Playwright browser contexts."""
+    """Factory and lifecycle manager for one Playwright browser context.
+
+    A session owns at most one live browser until :meth:`close` runs. Auth
+    providers use :meth:`create_context` to combine :class:`Profile` defaults,
+    encrypted-session storage state, and provider-owned browser context kwargs
+    such as client-certificate provisioning.
+    """
 
     def __init__(
         self,
@@ -51,13 +73,15 @@ class BrowserSession:
         profile: Profile,
         evasion_strategy: EvasionStrategy | None = None,
     ) -> None:
-        """Initialize the BrowserSession.
+        """Initialize the browser session.
 
         Args:
             playwright: The Playwright instance.
             settings: Application configuration settings.
-            profile: The user profile to use.
-            evasion_strategy: Optional evasion strategy (defaults to PlaywrightStealthEvasion).
+            profile: The :class:`Profile` carrying locale, timezone, and
+                fallback storage-state path.
+            evasion_strategy: Optional :class:`EvasionStrategy`; defaults to
+                :class:`PlaywrightStealthEvasion`.
         """
         self.playwright = playwright
         self.settings = settings
@@ -77,11 +101,14 @@ class BrowserSession:
 
         When ``provisioner`` is supplied, it can inject auth-provider-
         specific ``browser.new_context(...)`` kwargs and tag the
-        resulting context after construction.
+        resulting context after construction. Certificate auth uses this
+        hook through :class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner`;
+        Cl@ve Móvil usually passes only persisted in-memory storage state.
 
         Args:
-            provisioner: Optional auth-provider hook used to decorate
-                the new context call.
+            provisioner: Optional :class:`BrowserContextProvisioner` used to
+                decorate the new context call and annotate the returned
+                context.
             storage_state_path: Optional path to a Playwright storage-state
                 JSON file; passed directly to ``browser.new_context``.
             storage_state: Optional in-memory storage state mapping passed
@@ -95,7 +122,9 @@ class BrowserSession:
             construction time.
 
         Raises:
-            BrowserError: If the browser cannot be launched.
+            BrowserError: If the browser cannot be launched, the context cannot
+                be created, evasion setup fails, annotation fails, or this
+                session already owns a live browser.
         """
         async with self._lifecycle_lock:
             if self._browser is not None:

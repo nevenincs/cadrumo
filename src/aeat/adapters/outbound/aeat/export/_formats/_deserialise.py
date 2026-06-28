@@ -1,17 +1,25 @@
-"""Fichero-BOE deserialiser.
+"""Fichero-BOE deserialiser for explicit fixed-width specs.
 
 Round-trip inverse of
 :func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`.
-Takes a fichero-BOE byte payload plus a ``RECORD_SPECS`` tuple and
+Takes a fichero-BOE byte payload plus a :class:`RecordFieldSpec` tuple and
 yields a :class:`ParsedRecord` carrying the per-field values (as
 strings, :class:`datetime.date` for date fields, or
 :class:`decimal.Decimal` for currency) plus metadata.
 
-This is the primary verification hook for the
-"prove exported numbers match AEAT's record" workflow: the serialiser
-produces bytes, the deserialiser parses bytes back, and a diff over
-casilla values is a one-line operation. Round-trip fidelity is the
-acceptance criterion.
+Use this module when the caller already has adapter-local
+:class:`RecordFieldSpec` or :class:`SegmentSpec` declarations and needs a
+byte-level round-trip check. The application export-verification flow
+parses registry layouts through
+:func:`aeat.domain.calculations.registry.parse_export_payload` so it can
+compare a file against the canonical
+:class:`aeat.domain.calculations.registry.ExportLayoutDefinition`.
+
+See Also:
+    :func:`aeat.adapters.outbound.aeat.export._formats._serialise.serialise`
+        Explicit-spec serialiser that produces the bytes parsed here.
+    :class:`aeat.domain.calculations.registry.ParsedExportPayload`
+        Registry-level parsed payload used by the application verifier.
 """
 
 from __future__ import annotations
@@ -55,6 +63,13 @@ class ParsedRecord(BaseModel):
             ``casilla_id``.
         raw_length: Byte length of the parsed content, excluding the
             optional CRLF terminator.
+
+    See Also:
+        :class:`RecordFieldSpec`
+            Field declarations that drive the parser.
+        :class:`aeat.domain.calculations.registry.ParsedExportPayload`
+            Registry-level parser result for application export
+            verification.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -332,6 +347,12 @@ class ParsedEnvelope(BaseModel):
             repeated in header and trailer) must carry the same value;
             divergent collisions raise at deserialisation time,
             mirroring the casilla-level contract.
+
+    See Also:
+        :class:`SegmentSpec`
+            Segment declarations consumed by :func:`deserialise_envelope`.
+        :func:`aeat.domain.calculations.registry.parse_export_payload`
+            Registry-level parser for application export verification.
     """
 
     model_config = STRICT_FROZEN_CONFIG

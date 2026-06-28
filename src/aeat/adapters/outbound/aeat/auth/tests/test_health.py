@@ -77,7 +77,6 @@ def _build_pkcs12(
 
 def _loaded_cert_for_window(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
     *,
     not_valid_after: datetime,
     not_valid_before: datetime | None = None,
@@ -103,11 +102,10 @@ def _loaded_cert_for_window(
 # ── Severity buckets ────────────────────────────────────────────────────────
 
 
-def test_health_ok_bucket(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_health_ok_bucket(tmp_path: Path) -> None:
     now = datetime.now(UTC)
     cert = _loaded_cert_for_window(
         tmp_path,
-        monkeypatch,
         not_valid_after=now + timedelta(days=200),
     )
     result = evaluate_loaded_certificate_health(
@@ -122,12 +120,11 @@ def test_health_ok_bucket(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
     assert result.critical_threshold_days == _CRITICAL_DAYS
 
 
-def test_health_warn_exact_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_health_warn_exact_boundary(tmp_path: Path) -> None:
     """A cert with exactly ``warn_days`` remaining is WARN (inclusive)."""
     now = datetime.now(UTC)
     cert = _loaded_cert_for_window(
         tmp_path,
-        monkeypatch,
         not_valid_after=now + timedelta(days=_WARN_DAYS, seconds=30),
     )
     result = evaluate_loaded_certificate_health(cert, warn_days=_WARN_DAYS, critical_days=_CRITICAL_DAYS, now=now)
@@ -135,19 +132,18 @@ def test_health_warn_exact_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     assert result.days_until_expiry == _WARN_DAYS
 
 
-def test_health_warn_below_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_health_warn_below_boundary(tmp_path: Path) -> None:
     now = datetime.now(UTC)
-    cert = _loaded_cert_for_window(tmp_path, monkeypatch, not_valid_after=now + timedelta(days=30))
+    cert = _loaded_cert_for_window(tmp_path, not_valid_after=now + timedelta(days=30))
     result = evaluate_loaded_certificate_health(cert, warn_days=_WARN_DAYS, critical_days=_CRITICAL_DAYS, now=now)
     assert result.severity is CertificateHealthSeverity.WARN
 
 
-def test_health_critical_exact_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_health_critical_exact_boundary(tmp_path: Path) -> None:
     """Exactly ``critical_days`` remaining → CRITICAL (inclusive)."""
     now = datetime.now(UTC)
     cert = _loaded_cert_for_window(
         tmp_path,
-        monkeypatch,
         not_valid_after=now + timedelta(days=_CRITICAL_DAYS, seconds=30),
     )
     result = evaluate_loaded_certificate_health(cert, warn_days=_WARN_DAYS, critical_days=_CRITICAL_DAYS, now=now)
@@ -155,15 +151,15 @@ def test_health_critical_exact_boundary(tmp_path: Path, monkeypatch: pytest.Monk
     assert result.days_until_expiry == _CRITICAL_DAYS
 
 
-def test_health_critical_below_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_health_critical_below_boundary(tmp_path: Path) -> None:
     now = datetime.now(UTC)
-    cert = _loaded_cert_for_window(tmp_path, monkeypatch, not_valid_after=now + timedelta(days=3))
+    cert = _loaded_cert_for_window(tmp_path, not_valid_after=now + timedelta(days=3))
     result = evaluate_loaded_certificate_health(cert, warn_days=_WARN_DAYS, critical_days=_CRITICAL_DAYS, now=now)
     assert result.severity is CertificateHealthSeverity.CRITICAL
     assert 0 < result.days_until_expiry < _CRITICAL_DAYS
 
 
-def test_health_expired(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_health_expired(tmp_path: Path) -> None:
     """An expired cert never raises from ``health()`` — returns EXPIRED."""
     now = datetime.now(UTC)
     p12 = _build_pkcs12(
@@ -187,7 +183,7 @@ def test_health_expired(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
 # ── health() disk path ──────────────────────────────────────────────────────
 
 
-def test_health_disk_path_ok(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_health_disk_path_ok(tmp_path: Path) -> None:
     now = datetime.now(UTC)
     p12 = _build_pkcs12(
         tmp_path,
@@ -210,9 +206,9 @@ def test_health_disk_path_ok(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
 # ── Model & error invariants ────────────────────────────────────────────────
 
 
-def test_health_model_is_frozen(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_health_model_is_frozen(tmp_path: Path) -> None:
     now = datetime.now(UTC)
-    cert = _loaded_cert_for_window(tmp_path, monkeypatch, not_valid_after=now + timedelta(days=200))
+    cert = _loaded_cert_for_window(tmp_path, not_valid_after=now + timedelta(days=200))
     result = evaluate_loaded_certificate_health(cert, warn_days=_WARN_DAYS, critical_days=_CRITICAL_DAYS, now=now)
     assert isinstance(result, CertificateHealth)
     with pytest.raises(ValueError, match=r"frozen|Instance is frozen"):
@@ -223,15 +219,15 @@ def test_pre_expiry_error_is_aeat_error() -> None:
     assert issubclass(CertificatePreExpiryError, AeatError)
 
 
-def test_evaluate_rejects_inverted_thresholds(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_evaluate_rejects_inverted_thresholds(tmp_path: Path) -> None:
     now = datetime.now(UTC)
-    cert = _loaded_cert_for_window(tmp_path, monkeypatch, not_valid_after=now + timedelta(days=100))
+    cert = _loaded_cert_for_window(tmp_path, not_valid_after=now + timedelta(days=100))
     with pytest.raises(ValueError, match=r"warn_days|critical_days|threshold"):
         evaluate_loaded_certificate_health(cert, warn_days=10, critical_days=30, now=now)
 
 
-def test_evaluate_rejects_nonpositive_critical(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_evaluate_rejects_nonpositive_critical(tmp_path: Path) -> None:
     now = datetime.now(UTC)
-    cert = _loaded_cert_for_window(tmp_path, monkeypatch, not_valid_after=now + timedelta(days=100))
+    cert = _loaded_cert_for_window(tmp_path, not_valid_after=now + timedelta(days=100))
     with pytest.raises(ValueError, match=r"critical_days|must be positive|greater than"):
         evaluate_loaded_certificate_health(cert, warn_days=60, critical_days=0, now=now)

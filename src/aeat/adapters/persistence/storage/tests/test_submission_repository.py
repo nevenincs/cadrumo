@@ -73,23 +73,24 @@ def _database_bytes(profile: TestRuntimeProfile) -> bytes:
     return read_db_at_rest_bytes(profile.paths.db_dir / "aeat.db")
 
 
+@pytest.fixture
+def repo() -> SubmissionRepository:
+    return SubmissionRepository()
+
+
 class TestEmptyState:
-    def test_load_returns_none_when_absent(self) -> None:
-        repo = SubmissionRepository()
+    def test_load_returns_none_when_absent(self, repo: SubmissionRepository) -> None:
         assert repo.load("missing-id") is None
 
-    def test_object_marker_identifies_secure_backend(self) -> None:
-        repo = SubmissionRepository()
+    def test_object_marker_identifies_secure_backend(self, repo: SubmissionRepository) -> None:
         assert repo.envelope_path_for("abc123").as_posix().endswith("aeat.domain.submission.records/abc123")
 
-    def test_list_submission_ids_empty(self) -> None:
-        repo = SubmissionRepository()
+    def test_list_submission_ids_empty(self, repo: SubmissionRepository) -> None:
         assert repo.list_submission_ids() == ()
 
 
 class TestSaveLoad:
-    def test_round_trip_preserves_payload(self) -> None:
-        repo = SubmissionRepository()
+    def test_round_trip_preserves_payload(self, repo: SubmissionRepository) -> None:
         filing = _make_filing()
         repo.save(filing)
 
@@ -97,8 +98,7 @@ class TestSaveLoad:
         loaded = repo_b.load(filing.submission_id)
         assert loaded == filing
 
-    def test_save_is_idempotent(self) -> None:
-        repo = SubmissionRepository()
+    def test_save_is_idempotent(self, repo: SubmissionRepository) -> None:
         filing = _make_filing()
         repo.save(filing)
         repo.save(filing)
@@ -106,8 +106,7 @@ class TestSaveLoad:
 
 
 class TestListAndIter:
-    def test_list_returns_persisted_ids_sorted(self) -> None:
-        repo = SubmissionRepository()
+    def test_list_returns_persisted_ids_sorted(self, repo: SubmissionRepository) -> None:
         f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
         f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
         repo.save(f1)
@@ -116,8 +115,7 @@ class TestListAndIter:
         assert set(ids) == {f1.submission_id, f2.submission_id}
         assert ids == tuple(sorted(ids))
 
-    def test_iter_submissions_yields_payloads(self) -> None:
-        repo = SubmissionRepository()
+    def test_iter_submissions_yields_payloads(self, repo: SubmissionRepository) -> None:
         f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
         f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
         repo.save(f1)
@@ -128,21 +126,22 @@ class TestListAndIter:
 
 
 class TestDelete:
-    def test_delete_removes_object(self) -> None:
-        repo = SubmissionRepository()
+    def test_delete_removes_object(self, repo: SubmissionRepository) -> None:
         filing = _make_filing()
         repo.save(filing)
         assert repo.delete(filing.submission_id) is True
         assert repo.load(filing.submission_id) is None
 
-    def test_delete_missing_returns_false(self) -> None:
-        repo = SubmissionRepository()
+    def test_delete_missing_returns_false(self, repo: SubmissionRepository) -> None:
         assert repo.delete("never-existed") is False
 
 
 class TestClassificationGate:
-    def test_database_payload_is_encrypted_audit_data(self, _runtime_profile: TestRuntimeProfile) -> None:
-        repo = SubmissionRepository()
+    def test_database_payload_is_encrypted_audit_data(
+        self,
+        _runtime_profile: TestRuntimeProfile,
+        repo: SubmissionRepository,
+    ) -> None:
         filing = _make_filing()
         repo.save(filing)
         raw = _database_bytes(_runtime_profile)
@@ -151,7 +150,7 @@ class TestClassificationGate:
         assert filing.submission_id.encode("utf-8") not in raw
         assert repo.load(filing.submission_id) == filing
 
-    def test_foreign_class_object_refused(self) -> None:
+    def test_foreign_class_object_refused(self, repo: SubmissionRepository) -> None:
         from .. import Envelope
 
         filing = _make_filing()
@@ -185,15 +184,13 @@ class TestUnsafeSubmissionIds:
         "bad",
         ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
     )
-    def test_unsafe_id_rejected(self, bad: str) -> None:
-        repo = SubmissionRepository()
+    def test_unsafe_id_rejected(self, repo: SubmissionRepository, bad: str) -> None:
         with pytest.raises(ValueError, match=r"identifier|non-empty|submission_id"):
             repo.envelope_path_for(bad)
 
 
 class TestPerSubmissionLockIsolation:
-    def test_lock_target_per_submission(self) -> None:
-        repo = SubmissionRepository()
+    def test_lock_target_per_submission(self, repo: SubmissionRepository) -> None:
         a = repo.lock_target_for("sub-a")
         b = repo.lock_target_for("sub-b")
         assert a != b

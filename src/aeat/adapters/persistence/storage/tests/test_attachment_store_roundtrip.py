@@ -22,11 +22,14 @@ as a strict ``bytes`` / pydantic inequality.
 from __future__ import annotations
 
 import hashlib
+import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Any, cast
 
 import pytest
+from sqlalchemy import select
 
 from .....core.config import override_settings
 from .....core.errors import build_error_envelope, resolve_error_message
@@ -41,12 +44,11 @@ from ..crypto._encrypted_columns import (
     encrypt_secure_object_payload,
     secure_object_payload_aad,
 )
+from ..sql._orm import SecureObjectRow
 from ..sql.engine import get_engine
+from ..sql.session import session_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-if TYPE_CHECKING:
-    from ..sql._orm import SecureObjectRow
 
 
 def _row_payload_aad(row: SecureObjectRow) -> bytes:
@@ -66,6 +68,31 @@ def _decrypt_row_content(row: SecureObjectRow) -> bytes:
 
 def _encrypt_row_content(row: SecureObjectRow, content: bytes) -> bytes:
     return encrypt_secure_object_payload(content, associated_data=_row_payload_aad(row))
+
+
+def _manifest_row_statement(attachment_id: str) -> Any:
+    return select(SecureObjectRow).where(
+        SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
+        SecureObjectRow.object_key == attachment_id,
+    )
+
+
+def _rewrite_manifest_envelope(
+    engine: Any,
+    attachment_id: str,
+    mutate: Callable[[dict[str, Any]], None],
+) -> None:
+    with session_scope(engine) as session:
+        row = session.execute(_manifest_row_statement(attachment_id)).scalar_one()
+        envelope = cast("dict[str, Any]", json.loads(_decrypt_row_content(row).decode(UTF_8_ENCODING)))
+        mutate(envelope)
+        row.payload = _encrypt_row_content(row, json.dumps(envelope).encode(UTF_8_ENCODING))
+
+
+def _replace_manifest_row_payload(engine: Any, attachment_id: str, payload: bytes) -> None:
+    with session_scope(engine) as session:
+        row = session.execute(_manifest_row_statement(attachment_id)).scalar_one()
+        row.payload = _encrypt_row_content(row, payload)
 
 
 def _make_attachment(*, sha256: str, bytes_size: int) -> Attachment:
@@ -170,13 +197,6 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
     and the bytes-on-disk no longer prove the manifest's identity.
     """
 
-    import json as _json
-
-    from sqlalchemy import select
-
-    from ..sql._orm import SecureObjectRow
-    from ..sql.session import session_scope
-
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)
         store = AttachmentStore()
@@ -185,13 +205,7 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
         attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
         store.write_manifest(attachment)
 
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
-                SecureObjectRow.object_key == attachment.attachment_id,
-            )
-            row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(_decrypt_row_content(row).decode(UTF_8_ENCODING))
+        def tamper_sha256(envelope: dict[str, Any]) -> None:
             manifest = envelope["payload"]
             # write_manifest drops attachment_id from the persisted payload
             # (the row's object_key carries it as the content-addressing
@@ -203,7 +217,8 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
             )
             tampered_digest = hashlib.sha256(b"tampered body").hexdigest()
             manifest["sha256"] = tampered_digest
-            row.payload = _encrypt_row_content(row, _json.dumps(envelope).encode(UTF_8_ENCODING))
+
+        _rewrite_manifest_envelope(engine, attachment.attachment_id, tamper_sha256)
 
         with pytest.raises(AttachmentValidationError, match="invalid attachment manifest"):
             store.load_manifest(attachment.attachment_id)
@@ -224,13 +239,6 @@ def test_attachment_manifest_envelope_metadata_drift_fails_closed(
 ) -> None:
     """Row metadata and embedded manifest-envelope metadata must agree."""
 
-    import json as _json
-
-    from sqlalchemy import select
-
-    from ..sql._orm import SecureObjectRow
-    from ..sql.session import session_scope
-
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)
         store = AttachmentStore()
@@ -239,15 +247,11 @@ def test_attachment_manifest_envelope_metadata_drift_fails_closed(
         attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
         store.write_manifest(attachment)
 
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
-                SecureObjectRow.object_key == attachment.attachment_id,
-            )
-            row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(_decrypt_row_content(row).decode(UTF_8_ENCODING))
-            envelope[field_name] = tampered_value
-            row.payload = _encrypt_row_content(row, _json.dumps(envelope).encode(UTF_8_ENCODING))
+        _rewrite_manifest_envelope(
+            engine,
+            attachment.attachment_id,
+            lambda envelope: envelope.__setitem__(field_name, tampered_value),
+        )
 
         with pytest.raises(AttachmentValidationError) as excinfo:
             store.load_manifest(attachment.attachment_id)
@@ -273,11 +277,6 @@ def test_malformed_attachment_manifest_payload_is_localized_for_all_read_paths(
 ) -> None:
     """Malformed persisted manifest bytes must not escape as raw parser exceptions."""
 
-    from sqlalchemy import select
-
-    from ..sql._orm import SecureObjectRow
-    from ..sql.session import session_scope
-
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)
         store = AttachmentStore()
@@ -286,13 +285,7 @@ def test_malformed_attachment_manifest_payload_is_localized_for_all_read_paths(
         attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
         store.write_manifest(attachment)
 
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
-                SecureObjectRow.object_key == attachment.attachment_id,
-            )
-            row = session.execute(stmt).scalar_one()
-            row.payload = _encrypt_row_content(row, stored_payload)
+        _replace_manifest_row_payload(engine, attachment.attachment_id, stored_payload)
 
         for read_manifests in (
             lambda: store.load_manifest(attachment.attachment_id),

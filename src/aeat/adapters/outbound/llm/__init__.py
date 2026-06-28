@@ -26,6 +26,7 @@ from ._errors import (
     LLMCacheError,
     LLMConfigError,
     LLMError,
+    LLMPdfRasterisationError,
     LLMProviderError,
     LLMRateLimitError,
 )
@@ -55,6 +56,7 @@ __all__ = [
     "LLMClient",
     "LLMConfigError",
     "LLMError",
+    "LLMPdfRasterisationError",
     "LLMProvider",
     "LLMProviderError",
     "LLMRateLimitError",

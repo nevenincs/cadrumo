@@ -1,35 +1,36 @@
-"""Live Google Sheets adapter that materialises a `SheetExportPlan`.
+"""Live Google Sheets adapter that materialises a :class:`SheetExportPlan`.
 
-The adapter is the outbound boundary for the schema-to-sheet engine:
-the engine produces a `SheetExportPlan` (a pure record), and this
-module turns the plan into a real spreadsheet inside the operator's
-`aeat-vault/` Drive folder. Every Drive folder and Sheets spreadsheet
-the adapter touches carries the `appProperties.aeat_vault_app=aeat`
-ownership marker so the operator's pre-existing Drive content is
-isolated from app-owned artefacts.
+The adapter is the outbound boundary for
+:mod:`aeat.application.storage.calc_sheets`: the engine produces a pure
+:class:`SheetExportPlan`, and this module turns the plan into a real
+spreadsheet inside the operator's ``aeat-vault/`` Drive folder. Every Drive
+folder and Sheets spreadsheet the adapter touches carries the
+``appProperties.aeat_vault_app=aeat`` ownership marker so the operator's
+pre-existing Drive content is isolated from app-owned artefacts.
 
 Composition:
 
-- Drive v3 hosts the parent folder structure (`aeat-vault/calc-sheets/
-  {modelo}-{period}-{year}/`) and the spreadsheet file metadata.
+- Drive v3 hosts the parent folder structure
+  ``aeat-vault/calc-sheets/{modelo}-{period}-{year}/`` and the spreadsheet
+  file metadata.
 - Sheets v4 reshapes the spreadsheet: tabs, cell values, formulas,
   protected ranges, and developer metadata stamping the engine
   version + registry SHA.
 
-The adapter raises typed `OutboundStorageError` subclasses on Drive / Sheets
-failures (e.g., `OutboundStoragePermissionError` for 401/403, `OutboundStorageNotFoundError`
-for 404, `OutboundStorageConflictError` when refusing foreign Drive content),
-with concrete remediation context attached.
+All Google calls route through :func:`aeat.adapters.outbound.google._api.execute_request`,
+which raises typed :class:`~aeat.adapters.outbound.storage.OutboundStorageError`
+subclasses on Drive / Sheets failures. This adapter adds
+:class:`OutboundStorageConflictError` when it refuses foreign Drive content.
 
 One-way contract: this adapter is an export *mirror* only. Google
 Sheets is never an authority for tax data — the workbook is a
 human-readable projection of registry-grounded engine output, not
 an input of record. Operator edits made in the sheet are read back
-through `_calc_sheets_pull.py`, which gates every pull on the Drive
-ownership marker and a registry-SHA metadata match before the caller
-may consume them; a workbook that fails either gate is refused, never
-silently trusted. No path in this package writes Sheets content into
-the local store, the registry, or an AEAT submission.
+through :mod:`aeat.adapters.outbound.google._calc_sheets_pull`, which gates
+every pull on the Drive ownership marker and a registry-SHA metadata match
+before the caller may consume them; a workbook that fails either gate is
+refused, never silently trusted. No path in this package writes Sheets content
+into the local store, the registry, or an AEAT submission.
 """
 
 from __future__ import annotations
@@ -95,10 +96,11 @@ _MANAGED_DEVELOPER_METADATA_KEYS: Final[frozenset[str]] = frozenset(
 class CalcSheetsApplyResult(BaseModel):
     """Outcome of one apply cycle.
 
-    Carries the spreadsheet's Drive file id, its Sheets URL, the
-    `aeat-vault/calc-sheets/<...>/` Drive folder id (so the operator
-    can navigate to the right place), and the count of cells / formulas
-    / protected ranges actually written.
+    Returned by :func:`apply_export_plan` after a :class:`SheetExportPlan` has
+    been materialised. Carries the spreadsheet's Drive file id, its Sheets URL,
+    the ``aeat-vault/calc-sheets/<...>/`` Drive folder id, and the counts of
+    value cells, formula cells, row-set headers, protected ranges, and tabs
+    written during the apply cycle.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -1172,7 +1174,7 @@ def apply_export_plan(
     credentials: object,
     root_folder_id: str,
 ) -> CalcSheetsApplyResult:
-    """Materialise a `SheetExportPlan` as a real Google Sheets workbook.
+    """Materialise a :class:`SheetExportPlan` as a Google Sheets workbook.
 
     The adapter is idempotent at the spreadsheet level: applying the
     same plan twice updates the same spreadsheet rather than creating
@@ -1180,18 +1182,26 @@ def apply_export_plan(
     title remain stable.
 
     Args:
-        plan: The pure `SheetExportPlan` produced by the engine.
-        credentials: A `google.oauth2.credentials.Credentials`-shaped
+        plan: The pure :class:`SheetExportPlan` produced by
+            :func:`aeat.application.storage.calc_sheets.build_export_plan`.
+        credentials: A ``google.oauth2.credentials.Credentials``-shaped
             object carrying refresh + access tokens with at least the
-            `drive.file` + `spreadsheets` scopes.
+            ``drive.file`` + ``spreadsheets`` scopes.
         root_folder_id: The operator's Drive root folder id (the same
-            folder `GoogleDriveProvider` uses for the ciphertext mirror).
+            folder
+            :class:`aeat.adapters.outbound.storage._google_drive.GoogleDriveProvider`
+            uses for the ciphertext mirror).
 
     Returns:
-        A :class:`CalcSheetsApplyResult` with the spreadsheet's id and URL.
+        A :class:`CalcSheetsApplyResult` with the spreadsheet location and
+        write counts surfaced by ``aeat config google sync calc export``.
 
     Raises:
-        OutboundStorageValidationError: When the supplied ``root_folder_id`` is blank.
+        :class:`OutboundStorageValidationError`: When the supplied
+            ``root_folder_id`` is blank.
+        :class:`~aeat.adapters.outbound.storage.OutboundStorageError`: When
+            Drive or Sheets rejects the request, quota is exhausted, the target
+            is missing, or the adapter refuses foreign Drive content.
     """
     if not root_folder_id.strip():
         raise OutboundStorageValidationError(

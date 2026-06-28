@@ -1,26 +1,33 @@
-"""`get_storage_provider` factory keyed on `ProviderKind`.
+""":func:`get_storage_provider` factory keyed on :class:`ProviderKind`.
 
 The factory is the single entry point upper layers (sync coordinator,
-CLI commands, application services) call to obtain a `StorageProvider`
-configured for the active profile. Settings drive the choice:
+CLI commands, application services) call to obtain a :class:`StorageProvider`
+configured for the active profile. :class:`aeat.core.config.Settings` drives
+the choice:
 
-- `aeat_storage_provider_kind` selects the backend.
-- `aeat_local_storage_root` chooses the root directory for the local
+- ``aeat_storage_provider_kind`` selects the backend.
+- ``aeat_local_storage_root`` chooses the root directory for the local
   backend.
-- `aeat_google_drive_root_folder_id` + the per-profile OAuth client +
-  token (loaded via `aeat.adapters.outbound.google._session_store`)
+- ``aeat_google_drive_root_folder_id`` + the per-profile
+  :class:`aeat.adapters.outbound.google.OAuthClient` and
+  :class:`aeat.adapters.outbound.google.OAuthToken` records (loaded via
+  :mod:`aeat.adapters.outbound.google._session_store`)
   parameterise the Drive backend.
 
 Composition order:
 
-1. Resolve the active profile via `_active_profile.resolve_active_profile`.
-2. Read settings via `load_settings()`.
-3. Dispatch on `ProviderKind`. ``LOCAL_FILESYSTEM`` builds a
-   ``LocalFileSystemProvider`` rooted at ``aeat_local_storage_root / profile``;
-   ``GOOGLE_DRIVE`` loads the per-profile ``oauth-client`` and ``oauth-token``,
-   builds ``Credentials``, and instantiates a ``GoogleDriveProvider`` keyed on
+1. Resolve the active profile via
+   :func:`aeat.adapters.outbound.google._active_profile.resolve_active_profile`.
+2. Read settings via :func:`aeat.core.config.load_settings`.
+3. Dispatch on :class:`ProviderKind`. ``LOCAL_FILESYSTEM`` builds a
+   :class:`aeat.adapters.outbound.storage._local.LocalFileSystemProvider`
+   rooted at ``aeat_local_storage_root / profile``; ``GOOGLE_DRIVE`` loads the
+   per-profile ``oauth-client`` and ``oauth-token``, builds ``Credentials``,
+   and instantiates
+   :class:`aeat.adapters.outbound.storage._google_drive.GoogleDriveProvider`
+   keyed on
    ``aeat_google_drive_root_folder_id``.
-4. Refuse unknown kinds with `OutboundStorageValidationError`.
+4. Refuse unknown kinds with :class:`OutboundStorageValidationError`.
 """
 
 from __future__ import annotations
@@ -56,10 +63,14 @@ def _parse_kind(raw: str) -> ProviderKind:
 
 
 def _build_google_credentials(*, profile: str) -> Credentials:
-    """Hydrate `google.oauth2.credentials.Credentials` from the per-profile records.
+    """Hydrate Google ``Credentials`` from the per-profile OAuth records.
 
-    Imports the upstream library lazily so unit tests for the local /
-    in-memory backends do not pay the cost.
+    Loads :class:`aeat.adapters.outbound.google.OAuthClient` and
+    :class:`aeat.adapters.outbound.google.OAuthToken` through
+    :func:`aeat.adapters.outbound.google._session_store.load_client` and
+    :func:`aeat.adapters.outbound.google._session_store.load_token`. Imports the
+    upstream library lazily so unit tests for the local backend do not pay the
+    cost.
     """
     from ..google._session_store import load_client, load_token
 
@@ -113,11 +124,13 @@ def _resolve_profile() -> str:
 def _resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
     """Resolve the Drive root folder id with the canonical precedence.
 
-    1. `AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID` env var / `.env` value
-       (Settings.aeat_google_drive_root_folder_id; overrides for
-       one-off / CI / debugging without persisting state)
-    2. Per-profile persisted `DriveConfig` record (canonical operator
-       enrolment via `aeat config google folder set <id>`)
+    1. ``AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID`` env var / ``.env`` value
+       (:class:`aeat.core.config.Settings`
+       ``aeat_google_drive_root_folder_id``; overrides for one-off / CI /
+       debugging without persisting state)
+    2. Per-profile persisted
+       :class:`aeat.adapters.outbound.google.DriveConfig` record (canonical
+       operator enrolment via ``aeat config google folder set <id>``)
 
     Returns the empty string when neither source is configured.
     """
@@ -135,20 +148,21 @@ def get_storage_provider(
     *,
     settings: Settings | None = None,
 ) -> StorageProvider:
-    """Build a `StorageProvider` for the active AEAT profile.
+    """Build a :class:`StorageProvider` for the active AEAT profile.
 
     Args:
-        settings: Optional pre-built `Settings`. Defaults to
-            `load_settings()`.
+        settings: Optional pre-built :class:`aeat.core.config.Settings`.
+            Defaults to :func:`aeat.core.config.load_settings`.
 
     Returns:
         A concrete :class:`StorageProvider` already wired with credentials and
         root directory or folder ID for the resolved profile.
 
     Raises:
-        OutboundStorageValidationError: When the settings value is unknown, the
-            Drive backend is selected without `aeat_google_drive_root_folder_id`,
-            or the profile lacks the records the chosen backend needs.
+        OutboundStorageValidationError: When the settings value is unknown,
+            the Drive backend is selected without
+            ``aeat_google_drive_root_folder_id``, or the profile lacks the
+            records the chosen backend needs.
     """
     settings_resolved = settings if settings is not None else load_settings()
     kind = _parse_kind(settings_resolved.aeat_storage_provider_kind)

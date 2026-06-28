@@ -1,4 +1,18 @@
-"""Google Sheets value-write payload builders for calc sheet exports."""
+"""Google Sheets value-write payload builders for calc sheet exports.
+
+:mod:`aeat.adapters.outbound.google._calc_sheets_apply` clears the workbook
+tabs and passes these payloads to the shared
+:func:`aeat.adapters.outbound.google._api.execute_request` boundary for a
+Sheets ``values.batchUpdate`` call. This module stays pure: it maps
+:class:`SheetExportPlan` facets into A1 ranges plus row values and never
+opens a Google service object itself.
+
+See Also:
+    :func:`_build_value_data` and :func:`_build_formula_data` emit the main
+    workbook grid, while :func:`_build_evidence_value_data` mirrors
+    :func:`aeat.application.storage.calc_sheets.evidence_table` so the online
+    Evidencia tab stays aligned with the offline workbook renderer.
+"""
 
 from __future__ import annotations
 
@@ -17,6 +31,12 @@ from ....application.storage.calc_sheets import (
 
 
 def _coerce_cell_value(value: Decimal | str | bool | None) -> object:
+    """Convert a :class:`SheetValueCell` value into a Sheets API scalar.
+
+    ``None`` becomes an empty cell, booleans stay native, and
+    :class:`~decimal.Decimal` values are rendered with fixed-point text so
+    Sheets does not receive rounded binary floats.
+    """
     if value is None:
         return ""
     if isinstance(value, bool):
@@ -29,6 +49,7 @@ def _coerce_cell_value(value: Decimal | str | bool | None) -> object:
 
 
 def _build_value_data(value_cells: Iterable[SheetValueCell]) -> list[dict[str, Any]]:
+    """Build ``values.batchUpdate`` entries for :class:`SheetValueCell` records."""
     data: list[dict[str, Any]] = []
     for cell in value_cells:
         data.append(
@@ -41,6 +62,12 @@ def _build_value_data(value_cells: Iterable[SheetValueCell]) -> list[dict[str, A
 
 
 def _build_formula_data(formula_cells: Iterable[SheetFormulaCell]) -> list[dict[str, Any]]:
+    """Build ``values.batchUpdate`` entries for :class:`SheetFormulaCell` records.
+
+    Formula text is prefixed with ``=`` because
+    :mod:`aeat.application.storage.calc_sheets` stores formula bodies without
+    the leading Sheets marker.
+    """
     data: list[dict[str, Any]] = []
     for cell in formula_cells:
         data.append(
@@ -53,7 +80,7 @@ def _build_formula_data(formula_cells: Iterable[SheetFormulaCell]) -> list[dict[
 
 
 def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str, Any]]:
-    """Emit Detalle-tab header cells declaring each row-set column."""
+    """Emit Detalle-tab header cells declaring each :class:`SheetRowSet` column."""
     data: list[dict[str, Any]] = []
     for row_set in row_sets:
         for column in row_set.columns:
@@ -67,7 +94,12 @@ def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str
 
 
 def _build_evidence_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
-    """Build the Evidencia tab value writes, mirroring the offline workbook."""
+    """Build Evidencia-tab value writes for ``plan``.
+
+    Uses :func:`aeat.application.storage.calc_sheets.evidence_table`, the same
+    source used by the offline workbook renderer, so online Sheets output and
+    offline XLSX output stay cell-for-cell aligned.
+    """
     fingerprint, header, body = evidence_table(plan)
     tab = TabName.EVIDENCIA.value
     data: list[dict[str, Any]] = [
@@ -80,6 +112,7 @@ def _build_evidence_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
 
 
 def _build_guide_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
+    """Build Guide-tab title, paragraph, and export-stamp rows for ``plan``."""
     data: list[dict[str, Any]] = [
         {"range": f"'{TabName.GUIDE.value}'!A1", "values": [[plan.guide.title]]},
     ]

@@ -243,7 +243,7 @@ def test_resume_locked_hash_mismatch_carries_translated_message(
     async def run() -> None:
         with pytest.raises(AeatLoginAssertionError) as exc_info:
             # Call private method directly to isolate this raise path.
-            await provider._resume_locked(  # type: ignore[attr-defined]
+            await provider._resume_locked(
                 storage_state_path,
                 browser_session=_MinimalBrowserSession(),
                 target_url=None,
@@ -271,7 +271,7 @@ def test_click_clave_movil_button_missing_click_carries_translated_message(
     async def run() -> None:
         with pytest.raises(AeatLoginAssertionError) as exc_info:
             # Access the private method directly to isolate this raise.
-            await provider._click_clave_movil_button(page)  # type: ignore[arg-type]
+            await provider._click_clave_movil_button(page)
         exc = exc_info.value
         assert exc.translated_message == "adapters.auth.clave_movil.errors.page_missing_click"
 

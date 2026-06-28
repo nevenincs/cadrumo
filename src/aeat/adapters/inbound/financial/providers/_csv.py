@@ -25,7 +25,7 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import load_settings
 from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .....core.logging import get_logger
-from .....domain.transactions import SourceFormat
+from .....domain.transactions import SourceFormat, TransactionDirection
 from ._base import (
     FinancialProvider,
     FinancialValidationError,
@@ -69,6 +69,7 @@ class CsvColumnMap(BaseModel):
     booked_date: tuple[str, ...]
     value_date: tuple[str, ...] = ()
     amount: tuple[str, ...]
+    direction: tuple[str, ...] = ("direction",)
     currency: tuple[str, ...] = ()
     description: tuple[str, ...]
     counterparty: tuple[str, ...] = ()
@@ -178,6 +179,7 @@ class ParsedTabularTransactionRow:
     booked_date: date
     value_date: date | None
     amount: Decimal
+    direction: TransactionDirection | None
     currency: str
     description: str
     counterparty: str | None
@@ -285,7 +287,7 @@ class CsvProvider(FinancialProvider):
                 raise InvalidFinancialSourceError(
                     f"CSV row {source_row_index} could not be parsed: {exc}",
                 ) from exc
-            yield build_raw_transaction(
+            built = build_raw_transaction(
                 provider=self,
                 path=path,
                 source_sha256=source_sha256,
@@ -299,6 +301,10 @@ class CsvProvider(FinancialProvider):
                 description=parsed.description,
                 raw_fields=raw_fields,
             )
+            if parsed.direction is not None:
+                yield ParsedLedgerRow(raw=built.raw, direction=parsed.direction)
+            else:
+                yield built
 
     def _load_rows(
         self,
@@ -445,6 +451,7 @@ def _parse_tabular_transaction_row(
         _required_typed_value(typed_fields, lookup, layout.columns.amount, "amount", required_field_context),
         decimal_separator=layout.decimal_separator,
     )
+    direction = _direction_from_aliases(raw_fields, lookup, layout.columns.direction)
     currency = _value_from_aliases(raw_fields, lookup, layout.columns.currency) or default_currency()
     description = _required_value(raw_fields, lookup, layout.columns.description, "description")
     counterparty = _value_from_aliases(raw_fields, lookup, layout.columns.counterparty)
@@ -453,6 +460,7 @@ def _parse_tabular_transaction_row(
         booked_date=booked_date,
         value_date=value_date,
         amount=amount,
+        direction=direction,
         currency=currency,
         description=description,
         counterparty=counterparty,
@@ -484,6 +492,25 @@ def _typed_value_from_aliases(
         return None
     value = raw_fields.get(header, "")
     return value if coerce_cell_text(value) else None
+
+
+def _direction_from_aliases(
+    raw_fields: Mapping[str, str],
+    lookup: Mapping[str, str],
+    aliases: tuple[str, ...],
+) -> TransactionDirection | None:
+    header = _find_column(lookup, aliases)
+    if header is None:
+        return None
+    raw = coerce_cell_text(raw_fields.get(header, ""))
+    if not raw:
+        raise FinancialValidationError("missing direction value")
+    normalized = "_".join(raw.replace("-", " ").replace("_", " ").upper().split())
+    try:
+        return TransactionDirection(normalized)
+    except ValueError as exc:
+        expected = ", ".join(direction.value for direction in TransactionDirection)
+        raise FinancialValidationError(f"unsupported direction value: {raw!r}; expected one of {expected}") from exc
 
 
 def _required_value(

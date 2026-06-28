@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -53,7 +54,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from sqlalchemy import Engine, select
 
-from .....core.config import Settings
+from .....core.config import override_settings
 from .. import EphemeralMasterKeyProvider, SensitivityClass
 from ..crypto._encrypted_columns import (
     decrypt_secure_object_payload,
@@ -129,22 +130,27 @@ class SecureRepositoryContractCase[T: BaseModel]:
     mutation_field: str
 
 
-def _activate_engine(db_path: Path, monkeypatch: pytest.MonkeyPatch) -> Engine:
-    """Repoint the process-default engine at ``db_path``.
+@contextmanager
+def _activated_engine(db_path: Path):
+    """Repoint the process-default engine at ``db_path`` for one check.
 
-    Disposes every cached engine, rebinds ``AEAT_DATABASE_URL`` via
-    ``monkeypatch``, then builds and returns a fresh engine whose
-    schema is materialised against ``Base.metadata``. The caller is
-    responsible for disposing the returned engine when the check
-    completes.
+    Disposes cached engines, binds the database and storage-root settings through
+    the canonical ContextVar-backed settings surface, then yields a fresh engine
+    whose schema is materialised against ``Base.metadata``.
     """
     dispose_engine()
     url = f"sqlite:///{db_path.as_posix()}"
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", (db_path.parent / "storage-root").as_posix())
-    monkeypatch.setenv("AEAT_DATABASE_URL", url)
-    engine = create_engine_from_settings(Settings(aeat_database_url=url))
-    Base.metadata.create_all(engine)
-    return engine
+    with override_settings(
+        aeat_local_storage_root=db_path.parent / "storage-root",
+        aeat_database_url=url,
+    ) as settings:
+        engine = create_engine_from_settings(settings)
+        try:
+            Base.metadata.create_all(engine)
+            yield engine
+        finally:
+            engine.dispose()
+            dispose_engine(settings)
 
 
 def _round_trip_preserves_payload[T: BaseModel](
@@ -335,15 +341,14 @@ def assert_secure_repository_contract[T: BaseModel](
     case: SecureRepositoryContractCase[T],
     *,
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> int:
     """Run all 11 canonical contract checks against ``case``.
 
     For each check the function:
 
       1. Disposes any cached process-default engine.
-      2. Rebinds ``AEAT_DATABASE_URL`` (via ``monkeypatch``) to a
-         fresh SQLite file under ``tmp_path``.
+      2. Rebinds ``AEAT_DATABASE_URL`` and ``AEAT_LOCAL_STORAGE_ROOT``
+         through ``override_settings`` to a fresh SQLite file under ``tmp_path``.
       3. Builds a real engine for that URL and materialises the ORM
          schema.
       4. Activates a real :class:`EphemeralMasterKeyProvider`.
@@ -367,38 +372,23 @@ def assert_secure_repository_contract[T: BaseModel](
     for index, (label, check) in enumerate(_PARAM_CHECKS):
         db_path = tmp_path / f"contract-{index:02d}-{label}.db"
         provider = EphemeralMasterKeyProvider()
-        with provider:
-            engine = _activate_engine(db_path, monkeypatch)
-            try:
-                check(erased)
-            finally:
-                engine.dispose()
-                dispose_engine()
+        with provider, _activated_engine(db_path):
+            check(erased)
         executed += 1
 
     db_path = tmp_path / "contract-encrypted-audit-data.db"
     provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = _activate_engine(db_path, monkeypatch)
-        try:
-            _database_payload_is_encrypted_audit_data(erased, db_path)
-        finally:
-            engine.dispose()
-            dispose_engine()
+    with provider, _activated_engine(db_path):
+        _database_payload_is_encrypted_audit_data(erased, db_path)
     executed += 1
 
     db_path = tmp_path / "contract-anti-tautology.db"
     provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = _activate_engine(db_path, monkeypatch)
-        try:
-            _boundary_catches_simulated_field_drop_via_corrupted_payload(
-                erased,
-                engine,
-            )
-        finally:
-            engine.dispose()
-            dispose_engine()
+    with provider, _activated_engine(db_path) as engine:
+        _boundary_catches_simulated_field_drop_via_corrupted_payload(
+            erased,
+            engine,
+        )
     executed += 1
 
     return executed

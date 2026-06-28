@@ -1,7 +1,9 @@
 """Filed-declaration observation and registry interpretation helpers.
 
-Use of :class:`CasillaObservation`, :class:`ModeloRevision`, :class:`RegistrySnapshot`,
-and :class:`ValidatedRegistryAuthority` for compliance.
+The Sede capture path resolves a :class:`RegistrySnapshot` through
+:class:`ValidatedRegistryAuthority`, interprets its :class:`ModeloRevision`, and
+materialises filed rows as provenance-bearing :class:`CasillaObservation`
+records.
 """
 
 from __future__ import annotations
@@ -57,7 +59,6 @@ __all__ = [
     "FiledDeclaracionArtefactSink",
     "_is_modelo_303_page_03_fallback",
     "_observed_casillas_from_declaration_pdf",
-    "_observed_casillas_from_submitted_file",
     "_read_guard_policy_from_snapshot",
     "_register_row_artefact",
     "_registry_snapshot_for_declaration",
@@ -66,6 +67,7 @@ __all__ = [
     "_submitted_file_extraction_coverage",
     "_verify_submitted_file_context",
     "_with_derived_303_compensation_available_observation",
+    "observed_casillas_from_submitted_file",
     "registry_observation_from_filed_declaration",
     "resolve_previous_filing_bindings_from_filed_declarations",
     "resolve_relation_values_from_filed_declarations",
@@ -219,6 +221,9 @@ def _observed_casillas_from_submitted_file(
     if not observations:
         raise SedeParseError(f"submitted-file artefact {artefact.sha256[:16]} did not yield casilla observations")
     return tuple(observations)
+
+
+observed_casillas_from_submitted_file = _observed_casillas_from_submitted_file
 
 
 def _is_modelo_303_page_03_fallback(casillas: tuple[ObservedCasillaValue, ...]) -> bool:
@@ -590,7 +595,9 @@ def resolve_previous_filing_bindings_from_filed_declarations(
 ) -> dict[BindingId, Decimal]:
     """Resolve registry previous-filing bindings from filed AEAT observations.
 
-    Use of :class:`ModeloRevision` for compliance.
+    The :class:`ModeloRevision` supplies the previous-filing binding selectors;
+    filed Sede observations are converted before the registry resolver folds
+    their casilla values.
     """
     return resolve_previous_filing_binding_values(
         revision,
@@ -609,7 +616,8 @@ def resolve_relation_values_from_filed_declarations(
 ) -> dict[RelationId, Decimal]:
     """Resolve registry cross-model relation values from filed AEAT observations.
 
-    Use of :class:`ModeloRevision` for compliance.
+    The :class:`ModeloRevision` supplies relation declarations; filed Sede
+    observations are converted before relation values are folded.
     """
     return resolve_relation_values_from_observations(
         revision,

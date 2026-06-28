@@ -1,4 +1,12 @@
-"""Health check script for the Playwright setup."""
+"""Smoke-check entry point for the Playwright browser setup.
+
+The health check constructs the production
+:func:`default_browser_session_factory`, opens a browser context, and navigates
+through :meth:`aeat.adapters.outbound.aeat.browser.BrowserSession.navigate`.
+It verifies the local Playwright/browser installation path rather than the AEAT
+site-health parser corpus; parser classifications are represented separately by
+:class:`aeat.adapters.outbound.aeat.browser.SiteHealthStatus`.
+"""
 
 from __future__ import annotations
 
@@ -15,6 +23,11 @@ logger = get_logger(__name__)
 
 async def run_health_check() -> None:
     """Run a smoke test to verify Playwright installation and evasion patches.
+
+    The check uses :func:`default_browser_session_factory` so failures exercise
+    the same optional ``browser`` extra, :class:`BrowserError` wrapping, evasion,
+    context creation, and navigation path used by production auth and Sede
+    readers.
 
     Raises:
         BrowserError: If the health check fails.
@@ -46,7 +59,7 @@ async def run_health_check() -> None:
 
 
 def main() -> None:
-    """Synchronous entry point for the health check."""
+    """Run :func:`run_health_check` from synchronous callers."""
     asyncio.run(run_health_check())
 
 
