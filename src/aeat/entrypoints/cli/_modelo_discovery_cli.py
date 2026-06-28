@@ -271,6 +271,16 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             str | None,
             typer.Option("--form-number", help=tr("cli.app.modelo.casillas.form_number_help")),
         ] = None,
+        casilla_number: Annotated[
+            str | None,
+            typer.Option(
+                "--number",
+                help=tr(
+                    "cli.app.modelo.casillas.number_help",
+                    default="Filter casillas by the printed casilla number or canonical id (e.g. 0596).",
+                ),
+            ),
+        ] = None,
         explain: Annotated[
             bool,
             typer.Option(
@@ -306,6 +316,17 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             _query,
             bad_parameter_from_error=deps.bad_parameter_from_error,
         )
+        number_filter = casilla_number.strip() if casilla_number is not None else None
+        if number_filter:
+            report = report.model_copy(
+                update={
+                    "rows": tuple(
+                        row
+                        for row in report.rows
+                        if row.number == number_filter or row.casilla_id == number_filter
+                    ),
+                },
+            )
         lang = output_language()
         result = ModeloCasillasResult(
             modelo=report.code,
