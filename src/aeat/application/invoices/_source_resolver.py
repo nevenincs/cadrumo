@@ -13,11 +13,17 @@ from decimal import Decimal
 from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import BindingSourceKind, Period
 from ...core.hashing import sha256_hex
-from ...domain.calculations.registry import InvoiceObservation, resolve_invoice_binding_values
+from ...domain.calculations.registry import (
+    BindingId,
+    InvoiceObservation,
+    RegistryValidationError,
+    resolve_invoice_binding_row_values,
+    resolve_invoice_binding_values,
+)
 from ...domain.invoices import Invoice, InvoiceCatalogueRepository
 from ...domain.invoices._protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind, IvaCategory
-from ...domain.modelos import validate_m349_country_prefix_context
+from ...domain.modelos import Modelo349OperadorRow, validate_m349_country_prefix_context
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
@@ -36,6 +42,13 @@ _M349_PAYABLE_SUMMARY_BINDING_MIRRORS: dict[str, str] = {
     "iva-349-declarante-importe-operaciones-adquisicion": "iva-349-declarante-importe-operaciones",
     "iva-349-declarante-numero-rectificaciones-adquisicion": "iva-349-declarante-numero-rectificaciones",
     "iva-349-declarante-importe-rectificaciones-adquisicion": "iva-349-declarante-importe-rectificaciones",
+}
+_M349_OPERADOR_ROW_BINDINGS: dict[BindingId, str] = {
+    "iva-349-operador-row-codigo-pais": "codigo_pais",
+    "iva-349-operador-row-nif": "nif_comunitario",
+    "iva-349-operador-row-apellidos": "razon_social",
+    "iva-349-operador-row-clave": "clave_operacion",
+    "iva-349-operador-row-base": "importe",
 }
 
 
@@ -95,6 +108,7 @@ class InvoiceCatalogueSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=_m349_declarante_summary_union(context=context, binding_values=binding_values),
+            detail_rows=_m349_operador_rows_from_observations(context=context, observations=observations),
             source_transaction_ids=tuple(
                 sorted(
                     {transaction_id for invoice, _ in observed for transaction_id in invoice.linked_transaction_ids},
@@ -171,6 +185,57 @@ def _m349_declarante_summary_union(
             continue
         merged[public_binding] = merged.get(public_binding, Decimal("0")) + binding_values[payable_binding]
     return merged
+
+
+def _m349_operador_rows_from_observations(
+    *,
+    context: CalculationSourceContext,
+    observations: tuple[InvoiceObservation, ...],
+) -> tuple[Modelo349OperadorRow, ...]:
+    if str(context.modelo) != "349" or not observations:
+        return ()
+    row_values = resolve_invoice_binding_row_values(context.revision, observations)
+    rows: list[Modelo349OperadorRow] = []
+    row_indexes = sorted(
+        {
+            row_index
+            for binding_id, row_index in row_values
+            if binding_id in _M349_OPERADOR_ROW_BINDINGS
+        },
+    )
+    for row_index in row_indexes:
+        values = {
+            attr: row_values[(binding_id, row_index)]
+            for binding_id, attr in _M349_OPERADOR_ROW_BINDINGS.items()
+            if (binding_id, row_index) in row_values
+        }
+        if set(values) != set(_M349_OPERADOR_ROW_BINDINGS.values()):
+            raise RegistryValidationError(f"Modelo 349 invoice row {row_index} is incomplete")
+        codigo_pais = values["codigo_pais"]
+        nif_comunitario = values["nif_comunitario"]
+        razon_social = values["razon_social"]
+        clave_operacion = values["clave_operacion"]
+        importe = values["importe"]
+        if not (
+            isinstance(codigo_pais, str)
+            and isinstance(nif_comunitario, str)
+            and isinstance(razon_social, str)
+            and isinstance(clave_operacion, str)
+            and isinstance(importe, Decimal)
+        ):
+            raise RegistryValidationError(f"Modelo 349 invoice row {row_index} has invalid field types")
+        try:
+            row = Modelo349OperadorRow(
+                codigo_pais=codigo_pais,
+                nif_comunitario=f"{codigo_pais}{nif_comunitario}",
+                razon_social=razon_social,
+                clave_operacion=clave_operacion,
+                importe=importe,
+            )
+        except ValueError as exc:
+            raise RegistryValidationError(str(exc)) from exc
+        rows.append(row)
+    return tuple(rows)
 
 
 def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> CalculationSourceProvenance:

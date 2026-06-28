@@ -904,6 +904,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         caller_binding_values=binding_values or {},
         caller_casilla_inputs=casilla_inputs or {},
     )
+    all_detail_rows = (*source_resolution.detail_rows, *detail_rows)
     detail_row_binding_values = _detail_row_binding_values_for_calculation(
         work_unit=work_unit,
         detail_rows=detail_rows,
@@ -974,7 +975,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         calculation_repository=calculation_repository,
         bucket_event_repository=bucket_event_repository,
         borrador_snapshot_repository=borrador_snapshot_repository,
-        detail_rows=detail_rows,
+        detail_rows=all_detail_rows,
         clock=clock,
     )
     advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(
