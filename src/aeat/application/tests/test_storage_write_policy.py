@@ -81,6 +81,46 @@ def test_profile_bound_write_allows_pointer_route_from_stale_settings(tmp_path: 
     assert decision.route_kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
 
 
+def test_stub_only_work_create_delegates_to_leaf_refusal_before_root_route_guard(tmp_path: Path) -> None:
+    settings = Settings(aeat_local_storage_root=tmp_path, aeat_output_language=OutputLanguage.EN)
+
+    decision = inspect_storage_write_policy(
+        "app modelo work create",
+        bootstrap_exempt=False,
+        settings=settings,
+        argv_tokens=("app", "modelo", "work", "create", "--modelo", "210", "--year", "2025", "--period", "1T"),
+    )
+
+    assert decision.allowed is True
+    assert decision.code is StorageWritePolicyCode.LEAF_REFUSAL_DELEGATED
+    assert decision.profile_bound_write is True
+
+    supported = inspect_storage_write_policy(
+        "app modelo work create",
+        bootstrap_exempt=False,
+        settings=settings,
+        argv_tokens=("app", "modelo", "work", "create", "--modelo", "303", "--year", "2025", "--period", "1T"),
+    )
+    assert supported.allowed is False
+    assert supported.code is StorageWritePolicyCode.REFUSED_ROOT_FALLBACK
+
+
+def test_m210_live_engine_work_create_stays_under_root_write_guard(tmp_path: Path) -> None:
+    decision = inspect_storage_write_policy(
+        "app modelo work create",
+        bootstrap_exempt=False,
+        settings=Settings(
+            aeat_local_storage_root=tmp_path,
+            aeat_output_language=OutputLanguage.EN,
+            aeat_m210_engine_live=True,
+        ),
+        argv_tokens=("app", "modelo", "work", "create", "--modelo=210", "--year", "2025", "--period", "1T"),
+    )
+
+    assert decision.allowed is False
+    assert decision.code is StorageWritePolicyCode.REFUSED_ROOT_FALLBACK
+
+
 def test_bootstrap_exemption_short_circuits_route_policy(tmp_path: Path) -> None:
     decision = inspect_storage_write_policy(
         "config profile create operator",

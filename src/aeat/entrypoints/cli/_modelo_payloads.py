@@ -794,6 +794,9 @@ class ModeloRowPayload(OutputSchema):
     cadence: str
     tax_domain: str
     revision_count: int
+    local_work_supported: bool
+    local_work_status: str
+    local_work_guidance: str | None = None
 
 
 @register_schema("modelo.list")
