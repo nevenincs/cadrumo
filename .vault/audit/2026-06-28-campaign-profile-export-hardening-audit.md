@@ -894,8 +894,17 @@ Ramon's AD-HOC and annual probes were deliberately not recoded into hidden
 assumptions. M309 still needs grounded event-date or transaction-selection
 semantics before it can become a smooth AD-HOC workflow, and M100 annual
 guidance still needs clearer relation/casilla discovery. Source triage also
-kept Marco's GB/XI M349 country-code concern and `filing-record list --modelo`
-discoverability concern as backlog rather than legal assumptions.
+kept Marco's GB/XI M349 country-code concern as backlog rather than legal
+assumptions.
+
+Follow-up commit `c7ffc6a6f` closed Marco's filing-record list discoverability
+defect without changing filing semantics. `aeat app modelo filing-record list`
+now accepts `--modelo`, surfaces `modelo_filter` in text and JSON output, and
+filters the existing filing-record catalogue by the stored Modelo code. The same
+commit completed the localized bare-year ledger guidance introduced in
+`eeb2de989`: both `--year 2025` and `--filter year=2026` fail closed with the
+matching annual `--period 0A --year ...` guidance instead of leaking internal
+parser tokens.
 
 ## Recommendations
 
@@ -1063,6 +1072,17 @@ Implemented and reviewed in this wave:
   `src/aeat/entrypoints/cli/_config/_profile_bundle.py`, with real bundle
   tamper coverage in
   `src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py`.
+- Filing-record list `--modelo` filtering in
+  `src/aeat/application/modelo/_filing_actions.py`,
+  `src/aeat/entrypoints/cli/_modelo_records_cli.py`, and
+  `src/aeat/entrypoints/cli/_modelo_payloads.py`, with service and CLI coverage
+  in `src/aeat/application/modelo/tests/test_file_flow_filing.py` and
+  `src/aeat/entrypoints/cli/tests/test_cli_surface.py`.
+- Localized ledger period/year pairing guidance in
+  `src/aeat/entrypoints/cli/_ledger_list.py`,
+  `src/aeat/entrypoints/cli/_ledger_read_cli.py`, and
+  `src/aeat/locales/{ca,en,es,hu}.yml`, with `--year` and `--filter year=...`
+  CLI coverage.
 
 Verification passed:
 
@@ -1162,6 +1182,12 @@ Verification passed:
 - Wave-thirteen profile bundle tax-id import gate: `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_profile_import_idempotency.py -q --tb=short -m integration`.
 - Wave-thirteen focused ruff checks passed for the touched M349, ledger-list,
   and profile-bundle implementation and test files.
+- Wave-thirteen filing-record modelo filter: `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_cli_surface.py::test_app_modelo_filing_record_list_text_header_is_well_formed src/aeat/entrypoints/cli/tests/test_cli_surface.py::test_app_modelo_filing_record_list_accepts_modelo_filter src/aeat/entrypoints/cli/tests/test_cli_surface.py::test_app_ledger_create_manual_transaction_persists_in_active_bucket -q --tb=short -m integration` and `uv run --no-sync pytest src/aeat/application/modelo/tests/test_file_flow_filing.py -q --tb=short -k list_filing_records`.
+- Wave-thirteen ledger guidance and locale closure: `uv run --no-sync pytest src/aeat/entrypoints/cli/tests/test_ledger_list_filter.py -q --tb=short -m integration`, `uv run --no-sync python -m aeat.locales scaffold --check`, and `uv run --no-sync python -m aeat.locales audit`.
+- Wave-thirteen filing-record/ledger guidance ruff and diff checks passed for
+  the touched implementation, test, and locale files. A read-only code review
+  found one medium issue in the `--filter year=...` guidance path; the helper now
+  derives a digit-only filter year and the regression is covered.
 
 Independent read-only reviews reported no findings for the IVA wallet patch,
 the Modelo 202 modality gate, the stage-1 readiness hardening, the M390 export
@@ -1219,9 +1245,6 @@ Residual backlog:
 - Clarify local export versus local filing versus official/imported filing
   evidence in cross-period dependency guidance, especially for M130/M100 annual
   carry paths.
-- Make filing-record list filtering discoverable from the CLI surface; Marco's
-  persona expected `filing-record list --modelo` even though the current command
-  does not accept that option.
 - Add earlier applicability/preflight refusal for pure recargo-equivalence
   retailer profiles on M303/M390, or otherwise make the unsupported-retailer
   boundary explicit before work creation.
