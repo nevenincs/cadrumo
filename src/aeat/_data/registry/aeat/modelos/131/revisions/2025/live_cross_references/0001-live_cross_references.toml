@@ -22,6 +22,7 @@ legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:ar
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 
 # -----------------------------------------------------------------------------
-# Prior-quarter negative-result carry-forward (RD 439/2007 art. 110.5)
+# Prior-quarter negative-result carry-forward (AEAT M131 instructions under
+# the RD 439/2007 art. 110 pago fraccionado framework)
 # revision 2025.
 # -----------------------------------------------------------------------------

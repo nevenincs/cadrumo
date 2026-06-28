@@ -5,5 +5,5 @@ treatment = "factual_evidence"
 taxpayer_files_source = false
 target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "renta-work-income"]
 relation_refs = ["renta-2025-rel-190-retenciones-anuales"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
 source_refs = ["boe-modelo-190-2025-form"]

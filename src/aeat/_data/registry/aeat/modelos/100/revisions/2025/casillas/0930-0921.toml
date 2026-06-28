@@ -4,5 +4,5 @@ number = "0921"
 label = "Para fomentar el ejercicio físico y la práctica deportiva (importe de la casilla [2122] del Anexo B.14)"
 section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
 semantic_role = "irpf_deduccion_andalucia_ejercicio_fisico"
-legal_refs = ["ley-35-2006:art-77", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

@@ -107,11 +107,11 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 
 [[revisions.2023-y-siguientes.export_layouts.records.fields]]
-id = "modelo-303-page-01-surnames"
+id = "modelo-303-page-01-full-name"
 offset = 23
 length = 80
 kind = "header"
-header_key = "surnames"
+header_key = "full_name"
 data_type = "text"
 required = true
 padding = "right_space"

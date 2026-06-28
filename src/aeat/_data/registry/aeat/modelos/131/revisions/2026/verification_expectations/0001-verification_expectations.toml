@@ -10,6 +10,7 @@ legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
 
 # -----------------------------------------------------------------------------
-# Prior-quarter negative-result carry-forward (RD 439/2007 art. 110.5)
+# Prior-quarter negative-result carry-forward (AEAT M131 instructions under
+# the RD 439/2007 art. 110 pago fraccionado framework)
 # revision 2026.
 # -----------------------------------------------------------------------------

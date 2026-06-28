@@ -1,12 +1,12 @@
-# Modelo 714 (Impuesto sobre el Patrimonio) — casilla schema, Phase A.
+# Modelo 714 (Impuesto sobre el Patrimonio) — casilla schema.
 #
 # Authored from the AEAT diseño de registro DR714_2025.xls (Orden HAC/1023/2021,
 # corpus/aeat_official/disenos_registro/modelo_714/), sheet "714-10 Patrimonio"
-# (liquidación). Phase A: every casilla is input_kind = "manual" (no calc
-# engine). The cuota íntegra escala (casilla 29 / art. 30), the límite conjunto
-# (casillas 33/39 / art. 31) and the vivienda-habitual exención (art. 4.Nueve)
-# are grounded in the legal catalogue; the Phase-B calc engine deriving them is
-# the follow-on.
+# (liquidación). The registry now computes the art. 30 cuota íntegra scale
+# (casilla 29) and the art. 31 80%-floor reference (casilla 39). Base inputs,
+# límite conjunto, total cuota íntegra, cuota minorada, and cuota a ingresar
+# stay manual until their own official formula evidence lands. The vivienda
+# habitual exemption remains grounded in art. 4.Nueve on the base-imponible input.
 
 [[revisions."2021-y-siguientes".casillas]]
 id = "decl.ejercicio"

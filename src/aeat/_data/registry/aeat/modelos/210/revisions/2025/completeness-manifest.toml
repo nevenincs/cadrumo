@@ -16,12 +16,23 @@
 
 [revisions."2025".completeness_manifest]
 source_ref = "aeat-modelo-210-procedure"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.f"]
-source_refs = ["aeat-modelo-210-procedure"]
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-13.1.h",
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+    "ley-35-2006:art-85",
+]
+source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
 
 [[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "base_imponible"
 number = "base_imponible"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "coeficiente_imputacion_inmobiliaria"
+number = "coeficiente_imputacion_inmobiliaria"
 
 [[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "cuota_diferencial"
@@ -30,6 +41,10 @@ number = "cuota_diferencial"
 [[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "cuota_integra"
 number = "cuota_integra"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "dias_imputacion"
+number = "dias_imputacion"
 
 [[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "rendimientos_integros"
@@ -46,3 +61,15 @@ number = "tipo_gravamen"
 [[revisions."2025".completeness_manifest.casillas]]
 casilla_id = "tipo_renta"
 number = "tipo_renta"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "valor_adquisicion"
+number = "valor_adquisicion"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "valor_catastral"
+number = "valor_catastral"
+
+[[revisions."2025".completeness_manifest.casillas]]
+casilla_id = "valor_comprobado_administracion"
+number = "valor_comprobado_administracion"

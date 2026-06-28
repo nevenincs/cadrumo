@@ -2,7 +2,8 @@
 #
 # `cuota_integra = base_imponible × tipo_gravamen` per TRLIRNR Art 24
 # combined with the resolved rate from Art 25.1.a / 25.1.f / Convenio
-# override (see formula `m210-tipo-gravamen-2025-resolve`).
+# override, or the effective rate from the Art 25.1.b pension tariff
+# (see formula `m210-tipo-gravamen-2025-resolve`).
 
 [[revisions."2025".formulas]]
 id = "m210-cuota-integra-2025"
@@ -15,6 +16,7 @@ rounding = "money-2"
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-24",
     "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
 ]
 source_refs = ["aeat-modelo-210-procedure"]
 

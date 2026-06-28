@@ -1,5 +1,6 @@
-# RD 439/2007 art. 110.5 — same-ejercicio prior-quarter saldo-
-# negativo carry-forward. The selector declares
+# AEAT Modelo 130 instructions, casilla 15: same-ejercicio prior-quarter
+# negative-result carry-forward under the RD 439/2007 art. 110 pago
+# fraccionado framework. The selector declares
 # `source_period_offset_from_target = -1` (prior period) with
 # `max_year_delta = 0` (no cross-ejercicio reach): 2T pulls from
 # 1T, 3T from 2T, 4T from 3T; 1T produces no anchor (absent-by-
@@ -17,7 +18,12 @@ source_refs = ["aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
-required_text = ["Resultados negativos"]
+required_text = [
+    "importe (sin signo) de los resultados negativos",
+    "cualquiera de las autoliquidaciones anteriores",
+    "no hubieran sido deducidos anteriormente",
+    "en ningún caso podrá figurar en la casilla 15 un importe superior",
+]
 
 # AEAT Modelo 130 instrucciones, casilla 05 ("Pagos fraccionados
 # anteriores"): the same-ejercicio carry of prior-quarter payments.
@@ -49,4 +55,3 @@ required_text = [
     "minorada en el importe de la suma de las cantidades consignadas en la casilla 16",
     "No se computaran las cantidades negativas consignadas en la casilla 07",
 ]
-

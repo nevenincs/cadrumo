@@ -72,17 +72,18 @@
       "numero": "109",
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a109",
       "summary": {
-        "ca": "Desenvolupa les obligacions formals dels retenidors i obligats a ingressar a compte, incloent-hi el model, el termini de presentació i la comunicació de dades a l'Administració tributària.",
-        "en": "Details the formal duties of withholders and payers on account, including the form, the filing deadline, and the information return to the tax administration.",
-        "es": "Desarrolla las obligaciones formales de los retenedores y obligados a ingresar a cuenta, incluyendo el modelo, el plazo de presentación y la comunicación de datos a la Administración tributaria.",
-        "hu": "Meghatározza a forrásadó-levonásra kötelezettek formális kötelezettségeit, beleértve a nyomtatványt és a határidőket."
+        "ca": "Estableix que els contribuents que exerceixen activitats econòmiques estan obligats a autoliquidar i ingressar pagaments fraccionats de l'IRPF, amb excepcions quan almenys el 70% dels ingressos hagin estat sotmesos a retenció o ingrés a compte.",
+        "en": "Establishes that taxpayers carrying on economic activities must self-assess and pay IRPF fractional payments, with exceptions when at least 70% of income was subject to withholding or payment on account.",
+        "es": "Establece que los contribuyentes que ejerzan actividades económicas están obligados a autoliquidar e ingresar pagos fraccionados del IRPF, con excepciones cuando al menos el 70 por ciento de los ingresos haya sido objeto de retención o ingreso a cuenta.",
+        "hu": "Meghatározza, hogy a gazdasági tevékenységet végző adózóknak IRPF előlegrészleteket kell önadózással megállapítaniuk és befizetniük, kivéve ha a bevételek legalább 70%-a forrásadó vagy előlegfizetés tárgya volt."
       },
       "titulo": {
-        "ca": "Obligació de declarar",
-        "en": "Duty to file returns under the withholding regime",
-        "es": "Obligación de declarar",
-        "hu": "Bevallási kötelezettség"
-      }
+        "ca": "Obligats al pagament fraccionat",
+        "en": "Persons obliged to make fractional payments",
+        "es": "Obligados al pago fraccionado",
+        "hu": "Előlegrészlet-fizetésre kötelezettek"
+      },
+      "text_es": "Artículo 109. Obligados al pago fraccionado. 1. Los contribuyentes que ejerzan actividades económicas estarán obligados a autoliquidar e ingresar en el Tesoro, en concepto de pago a cuenta del Impuesto sobre la Renta de las Personas Físicas, la cantidad que resulte de lo establecido en los artículos siguientes, sin perjuicio de las excepciones previstas en los apartados siguientes. 2. Los contribuyentes que desarrollen actividades profesionales no estarán obligados a efectuar pago fraccionado en relación con las mismas si, en el año natural anterior, al menos el 70 por ciento de los ingresos de la actividad fueron objeto de retención o ingreso a cuenta. 3. Los contribuyentes que desarrollen actividades agrícolas o ganaderas no estarán obligados a efectuar pago fraccionado en relación con las mismas si, en el año natural anterior, al menos el 70 por ciento de los ingresos procedentes de la explotación, con excepción de las subvenciones corrientes y de capital y de las indemnizaciones, fueron objeto de retención o ingreso a cuenta. 4. Los contribuyentes que desarrollen actividades forestales no estarán obligados a efectuar pago fraccionado en relación con las mismas si, en el año natural anterior, al menos el 70 por ciento de los ingresos procedentes de la actividad, con excepción de las subvenciones corrientes y de capital y de las indemnizaciones, fueron objeto de retención o ingreso a cuenta. 5. A efectos de lo dispuesto en los apartados 2, 3 y 4 anteriores, en caso de inicio de la actividad se tendrá en cuenta el porcentaje de ingresos que hayan sido objeto de retención o ingreso a cuenta durante el período a que se refiere el pago fraccionado."
     },
     {
       "notes": "Base reglamentaria del Modelo 130.",

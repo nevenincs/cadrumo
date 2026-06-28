@@ -1,5 +1,5 @@
 [revisions."2023-y-siguientes"]
-label = "Modelo 721 ejercicios 2023 y siguientes (Orden HFP/886/2023, BOE-A-2023-17429)"
+label = "Modelo 721 ejercicios 2023 y siguientes (Orden HFP/886/2023; anexo sustituido por Orden HAC/1504/2024 desde ejercicio 2024)"
 valid_from = 2023-08-01
 period_selector = { year_from = 2023, periods = ["0A"] }
 legal_refs = [
@@ -9,10 +9,19 @@ legal_refs = [
     "orden-hfp-886-2023:art-1",
     "orden-hfp-886-2023:art-2",
     "orden-hfp-886-2023:art-3",
+    "orden-hfp-886-2023:art-4",
+    "orden-hac-1504-2024:art-9",
+    "orden-hac-1504-2024:df-unica",
     "ley-58-2003:art-93",
 ]
 source_refs = [
-    "aeat-dr-721",
+    "boe-modelo-721-2023-layout",
+    "boe-modelo-721-2024-layout",
     "aeat-modelo-721-procedure",
     "boe-modelo-721-2023-form",
+]
+orden_aplicabilidad = [
+    "orden-hfp-886-2023:art-1",
+    "orden-hac-1504-2024:art-9",
+    "orden-hac-1504-2024:df-unica",
 ]

@@ -263,7 +263,7 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.export_layouts.records.fields]]
 id = "modelo-303-page-02-reserved"
 offset = 1105
-length = 590
+length = 784
 kind = "filler"
 data_type = "text"
 required = false
@@ -275,7 +275,7 @@ source_refs = ["aeat-dr-303-2025"]
 
 [[revisions.2023-y-siguientes.export_layouts.records.fields]]
 id = "modelo-303-page-02-close-tag"
-offset = 1695
+offset = 1889
 length = 12
 kind = "literal"
 literal = "</T30302000>"

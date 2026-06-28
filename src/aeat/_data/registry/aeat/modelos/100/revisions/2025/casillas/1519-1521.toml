@@ -4,5 +4,5 @@ number = "1521"
 label = "Raíces (excepto remolacha azucarera), tubérculos, forrajes, algodón, frutos no cítricos y otros productos agrícolas no comprendidos expresamente en otros números: Ingresos íntegros"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_ingresos_integros_raices_tuberculos_forrajes"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

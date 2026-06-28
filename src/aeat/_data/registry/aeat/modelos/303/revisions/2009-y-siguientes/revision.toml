@@ -938,7 +938,31 @@ filing_schedules = ["modelo-303-trimestral"]
 
 [revisions.2009-y-siguientes.completeness_manifest]
 source_ref = "aeat-dr-303-2025"
-legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-99", "orden-eha-3786-2008:art-1", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71"]
+legal_refs = [
+    "ley-37-1992:art-102",
+    "ley-37-1992:art-104",
+    "ley-37-1992:art-115",
+    "ley-37-1992:art-116",
+    "ley-37-1992:art-13",
+    "ley-37-1992:art-15",
+    "ley-37-1992:art-161",
+    "ley-37-1992:art-17",
+    "ley-37-1992:art-21",
+    "ley-37-1992:art-22",
+    "ley-37-1992:art-25",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-88",
+    "ley-37-1992:art-90",
+    "ley-37-1992:art-91",
+    "ley-37-1992:art-92",
+    "ley-37-1992:art-94",
+    "ley-37-1992:art-95",
+    "ley-37-1992:art-99",
+    "orden-eha-3786-2008:art-1",
+    "rd-1624-1992:art-29",
+    "rd-1624-1992:art-30",
+    "rd-1624-1992:art-71",
+]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 # Informativa base-imponible boxes (entregas intracomunitarias exentas, casilla
