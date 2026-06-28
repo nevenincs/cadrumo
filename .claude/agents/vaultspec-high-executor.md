@@ -9,6 +9,7 @@ tools:
 - Write
 - Edit
 - Bash
+model: claude-opus-4-8
 ---
 
 # Persona: Lead Implementation Engineer (High-Tier)
