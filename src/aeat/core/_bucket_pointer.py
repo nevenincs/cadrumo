@@ -3,14 +3,15 @@
 The pointer file lives at ``<aeat-root>/active-profile`` and carries the
 canonical default for the active-profile precedence chain
 (flag > env > pointer). This record is the typed wrapper around the
-pointer file's plaintext content. The storage-layer term ``bucket`` is
+pointer file's plaintext content: :class:`BucketPointer`. The storage-layer term ``bucket`` is
 preserved on the record's `bucket_id` field because the bucket is the
 encrypted storage slice the operator profile sits on; the file's
 operator-visible name is `active-profile` to match the verb noun.
 
 The on-disk representation is single-document TOML keyed by
 ``bucket_id`` and ``schema_version``. An atomic write-then-rename
-helper materialises the pointer; a resolver consumes it at startup.
+helper, :func:`write_pointer`, materialises the pointer; the
+:func:`resolve_active_bucket_id` resolver consumes it at startup.
 """
 
 from __future__ import annotations

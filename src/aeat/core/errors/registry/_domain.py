@@ -1,4 +1,8 @@
-"""Error code registry for aeat.domain."""
+"""Domain-layer :class:`~aeat.core.errors.ErrorCode` registry aggregator.
+
+Combines the ordered domain shards into the tuple consumed by
+:mod:`aeat.core.errors._registry`.
+"""
 
 from __future__ import annotations
 

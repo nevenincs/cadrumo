@@ -1,4 +1,8 @@
-"""Error code registry for aeat.core."""
+"""Core-layer :class:`~aeat.core.errors.ErrorCode` registry declarations.
+
+Rows map core exception qualnames to stable
+:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+"""
 
 from .._registry import ErrorCategory, ErrorCode
 

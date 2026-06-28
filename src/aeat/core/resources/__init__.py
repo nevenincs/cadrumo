@@ -2,21 +2,21 @@
 
 Exposes:
 
-* The bundled-data boundary (``packaged_data``, ``bundled_path``,
-  ``as_path``) inherited from the corpus-registry-packaging
+* The bundled-data boundary (:func:`packaged_data`, :func:`bundled_path`,
+  :func:`as_path`) inherited from the corpus-registry-packaging
   feature.
-* The typed repository surface (``ResourceCacheRepository``,
-  ``ResourceRepository``) for read-only bundled resources.
+* The typed repository surface (:class:`ResourceCacheRepository`,
+  :class:`ResourceRepository`) for read-only bundled resources.
 * The ``resources`` factory and :class:`ResourceRegistry`
   aggregate that holds every repository.
-* The typed error hierarchy (``ResourceLoadError`` and its three
+* The typed error hierarchy (:class:`ResourceLoadError` and its three
   top-level subclasses).
 
 Per the resource-management-api ADR this is the project's only
 resource-access surface. Consumer code that wants a bundled
 resource imports ``resources`` and goes through the
 appropriate Repository attribute; tests that verify the data-
-tree shape may use ``bundled_path`` / ``packaged_data`` directly.
+tree shape may use :func:`bundled_path` / :func:`packaged_data` directly.
 """
 
 from __future__ import annotations

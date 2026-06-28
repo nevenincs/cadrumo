@@ -10,7 +10,7 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".relations]]
@@ -25,7 +25,7 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".relations]]
@@ -40,7 +40,7 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".relations]]
@@ -55,7 +55,7 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".relations]]
@@ -70,7 +70,7 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".relations]]
@@ -85,7 +85,7 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".relations]]
@@ -100,7 +100,7 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".relations]]
@@ -115,7 +115,7 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".relations]]
@@ -130,7 +130,7 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".relations]]
@@ -145,6 +145,6 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 

@@ -1,6 +1,8 @@
 """Profile bundle import/export command registration for ``aeat config profile``.
 
-Use of :class:`BucketEventHistoryRepository` for compliance.
+Profile import/export emits
+:class:`~aeat.domain.buckets.BucketEventHistoryRepository` lifecycle events
+around portable bundle writes and reads.
 """
 
 from __future__ import annotations
@@ -19,6 +21,8 @@ from ....core.time import now as _now
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+
+_PROFILE_TAX_ID_PATH = "identity.tax_id"
 
 if TYPE_CHECKING:
     from ....application.workflow import ProfileBucketPointer, WorkflowStateRepository
@@ -244,24 +248,7 @@ def _register_profile_import_command(
         except UnsupportedBundleSchemaVersionError as exc:
             raise _CliRefusedBoundaryError(str(exc)) from exc
         record = bundle.profile
-        # The bundle is plaintext and may be tampered. `config profile create`
-        # validates the NIF/CIF/NIE checksum via SubjectTaxId; the import path must
-        # enforce the same gate so an invalid identifier cannot become an active,
-        # filing-grade profile (a tampered or garbage tax id otherwise imports clean).
-        from ....core.identity import IdentityError, validate_spanish_tax_id
-
-        _imported_tax_id = next(
-            (fact.value for fact in record.facts if fact.path == "identity.tax_id"),
-            None,
-        )
-        if isinstance(_imported_tax_id, str) and _imported_tax_id.strip():
-            try:
-                validate_spanish_tax_id(_imported_tax_id)
-            except IdentityError as exc:
-                raise _CliRefusedBoundaryError(
-                    translated_message="cli.config.profile.import_invalid_tax_id",
-                    context={"error": str(exc)},
-                ) from exc
+        _validate_imported_profile_tax_id(record)
         bundle_profile_id = record.profile_id
 
         explicit_label = label.strip() if label is not None and label.strip() else None
@@ -368,6 +355,39 @@ def _validate_bundle_schema_version(bundle: object) -> None:
             f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
             translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
         )
+
+
+def _validate_imported_profile_tax_id(record: object) -> None:
+    """Refuse portable bundles whose filing identity tax id is absent or invalid."""
+    # The bundle is plaintext and may be tampered. `config profile create`
+    # validates the NIF/CIF/NIE checksum via SubjectTaxId; the import path must
+    # enforce the same gate so an invalid identifier cannot become an active,
+    # filing-grade profile (a tampered or garbage tax id otherwise imports clean).
+    from ....core.identity import IdentityError, validate_spanish_tax_id
+
+    tax_id_values = [
+        fact.value
+        for fact in getattr(record, "facts", ())
+        if getattr(fact, "path", None) == _PROFILE_TAX_ID_PATH
+    ]
+    if len(tax_id_values) != 1:
+        raise _invalid_import_tax_id(
+            f"{_PROFILE_TAX_ID_PATH} must appear exactly once in the profile bundle",
+        )
+    tax_id = tax_id_values[0]
+    if not isinstance(tax_id, str) or not tax_id.strip():
+        raise _invalid_import_tax_id(f"{_PROFILE_TAX_ID_PATH} must be a non-empty string")
+    try:
+        validate_spanish_tax_id(tax_id.strip())
+    except IdentityError as exc:
+        raise _invalid_import_tax_id(str(exc)) from exc
+
+
+def _invalid_import_tax_id(error: str) -> _CliRefusedBoundaryError:
+    return _CliRefusedBoundaryError(
+        translated_message="cli.config.profile.import_invalid_tax_id",
+        context={"error": error},
+    )
 
 
 def _emit_profile_lifecycle_event(

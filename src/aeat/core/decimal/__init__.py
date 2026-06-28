@@ -9,6 +9,8 @@ Public surface
   with a configurable fallback default.
 * :func:`coerce_decimal_strict` — same coercion but raises on unparseable
   input, for callers that must record the parse-failure type.
+* :func:`normalize_decimal_separators` — convert comma-decimal text to the
+  dot-decimal form accepted by :class:`~decimal.Decimal`.
 """
 
 from __future__ import annotations

@@ -11,9 +11,10 @@ quoting, variable expansion, or multi-line values. ``env/.env`` is a
 flat key/value file in this project and any deviation from that shape
 is treated as an error.
 
-See :func:`read_env_file` and :func:`write_env_vars` for the public
-surface; :func:`_atomic_write_text` is the durability helper that backs
-both writers.
+The public surface is :func:`read_env_file`, :func:`write_env_var`, and
+:func:`write_env_vars`; each takes a :class:`~pathlib.Path` target. Malformed
+input raises :class:`~aeat.core.errors.CoreValidationError`, while writers use
+:func:`_atomic_write_text` so the ``.env`` file is replaced atomically.
 """
 
 from __future__ import annotations

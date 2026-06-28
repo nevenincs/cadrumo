@@ -180,7 +180,7 @@ class TestRejection:
         non_string: object = 12345
         assert not isinstance(non_string, str)
         with pytest.raises(IdentityError) as excinfo:
-            validate_identity(non_string)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # pyrefly: ignore[bad-argument-type]  # reason: deliberate non-string to exercise runtime guard
+            validate_identity(non_string)
         assert excinfo.value.translated_message == "errors.identity.validate_expects_str"
 
     def test_arbitrary_garbage_rejected(self) -> None:

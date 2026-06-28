@@ -229,7 +229,7 @@ def default_rules() -> Mapping[str, _RedactionRule]:
 
     Returns:
         A read-only :class:`~collections.abc.Mapping` from rule name
-        to :class:`~aeat.core.classification._RedactionRule`.
+        to :class:`~aeat.core.classification.RedactionRule`.
     """
     return _DEFAULT_RULES
 
@@ -238,12 +238,11 @@ def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ..
     """Resolve the rule references on a policy to concrete rule instances.
 
     Args:
-        policy: A
-            :class:`~aeat.core.classification._ClassificationPolicy`
+        policy: A :class:`~aeat.core.classification.ClassificationPolicy`
             whose ``redaction_rules`` field carries rule names.
 
     Returns:
-        A tuple of :class:`~aeat.core.classification._RedactionRule`
+        A tuple of :class:`~aeat.core.classification.RedactionRule`
         instances in the order they were declared on the policy.
         Names that are not in the default registry are silently
         skipped: this is deliberate so per-domain policies can
@@ -262,7 +261,7 @@ def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionR
 
     Args:
         sensitivity: The
-            :class:`~aeat.core.classification._SensitivityClass` whose
+            :class:`~aeat.core.classification.SensitivityClass` whose
             default rules should apply.
 
     Returns:
@@ -290,9 +289,10 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
     Args:
         value: The candidate string. Non-string inputs raise
             :exc:`TypeError`; consumers must stringify upstream.
-        rules: Ordered tuple of rules. Each rule's pattern is
-            compiled with :data:`re.MULTILINE` and its strategy is
-            applied to every match.
+        rules: Ordered tuple of
+            :class:`~aeat.core.classification.RedactionRule` instances.
+            Each rule's pattern is compiled with :data:`re.MULTILINE`
+            and its strategy is applied to every match.
 
     Returns:
         The redacted string.
@@ -511,14 +511,10 @@ def redact_for_log(text: str) -> str:
 
     The AUDIT rule set is the right default for exception text: it
     redacts NIF (sha256-prefix), URL host-only, and bearer-token
-    fingerprints. The
-    ``aeat.core.classification._SensitivityClass.IDENTITY``
-    class is for ciphertext-at-rest, not log-shaped strings; the
-    ``aeat.core.classification._SensitivityClass.DIAGNOSTIC``
-    class has the same rules but is named for observability sinks
-    specifically.
-    :attr:`~aeat.core.classification._SensitivityClass.AUDIT` is the
-    canonical class for the log/error path.
+    fingerprints. The :class:`~aeat.core.classification.SensitivityClass`
+    identity and diagnostic classes are named for at-rest identity data
+    and observability sinks respectively; ``AUDIT`` is the canonical
+    class for the log/error path.
 
     Args:
         text: The log-shaped string to redact.

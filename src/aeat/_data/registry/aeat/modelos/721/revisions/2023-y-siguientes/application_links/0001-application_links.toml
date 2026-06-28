@@ -12,7 +12,7 @@ surface = "filing"
 consumer = "aeat.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-hfp-886-2023:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-721", "aeat-modelo-721-procedure"]
+source_refs = ["boe-modelo-721-2023-layout", "boe-modelo-721-2024-layout", "aeat-modelo-721-procedure"]
 
 [[revisions."2023-y-siguientes".application_links]]
 id = "modelo-721-extractor"
@@ -20,7 +20,7 @@ surface = "extractor"
 consumer = "aeat.adapters.inbound.declaracion.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["orden-hfp-886-2023:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-721", "aeat-modelo-721-procedure"]
+source_refs = ["boe-modelo-721-2023-layout", "boe-modelo-721-2024-layout", "aeat-modelo-721-procedure"]
 
 [[revisions."2023-y-siguientes".application_links]]
 id = "modelo-721-verification"
@@ -28,12 +28,12 @@ surface = "verification"
 consumer = "aeat.application.verification"
 requires_snapshot = true
 legal_refs = ["orden-hfp-886-2023:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-721", "aeat-modelo-721-procedure"]
+source_refs = ["boe-modelo-721-2023-layout", "boe-modelo-721-2024-layout", "aeat-modelo-721-procedure"]
 
 [[revisions."2023-y-siguientes".application_links]]
 id = "modelo-721-deadline"
 surface = "deadline"
 consumer = "aeat.domain.deadlines"
 requires_snapshot = true
-legal_refs = ["orden-hfp-886-2023:art-3", "ley-58-2003:art-93"]
+legal_refs = ["orden-hfp-886-2023:art-4", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-721-2023-form", "aeat-modelo-721-procedure"]

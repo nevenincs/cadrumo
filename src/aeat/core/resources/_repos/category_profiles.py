@@ -1,4 +1,8 @@
-"""CategoryProfileRepository: int-year-keyed spending-category profiles."""
+"""Year-keyed spending-category profile repository.
+
+:class:`CategoryProfileRepository` adapts category-profile lookups to the
+:class:`ResourceCacheRepository` interface aggregated by :class:`ResourceRegistry`.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +18,9 @@ if TYPE_CHECKING:
 class CategoryProfileRepository(ResourceCacheRepository[Mapping["SpendingCategory", "CategoryProfile"], int]):
     """Year-keyed repository for spending-category profile registries.
 
-    Wraps :func:`aeat.domain.categories.resolve_category_profiles`.
+    Wraps :func:`aeat.domain.categories.resolve_category_profiles`
+    and returns mappings from :class:`SpendingCategory` to
+    :class:`CategoryProfile`.
     """
 
     @override

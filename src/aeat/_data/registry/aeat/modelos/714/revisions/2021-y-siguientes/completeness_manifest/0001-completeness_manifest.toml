@@ -12,7 +12,7 @@
 
 [revisions."2021-y-siguientes".completeness_manifest]
 source_ref = "aeat-modelo-714-procedure"
-legal_refs = ["ley-19-1991:art-30"]
+legal_refs = ["ley-19-1991:art-28", "ley-19-1991:art-30", "ley-19-1991:art-31"]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021-y-siguientes".completeness_manifest.casillas]]

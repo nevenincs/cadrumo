@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hfp-886-2023-art-4.html",
+  "source_sha256": "8770de6ee5224251bb4afc0e722c99f425bab61b0618754d43c1024173d638f6",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La presentación del modelo 721, «Declaración informativa sobre monedas virtuales situadas en el extranjero», se realizará entre el 1 de enero y el 31 de marzo del año siguiente a aquel al que se refiera la información a suministrar.",
+      "title": "Artículo 4. Plazo de presentación del modelo 721, «Declaración informativa sobre monedas virtuales situadas en el extranjero».",
+      "section": "Artículo 4. Plazo de presentación del modelo 721, «Declaración informativa sobre monedas virtuales situadas en el extranjero».",
+      "anchor": null
+    }
+  ]
+}

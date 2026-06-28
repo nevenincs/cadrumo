@@ -48,7 +48,7 @@ expression = { op = "sum", args = [
     { casilla_id = "1629" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68"]
+legal_refs = ["ley-35-2006:art-68.2"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2020".formulas.source_citations]]

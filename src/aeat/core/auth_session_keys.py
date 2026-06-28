@@ -1,4 +1,10 @@
-"""Logical keys for encrypted AEAT browser-session objects."""
+"""Logical keys for encrypted AEAT browser-session objects.
+
+:func:`aeat_auth_session_storage_state_path` composes the active bucket id
+and provider storage stem into the durable logical key consumed by the
+encrypted AEAT browser-session store. The returned :class:`~pathlib.Path`
+is an object key, not a plaintext filesystem destination.
+"""
 
 from __future__ import annotations
 

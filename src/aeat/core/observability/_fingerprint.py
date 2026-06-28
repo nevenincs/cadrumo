@@ -1,10 +1,8 @@
 """Deterministic SHA-256 fingerprints of corpus, db, and certificate state.
 
-Used by the observability layer to gate read-only replay: a recorded
-:class:`aeat.core.observability._models.RunTrace` carries hashes
-captured at run time, and
-:func:`aeat.core.observability.replay_run` refuses to replay when any
-of those hashes has drifted relative to the on-disk state.
+Used by :func:`run_context` to stamp a recorded :class:`RunTrace` and
+by :func:`replay_run` to gate read-only replay. A replay refuses when
+any recorded hash has drifted relative to the current on-disk state.
 
 Auditability is prioritised over time-travel: a drift refusal forces
 the operator to acknowledge the change rather than silently re-running

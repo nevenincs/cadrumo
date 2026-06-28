@@ -5,5 +5,5 @@ label = "Reserva para Inversiones en las Illes Balears 2023: Año de la dotació
 section = ["resultados", "anexo_a_res", "reserva_inversiones_baleares_res"]
 data_type = "text"
 semantic_role = "irpf_rib_baleares_dotacion_anio"
-legal_refs = ["ley-31-2022:da-70", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-31-2022:da-70", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

@@ -1,4 +1,11 @@
-"""Support types and defaults for the central settings facade."""
+"""Support types and defaults for the central settings facade.
+
+This module holds the closed settings enums and derived records consumed
+by :class:`aeat.core.config.Settings`: authentication provider selectors
+(:class:`AuthProviderKindSetting`, :class:`CertificateBackend`), secret
+storage selection (:class:`SecretStoreBackend`), and database routing via
+:class:`StorageRouteKind` and :class:`StorageRouteClassification`.
+"""
 
 from __future__ import annotations
 

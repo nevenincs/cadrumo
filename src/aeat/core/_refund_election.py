@@ -7,12 +7,14 @@ election; a taxpayer NOT inscribed in REDEME may, in the LAST filing period of t
 year (the annual liquidación, Ley 37/1992 art. 116), explicitly elect to request
 the credit back as a refund (devolución, ``D``) instead.
 
-This closed value set is declared as a :class:`enum.StrEnum` in ``core`` per the
-core-authority discipline (closed axes live in ``core/``, hydrated at boundaries,
-asserted as members in tests). It is the operator-input sibling of
-:class:`~aeat.core.ResultDisposition` (the fichero result-disposition codes): the
-election is what the operator *chooses*, the disposition is what the shared
-resolver *derives* from that choice plus the eligibility gate.
+The exported :class:`RefundElection` closed value set is declared as a
+:class:`enum.StrEnum` in ``core`` per the core-authority discipline (closed axes
+live in ``core/``, hydrated at boundaries, asserted as members in tests). It is
+the operator-input sibling of :class:`~aeat.core.ResultDisposition` (the fichero
+result-disposition codes): the election is what the operator *chooses*, while
+:func:`~aeat.application.modelo.resolve_modelo_result_disposition` derives the
+filed disposition from that choice plus the
+:func:`~aeat.domain.iva.refund_disposition_available` eligibility gate.
 """
 
 from __future__ import annotations

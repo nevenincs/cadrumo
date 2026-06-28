@@ -1,4 +1,8 @@
-"""Error code registry for aeat.entrypoints."""
+"""Entrypoint-layer :class:`~aeat.core.errors.ErrorCode` registry declarations.
+
+Rows map CLI boundary exception qualnames to stable
+:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+"""
 
 from .._registry import ErrorCategory, ErrorCode
 

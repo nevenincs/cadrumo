@@ -1,7 +1,7 @@
 [[revisions."2019-y-siguientes".constructs]]
 id = "modelo-115-quarterly-rental-withholding"
 title = "Modelo 115 quarterly urban rental withholding filing"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = [
     "aeat-dr-115-2019-v13",
     "aeat-modelo-115-obligaciones-retenedor",

@@ -1,4 +1,8 @@
-"""Error code registry for aeat.adapters."""
+"""Adapter-layer :class:`~aeat.core.errors.ErrorCode` registry aggregator.
+
+Combines the ordered adapter shards into the tuple consumed by
+:mod:`aeat.core.errors._registry`.
+"""
 
 from __future__ import annotations
 

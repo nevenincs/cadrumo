@@ -1,12 +1,10 @@
 # Modelo 714 (patrimonio) construct.
 #
 # Phase-A landed the manual-casilla surface and official source grounding.
-# Phase-B (incremental) now begins with the cuota íntegra (casilla 29): the
-# Ley 19/1991 art. 30 escala estatal is implemented from official formula
-# evidence — the verbatim eight-bracket tarifa in the bundled authoritative
-# corpus `ley-19-1991-art-30.html` — so cuota-integra is computed from the
-# base liquidable via `patrimonio-cuota-integra-escala-estatal`. The remaining
-# downstream chain (límite conjunto, reducción 80%, cuota minorada, cuota a
+# Phase-B computes the cuota íntegra (casilla 29) from the Ley 19/1991 art. 30
+# escala estatal and the art. 31 80%-floor reference (casilla 39). Both formulas
+# are implemented from official evidence in the bundled authoritative corpus.
+# The remaining downstream chain (límite conjunto, cuota minorada, cuota a
 # ingresar) stays manual pending its own official formula evidence.
 
 [[revisions."2021-y-siguientes".constructs]]

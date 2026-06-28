@@ -16,7 +16,9 @@ The helper is shared between
 :mod:`aeat.adapters.outbound.aeat.auth._clave_movil` so the Windows-ACL
 discipline cannot diverge between the two session writers.
 
-See :func:`restrict_file_permissions` for the public entry point.
+The public :func:`restrict_file_permissions` entry point accepts a
+:class:`~pathlib.Path` target and deliberately returns ``None`` even when the
+best-effort hardening step cannot be applied.
 """
 
 from __future__ import annotations

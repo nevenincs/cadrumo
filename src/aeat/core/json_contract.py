@@ -5,7 +5,10 @@ Defines the strict pydantic v2 base classes (:class:`OutputSchema`,
 (:class:`SchemaEnvelope`), the schema registry
 (:data:`SCHEMA_REGISTRY`), and the streaming helpers
 (:func:`emit_json_document`, :func:`emit_json_success`) used by every
-``--json`` code path.
+``--json`` code path. :func:`emit_json_success` applies
+:func:`aeat.core.redaction.redact_structured_for_cli_output` to the
+entire envelope before writing stdout, so the result and
+:class:`Notice` channel share the same public-output redaction policy.
 
 Living in :mod:`aeat.core` keeps domain and adapter packages free of any
 dependency on :mod:`aeat.entrypoints.cli`: a wrapped command emits its
@@ -112,7 +115,8 @@ def derive_status(notices: Sequence[Notice]) -> EnvelopeStatus:
     """Return :attr:`EnvelopeStatus.WARNING` if any notice is warning-severity.
 
     Success documents never carry :attr:`EnvelopeStatus.ERROR`; that
-    status is reserved for the stderr error envelope.
+    status is reserved for the stderr error envelope. The returned
+    :class:`EnvelopeStatus` is the stdout envelope status.
     """
     for notice in notices:
         if notice.severity is NoticeSeverity.WARNING:
@@ -274,13 +278,15 @@ def emit_json_success(
     change handled by the JSON-contract test suite, not a casual edit.
     The ``status`` is derived from the supplied notices
     (:func:`derive_status`) so the JSON outcome and the shell exit code
-    never disagree.
+    never disagree. The assembled envelope is redacted through
+    :func:`aeat.core.redaction.redact_structured_for_cli_output` before
+    :func:`emit_json_document` writes it.
 
     Args:
         command: Stable command path string (e.g. ``"workflow list"``).
         result: The strict-validated command payload to surface as
             ``envelope.result``.
-        notices: Optional typed non-blocking diagnostics (warnings,
+        notices: Optional typed :class:`Notice` diagnostics (warnings,
             advisories, next-step hints); defaults to an empty list.
         indent: Indent width forwarded to :func:`emit_json_document`.
         sort_keys: Sort-keys flag forwarded to :func:`emit_json_document`.

@@ -1,4 +1,11 @@
-"""Canonical casilla-id primitive shared across architecture layers."""
+"""Canonical casilla-id primitive shared across architecture layers.
+
+The :data:`CasillaId` alias is the shared key for registry casillas,
+CLI ``--casilla`` inputs, parser observations, and calculation payloads.
+Use :func:`validated_casilla_id` or :func:`validated_casilla_id_map`
+at boundaries so display numbers and labels do not masquerade as
+canonical registry identifiers.
+"""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""TopicCatalogueRepository: singleton topic catalogue."""
+"""TopicCatalogueRepository: singleton :class:`TopicCatalogue` lookup."""
 
 from __future__ import annotations
 
@@ -13,7 +13,8 @@ if TYPE_CHECKING:
 class TopicCatalogueRepository(ResourceCacheRepository["TopicCatalogue", None]):
     """Singleton-keyed repository for the topic catalogue.
 
-    Wraps :func:`aeat.core.topics.load_topic_catalogue`.
+    Wraps :func:`aeat.core.topics.load_topic_catalogue` and exposes
+    the resulting :class:`TopicCatalogue` through ``singleton``.
     """
 
     @override

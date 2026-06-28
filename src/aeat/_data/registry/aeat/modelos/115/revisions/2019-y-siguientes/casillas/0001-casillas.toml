@@ -8,7 +8,7 @@ semantic_role = "perceptor_count"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-115-casilla-01"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -18,11 +18,11 @@ label = "Base de retenciones e ingresos a cuenta"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "money"
 semantic_role = "base_retenciones_ingresos_a_cuenta"
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"], source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"], source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"] }
 required = false
 input_kind = "manual"
 export_refs = ["modelo-115-casilla-02"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -37,7 +37,7 @@ input_kind = "computed"
 formula = "modelo-115-retenciones"
 export_refs = ["modelo-115-casilla-03"]
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-100", "orden-2000-11-20:apartado-primero"], source_refs = ["aeat-modelo-115-guia-censal"] }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -50,7 +50,7 @@ semantic_role = "resultado_anteriores_autoliquidaciones"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-115-casilla-04"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-obligaciones-retenedor"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -60,11 +60,11 @@ label = "Resultado a ingresar"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "cuota_a_ingresar"
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"], source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"], source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"] }
 required = false
 input_kind = "computed"
 formula = "modelo-115-resultado-ingresar"
 export_refs = ["modelo-115-casilla-05"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 

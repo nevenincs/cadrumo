@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-1504-2024-art-9.html",
+  "source_sha256": "27cfcf07568266831d85d3d71f6ab58946573145fcf5f85e09fdac22b0dbf0c8",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La Orden HFP/886/2023, de 26 de julio, por la que se aprueba el modelo 721 «Declaración informativa sobre monedas virtuales situadas en el extranjero», y se establecen las condiciones y el procedimiento para su presentación, queda modificada como sigue:\n\nSe sustituye el anexo de la Orden HFP/886/2023, de 26 de julio, por el que figura como anexo I de la presente orden.",
+      "title": "Artículo noveno. Modificación de la Orden HFP/886/2023.",
+      "section": "Artículo noveno. Modificación de la Orden HFP/886/2023.",
+      "anchor": null
+    }
+  ]
+}

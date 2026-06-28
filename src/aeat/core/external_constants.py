@@ -1,4 +1,4 @@
-"""External constants registry loaded from `external_constants.toml`.
+"""External constants registry loaded from ``external_constants.toml``.
 
 Centralises third-party hostnames, AEAT service paths, OAuth scopes, and
 remote API endpoints. The TOML file sits beside this module and is parsed
@@ -6,6 +6,12 @@ once per process via :func:`load_external_constants`. Every section is
 modelled as a frozen, strict pydantic v2 model so callers see typed,
 immutable values and any drift between the TOML and the schema fails fast
 at import time.
+
+The typed root is :class:`ExternalConstants`, with AEAT-specific subsections
+grouped under :class:`AeatSection`; callers normally reach it through
+:meth:`~aeat.core.config.Settings.external_constants`. The volatile Pre303 and
+IVA-wallet browser surface remains lazily validated as :class:`AeatPre303Surface`
+so selector churn does not poison unrelated configuration reads.
 """
 
 from __future__ import annotations

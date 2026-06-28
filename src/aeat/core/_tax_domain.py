@@ -1,10 +1,12 @@
 """Closed enumeration of Spanish-tax taxonomic domains used by the modelo registry.
 
-Every :class:`~aeat.domain.calculations.registry._schema.ModeloDefinition`
-declares the broad tax family it belongs to via its ``tax_domain``
-field. This enum closes the value set so loader hydration rejects
-typos and unknown values at registry-load time rather than at any
-downstream branch on the string.
+Every :class:`~aeat.domain.calculations.registry.ModeloDefinition` declares the
+broad tax family it belongs to via its ``tax_domain`` field. The exported
+:class:`TaxDomain` enum closes that value set so loader hydration rejects typos
+and unknown values at registry-load time rather than at any downstream branch on
+the string. It is the tax-family sibling of :class:`~aeat.core.Modelo`: one enum
+names the modelo identifier, the other names the registry taxonomy attached to
+that modelo definition.
 """
 
 from __future__ import annotations

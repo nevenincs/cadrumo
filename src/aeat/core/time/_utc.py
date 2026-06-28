@@ -1,15 +1,19 @@
-"""Canonical UTC datetime helpers.
+"""Canonical UTC :class:`~datetime.datetime` helpers.
 
 Two semantics exist across the codebase for handling naive datetimes:
 
 * :func:`coerce_utc_aware` — coerce a naive datetime to UTC-aware by
-  attaching :data:`datetime.UTC`.  Used where the source produces
+  attaching :data:`~datetime.UTC`.  Used where the source produces
   naive datetimes (e.g. PKCS#12 certificate timestamps).
 
 * :func:`validate_utc_aware` — reject naive datetimes or non-UTC
-  datetimes with :class:`aeat.core.errors.CoreValidationError`.  Used
+  datetimes with :class:`~aeat.core.errors.CoreValidationError`.  Used
   at persistence and model boundaries where a naive datetime indicates
   a programming error.
+
+:func:`parse_iso_datetime` is deliberately policy-neutral: it normalises the
+``Z`` suffix and returns the parsed :class:`~datetime.datetime`, leaving callers
+to choose :func:`coerce_utc_aware` or :func:`validate_utc_aware`.
 """
 
 from __future__ import annotations

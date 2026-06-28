@@ -1,7 +1,7 @@
 """Lazily-resolved :class:`SensitivityClass` DIAGNOSTIC redaction rule set.
 
-The DIAGNOSTIC-class rule set is resolved lazily on first call so the
-observability package does not pull
+The :func:`diagnostic_rules` helper resolves the DIAGNOSTIC-class rule
+set lazily on first call so the observability package does not pull
 :mod:`aeat.adapters.persistence.storage` (which triggers Alembic plugin
 discovery and emits INFO log lines on stderr at import time) into every
 CLI command's import chain. The cost of resolving the rule set once is

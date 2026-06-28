@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import ast
+import importlib
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -10,29 +12,320 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+_REPO_ROOT = Path(__file__).parents[4]
+
+
+def _repo_source(relative_path: str) -> str:
+    return (_REPO_ROOT / relative_path).read_text(encoding="utf-8")
+
+
+def _repo_tree(relative_path: str) -> ast.AST:
+    return ast.parse(_repo_source(relative_path))
+
+
+def _call_name(func: ast.expr) -> str:
+    if isinstance(func, ast.Name):
+        return func.id
+    if isinstance(func, ast.Attribute):
+        return func.attr
+    return ""
+
+
+def _assert_module_constant_identity(
+    *,
+    module_name: str,
+    attr_name: str,
+    expected: object,
+    import_message: str,
+) -> None:
+    mod = importlib.import_module(module_name)
+
+    assert hasattr(mod, attr_name), import_message
+    assert getattr(mod, attr_name) is expected
+
+
+def _decimal_call_literal_offenders(
+    *,
+    relative_path: str,
+    display_path: str,
+    literal: str,
+    replacement: str,
+) -> list[str]:
+    offenders: list[str] = []
+    for node in ast.walk(_repo_tree(relative_path)):
+        if not isinstance(node, ast.Call):
+            continue
+        if _call_name(node.func) != "Decimal":
+            continue
+        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == literal:
+            offenders.append(f"{display_path}:{node.lineno}: bare Decimal({literal!r}); use {replacement}")
+    return offenders
+
+
+def _min_arg_literal_offenders(
+    *,
+    relative_path: str,
+    display_path: str,
+    literal: int,
+    replacement: str,
+) -> list[str]:
+    offenders: list[str] = []
+    for node in ast.walk(_repo_tree(relative_path)):
+        if not isinstance(node, ast.Call):
+            continue
+        if _call_name(node.func) != "min":
+            continue
+        for arg in node.args:
+            if isinstance(arg, ast.Constant) and arg.value == literal:
+                offenders.append(f"{display_path}:{node.lineno}: bare {literal} literal in min(); use {replacement}")
+    return offenders
+
+
+_DEFAULT_IVA_IMPORT_CASES: tuple[tuple[str, str], ...] = (
+    (
+        "aeat.application.inventory._service",
+        "_service must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants",
+    ),
+    (
+        "aeat.entrypoints.cli._ledger_inventory_cli",
+        "_ledger_inventory_cli must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants",
+    ),
+    (
+        "aeat.domain.contribuyente.assets",
+        "aeat.domain.contribuyente.assets must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants",
+    ),
+    (
+        "aeat.domain.contribuyente.inventory",
+        "contribuyente.inventory must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants",
+    ),
+)
+_DEFAULT_IVA_IMPORT_IDS = (
+    "inventory-service",
+    "ledger-inventory-cli",
+    "contribuyente-assets",
+    "contribuyente-inventory",
+)
+
+_IVA_DECIMAL_LITERAL_CASES: tuple[tuple[str, str, str], ...] = (
+    (
+        "src/aeat/application/inventory/_service.py",
+        "_service.py",
+        "DEFAULT_IVA_GENERAL_RATE_PCT",
+    ),
+    (
+        "src/aeat/domain/contribuyente/assets/__init__.py",
+        "assets/__init__.py",
+        "DEFAULT_IVA_GENERAL_RATE_PCT",
+    ),
+    (
+        "src/aeat/domain/contribuyente/inventory/__init__.py",
+        "inventory/__init__.py",
+        "DEFAULT_IVA_GENERAL_RATE_PCT",
+    ),
+)
+_IVA_DECIMAL_LITERAL_IDS = ("inventory-service", "contribuyente-assets", "contribuyente-inventory")
+
+_MODELO_GROUP_CASES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("RETENCIONES_MODELOS", ("111", "115", "123", "180", "190", "193")),
+    ("COUNTERPART_MODELOS", ("347", "349")),
+    ("FOREIGN_ASSET_MODELOS", ("720",)),
+    ("IVA_REGIME_MODELOS", ("303", "390")),
+)
+_MODELO_GROUP_IDS = ("retenciones", "counterpart", "foreign-asset", "iva-regime")
+
+_MODELO_GROUP_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
+    (
+        "aeat.application.aggregation._service",
+        "_RETENCIONES_MODELOS",
+        "RETENCIONES_MODELOS",
+        "_service must alias RETENCIONES_MODELOS from aeat.core.external_constants",
+    ),
+    (
+        "aeat.application.aggregation._service",
+        "_COUNTERPART_MODELOS",
+        "COUNTERPART_MODELOS",
+        "_service must alias COUNTERPART_MODELOS from aeat.core.external_constants",
+    ),
+    (
+        "aeat.application.aggregation._service",
+        "_FOREIGN_ASSET_MODELOS",
+        "FOREIGN_ASSET_MODELOS",
+        "_service must alias FOREIGN_ASSET_MODELOS from aeat.core.external_constants",
+    ),
+    (
+        "aeat.application.overview._calendar",
+        "_IVA_REGIME_MODELOS",
+        "IVA_REGIME_MODELOS",
+        "_calendar must alias IVA_REGIME_MODELOS from aeat.core.external_constants",
+    ),
+)
+
+_MODELO_GROUP_LITERAL_CASES: tuple[tuple[str, tuple[str, ...], str], ...] = (
+    (
+        "src/aeat/application/aggregation/_service.py",
+        ("111", "115", "123", "180", "190", "193"),
+        "Bare retenciones-modelos tuple literal found in _service.py; use RETENCIONES_MODELOS from core",
+    ),
+    (
+        "src/aeat/application/aggregation/_service.py",
+        ("347", "349"),
+        "Bare counterpart-modelos tuple literal found in _service.py; use COUNTERPART_MODELOS from core",
+    ),
+    (
+        "src/aeat/application/aggregation/_service.py",
+        ("720",),
+        "Bare foreign-asset-modelos tuple literal found in _service.py; use FOREIGN_ASSET_MODELOS from core",
+    ),
+    (
+        "src/aeat/application/overview/_calendar.py",
+        ("303", "390"),
+        "Bare IVA-regime-modelos tuple literal found in _calendar.py; use IVA_REGIME_MODELOS from core",
+    ),
+)
+
+_IRPF_INT_CONSTANT_CASES: tuple[tuple[str, int], ...] = (
+    ("DEDUCCION_MATERNIDAD_MENSUAL_EUR", 100),
+    ("DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR", 1200),
+    ("INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR", 1000),
+)
+_IRPF_INT_CONSTANT_IDS = ("maternidad-mensual", "maternidad-anual-cap", "guarderia-cap")
+
+_IRPF_INT_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
+    (
+        "aeat.domain.contribuyente._deduccion_maternidad",
+        "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
+        "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
+        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from aeat.core.external_constants",
+    ),
+    (
+        "aeat.domain.contribuyente._deduccion_maternidad",
+        "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
+        "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
+        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from aeat.core.external_constants",
+    ),
+    (
+        "aeat.domain.contribuyente.family",
+        "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
+        "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
+        "family must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from aeat.core.external_constants",
+    ),
+    (
+        "aeat.domain.contribuyente.family",
+        "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
+        "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
+        "family must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from aeat.core.external_constants",
+    ),
+    (
+        "aeat.domain.contribuyente.family",
+        "INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR",
+        "INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR",
+        "family must import INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR from aeat.core.external_constants",
+    ),
+)
+_IRPF_INT_ALIAS_IDS = (
+    "deduccion-maternidad-mensual",
+    "deduccion-maternidad-anual-cap",
+    "family-maternidad-mensual",
+    "family-maternidad-anual-cap",
+    "family-guarderia-cap",
+)
+
+_MIN_LITERAL_CASES: tuple[tuple[str, str, int, str, str], ...] = (
+    (
+        "src/aeat/domain/contribuyente/family.py",
+        "family.py",
+        1200,
+        "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
+        "Bare 1200 maternidad cap literals found in family.py",
+    ),
+    (
+        "src/aeat/domain/contribuyente/_deduccion_maternidad.py",
+        "_deduccion_maternidad.py",
+        1200,
+        "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
+        "Bare 1200 maternidad cap literals found in _deduccion_maternidad.py",
+    ),
+    (
+        "src/aeat/domain/contribuyente/family.py",
+        "family.py",
+        1000,
+        "INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR",
+        "Bare 1000 guarderia cap literals found in family.py",
+    ),
+)
+_MIN_LITERAL_IDS = ("family-maternidad", "deduccion-maternidad", "family-guarderia")
+
+_DECIMAL_CONSTANT_CASES: tuple[tuple[str, str], ...] = (
+    ("DEFAULT_IVA_GENERAL_RATE_PCT", "21.00"),
+    ("AMORTIZACION_INMUEBLE_RATE", "0.03"),
+    ("REBECA_MARITIME_EXEMPTION_FRACTION", "0.50"),
+)
+_DECIMAL_CONSTANT_IDS = ("default-iva-general-rate", "amortizacion-inmueble-rate", "rebeca-maritime-fraction")
+
+_DECIMAL_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
+    (
+        "aeat.domain.fincas._amortization_ledger",
+        "AMORTIZACION_INMUEBLE_RATE",
+        "AMORTIZACION_INMUEBLE_RATE",
+        "_amortization_ledger must import AMORTIZACION_INMUEBLE_RATE from aeat.core.external_constants",
+    ),
+    (
+        "aeat.domain.fincas._amortization_ledger",
+        "ART_23_1_F_RATE",
+        "AMORTIZACION_INMUEBLE_RATE",
+        "_amortization_ledger must expose ART_23_1_F_RATE alias",
+    ),
+    (
+        "aeat.domain.renta._maritime_exemption",
+        "REBECA_MARITIME_EXEMPTION_FRACTION",
+        "REBECA_MARITIME_EXEMPTION_FRACTION",
+        "_maritime_exemption must import REBECA_MARITIME_EXEMPTION_FRACTION from aeat.core.external_constants",
+    ),
+)
+_DECIMAL_ALIAS_IDS = ("amortization-rate", "amortization-art-23-alias", "rebeca-fraction")
+
+_DECIMAL_LITERAL_CASES: tuple[tuple[str, str, str, str, str], ...] = (
+    (
+        "src/aeat/domain/fincas/_amortization_ledger.py",
+        "_amortization_ledger.py",
+        "0.03",
+        "AMORTIZACION_INMUEBLE_RATE",
+        "Bare Decimal('0.03') amortization literals found",
+    ),
+    (
+        "src/aeat/domain/renta/_maritime_exemption.py",
+        "_maritime_exemption.py",
+        "0.50",
+        "REBECA_MARITIME_EXEMPTION_FRACTION",
+        "Bare Decimal('0.50') REBECA literals found",
+    ),
+)
+_DECIMAL_LITERAL_IDS = ("amortization-rate", "rebeca-fraction")
+
+
 # ---------------------------------------------------------------------------
 # contract — DEFAULT_IVA_GENERAL_RATE_PCT centralisation tests
 # ---------------------------------------------------------------------------
 
 
-def test_default_iva_general_rate_pct_value() -> None:
-    """``DEFAULT_IVA_GENERAL_RATE_PCT`` equals 21.00 per LIVA art. 90 Uno."""
+@pytest.mark.parametrize(("constant_name", "expected"), _DECIMAL_CONSTANT_CASES, ids=_DECIMAL_CONSTANT_IDS)
+def test_decimal_external_constant_values(constant_name: str, expected: str) -> None:
+    """Decimal external constants equal their legal scalar values."""
 
-    from decimal import Decimal
+    from .. import external_constants
 
-    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
-
-    assert Decimal("21.00") == DEFAULT_IVA_GENERAL_RATE_PCT
+    assert Decimal(expected) == getattr(external_constants, constant_name)
 
 
-def test_default_iva_general_rate_pct_is_final_decimal() -> None:
-    """``DEFAULT_IVA_GENERAL_RATE_PCT`` is a ``Decimal`` instance (typed ``Final[Decimal]``)."""
+@pytest.mark.parametrize(("constant_name", "expected"), _DECIMAL_CONSTANT_CASES, ids=_DECIMAL_CONSTANT_IDS)
+def test_decimal_external_constants_are_decimal(constant_name: str, expected: str) -> None:
+    """Decimal external constants are ``Decimal`` instances."""
 
-    from decimal import Decimal
+    from .. import external_constants
 
-    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
-
-    assert isinstance(DEFAULT_IVA_GENERAL_RATE_PCT, Decimal)
+    value = getattr(external_constants, constant_name)
+    assert isinstance(value, Decimal)
+    assert value == Decimal(expected)
 
 
 def test_default_iva_general_rate_pct_matches_registry() -> None:
@@ -51,141 +344,48 @@ def test_default_iva_general_rate_pct_matches_registry() -> None:
     assert registry_rate.pct == DEFAULT_IVA_GENERAL_RATE_PCT
 
 
-def test_inventory_service_imports_default_iva_general_rate_pct_from_core() -> None:
-    """``application/inventory/_service.py`` imports ``DEFAULT_IVA_GENERAL_RATE_PCT`` from core."""
-
-    import importlib
-
-    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
-
-    mod = importlib.import_module("aeat.application.inventory._service")
-
-    assert hasattr(mod, "DEFAULT_IVA_GENERAL_RATE_PCT"), (
-        "_service must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants"
-    )
-    assert mod.DEFAULT_IVA_GENERAL_RATE_PCT is DEFAULT_IVA_GENERAL_RATE_PCT
-
-
-def test_ledger_inventory_cli_imports_default_iva_general_rate_pct_from_core() -> None:
-    """``entrypoints/cli/_ledger_inventory_cli.py`` imports ``DEFAULT_IVA_GENERAL_RATE_PCT`` from core."""
-
-    import importlib
+@pytest.mark.parametrize(
+    ("module_name", "message"),
+    _DEFAULT_IVA_IMPORT_CASES,
+    ids=_DEFAULT_IVA_IMPORT_IDS,
+)
+def test_modules_import_default_iva_general_rate_pct_from_core(
+    module_name: str,
+    message: str,
+) -> None:
+    """Known consumers import ``DEFAULT_IVA_GENERAL_RATE_PCT`` from core."""
 
     from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
 
-    mod = importlib.import_module("aeat.entrypoints.cli._ledger_inventory_cli")
-
-    assert hasattr(mod, "DEFAULT_IVA_GENERAL_RATE_PCT"), (
-        "_ledger_inventory_cli must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants"
+    _assert_module_constant_identity(
+        module_name=module_name,
+        attr_name="DEFAULT_IVA_GENERAL_RATE_PCT",
+        expected=DEFAULT_IVA_GENERAL_RATE_PCT,
+        import_message=message,
     )
-    assert mod.DEFAULT_IVA_GENERAL_RATE_PCT is DEFAULT_IVA_GENERAL_RATE_PCT
 
 
-def test_contribuyente_assets_imports_default_iva_general_rate_pct_from_core() -> None:
-    """``domain/contribuyente/assets/__init__.py`` imports ``DEFAULT_IVA_GENERAL_RATE_PCT`` from core."""
+@pytest.mark.parametrize(
+    ("relative_path", "display_path", "replacement"),
+    _IVA_DECIMAL_LITERAL_CASES,
+    ids=_IVA_DECIMAL_LITERAL_IDS,
+)
+def test_no_bare_iva_rate_decimal_literal_in_consumers(
+    relative_path: str,
+    display_path: str,
+    replacement: str,
+) -> None:
+    """No bare ``Decimal("21.00")`` literal in IVA rate consumers."""
 
-    import importlib
-
-    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
-
-    mod = importlib.import_module("aeat.domain.contribuyente.assets")
-
-    assert hasattr(mod, "DEFAULT_IVA_GENERAL_RATE_PCT"), (
-        "aeat.domain.contribuyente.assets must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants"
+    offenders = _decimal_call_literal_offenders(
+        relative_path=relative_path,
+        display_path=display_path,
+        literal="21.00",
+        replacement=replacement,
     )
-    assert mod.DEFAULT_IVA_GENERAL_RATE_PCT is DEFAULT_IVA_GENERAL_RATE_PCT
-
-
-def test_contribuyente_inventory_imports_default_iva_general_rate_pct_from_core() -> None:
-    """``domain/contribuyente/inventory/__init__.py`` imports ``DEFAULT_IVA_GENERAL_RATE_PCT`` from core."""
-
-    import importlib
-
-    from ..external_constants import DEFAULT_IVA_GENERAL_RATE_PCT
-
-    mod = importlib.import_module("aeat.domain.contribuyente.inventory")
-
-    assert hasattr(mod, "DEFAULT_IVA_GENERAL_RATE_PCT"), (
-        "aeat.domain.contribuyente.inventory must import DEFAULT_IVA_GENERAL_RATE_PCT from aeat.core.external_constants"
-    )
-    assert mod.DEFAULT_IVA_GENERAL_RATE_PCT is DEFAULT_IVA_GENERAL_RATE_PCT
-
-
-def test_no_bare_iva_rate_decimal_literal_in_inventory_service() -> None:
-    """No bare ``Decimal("21.00")`` literal in ``application/inventory/_service.py``.
-
-    Anti-tautology: parses the real AST so any future re-introduction triggers failure.
-    """
-
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/application/inventory/_service.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
-        if func_name != "Decimal":
-            continue
-        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "21.00":
-            offenders.append(f"_service.py:{node.lineno}: bare Decimal('21.00'); use DEFAULT_IVA_GENERAL_RATE_PCT")
 
     assert offenders == [], (
-        "Local IVA 21.00 literals found; import DEFAULT_IVA_GENERAL_RATE_PCT from core instead:\n"
-        + "\n".join(offenders)
-    )
-
-
-def test_no_bare_iva_rate_decimal_literal_in_contribuyente_assets() -> None:
-    """No bare ``Decimal("21.00")`` literal in ``domain/contribuyente/assets/__init__.py``."""
-
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/domain/contribuyente/assets/__init__.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
-        if func_name != "Decimal":
-            continue
-        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "21.00":
-            offenders.append(
-                f"assets/__init__.py:{node.lineno}: bare Decimal('21.00'); use DEFAULT_IVA_GENERAL_RATE_PCT",
-            )
-
-    assert offenders == [], (
-        "Local IVA 21.00 literals found in assets; import DEFAULT_IVA_GENERAL_RATE_PCT from core instead:\n"
-        + "\n".join(offenders)
-    )
-
-
-def test_no_bare_iva_rate_decimal_literal_in_contribuyente_inventory() -> None:
-    """No bare ``Decimal("21.00")`` literal in ``domain/contribuyente/inventory/__init__.py``."""
-
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/domain/contribuyente/inventory/__init__.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
-        if func_name != "Decimal":
-            continue
-        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "21.00":
-            offenders.append(
-                f"inventory/__init__.py:{node.lineno}: bare Decimal('21.00'); use DEFAULT_IVA_GENERAL_RATE_PCT",
-            )
-
-    assert offenders == [], (
-        "Local IVA 21.00 literals found in inventory; import DEFAULT_IVA_GENERAL_RATE_PCT from core instead:\n"
+        f"Local IVA 21.00 literals found in {display_path}; import DEFAULT_IVA_GENERAL_RATE_PCT from core instead:\n"
         + "\n".join(offenders)
     )
 
@@ -197,9 +397,7 @@ def test_no_bare_iva_rate_string_literal_in_ledger_inventory_cli() -> None:
     bare Option default instead of ``str(DEFAULT_IVA_GENERAL_RATE_PCT)``.
     """
 
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/entrypoints/cli/_ledger_inventory_cli.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
+    tree = _repo_tree("src/aeat/entrypoints/cli/_ledger_inventory_cli.py")
 
     offenders: list[str] = []
     for node in ast.walk(tree):
@@ -219,9 +417,7 @@ def test_no_bare_iva_rate_string_literal_in_ledger_inventory_cli() -> None:
 def test_no_bare_jsonl_or_xlsx_mime_literal_in_tabular() -> None:
     """No bare JSONL/XLSX MIME literals in ``_tabular.py`` argument positions."""
 
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/application/export/_tabular.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
+    tree = _repo_tree("src/aeat/application/export/_tabular.py")
 
     guarded_literals = {
         "application/x-ndjson": "_JSONL_MIME_TYPE",
@@ -244,132 +440,48 @@ def test_no_bare_jsonl_or_xlsx_mime_literal_in_tabular() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_retenciones_modelos_value() -> None:
-    """``RETENCIONES_MODELOS`` equals the withholding/retention filing modelo set."""
+@pytest.mark.parametrize(("constant_name", "expected"), _MODELO_GROUP_CASES, ids=_MODELO_GROUP_IDS)
+def test_modelo_group_values(constant_name: str, expected: tuple[str, ...]) -> None:
+    """Modelo group constants equal their authoritative modelo tuples."""
 
-    from ..external_constants import RETENCIONES_MODELOS
+    from .. import external_constants
 
-    assert RETENCIONES_MODELOS == ("111", "115", "123", "180", "190", "193")
-
-
-def test_retenciones_modelos_is_tuple_of_str() -> None:
-    """``RETENCIONES_MODELOS`` is a ``tuple`` whose elements are ``str`` instances."""
-
-    from ..external_constants import RETENCIONES_MODELOS
-
-    assert isinstance(RETENCIONES_MODELOS, tuple)
-    assert all(isinstance(code, str) for code in RETENCIONES_MODELOS)
+    assert getattr(external_constants, constant_name) == expected
 
 
-def test_counterpart_modelos_value() -> None:
-    """``COUNTERPART_MODELOS`` equals the third-party declaration filing modelo set."""
+@pytest.mark.parametrize(("constant_name", "expected"), _MODELO_GROUP_CASES, ids=_MODELO_GROUP_IDS)
+def test_modelo_groups_are_tuples_of_str(constant_name: str, expected: tuple[str, ...]) -> None:
+    """Modelo group constants are tuples whose elements are strings."""
 
-    from ..external_constants import COUNTERPART_MODELOS
+    from .. import external_constants
 
-    assert COUNTERPART_MODELOS == ("347", "349")
-
-
-def test_counterpart_modelos_is_tuple_of_str() -> None:
-    """``COUNTERPART_MODELOS`` is a ``tuple`` whose elements are ``str`` instances."""
-
-    from ..external_constants import COUNTERPART_MODELOS
-
-    assert isinstance(COUNTERPART_MODELOS, tuple)
-    assert all(isinstance(code, str) for code in COUNTERPART_MODELOS)
+    value = getattr(external_constants, constant_name)
+    assert isinstance(value, tuple)
+    assert all(isinstance(code, str) for code in value)
+    assert len(value) == len(expected)
 
 
-def test_foreign_asset_modelos_value() -> None:
-    """``FOREIGN_ASSET_MODELOS`` equals the overseas-asset declaration modelo set."""
+@pytest.mark.parametrize(
+    ("module_name", "module_attr", "constant_name", "message"),
+    _MODELO_GROUP_ALIAS_CASES,
+    ids=_MODELO_GROUP_IDS,
+)
+def test_modelo_group_consumers_alias_central_constants(
+    module_name: str,
+    module_attr: str,
+    constant_name: str,
+    message: str,
+) -> None:
+    """Known consumers alias modelo group constants from core."""
 
-    from ..external_constants import FOREIGN_ASSET_MODELOS
+    from .. import external_constants
 
-    assert FOREIGN_ASSET_MODELOS == ("720",)
-
-
-def test_foreign_asset_modelos_is_tuple_of_str() -> None:
-    """``FOREIGN_ASSET_MODELOS`` is a ``tuple`` whose elements are ``str`` instances."""
-
-    from ..external_constants import FOREIGN_ASSET_MODELOS
-
-    assert isinstance(FOREIGN_ASSET_MODELOS, tuple)
-    assert all(isinstance(code, str) for code in FOREIGN_ASSET_MODELOS)
-
-
-def test_iva_regime_modelos_value() -> None:
-    """``IVA_REGIME_MODELOS`` equals the IVA-regime gating grupo modelo set."""
-
-    from ..external_constants import IVA_REGIME_MODELOS
-
-    assert IVA_REGIME_MODELOS == ("303", "390")
-
-
-def test_iva_regime_modelos_is_tuple_of_str() -> None:
-    """``IVA_REGIME_MODELOS`` is a ``tuple`` whose elements are ``str`` instances."""
-
-    from ..external_constants import IVA_REGIME_MODELOS
-
-    assert isinstance(IVA_REGIME_MODELOS, tuple)
-    assert all(isinstance(code, str) for code in IVA_REGIME_MODELOS)
-
-
-def test_aggregation_service_retenciones_modelos_is_central_constant() -> None:
-    """``_service._RETENCIONES_MODELOS`` is the central ``RETENCIONES_MODELOS`` constant."""
-
-    import importlib
-
-    from ..external_constants import RETENCIONES_MODELOS
-
-    mod = importlib.import_module("aeat.application.aggregation._service")
-
-    assert hasattr(mod, "_RETENCIONES_MODELOS"), (
-        "_service must alias RETENCIONES_MODELOS from aeat.core.external_constants"
+    _assert_module_constant_identity(
+        module_name=module_name,
+        attr_name=module_attr,
+        expected=getattr(external_constants, constant_name),
+        import_message=message,
     )
-    assert mod._RETENCIONES_MODELOS is RETENCIONES_MODELOS
-
-
-def test_aggregation_service_counterpart_modelos_is_central_constant() -> None:
-    """``_service._COUNTERPART_MODELOS`` is the central ``COUNTERPART_MODELOS`` constant."""
-
-    import importlib
-
-    from ..external_constants import COUNTERPART_MODELOS
-
-    mod = importlib.import_module("aeat.application.aggregation._service")
-
-    assert hasattr(mod, "_COUNTERPART_MODELOS"), (
-        "_service must alias COUNTERPART_MODELOS from aeat.core.external_constants"
-    )
-    assert mod._COUNTERPART_MODELOS is COUNTERPART_MODELOS
-
-
-def test_aggregation_service_foreign_asset_modelos_is_central_constant() -> None:
-    """``_service._FOREIGN_ASSET_MODELOS`` is the central ``FOREIGN_ASSET_MODELOS`` constant."""
-
-    import importlib
-
-    from ..external_constants import FOREIGN_ASSET_MODELOS
-
-    mod = importlib.import_module("aeat.application.aggregation._service")
-
-    assert hasattr(mod, "_FOREIGN_ASSET_MODELOS"), (
-        "_service must alias FOREIGN_ASSET_MODELOS from aeat.core.external_constants"
-    )
-    assert mod._FOREIGN_ASSET_MODELOS is FOREIGN_ASSET_MODELOS
-
-
-def test_calendar_iva_regime_modelos_is_central_constant() -> None:
-    """``_calendar._IVA_REGIME_MODELOS`` is the central ``IVA_REGIME_MODELOS`` constant."""
-
-    import importlib
-
-    from ..external_constants import IVA_REGIME_MODELOS
-
-    mod = importlib.import_module("aeat.application.overview._calendar")
-
-    assert hasattr(mod, "_IVA_REGIME_MODELOS"), (
-        "_calendar must alias IVA_REGIME_MODELOS from aeat.core.external_constants"
-    )
-    assert mod._IVA_REGIME_MODELOS is IVA_REGIME_MODELOS
 
 
 def _ast_contains_modelo_group_tuple(source: str, expected_elts: tuple[str, ...]) -> bool:
@@ -388,61 +500,19 @@ def _ast_contains_modelo_group_tuple(source: str, expected_elts: tuple[str, ...]
     return False
 
 
-def test_no_bare_retenciones_modelos_tuple_literal_in_service() -> None:
-    """No bare retenciones-grupo tuple literal in ``application/aggregation/_service.py``.
+@pytest.mark.parametrize(
+    ("relative_path", "expected_elts", "message"),
+    _MODELO_GROUP_LITERAL_CASES,
+    ids=_MODELO_GROUP_IDS,
+)
+def test_no_bare_modelo_group_tuple_literals_in_consumers(
+    relative_path: str,
+    expected_elts: tuple[str, ...],
+    message: str,
+) -> None:
+    """No bare modelo group tuple literals in consumers."""
 
-    Anti-tautology: parses the real AST so any future re-introduction of the
-    local constant triggers immediate failure.
-    """
-
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/application/aggregation/_service.py").read_text(encoding="utf-8")
-
-    assert not _ast_contains_modelo_group_tuple(source, ("111", "115", "123", "180", "190", "193")), (
-        "Bare retenciones-modelos tuple literal found in _service.py; use RETENCIONES_MODELOS from core"
-    )
-
-
-def test_no_bare_counterpart_modelos_tuple_literal_in_service() -> None:
-    """No bare counterpart-grupo tuple literal in ``application/aggregation/_service.py``.
-
-    Anti-tautology: parses the real AST so any future re-introduction triggers failure.
-    """
-
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/application/aggregation/_service.py").read_text(encoding="utf-8")
-
-    assert not _ast_contains_modelo_group_tuple(source, ("347", "349")), (
-        "Bare counterpart-modelos tuple literal found in _service.py; use COUNTERPART_MODELOS from core"
-    )
-
-
-def test_no_bare_foreign_asset_modelos_tuple_literal_in_service() -> None:
-    """No bare foreign-assets-grupo tuple literal in ``application/aggregation/_service.py``.
-
-    Anti-tautology: parses the real AST so any future re-introduction triggers failure.
-    """
-
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/application/aggregation/_service.py").read_text(encoding="utf-8")
-
-    assert not _ast_contains_modelo_group_tuple(source, ("720",)), (
-        "Bare foreign-asset-modelos tuple literal found in _service.py; use FOREIGN_ASSET_MODELOS from core"
-    )
-
-
-def test_no_bare_iva_regime_modelos_tuple_literal_in_calendar() -> None:
-    """No bare IVA-regime-grupo tuple literal in ``application/overview/_calendar.py``.
-
-    Anti-tautology: parses the real AST so any future re-introduction triggers failure.
-    """
-
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/application/overview/_calendar.py").read_text(encoding="utf-8")
-
-    assert not _ast_contains_modelo_group_tuple(source, ("303", "390")), (
-        "Bare IVA-regime-modelos tuple literal found in _calendar.py; use IVA_REGIME_MODELOS from core"
-    )
+    assert not _ast_contains_modelo_group_tuple(_repo_source(relative_path), expected_elts), message
 
 
 # ---------------------------------------------------------------------------
@@ -450,36 +520,24 @@ def test_no_bare_iva_regime_modelos_tuple_literal_in_calendar() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_deduccion_maternidad_mensual_eur_value() -> None:
-    """``DEDUCCION_MATERNIDAD_MENSUAL_EUR`` equals 100 per Art. 81 LIRPF (Ley 35/2006)."""
+@pytest.mark.parametrize(("constant_name", "expected"), _IRPF_INT_CONSTANT_CASES, ids=_IRPF_INT_CONSTANT_IDS)
+def test_irpf_int_constant_values(constant_name: str, expected: int) -> None:
+    """IRPF integer constants equal their legal scalar values."""
 
-    from ..external_constants import DEDUCCION_MATERNIDAD_MENSUAL_EUR
+    from .. import external_constants
 
-    assert DEDUCCION_MATERNIDAD_MENSUAL_EUR == 100
-
-
-def test_deduccion_maternidad_anual_cap_eur_value() -> None:
-    """``DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR`` equals 1200 per Art. 81 LIRPF (Ley 35/2006)."""
-
-    from ..external_constants import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
-
-    assert DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR == 1200
+    assert getattr(external_constants, constant_name) == expected
 
 
-def test_deduccion_maternidad_mensual_eur_is_int() -> None:
-    """``DEDUCCION_MATERNIDAD_MENSUAL_EUR`` is an ``int`` (casilla 0611 carries no decimal places)."""
+@pytest.mark.parametrize(("constant_name", "expected"), _IRPF_INT_CONSTANT_CASES, ids=_IRPF_INT_CONSTANT_IDS)
+def test_irpf_int_constants_are_int(constant_name: str, expected: int) -> None:
+    """IRPF euro constants are ``int`` values because the target casillas carry no decimals."""
 
-    from ..external_constants import DEDUCCION_MATERNIDAD_MENSUAL_EUR
+    from .. import external_constants
 
-    assert isinstance(DEDUCCION_MATERNIDAD_MENSUAL_EUR, int)
-
-
-def test_deduccion_maternidad_anual_cap_eur_is_int() -> None:
-    """``DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR`` is an ``int`` (casilla 0611 carries no decimal places)."""
-
-    from ..external_constants import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
-
-    assert isinstance(DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR, int)
+    value = getattr(external_constants, constant_name)
+    assert isinstance(value, int)
+    assert value == expected
 
 
 def test_deduccion_maternidad_monthly_times_12_equals_annual_cap() -> None:
@@ -493,112 +551,26 @@ def test_deduccion_maternidad_monthly_times_12_equals_annual_cap() -> None:
     assert DEDUCCION_MATERNIDAD_MENSUAL_EUR * 12 == DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
 
 
-def test_deduccion_maternidad_module_imports_mensual_from_core() -> None:
-    """``domain/contribuyente/_deduccion_maternidad.py`` reads ``DEDUCCION_MATERNIDAD_MENSUAL_EUR`` from core."""
+@pytest.mark.parametrize(
+    ("module_name", "module_attr", "constant_name", "message"),
+    _IRPF_INT_ALIAS_CASES,
+    ids=_IRPF_INT_ALIAS_IDS,
+)
+def test_irpf_int_constant_consumers_alias_core_constants(
+    module_name: str,
+    module_attr: str,
+    constant_name: str,
+    message: str,
+) -> None:
+    """Known consumers alias IRPF integer constants from core."""
 
-    import importlib
+    from .. import external_constants
 
-    from ..external_constants import DEDUCCION_MATERNIDAD_MENSUAL_EUR
-
-    mod = importlib.import_module("aeat.domain.contribuyente._deduccion_maternidad")
-
-    assert hasattr(mod, "DEDUCCION_MATERNIDAD_MENSUAL_EUR"), (
-        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from aeat.core.external_constants"
-    )
-    assert mod.DEDUCCION_MATERNIDAD_MENSUAL_EUR is DEDUCCION_MATERNIDAD_MENSUAL_EUR
-
-
-def test_deduccion_maternidad_module_imports_anual_cap_from_core() -> None:
-    """``domain/contribuyente/_deduccion_maternidad.py`` reads ``DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR`` from core."""
-
-    import importlib
-
-    from ..external_constants import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
-
-    mod = importlib.import_module("aeat.domain.contribuyente._deduccion_maternidad")
-
-    assert hasattr(mod, "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR"), (
-        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from aeat.core.external_constants"
-    )
-    assert mod.DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR is DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
-
-
-def test_family_module_imports_deduccion_maternidad_constants_from_core() -> None:
-    """``domain/contribuyente/family.py`` reads both maternidad constants from core."""
-
-    import importlib
-
-    from ..external_constants import (
-        DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR,
-        DEDUCCION_MATERNIDAD_MENSUAL_EUR,
-    )
-
-    mod = importlib.import_module("aeat.domain.contribuyente.family")
-
-    assert hasattr(mod, "DEDUCCION_MATERNIDAD_MENSUAL_EUR"), (
-        "family must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from aeat.core.external_constants"
-    )
-    assert hasattr(mod, "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR"), (
-        "family must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from aeat.core.external_constants"
-    )
-    assert mod.DEDUCCION_MATERNIDAD_MENSUAL_EUR is DEDUCCION_MATERNIDAD_MENSUAL_EUR
-    assert mod.DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR is DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
-
-
-def test_no_bare_1200_maternidad_cap_literal_in_family() -> None:
-    """No bare ``1200`` integer literal as a ``min()`` argument in ``family.py``.
-
-    Anti-tautology: parses the real AST so any re-introduction of the local literal triggers failure.
-    """
-
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/domain/contribuyente/family.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
-        if func_name != "min":
-            continue
-        for arg in node.args:
-            if isinstance(arg, ast.Constant) and arg.value == 1200:
-                offenders.append(
-                    f"family.py:{node.lineno}: bare 1200 literal in min(); use DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
-                )
-
-    assert offenders == [], "Bare 1200 maternidad cap literals found in family.py:\n" + "\n".join(offenders)
-
-
-def test_no_bare_1200_maternidad_cap_literal_in_deduccion_maternidad() -> None:
-    """No bare ``1200`` integer literal as a ``min()`` argument in ``_deduccion_maternidad.py``.
-
-    Anti-tautology: parses the real AST so any re-introduction triggers failure.
-    """
-
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/domain/contribuyente/_deduccion_maternidad.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
-        if func_name != "min":
-            continue
-        for arg in node.args:
-            if isinstance(arg, ast.Constant) and arg.value == 1200:
-                offenders.append(
-                    f"_deduccion_maternidad.py:{node.lineno}: bare 1200 literal in min(); "
-                    f"use DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
-                )
-
-    assert offenders == [], "Bare 1200 maternidad cap literals found in _deduccion_maternidad.py:\n" + "\n".join(
-        offenders,
+    _assert_module_constant_identity(
+        module_name=module_name,
+        attr_name=module_attr,
+        expected=getattr(external_constants, constant_name),
+        import_message=message,
     )
 
 
@@ -607,212 +579,77 @@ def test_no_bare_1200_maternidad_cap_literal_in_deduccion_maternidad() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_incremento_guarderia_por_hijo_cap_eur_value() -> None:
-    """``INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR`` equals 1000 per Art. 81 LIRPF (Ley 35/2006)."""
+@pytest.mark.parametrize(
+    ("relative_path", "display_path", "literal", "replacement", "message"),
+    _MIN_LITERAL_CASES,
+    ids=_MIN_LITERAL_IDS,
+)
+def test_no_bare_irpf_cap_literals_in_min_calls(
+    relative_path: str,
+    display_path: str,
+    literal: int,
+    replacement: str,
+    message: str,
+) -> None:
+    """No bare IRPF cap literals appear as ``min()`` arguments in consumers."""
 
-    from ..external_constants import INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR
-
-    assert INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR == 1000
-
-
-def test_incremento_guarderia_por_hijo_cap_eur_is_int() -> None:
-    """``INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR`` is an ``int`` (casilla 0613 carries no decimal places)."""
-
-    from ..external_constants import INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR
-
-    assert isinstance(INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR, int)
-
-
-def test_family_module_imports_incremento_guarderia_cap_from_core() -> None:
-    """``domain/contribuyente/family.py`` reads ``INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR`` from core."""
-
-    import importlib
-
-    from ..external_constants import INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR
-
-    mod = importlib.import_module("aeat.domain.contribuyente.family")
-
-    assert hasattr(mod, "INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR"), (
-        "family must import INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR from aeat.core.external_constants"
+    offenders = _min_arg_literal_offenders(
+        relative_path=relative_path,
+        display_path=display_path,
+        literal=literal,
+        replacement=replacement,
     )
-    assert mod.INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR is INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR
 
-
-def test_no_bare_1000_guarderia_cap_literal_in_family() -> None:
-    """No bare ``1000`` integer literal as a ``min()`` argument in ``family.py``.
-
-    Anti-tautology: parses the real AST so any re-introduction of the local literal triggers failure.
-    Scoped to ``min()`` calls to avoid false positives from unrelated integer constants.
-    """
-
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/domain/contribuyente/family.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
-        if func_name != "min":
-            continue
-        for arg in node.args:
-            if isinstance(arg, ast.Constant) and arg.value == 1000:
-                offenders.append(
-                    f"family.py:{node.lineno}: bare 1000 literal in min(); use INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR",
-                )
-
-    assert offenders == [], "Bare 1000 guarderia cap literals found in family.py:\n" + "\n".join(offenders)
+    assert offenders == [], message + ":\n" + "\n".join(offenders)
 
 
 # ---------------------------------------------------------------------------
-# contract — AMORTIZACION_INMUEBLE_RATE centralisation tests
+# contract — Decimal-rate consumer centralisation tests
 # ---------------------------------------------------------------------------
 
 
-def test_amortizacion_inmueble_rate_value() -> None:
-    """``AMORTIZACION_INMUEBLE_RATE`` equals 0.03 per RD 439/2007 (RIRPF) art. 14.2.a."""
+@pytest.mark.parametrize(
+    ("module_name", "module_attr", "constant_name", "message"),
+    _DECIMAL_ALIAS_CASES,
+    ids=_DECIMAL_ALIAS_IDS,
+)
+def test_decimal_constant_consumers_alias_core_constants(
+    module_name: str,
+    module_attr: str,
+    constant_name: str,
+    message: str,
+) -> None:
+    """Known consumers alias Decimal constants from core."""
 
-    from decimal import Decimal
+    from .. import external_constants
 
-    from ..external_constants import AMORTIZACION_INMUEBLE_RATE
-
-    assert Decimal("0.03") == AMORTIZACION_INMUEBLE_RATE
-
-
-def test_amortizacion_inmueble_rate_is_final_decimal() -> None:
-    """``AMORTIZACION_INMUEBLE_RATE`` is a ``Decimal`` instance (typed ``Final[Decimal]``)."""
-
-    from decimal import Decimal
-
-    from ..external_constants import AMORTIZACION_INMUEBLE_RATE
-
-    assert isinstance(AMORTIZACION_INMUEBLE_RATE, Decimal)
-
-
-def test_amortization_ledger_imports_amortizacion_inmueble_rate_from_core() -> None:
-    """``domain/fincas/_amortization_ledger.py`` reads ``AMORTIZACION_INMUEBLE_RATE`` from core."""
-
-    import importlib
-
-    from ..external_constants import AMORTIZACION_INMUEBLE_RATE
-
-    mod = importlib.import_module("aeat.domain.fincas._amortization_ledger")
-
-    assert hasattr(mod, "AMORTIZACION_INMUEBLE_RATE"), (
-        "_amortization_ledger must import AMORTIZACION_INMUEBLE_RATE from aeat.core.external_constants"
-    )
-    assert mod.AMORTIZACION_INMUEBLE_RATE is AMORTIZACION_INMUEBLE_RATE
-
-
-def test_amortization_ledger_art_23_alias_equals_core_constant() -> None:
-    """``ART_23_1_F_RATE`` in ``_amortization_ledger.py`` is identical to ``AMORTIZACION_INMUEBLE_RATE``."""
-
-    import importlib
-
-    from ..external_constants import AMORTIZACION_INMUEBLE_RATE
-
-    mod = importlib.import_module("aeat.domain.fincas._amortization_ledger")
-
-    assert hasattr(mod, "ART_23_1_F_RATE"), "_amortization_ledger must expose ART_23_1_F_RATE alias"
-    assert mod.ART_23_1_F_RATE is AMORTIZACION_INMUEBLE_RATE
-
-
-def test_no_bare_amortizacion_decimal_literal_in_amortization_ledger() -> None:
-    """No bare ``Decimal("0.03")`` literal in ``domain/fincas/_amortization_ledger.py``.
-
-    Anti-tautology: parses the real AST so any re-introduction triggers failure.
-    """
-
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/domain/fincas/_amortization_ledger.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
-        if func_name != "Decimal":
-            continue
-        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "0.03":
-            offenders.append(
-                f"_amortization_ledger.py:{node.lineno}: bare Decimal('0.03'); use AMORTIZACION_INMUEBLE_RATE",
-            )
-
-    assert offenders == [], (
-        "Bare Decimal('0.03') amortization literals found; import AMORTIZACION_INMUEBLE_RATE from core instead:\n"
-        + "\n".join(offenders)
+    _assert_module_constant_identity(
+        module_name=module_name,
+        attr_name=module_attr,
+        expected=getattr(external_constants, constant_name),
+        import_message=message,
     )
 
 
-# ---------------------------------------------------------------------------
-# contract — REBECA_MARITIME_EXEMPTION_FRACTION centralisation tests
-# ---------------------------------------------------------------------------
+@pytest.mark.parametrize(
+    ("relative_path", "display_path", "literal", "replacement", "message"),
+    _DECIMAL_LITERAL_CASES,
+    ids=_DECIMAL_LITERAL_IDS,
+)
+def test_no_bare_decimal_literals_in_consumers(
+    relative_path: str,
+    display_path: str,
+    literal: str,
+    replacement: str,
+    message: str,
+) -> None:
+    """No bare Decimal literals in Decimal-constant consumers."""
 
-
-def test_rebeca_maritime_exemption_fraction_value() -> None:
-    """``REBECA_MARITIME_EXEMPTION_FRACTION`` equals 0.50 per Ley 19/1994 arts. 73/75."""
-
-    from decimal import Decimal
-
-    from ..external_constants import REBECA_MARITIME_EXEMPTION_FRACTION
-
-    assert Decimal("0.50") == REBECA_MARITIME_EXEMPTION_FRACTION
-
-
-def test_rebeca_maritime_exemption_fraction_is_final_decimal() -> None:
-    """``REBECA_MARITIME_EXEMPTION_FRACTION`` is a ``Decimal`` instance (typed ``Final[Decimal]``)."""
-
-    from decimal import Decimal
-
-    from ..external_constants import REBECA_MARITIME_EXEMPTION_FRACTION
-
-    assert isinstance(REBECA_MARITIME_EXEMPTION_FRACTION, Decimal)
-
-
-def test_maritime_exemption_imports_rebeca_fraction_from_core() -> None:
-    """``domain/renta/_maritime_exemption.py`` reads ``REBECA_MARITIME_EXEMPTION_FRACTION`` from core."""
-
-    import importlib
-
-    from ..external_constants import REBECA_MARITIME_EXEMPTION_FRACTION
-
-    mod = importlib.import_module("aeat.domain.renta._maritime_exemption")
-
-    assert hasattr(mod, "REBECA_MARITIME_EXEMPTION_FRACTION"), (
-        "_maritime_exemption must import REBECA_MARITIME_EXEMPTION_FRACTION from aeat.core.external_constants"
+    offenders = _decimal_call_literal_offenders(
+        relative_path=relative_path,
+        display_path=display_path,
+        literal=literal,
+        replacement=replacement,
     )
-    assert mod.REBECA_MARITIME_EXEMPTION_FRACTION is REBECA_MARITIME_EXEMPTION_FRACTION
 
-
-def test_no_bare_rebeca_fraction_decimal_literal_in_maritime_exemption() -> None:
-    """No bare ``Decimal("0.50")`` literal in ``domain/renta/_maritime_exemption.py``.
-
-    Anti-tautology: parses the real AST so any re-introduction of the local literal triggers failure.
-    Scoped to the REBECA calculation; does not flag Decimal("0") or other unrelated values.
-    """
-
-    repo_root = Path(__file__).parents[4]
-    source = (repo_root / "src/aeat/domain/renta/_maritime_exemption.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-
-    offenders: list[str] = []
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        func = node.func
-        func_name = func.id if isinstance(func, ast.Name) else (func.attr if isinstance(func, ast.Attribute) else "")
-        if func_name != "Decimal":
-            continue
-        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == "0.50":
-            offenders.append(
-                f"_maritime_exemption.py:{node.lineno}: bare Decimal('0.50'); use REBECA_MARITIME_EXEMPTION_FRACTION",
-            )
-
-    assert offenders == [], (
-        "Bare Decimal('0.50') REBECA literals found; import REBECA_MARITIME_EXEMPTION_FRACTION from core instead:\n"
-        + "\n".join(offenders)
-    )
+    assert offenders == [], message + ":\n" + "\n".join(offenders)

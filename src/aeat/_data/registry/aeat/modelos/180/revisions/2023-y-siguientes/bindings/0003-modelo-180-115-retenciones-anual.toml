@@ -1,7 +1,7 @@
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-115-retenciones-anual"
 source = "relation_prefill"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-180-2014-form", "boe-modelo-180-2023-form", "aeat-modelo-180-ayuda-presentacion"]
 selector = { source_modelo = "115", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["03"] }
 aggregation = { op = "sum" }

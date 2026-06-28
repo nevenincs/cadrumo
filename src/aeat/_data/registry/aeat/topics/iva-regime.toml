@@ -1,3 +1,7 @@
 slug = "iva-regime"
 see_also = ["modelos", "regimens", "sii-verifactu"]
-legal_refs = ["ley-37-1992:art-120"]
+legal_refs = [
+    "ley-37-1992:art-122",
+    "ley-37-1992:art-148",
+    "ley-37-1992:art-164",
+]

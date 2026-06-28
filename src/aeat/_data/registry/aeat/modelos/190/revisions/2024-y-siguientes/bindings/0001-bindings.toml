@@ -3,7 +3,7 @@ id = "modelo-190-111-trabajo-dinerario-importe-anual"
 source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["02"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -15,7 +15,7 @@ id = "modelo-190-111-trabajo-especie-importe-anual"
 source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["05"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -27,7 +27,7 @@ id = "modelo-190-111-actividades-dinerario-importe-anual"
 source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["08"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -39,7 +39,7 @@ id = "modelo-190-111-actividades-especie-importe-anual"
 source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["11"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -51,7 +51,7 @@ id = "modelo-190-111-premios-dinerario-importe-anual"
 source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["14"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -63,7 +63,7 @@ id = "modelo-190-111-premios-especie-importe-anual"
 source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["17"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -75,7 +75,7 @@ id = "modelo-190-111-ganancias-dinerario-importe-anual"
 source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["20"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -87,7 +87,7 @@ id = "modelo-190-111-ganancias-especie-importe-anual"
 source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["23"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -99,7 +99,7 @@ id = "modelo-190-111-derechos-imagen-importe-anual"
 source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["26"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -111,7 +111,7 @@ id = "modelo-190-111-retenciones-anual"
 source = "relation_prefill"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casilla_ids = ["28"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]

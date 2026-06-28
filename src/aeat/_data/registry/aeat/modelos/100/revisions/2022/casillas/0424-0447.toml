@@ -4,5 +4,5 @@ number = "0447"
 label = "Resto de saldos netos negativos de rendimientos de capital mobiliario de 2021, pendientes de compensación a 1 de enero de 2022, a integrar en la base imponible del ahorro, con el límite del 25 por ..."
 section = ["resultados", "base_imponible_res"]
 semantic_role = "irpf_saldo_neto_rdto_capital_mobiliario_resto_pendiente"
-legal_refs = ["ley-35-2006:art-48", "ley-35-2006:art-49"]
+legal_refs = ["ley-35-2006:art-49"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

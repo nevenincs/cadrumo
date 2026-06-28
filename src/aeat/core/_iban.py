@@ -1,10 +1,12 @@
 """Shared ISO 13616 IBAN structural primitives.
 
-One canonical home for the IBAN shape pattern and the mod-97 check residue,
-consumed both by the registry casilla boundary (``data_type = "iban"`` via
+One canonical home for the :data:`IBAN_SHAPE_RE` pattern and
+:func:`iban_mod_97` check residue, consumed both by the registry casilla
+boundary (``data_type = "iban"`` via
 :mod:`aeat.domain.calculations.registry._schema_scalars`) and by the deadlines
-refund-account model (:class:`aeat.domain.deadlines._models.RefundAccount`), so
-neither domain package has to import the other to validate an IBAN.
+refund-account model (:class:`~aeat.domain.deadlines.RefundAccount`). Keeping
+the primitives in ``core`` lets each domain validate an IBAN without importing
+the other.
 """
 
 from __future__ import annotations

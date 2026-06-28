@@ -17,10 +17,11 @@ from __future__ import annotations
 
 import json
 import uuid
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -39,8 +40,55 @@ def _isolated_storage(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _invoke(args: list[str]):
+def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
+
+
+def _create_profile(
+    name: str,
+    *,
+    tax_id: str,
+    activity: str,
+    output_language: str | None = None,
+) -> Result:
+    args = [
+        "config",
+        "profile",
+        "create",
+        name,
+        "--quiet",
+        "--tax-id",
+        tax_id,
+        "--entity-type",
+        "natural_person",
+        "--name",
+        "Import",
+        "--surnames",
+        "Idempotency",
+        "--activity",
+        activity,
+    ]
+    if output_language is not None:
+        args.extend(("--output-language", output_language))
+    return _invoke(args)
+
+
+def _export_profile(name: str, bundle_path: Path) -> Result:
+    return _invoke(("config", "profile", "export", name, "--to", str(bundle_path)))
+
+
+def _import_bundle(
+    bundle_path: Path,
+    *,
+    json_format: bool = False,
+    label: str | None = None,
+) -> Result:
+    args = ["config", "profile", "import", str(bundle_path)]
+    if label is not None:
+        args.extend(("--label", label))
+    if json_format:
+        args = ["--format", "json", *args]
+    return _invoke(args)
 
 
 def _create_minimal_profile_and_export(tmp_path: Path, bundle_path: Path) -> str:
@@ -49,24 +97,15 @@ def _create_minimal_profile_and_export(tmp_path: Path, bundle_path: Path) -> str
     Returns the exported ``profile_id`` (UUID).
     """
 
-    r = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "idempotency-test",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--activity",
-            "design",
-            "--output-language",
-            "en",
-        ],
+    r = _create_profile(
+        "idempotency-test",
+        tax_id="12345678Z",
+        activity="design",
+        output_language="en",
     )
     assert r.exit_code == 0, r.output
 
-    r_export = _invoke(["config", "profile", "export", "idempotency-test", "--to", str(bundle_path)])
+    r_export = _export_profile("idempotency-test", bundle_path)
     assert r_export.exit_code == 0, r_export.output
     assert bundle_path.is_file()
 
@@ -96,7 +135,7 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
     # The source profile is already present (created above).
     # A first import attempt into the SAME root where the source profile
     # lives must fail — profile_id UUID collision.
-    r_first = _invoke(["config", "profile", "import", str(bundle_path)])
+    r_first = _import_bundle(bundle_path)
     assert r_first.exit_code != 0, r_first.output
     assert_public_profile_id_not_leaked(r_first.output, exported_id)
     assert "already registered" in r_first.output or "profile" in r_first.output.lower()
@@ -105,13 +144,13 @@ def test_reimport_same_bundle_is_refused(tmp_path: Path) -> None:
     # Import into a fresh root succeeds once.
     fresh_root = tmp_path / "fresh"
     with isolated_profile_storage_root(tmp_path=fresh_root):
-        r_ok = _invoke(["--format", "json", "config", "profile", "import", str(bundle_path)])
+        r_ok = _import_bundle(bundle_path, json_format=True)
         assert r_ok.exit_code == 0, r_ok.output
         ok_payload = assert_public_profile_payload_redacted(r_ok.output, exported_id)
         assert ok_payload["display_name"] == "idempotency-test"
 
         # Second import into the same fresh root must be refused (UUID taken).
-        r_second = _invoke(["config", "profile", "import", str(bundle_path)])
+        r_second = _import_bundle(bundle_path)
         assert r_second.exit_code != 0, r_second.output
         assert_public_profile_id_not_leaked(r_second.output, exported_id)
         assert "already registered" in r_second.output or "profile" in r_second.output.lower()
@@ -153,46 +192,31 @@ def test_label_collision_different_uuid_refused_even_with_explicit_label(tmp_pat
     with isolated_profile_storage_root(tmp_path=dest_root):
         # Occupy the label "idempotency-test" with a locally-minted profile
         # carrying a different UUID.
-        r_local = _invoke(
-            [
-                "config",
-                "profile",
-                "create",
-                "idempotency-test",
-                "--quiet",
-                "--tax-id",
-                "87654321X",
-                "--activity",
-                "consulting",
-            ],
+        r_local = _create_profile(
+            "idempotency-test",
+            tax_id="87654321X",
+            activity="consulting",
         )
         assert r_local.exit_code == 0, r_local.output
 
         # Import the bundle without --label: display_name is "idempotency-test",
         # which is already taken by the locally-minted profile → refused.
-        r_import = _invoke(["config", "profile", "import", str(bundle_path)])
+        r_import = _import_bundle(bundle_path)
         assert r_import.exit_code != 0, r_import.output
         assert_public_profile_id_not_leaked(r_import.output, exported_id)
         assert "Traceback" not in r_import.output
 
         # Passing --label with the SAME taken name is also refused.
-        r_explicit = _invoke(["config", "profile", "import", str(bundle_path), "--label", "idempotency-test"])
+        r_explicit = _import_bundle(bundle_path, label="idempotency-test")
         assert r_explicit.exit_code != 0, r_explicit.output
         assert_public_profile_id_not_leaked(r_explicit.output, exported_id)
         assert "Traceback" not in r_explicit.output
 
         # Passing --label with a FREE name succeeds.
-        r_free = _invoke(
-            [
-                "--format",
-                "json",
-                "config",
-                "profile",
-                "import",
-                str(bundle_path),
-                "--label",
-                "idempotency-test-imported",
-            ],
+        r_free = _import_bundle(
+            bundle_path,
+            json_format=True,
+            label="idempotency-test-imported",
         )
         assert r_free.exit_code == 0, r_free.output
         free_payload = assert_public_profile_payload_redacted(r_free.output, exported_id)
@@ -225,31 +249,24 @@ def test_mutated_profile_id_creates_second_profile(tmp_path: Path) -> None:
     mutated_bundle_path = tmp_path / "mutated.json"
     raw = json.loads(bundle_path.read_text(encoding="utf-8"))
     mutated_id = str(uuid.uuid4())
-    # Patch the profile_id inside the profile sub-object.
+    # Change the profile_id inside the profile sub-object.
     raw["profile"]["profile_id"] = mutated_id
     mutated_bundle_path.write_text(json.dumps(raw), encoding="utf-8")
 
     dest_root = tmp_path / "dest"
     with isolated_profile_storage_root(tmp_path=dest_root):
         # Import the original bundle — succeeds.
-        r_orig = _invoke(["--format", "json", "config", "profile", "import", str(bundle_path)])
+        r_orig = _import_bundle(bundle_path, json_format=True)
         assert r_orig.exit_code == 0, r_orig.output
         orig_payload = assert_public_profile_payload_redacted(r_orig.output, exported_id)
         assert orig_payload["display_name"] == "idempotency-test"
 
         # Import the UUID-mutated bundle under a distinct label — succeeds
         # (different UUID, different label).
-        r_mut = _invoke(
-            [
-                "--format",
-                "json",
-                "config",
-                "profile",
-                "import",
-                str(mutated_bundle_path),
-                "--label",
-                "idempotency-test-mutated",
-            ],
+        r_mut = _import_bundle(
+            mutated_bundle_path,
+            json_format=True,
+            label="idempotency-test-mutated",
         )
         assert r_mut.exit_code == 0, r_mut.output
         mut_payload = assert_public_profile_payload_redacted(r_mut.output, mutated_id)
@@ -319,7 +336,7 @@ def test_import_refuses_tampered_invalid_tax_id(tmp_path: Path) -> None:
 
     dest_root = tmp_path / "dest"
     with isolated_profile_storage_root(tmp_path=dest_root):
-        r = _invoke(["config", "profile", "import", str(tampered_path), "--label", "tampered-import"])
+        r = _import_bundle(tampered_path, label="tampered-import")
         assert r.exit_code != 0, r.output
         assert "Traceback" not in r.output
         lowered = r.output.lower()
@@ -333,5 +350,44 @@ def test_import_refuses_tampered_invalid_tax_id(tmp_path: Path) -> None:
     # A valid (untampered) bundle still imports cleanly.
     clean_root = tmp_path / "clean"
     with isolated_profile_storage_root(tmp_path=clean_root):
-        r_ok = _invoke(["config", "profile", "import", str(bundle_path), "--label", "clean-import"])
+        r_ok = _import_bundle(bundle_path, label="clean-import")
         assert r_ok.exit_code == 0, r_ok.output
+
+
+@pytest.mark.parametrize("tamper_case", ["missing", "blank", "non_string", "duplicate"])
+def test_import_refuses_missing_or_non_string_tax_id(tmp_path: Path, tamper_case: str) -> None:
+    """The import boundary requires exactly one nonblank string identity.tax_id fact."""
+
+    bundle_path = tmp_path / f"tax-id-{tamper_case}.json"
+    _create_minimal_profile_and_export(tmp_path, bundle_path)
+
+    raw = json.loads(bundle_path.read_text(encoding="utf-8"))
+    facts = raw["profile"]["facts"]
+    tax_facts = [fact for fact in facts if fact.get("path") == "identity.tax_id"]
+    assert len(tax_facts) == 1, "exported bundle must carry one identity.tax_id fact"
+    if tamper_case == "missing":
+        raw["profile"]["facts"] = [fact for fact in facts if fact.get("path") != "identity.tax_id"]
+    elif tamper_case == "blank":
+        tax_facts[0]["value"] = "   "
+    elif tamper_case == "non_string":
+        tax_facts[0]["value"] = 12345678
+    elif tamper_case == "duplicate":
+        facts.append(dict(tax_facts[0]))
+    else:  # pragma: no cover - parametrization guard
+        raise AssertionError(f"unhandled tamper case {tamper_case!r}")
+
+    tampered_path = tmp_path / f"tampered-{tamper_case}.json"
+    tampered_path.write_text(json.dumps(raw), encoding="utf-8")
+
+    dest_root = tmp_path / f"dest-{tamper_case}"
+    label = f"tampered-{tamper_case}"
+    with isolated_profile_storage_root(tmp_path=dest_root):
+        r = _import_bundle(tampered_path, label=label)
+        assert r.exit_code != 0, r.output
+        assert "Traceback" not in r.output
+        lowered = r.output.lower()
+        assert "tax identif" in lowered or "identificador fiscal" in lowered, r.output
+
+        r_list = _invoke(["config", "profile", "list"])
+        assert r_list.exit_code == 0, r_list.output
+        assert label not in r_list.output

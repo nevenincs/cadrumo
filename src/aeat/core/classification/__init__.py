@@ -1,13 +1,13 @@
 """Sensitivity classification primitives for persisted state.
 
 Every persisted record (SQL row, file-backed envelope, blob, secret-store
-entry, audit-log entry) declares a :class:`SensitivityClass`. Each class
-maps to a default :class:`ClassificationPolicy` that pins the at-rest
-treatment (plaintext or ciphertext-required), retention behaviour, and
-the redaction rule references that the audit sink and run-trace path
-honour. Operator-facing output uses :class:`OutputSensitivityClass` so
-CLI public output can be classified without pretending it is a persisted
-record.
+entry, audit-log entry) declares a :class:`SensitivityClass`. Each class maps to
+a default :class:`ClassificationPolicy` resolved by :func:`default_policy_for`;
+the policy pins the at-rest treatment (plaintext or ciphertext-required),
+retention behaviour, and the redaction rule references that the audit sink and
+run-trace path honour. Operator-facing output uses
+:class:`OutputSensitivityClass` and :func:`default_output_policy_for` so CLI
+public output can be classified without pretending it is a persisted record.
 
 The default policy table is the single point of truth. Per-domain
 repositories MAY override the default for an individual record (e.g.
@@ -149,7 +149,8 @@ class RedactionStrategy(StrEnum):
         HOST_ONLY: For URL-shaped values, retain only the host
             component; drop path, query, and fragment.
         FINGERPRINT: Replace bearer / OAuth token-shaped values with
-            their SHA-256 fingerprint formatted as ``sha256:<8hex>``.
+            their SHA-256 fingerprint formatted as
+            ``token:sha256:<8hex>``.
         ELLIPSIS: Replace the matched value with three ASCII-safe
             full stops (``...``).
     """
@@ -163,8 +164,9 @@ class RedactionStrategy(StrEnum):
 class RedactionRule(BaseModel):
     """One rule applied at write time by the audit sink and run-trace path.
 
-    The rule shape is stable; the matching :func:`aeat.adapters.persistence.storage.redact`
-    helper consumes a tuple of rules and applies them in order.
+    The rule shape is stable; :func:`aeat.core.redaction.redact` and
+    :func:`aeat.core.redaction.redact_structured` consume tuples of
+    rules and apply them in order.
 
     Attributes:
         name: Stable identifier for log diagnostics. Lowercase
@@ -202,10 +204,10 @@ class ClassificationPolicy(BaseModel):
         redaction_rules: Tuple of redaction-rule names (matched by
             :attr:`RedactionRule.name`) that apply when this class
             participates in audit-sink writes. Resolution to live
-            :class:`RedactionRule` instances is performed by the
-            redaction helper; the policy carries names only so the
-            table can be loaded eagerly without depending on the rule
-            registry.
+            :class:`RedactionRule` instances is performed by
+            :func:`aeat.core.redaction.default_rules_for`; the policy
+            carries names only so the table can be loaded eagerly
+            without depending on the rule registry.
     """
 
     model_config = _STRICT_FROZEN

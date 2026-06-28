@@ -1,8 +1,10 @@
-"""Canonical :class:`~decimal.Decimal` coercion helper for the AEAT domain.
+"""Canonical :class:`~decimal.Decimal` coercion helpers for the AEAT domain.
 
 Consolidates three independent ``_coerce_decimal`` copies that previously
 lived in :mod:`_calc_sheets_pull`, :mod:`_row_set_assembly`, and
-:mod:`invoices._models`.  All call-sites must import from this module.
+:mod:`invoices._models`. All call-sites use :func:`coerce_decimal`,
+:func:`coerce_decimal_strict`, or :func:`normalize_decimal_separators` from this
+module rather than open-coding decimal parsing.
 
 Variant analysis
 ----------------
@@ -17,7 +19,7 @@ Variant analysis
 Canonical resolution
 --------------------
 
-``coerce_decimal(value, *, default=None) -> Decimal | None``
+:func:`coerce_decimal` uses ``coerce_decimal(value, *, default=None) -> Decimal | None``.
 
 A single ``default`` keyword argument covers all three patterns:
 

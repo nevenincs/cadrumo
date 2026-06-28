@@ -5,15 +5,14 @@ One subdirectory per ``run_id`` under
 ``trace.json`` and ``events.jsonl``. Both files round-trip through the
 strict pydantic models in :mod:`aeat.core.observability._models`.
 
-Run traces are DIAGNOSTIC class. The substrate's redaction rule set
-(``default_rules_for_class(SensitivityClass.DIAGNOSTIC)``) walks every
-string leaf — NIFs SHA-256-prefixed, URLs reduced to host-only,
+Run traces are DIAGNOSTIC class. The redaction rule set returned by
+:func:`aeat.core.redaction.default_rules_for_class` for
+:class:`~aeat.core.classification.SensitivityClass.DIAGNOSTIC` walks
+every string leaf — NIFs SHA-256-prefixed, URLs reduced to host-only,
 bearer-shaped tokens fingerprinted, opaque bearers fingerprinted —
-before serialisation. The redaction substrate is imported lazily so
-the observability package does not pull
-:mod:`aeat.adapters.persistence.storage` (with its Alembic plugin
-discovery) into every CLI command's import chain; this preserves the
-json-pipe-safety contract.
+before serialisation. The core redaction helper is imported lazily so
+commands that never persist traces avoid resolving the rule registry on
+import.
 """
 
 from __future__ import annotations
@@ -124,10 +123,10 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
     """Persist a :class:`RunTrace` to ``<runs_dir>/<run_id>/trace.json``.
 
     Every string leaf passes through
-    :func:`aeat.adapters.persistence.storage.redact_structured` at
-    DIAGNOSTIC class before serialisation so the on-disk record never
-    carries a plaintext NIF, bearer token, or sensitive URL path even
-    if a caller fed one into ``arguments``.
+    :func:`aeat.core.redaction.redact_structured` at DIAGNOSTIC class
+    before serialisation so the on-disk record never carries a
+    plaintext NIF, bearer token, or sensitive URL path even if a caller
+    fed one into ``arguments``.
 
     Args:
         trace: The :class:`RunTrace` to persist.

@@ -1,4 +1,8 @@
-"""Ordered application error-code registry shard."""
+"""Ordered application :class:`~aeat.core.errors.ErrorCode` registry shard.
+
+Rows map application-layer exception qualnames to stable
+:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+"""
 
 from .._registry import ErrorCategory, ErrorCode
 

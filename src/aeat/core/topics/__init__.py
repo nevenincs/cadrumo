@@ -14,11 +14,13 @@ title and body text live in the i18n catalogue under ``topic.<slug>.*``
 so translations follow the project's locale pipeline rather than
 hardcoded multiline strings.
 
-The catalogue records are core-level resources (they depend only on
-``core`` primitives and the bundled registry path), so they live in
-``aeat.core.topics`` and are consumed through the
-:class:`aeat.core.resources.TopicCatalogueRepository` singleton — keeping
-``core`` free of any import into the application layer.
+The :class:`Topic` records are core-level resources: they depend only
+on core primitives and the bundled registry path. They are loaded into
+a :class:`TopicCatalogue` by :func:`load_topic_catalogue` and consumed
+through the
+:class:`~aeat.core.resources._repos.topics.TopicCatalogueRepository`
+singleton, keeping ``core`` free of any import into the application
+layer.
 """
 
 from __future__ import annotations
@@ -39,7 +41,7 @@ _TOPIC_REGISTRY_ROOT = _bundled_path("registry", "aeat", "topics")
 
 
 class TopicNotFoundError(_AeatError):
-    """Raised when a requested slug is not registered in the catalogue."""
+    """Raised when a requested slug is absent from a :class:`TopicCatalogue`."""
 
 
 class Topic(BaseModel):
@@ -52,7 +54,7 @@ class Topic(BaseModel):
         body_key: i18n key resolving to the topic body. Convention:
             ``topic.<slug>.body``.
         see_also: Slugs of related topics for cross-referencing.
-        legal_refs: Stable corpus references (``ley-58-2003:art-27``,
+        legal_refs: Stable corpus references (``ley-58-2003:art-27.2``,
             ``rd-439-2007:art-110``) the topic anchors against.
     """
 
@@ -66,7 +68,7 @@ class Topic(BaseModel):
 
 
 class TopicCatalogue(BaseModel):
-    """Closed catalogue of registered conceptual topics."""
+    """Closed catalogue of registered :class:`Topic` records."""
 
     model_config = _STRICT_FROZEN
 

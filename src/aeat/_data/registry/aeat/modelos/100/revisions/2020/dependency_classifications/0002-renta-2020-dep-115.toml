@@ -5,5 +5,5 @@ treatment = "direct_annual_settlement"
 taxpayer_files_source = false
 target_constructs = ["renta-2020-dependent-modelos"]
 relation_refs = ["renta-2020-rel-115-retenciones-trimestrales"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108"]
 source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]

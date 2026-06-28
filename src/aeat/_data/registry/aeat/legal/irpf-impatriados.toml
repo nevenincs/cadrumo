@@ -42,8 +42,49 @@ reviewed_at = 2026-05-27
 reviewed_by = "wgergely"
 notes = "RIRPF Art. 113-120 — condiciones y procedimiento para ejercer la opción del régimen especial de impatriados: comunicación a la AEAT en plazo de 6 meses, mantenimiento de la residencia fiscal española, rentas aplicables."
 required_text = [
-    "desplazados",
-    "opción",
+    "Ámbito de aplicación",
+    "residencia fiscal en España",
+    "apartado 1 del artículo 93",
+]
+
+[legal."rd-439-2007:art-115"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "reglamento"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-115.html#a115"
+document_id = "BOE-A-2007-6820"
+article = "115"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a115"
+published_at = 2007-03-31
+effective_from = 2023-12-07
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (agent-authored from BOE-A-2007-6820#a115; operator to re-stamp)"
+notes = "RIRPF Art. 115 fixes the duration of the impatriado special regime: the tax period in which Spanish residence is acquired and the five following tax periods, with the 183-day residence-year rule."
+required_text = [
+    "Duración",
+    "cinco períodos impositivos siguientes",
+    "permanencia en territorio español sea superior a 183 días",
+]
+
+[legal."rd-439-2007:art-116"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "reglamento"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-116.html#a116"
+document_id = "BOE-A-2007-6820"
+article = "116"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a116"
+published_at = 2007-03-31
+effective_from = 2023-12-07
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (agent-authored from BOE-A-2007-6820#a116; operator to re-stamp)"
+notes = "RIRPF Art. 116 establishes how the impatriado option is exercised and the six-month communication deadline. Grounds the profile special_regime_start_date selector."
+required_text = [
+    "Ejercicio de la opción",
+    "plazo máximo de seis meses",
+    "modelo de comunicación",
 ]
 
 [sources."aeat-modelo-151-procedure"]

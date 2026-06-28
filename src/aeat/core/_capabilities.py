@@ -11,6 +11,10 @@ The set is declared here in ``core/`` — the innermost hexagonal ring — per
 boundary renders the accepted-value ``Choice([...])`` from the enum, production
 code routes on members, and the profile schema / resolver / doctor share one
 authority for the capability identifiers.
+
+The :class:`ServiceCapability` members are consumed by
+:func:`aeat.application.user_profile.resolve_capability` and by the setup
+wizard's capability questions.
 """
 
 from __future__ import annotations

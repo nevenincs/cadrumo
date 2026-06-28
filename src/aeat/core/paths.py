@@ -1,16 +1,18 @@
 """Shared path normalization and containment helpers.
 
-Centralises the small set of filesystem primitives that every other
-``aeat`` module needs: resolving repo-relative paths against the
-project root, normalising user-provided settings to absolute paths,
-and safely resolving caller-provided sub-paths under a fixed root
-without allowing path-traversal escapes.
+Centralises the small set of :class:`~pathlib.Path` primitives that every other
+``aeat`` module needs: resolving repo-relative paths against
+:data:`PROJECT_ROOT` via :func:`resolve_project_path`, normalising user-provided
+settings with :func:`normalize_project_relative_path`, and safely resolving
+caller-provided sub-paths under a fixed root without allowing path-traversal
+escapes.
 
-The containment helpers (:func:`resolve_relative_subpath`,
-:func:`resolve_record_json_path`) refuse backslashes, parent
-references, absolute components, and any resolved path that escapes
-the owning root. They are the load-bearing defence against
-caller-controlled identifier injection on the on-disk store paths.
+The containment helpers (:func:`resolve_relative_subpath` and
+:func:`resolve_record_json_path`) refuse backslashes, parent references,
+absolute components, and any resolved path that escapes the owning root. They
+raise :class:`~aeat.core.errors.CoreValidationError` and are the load-bearing
+defence against caller-controlled identifier injection on the on-disk store
+paths.
 """
 
 from __future__ import annotations

@@ -6,6 +6,11 @@ innermost hexagonal ring — so the Typer boundary can render the
 accepted-value ``Choice([...])`` from the enum directly
 (``aeat-architecture-boundaries``), production code routes on enum members,
 and tests assert against members rather than raw strings.
+
+:class:`LedgerSortField` selects the projection axis and
+:class:`LedgerSortOrder` selects the direction. The CLI parser and the
+ledger projection service both use these enum members rather than raw
+string tokens.
 """
 
 from __future__ import annotations

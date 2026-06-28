@@ -1,10 +1,12 @@
 """Shared :mod:`click` context helpers safe to import from any layer.
 
-The helpers walk the active :class:`click.Context` chain to surface
-root-level CLI flags (e.g. ``--json``) without forcing callers to thread
-the context object explicitly. They live in :mod:`aeat.core` so domain
-code can call :func:`json_output_requested` without inverting the
-dependency direction onto :mod:`aeat.entrypoints.cli`.
+The helpers walk the active :class:`click.Context` chain to surface root-level
+CLI flags (e.g. ``--json``) without forcing callers to thread the context
+object explicitly. They live in :mod:`aeat.core` so domain code can call
+:func:`json_output_requested`, :func:`current_cli_flag`, or
+:func:`context_chain_requests_json` without inverting the dependency direction
+onto :mod:`aeat.entrypoints.cli`. Terminal error handlers that have no live
+context can fall back to :func:`argv_requests_json`.
 """
 
 from __future__ import annotations

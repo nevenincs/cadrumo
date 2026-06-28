@@ -1,4 +1,10 @@
-"""Registry submodules."""
+"""Layered declarations for the public :class:`~aeat.core.errors.ErrorCode` registry.
+
+Each child module contributes ordered ``(qualname, ErrorCode)`` rows for
+one architectural layer. :mod:`aeat.core.errors._registry` imports the
+combined tuple and binds each :class:`~aeat.core.errors.AeatError`
+subclass to its declared metadata.
+"""
 
 from __future__ import annotations
 

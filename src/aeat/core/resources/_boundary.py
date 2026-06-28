@@ -7,11 +7,12 @@ same prefix resolves to the in-tree top-level ``corpus/`` and
 ``registry/`` directories under an editable install because hatchling
 honours the force-include mapping for both targets.
 
-Callers MUST go through :func:`packaged_data` rather than computing
-the location from ``__file__`` or a ``PROJECT_ROOT`` walk. The
-``PROJECT_ROOT`` walk is reserved for ``var/`` operator outputs in
-:mod:`aeat.core.config` and is not a valid resolution path for
-read-only bundled data.
+Callers MUST go through :func:`packaged_data` rather than computing the location
+from ``__file__`` or a ``PROJECT_ROOT`` walk. Use :func:`bundled_path` when a
+process-lifetime :class:`~pathlib.Path` is required, and :func:`as_path` for a
+scoped materialised path. The ``PROJECT_ROOT`` walk is reserved for ``var/``
+operator outputs in :mod:`aeat.core.config` and is not a valid resolution path
+for read-only bundled data.
 """
 
 from __future__ import annotations

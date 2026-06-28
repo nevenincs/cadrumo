@@ -1,12 +1,13 @@
 # M210 IRNR Convenio doble imposición rate overrides (Phase 1 seed).
 #
-# Convenio-rate-table parameter mapping (country_code, tipo_renta) to the
-# treaty rate that REPLACES the TRLIRNR Art 25 baseline when a profile
-# declares a treaty country. Replacement semantics, not stacking, per
-# m210-irnr-full-engine ADR §D2.4. The override applies only when the
-# profile's fiscal-residence country has a Convenio row for the
-# tipo_renta being filed; otherwise the m210-tipo-gravamen-2025
-# baseline applies.
+# Convenio-rate-table parameter mapping (country_code, tipo_renta) to a
+# treaty rate that REPLACES the TRLIRNR Art 25 baseline, or to the
+# symbolic DOMESTIC_TARIFF value for treaties that allocate Spain-side
+# taxation while leaving the domestic progressive tariff to compute the
+# amount. Replacement semantics, not stacking, per m210-irnr-full-engine
+# ADR §D2.4. The override applies only when the profile's fiscal-residence
+# country has a Convenio row for the tipo_renta being filed; otherwise the
+# m210-tipo-gravamen-2025 baseline or tariff branch applies.
 #
 # S389b runtime helper (_resolve_m210_rate) emits BLOCKING findings
 # when a profile-declared treaty country has no row for the requested
@@ -18,6 +19,7 @@ data_type = "convenio_rate_table"
 unit = "percent"
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.b",
     "trlirnr-rdleg-5-2004:art-25.1.f",
 ]
 source_refs = ["aeat-modelo-210-procedure"]
@@ -30,22 +32,25 @@ required_text = ["tipo de gravamen", "no residentes"]
 country_code = "GB"
 tipo_renta = "general"
 rate = "0.24"
-legal_ref_anchor = "boe-a-2014-5171"
-notes = "Convenio España-UK Art 7 rendimientos sin establecimiento permanente; tarifa coincide con TRLIRNR baseline. valid_to open: treaty rate year-stable, no subsequent BOE amendment published."
+legal_ref_anchor = "convenio-es-gb-2013:art-6"
+legal_refs = ["convenio-es-gb-2013:art-6", "trlirnr-rdleg-5-2004:art-25.1.a"]
+notes = "Convenio Espana-UK Art 6 rentas inmobiliarias permite imposicion en el Estado donde estan situados los inmuebles; el 24 por ciento aplicado se fundamenta en TRLIRNR art 25.1.a. valid_to open: treaty allocation rule year-stable."
 valid_from = 2025-01-01
 
 [[revisions."2025".parameters.convenio_rates]]
 country_code = "MA"
 tipo_renta = "interest"
 rate = "0.10"
-legal_ref_anchor = "boe-a-1985-13340"
-notes = "Convenio España-Marruecos Art 14 intereses; override 10 por ciento del baseline TRLIRNR Art 25.1.f del 19 por ciento. valid_to open: treaty rate year-stable."
+legal_ref_anchor = "convenio-es-ma-1978:art-11"
+legal_refs = ["convenio-es-ma-1978:art-11"]
+notes = "Convenio Espana-Marruecos Art 11 intereses; source-state tax may not exceed 10 por ciento del importe bruto de los intereses. valid_to open: treaty rate year-stable."
 valid_from = 2025-01-01
 
 [[revisions."2025".parameters.convenio_rates]]
 country_code = "AR"
 tipo_renta = "pension"
-rate = "NOT_YET_AUTHORED"
-legal_ref_anchor = "BOE-CONVENIO-AR-NOT-FOUND"
-notes = "Convenio España-Argentina pensiones tarifa pendiente de verificación corpus BOE; placeholder activa BLOCKING finding al lookup. valid_to open: placeholder remains until corpus-blocking resolves."
+rate = "DOMESTIC_TARIFF"
+legal_ref_anchor = "convenio-es-ar-1992:art-19"
+legal_refs = ["convenio-es-ar-1992:art-19", "trlirnr-rdleg-5-2004:art-25.1.b"]
+notes = "Convenio Espana-Argentina Art 19 funciones publicas grounds the Spain-side allocation for public pensions; DOMESTIC_TARIFF delegates the amount to the TRLIRNR art 25.1.b progressive pension tariff table."
 valid_from = 2025-01-01

@@ -1,4 +1,8 @@
-"""Ordered application error-code registry shard."""
+"""Ordered application :class:`~aeat.core.errors.ErrorCode` registry shard.
+
+Rows map application-layer exception qualnames to stable
+:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+"""
 
 from .._registry import ErrorCategory, ErrorCode
 
@@ -582,6 +586,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_modelo_applicability_filter",
             default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._action_errors.ModeloProfileReadinessError",
+        ErrorCode(
+            code="REFUSED_MODELO_PROFILE_READINESS",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.profile_readiness_missing",
+            default_suggestion="aeat config profile edit PROFILE",
             retryable=False,
             runbook_id=None,
         ),

@@ -1,17 +1,19 @@
 [[revisions."2023-y-siguientes".workbook_parity_refs]]
-id = "modelo-721-dr"
-workbook_source = "aeat-dr-721"
-fixture_id = "modelo-721-record-design-layout"
+id = "modelo-721-dr-2023"
+workbook_source = "boe-modelo-721-2023-layout"
+fixture_id = "modelo-721-record-design-layout-2023"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
 legal_refs = ["orden-hfp-886-2023:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-721"]
+source_refs = ["boe-modelo-721-2023-layout"]
 
-# NOTE: The aeat-dr-721 source is a stub (corpus not yet ingested). Its kind
-# is currently form_spec (an AEAT landing-page HTML); when the real
-# Orden HFP/886/2023 Anexo Diseño workbook lands, flip the kind back to
-# record_design and update corpus_path / sha256 / bytes / applies_from in
-# .../legal/monedas-virtuales.toml. The workbook_parity_ref records the
-# intent; the fixture_id and runner will be grounded against the real
-# AEAT DR at ingest time.
+[[revisions."2023-y-siguientes".workbook_parity_refs]]
+id = "modelo-721-dr-2024"
+workbook_source = "boe-modelo-721-2024-layout"
+fixture_id = "modelo-721-record-design-layout-2024"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hac-1504-2024:art-9", "orden-hac-1504-2024:df-unica", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-721-2024-layout"]

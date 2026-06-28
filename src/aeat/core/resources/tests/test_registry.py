@@ -53,7 +53,7 @@ def test_registry_clear_is_safe_when_empty() -> None:
     resources().clear()
 
 
-class _DummyKey(TypedResourceKey):
+class _NamedResourceKey(TypedResourceKey):
     """A test-only key for exercising the Repository contract."""
 
     name: str
@@ -64,7 +64,7 @@ class _DummyKey(TypedResourceKey):
         return hash(self.name)
 
 
-class _DummyRepository(ResourceCacheRepository[str, _DummyKey]):
+class _UppercaseResourceRepository(ResourceCacheRepository[str, _NamedResourceKey]):
     """A minimal ResourceCacheRepository subclass returning the key's name uppercased."""
 
     def __init__(self) -> None:
@@ -72,7 +72,7 @@ class _DummyRepository(ResourceCacheRepository[str, _DummyKey]):
         self._load_calls = 0
 
     @override
-    def _load(self, key: _DummyKey) -> str:
+    def _load(self, key: _NamedResourceKey) -> str:
         self._load_calls += 1
         return key.name.upper()
 
@@ -80,8 +80,8 @@ class _DummyRepository(ResourceCacheRepository[str, _DummyKey]):
 def test_repository_caches_after_first_load() -> None:
     """A second :meth:`get` for the same key returns the cached value."""
 
-    repo = _DummyRepository()
-    key = _DummyKey(name="alpha")
+    repo = _UppercaseResourceRepository()
+    key = _NamedResourceKey(name="alpha")
 
     first = repo.get(key)
     second = repo.get(key)
@@ -94,18 +94,18 @@ def test_repository_caches_after_first_load() -> None:
 def test_repository_loads_distinct_keys_independently() -> None:
     """Distinct keys yield distinct cached values."""
 
-    repo = _DummyRepository()
+    repo = _UppercaseResourceRepository()
 
-    assert repo.get(_DummyKey(name="a")) == "A"
-    assert repo.get(_DummyKey(name="b")) == "B"
+    assert repo.get(_NamedResourceKey(name="a")) == "A"
+    assert repo.get(_NamedResourceKey(name="b")) == "B"
     assert repo._load_calls == 2
 
 
 def test_repository_clear_cache_forces_reload() -> None:
     """:meth:`clear_cache` empties the Identity Map."""
 
-    repo = _DummyRepository()
-    key = _DummyKey(name="alpha")
+    repo = _UppercaseResourceRepository()
+    key = _NamedResourceKey(name="alpha")
 
     repo.get(key)
     repo.clear_cache()
@@ -117,18 +117,18 @@ def test_repository_clear_cache_forces_reload() -> None:
 def test_typed_resource_key_is_frozen() -> None:
     """Typed keys are frozen so they can serve as Identity Map dict keys."""
 
-    key = _DummyKey(name="alpha")
+    key = _NamedResourceKey(name="alpha")
 
     with pytest.raises(ValidationError):
-        key.name = "beta"  # type: ignore[misc]
+        key.__setattr__("name", "beta")
 
 
 def test_typed_resource_key_is_hashable() -> None:
     """Frozen Pydantic key models are hashable; Identity Map dict use depends on this."""
 
-    a = _DummyKey(name="alpha")
-    b = _DummyKey(name="alpha")
-    c = _DummyKey(name="beta")
+    a = _NamedResourceKey(name="alpha")
+    b = _NamedResourceKey(name="alpha")
+    c = _NamedResourceKey(name="beta")
 
     container = {a: "first"}
     assert container[b] == "first"  # same value -> same hash
@@ -146,7 +146,7 @@ def test_error_hierarchy_subclasses_resource_load_error() -> None:
 def test_resource_repository_protocol_recognises_default_base() -> None:
     """A :class:`ResourceCacheRepository` subclass satisfies the :class:`ResourceRepository` protocol."""
 
-    repo = _DummyRepository()
+    repo = _UppercaseResourceRepository()
 
     assert isinstance(repo, ResourceRepository)
 
@@ -161,17 +161,17 @@ def test_registry_clear_tolerates_empty_dataclass() -> None:
 def test_unimplemented_repository_get_raises_not_implemented_error() -> None:
     """A ResourceCacheRepository that forgets to override _load raises on first get."""
 
-    class _MissingRepo(ResourceCacheRepository[str, _DummyKey]):
+    class _MissingRepo(ResourceCacheRepository[str, _NamedResourceKey]):
         pass
 
     with pytest.raises(NotImplementedError):
-        _MissingRepo().get(_DummyKey(name="x"))
+        _MissingRepo().get(_NamedResourceKey(name="x"))
 
 
 def test_unimplemented_repository_all_raises_not_implemented_error() -> None:
     """The default :meth:`all` is unsafe; Repositories with a finite key space override."""
 
-    repo = _DummyRepository()
+    repo = _UppercaseResourceRepository()
 
     with pytest.raises(NotImplementedError):
         list(repo.all())

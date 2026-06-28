@@ -1,4 +1,12 @@
-"""Central command-output rendering contract."""
+"""Central command-output rendering contract.
+
+:func:`render_command_output` is the shared text/JSON transport boundary
+for command handlers that do not need a full :class:`SchemaEnvelope`.
+It returns :class:`RenderedCommandOutput`, chooses an :class:`OutputFormat`,
+and applies :func:`aeat.core.redaction.redact_for_cli_output` or
+:func:`aeat.core.redaction.redact_structured_for_cli_output` before text
+reaches stdout.
+"""
 
 from __future__ import annotations
 

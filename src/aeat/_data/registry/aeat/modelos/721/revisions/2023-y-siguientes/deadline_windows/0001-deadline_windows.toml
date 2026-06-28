@@ -1,5 +1,5 @@
 # Plazo de presentacion del Modelo 721: 1 enero - 31 marzo del año siguiente
-# al ejercicio (Orden HFP/886/2023 art. 3). Primera declaracion = ejercicio 2023.
+# al ejercicio (Orden HFP/886/2023 art. 4). Primera declaracion = ejercicio 2023.
 
 [[revisions."2023-y-siguientes".deadline_windows]]
 id = "modelo-721-2023-0a"
@@ -8,7 +8,7 @@ period = "2023-0A"
 period_kind = "annual"
 opens_on = 2024-01-01
 closes_on = 2024-03-31
-legal_refs = ["orden-hfp-886-2023:art-3", "ley-58-2003:art-93"]
+legal_refs = ["orden-hfp-886-2023:art-4", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-721-2023-form"]
 
 [[revisions."2023-y-siguientes".deadline_windows]]
@@ -18,7 +18,7 @@ period = "2024-0A"
 period_kind = "annual"
 opens_on = 2025-01-01
 closes_on = 2025-03-31
-legal_refs = ["orden-hfp-886-2023:art-3", "ley-58-2003:art-93"]
+legal_refs = ["orden-hfp-886-2023:art-4", "orden-hac-1504-2024:df-unica", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-721-2023-form"]
 
 [[revisions."2023-y-siguientes".deadline_windows]]
@@ -28,5 +28,5 @@ period = "2025-0A"
 period_kind = "annual"
 opens_on = 2026-01-01
 closes_on = 2026-03-31
-legal_refs = ["orden-hfp-886-2023:art-3", "ley-58-2003:art-93"]
+legal_refs = ["orden-hfp-886-2023:art-4", "orden-hac-1504-2024:df-unica", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-721-2023-form"]

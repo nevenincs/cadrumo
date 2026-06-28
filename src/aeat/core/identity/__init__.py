@@ -1,8 +1,8 @@
 """Spanish identity-document parsing and validation.
 
-Public surface for NIF / NIE / CIF documents — the three identity-number
-shapes Spanish autónomos, individuals, and legal entities use in tax
-filings. The module is intentionally tiny:
+Public surface for NIF / NIE / CIF documents — the identity-number shapes
+Spanish taxpayers and legal entities use in tax filings. The module is
+intentionally tiny:
 
 * :class:`IdentityDocument` — closed :class:`enum.StrEnum` naming the
   three document kinds.
@@ -13,6 +13,8 @@ filings. The module is intentionally tiny:
   only need to check well-formedness.
 * :class:`IdentityError` — typed failure shape that registers under the
   stable error code ``INTEGRITY_IDENTITY_DOCUMENT``.
+* :data:`SubjectTaxId` — pydantic-ready alias for fields that must carry a
+  validated Spanish tax identifier.
 
 The module lives in :mod:`aeat.core` because identity validation is a
 domain concern, not a persistence concern. The persistence layer's

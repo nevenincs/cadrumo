@@ -1,4 +1,8 @@
-"""RecargoBandsRepository: singleton recargo-band tuple."""
+"""Singleton recargo-band repository.
+
+:class:`RecargoBandsRepository` exposes Ley 58/2003 recargo bands through the
+shared :class:`ResourceCacheRepository` cache used by :class:`ResourceRegistry`.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +14,8 @@ from .._repository import ResourceCacheRepository
 class RecargoBandsRepository(ResourceCacheRepository[object, None]):
     """Singleton-keyed repository for the Ley 58/2003 recargo bands.
 
-    Wraps :func:`aeat.domain.deadlines.load_recargo_bands`.
+    Wraps :func:`aeat.domain.deadlines.load_recargo_bands` behind
+    the shared :class:`ResourceCacheRepository` cache.
     """
 
     @override

@@ -5,5 +5,5 @@ treatment = "factual_evidence"
 taxpayer_files_source = false
 target_constructs = ["renta-2024-dependent-modelos"]
 relation_refs = ["renta-2024-rel-193-retenciones-anuales"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3377-2011:art-1"]
 source_refs = ["boe-modelo-193-2011-form"]

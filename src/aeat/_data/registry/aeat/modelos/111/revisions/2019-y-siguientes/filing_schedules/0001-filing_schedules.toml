@@ -3,7 +3,7 @@ id = "modelo-111-trimestral"
 period_kind = "quarterly"
 periods = ["1T", "2T", "3T", "4T"]
 profile_condition_mode = "all"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".filing_schedules.profile_conditions]]
@@ -11,7 +11,7 @@ field = "enrollment.large_company"
 op = "equals"
 value = false
 explanation = "Modelo 111 trimestral para retenedores no sujetos a autoliquidacion mensual por gran empresa."
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".filing_schedules.profile_conditions]]
@@ -19,7 +19,7 @@ field = "enrollment.public_administration_budget_gt_6000000"
 op = "equals"
 value = false
 explanation = "Modelo 111 trimestral cuando no aplica presupuesto publico anual superior a 6 millones de euros."
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".filing_schedules]]
@@ -27,7 +27,7 @@ id = "modelo-111-mensual"
 period_kind = "monthly"
 periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 profile_condition_mode = "any"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".filing_schedules.profile_conditions]]
@@ -35,7 +35,7 @@ field = "enrollment.large_company"
 op = "equals"
 value = true
 explanation = "Modelo 111 mensual para grandes empresas."
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-modelo-111-instructions"]
 
 [[revisions."2019-y-siguientes".filing_schedules.profile_conditions]]
@@ -43,7 +43,7 @@ field = "enrollment.public_administration_budget_gt_6000000"
 op = "equals"
 value = true
 explanation = "Modelo 111 mensual para Administraciones publicas con presupuesto anual superior a 6 millones de euros."
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-modelo-111-instructions"]
 
 # Casilla IDs in this modelo are the same as the printed form numbers.

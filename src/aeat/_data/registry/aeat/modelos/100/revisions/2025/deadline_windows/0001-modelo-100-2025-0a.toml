@@ -6,5 +6,5 @@ period_kind = "annual"
 opens_on = 2026-04-08
 closes_on = 2026-06-30
 payment_cutoff_on = 2026-06-25
-legal_refs = ["orden-hac-277-2026:art-7", "orden-hac-277-2026:art-3", "ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["orden-hac-277-2026:art-7", "orden-hac-277-2026:art-3", "ley-35-2006:art-99"]
 source_refs = ["aeat-modelo-100-procedure", "boe-modelo-100-2025-form"]

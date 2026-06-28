@@ -4,7 +4,7 @@ id = "modelo-180-115-perceptores-anual"
 # store (aggregate_retenciones_180.total_perceptors), not the sum of quarterly
 # Modelo 115 counts (which double-counts a perceptor paid in more than one quarter).
 source = "retenciones_aggregation"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-180-2014-form", "aeat-modelo-180-ayuda-presentacion"]
 selector = { target_casilla_id = "decl.total-perceptores", fact = "perceptor_count_distinct" }
 
