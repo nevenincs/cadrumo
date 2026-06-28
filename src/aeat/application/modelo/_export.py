@@ -83,6 +83,7 @@ from ._action_errors import (
 )
 from ._result_disposition_resolution import resolve_modelo_result_disposition
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
+from ._revision_replay_inputs import revision_filing_replay_inputs
 from ._verification_actions import (
     _cross_period_expected_member_sets_from_profile,
     _require_cross_period_clean_state,
@@ -590,11 +591,11 @@ def _approve_export_draft(
         period=period,
         modelos=(work_unit.modelo,),
     )
-    inputs: filing_domain.ModeloInputs = {
-        **dict(revision.input_values_by_casilla_id),
-        **dict(revision.binding_overrides),
-        **dict(revision.relation_overrides),
-    }
+    inputs: filing_domain.ModeloInputs = revision_filing_replay_inputs(
+        revision=revision,
+        work_unit=work_unit,
+        workflow_profile=workflow_profile,
+    )
     try:
         draft = build_draft(
             modelo=work_unit.modelo,
