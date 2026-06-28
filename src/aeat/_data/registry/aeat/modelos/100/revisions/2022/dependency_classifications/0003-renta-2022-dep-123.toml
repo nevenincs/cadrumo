@@ -5,5 +5,5 @@ treatment = "direct_annual_settlement"
 taxpayer_files_source = false
 target_constructs = ["renta-2022-dependent-modelos"]
 relation_refs = ["renta-2022-rel-123-retenciones-trimestrales"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-ii"]
 source_refs = ["aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]

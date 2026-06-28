@@ -18,6 +18,26 @@ required_text = [
     "patrimonio empresarial",
 ]
 
+[legal."ley-37-1992:art-9-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a9-2"
+document_id = "BOE-A-1992-28740"
+article = "9 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9-2"
+published_at = 1992-12-29
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "LIVA art 9 bis: acuerdo de ventas de bienes en consigna. Define las transferencias intracomunitarias en consigna, el plazo de doce meses, y la inclusion reglamentaria en declaracion recapitulativa. Base sustantiva de las claves M349 R, D y C desde la revision 2020."
+required_text = [
+    "Acuerdo de ventas de bienes en consigna",
+    "declaración recapitulativa a que se refiere el artículo 164",
+    "plazo de los doce meses",
+]
+
 [legal."ley-37-1992:art-79"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -36,6 +56,25 @@ required_text = [
     "coste",
     "autoconsumo",
     "gastos de personal",
+]
+
+[legal."ley-37-1992:art-80"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a80"
+document_id = "BOE-A-1992-28740"
+article = "80"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a80"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "LIVA art 80: modificacion de la base imponible. Grounds rectified M349 bases where the declared intracommunity operation base changes because the taxable base is reduced or otherwise modified."
+required_text = [
+    "Modificación de la base imponible",
+    "la base imponible se modificará en la cuantía correspondiente",
 ]
 
 [legal."ley-37-1992:art-84"]
@@ -271,6 +310,84 @@ required_text = [
     "Las adquisiciones intracomunitarias de bienes cuya entrega en el territorio de aplicación del impuesto hubiera estado",
 ]
 
+[legal."ley-37-1992:art-27"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a27"
+document_id = "BOE-A-1992-28740"
+article = "27"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a27"
+published_at = 1992-12-29
+effective_from = 2011-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "LIVA art 27.12: importaciones exentas followed by onward delivery to another Member State. Base sustantiva de las claves M349 M y H when the M349 instructions cite importacion exenta and representative-fiscal flows."
+required_text = [
+    "Importaciones de bienes cuya entrega en el interior estuviese exenta del impuesto",
+    "los bienes cuya expedición o transporte tenga como punto de llegada un lugar situado en otro Estado miembro",
+    "representante fiscal",
+]
+
+[legal."ley-37-1992:art-69"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a69"
+document_id = "BOE-A-1992-28740"
+article = "69"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a69"
+published_at = 1992-12-29
+effective_from = 2010-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "LIVA art 69: general place-of-supply rules for services. Grounds M349 intracommunity service prestation/acquisition keys S and I together with the RIVA recapitulativa obligation."
+required_text = [
+    "Lugar de realización de las prestaciones de servicios. Reglas generales",
+    "Cuando el destinatario sea un empresario o profesional que actúe como tal",
+]
+
+[legal."ley-37-1992:art-70"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a70"
+document_id = "BOE-A-1992-28740"
+article = "70"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a70"
+published_at = 1992-12-29
+effective_from = 2010-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "LIVA art 70: special place-of-supply rules for services. Complements art 69 for M349 service keys S and I where official instructions distinguish services localized in or outside the TAI."
+required_text = [
+    "Lugar de realización de las prestaciones de servicios. Reglas especiales",
+    "Los relacionados con bienes inmuebles que radiquen en el citado territorio",
+]
+
+[legal."ley-37-1992:art-86"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a86"
+document_id = "BOE-A-1992-28740"
+article = "86"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a86"
+published_at = 1992-12-29
+effective_from = 2011-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "LIVA art 86.3: import representative-fiscal obligation for importations covered by art 27.12. Base sustantiva for M349 key H where the instructions require representative-fiscal deliveries after exempt import."
+required_text = [
+    "Sujetos pasivos",
+    "cuando se trate de las importaciones a que se refiere el número 12.º del artículo 27",
+    "representante fiscal",
+]
+
 [legal."ley-37-1992:art-117-bis"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -309,6 +426,46 @@ required_text = [
     "Liquidación del Impuesto. Normas generales",
     "los sujetos pasivos deberán realizar por sí mismos la determinación de la deuda tributaria",
     "El período de liquidación coincidirá con el trimestre natural",
+]
+
+[legal."rd-1624-1992:art-79"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-79.html#a79"
+document_id = "BOE-A-1992-28925"
+article = "79"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a79"
+published_at = 1992-12-31
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "Reglamento del IVA art 79: obligation to present the declaracion recapitulativa. Enumerates the M349 operation universe: intracommunity deliveries, acquisitions, services, triangular subsequent deliveries, and consignment-sale movements."
+required_text = [
+    "Obligación de presentar la declaración recapitulativa",
+    "Las prestaciones intracomunitarias de servicios",
+    "acuerdo de ventas de bienes en consigna",
+]
+
+[legal."rd-1624-1992:art-80"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-80.html#a80"
+document_id = "BOE-A-1992-28925"
+article = "80"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a80"
+published_at = 1992-12-31
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "Reglamento del IVA art 80: content of the declaracion recapitulativa, including identification data, operation bases/importes, consignment-sale information, and rectification of erroneous recapitulativa data."
+required_text = [
+    "Contenido de la declaración recapitulativa",
+    "Los datos de identificación de los proveedores y adquirentes",
+    "deberán rectificarse cuando se haya incurrido en errores",
 ]
 
 [legal."rd-1624-1992:art-29"]

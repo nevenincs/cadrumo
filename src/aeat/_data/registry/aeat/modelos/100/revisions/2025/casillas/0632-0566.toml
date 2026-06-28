@@ -4,5 +4,5 @@ number = "0566"
 label = "Deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Economico Europeo  (importes de esta casillas del anexo A.4): Pa..."
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_unidades_familiares_ue_eee_autonomica"
-legal_refs = ["ley-35-2006:art-81-bis", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

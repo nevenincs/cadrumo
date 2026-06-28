@@ -1,6 +1,6 @@
 [[revisions."2024-y-siguientes".export_layouts]]
 id = "modelo-123-fichero-boe"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records]]
@@ -21,7 +21,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -35,7 +35,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -49,7 +49,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -63,7 +63,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -77,7 +77,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -91,7 +91,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -105,7 +105,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -118,7 +118,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -132,7 +132,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -145,7 +145,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -159,7 +159,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -172,7 +172,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -186,7 +186,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records]]
@@ -207,7 +207,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -221,7 +221,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -235,7 +235,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -249,7 +249,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -262,7 +262,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -276,7 +276,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -290,7 +290,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -304,7 +304,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -318,7 +318,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -332,7 +332,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -346,7 +346,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -360,7 +360,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -374,7 +374,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -388,7 +388,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -402,7 +402,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -416,7 +416,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -430,7 +430,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -444,7 +444,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -458,7 +458,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -472,7 +472,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -486,7 +486,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -500,7 +500,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -514,7 +514,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -528,7 +528,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -542,7 +542,7 @@ required = false
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -556,7 +556,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -570,7 +570,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -583,7 +583,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records.fields]]
@@ -597,7 +597,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 
 [[revisions."2024-y-siguientes".export_layouts.records]]
@@ -618,6 +618,6 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
 

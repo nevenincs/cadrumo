@@ -112,6 +112,27 @@ required_text = [
     "mínimo personal y familiar",
 ]
 
+[legal."rd-439-2007:art-88"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-88.html#a88"
+document_id = "BOE-A-2007-6820"
+article = "88"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a88"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex-legal-grounding"
+notes = "RIRPF art 88: comunicacion de datos del perceptor de rentas del trabajo a su pagador. Base reglamentaria del Modelo 145: el perceptor comunica circunstancias personales y familiares al pagador, el pagador conserva la comunicacion firmada, y el contenido se ajusta al modelo aprobado por resolucion del Departamento de Gestion Tributaria de la AEAT."
+required_text = [
+    "Comunicación de datos del perceptor de rentas del trabajo a su pagador",
+    "deberán comunicar al pagador la situación personal y familiar",
+    "El contenido de las comunicaciones se ajustará al modelo que se apruebe por Resolución",
+    "no será preciso reiterar en cada ejercicio la comunicación de datos al pagador",
+]
+
 [legal."rd-439-2007:art-80"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -205,7 +226,7 @@ effective_from = 2007-03-31
 review_status = "reviewed"
 reviewed_at = 2026-04-12
 reviewed_by = "wgergely"
-notes = "Base reglamentaria del importe del pago fraccionado de actividades economicas."
+notes = "Base reglamentaria del importe del pago fraccionado de actividades economicas. Para la revision 2019-y-siguientes, la regla especifica de resultados negativos de trimestres anteriores del Modelo 130 se verifica contra las instrucciones AEAT del modelo; no contra un apartado 110.5 vigente."
 required_text = [
     "20 por ciento del rendimiento neto",
     "2 por ciento del volumen de ingresos del trimestre",
@@ -730,23 +751,67 @@ required_text = [
     "2.000 euros anuales",
 ]
 
+[legal."rd-439-2007:art-31"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-31.html#a31"
+document_id = "BOE-A-2007-6820"
+article = "31"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a31"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "RIRPF art 31: entidades en regimen de atribucion. Establece la aplicacion de la modalidad simplificada de estimacion directa a actividades economicas desarrolladas por entidades de atribucion de rentas cuando todos sus miembros sean contribuyentes IRPF y la entidad cumpla los requisitos reglamentarios."
+required_text = [
+    "Entidades en régimen de atribución",
+    "La modalidad simplificada del método de estimación directa",
+    "con independencia de las circunstancias",
+    "se atribuirá por partes iguales",
+]
+
+[legal."rd-439-2007:art-39"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-39.html#a39"
+document_id = "BOE-A-2007-6820"
+article = "39"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a39"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "RIRPF art 39: entidades en regimen de atribucion. Establece la aplicacion del metodo de estimacion objetiva a actividades economicas desarrolladas por entidades de atribucion de rentas, con independencia de las circunstancias individuales de sus miembros y con reglas de computo del ambito de aplicacion."
+required_text = [
+    "El método de estimación objetiva",
+    "todos sus socios, herederos, comuneros o partícipes sean personas físicas",
+    "definición del ámbito de aplicación",
+    "se atribuirá por partes iguales",
+]
+
 [legal."rd-439-2007:art-109"]
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "real_decreto"
-corpus_ref = "corpus/normatives/rd-439-2007.json#art-109"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-109.html#a109"
 document_id = "BOE-A-2007-6820"
 article = "109"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a109"
 published_at = 2007-03-31
 effective_from = 2007-03-31
 review_status = "reviewed"
-reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
-notes = "Obligaciones formales de retenedores y obligados a ingresar a cuenta."
+reviewed_at = 2026-06-27
+reviewed_by = "codex"
+notes = "RIRPF art 109: obligados al pago fraccionado. Establece que los contribuyentes que ejercen actividades economicas autoliquidan e ingresan pagos fraccionados de IRPF y recoge las excepciones por retenciones o ingresos a cuenta iguales o superiores al 70 por ciento."
 required_text = [
-    "obligaciones formales de los retenedores",
-    "modelo, el plazo de presentación",
+    "Obligados al pago fraccionado",
+    "actividades económicas estarán obligados a autoliquidar e ingresar en el Tesoro",
+    "70 por ciento de los ingresos",
+    "inicio de la actividad",
 ]
 
 [legal."rd-439-2007:art-100"]
@@ -1429,6 +1494,26 @@ notes = "Base legal para reglas generales de calculo del rendimiento neto de act
 required_text = [
     "rendimiento neto de la actividad económica",
     "Impuesto sobre Sociedades",
+]
+
+[legal."ley-35-2006:art-29"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a29"
+document_id = "BOE-A-2006-20764"
+article = "29"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a29"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (agent-authored from bundled ley-35-2006.html#a29; operator to re-stamp)"
+notes = "LIRPF art 29 defines elementos patrimoniales afectos to an economic activity, including business premises and partially used assets. Grounds censo establishment type and activity-affectation profile selectors."
+required_text = [
+    "Elementos patrimoniales afectos",
+    "bienes inmuebles en los que se desarrolla la actividad",
+    "elementos patrimoniales que sirvan sólo parcialmente",
 ]
 
 [legal."ley-35-2006:art-30"]
@@ -2375,6 +2460,46 @@ required_text = [
     "Deducción por inversión en vivienda habitual",
 ]
 
+[legal."ley-35-2006:da-23"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#davigesimatercera"
+document_id = "BOE-A-2006-20764"
+article = "DA-23"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#davigesimatercera"
+published_at = 2006-11-29
+effective_from = 2013-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (agent-authored from bundled ley-35-2006.html#davigesimatercera; operator to re-stamp)"
+notes = "LIRPF disposición adicional 23ª defines vivienda habitual for specified exemptions as the dwelling where the taxpayer resides for a continuous three-year period, with statutory exceptions for forced changes such as marriage, separation, job relocation, or first/better employment. Grounds the profile flag that marks whether the fiscal address is the operator's habitual dwelling before the LIRPF art 30 home-office affectation rule is applied."
+required_text = [
+    "Consideración de vivienda habitual",
+    "plazo continuado de tres años",
+    "circunstancias que necesariamente exijan el cambio de vivienda",
+]
+
+[legal."ley-35-2006:dt-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dtduodecima"
+document_id = "BOE-A-2006-20764"
+article = "DT-12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dtduodecima"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex"
+notes = "LIRPF disposición transitoria 12ª: régimen transitorio aplicable a prestaciones de planes de pensiones, mutualidades de previsión social y planes de previsión asegurados, including the reduction regime for pre-2007 contributions. Grounds the Modelo 100 DT12 reducción advisory."
+required_text = [
+    "Régimen transitorio aplicable a los planes de pensiones",
+    "aportaciones realizadas hasta 31 de diciembre de 2006",
+    "beneficiarios podrán aplicar el régimen financiero",
+]
+
 [legal."ley-35-2006:dt-15"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2427,6 +2552,26 @@ reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#da-11; 
 notes = "LIRPF disposición adicional 58ª: deducción por la adquisición de vehículos eléctricos enchufables y de pila de combustible y por la instalación de puntos de recarga (15% sobre el valor de adquisición, con límites). Base legal de las casillas de deducción por vehículos eléctricos y puntos de recarga en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-11 (DA quincuagésima octava); operator to confirm and re-stamp."
 required_text = [
     "Deducción por la adquisición de vehículos eléctricos",
+]
+
+[legal."ley-35-2006:da-60"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-14"
+document_id = "BOE-A-2006-20764"
+article = "DA-60"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-14"
+published_at = 2006-11-29
+effective_from = 2025-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex (agent-authored from bundled ley-35-2006.html#da-14; operator to re-stamp)"
+notes = "LIRPF disposición adicional 60ª: reducción del 30% sobre rendimientos de actividades artísticas obtenidos de manera excepcional, con base máxima anual de 150.000 euros, para rendimientos del trabajo artísticos y rendimientos netos de actividades económicas artísticas que excedan del 130% de la media de los tres periodos impositivos anteriores. Base legal de las casillas Modelo 100 2025 de reducción por rendimientos artísticos excepcionales. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-14 (DA sexagésima); operator to confirm and re-stamp."
+required_text = [
+    "Rendimientos de actividades artísticas obtenidos de manera excepcional",
+    "se reducirá en un 30 por ciento",
+    "La cuantía sobre la que se aplicará esta reducción no podrá superar los 150.000 euros anuales",
 ]
 
 [legal."ley-35-2006:art-79"]
@@ -2663,6 +2808,47 @@ review_status = "reviewed"
 reviewed_at = 2026-05-27
 reviewed_by = "wgergely"
 notes = "Articulo 8 de la Orden HAC/242/2025: plazo de presentacion de la declaracion del IRPF ejercicio 2024. El plazo general comprende del 2 de abril al 30 de junio de 2025. La domiciliacion bancaria del pago puede realizarse desde el 2 de abril hasta el 25 de junio de 2025. Corpus contiene solo articulo primero; art-8 pendiente de extraccion al corpus HTML."
+
+[legal."ley-35-2006:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a8"
+document_id = "BOE-A-2006-20764"
+article = "8"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a8"
+published_at = 2006-11-29
+effective_from = 2016-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (verified against bundled ley-35-2006.html#a8; operator to re-stamp)"
+notes = "LIRPF art 8 defines IRPF taxpayers as natural persons with habitual residence in Spain or the foreign-residence circumstances in art 10, and excludes non-IS civil societies, herencias yacentes, comunidades de bienes, and LGT art 35.4 entities from direct IRPF taxpayer status. Grounds the natural_person and attribution_entity split on the profile entity-type axis."
+required_text = [
+    "Son contribuyentes por este impuesto",
+    "Las personas físicas",
+    "No tendrán la consideración de contribuyente las sociedades civiles no sujetas al Impuesto sobre Sociedades",
+    "Sección 2.ª del Título X",
+]
+
+[legal."ley-35-2006:art-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a9"
+document_id = "BOE-A-2006-20764"
+article = "9"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a9"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (agent-authored from bundled ley-35-2006.html#a9; operator to re-stamp)"
+notes = "LIRPF art 9 defines habitual residence in Spanish territory for IRPF taxpayers using the 183-day permanence test, the main centre/base of activities or economic interests, and the family presumption. Grounds the resident_irpf branch of taxpayer fiscal-residency profile selection."
+required_text = [
+    "residencia habitual en territorio español",
+    "más de 183 días",
+    "núcleo principal o la base de sus actividades",
+]
 
 [legal."ley-35-2006:art-11"]
 evidence_tier = "legal_authority"
@@ -3299,6 +3485,30 @@ applies_from = 2007-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 review_status = "reviewed"
 
+[sources."boe-lirpf-art-7-authority"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-35-2006.html"
+sha256 = "b55ba6f2ee97c045290277acd5be1e6493e95b8e5ba7cb7e5e776ff5a572d9f0"
+bytes = 1921157
+retrieved_at = 2026-05-06
+applies_from = 2007-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a7"
+review_status = "reviewed"
+
+[sources."boe-ley-19-1994-art-75-authority"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-19-1994-art-75.html"
+sha256 = "344657dee928cc9c7728dcd3ceab364b60252db3bf13dd2d5ee8aa8e77155dbe"
+bytes = 2188
+retrieved_at = 2026-06-10
+applies_from = 1994-07-08
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a75"
+review_status = "reviewed"
+
 [legal."ley-35-2006:art-7"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -3312,9 +3522,31 @@ effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-15
 reviewed_by = "claude-opus (agent-authored from bundled ley-35-2006.html#a7; operator to re-stamp)"
-notes = "LIRPF art 7: rentas exentas. Base legal de las casillas informativas de rentas exentas (importes que no se integran en la base imponible) del Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a7; operator to confirm and re-stamp."
+notes = "LIRPF art 7: rentas exentas, including art 7.p foreign-work exemption and its 60.100 EUR annual cap. Base legal de las casillas informativas de rentas exentas (importes que no se integran en la base imponible) del Modelo 100 and the maritime worker Art. 7.p exemption. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a7; operator to confirm and re-stamp."
 required_text = [
     "Rentas exentas",
+    "trabajos efectivamente realizados en el extranjero",
+    "límite máximo de 60.100 euros anuales",
+]
+
+[legal."ley-35-2006:da-41"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dacuadragesimaprimera"
+document_id = "BOE-A-2006-20764"
+article = "DA 41"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dacuadragesimaprimera"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (agent-authored from bundled ley-35-2006.html#dacuadragesimaprimera; operator to re-stamp)"
+notes = "LIRPF DA 41: tripulantes de determinados buques de pesca. Establishes a 50 por ciento exempt-income rule for qualifying tuna fleet crew, conditioned on compatibility with EU law. Added by Ley 26/2014 art. 1.98; currently guarded inactive by the maritime worker engine until state-aid clearance is granted."
+required_text = [
+    "Tripulantes de determinados buques de pesca",
+    "renta exenta el 50 por ciento",
+    "condicionada a su compatibilidad con el ordenamiento comunitario",
 ]
 
 [legal."ley-35-2006:art-53"]
@@ -3429,14 +3661,19 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
-corpus_ref = "corpus/normatives/html/ley-31-2022-da-70.html#da70"
+corpus_ref = "corpus/normatives/html/ley-31-2022-da-70.html#da-70"
 document_id = "BOE-A-2022-22128"
 article = "DA-70"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#da70"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#da-70"
 published_at = 2022-12-23
 effective_from = 2023-01-01
 review_status = "reviewed"
-reviewed_at = 2026-06-15
-reviewed_by = "claude-opus (agent-authored; binding provision confirmed from the AEAT Modelo 100 casilla labels 'D.A. septuagésima Ley 31/2022'; CORPUS NOT YET BUNDLED — operator to bundle DA-70 and re-stamp)"
-notes = "Ley 31/2022 (Presupuestos Generales del Estado para 2023) disposición adicional 70ª: Reserva para Inversiones en las Illes Balears (RIB), incentivo análogo a la Reserva para Inversiones en Canarias, aplicable a los rendimientos derivados de establecimientos situados en las Illes Balears para los ejercicios 2023-2028. Base legal de las casillas de dotación e inversión de la RIB en Modelo 100. AGENT-AUTHORED: the binding provision (Ley 31/2022 DA-70) is taken verbatim from the AEAT Modelo 100 casilla labels themselves; the consolidated DA-70 corpus excerpt is NOT bundled under corpus/normatives/html (only ley-31-2022-art-39.html, the LIS modification, is bundled), so required_text is intentionally empty pending an operator corpus refresh — never fabricate the excerpt from a secondary source (legal-grounding-verifies-bundled-authoritative-corpus). corpus_ref names the to-be-bundled DA-70 file path. Operator to bundle the BOE-A-2022-22128 DA-70 text, add a corpus-verified required_text, and re-stamp."
-required_text = []
+reviewed_at = 2026-06-28
+reviewed_by = "codex (verified against official BOE-A-2022-22128 consolidated DA-70; corpus excerpt bundled)"
+notes = "Ley 31/2022 (Presupuestos Generales del Estado para 2023) disposición adicional 70ª: Régimen fiscal especial de las Illes Balears. DA-70.Cuatro grounds the Reserva para Inversiones en las Illes Balears (RIB), including the reserve/materialisation tracking fields and the IRPF estimación-directa cuota deduction for Modelo 100 RIB casillas. Corpus excerpt bundled from the official BOE consolidated text."
+required_text = [
+    "Reserva para inversiones en las Illes Balears",
+    "El importe de la reserva pendiente de materialización",
+    "Los contribuyentes del Impuesto sobre la Renta de las Personas Físicas",
+    "tendrán derecho a una deducción en la cuota íntegra",
+]

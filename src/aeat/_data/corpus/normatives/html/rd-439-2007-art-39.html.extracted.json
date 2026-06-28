@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-439-2007-art-39.html",
+  "source_sha256": "954c4afee09540113c3c8a754b7b44d39cc678a251e54d1076487adfbcd49ca9",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. El método de estimación objetiva será aplicable para la determinación del rendimiento neto de las actividades económicas desarrolladas por las entidades a que se refiere el artículo 87 de la Ley del Impuesto, siempre que todos sus socios, herederos, comuneros o partícipes sean personas físicas contribuyentes por este Impuesto.\n2. La renuncia al método, que deberá efectuarse de acuerdo a lo dispuesto en el artículo 33 de este Reglamento, se formulará por todos los socios, herederos, comuneros o partícipes.\n3. La aplicación de este método de estimación objetiva deberá efectuarse con independencia de las circunstancias que concurran individualmente en los socios, herederos, comuneros o partícipes.\nNo obstante, para la definición del ámbito de aplicación deberán computarse no sólo las operaciones correspondientes a las actividades económicas desarrolladas por la propia entidad en régimen de atribución, sino también las correspondientes a las desarrolladas por sus socios, herederos, comuneros o partícipes; los cónyuges, descendientes y ascendientes de éstos; así como por otras entidades en régimen de atribución de rentas en las que participen cualquiera de las personas anteriores, en las que concurran las circunstancias señaladas en el artículo 32.2.a) de este Reglamento.\n4. El rendimiento neto se atribuirá a los socios, herederos, comuneros o partícipes, según las normas o pactos aplicables en cada caso y, si éstos no constaran a la Administración en forma fehaciente, se atribuirá por partes iguales.",
+      "title": "Artículo 39. Entidades en régimen de atribución.",
+      "section": "Artículo 39. Entidades en régimen de atribución.",
+      "anchor": null
+    }
+  ]
+}

@@ -13,10 +13,14 @@ legal_refs = [
     "orden-hfp-886-2023:art-1",
     "orden-hfp-886-2023:art-2",
     "orden-hfp-886-2023:art-3",
+    "orden-hfp-886-2023:art-4",
+    "orden-hac-1504-2024:art-9",
+    "orden-hac-1504-2024:df-unica",
     "ley-58-2003:art-93",
 ]
 source_refs = [
-    "aeat-dr-721",
+    "boe-modelo-721-2023-layout",
+    "boe-modelo-721-2024-layout",
     "aeat-modelo-721-procedure",
     "boe-modelo-721-2023-form",
 ]

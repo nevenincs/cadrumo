@@ -5,5 +5,5 @@ label = "Gasto 2: Importe del gasto"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "money"
 semantic_role = "irpf_inmueble_gasto_reparacion_importe"
-legal_refs = ["ley-35-2006:art-23", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-23", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]

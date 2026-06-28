@@ -7,7 +7,7 @@
 #
 # Phase 1 rows (per m210-irnr-full-engine ADR §D2.3):
 # - general                 → 24% (TRLIRNR Art 25.1.a baseline)
-# - ue_residente            → 19% (TRLIRNR Art 25.1.f UE/EEE)
+# - ue_residente            → 19% (TRLIRNR Art 25.1.a UE/EEE)
 # - ganancia_patrimonial    → 19% (TRLIRNR Art 25.1.f, savings-base rate)
 # - inmobiliaria            → 24% (TRLIRNR Art 25.1.a; deduction routing
 #                                  via Art 24.5 deferred to Phase 2)
@@ -24,12 +24,12 @@
 #                                  RDLeg 5/2004 art.25.1.f + AEAT manual no
 #                                  residentes (2026-06-14 grounding pass).)
 #
-# Phase 2 tipos deferred (pension via Art 25.1.b — corpus-blocked under
-# task #229 — and any further branches) are intentionally absent from
-# this table. A runtime lookup for a tipo_renta with no row in the
-# table will emit a BLOCKING finding when S389 wires the lookup
-# helper. Absence-as-signal is preferred to a NOT_YET_AUTHORED sentinel
-# row at this schema layer.
+# Pension is intentionally absent from this flat-rate table because
+# TRLIRNR Art 25.1.b is a progressive bracket tariff. The live branch
+# is represented by parameter `m210-pension-tarifa-2025`, and
+# `m210_resolve_rate` derives an effective rate from that table when
+# tipo_renta is `pension`. Other future tipos with no row still surface
+# as deferred/missing coverage through the lookup helper.
 #
 # S389 will compose this baseline with an override table
 # (m210-convenio-rates) that REPLACES the baseline when the profile

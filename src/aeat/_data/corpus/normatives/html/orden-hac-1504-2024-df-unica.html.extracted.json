@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-1504-2024-df-unica.html",
+  "source_sha256": "a70e4a4e06d5804b14a73438bf67771f905fc7c948cedf68220f9d44f214ad73",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La presente orden entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado», y será aplicable, por primera vez, a las declaraciones informativas correspondientes al ejercicio 2024, que se presentarán en el ejercicio 2025.",
+      "title": "Disposición final única. Entrada en vigor.",
+      "section": "Disposición final única. Entrada en vigor.",
+      "anchor": null
+    }
+  ]
+}

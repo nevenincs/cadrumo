@@ -58,6 +58,27 @@ required_text = [
     "en el plazo de un mes",
 ]
 
+[legal."rdleg-1-2004:art-6.3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rdleg-1-2004-art-6.html#a6"
+document_id = "BOE-A-2004-4163"
+article = "6.3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4163#a6"
+published_at = 2004-03-08
+effective_from = 2011-03-06
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (verified against official BOE-A-2004-4163 consolidated art. 6; corpus excerpt bundled)"
+notes = "RDLeg 1/2004 art 6.3 defines the cadastral reference as the alphanumeric identifier assigned to each immovable property and requires that identifier in documents with economic or tax relevance linked to the property. Grounds the fiscal-address cadastral-reference profile/censo field."
+required_text = [
+    "referencia catastral",
+    "código alfanumérico",
+    "cartografía oficial del Catastro",
+    "trascendencia tributaria vinculadas al inmueble",
+]
+
 [legal."orden-eha-1274-2007:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"

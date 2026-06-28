@@ -5,7 +5,8 @@
 # non-residents. The declaration is Modelo 714 (Orden HAC/1023/2021).
 # The obligation threshold is €700.000 net wealth nationally (Art. 28 Ley 19/1991),
 # with autonomic-community variation: Comunitat Valenciana €600.000, some CCAAs
-# €700.000 or €1.000.000. Full casilla authoring is pending.
+# €700.000 or €1.000.000. The 714 registry currently grounds the base, art. 30
+# state scale, art. 31 joint-limit floor, and art. 4.Nueve habitual-home exemption.
 
 [legal."ley-19-1991:art-28"]
 evidence_tier = "legal_authority"

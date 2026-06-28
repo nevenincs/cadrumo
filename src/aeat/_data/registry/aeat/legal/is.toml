@@ -1,3 +1,24 @@
+[legal."ley-27-2014:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-7.html#a7"
+document_id = "BOE-A-2014-12328"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a7"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (verified against official BOE-A-2014-12328 consolidated art. 7; corpus excerpt bundled)"
+notes = "LIS art 7 defines contributors to Impuesto sobre Sociedades, including resident legal persons and using the abbreviated designations sociedades or entidades. Grounds the legal_entity branch of the profile entity-type axis."
+required_text = [
+    "Contribuyentes",
+    "Serán contribuyentes del Impuesto",
+    "Las personas jurídicas",
+    "sociedades o entidades",
+]
+
 [legal."ley-27-2014:art-10"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -364,20 +385,43 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
-corpus_ref = "corpus/normatives/html/ley-27-2014-dt-44.html#dt44"
-document_id = "BOE-A-2024-26694"
+corpus_ref = "corpus/normatives/html/ley-27-2014-dt-44.html#dt-6"
+document_id = "BOE-A-2014-12328"
 article = "DT-44"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-26694"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dt-6"
 published_at = 2024-12-21
 effective_from = 2025-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-02
 reviewed_by = "wgergely"
-notes = "LIS DT 44ª (Ley 7/2024, BOE-A-2024-26694): régimen transitorio del tipo de gravamen de las microempresas cuyo INCN del período inmediato anterior es inferior a 1 millón de euros, sobre la escala del art. 29.1 LIS; ejercicios iniciados en 2025 (21% / 22%) y 2026 (19% / 21%)."
+notes = "LIS DT 44ª (Ley 7/2024, BOE-A-2024-26694): régimen transitorio del tipo de gravamen de las microempresas cuyo INCN del período inmediato anterior es inferior a 1 millón de euros, sobre la escala del art. 29.1 LIS; ejercicios iniciados en 2025 (21% / 22%) y 2026 (19% / 21%). También fija el tránsito de entidades de reducida dimensión que cumplen el art. 101 LIS: 24% en 2025, 23% en 2026, 22% en 2027 y 21% en 2028, salvo tipo especial distinto del general."
 required_text = [
     "21 por ciento",
     "22 por ciento",
+    "24 por ciento",
+    "23 por ciento",
+    "entidades que cumplan las previsiones previstas en el artículo 101",
     "1 millón de euros",
+]
+
+[legal."ley-27-2014:art-101"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-101.html#a101"
+document_id = "BOE-A-2014-12328"
+article = "101"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a101"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "codex (bundled corpus excerpt cross-checked against live BOE)"
+notes = "LIS art 101: define the entidades de reducida dimensión threshold by prior-period INCN below 10 million euros and the annualisation/group rules used by DT 44 ERD rate dispatch."
+required_text = [
+    "inferior a 10 millones de euros",
+    "entidad patrimonial",
+    "importe neto de la cifra de negocios se elevará al año",
 ]
 
 [legal."ley-27-2014:art-30"]
@@ -735,6 +779,50 @@ required_text = [
     "Serán deducibles de la cuota líquida",
     "Los pagos fraccionados",
     "la Administración tributaria procederá a devolver, de oficio, el exceso",
+]
+
+[legal."ley-12-2002:art-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-12-2002-art-15.html#a15"
+document_id = "BOE-A-2002-9969"
+article = "15"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-9969#a15"
+published_at = 2002-05-24
+effective_from = 2002-05-25
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (verified against official BOE-A-2002-9969 consolidated art. 15; corpus excerpt bundled)"
+notes = "Concierto Economico Pais Vasco art 15: Impuesto sobre Sociedades taxpayers that tribute jointly to the Diputaciones Forales and the Administracion del Estado allocate the tax in proportion to the volume of operations in each territory, expressed as a percentage. Grounds the Modelo 200 Estado/foral percentage profile fact."
+required_text = [
+    "Impuesto sobre Sociedades",
+    "Diputaciones Forales",
+    "Administración del Estado",
+    "en proporción al volumen de operaciones",
+    "porcentaje redondeado con dos decimales",
+]
+
+[legal."ley-28-1990:art-19"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-28-1990-art-19.html#a1-22"
+document_id = "BOE-A-1990-31117"
+article = "19"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-31117#a1-22"
+published_at = 1990-12-27
+effective_from = 2003-07-17
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "codex (verified against official BOE-A-1990-31117 consolidated art. 19; corpus excerpt bundled)"
+notes = "Convenio Economico Navarra art 19: Impuesto sobre Sociedades taxpayers operating in common and Navarra territories tribute jointly to both Administrations in proportion to operation volume, expressed as a percentage. Grounds the Modelo 200 Estado/Navarra percentage profile fact."
+required_text = [
+    "Comunidad Foral de Navarra",
+    "Impuesto sobre Sociedades",
+    "tributarán conjuntamente a ambas Administraciones",
+    "en proporción al volumen de operaciones",
+    "porcentaje redondeado con dos decimales",
 ]
 
 [legal."ley-27-2014:art-124"]
