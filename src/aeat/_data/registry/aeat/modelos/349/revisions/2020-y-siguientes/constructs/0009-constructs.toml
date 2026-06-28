@@ -9,6 +9,7 @@ legal_refs = [
     "ley-58-2003:art-93",
     "rd-1624-1992:art-79",
     "rd-1624-1992:art-80",
+    "rd-1624-1992:art-81",
     "ley-37-1992:art-9-bis",
     "ley-37-1992:art-13",
     "ley-37-1992:art-15",
@@ -24,6 +25,7 @@ legal_refs = [
 source_refs = [
     "aeat-dr-349-2020-current",
     "aeat-vies-gestiones-procedure",
+    "aeat-modelo-349-instructions",
     "aeat-modelo-349-procedure",
     "boe-modelo-349-form-2010",
 ]

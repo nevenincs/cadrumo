@@ -9,6 +9,8 @@ from typing import cast
 
 import pytest
 
+from .....core import BindingSourceKind
+from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_host
 from .. import (
@@ -16,6 +18,7 @@ from .. import (
     CasillaId,
     InputKind,
     InvoiceObservation,
+    ModeloRevision,
     RegistryValidator,
     build_snapshot,
     invoice_binding_requirements,
@@ -27,7 +30,10 @@ from .. import (
     resolve_invoice_binding_values,
     validated_casilla_id,
 )
+from .._corpus_catalogue import verify_source_file
+from .._legal import verify_legal_catalogue
 from .._schema import DataBindingDefinition
+from .._text import normalise_corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW6_HOST = aeat_host("www6")
@@ -94,6 +100,37 @@ _OFFICIAL_FIELD_POSITIONS: dict[CasillaId, tuple[int, int]] = {
     _RECT_BASE_RECTIFICADA_CASILLA: (153, 165),
     _RECT_BASE_ANTERIOR_CASILLA: (166, 178),
 }
+_OFFICIAL_FIELD_WIDTHS: dict[CasillaId, int] = {
+    casilla_id: end - start + 1 for casilla_id, (start, end) in _OFFICIAL_FIELD_POSITIONS.items()
+}
+_M349_GB_XI_SOURCE_REF = "aeat-modelo-349-instructions"
+_M349_GB_XI_ORDINARY_BINDINGS = (
+    "iva-349-operador-row-codigo-pais",
+    "iva-349-operador-row-codigo-pais-adquisicion",
+)
+_M349_GB_XI_RECTIFICATION_BINDINGS = (
+    "iva-349-rectificacion-row-codigo-pais",
+    "iva-349-rectificacion-row-codigo-pais-adquisicion",
+)
+_M349_GB_XI_ORDINARY_REQUIRED_TEXT = (
+    "exclusivamente para los bienes (no para servicios)",
+    "NIVA que comenzará por XI",
+    "Para los períodos 1M y 1T de 2021, el modelo 349 admitirá los prefijos GB y XI",
+    "Para los periodos 2M a 12M y 2T a 4T de 2021 sólo se admitirá el prefijo XI",
+)
+_M349_GB_XI_RECTIFICATION_REQUIRED_TEXT = (
+    "Para las rectificaciones de operaciones anteriores a 2021, sólo se admitirá el prefijo GB",
+    "Para las rectificaciones de operaciones del 1M o 1T de 2021",
+    "Para las rectificaciones de operaciones de 2M a 12M y 2T a 4T de 2021, sólo se admitirá el prefijo XI",
+)
+_M349_CADENCE_LEGAL_REF = "rd-1624-1992:art-81"
+_M349_CADENCE_REQUIRED_TEXT = (
+    "Lugar, forma y plazos de presentacion de la declaracion recapitulativa",
+    "por cada mes natural durante los veinte primeros dias naturales",
+    "en cada uno de los cuatro trimestres naturales anteriores",
+    "50.000 euros",
+    "durante los veinte primeros dias naturales del mes inmediato siguiente al correspondiente periodo trimestral",
+)
 
 
 @lru_cache(maxsize=1)
@@ -101,6 +138,11 @@ def _load_modelo_349():
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(modelo for modelo in modelos if modelo.id == "349")
     return modelo, catalogues
+
+
+def _modelo_349_revision() -> ModeloRevision:
+    modelo, _ = _load_modelo_349()
+    return modelo.revisions["2020-y-siguientes"]
 
 
 def test_committed_modelo_349_validates_against_catalogues() -> None:
@@ -168,8 +210,7 @@ def test_committed_modelo_349_is_informative_static_documentation_only() -> None
 
 
 def test_committed_modelo_349_casilla_numbers_match_official_record_design() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
     for casilla_id, (expected_start, expected_end) in _OFFICIAL_FIELD_POSITIONS.items():
@@ -204,15 +245,13 @@ def test_committed_modelo_349_casilla_data_types_match_official_record_design(
     casilla_id: CasillaId,
     expected_data_type: str,
 ) -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     casilla = next(item for item in revision.casillas if item.id == casilla_id)
     assert casilla.data_type == expected_data_type
 
 
 def test_committed_modelo_349_base_intracomunitaria_role_coverage() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     expected_ids = {
         _OP_BASE_IMPONIBLE_CASILLA,
@@ -234,40 +273,23 @@ def test_committed_modelo_349_base_intracomunitaria_role_coverage() -> None:
 
 
 def test_committed_modelo_349_casilla_widths_match_official_record_design() -> None:
-    expected_lengths: dict[CasillaId, int] = {
-        _DECL_NUMERO_OPERADORES_CASILLA: 9,
-        _DECL_IMPORTE_OPERACIONES_CASILLA: 15,
-        _DECL_NUMERO_RECTIFICACIONES_CASILLA: 9,
-        _DECL_IMPORTE_RECTIFICACIONES_CASILLA: 15,
-        _OP_CODIGO_PAIS_CASILLA: 2,
-        _OP_NIF_COMUNITARIO_CASILLA: 15,
-        _OP_APELLIDOS_RAZON_SOCIAL_CASILLA: 40,
-        _OP_CLAVE_OPERACION_CASILLA: 1,
-        _OP_BASE_IMPONIBLE_CASILLA: 13,
-        _RECT_EJERCICIO_RECTIFICADO_CASILLA: 4,
-        _RECT_PERIODO_RECTIFICADO_CASILLA: 2,
-        _RECT_BASE_RECTIFICADA_CASILLA: 13,
-        _RECT_BASE_ANTERIOR_CASILLA: 13,
-    }
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     for casilla in revision.casillas:
-        if casilla.id not in expected_lengths:
+        if casilla.id not in _OFFICIAL_FIELD_WIDTHS:
             continue
         if "-" in casilla.number:
             start, end = casilla.number.split("-", 1)
             actual_length = int(end) - int(start) + 1
         else:
             actual_length = 1
-        assert actual_length == expected_lengths[casilla.id], (
+        assert actual_length == _OFFICIAL_FIELD_WIDTHS[casilla.id], (
             f"casilla {casilla.id!r} byte length {actual_length} does not match official "
-            f"record-design length {expected_lengths[casilla.id]}"
+            f"record-design length {_OFFICIAL_FIELD_WIDTHS[casilla.id]}"
         )
 
 
 def test_committed_modelo_349_authenticated_read_surface_allows_read_only_methods_only() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     auth_surface = next(ref for ref in revision.live_cross_references if ref.id == "modelo-349-filed-declarations-read")
 
     assert auth_surface.surface == "authenticated_read_surface"
@@ -278,8 +300,7 @@ def test_committed_modelo_349_authenticated_read_surface_allows_read_only_method
 
 
 def test_committed_modelo_349_authenticated_read_surface_forbids_aeat_state_mutations() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     auth_surface = next(ref for ref in revision.live_cross_references if ref.id == "modelo-349-filed-declarations-read")
 
     forbidden = set(auth_surface.forbidden_actions)
@@ -296,8 +317,7 @@ def test_committed_modelo_349_authenticated_read_surface_forbids_aeat_state_muta
 
 
 def test_committed_modelo_349_authenticated_read_surface_pins_aeat_hosts() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     auth_surface = next(ref for ref in revision.live_cross_references if ref.id == "modelo-349-filed-declarations-read")
 
     assert _WWW6_HOST in auth_surface.allowed_hosts
@@ -321,9 +341,61 @@ def test_committed_modelo_349_workbook_parity_resolves_to_corpus_artefact() -> N
     assert artefact_path.is_file(), artefact_path
 
 
-def test_committed_modelo_349_construct_collects_all_revision_members() -> None:
-    modelo, _ = _load_modelo_349()
+def test_committed_modelo_349_gb_xi_country_prefix_rules_are_cited_to_aeat_instructions() -> None:
+    modelo, catalogues = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
+    source = catalogues.sources[_M349_GB_XI_SOURCE_REF]
+
+    assert source.evidence_tier == "official_source_guidance"
+    assert source.kind == "instructions"
+    assert source.corpus_path == "corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.txt"
+    assert source.sha256 == "da88207bffeb21d0ea94a28229f8657cec0d88769d132d10ecdb74b66ce9e5e8"
+    assert source.bytes == 70701
+    assert source.source_url.endswith("/GI28/instr_mod_349.pdf")
+    verify_source_file(PROJECT_ROOT, source)
+
+    source_text = normalise_corpus_text((bundled_path() / source.corpus_path).read_text(encoding="utf-8"))
+    for required_text in _M349_GB_XI_ORDINARY_REQUIRED_TEXT + _M349_GB_XI_RECTIFICATION_REQUIRED_TEXT:
+        assert normalise_corpus_text(required_text) in source_text
+
+    bindings = {binding.id: binding for binding in revision.bindings}
+    expected_by_binding = {
+        **{binding_id: _M349_GB_XI_ORDINARY_REQUIRED_TEXT for binding_id in _M349_GB_XI_ORDINARY_BINDINGS},
+        **{
+            binding_id: _M349_GB_XI_RECTIFICATION_REQUIRED_TEXT
+            for binding_id in _M349_GB_XI_RECTIFICATION_BINDINGS
+        },
+    }
+    for binding_id, expected_required_text in expected_by_binding.items():
+        binding = bindings[binding_id]
+        assert _M349_GB_XI_SOURCE_REF in binding.source_refs
+        (instruction_citation,) = (
+            citation for citation in binding.source_citations if citation.source_ref == _M349_GB_XI_SOURCE_REF
+        )
+        assert instruction_citation.required_text == expected_required_text
+
+
+def test_committed_modelo_349_cadence_threshold_links_to_riva_art_81_corpus() -> None:
+    modelo, catalogues = _load_modelo_349()
+    revision = modelo.revisions["2020-y-siguientes"]
+    reference = catalogues.legal[_M349_CADENCE_LEGAL_REF]
+
+    assert _M349_CADENCE_LEGAL_REF in modelo.legal_refs
+    assert _M349_CADENCE_LEGAL_REF in revision.legal_refs
+    assert _M349_CADENCE_LEGAL_REF in revision.constructs[0].legal_refs
+    assert reference.corpus_ref == "corpus/normatives/html/rd-1624-1992-art-81.html#a81"
+    assert reference.effective_from == date(2020, 3, 1)
+    assert reference.required_text == _M349_CADENCE_REQUIRED_TEXT
+
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
+    corpus_path_text = reference.corpus_ref.split("#", 1)[0]
+    corpus_text = normalise_corpus_text((bundled_path() / corpus_path_text).read_text(encoding="utf-8"))
+    for required_text in _M349_CADENCE_REQUIRED_TEXT:
+        assert normalise_corpus_text(required_text) in corpus_text
+
+
+def test_committed_modelo_349_construct_collects_all_revision_members() -> None:
+    revision = _modelo_349_revision()
     assert len(revision.constructs) == 1
     construct = revision.constructs[0]
 
@@ -336,8 +408,7 @@ def test_committed_modelo_349_construct_collects_all_revision_members() -> None:
 
 
 def test_committed_modelo_349_filing_schedules_split_monthly_and_quarterly_by_threshold() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
 
     schedules_by_id = {schedule.id: schedule for schedule in revision.filing_schedules}
     assert set(schedules_by_id) == {"modelo-349-trimestral", "modelo-349-mensual"}
@@ -346,22 +417,27 @@ def test_committed_modelo_349_filing_schedules_split_monthly_and_quarterly_by_th
     assert quarterly.period_kind == "quarterly"
     assert quarterly.periods == ("1T", "2T", "3T", "4T")
     assert quarterly.profile_condition_mode == "all"
+    assert _M349_CADENCE_LEGAL_REF in quarterly.legal_refs
     quarterly_predicates = {condition.field: condition for condition in quarterly.profile_conditions}
     assert quarterly_predicates["does_intracomunitario"].value is True
-    assert quarterly_predicates["iva.intracommunity_operations_exceed_50000_eur"].op == "equals"
-    assert quarterly_predicates["iva.intracommunity_operations_exceed_50000_eur"].value is False
+    quarterly_threshold = quarterly_predicates["iva.intracommunity_operations_exceed_50000_eur"]
+    assert quarterly_threshold.op == "equals"
+    assert quarterly_threshold.value is False
+    assert _M349_CADENCE_LEGAL_REF in quarterly_threshold.legal_refs
 
     monthly = schedules_by_id["modelo-349-mensual"]
     assert monthly.period_kind == "monthly"
     assert monthly.periods == ("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")
+    assert _M349_CADENCE_LEGAL_REF in monthly.legal_refs
     monthly_predicates = {condition.field: condition for condition in monthly.profile_conditions}
     assert monthly_predicates["does_intracomunitario"].value is True
-    assert monthly_predicates["iva.intracommunity_operations_exceed_50000_eur"].value is True
+    monthly_threshold = monthly_predicates["iva.intracommunity_operations_exceed_50000_eur"]
+    assert monthly_threshold.value is True
+    assert _M349_CADENCE_LEGAL_REF in monthly_threshold.legal_refs
 
 
 def test_committed_modelo_349_deadline_windows_cover_every_supported_period_per_year() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
 
     expected_periods = {f"{m:02d}" for m in range(1, 13)} | {f"{q}T" for q in range(1, 5)}
     by_year: dict[int, set[str]] = {}
@@ -394,16 +470,14 @@ def test_committed_modelo_349_deadline_windows_match_official_plazo_rules(
     expected_open: date,
     expected_close: date,
 ) -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     window = next(w for w in revision.deadline_windows if w.id == window_id)
     assert window.opens_on == expected_open
     assert window.closes_on == expected_close
 
 
 def test_committed_modelo_349_deadline_windows_are_unique_by_period() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     seen: set[tuple[int, str]] = set()
     for window in revision.deadline_windows:
         key = (window.period.filing_year, window.period.registry_token)
@@ -412,8 +486,7 @@ def test_committed_modelo_349_deadline_windows_are_unique_by_period() -> None:
 
 
 def test_committed_modelo_349_deadline_app_link_is_registered() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     deadline_links = [link for link in revision.application_links if link.surface == "deadline"]
     assert len(deadline_links) == 1
     assert deadline_links[0].id == "modelo-349-deadline"
@@ -421,8 +494,7 @@ def test_committed_modelo_349_deadline_app_link_is_registered() -> None:
 
 
 def test_committed_modelo_349_export_layout_declares_three_fixed_width_records() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     assert len(revision.export_layouts) == 1
     layout = revision.export_layouts[0]
     assert layout.id == "modelo-349-fichero-2020"
@@ -447,8 +519,7 @@ def test_committed_modelo_349_export_records_open_with_official_record_type_lite
     record_type: str,
     expected_record_type_literal: str,
 ) -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     layout = revision.export_layouts[0]
     record = next(item for item in layout.records if item.record_type == record_type)
     first_field = record.fields[0]
@@ -459,8 +530,7 @@ def test_committed_modelo_349_export_records_open_with_official_record_type_lite
 
 
 def test_committed_modelo_349_export_records_total_five_hundred_bytes_each() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     layout = revision.export_layouts[0]
     for record in layout.records:
         total = sum(field.length or 0 for field in record.fields)
@@ -468,8 +538,7 @@ def test_committed_modelo_349_export_records_total_five_hundred_bytes_each() -> 
 
 
 def test_committed_modelo_349_export_records_have_contiguous_non_overlapping_fields() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     layout = revision.export_layouts[0]
     for record in layout.records:
         cursor = 1
@@ -484,8 +553,7 @@ def test_committed_modelo_349_export_records_have_contiguous_non_overlapping_fie
 
 
 def test_committed_modelo_349_export_casilla_fields_resolve_to_revision_casillas() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     layout = revision.export_layouts[0]
     casilla_ids = {casilla.id for casilla in revision.casillas}
     for record in layout.records:
@@ -498,8 +566,7 @@ def test_committed_modelo_349_export_casilla_fields_resolve_to_revision_casillas
 
 
 def test_committed_modelo_349_export_app_link_is_registered() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     export_links = [link for link in revision.application_links if link.surface == "export"]
     assert len(export_links) == 1
     assert export_links[0].id == "modelo-349-export"
@@ -507,15 +574,13 @@ def test_committed_modelo_349_export_app_link_is_registered() -> None:
 
 
 def test_committed_modelo_349_construct_includes_export_layout() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     construct = revision.constructs[0]
     assert set(construct.export_layouts) == {layout.id for layout in revision.export_layouts}
 
 
 def test_committed_modelo_349_extraction_profiles_target_declarant_summary_casillas() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
 
     profiles_by_id = {profile.id: profile for profile in revision.extraction_profiles}
     assert set(profiles_by_id) == {"modelo-349-declaracion-pdf", "modelo-349-submitted-file"}
@@ -535,8 +600,7 @@ def test_committed_modelo_349_extraction_profiles_target_declarant_summary_casil
 
 
 def test_committed_modelo_349_extractor_app_link_is_registered() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     extractor_links = [link for link in revision.application_links if link.surface == "extractor"]
     assert len(extractor_links) == 1
     assert extractor_links[0].id == "modelo-349-extractor"
@@ -544,8 +608,7 @@ def test_committed_modelo_349_extractor_app_link_is_registered() -> None:
 
 
 def test_committed_modelo_349_construct_includes_extraction_profiles() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     construct = revision.constructs[0]
     assert set(construct.extraction_profiles) == {profile.id for profile in revision.extraction_profiles}
 
@@ -650,48 +713,75 @@ def _fixed_width_record(length: int, fields: dict[tuple[int, int], str]) -> str:
 
 
 def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_summary() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
 
-    invoice_bindings: dict[str, DataBindingDefinition] = {
+    collectible_bindings: dict[str, DataBindingDefinition] = {
         b.id: b
         for b in revision.bindings
         if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.op != "rows"
     }
-    assert set(invoice_bindings) == {
+    payable_bindings: dict[str, DataBindingDefinition] = {
+        b.id: b
+        for b in revision.bindings
+        if b.source == "payable_invoice" and b.aggregation is not None and b.aggregation.op != "rows"
+    }
+    expected_collectible = {
         "iva-349-declarante-numero-operadores",
         "iva-349-declarante-importe-operaciones",
         "iva-349-declarante-numero-rectificaciones",
         "iva-349-declarante-importe-rectificaciones",
     }
+    expected_payable = {f"{binding_id}-adquisicion" for binding_id in expected_collectible}
+    assert set(collectible_bindings) == expected_collectible
+    assert set(payable_bindings) == expected_payable
+
     expected_claves = ("E", "M", "H", "A", "T", "S", "I", "R", "D", "C")
     for binding_id in (
         "iva-349-declarante-numero-operadores",
         "iva-349-declarante-importe-operaciones",
     ):
-        binding = invoice_bindings[binding_id]
+        binding = collectible_bindings[binding_id]
         assert binding.selector["rectification_scope"] == "exclude_rectifications"
         assert cast("tuple[str, ...]", binding.selector["claves"]) == expected_claves
     for binding_id in (
         "iva-349-declarante-numero-rectificaciones",
         "iva-349-declarante-importe-rectificaciones",
     ):
-        binding = invoice_bindings[binding_id]
+        binding = collectible_bindings[binding_id]
         assert binding.selector["rectification_scope"] == "only_rectifications"
         assert cast("tuple[str, ...]", binding.selector["claves"]) == expected_claves
 
+    expected_payable_claves = ("A", "I", "T")
+    for binding_id in (
+        "iva-349-declarante-numero-operadores-adquisicion",
+        "iva-349-declarante-importe-operaciones-adquisicion",
+    ):
+        binding = payable_bindings[binding_id]
+        assert binding.selector["rectification_scope"] == "exclude_rectifications"
+        assert cast("tuple[str, ...]", binding.selector["claves"]) == expected_payable_claves
+    for binding_id in (
+        "iva-349-declarante-numero-rectificaciones-adquisicion",
+        "iva-349-declarante-importe-rectificaciones-adquisicion",
+    ):
+        binding = payable_bindings[binding_id]
+        assert binding.selector["rectification_scope"] == "only_rectifications"
+        assert cast("tuple[str, ...]", binding.selector["claves"]) == expected_payable_claves
+
 
 def test_committed_modelo_349_invoice_binding_requirements_split_by_rectification_scope() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     requirements = invoice_binding_requirements(revision)
 
-    by_scope = {req.rectification_scope: req for req in requirements}
-    assert set(by_scope) == {"exclude_rectifications", "only_rectifications"}
-    # Both scalar declarant-summary bindings and the 5 operador row bindings
-    # share exclude_rectifications + the same clave set, so they all collapse
-    # into one requirement cohort.
-    expected_exclude = {
+    by_scope_and_claves = {(req.rectification_scope, req.claves): req for req in requirements}
+    expected_collectible_claves = ("A", "C", "D", "E", "H", "I", "M", "R", "S", "T")
+    expected_payable_claves = ("A", "I", "T")
+    assert set(by_scope_and_claves) == {
+        ("exclude_rectifications", expected_collectible_claves),
+        ("only_rectifications", expected_collectible_claves),
+        ("exclude_rectifications", expected_payable_claves),
+        ("only_rectifications", expected_payable_claves),
+    }
+    expected_collectible_exclude = {
         "iva-349-declarante-numero-operadores",
         "iva-349-declarante-importe-operaciones",
         "iva-349-operador-row-codigo-pais",
@@ -700,7 +790,7 @@ def test_committed_modelo_349_invoice_binding_requirements_split_by_rectificatio
         "iva-349-operador-row-clave",
         "iva-349-operador-row-base",
     }
-    expected_only = {
+    expected_collectible_only = {
         "iva-349-declarante-numero-rectificaciones",
         "iva-349-declarante-importe-rectificaciones",
         "iva-349-rectificacion-row-codigo-pais",
@@ -712,16 +802,35 @@ def test_committed_modelo_349_invoice_binding_requirements_split_by_rectificatio
         "iva-349-rectificacion-row-base-rectificada",
         "iva-349-rectificacion-row-base-anterior",
     }
-    assert set(by_scope["exclude_rectifications"].binding_ids) == expected_exclude
-    assert set(by_scope["only_rectifications"].binding_ids) == expected_only
+    expected_payable_exclude = {f"{binding_id}-adquisicion" for binding_id in expected_collectible_exclude}
+    expected_payable_only = {f"{binding_id}-adquisicion" for binding_id in expected_collectible_only}
+    assert (
+        set(by_scope_and_claves[("exclude_rectifications", expected_collectible_claves)].binding_ids)
+        == expected_collectible_exclude
+    )
+    assert (
+        set(by_scope_and_claves[("only_rectifications", expected_collectible_claves)].binding_ids)
+        == expected_collectible_only
+    )
+    assert (
+        set(by_scope_and_claves[("exclude_rectifications", expected_payable_claves)].binding_ids)
+        == expected_payable_exclude
+    )
+    assert (
+        set(by_scope_and_claves[("only_rectifications", expected_payable_claves)].binding_ids) == expected_payable_only
+    )
 
 
 def test_committed_modelo_349_invoice_bindings_resolve_substantive_legal_refs() -> None:
     modelo, catalogues = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
-    invoice_bindings = [binding for binding in revision.bindings if binding.source == "collectible_invoice"]
+    invoice_bindings = [
+        binding for binding in revision.bindings if binding.source in {"collectible_invoice", "payable_invoice"}
+    ]
 
-    assert len(invoice_bindings) == 17
+    assert len(invoice_bindings) == 34
+    assert sum(1 for binding in invoice_bindings if binding.source == "collectible_invoice") == 17
+    assert sum(1 for binding in invoice_bindings if binding.source == "payable_invoice") == 17
     assert set(catalogues.legal) >= _M349_SUBSTANTIVE_BINDING_LEGAL_REFS
 
     for binding in invoice_bindings:
@@ -739,8 +848,7 @@ def test_committed_modelo_349_invoice_bindings_resolve_substantive_legal_refs() 
 
 
 def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledger() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
 
     non_rect_obs = (
         InvoiceObservation(
@@ -776,14 +884,17 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
 
     resolved = resolve_invoice_binding_values(revision, observations)
 
-    # Assert the four expected binding keys are all present.
-    expected_keys = {
+    # Assert the source-specific scalar binding keys are all present.
+    expected_collectible_keys = {
         "iva-349-declarante-numero-operadores",
         "iva-349-declarante-importe-operaciones",
         "iva-349-declarante-numero-rectificaciones",
         "iva-349-declarante-importe-rectificaciones",
     }
-    assert expected_keys == set(resolved.keys()), "resolver must populate exactly the four declarant bindings"
+    expected_payable_keys = {f"{binding_id}-adquisicion" for binding_id in expected_collectible_keys}
+    assert expected_collectible_keys | expected_payable_keys == set(resolved.keys()), (
+        "resolver must populate the four public declarant bindings plus payable acquisition mirrors"
+    )
 
     # Operator count and total base are derived directly from the non-rectification
     # observations — the resolver must sum distinct operators and their base amounts.
@@ -800,18 +911,92 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
     assert rect_obs.rectified_base_previous is not None
     expected_rect_delta = abs(rect_obs.base_amount - rect_obs.rectified_base_previous)
     assert resolved["iva-349-declarante-importe-rectificaciones"] == expected_rect_delta
+    for binding_id in expected_payable_keys:
+        assert resolved[binding_id] == Decimal("0")
+
+
+def test_committed_modelo_349_invoice_binding_resolver_separates_payable_service_acquisitions() -> None:
+    revision = _modelo_349_revision()
+
+    observations = (
+        InvoiceObservation(
+            invoice_id="inv-it-service-acq",
+            source_kind=BindingSourceKind.PAYABLE_INVOICE,
+            party_tax_id="IT12345678901",
+            country_code="IT",
+            transaction_date=date(2026, 3, 1),
+            base_amount=Decimal("3000.00"),
+            intracommunity_clave="I",
+        ),
+    )
+
+    resolved = resolve_invoice_binding_values(revision, observations)
+
+    assert resolved["iva-349-declarante-numero-operadores"] == Decimal("0")
+    assert resolved["iva-349-declarante-importe-operaciones"] == Decimal("0")
+    assert resolved["iva-349-declarante-numero-operadores-adquisicion"] == Decimal("1")
+    assert resolved["iva-349-declarante-importe-operaciones-adquisicion"] == Decimal("3000.00")
+
+
+def test_committed_modelo_349_row_resolver_appends_payable_acquisitions_to_public_export_rows() -> None:
+    revision = _modelo_349_revision()
+
+    observations = (
+        InvoiceObservation(
+            invoice_id="inv-de-sale",
+            party_tax_id="DE111111111",
+            country_code="DE",
+            transaction_date=date(2026, 3, 1),
+            base_amount=Decimal("1000.00"),
+            intracommunity_clave="E",
+            party_legal_name="SALE GMBH",
+        ),
+        InvoiceObservation(
+            invoice_id="inv-de-acq",
+            source_kind=BindingSourceKind.PAYABLE_INVOICE,
+            party_tax_id="DE222222222",
+            country_code="DE",
+            transaction_date=date(2026, 3, 2),
+            base_amount=Decimal("750.00"),
+            intracommunity_clave="A",
+            party_legal_name="SUPPLIER GMBH",
+        ),
+        InvoiceObservation(
+            invoice_id="inv-it-service-acq",
+            source_kind=BindingSourceKind.PAYABLE_INVOICE,
+            party_tax_id="IT12345678901",
+            country_code="IT",
+            transaction_date=date(2026, 3, 3),
+            base_amount=Decimal("3000.00"),
+            intracommunity_clave="I",
+            party_legal_name="SERVIZI SRL",
+        ),
+    )
+
+    rows = resolve_invoice_binding_row_values(revision, observations)
+
+    assert rows[("iva-349-operador-row-clave", 1)] == "E"
+    assert rows[("iva-349-operador-row-nif", 1)] == "111111111"
+    assert rows[("iva-349-operador-row-clave-adquisicion", 1)] == "A"
+    assert rows[("iva-349-operador-row-nif-adquisicion", 1)] == "222222222"
+    assert rows[("iva-349-operador-row-clave-adquisicion", 2)] == "I"
+    assert rows[("iva-349-operador-row-nif-adquisicion", 2)] == "12345678901"
+    assert rows[("iva-349-operador-row-clave", 2)] == "A"
+    assert rows[("iva-349-operador-row-nif", 2)] == "222222222"
+    assert rows[("iva-349-operador-row-clave", 3)] == "I"
+    assert rows[("iva-349-operador-row-nif", 3)] == "12345678901"
 
 
 def test_committed_modelo_349_construct_includes_invoice_bindings() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
     construct = revision.constructs[0]
-    assert set(construct.bindings) == {b.id for b in revision.bindings if b.source == "collectible_invoice"}
+    assert set(construct.bindings) == {
+        b.id for b in revision.bindings if b.source in {"collectible_invoice", "payable_invoice"}
+    }
 
 
 def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bindings() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
 
     casillas_by_id = {c.id: c for c in revision.casillas}
     expected_bindings: dict[CasillaId, str] = {
@@ -827,13 +1012,17 @@ def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bi
 
 
 def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
 
     row_bindings: dict[str, DataBindingDefinition] = {
         b.id: b
         for b in revision.bindings
         if b.source == "collectible_invoice" and b.aggregation is not None and b.aggregation.op == "rows"
+    }
+    payable_row_bindings: dict[str, DataBindingDefinition] = {
+        b.id: b
+        for b in revision.bindings
+        if b.source == "payable_invoice" and b.aggregation is not None and b.aggregation.op == "rows"
     }
     expected_operador_row_bindings = {
         "iva-349-operador-row-codigo-pais",
@@ -853,18 +1042,29 @@ def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings()
         "iva-349-rectificacion-row-base-anterior",
     }
     assert set(row_bindings) == expected_operador_row_bindings | expected_rectificacion_row_bindings
+    assert set(payable_row_bindings) == {
+        f"{binding_id}-adquisicion"
+        for binding_id in expected_operador_row_bindings | expected_rectificacion_row_bindings
+    }
 
     for binding_id in expected_operador_row_bindings:
         assert row_bindings[binding_id].selector["grouping"] == "operator_clave"
         assert row_bindings[binding_id].selector["rectification_scope"] == "exclude_rectifications"
+        payable_binding = payable_row_bindings[f"{binding_id}-adquisicion"]
+        assert payable_binding.selector["grouping"] == "operator_clave"
+        assert payable_binding.selector["rectification_scope"] == "exclude_rectifications"
+        assert cast("tuple[str, ...]", payable_binding.selector["claves"]) == ("A", "I", "T")
     for binding_id in expected_rectificacion_row_bindings:
         assert row_bindings[binding_id].selector["grouping"] == "operator_clave_period"
         assert row_bindings[binding_id].selector["rectification_scope"] == "only_rectifications"
+        payable_binding = payable_row_bindings[f"{binding_id}-adquisicion"]
+        assert payable_binding.selector["grouping"] == "operator_clave_period"
+        assert payable_binding.selector["rectification_scope"] == "only_rectifications"
+        assert cast("tuple[str, ...]", payable_binding.selector["claves"]) == ("A", "I", "T")
 
 
 def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
 
     observations = (
         InvoiceObservation(
@@ -921,8 +1121,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
 
 
 def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clave_period() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
 
     observations = (
         InvoiceObservation(
@@ -970,8 +1169,7 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
 
 
 def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
-    modelo, _ = _load_modelo_349()
-    revision = modelo.revisions["2020-y-siguientes"]
+    revision = _modelo_349_revision()
 
     non_rect_obs = (
         InvoiceObservation(
@@ -1016,14 +1214,8 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
 
     # Operator and importe values must equal what the resolver computed from the
     # non-rectification observations.
-    assert (
-        casilla_values[_DECL_NUMERO_OPERADORES_CASILLA]
-        == binding_values["iva-349-declarante-numero-operadores"]
-    )
-    assert (
-        casilla_values[_DECL_IMPORTE_OPERACIONES_CASILLA]
-        == binding_values["iva-349-declarante-importe-operaciones"]
-    )
+    assert casilla_values[_DECL_NUMERO_OPERADORES_CASILLA] == binding_values["iva-349-declarante-numero-operadores"]
+    assert casilla_values[_DECL_IMPORTE_OPERACIONES_CASILLA] == binding_values["iva-349-declarante-importe-operaciones"]
 
     # Rectification casillas must pass through from binding to casilla unchanged.
     assert (
