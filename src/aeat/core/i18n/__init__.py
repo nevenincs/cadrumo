@@ -1,4 +1,4 @@
-"""Internationalization primitives: the ``tr`` translation surface.
+"""Internationalization primitives: the :func:`tr` translation surface.
 
 Resolves operator-facing strings to the active output language (Spanish,
 English, Catalan, or Hungarian) — the single runtime translation surface

@@ -1,4 +1,8 @@
-"""Ordered adapter error-code registry shard."""
+"""Ordered adapter :class:`~aeat.core.errors.ErrorCode` registry shard.
+
+Rows map adapter-layer exception qualnames to stable
+:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+"""
 
 from .._registry import ErrorCategory, ErrorCode
 

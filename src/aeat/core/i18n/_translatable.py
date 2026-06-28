@@ -1,4 +1,9 @@
-"""Modern i18n primitives for the AEAT domain layer."""
+"""Typed translation-key primitives for localized AEAT messages.
+
+Defines :class:`Translatable`, the string subtype imported as ``tr`` by
+catalogues and diagnostic records whose importance is carried separately by
+:class:`BaseSeverity`.
+"""
 
 from __future__ import annotations
 
@@ -13,7 +18,7 @@ class Translatable(str):
 
     Used to type-hint fields that hold translation keys rather than
     raw user-facing strings, ensuring all translatable text can be
-    statically identified and routed through the python-i18n backend.
+    statically identified and routed through ``tr``.
     """
 
     @classmethod

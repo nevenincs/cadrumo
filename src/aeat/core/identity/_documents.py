@@ -15,9 +15,13 @@ The three document shapes:
   leading kind code; the algorithm is the Luhn-style sum-of-doubled-
   odd-digits method described by AEAT.
 
-The validator accepts mixed case and trims surrounding whitespace. It
-rejects values whose check letter does not match the algorithm, not
-just shape mismatches.
+The public :func:`validate_identity` parser returns an :class:`IdentityDocument`
+member and raises :class:`IdentityError` on malformed input. It accepts mixed
+case, trims surrounding whitespace, and rejects values whose check letter does
+not match the algorithm, not just shape mismatches. Callers that only need the
+canonical string form use
+:func:`~aeat.core.identity.validate_spanish_tax_id` from the sibling tax-id
+module.
 """
 
 from __future__ import annotations
@@ -207,7 +211,7 @@ def _validate_cif(candidate: str) -> IdentityDocument:
     return IdentityDocument.CIF
 
 
-def validate_identity(candidate: str) -> IdentityDocument:
+def validate_identity(candidate: object) -> IdentityDocument:
     """Parse and check-letter-validate a Spanish identity document.
 
     Disambiguates by leading character: ``X``/``Y``/``Z`` route to NIE,
@@ -217,9 +221,9 @@ def validate_identity(candidate: str) -> IdentityDocument:
     :class:`IdentityDocument` is returned.
 
     Args:
-        candidate: A free-form string. Surrounding whitespace, dashes,
-            spaces, and casing are tolerated; everything else must match
-            one of the three canonical shapes.
+        candidate: A free-form candidate value. Strings tolerate surrounding
+            whitespace, dashes, spaces, and casing; non-string values are
+            rejected with a typed :class:`IdentityError`.
 
     Returns:
         The matching :class:`IdentityDocument` enum member.

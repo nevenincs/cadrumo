@@ -49,7 +49,7 @@ class ResultDisposition(StrEnum):
     """
 
     COMPENSACION = "C"
-    """Solicitud de compensación — a credit carried forward (IVA: a compensar)."""
+    """Solicitud de compensación — an IVA credit carried forward, ``a compensar``."""
     DEVOLUCION = "D"
     """Solicitud de devolución — refund requested."""
     CUENTA_CORRIENTE_INGRESO = "G"

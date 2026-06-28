@@ -1,4 +1,8 @@
-"""IvaRateTableRepository: singleton IVA rate table."""
+"""Singleton IVA-rate-table repository.
+
+:class:`IvaRateTableRepository` exposes the bundled IVA rate table through the
+shared :class:`ResourceCacheRepository` cache used by :class:`ResourceRegistry`.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +18,9 @@ if TYPE_CHECKING:
 class IvaRateTableRepository(ResourceCacheRepository[Mapping["EUMemberState", "tuple[IvaRateRecord, ...]"], None]):
     """Singleton-keyed repository for the bundled IVA rate table.
 
-    Wraps :func:`aeat.domain.iva._rates.load_iva_rate_table`.
+    Wraps :func:`aeat.domain.iva._rates.load_iva_rate_table`
+    and returns mappings from :class:`EUMemberState` to
+    :class:`IvaRateRecord` tuples.
     """
 
     @override

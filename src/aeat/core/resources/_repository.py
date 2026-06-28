@@ -1,9 +1,10 @@
-"""ResourceCacheRepository[T, K] base for the resource-management API.
+""":class:`ResourceCacheRepository` base for the resource-management API.
 
 Every read-only bundled-data resource in the project is exposed
-through one ResourceCacheRepository instance. The repository owns
-its loader and its Identity Map cache; consumers do not import
-loader functions directly.
+through one :class:`ResourceRepository` implementation. The
+repository owns its loader and its Identity Map cache; consumers
+go through :class:`ResourceRegistry` instead of importing loader
+functions directly.
 
 The base class implements the ``get(key)`` / ``clear_cache``
 contract on top of an unbounded ``dict[K, T]``. Subclasses
@@ -40,8 +41,9 @@ class ResourceCacheRepository[T, K: Hashable]:
     """Default Repository implementation with an Identity Map cache.
 
     Subclasses override :meth:`_load` to read and validate one
-    resource per key. The base class owns the cache; subclasses
-    never touch it directly.
+    resource per key. The base class owns the cache behind the
+    :class:`ResourceRepository` protocol; subclasses never touch it
+    directly.
     """
 
     def __init__(self) -> None:

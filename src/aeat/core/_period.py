@@ -8,9 +8,11 @@ Period codes represent the filing frequency and scheme for tax returns:
 - OSS/IOSS: EXT-1T, EXT-2T, EXT-3T, EXT-4T (extra-Union scheme)
 - Ad-hoc/Event: AD-HOC, EVENT-N (event-driven filings)
 
-StandardPeriodCode is the canonical StrEnum for the basic period codes
-(1T-4T, 1P-4P, 0A, 01-12). Extended forms (EXT-*, AD-HOC, EVENT-*) are
-validated via separate regex patterns for modeller flexibility.
+:class:`StandardPeriodCode` is the canonical :class:`~enum.StrEnum` for
+the basic period codes (1T-4T, 1P-4P, 0A, 01-12). Extended forms
+(EXT-*, AD-HOC, EVENT-*) are validated via separate regex patterns for
+modeller flexibility. :class:`Period` combines one accepted code with a
+filing year, and :class:`PeriodKind` classifies the resulting cadence.
 """
 
 from __future__ import annotations
@@ -199,7 +201,7 @@ class Period(BaseModel):
 
     @classmethod
     def from_string(cls, value: str) -> Period:
-        """Parse the canonical display string emitted by :meth:`__str__`.
+        """Parse the canonical display string emitted by :meth:`__str__` into a :class:`Period`.
 
         Only the separated ``"YYYY <registry-code>"`` display form is accepted.
         Combined calendar strings such as ``"2026Q1"`` or ``"2026-1T"`` remain
@@ -215,7 +217,7 @@ class Period(BaseModel):
 
     @classmethod
     def from_registry_authoring_string(cls, value: str) -> Period:
-        """Parse the transitional registry-authoring deadline period strings.
+        """Parse transitional registry-authoring deadline strings into a :class:`Period`.
 
         The registry deadline-window TOML still carries historical authoring
         forms (``"2026Q1"``, ``"2026-1T"``, ``"2026-03"``, ``"2026-0A"``,

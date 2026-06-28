@@ -5,6 +5,10 @@ schema) need the same two operations: parse a TOML file with errors
 re-raised as a domain-specific exception, and recursively freeze the
 parsed mapping so list values become tuples. These helpers are the
 single source of that behaviour.
+
+:func:`read_toml` and :func:`freeze_toml` are used by the registry
+loader in :mod:`aeat.domain.calculations.registry._loader` and the
+user-profile schema loader in :mod:`aeat.domain.user_profile._loader`.
 """
 
 from __future__ import annotations

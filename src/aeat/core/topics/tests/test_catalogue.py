@@ -76,6 +76,20 @@ def test_every_topic_renders_title_and_body_in_default_locale() -> None:
         assert body and body != topic.body_key, f"topic {topic.slug!r}: body missing in default locale"
 
 
+def test_every_topic_legal_ref_resolves_against_real_legal_catalogue() -> None:
+    """Topic citation links must resolve through the committed legal catalogue."""
+    catalogue = resources().topics.singleton
+    legal_ids = set(resources().modelos.authority.catalogues.legal)
+    missing = sorted(
+        f"{topic.slug}: {legal_ref}"
+        for topic in catalogue.topics
+        for legal_ref in topic.legal_refs
+        if legal_ref not in legal_ids
+    )
+
+    assert missing == []
+
+
 _FORBIDDEN_IMPORT_ROOTS: frozenset[str] = frozenset({"click", "rich", "typer", "aeat.entrypoints"})
 _FORBIDDEN_IMPORT_NAMES: frozenset[str] = frozenset(
     {"_emit", "emit_json_document", "emit_json_success", "render_command_output"},

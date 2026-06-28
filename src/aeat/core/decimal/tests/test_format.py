@@ -73,7 +73,7 @@ def test_format_decimal_normalize(value: Decimal, expected: str) -> None:
 def test_format_decimal_none_raises_by_default() -> None:
     """When none_value is not provided, passing None is a programming error."""
     with pytest.raises(DecimalFormatError, match="none_value was not provided"):
-        format_decimal(None)  # type: ignore[arg-type]
+        format_decimal(None)
 
 
 @pytest.mark.parametrize(

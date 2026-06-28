@@ -1,4 +1,9 @@
-"""IvaCatalogueRepository: int-year-keyed IVA regulation catalogue."""
+"""Year-keyed IVA regulation-catalogue repository.
+
+:class:`IvaCatalogueRepository` is the :class:`ResourceCacheRepository` adapter
+for bundled IVA catalogues and the resource factory's IVA-catalogue root
+override.
+"""
 
 from __future__ import annotations
 
@@ -16,7 +21,8 @@ class IvaCatalogueRepository(ResourceCacheRepository[object, int]):
     Settings env-override seam for ``AEAT_IVA_CATALOGUE_ROOT`` is
     threaded through the constructor's ``root`` parameter; the
     :func:`aeat.core.resources.resources` factory reads Settings and
-    passes the resolved root once at construction.
+    passes the resolved root once at construction. Missing years raise
+    :class:`ResourceNotFoundError`.
     """
 
     def __init__(self, root: Path | None = None) -> None:

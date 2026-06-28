@@ -1,4 +1,8 @@
-"""Ordered adapter error-code registry shard."""
+"""Ordered adapter :class:`~aeat.core.errors.ErrorCode` registry shard.
+
+Rows map adapter-layer exception qualnames to stable
+:class:`~aeat.core.errors.ErrorCategory` values and locale message keys.
+"""
 
 from .._registry import ErrorCategory, ErrorCode
 
@@ -176,6 +180,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             message_key="errors.fail.fail_llm_provider",
             default_suggestion=None,
             retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.outbound.llm._errors.LLMPdfRasterisationError",
+        ErrorCode(
+            code="FAIL_LLM_PDF_RASTERISATION",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_llm_pdf_rasterisation",
+            default_suggestion=None,
+            retryable=False,
             runbook_id=None,
         ),
     ),

@@ -2,10 +2,11 @@
 
 Provides :func:`sha256_hex`, :func:`sha256_file`, :func:`hash_file`,
 :func:`canonical_json_bytes`, and :func:`content_hash_hex` as the single
-authoritative SHA-256 implementations.  All adapters, application services, and
-domain modules import from here rather than inlining
-``hashlib.sha256(data).hexdigest()``, duplicating the chunked-read loop, or
-re-deriving the canonical-JSON content-hash serialisation.
+authoritative SHA-256 implementations.  Byte callers hash in memory; file
+callers pass a :class:`~pathlib.Path` and share the chunked-read loop. All
+adapters, application services, and domain modules import from here rather than
+inlining ``hashlib.sha256(data).hexdigest()`` or re-deriving the canonical-JSON
+content-hash serialisation.
 """
 
 from __future__ import annotations

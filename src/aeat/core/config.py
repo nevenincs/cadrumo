@@ -72,6 +72,12 @@ LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = "aeat_live_tests_google"
 LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = "AEAT_LIVE_TESTS_GOOGLE"
 """Environment variable backing :attr:`Settings.aeat_live_tests_google`."""
 
+_STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
+    "aeat_secret_store_dir": "secrets",
+    "aeat_blob_store_dir": "blobs",
+    "aeat_audit_dir": "audit",
+}
+
 
 class Settings(AeatTimeoutSettings):
     """Application settings populated from environment variables and ``.env``.
@@ -1078,6 +1084,14 @@ class Settings(AeatTimeoutSettings):
         )
         return self
 
+    @model_validator(mode="after")
+    def _resolve_storage_substrate_dirs_under_storage_root(self) -> Settings:
+        for field_name, dirname in _STATE_ROOT_DERIVED_DIRS.items():
+            if field_name in self.model_fields_set:
+                continue
+            object.__setattr__(self, field_name, self.aeat_local_storage_root / dirname)
+        return self
+
     @field_validator(
         "aeat_certificate_path",
         mode="before",
@@ -1257,6 +1271,10 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
         and route_overrides.intersection(overrides)
     ):
         merged.pop("aeat_database_url", None)
+    if "aeat_local_storage_root" in overrides:
+        for derived_field in (*_STATE_ROOT_DERIVED_DIRS, "aeat_token_dir", "aeat_log_dir"):
+            if derived_field not in overrides and derived_field not in current.model_fields_set:
+                merged.pop(derived_field, None)
     merged.update(overrides)
     new_settings = Settings.model_validate(merged)
     # ``model_validate`` marks every key in the merged dict as set,

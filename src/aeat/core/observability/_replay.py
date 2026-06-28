@@ -2,7 +2,7 @@
 
 Replay loads a persisted trace, recomputes the current
 ``corpus_sha256``, refuses on drift, and re-enters the same Typer CLI
-path with the captured argv.
+path reconstructed from captured :class:`ArgumentRecord` values.
 
 Replay also refuses recorded arguments containing the removed
 ``--no-dry-run`` flag, so old traces cannot reintroduce an obsolete
@@ -38,9 +38,9 @@ _REMOVED_WRITE_FLAG_NAMES: frozenset[str] = frozenset(
 def _argument_uses_removed_write_flag(arg: ArgumentRecord) -> bool:
     """Return True if ``arg`` is a removed write-era flag with a truthy value.
 
-    The boolean flags captured by :func:`cli_run_context` arrive as the
-    stringified value ``"True"`` / ``"False"``. A ``False`` capture
-    means the caller did not opt in. Any non-False value pair is
+    The boolean flags captured as :class:`ArgumentRecord` values arrive
+    as the stringified value ``"True"`` / ``"False"``. A ``False``
+    capture means the caller did not opt in. Any non-False value pair is
     rejected before argv reconstruction.
     """
     if arg.source is not ArgumentSource.FLAG:

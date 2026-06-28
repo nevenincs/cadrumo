@@ -1,4 +1,8 @@
-"""HolidayCalendarRepository: int-year-keyed holiday calendar."""
+"""Year-keyed holiday-calendar repository.
+
+:class:`HolidayCalendarRepository` loads BOE holiday calendars through the
+shared :class:`ResourceCacheRepository` cache behind :class:`ResourceRegistry`.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +14,8 @@ from .._repository import ResourceCacheRepository
 class HolidayCalendarRepository(ResourceCacheRepository[object, int]):
     """Year-keyed repository for BOE holiday calendars.
 
-    Wraps :func:`aeat.domain.deadlines.load_holiday_calendar`.
+    Wraps :func:`aeat.domain.deadlines.load_holiday_calendar`
+    behind the shared :class:`ResourceCacheRepository` cache.
     """
 
     @override

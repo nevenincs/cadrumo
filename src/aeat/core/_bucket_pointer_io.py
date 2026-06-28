@@ -6,6 +6,10 @@ The write path uses the write-then-rename pattern so a crashed switch
 never produces a truncated pointer; the read path returns ``None``
 when the pointer is absent and the higher-level precedence resolver
 handles the missing case.
+
+The IO helpers serialise :class:`BucketPointer` records and feed
+:func:`resolve_active_bucket_id`, which is the single active-profile
+resolver used by storage and CLI startup flows.
 """
 
 from __future__ import annotations
