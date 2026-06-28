@@ -1,10 +1,18 @@
 """Private health-probe helper for :class:`aeat.adapters.outbound.aeat.browser.BrowserSession`.
 
-The session navigation hook calls this helper after every ``page.goto``.
-Keeping this helper isolated in its own module makes the forbidden-import
-guard trivial: this module MUST NOT import anything from
+The session navigation hook calls this helper after every ``page.goto`` and
+before raising :class:`aeat.core.errors.SiteHealthError` for non-OK
+classifications. Keeping the helper isolated makes the forbidden-import guard
+trivial: this module MUST NOT import anything from
 :mod:`aeat.adapters.outbound.aeat.auth`, :mod:`aeat.application.filing`, or
 :mod:`aeat.domain.transactions`.
+
+See Also:
+    :func:`aeat.adapters.outbound.aeat.browser._site_health_parsers.evaluate_response`
+        Pure parser suite delegated to by :func:`probe_response`.
+    :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
+        Concrete status record returned for maintenance, WAF, rate-limit, and
+        unreachable classifications.
 """
 
 from __future__ import annotations
@@ -24,6 +32,11 @@ def probe_response(
     rate_limit_retry_after_default: int,
 ) -> SiteHealthStatus | None:
     """Classify a response via the parser suite.
+
+    This is the narrow boundary between Playwright navigation and the pure
+    parser code. It keeps :class:`~aeat.adapters.outbound.aeat.browser.BrowserSession`
+    dependent on one function while preserving the parser module's lack of
+    browser, auth, filing, or transaction imports.
 
     Args:
         url: The probe URL whose response is being classified.

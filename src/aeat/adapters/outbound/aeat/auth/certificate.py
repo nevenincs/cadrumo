@@ -1,14 +1,20 @@
-"""PKCS#12 client-certificate authentication for AEAT Sede Electrónica.
+"""PKCS#12 client-certificate records and checks for AEAT Sede Electrónica.
 
 This module is the public surface for certificate-based authentication
 against the Spanish tax authority's Sede Electrónica. Callers import
 exclusively from :mod:`aeat.adapters.outbound.aeat.auth`; the backend implementations live in
 the private :mod:`aeat.adapters.outbound.aeat.auth._certificate_backends` package.
 
+:class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` consumes this
+surface by loading a :class:`CertificateBundle` into a :class:`LoadedCertificate`,
+recording :class:`CertificateHealth`, deriving the taxpayer NIF/NIE through
+:func:`extract_nif_from_subject`, and storing :class:`HandshakeResult` evidence
+in certificate-backed sessions.
+
 Design constraints:
 
 * All boundary records are pydantic v2 ``BaseModel`` with
-  ``model_config = ConfigDict(strict=True, frozen=True)``.
+  ``model_config`` set to the shared strict, frozen project config.
 * Cert passphrases are :class:`pydantic.SecretStr`. The secret value is
   materialised only at the exact TLS-handshake boundary and is never
   logged, persisted, or serialised by ``model_dump``.
@@ -17,6 +23,12 @@ Design constraints:
   so they can never be leaked via ``model_dump`` or ``repr``.
 * All errors inherit from :class:`aeat.core.errors.AeatError` via
   :class:`CertificateError`.
+
+See Also:
+    :class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner`
+    for wiring :class:`LoadedCertificate` into browser contexts, and
+    :func:`aeat.adapters.outbound.aeat.auth.describe_certificate_provider`
+    for the provider summary built from :class:`CertificateHealth`.
 """
 
 from __future__ import annotations
@@ -50,19 +62,24 @@ log = get_logger(__name__)
 
 
 class CertificateError(AuthError):
-    """Base class for every certificate-auth domain error."""
+    """Base class for every certificate-auth domain error.
+
+    Subclasses remain catchable through the shared :class:`AuthError` branch
+    while preserving certificate-specific causes for loading, password,
+    health, handshake, and subject-identity failures.
+    """
 
 
 class CertificateLoadError(CertificateError):
-    """Raised when PKCS#12 bytes cannot be parsed at all."""
+    """Raised when :func:`load_certificate` cannot parse PKCS#12 bytes."""
 
 
 class CertificatePasswordError(CertificateError):
-    """Raised when the passphrase env var is missing/empty or wrong."""
+    """Raised when :class:`CertificateBundle.password` is empty or wrong."""
 
 
 class CertificateExpiredError(CertificateError):
-    """Raised when a loaded certificate's ``not_after`` is in the past."""
+    """Raised when :func:`load_certificate` sees an elapsed ``not_after``."""
 
 
 class CertificatePreExpiryError(CertificateError):
@@ -135,6 +152,10 @@ class CertificateHealthSeverity(StrEnum):
 class CertificateBundle(BaseModel):
     """Operator-supplied pointer at a PKCS#12 bundle on disk.
 
+    :func:`load_certificate` turns this pointer into a
+    :class:`LoadedCertificate`. The selected :class:`CertificateBackend`
+    determines which private backend later consumes the loaded certificate.
+
     The PKCS#12 passphrase is carried directly as a
     :class:`pydantic.SecretStr` so callers no longer have to round-trip
     the secret through ``os.environ``. The secret is materialised
@@ -158,6 +179,10 @@ class CertificateBundle(BaseModel):
 
 class LoadedCertificate(BaseModel):
     """A parsed, validated, in-memory PKCS#12 certificate.
+
+    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` uses this
+    record for NIF/NIE extraction, :class:`CertificateHealth` evaluation,
+    :class:`HandshakeResult` creation, and browser-context provisioning.
 
     Public fields are safe to log and serialise. Secret material
     (raw PKCS#12 bytes, parsed private key, passphrase) lives in
@@ -226,7 +251,9 @@ class CertificateHealth(BaseModel):
     critical thresholds sourced from
     :class:`aeat.core.config.Settings`. The record never carries any
     secret material; it is safe to log, persist, or surface to the
-    CLI.
+    CLI. :func:`evaluate_loaded_certificate_health` computes this from an
+    existing :class:`LoadedCertificate`; :func:`health` computes it from a
+    bundle path while preserving the expired-certificate reporting path.
 
     Attributes:
         subject: RFC-4514 subject DN.
@@ -260,6 +287,10 @@ class CertificateHealth(BaseModel):
 
 class HandshakeResult(BaseModel):
     """Structured outcome of a :func:`verify_handshake` attempt.
+
+    Successful certificate sessions persist this result inside
+    :class:`aeat.adapters.outbound.aeat.auth._authenticator_persistence.PersistedSessionMetadata`
+    so resumed sessions can preserve the original mTLS probe evidence.
 
     Attributes:
         success: Whether the TLS handshake completed successfully.
@@ -302,6 +333,11 @@ class _BrowserContextLike(Protocol):
 
 def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
     """Load and validate a PKCS#12 bundle from disk.
+
+    This is the canonical decode path for certificate auth. It feeds
+    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator`, operator
+    probes, and backend provisioning surfaces with the same
+    :class:`LoadedCertificate` contract.
 
     The passphrase is unwrapped from ``bundle.password`` at the
     PKCS#12-decode boundary only. An empty :class:`SecretStr` raises
@@ -432,8 +468,9 @@ def evaluate_loaded_certificate_health(
     """Compute a :class:`CertificateHealth` from an already-loaded cert.
 
     The helper exists so callers that have already paid the PKCS#12
-    decode cost (e.g. :class:`aeat.application.workflow.WorkflowEngine`) can reuse
-    the parsed record rather than re-reading the bundle from disk.
+    decode cost, such as :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator`
+    or operator probes, can reuse the parsed record rather than re-reading the
+    bundle from disk.
 
     Args:
         cert: A previously-loaded :class:`LoadedCertificate`.
@@ -622,9 +659,9 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
     Raises:
         CertificateNifParseError: When the subject contains no
             recognisable DNI / NIE identifier, or when the value
-            present is a CIF (legal-entity) — this project is
-            explicitly autónomo-only and does not support
-            *persona jurídica* certificates.
+            present is a CIF (legal-entity). Certificate auth here
+            accepts individual taxpayer certificates and rejects
+            organization certificates rather than guessing an identity.
     """
     subject = cert.subject
 
@@ -633,7 +670,7 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
         if _CIF_RE.match(candidate):
             raise CertificateNifParseError(
                 f"subject serialNumber {candidate!r} looks like a CIF "
-                "(legal-entity). This project supports autónomo "
+                "(legal-entity). This project supports individual taxpayer "
                 "(persona física) certificates only.",
             )
         if _DNI_RE.match(candidate) or _NIE_RE.match(candidate):
@@ -688,8 +725,10 @@ def preload_into_browser_context(
     supplied at :meth:`playwright.async_api.Browser.new_context` time;
     there is no post-hoc injection hook. This function therefore
     **validates** the contract rather than mutating ``context``. It is
-    the integration hook the browser layer will call once it learns to
-    pass a :class:`CertificateBundle` through to ``new_context``.
+    the integration hook used by
+    :class:`aeat.adapters.outbound.aeat.auth.CertificateContextProvisioner`
+    after it passes a :class:`CertificateBundle`-derived certificate through
+    to ``new_context``.
 
     Args:
         cert: The :class:`LoadedCertificate` to verify against ``context``.
@@ -702,6 +741,10 @@ def preload_into_browser_context(
 
 def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
     """Perform an opt-in TLS handshake smoke test.
+
+    :class:`aeat.adapters.outbound.aeat.auth.AeatAuthenticator` calls this
+    before constructing a certificate-backed :class:`AeatSession`. Backend
+    implementations own the actual transport behavior.
 
     Dispatches to the backend selected by ``cert.backend``. TLS failures
     are returned as :class:`HandshakeResult` with ``success=False`` so

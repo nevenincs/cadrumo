@@ -7,10 +7,13 @@ running statements through real SQLAlchemy sessions backed by SQLite.
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.engine import Engine
 
 from ......core.config import Settings
 from ...errors import StorageValidationError
@@ -21,17 +24,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _SESSION_LOGGER_NAME = "aeat.adapters.persistence.storage.sql.session"
 
 
-def _engine(tmp_path: Path):
+@contextmanager
+def _engine(tmp_path: Path) -> Iterator[Engine]:
     settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'session.db').as_posix()}")
     engine = create_engine_from_settings(settings)
     Base.metadata.create_all(engine)
-    return engine
+    try:
+        yield engine
+    finally:
+        engine.dispose()
 
 
 def test_session_scope_commits_on_success(tmp_path: Path) -> None:
     """A normal exit from :func:`session_scope` persists the unit of work."""
-    engine = _engine(tmp_path)
-    try:
+    with _engine(tmp_path) as engine:
         with session_scope(engine) as session:
             session.execute(
                 text("insert into modelos (identifier, name) values (:identifier, :name)"),
@@ -40,8 +46,6 @@ def test_session_scope_commits_on_success(tmp_path: Path) -> None:
         with engine.connect() as conn:
             count = conn.execute(text("select count(*) from modelos")).scalar_one()
         assert count == 1
-    finally:
-        engine.dispose()
 
 
 def test_session_scope_rolls_back_and_logs_on_exception(
@@ -49,9 +53,7 @@ def test_session_scope_rolls_back_and_logs_on_exception(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """An exception inside :func:`session_scope` rolls back and logs diagnostics."""
-    engine = _engine(tmp_path)
-
-    try:
+    with _engine(tmp_path) as engine:
         caplog.set_level(logging.DEBUG, logger=_SESSION_LOGGER_NAME)
         with pytest.raises(StorageValidationError), session_scope(engine) as session:
             session.execute(
@@ -66,5 +68,3 @@ def test_session_scope_rolls_back_and_logs_on_exception(
         assert count == 0
         messages = tuple(record.getMessage() for record in caplog.records if record.name == _SESSION_LOGGER_NAME)
         assert "session_scope rolling back due to exception" in messages
-    finally:
-        engine.dispose()

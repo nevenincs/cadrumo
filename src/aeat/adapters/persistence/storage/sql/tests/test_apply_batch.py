@@ -9,6 +9,8 @@ is its decryption-free diff companion: an entry whose freshly-serialised
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -43,15 +45,18 @@ def _write(key: str, body: bytes, *, expected_revision_id: str | None = None) ->
     )
 
 
-def _repo(tmp_path: Path) -> SecureObjectRepository:
+@contextmanager
+def _repo(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'batch.db').as_posix()}"))
     Base.metadata.create_all(engine)
-    return SecureObjectRepository(engine=engine)
+    try:
+        yield SecureObjectRepository(engine=engine)
+    finally:
+        engine.dispose()
 
 
 def test_apply_batch_upserts_and_deletes_in_one_unit(tmp_path: Path) -> None:
-    with EphemeralMasterKeyProvider():
-        repo = _repo(tmp_path)
+    with EphemeralMasterKeyProvider(), _repo(tmp_path) as repo:
         repo.apply_batch((_write("alpha", b"alpha-1"), _write("beta", b"beta-1")))
         assert repo.exists(_NS, "alpha")
         assert repo.exists(_NS, "beta")
@@ -69,8 +74,7 @@ def test_apply_batch_upserts_and_deletes_in_one_unit(tmp_path: Path) -> None:
 
 
 def test_namespace_payload_hashes_keys_match_natural_key_digests(tmp_path: Path) -> None:
-    with EphemeralMasterKeyProvider():
-        repo = _repo(tmp_path)
+    with EphemeralMasterKeyProvider(), _repo(tmp_path) as repo:
         repo.apply_batch((_write("alpha", b"stable-body"), _write("beta", b"beta-body")))
 
         stored = repo.namespace_payload_hashes(_NS)
@@ -90,8 +94,7 @@ def test_apply_batch_is_atomic_on_failure(tmp_path: Path) -> None:
     A stale ``expected_revision_id`` raises *inside* the unit of work; the sibling
     upsert and the deletion in the same batch must not survive.
     """
-    with EphemeralMasterKeyProvider():
-        repo = _repo(tmp_path)
+    with EphemeralMasterKeyProvider(), _repo(tmp_path) as repo:
         repo.apply_batch((_write("keep", b"keep-body"), _write("victim", b"victim-body")))
 
         with pytest.raises(SecureObjectRevisionConflictError):

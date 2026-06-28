@@ -119,10 +119,7 @@ def test_bundle_password_does_not_leak_in_repr_or_dump(tmp_path: Path) -> None:
 # ── load_certificate happy path ─────────────────────────────────────────────
 
 
-def test_load_certificate_happy_path(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_load_certificate_happy_path(tmp_path: Path) -> None:
     p12 = _build_pkcs12_bundle(tmp_path)
     bundle = CertificateBundle(
         path=p12,
@@ -163,10 +160,7 @@ def test_load_certificate_wrong_password(tmp_path: Path) -> None:
         load_certificate(bundle)
 
 
-def test_load_certificate_expired(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_load_certificate_expired(tmp_path: Path) -> None:
     now = datetime.now(UTC)
     p12 = _build_pkcs12_bundle(
         tmp_path,
@@ -182,10 +176,7 @@ def test_load_certificate_expired(
         load_certificate(bundle)
 
 
-def test_load_certificate_garbage_bytes(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_load_certificate_garbage_bytes(tmp_path: Path) -> None:
     bad = tmp_path / "bad.p12"
     bad.write_bytes(b"this is not a pkcs12 file")
     bundle = CertificateBundle(
@@ -200,10 +191,7 @@ def test_load_certificate_garbage_bytes(
 # ── SecretStr / PrivateAttr non-leakage ─────────────────────────────────────
 
 
-def test_loaded_certificate_does_not_leak_secrets(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_loaded_certificate_does_not_leak_secrets(tmp_path: Path) -> None:
     p12 = _build_pkcs12_bundle(tmp_path)
     bundle = CertificateBundle(
         path=p12,
@@ -252,10 +240,7 @@ def test_select_backend_returns_matching_class(backend: CertificateBackend) -> N
 # ── verify_handshake input validation ──────────────────────────────────────
 
 
-def test_verify_handshake_rejects_empty_url(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_verify_handshake_rejects_empty_url(tmp_path: Path) -> None:
     p12 = _build_pkcs12_bundle(tmp_path)
     bundle = CertificateBundle(
         path=p12,
@@ -267,10 +252,7 @@ def test_verify_handshake_rejects_empty_url(
         verify_handshake(loaded, "")
 
 
-def test_verify_handshake_returns_failure_on_tls_error(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_verify_handshake_returns_failure_on_tls_error(tmp_path: Path) -> None:
     p12 = _build_pkcs12_bundle(tmp_path)
     bundle = CertificateBundle(
         path=p12,
@@ -290,10 +272,7 @@ def test_verify_handshake_returns_failure_on_tls_error(
 # ── Playwright backend contract ─────────────────────────────────────────────
 
 
-def test_playwright_preload_rejects_unmarked_context(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_playwright_preload_rejects_unmarked_context(tmp_path: Path) -> None:
     from ..certificate import CertificateError
 
     p12 = _build_pkcs12_bundle(tmp_path)
@@ -311,10 +290,7 @@ def test_playwright_preload_rejects_unmarked_context(
         preload_into_browser_context(loaded, _UnmarkedContext())
 
 
-def test_playwright_preload_accepts_marked_context(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_playwright_preload_accepts_marked_context(tmp_path: Path) -> None:
     p12 = _build_pkcs12_bundle(tmp_path)
     bundle = CertificateBundle(
         path=p12,
@@ -333,10 +309,7 @@ def test_playwright_preload_accepts_marked_context(
     assert result is None
 
 
-def test_playwright_client_certificates_kwarg_materialises_secret(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_playwright_client_certificates_kwarg_materialises_secret(tmp_path: Path) -> None:
     from .._certificate_backends._playwright_context import (
         build_client_certificates_kwarg,
     )
@@ -361,10 +334,7 @@ def test_playwright_client_certificates_kwarg_materialises_secret(
 # ── Browserless backends ────────────────────────────────────────────────────
 
 
-def test_httpx_fallback_preload_rejects_browser_path(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_httpx_fallback_preload_rejects_browser_path(tmp_path: Path) -> None:
     from .._certificate_backends._httpx_fallback import HttpxFallbackBackend
     from .._errors import AuthConfigurationError
 

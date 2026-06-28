@@ -18,16 +18,33 @@ from __future__ import annotations
 import base64
 import logging
 from io import BytesIO
-from typing import override
+from typing import Protocol, cast, override
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import load_settings
+from .._errors import LLMPdfRasterisationError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error
 
 _LOG = logging.getLogger(__name__)
+
+
+class _PillowImageLike(Protocol):
+    def save(self, fp: BytesIO, format: str | None = None) -> None: ...
+
+
+class _PdfiumBitmapLike(Protocol):
+    def to_pil(self) -> _PillowImageLike: ...
+
+    def close(self) -> None: ...
+
+
+class _PdfiumPageLike(Protocol):
+    def render(self, *, scale: float) -> _PdfiumBitmapLike: ...
+
+    def close(self) -> None: ...
 
 
 def rasterise_pdf_pages_to_base64_png(pdf_bytes: bytes, *, scale: float = 2.0) -> tuple[str, ...]:
@@ -47,20 +64,28 @@ def rasterise_pdf_pages_to_base64_png(pdf_bytes: bytes, *, scale: float = 2.0) -
     """
     import pypdfium2 as pdfium  # lazy: keep the adapter import light, mirror the declaración fast-path
 
-    document = pdfium.PdfDocument(pdf_bytes)
+    try:
+        document = pdfium.PdfDocument(pdf_bytes)
+    except Exception as exc:
+        raise LLMPdfRasterisationError(f"could not rasterise PDF pages: {exc}") from exc
     try:
         pages: list[str] = []
         for page in document:
-            # pypdfium2's iterated page type carries ``render`` at runtime; its
-            # bundled stub omits it (third-party API boundary).
-            bitmap = page.render(scale=scale)  # ty: ignore[unresolved-attribute]  # pypdfium2 stub gap
-            image = bitmap.to_pil()
-            buffer = BytesIO()
-            image.save(buffer, format="PNG")
-            pages.append(base64.b64encode(buffer.getvalue()).decode("ascii"))
-            bitmap.close()
-            page.close()
+            pdf_page = cast("_PdfiumPageLike", page)
+            try:
+                bitmap = pdf_page.render(scale=scale)
+                try:
+                    image = bitmap.to_pil()
+                    buffer = BytesIO()
+                    image.save(buffer, format="PNG")
+                    pages.append(base64.b64encode(buffer.getvalue()).decode("ascii"))
+                finally:
+                    bitmap.close()
+            finally:
+                pdf_page.close()
         return tuple(pages)
+    except Exception as exc:
+        raise LLMPdfRasterisationError(f"could not rasterise PDF pages: {exc}") from exc
     finally:
         document.close()
 

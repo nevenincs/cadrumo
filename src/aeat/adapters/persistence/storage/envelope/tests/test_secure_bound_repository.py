@@ -5,7 +5,7 @@ Exercises save -> load -> iter -> delete against a real SQLite-backed
 :class:`EphemeralMasterKeyProvider`. No mocks; this is the
 anti-tautology, anti-regression gate for the new base class.
 
-A throwaway ``_DummyPayload`` Pydantic model and a throwaway concrete
+A throwaway ``_RoundtripPayload`` Pydantic model and a throwaway concrete
 :class:`SecureBoundRepository` subclass live inside this module —
 production migrations of the 8 concrete repositories ship under
 subsequent steps.
@@ -34,7 +34,7 @@ from .._secure_repository import SecureBoundRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-class _DummyPayload(BaseModel):
+class _RoundtripPayload(BaseModel):
     """Throwaway typed payload exercised by the base-class roundtrip test."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -43,20 +43,20 @@ class _DummyPayload(BaseModel):
     value: int
 
 
-class _DummyRepository(SecureBoundRepository[_DummyPayload]):
+class _RoundtripRepository(SecureBoundRepository[_RoundtripPayload]):
     """Concrete subclass wiring the four class-level descriptors."""
 
-    namespace: ClassVar[str] = "aeat.test.envelope.secure_bound_dummy"
+    namespace: ClassVar[str] = "aeat.test.envelope.secure_bound_roundtrip"
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
-    payload_type: ClassVar[type[BaseModel]] = _DummyPayload
+    payload_type: ClassVar[type[BaseModel]] = _RoundtripPayload
 
     @override
-    def extract_identifier(self, payload: _DummyPayload) -> str:
+    def extract_identifier(self, payload: _RoundtripPayload) -> str:
         return payload.id
 
 
-def _bound_repo_with_engine(tmp_path: Path) -> tuple[_DummyRepository, Engine]:
+def _bound_repo_with_engine(tmp_path: Path) -> tuple[_RoundtripRepository, Engine]:
     """Build an isolated SQLite engine + repository against ``tmp_path``."""
 
     db_path = tmp_path / "secure-bound-roundtrip.db"
@@ -65,7 +65,7 @@ def _bound_repo_with_engine(tmp_path: Path) -> tuple[_DummyRepository, Engine]:
     )
     Base.metadata.create_all(engine)
     objects = SecureObjectRepository(engine=engine)
-    repo = _DummyRepository(objects=objects)
+    repo = _RoundtripRepository(objects=objects)
     return repo, engine
 
 
@@ -78,8 +78,8 @@ def test_secure_bound_repository_save_load_iter_delete_roundtrip(
     with provider:
         repo, engine = _bound_repo_with_engine(tmp_path)
         try:
-            first = _DummyPayload(id="alpha", value=42)
-            second = _DummyPayload(id="beta", value=99)
+            first = _RoundtripPayload(id="alpha", value=42)
+            second = _RoundtripPayload(id="beta", value=99)
 
             repo.save(first)
             repo.save(second)
@@ -126,7 +126,7 @@ def test_secure_bound_repository_default_refuses_active_profile_without_session(
         ),
         pytest.raises(StorageValidationError, match="no active bucket session"),
     ):
-        _DummyRepository()
+        _RoundtripRepository()
 
 
 def test_secure_bound_repository_rejects_future_schema_version(
@@ -148,8 +148,8 @@ def test_secure_bound_repository_rejects_future_schema_version(
     with provider:
         repo, engine = _bound_repo_with_engine(tmp_path)
         try:
-            future_payload = _DummyPayload(id="future", value=7)
-            future_envelope = Envelope[_DummyPayload](
+            future_payload = _RoundtripPayload(id="future", value=7)
+            future_envelope = Envelope[_RoundtripPayload](
                 schema_version=2,
                 written_at=datetime.now(UTC),
                 classification=SensitivityClass.AUDIT,
@@ -159,7 +159,7 @@ def test_secure_bound_repository_rejects_future_schema_version(
             # row carries schema_version=2 even though the bound repo
             # declares max=1.
             repo._objects.save(
-                namespace=_DummyRepository.namespace,
+                namespace=_RoundtripRepository.namespace,
                 object_key="future",
                 classification=SensitivityClass.AUDIT,
                 schema_version=2,
@@ -182,8 +182,8 @@ def test_secure_bound_repository_iter_ids_fails_closed_on_unreadable_row(
     with provider:
         repo, engine = _bound_repo_with_engine(tmp_path)
         try:
-            repo.save(_DummyPayload(id="alpha", value=42))
-            repo.save(_DummyPayload(id="beta", value=99))
+            repo.save(_RoundtripPayload(id="alpha", value=42))
+            repo.save(_RoundtripPayload(id="beta", value=99))
             with session_scope(engine) as session:
                 session.execute(
                     text(
@@ -192,7 +192,7 @@ def test_secure_bound_repository_iter_ids_fails_closed_on_unreadable_row(
                         "SELECT MIN(id) FROM secure_objects WHERE namespace = :namespace"
                         ")",
                     ),
-                    {"namespace": _DummyRepository.namespace},
+                    {"namespace": _RoundtripRepository.namespace},
                 )
 
             with pytest.raises(SecureObjectUnreadableError):
@@ -210,8 +210,8 @@ def test_secure_bound_repository_underlying_iterator_still_reports_partial_failu
     with provider:
         repo, engine = _bound_repo_with_engine(tmp_path)
         try:
-            repo.save(_DummyPayload(id="alpha", value=42))
-            repo.save(_DummyPayload(id="beta", value=99))
+            repo.save(_RoundtripPayload(id="alpha", value=42))
+            repo.save(_RoundtripPayload(id="beta", value=99))
             with session_scope(engine) as session:
                 session.execute(
                     text(
@@ -220,14 +220,14 @@ def test_secure_bound_repository_underlying_iterator_still_reports_partial_failu
                         "SELECT MIN(id) FROM secure_objects WHERE namespace = :namespace"
                         ")",
                     ),
-                    {"namespace": _DummyRepository.namespace},
+                    {"namespace": _RoundtripRepository.namespace},
                 )
 
             outcomes = tuple(
                 repo._objects.iter_records_with_failures(
-                    _DummyRepository.namespace,
-                    expected_class=_DummyRepository.sensitivity,
-                    max_supported_version=_DummyRepository.schema_version,
+                    _RoundtripRepository.namespace,
+                    expected_class=_RoundtripRepository.sensitivity,
+                    max_supported_version=_RoundtripRepository.schema_version,
                 ),
             )
 
@@ -248,22 +248,22 @@ def test_envelope_payload_type_is_preserved_across_generic_boundary(
     """Payload type identity is preserved through the save -> load cycle.
 
     Asserts that the object returned by ``repo.load()`` is a real
-    ``_DummyPayload`` instance (not a plain dict or BaseModel), confirming
-    that ``_envelope_cls()`` produces a validating ``Envelope[_DummyPayload]``
+    ``_RoundtripPayload`` instance (not a plain dict or BaseModel), confirming
+    that ``_envelope_cls()`` produces a validating ``Envelope[_RoundtripPayload]``
     and that the cast at the load boundary is genuinely safe.
     """
     provider = EphemeralMasterKeyProvider()
     with provider:
         repo, engine = _bound_repo_with_engine(tmp_path)
         try:
-            original = _DummyPayload(id="type-check", value=7)
+            original = _RoundtripPayload(id="type-check", value=7)
             repo.save(original)
             loaded = repo.load("type-check")
 
             assert loaded is not None
             # Runtime type must be the concrete payload model, not a supertype.
-            assert type(loaded) is _DummyPayload
-            assert isinstance(loaded, _DummyPayload)
+            assert type(loaded) is _RoundtripPayload
+            assert isinstance(loaded, _RoundtripPayload)
             # Field equality confirms Pydantic validated the JSON correctly.
             assert loaded == original
         finally:
@@ -287,7 +287,7 @@ def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None
 
     from pydantic import ValidationError
 
-    env_cls = Envelope.for_payload_type(_DummyPayload)
+    env_cls = Envelope.for_payload_type(_RoundtripPayload)
 
     # The factory must return a class, not an instance.
     assert isinstance(env_cls, type)
@@ -305,7 +305,7 @@ def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None
         },
     )
     loaded = env_cls.model_validate_json(valid_json)
-    assert isinstance(loaded.payload, _DummyPayload)
+    assert isinstance(loaded.payload, _RoundtripPayload)
     assert loaded.payload.id == "x"
 
     # A payload with wrong field types must be rejected by Pydantic.

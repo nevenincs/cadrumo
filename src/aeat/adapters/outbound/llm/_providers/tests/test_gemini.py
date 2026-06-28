@@ -6,6 +6,7 @@ import asyncio
 import json
 import socket
 import threading
+from collections.abc import Mapping
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from queue import Queue
@@ -89,8 +90,8 @@ def test_gemini_uses_central_endpoint_setting_and_api_key_header() -> None:
     assert observed["path"] == "/v1beta/models/gemini-test-model:generateContent"
     assert observed["api_key_header"] == "gemini-secret"
     assert "gemini-secret" not in str(observed["path"])
-    assert isinstance(body, dict)
-    assert body["generationConfig"] == {"temperature": 0.0, "maxOutputTokens": 32}  # ty: ignore[invalid-argument-type]  # narrowed by isinstance above
+    assert isinstance(body, Mapping)
+    assert body.get("generationConfig") == {"temperature": 0.0, "maxOutputTokens": 32}
 
 
 def test_gemini_transport_failure_raises_llm_provider_error() -> None:

@@ -475,7 +475,7 @@ TEST_SESSION_LIFECYCLE_NAMESPACE = SecureObjectNamespaceDefinition(
 )
 TEST_SECURE_BOUND_CONTRACT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="test_secure_bound_contract",
-    namespace="aeat.test.envelope.secure_bound_contract_dummy",
+    namespace="aeat.test.envelope.secure_bound_contract",
     owner="aeat.adapters.persistence.storage.envelope.test_secure_bound_repository_contract",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,

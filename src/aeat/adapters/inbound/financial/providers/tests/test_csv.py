@@ -8,14 +8,16 @@ in :class:`aeat.adapters.inbound.financial.providers._csv.CsvProvider`.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from ......core.config import override_settings
 from ......core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
+from ......domain.transactions import TransactionDirection
 from ......tests import FIXTURES_DIR
-from .. import CsvProvider
+from .. import CsvProvider, InvalidFinancialSourceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -57,6 +59,39 @@ def test_csv_provider_synthesizes_ids_when_source_has_none() -> None:
     assert len(parsed_rows) == 2
     assert parsed_rows[0].raw.transaction_id.startswith("bbva-")
     assert parsed_rows[0].raw.provenance.source_row_index == 2
+
+
+def test_csv_provider_explicit_direction_column_overrides_positive_amount_sign(tmp_path: Path) -> None:
+    """A canonical direction column is authoritative over a positive amount."""
+    source = tmp_path / "explicit-direction.csv"
+    source.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID,direction,source_jurisdiction\n"
+        "2026-04-17,French Vendor,FR expense,48.40,EUR,n26-fr-expense,OUTGOING,FR\n",
+        encoding="utf-8",
+    )
+
+    parsed_rows = tuple(CsvProvider().ingest(source))
+
+    assert len(parsed_rows) == 1
+    (parsed,) = parsed_rows
+    assert parsed.raw.amount == Decimal("48.40")
+    assert parsed.direction is TransactionDirection.OUTGOING
+    assert parsed.raw.raw_fields["source_jurisdiction"] == "FR"
+
+
+def test_csv_provider_rejects_invalid_explicit_direction_value(tmp_path: Path) -> None:
+    """A malformed direction cell must not fall back to amount-sign inference."""
+    source = tmp_path / "invalid-direction.csv"
+    source.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID,direction\n"
+        "2026-04-17,French Vendor,FR expense,48.40,EUR,n26-fr-expense,EXPENSE\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(InvalidFinancialSourceError) as exc_info:
+        tuple(CsvProvider().ingest(source))
+
+    assert "unsupported direction value" in str(exc_info.value)
 
 
 def test_csv_provider_rejects_unknown_headers(tmp_path: Path) -> None:

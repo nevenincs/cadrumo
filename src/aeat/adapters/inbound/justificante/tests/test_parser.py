@@ -392,7 +392,7 @@ class TestJustificanteModel:
         *,
         sha256: str | None = None,
     ) -> Justificante:
-        pdf = tmp_path / "dummy.pdf"
+        pdf = tmp_path / "source.pdf"
         pdf.write_bytes(b"%PDF-1.4\n%EOF\n")
         return Justificante(
             csv="ABCD1234EFGH5678",

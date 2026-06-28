@@ -14,6 +14,7 @@ import base64
 import io
 import json
 import threading
+from collections.abc import Mapping
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from queue import Queue
@@ -102,13 +103,13 @@ def test_local_adapter_forwards_rasterised_images_to_loopback() -> None:
 
     observed = events.get_nowait()
     body = observed["body"]
-    assert isinstance(body, dict)
-    messages = body["messages"]  # ty: ignore[invalid-argument-type]  # narrowed by isinstance above
+    assert isinstance(body, Mapping)
+    messages = body.get("messages")
     assert isinstance(messages, list)
     user_message = messages[-1]
-    assert isinstance(user_message, dict)
-    assert user_message["role"] == "user"  # ty: ignore[invalid-argument-type]  # narrowed by isinstance above
-    assert user_message["images"] == list(images)  # ty: ignore[invalid-argument-type]  # narrowed by isinstance above
+    assert isinstance(user_message, Mapping)
+    assert user_message.get("role") == "user"
+    assert user_message.get("images") == list(images)
     assert completion.text == "vision read"
     assert completion.input_tokens == 11
     assert completion.output_tokens == 4

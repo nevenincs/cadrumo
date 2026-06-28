@@ -1,8 +1,14 @@
 """Encrypted persistence for AEAT browser session state.
 
-Stores the serialized session as a record classified at
-:class:`SensitivityClass` SESSION through :class:`SecureObjectRepository`,
-so the browser cookies and tokens never touch disk in plaintext.
+This module is the concrete adapter behind
+:class:`aeat.application.auth._protocols.SessionStoreProtocol`. It stores
+:class:`PersistedBrowserSession` envelopes in
+:data:`AEAT_BROWSER_SESSION_NAMESPACE`, whose registry entry pins the records
+to bucket-local :class:`SensitivityClass` ``SESSION`` storage.
+
+:class:`SecureObjectRepository` encrypts payload bytes and digests the logical
+object key at the column boundary, so Playwright cookies, local storage, and
+provider metadata never appear as plaintext files.
 """
 
 from __future__ import annotations
@@ -26,7 +32,13 @@ _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
 
 
 class PersistedBrowserSession(BaseModel):
-    """Encrypted browser session state plus provider-specific metadata."""
+    """Encrypted Playwright storage state plus provider-owned metadata.
+
+    ``storage_state`` carries the payload returned by
+    ``BrowserContext.storage_state()``. ``metadata`` remains a provider-owned
+    mapping so certificate auth and Cl@ve Móvil can persist different validated
+    metadata models while exposing the same encrypted envelope to callers.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -37,17 +49,26 @@ class PersistedBrowserSession(BaseModel):
 
     @property
     def storage_state_sha256(self) -> str:
-        """Return the canonical SHA-256 of the Playwright storage state."""
+        """Return the canonical SHA-256 fingerprint of the storage-state payload."""
         return _storage_state_sha256(self.storage_state)
 
 
 def exists(path: Path) -> bool:
-    """Return whether a browser session exists for logical ``path``."""
+    """Return whether an encrypted session exists for logical ``path``.
+
+    ``path`` is the logical storage-state identifier produced by
+    :func:`~aeat.application.auth.storage_state_paths` or provider-specific
+    helpers, not a plaintext file path to inspect.
+    """
     return _repository().exists(AEAT_BROWSER_SESSION_NAMESPACE.namespace, _key(path))
 
 
 def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[str, object]) -> None:
-    """Persist ``storage_state`` and ``metadata`` encrypted at SESSION class."""
+    """Persist ``storage_state`` and ``metadata`` in :class:`SensitivityClass` ``SESSION`` storage.
+
+    The values are wrapped in a :class:`PersistedBrowserSession` envelope before
+    :class:`SecureObjectRepository` encrypts the serialized JSON payload.
+    """
     payload = PersistedBrowserSession(
         storage_state=storage_state,
         metadata=metadata,
@@ -64,7 +85,12 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
 
 
 def load(path: Path) -> PersistedBrowserSession | None:
-    """Load a :class:`PersistedBrowserSession` for logical ``path``, or ``None`` when absent."""
+    """Load the :class:`PersistedBrowserSession` for logical ``path``.
+
+    Returns ``None`` when the logical key is absent. A present record is read
+    from :data:`AEAT_BROWSER_SESSION_NAMESPACE` with the expected
+    :class:`SensitivityClass` and current namespace schema version.
+    """
     record = _repository().load(
         AEAT_BROWSER_SESSION_NAMESPACE.namespace,
         _key(path),
@@ -77,17 +103,26 @@ def load(path: Path) -> PersistedBrowserSession | None:
 
 
 def delete(path: Path) -> bool:
-    """Delete persisted browser session state for logical ``path``."""
+    """Delete the encrypted browser session for logical ``path``."""
     return _repository().delete(AEAT_BROWSER_SESSION_NAMESPACE.namespace, _key(path))
 
 
 def storage_state_sha256(storage_state: Mapping[str, object]) -> str:
-    """Return the canonical SHA-256 of a Playwright storage-state payload."""
+    """Return the canonical SHA-256 for a Playwright storage-state payload.
+
+    Certificate auth and Cl@ve Móvil metadata store this fingerprint so resume
+    paths can reject a metadata envelope that no longer matches the encrypted
+    storage-state payload.
+    """
     return _storage_state_sha256(storage_state)
 
 
 def logical_object_key(path: Path) -> str:
-    """Return the secure-object logical key for a browser-session path."""
+    """Return the natural secure-object key for a browser-session ``path``.
+
+    :class:`SecureObjectRepository` HMAC-digests this value before writing the
+    row, so callers can use the same logical key without exposing it on disk.
+    """
     return _key(path)
 
 

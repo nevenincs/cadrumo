@@ -630,40 +630,49 @@ class TestDefaultBlobStoreRoots:
 class TestRotationLockTargetAlignment:
     """Rotation lock-target must match the writer's lock-target."""
 
-    def test_multi_file_envelope_uses_writer_lock_convention(self) -> None:
-        # compute ``<id>.lock`` (stripping
-        # ``.envelope.json``); rotation must match so they contend on
-        # the same OS-level lock-byte target.
-        entry = RotationPlanEntry(
-            store_dir=Path("/store"),
-            hkdf_context=_HKDF_CONTEXT_DRAFT,
-        )
-        envelope_path = Path("/store/draft-abc123.envelope.json")
-        assert entry.lock_path_for(envelope_path) == Path("/store/draft-abc123.lock")
-
-    def test_single_file_envelope_uses_with_suffix_convention(self) -> None:
-        # Single-file consumers such as usage-ratios use
-        # ``target.with_suffix('.lock')`` for their writer lock; the
-        # plan entry must produce the same path.
-        entry = RotationPlanEntry(
-            store_dir=Path("/store"),
-            hkdf_context=b"aeat.domain.usage_ratios.profile.v1",
-            target_filename="usage-ratios.json",
-        )
-        envelope_path = Path("/store/usage-ratios.json")
-        assert entry.lock_path_for(envelope_path) == Path("/store/usage-ratios.lock")
-
-    def test_falls_back_to_stem_when_suffix_missing(self) -> None:
-        # Defensive: an entry whose envelope file does NOT end in the
-        # configured suffix must still produce a sensible lock target
-        # (``<stem>.lock``) rather than crashing.
-        entry = RotationPlanEntry(
-            store_dir=Path("/store"),
-            hkdf_context=_HKDF_CONTEXT_TX,
-            envelope_suffix=".envelope.json",
-        )
-        envelope_path = Path("/store/oddly-named-file.json")
-        assert entry.lock_path_for(envelope_path) == Path("/store/oddly-named-file.lock")
+    @pytest.mark.parametrize(
+        ("entry", "envelope_path", "expected_lock_path"),
+        (
+            (
+                RotationPlanEntry(
+                    store_dir=Path("/store"),
+                    hkdf_context=_HKDF_CONTEXT_DRAFT,
+                ),
+                Path("/store/draft-abc123.envelope.json"),
+                Path("/store/draft-abc123.lock"),
+            ),
+            (
+                RotationPlanEntry(
+                    store_dir=Path("/store"),
+                    hkdf_context=b"aeat.domain.usage_ratios.profile.v1",
+                    target_filename="usage-ratios.json",
+                ),
+                Path("/store/usage-ratios.json"),
+                Path("/store/usage-ratios.lock"),
+            ),
+            (
+                RotationPlanEntry(
+                    store_dir=Path("/store"),
+                    hkdf_context=_HKDF_CONTEXT_TX,
+                    envelope_suffix=".envelope.json",
+                ),
+                Path("/store/oddly-named-file.json"),
+                Path("/store/oddly-named-file.lock"),
+            ),
+        ),
+        ids=(
+            "multi-file-envelope-writer-convention",
+            "single-file-with-suffix-convention",
+            "fallback-to-stem-when-suffix-missing",
+        ),
+    )
+    def test_rotation_lock_path_conventions(
+        self,
+        entry: RotationPlanEntry,
+        envelope_path: Path,
+        expected_lock_path: Path,
+    ) -> None:
+        assert entry.lock_path_for(envelope_path) == expected_lock_path
 
     def test_rotation_blocks_on_writer_held_lock(
         self,

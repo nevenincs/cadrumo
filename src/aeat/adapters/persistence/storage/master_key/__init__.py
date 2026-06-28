@@ -17,7 +17,7 @@ helper, and the BIP-39 recovery primitives
 
 from __future__ import annotations
 
-from ._active_session import NoActiveBucketSessionError, activate_session
+from ._active_session import NoActiveBucketSessionError, activate_session, suspend_active_session
 from ._kdf_params import KdfParams
 from ._master_key import (
     EphemeralMasterKeyProvider,
@@ -90,6 +90,7 @@ __all__ = [
     "refuse_unsecured_with_real_nif",
     "save_recovery_envelope",
     "save_wrapped_master_key",
+    "suspend_active_session",
     "unwrap_master_key",
     "unwrap_recovery_envelope",
     "verify_recovery_mnemonic",

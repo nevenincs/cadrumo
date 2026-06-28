@@ -69,84 +69,65 @@ _M303_CUOTA_GENERAL_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-def test_currency_inline_sign_round_trips_negative_value() -> None:
-    """A signed-currency field with byte-0 ``N`` marker round-trips strictly.
+def _wire_body(payload: bytes) -> bytes:
+    return payload[: -len(b"\r\n")] if payload.endswith(b"\r\n") else payload
 
-    The :class:`SignedMode.INLINE_SIGN` convention puts an ``N``
-    or space in byte 0 of the field, followed by the absolute
-    magnitude in cents. A regression that flips byte 0 (e.g.
-    emits ``-`` instead of ``N`` or fails to read the sign back)
-    surfaces as a strict Decimal inequality.
-    """
 
+def _currency_specs(*, signed_mode: SignedMode = SignedMode.UNSIGNED):
     specs = (
         record_field(
             offset=1,
             length=12,
-            field_id="AMOUNT_SIGNED",
+            field_id="AMOUNT",
             casilla_id=_AMOUNT_CASILLA,
             kind=FieldKind.CURRENCY,
-            signed_mode=SignedMode.INLINE_SIGN,
+            signed_mode=signed_mode,
         ),
     )
     validate_record_specs(specs, total_length=specs[-1].offset - 1 + specs[-1].length)
+    return specs
+
+
+@pytest.mark.parametrize(
+    ("amount", "expected_marker"),
+    (
+        (Decimal("-12345.67"), b"N"),
+        (Decimal("42.00"), b" "),
+    ),
+    ids=("negative-marker", "positive-marker"),
+)
+def test_currency_inline_sign_round_trips_value(amount: Decimal, expected_marker: bytes) -> None:
+    specs = _currency_specs(signed_mode=SignedMode.INLINE_SIGN)
 
     payload = serialise(
-        casilla_values={_AMOUNT_CASILLA: Decimal("-12345.67")},
+        casilla_values={_AMOUNT_CASILLA: amount},
         headers={},
         specs=specs,
         encoding=ISO_8859_1_ENCODING,
         total_length=12,
     )
 
-    # Byte 0 must be the inline-sign marker for negative values.
-    body = payload[: -len(b"\r\n")] if payload.endswith(b"\r\n") else payload
-    assert body[0:1] == b"N", f"INLINE_SIGN negative value should emit 'N' in byte 0; got {body[0:1]!r}"
+    assert _wire_body(payload)[0:1] == expected_marker
 
     parsed = deserialise(payload, specs=specs, encoding=ISO_8859_1_ENCODING, total_length=12)
-    assert parsed.casilla_values[_AMOUNT_CASILLA] == Decimal("-12345.67")
+    assert parsed.casilla_values[_AMOUNT_CASILLA] == amount
 
 
-def test_currency_inline_sign_round_trips_positive_value() -> None:
-    """Positive INLINE_SIGN values emit a leading space, decoded as a positive Decimal."""
-
-    specs = (
-        record_field(
-            offset=1,
-            length=12,
-            field_id="AMOUNT_SIGNED",
-            casilla_id=_AMOUNT_CASILLA,
-            kind=FieldKind.CURRENCY,
-            signed_mode=SignedMode.INLINE_SIGN,
-        ),
-    )
-    validate_record_specs(specs, total_length=specs[-1].offset - 1 + specs[-1].length)
-
-    payload = serialise(
-        casilla_values={_AMOUNT_CASILLA: Decimal("42.00")},
-        headers={},
-        specs=specs,
-        encoding=ISO_8859_1_ENCODING,
-        total_length=12,
-    )
-
-    body = payload[: -len(b"\r\n")] if payload.endswith(b"\r\n") else payload
-    assert body[0:1] == b" ", f"INLINE_SIGN non-negative value should emit space in byte 0; got {body[0:1]!r}"
-
-    parsed = deserialise(payload, specs=specs, encoding=ISO_8859_1_ENCODING, total_length=12)
-    assert parsed.casilla_values[_AMOUNT_CASILLA] == Decimal("42.00")
-
-
-def test_date_field_yyyymmdd_round_trips() -> None:
-    """A ``YYYYMMDD`` DATE field round-trips a real calendar date strictly."""
-
+@pytest.mark.parametrize(
+    ("field_id", "date_fmt", "expected_body"),
+    (
+        ("DEVENGO", DateFmt.YYYYMMDD, b"20250420"),
+        ("FECHA", DateFmt.DDMMYYYY, b"20042025"),
+    ),
+)
+def test_date_field_round_trips(field_id: str, date_fmt: DateFmt, expected_body: bytes) -> None:
     specs = (
         record_field(
             offset=1,
             length=8,
-            field_id="DEVENGO",
+            field_id=field_id,
             kind=FieldKind.DATE,
-            date_fmt=DateFmt.YYYYMMDD,
+            date_fmt=date_fmt,
         ),
     )
     validate_record_specs(specs, total_length=specs[-1].offset - 1 + specs[-1].length)
@@ -154,45 +135,15 @@ def test_date_field_yyyymmdd_round_trips() -> None:
     target = date(2025, 4, 20)
     payload = serialise(
         casilla_values={},
-        headers={"DEVENGO": target},
+        headers={field_id: target},
         specs=specs,
         encoding=ISO_8859_1_ENCODING,
         total_length=8,
     )
-    body = payload[: -len(b"\r\n")] if payload.endswith(b"\r\n") else payload
-    assert body == b"20250420"
+    assert _wire_body(payload) == expected_body
 
     parsed = deserialise(payload, specs=specs, encoding=ISO_8859_1_ENCODING, total_length=8)
-    assert parsed.field_values["DEVENGO"] == target
-
-
-def test_date_field_ddmmyyyy_round_trips() -> None:
-    """A ``DDMMYYYY`` DATE field round-trips, distinguishing it from YYYYMMDD."""
-
-    specs = (
-        record_field(
-            offset=1,
-            length=8,
-            field_id="FECHA",
-            kind=FieldKind.DATE,
-            date_fmt=DateFmt.DDMMYYYY,
-        ),
-    )
-    validate_record_specs(specs, total_length=specs[-1].offset - 1 + specs[-1].length)
-
-    target = date(2025, 4, 20)
-    payload = serialise(
-        casilla_values={},
-        headers={"FECHA": target},
-        specs=specs,
-        encoding=ISO_8859_1_ENCODING,
-        total_length=8,
-    )
-    body = payload[: -len(b"\r\n")] if payload.endswith(b"\r\n") else payload
-    assert body == b"20042025"
-
-    parsed = deserialise(payload, specs=specs, encoding=ISO_8859_1_ENCODING, total_length=8)
-    assert parsed.field_values["FECHA"] == target
+    assert parsed.field_values[field_id] == target
 
 
 def test_alphanumeric_zero_padded_field_round_trips() -> None:
@@ -237,19 +188,7 @@ def test_currency_blank_input_rejected_at_decode() -> None:
     from a legitimate zero.
     """
 
-    from ..._errors import AeatExportFormatError
-    from .._deserialise import deserialise
-
-    specs = (
-        record_field(
-            offset=1,
-            length=12,
-            field_id="AMOUNT",
-            casilla_id=_AMOUNT_CASILLA,
-            kind=FieldKind.CURRENCY,
-        ),
-    )
-    validate_record_specs(specs, total_length=specs[-1].offset - 1 + specs[-1].length)
+    specs = _currency_specs()
 
     # 12 spaces — a wire shape that earlier silently decoded to 0.00.
     blank_payload = b" " * 12 + b"\r\n"
@@ -265,20 +204,7 @@ def test_currency_inline_sign_blank_magnitude_rejected_at_decode() -> None:
     decode to a negative-zero.
     """
 
-    from ..._errors import AeatExportFormatError
-    from .._deserialise import deserialise
-
-    specs = (
-        record_field(
-            offset=1,
-            length=12,
-            field_id="AMOUNT",
-            casilla_id=_AMOUNT_CASILLA,
-            kind=FieldKind.CURRENCY,
-            signed_mode=SignedMode.INLINE_SIGN,
-        ),
-    )
-    validate_record_specs(specs, total_length=12)
+    specs = _currency_specs(signed_mode=SignedMode.INLINE_SIGN)
     # Sign byte 'N' + 11 blank magnitude bytes
     blank_payload = b"N" + b" " * 11 + b"\r\n"
     with pytest.raises(AeatExportFormatError, match=r"magnitude is blank"):
@@ -288,16 +214,7 @@ def test_currency_inline_sign_blank_magnitude_rejected_at_decode() -> None:
 def test_currency_invalid_wire_bytes_raise_redacted_export_format_error() -> None:
     """Invalid CURRENCY wire bytes must not be echoed in parser errors."""
 
-    specs = (
-        record_field(
-            offset=1,
-            length=12,
-            field_id="AMOUNT",
-            casilla_id=_AMOUNT_CASILLA,
-            kind=FieldKind.CURRENCY,
-        ),
-    )
-    validate_record_specs(specs, total_length=12)
+    specs = _currency_specs()
 
     canary = b"12345678Z999"
     with pytest.raises(AeatExportFormatError) as exc_info:
@@ -342,9 +259,8 @@ def test_cp1252_encoded_field_round_trips_non_ascii() -> None:
         encoding="cp1252",
         total_length=8,
     )
-    body = payload[: -len(b"\r\n")] if payload.endswith(b"\r\n") else payload
     # The ñ must encode as a single CP1252 byte (0xF1).
-    assert b"\xf1" in body
+    assert b"\xf1" in _wire_body(payload)
 
     parsed = deserialise(payload, specs=specs, encoding="cp1252", total_length=8)
     assert parsed.field_values["NOMBRE"] == "Pañito"
@@ -604,16 +520,15 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
 # Modelo 303 golden-SHA fichero-BOE round-trip
 # ---------------------------------------------------------------------------
 #
-# Source authority: AEAT Diseño de Registros DR303 (ejercicio 2024, updated
-# 2024-11-29), Orden EHA/3786/2008 as amended.
+# Source authority: AEAT Diseño de Registros DR303 (ejercicio 2025, updated
+# 2025-12-04), Orden EHA/3786/2008 as amended.
 # Corpus path: src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/
-#   files/04-303-ejercicio-2024-a-partir-de-periodos-09-y-3t-y-siguientes-
-#   actualizado-29-11-24-381-kb-x.xlsx
+#   files/06-303-ejercicio-2025-actualizado-04-12-2025-380-kb-xlsx.xlsx
 #
 # Record layout (8-segment envelope, derived from DR):
 #   DP30300  envelope header:    328 bytes  (DR sheet DP30300 rows 1-13)
 #   DP30301  page-01 IVA dev:   1581 bytes  (DR sheet DP30301 rows 1-88)
-#   DP30302  page-02 RS:        1706 bytes  (DR sheet DP30302 rows 1-91)
+#   DP30302  page-02 RS:        1900 bytes  (DR sheet DP30302 rows 1-166)
 #   DP30303  page-03 resultado: 1017 bytes  (DR sheet DP30303 rows 1-38)
 #   DP30304  page-04 exon 390:   998 bytes  (DR sheet DP30304 rows 1-43)
 #   DP30305  page-05 prorrata:  1523 bytes  (DR sheet DP30305 rows 1-72)
@@ -623,9 +538,9 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
 # Two dispositions exercise the conditional DID (cuenta-devolución) page:
 #   * Non-refund ("I"/"C"): the DID page is SUPPRESSED — emitting an empty
 #     823-byte refund block files a devolución AEAT cannot pay — so the
-#     fichero is 7994 - 823 = 7171 bytes and carries no DID record.
+#     fichero is 8188 - 823 = 7365 bytes and carries no DID record.
 #   * Refund ("D"): the DID page is emitted with the refund account AEAT pays
-#     into, so the fichero is the full 7994 bytes.
+#     into, so the fichero is the full 8188 bytes.
 #
 # The REDEME indicator (DR DP30301 offset 110, 1 byte) is written on EVERY
 # filing: "1" SI (REDEME-enrolled) / "2" NO (ordinary). It is the same standing
@@ -646,30 +561,31 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
 # inputs/headers below, then verifying every asserted byte position against the
 # DR offset table before recording the hash — never hand-tuned to make the test
 # pass.
-_M303_GOLDEN_SHA256 = "e9dfc7d11988d4bd0aa0ea4f540440c28da287ee3f832a2baec2183740a48113"
+_M303_GOLDEN_SHA256 = "6b0822ce2cb8ce112066438c245afec78c3051abbfd69825d01cc65b2322720e"
 #: Refund ("D") disposition with a Spanish IBAN: the DID page is emitted, so the
 #: fichero is the full 7994 bytes.
-_M303_REFUND_GOLDEN_SHA256 = "a95880caf0dd5b43e787b907d9e1ec20ea829aca1a1aaca12876490db11a730f"
+_M303_REFUND_GOLDEN_SHA256 = "283699403be00cc249625da21e5ffcbaf6dc0b429202a7f69feaaacc3701e2a1"
 #: Refund ("D") disposition with a non-SEPA (Resto Países, Marca SEPA "3") SWIFT
 #: account: the DID page carries the SWIFT-BIC plus the foreign-bank block (no
 #: IBAN), so the fichero is the full 7994 bytes.
-_M303_REFUND_NON_SEPA_GOLDEN_SHA256 = "07a61b926dc03ac79d71cd565536048f562fef71528ed765e7a70d1aac1994a1"
+_M303_REFUND_NON_SEPA_GOLDEN_SHA256 = "4dc53ab2e9ba9bda51f114112a01d93c8e90892f7fc0c0781de3c7106158f30b"
 
 # Cumulative record-start offsets (0-based byte index):
 #   DP30300 starts at 0
 #   DP30301 starts at 328
 #   DP30302 starts at 328+1581 = 1909
-#   DP30303 starts at 1909+1706 = 3615
-#   DP30304 starts at 3615+1017 = 4632
-#   DP30305 starts at 4632+998  = 5630
+#   DP30303 starts at 1909+1900 = 3809
+#   DP30304 starts at 3809+1017 = 4826
+#   DP30305 starts at 4826+998  = 5824
 # On a REFUND filing the DID page follows page-05:
-#   DP303DID starts at 5630+1523 = 7153
-#   Envelope footer starts at 7153+823 = 7976
+#   DP303DID starts at 5824+1523 = 7347
+#   Envelope footer starts at 7347+823 = 8170
 # On a NON-refund filing the DID page is suppressed, so the envelope footer
-# follows page-05 directly at 7153 and the fichero ends at 7171.
+# follows page-05 directly at 7347 and the fichero ends at 7365.
 _M303_P01_START = 328
-_M303_P03_START = 3615
-_M303_DID_START = 7153
+_M303_P02_START = 1909
+_M303_P03_START = 3809
+_M303_DID_START = 7347
 
 # DR DP30301 REDEME indicator: offset 110 (1-based), length 1.
 _M303_REDEME_OFFSET = 110
@@ -700,7 +616,7 @@ _M303_NON_SEPA_BANK_COUNTRY = "US"
 
 
 def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
-    """Non-refund Modelo 303 ("I") serialises to a byte-exact 7171-byte fichero-BOE.
+    """Non-refund Modelo 303 ("I") serialises to a byte-exact 7365-byte fichero-BOE.
 
     Inputs are fixed (IVA devengado tipo general 21% only).  Expected byte
     values at each asserted position are derived from DR303 (2024 edition).
@@ -714,7 +630,7 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
       ordinary, non-REDEME filer, written on every filing; and
     * the cuenta-devolución (DID) page is SUPPRESSED on a non-refund
       disposition — an empty 823-byte refund block files a devolución AEAT
-      cannot pay — so the fichero is 7994 - 823 = 7171 bytes with no DID record.
+      cannot pay — so the fichero is 8188 - 823 = 7365 bytes with no DID record.
     """
     from .......application.filing import (
         ModeloDraftStatus,
@@ -753,6 +669,7 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
         headers={
             "declaration_type": "I",
             "surnames": "GARCIA LOPEZ",
+            "full_name": "GARCIA LOPEZ JUAN",
             "program_version": "A001",
             "presenter_nif": "12345678Z",
             # REDEME indicator: "2" (NO) for an ordinary non-REDEME filer —
@@ -775,14 +692,19 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
         s = _M303_P01_START + offset - 1
         return payload[s : s + length]
 
+    def _p2(offset: int, length: int) -> bytes:
+        """Read bytes from DR DP30302 page-02 record (1-based field offset)."""
+        s = _M303_P02_START + offset - 1
+        return payload[s : s + length]
+
     def _p3(offset: int, length: int) -> bytes:
         """Read bytes from DR DP30303 page-03 record (1-based field offset)."""
         s = _M303_P03_START + offset - 1
         return payload[s : s + length]
 
     # Total length on a non-refund filing: the DID page (823 bytes) is
-    # suppressed, so 328+1581+1706+1017+998+1523+18 = 7171.
-    assert len(payload) == 7171, f"expected 7171-byte non-refund fichero-BOE; got {len(payload)}"
+    # suppressed, so 328+1581+1900+1017+998+1523+18 = 7365.
+    assert len(payload) == 7365, f"expected 7365-byte non-refund fichero-BOE; got {len(payload)}"
 
     # DR DP30300 rows 1-7: envelope tag bytes
     # Row 1 (offset 1-2): "<T"
@@ -815,6 +737,12 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
     # DR DP30301 row 7 (offset 14-22): NIF sujeto pasivo (9 bytes An)
     assert _p1(14, 9) == b"12345678Z", "DR DP30301 row 7: NIF must match input profile"
 
+    # DR DP30301 row 8 (offset 23-102): one legal-name field, "Apellidos y
+    # nombre o Razon social", not a surname-only slot.
+    assert _p1(23, 80).rstrip(b" ") == b"GARCIA LOPEZ JUAN", (
+        "DR DP30301 row 8: legal name must combine surnames and name"
+    )
+
     # DR DP30301 row 9 (offset 103-106): Ejercicio (4 bytes Num)
     assert _p1(103, 4) == b"2025", "DR DP30301 row 9: ejercicio must be '2025'"
 
@@ -846,6 +774,11 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
 
     # DR DP30301 row 88 (offset 1570-1581): closing tag </T30301000> (12 bytes)
     assert _p1(1570, 12) == b"</T30301000>", "DR DP30301 row 88: page-01 close tag"
+
+    # DR DP30302 rows 165-166: reserved tail and close tag. The 2025 workbook
+    # extends the reserved row to offset 1888; page-02 is 1900 bytes, not 1706.
+    assert _p2(1615, 274) == b" " * 274, "DR DP30302 row 165: reserved tail must be 274 bytes"
+    assert _p2(1889, 12) == b"</T30302000>", "DR DP30302 row 166: page-02 close tag"
 
     # DR DP30303 rows 1-4: page-03 tag
     assert _p3(1, 2) == b"<T", "DR DP30303 row 1: page open tag"
@@ -893,18 +826,18 @@ def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
         f"  Got:      {digest}\n"
         "Any change to the 303.toml export layout that alters byte output\n"
         "must be re-grounded against the AEAT Diseño de Registros DR303\n"
-        "(Orden EHA/3786/2008, 2024 revision, updated 2024-11-29)\n"
+        "(Orden EHA/3786/2008, 2025 revision, updated 2025-12-04)\n"
         "before updating this constant."
     )
 
     # Receipt metadata sanity
-    assert receipt.byte_size == 7171
+    assert receipt.byte_size == 7365
     assert receipt.file_sha256 == _M303_GOLDEN_SHA256
 
 
 def test_modelo_303_refund_golden_sha_fichero_boe(tmp_path: Path) -> None:
     """Refund Modelo 303 ("D") with a Spanish IBAN serialises to a byte-exact
-    7994-byte fichero-BOE carrying the cuenta-devolución (DID) page.
+    8188-byte fichero-BOE carrying the cuenta-devolución (DID) page.
 
     Companion to the non-refund golden case. The refund disposition emits the
     DID page AEAT pays into, so the per-offset assertions name the DR-EXPECTED
@@ -957,6 +890,7 @@ def test_modelo_303_refund_golden_sha_fichero_boe(tmp_path: Path) -> None:
             # Refund disposition: AEAT pays the devolución into the DID account.
             "declaration_type": "D",
             "surnames": "GARCIA LOPEZ",
+            "full_name": "GARCIA LOPEZ JUAN",
             "program_version": "A001",
             "presenter_nif": "12345678Z",
             # REDEME indicator "1" (SI) for the enrolled refund filer.
@@ -984,8 +918,8 @@ def test_modelo_303_refund_golden_sha_fichero_boe(tmp_path: Path) -> None:
         s = _M303_DID_START + offset - 1
         return payload[s : s + length]
 
-    # A refund filing emits the DID page, so the fichero is the full 7994 bytes.
-    assert len(payload) == 7994, f"expected 7994-byte refund fichero-BOE; got {len(payload)}"
+    # A refund filing emits the DID page, so the fichero is the full 8188 bytes.
+    assert len(payload) == 8188, f"expected 8188-byte refund fichero-BOE; got {len(payload)}"
 
     # DR DP30301 REDEME indicator (offset 110, 1 byte): "1" (SI) for the
     # REDEME-enrolled refund filer — the DR-expected value, asserted before the SHA.
@@ -1039,18 +973,18 @@ def test_modelo_303_refund_golden_sha_fichero_boe(tmp_path: Path) -> None:
         f"  Got:      {digest}\n"
         "Any change to the 303.toml export layout or the refund DID block that\n"
         "alters byte output must be re-grounded against the AEAT Diseño de\n"
-        "Registros DR303 (Orden EHA/3786/2008, 2024 revision) before updating\n"
+        "Registros DR303 (Orden EHA/3786/2008, 2025 revision) before updating\n"
         "this constant."
     )
 
     # Receipt metadata sanity
-    assert receipt.byte_size == 7994
+    assert receipt.byte_size == 8188
     assert receipt.file_sha256 == _M303_REFUND_GOLDEN_SHA256
 
 
 def test_modelo_303_refund_non_sepa_golden_sha_fichero_boe(tmp_path: Path) -> None:
     """Refund Modelo 303 ("D") with a non-SEPA (Resto Países) SWIFT account
-    serialises to a byte-exact 7994-byte fichero-BOE carrying the SWIFT-BIC plus
+    serialises to a byte-exact 8188-byte fichero-BOE carrying the SWIFT-BIC plus
     the foreign-bank DID block.
 
     Companion to the SEPA refund golden case, locking the Marca SEPA "3" branch:
@@ -1107,6 +1041,7 @@ def test_modelo_303_refund_non_sepa_golden_sha_fichero_boe(tmp_path: Path) -> No
             # Refund disposition: AEAT pays the devolución into the DID account.
             "declaration_type": "D",
             "surnames": "GARCIA LOPEZ",
+            "full_name": "GARCIA LOPEZ JUAN",
             "program_version": "A001",
             "presenter_nif": "12345678Z",
             # REDEME indicator "1" (SI) for the enrolled refund filer.
@@ -1139,8 +1074,8 @@ def test_modelo_303_refund_non_sepa_golden_sha_fichero_boe(tmp_path: Path) -> No
         s = _M303_DID_START + offset - 1
         return payload[s : s + length]
 
-    # A refund filing emits the DID page, so the fichero is the full 7994 bytes.
-    assert len(payload) == 7994, f"expected 7994-byte non-SEPA refund fichero-BOE; got {len(payload)}"
+    # A refund filing emits the DID page, so the fichero is the full 8188 bytes.
+    assert len(payload) == 8188, f"expected 8188-byte non-SEPA refund fichero-BOE; got {len(payload)}"
 
     # DR DP30301 REDEME indicator (offset 110, 1 byte): "1" (SI) for the
     # REDEME-enrolled refund filer — the DR-expected value, asserted before the SHA.
@@ -1207,10 +1142,10 @@ def test_modelo_303_refund_non_sepa_golden_sha_fichero_boe(tmp_path: Path) -> No
         f"  Got:      {digest}\n"
         "Any change to the 303.toml export layout or the non-SEPA DID block that\n"
         "alters byte output must be re-grounded against the AEAT Diseño de\n"
-        "Registros DR303 (Orden EHA/3786/2008, 2024 revision) before updating\n"
+        "Registros DR303 (Orden EHA/3786/2008, 2025 revision) before updating\n"
         "this constant."
     )
 
     # Receipt metadata sanity
-    assert receipt.byte_size == 7994
+    assert receipt.byte_size == 8188
     assert receipt.file_sha256 == _M303_REFUND_NON_SEPA_GOLDEN_SHA256

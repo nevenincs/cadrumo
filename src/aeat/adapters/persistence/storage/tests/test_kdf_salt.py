@@ -22,7 +22,7 @@ def test_encode_decode_kdf_salt_round_trips_exact_bytes() -> None:
 def test_decode_kdf_salt_accepts_bytes_without_copying_contract_change() -> None:
     salt = b"0123456789abcdef"
 
-    assert decode_kdf_salt(salt) == salt
+    assert decode_kdf_salt(salt) is salt
 
 
 def test_require_kdf_salt_length_accepts_canonical_length() -> None:
@@ -31,9 +31,10 @@ def test_require_kdf_salt_length_accepts_canonical_length() -> None:
     assert require_kdf_salt_length(salt) == salt
 
 
-def test_require_kdf_salt_length_raises_configured_error_type() -> None:
+@pytest.mark.parametrize("invalid_salt", [b"short", b"0" * (KDF_SALT_BYTES + 1)])
+def test_require_kdf_salt_length_raises_configured_error_type(invalid_salt: bytes) -> None:
     with pytest.raises(StorageValidationError, match="salt must be exactly 16 bytes"):
-        require_kdf_salt_length(b"short", error_type=StorageValidationError)
+        require_kdf_salt_length(invalid_salt, error_type=StorageValidationError)
 
 
 def test_decode_kdf_salt_rejects_non_bytes_non_string_with_configured_error_type() -> None:

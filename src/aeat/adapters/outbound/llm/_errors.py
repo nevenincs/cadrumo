@@ -13,6 +13,10 @@ class LLMProviderError(LLMError):
     """Raised when a provider returns an unrecoverable error."""
 
 
+class LLMPdfRasterisationError(LLMError):
+    """Raised when an on-host PDF cannot be rasterised for local vision input."""
+
+
 class LLMCacheError(LLMError):
     """Raised when a cache entry cannot be read, written, or parsed."""
 

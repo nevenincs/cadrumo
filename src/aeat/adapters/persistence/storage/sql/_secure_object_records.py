@@ -1,6 +1,7 @@
 """Pydantic records for SQL secure object persistence.
 
-Use of :class:`SensitivityClass` for compliance.
+Secure object read/write records carry :class:`SensitivityClass` so repository
+policy can enforce the expected storage classification.
 """
 
 from __future__ import annotations
